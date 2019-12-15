@@ -11,6 +11,7 @@ setup(
     name='hopsworks',
     version=__version__,
     install_requires=[
+        'humps'
     ],
     extras_require={
         'test': [
