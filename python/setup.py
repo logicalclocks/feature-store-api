@@ -10,9 +10,14 @@ def read(fname):
 setup(
     name="hopsworks",
     version=__version__,
-    install_requires=["pyhumps"],
+    install_requires=[
+        "pyhumps"
+    ],
     extras_require={
-        "test": ["pylint", "pytest"]
+        "dev": [
+            "pytest",
+            "flake8",
+            "black"],
     },
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
