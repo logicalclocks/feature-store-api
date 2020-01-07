@@ -25,7 +25,7 @@ setup(
     license='GNU Affero General Public License v3',
     keywords='',
     url='',
-    download_url=''
+    download_url='',
     packages=find_packages(),
     long_description='',#read('README.rst'),
     classifiers=[
