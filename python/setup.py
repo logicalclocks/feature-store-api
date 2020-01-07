@@ -11,7 +11,8 @@ setup(
     name="hopsworks",
     version=__version__,
     install_requires=[
-        "pyhumps"
+        "pyhumps",
+        "requests"
     ],
     extras_require={
         "dev": [
