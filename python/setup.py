@@ -12,7 +12,10 @@ setup(
     version=__version__,
     install_requires=[
         "pyhumps",
-        "requests"
+        "requests",
+        "cryptography",
+        "pyopenssl",
+        "idna"
     ],
     extras_require={
         "dev": [
