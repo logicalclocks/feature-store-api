@@ -5,23 +5,22 @@ from OpenSSL import SSL
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 import idna
+import furl
 
 
 class Client:
     TOKEN_FILE = "token.jwt"
-    ENV_REST_ENDPOINT = "REST_ENDPOINT"
-    ENV_VERIFY = "REQUEST_VERIFY"
+    REST_ENDPOINT = "REST_ENDPOINT"
+    REQUESTS_VERIFY = "REQUESTS_VERIFY"
     DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"
 
     def __init__(self):
-        self._host, self._port = self._get_host_port_pair_host()
+        self._base_url = self._get_hopsworks_rest_endpoint()
+        self._host, self._port = self._get_host_port_pair()
         # TODO(Fabio) : Have a thread that refreshes the token
-        self._token = self._read_jwt()
+        self._auth = BearerAuth(self._read_jwt())
         self._verify = self._get_verify()
         self._session = requests.session()
-
-    def get_feature_group(self, feature_store_id, feature_group_name, version):
-        pass
 
     def _get_verify(self):
         """
@@ -34,7 +33,10 @@ class Client:
             else if hopsworks is not self-signed, return true
             return false
         """
-        if self.ENV_VERIFY in os.environ and os.environ[self.ENV_VERIFY] == "true":
+        if (
+            self.REQUESTS_VERIFY in os.environ
+            and os.environ[self.REQUESTS_VERIFY] == "true"
+        ):
 
             hostname_idna = idna.encode(self._host)
             sock = socket.socket()
@@ -60,11 +62,8 @@ class Client:
                 issuer = crypto_cert.issuer.get_attributes_for_oid(NameOID.COMMON_NAME)[
                     0
                 ].value
-                if (
-                    commonname == issuer
-                    and self.DOMAIN_CA_TRUSTSTORE_PEM_ENV_VAR in os.environ
-                ):
-                    return os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM_ENV_VAR]
+                if commonname == issuer and self.DOMAIN_CA_TRUSTSTORE_PEM in os.environ:
+                    return os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
                 else:
                     return True
             except x509.ExtensionNotFound:
@@ -72,11 +71,8 @@ class Client:
 
         return False
 
-    def _get_host(self):
-        """
-        Returns:
-            The hopsworks REST endpoint for making requests to the REST API
-
+    def _get_hopsworks_rest_endpoint(self):
+        """Get the hopsworks REST endpoint for making requests to the REST API
         """
         return os.environ[self.REST_ENDPOINT]
 
@@ -88,7 +84,7 @@ class Client:
         Returns:
             a list [endpoint, port]
         """
-        endpoint = self._get_host()
+        endpoint = self._base_url
         if "http" in endpoint:
             last_index = endpoint.rfind("/")
             endpoint = endpoint[last_index + 1 :]
@@ -105,34 +101,58 @@ class Client:
         with open(self.TOKEN_FILE, "r") as jwt:
             return jwt.read()
 
-    def _send_request(self, method, path_param, query_param, headers, data):
-        path_param.insert(0, self._host)
-        url = str.join("/", path_param)
+    def _send_request(
+        self, method, path_params, query_params=None, headers=None, data=None
+    ):
+        f_url = furl.furl(self._base_url)
+        f_url.path.segments = path_params
+        url = str(f_url)
 
-        headers["Authorization"] = "Bearer " + self._token
+        request = requests.Request(
+            method,
+            url=url,
+            headers=headers,
+            data=data,
+            params=query_params,
+            auth=self._auth,
+        )
 
-        request = requests.Request(method, url=url, headers=headers, params=path_param)
         prepped = self._session.prepare_request(request)
         response = self._session.send(prepped, verify=self._verify)
 
         if response.status_code // 100 != 2:
-            error_object = response.json()
-            raise RestAPIError(
-                "Metadata operation error: (url: {}). Server response: \n"
-                "HTTP code: {}, HTTP reason: {}, error code: {}, error msg: {}, user "
-                "msg: {}".format(
-                    url,
-                    response.status_code,
-                    response.reason,
-                    error_object.get("errorCode", ""),
-                    error_object.get("errorMsg", ""),
-                    error_object.get("usrMsg", ""),
-                )
-            )
+            raise RestAPIError(url, response)
         else:
             return response.json()
 
 
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self._token = token
+
+    def __call__(self, r):
+        r.headers["Authorization"] = "Bearer " + self._token
+        return r
+
+
 class RestAPIError(Exception):
-    """REST Exception
+    """REST Exception encapsulating the response object and url.
     """
+
+    def __init__(self, url, response):
+        error_object = response.json()
+        message = (
+            "Metadata operation error: (url: {}). Server response: \n"
+            "HTTP code: {}, HTTP reason: {}, error code: {}, error msg: {}, user "
+            "msg: {}".format(
+                url,
+                response.status_code,
+                response.reason,
+                error_object.get("errorCode", ""),
+                error_object.get("errorMsg", ""),
+                error_object.get("usrMsg", ""),
+            )
+        )
+        super().__init__(message)
+        self.url = url
+        self.response = response

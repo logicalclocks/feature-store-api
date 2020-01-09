@@ -15,7 +15,8 @@ setup(
         "requests",
         "cryptography",
         "pyopenssl",
-        "idna"
+        "idna",
+        "furl"
     ],
     extras_require={
         "dev": [
