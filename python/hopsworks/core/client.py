@@ -1,5 +1,4 @@
 import os
-import requests
 import socket
 from OpenSSL import SSL
 from cryptography import x509
@@ -10,6 +9,12 @@ import boto3
 import json
 import base64
 from abc import ABC, abstractmethod
+
+import requests
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class BaseClient(ABC):
