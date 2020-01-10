@@ -6,21 +6,21 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 import idna
 import furl
+import boto3
+import json
+import base64
+from abc import ABC, abstractmethod
 
 
-class Client:
+class BaseClient(ABC):
     TOKEN_FILE = "token.jwt"
     REST_ENDPOINT = "REST_ENDPOINT"
     REQUESTS_VERIFY = "REQUESTS_VERIFY"
     DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"
 
+    @abstractmethod
     def __init__(self):
-        self._base_url = self._get_hopsworks_rest_endpoint()
-        self._host, self._port = self._get_host_port_pair()
-        # TODO(Fabio) : Have a thread that refreshes the token
-        self._auth = BearerAuth(self._read_jwt())
-        self._verify = self._get_verify()
-        self._session = requests.session()
+        pass
 
     def _get_verify(self):
         """
@@ -126,12 +126,212 @@ class Client:
             return response.json()
 
 
+class HopsworksClient(BaseClient):
+    def __init__(self):
+        self._base_url = self._get_hopsworks_rest_endpoint()
+        self._host, self._port = self._get_host_port_pair()
+        # TODO(Fabio) : Have a thread that refreshes the token
+        self._auth = BearerAuth(self._read_jwt())
+        self._verify = self._get_verify()
+        self._session = requests.session()
+
+
+class ExternalClient(BaseClient):
+    HOPSWORKS_PROJECT_NAME = "HOPSWORKS_PROJECT_NAME"
+    HOPSWORKS_PROJECT_ID = "HOPSWORKS_PROJECT_ID"
+    DEFAULT_REGION = "default"
+    SECRETS_MANAGER = "secretsmanager"
+    PARAMETER_STORE = "parameterstore"
+    LOCAL_STORE = "local"
+    CERT_KEY = "CERT_KEY"
+    CERT_FOLDER = "CERT_FOLDER"
+
+    def __init__(
+        self,
+        host,
+        port,
+        project,
+        region_name,
+        secrets_store,
+        hostname_verification,
+        trust_store_path,
+        cert_folder,
+        api_key_file,
+    ):
+        if not host:
+            raise TypeError(
+                "host cannot be of type NoneType, host is a non-optional "
+                "argument to connect to hopsworks from an external environment."
+            )
+        if not project:
+            raise TypeError(
+                "project cannot be of type NoneType, project is a "
+                "non-optional argument to connect to hopsworks from an external "
+                "environment"
+            )
+
+        self._base_url = host + ":" + str(port)
+        self._host = host
+        self._port = port
+        self._project = project
+        self._region_name = region_name
+
+        self._auth = ApiKeyAuth(
+            self._get_secret(secrets_store, "api-key", api_key_file)
+        )
+
+        os.environ[self.REST_ENDPOINT] = host + ":" + str(port)
+        os.environ[self.HOPSWORKS_PROJECT_NAME] = project
+
+        if trust_store_path:
+            os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM] = trust_store_path
+        if hostname_verification:
+            os.environ[self.REQUESTS_VERIFY] = json.dumps(hostname_verification)
+
+        self._session = requests.session()
+        self._verify = self._get_verify()
+
+        project_info = self._get_project_info(project)
+        project_id = str(project_info["projectId"])
+        os.environ[self.HOPSWORKS_PROJECT_ID] = project_id
+
+        credentials = self._get_credentials(project_id)
+        self._write_b64_cert_to_bytes(
+            str(credentials["kStore"]), path=os.path.join(cert_folder, "keyStore.jks")
+        )
+        self._write_b64_cert_to_bytes(
+            str(credentials["tStore"]), path=os.path.join(cert_folder, "trustStore.jks")
+        )
+
+        os.environ[self.CERT_FOLDER] = cert_folder
+        os.environ[self.CERT_KEY] = str(credentials["password"])
+
+    def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
+        """
+        Returns secret value from the AWS Secrets Manager or Parameter Store
+
+        Args:
+            :secrets_store: the underlying secrets storage to be used, e.g. `secretsmanager` or `parameterstore`
+            :secret_type (str): key for the secret value, e.g. `api-key`, `cert-key`, `trust-store`, `key-store`
+            :api_token_file: path to a file containing an api key
+        Returns:
+            :str: secret value
+        """
+        if secrets_store == self.SECRETS_MANAGER:
+            return self._query_secrets_manager(secret_key)
+        elif secrets_store == self.PARAMETER_STORE:
+            return self._query_parameter_store(secret_key)
+        elif secrets_store == self.LOCAL_STORE:
+            if not api_key_file:
+                raise Exception("api_key_file needs to be set for local mode")
+            with open(api_key_file) as f:
+                return f.readline().strip()
+        else:
+            raise UnkownSecretStorageError(
+                "Secrets storage " + secrets_store + " is not supported."
+            )
+
+    def _query_secrets_manager(self, secret_key):
+        secret_name = "hopsworks/role/" + self._assumed_role()
+        args = {"service_name": "secretsmanager"}
+        region_name = self._get_region()
+        if region_name:
+            args["region_name"] = region_name
+        client = boto3.client(**args)
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        return json.loads(get_secret_value_response["SecretString"])[secret_key]
+
+    def _assumed_role(self):
+        client = boto3.client("sts")
+        response = client.get_caller_identity()
+        # arns for assumed roles in SageMaker follow the following schema
+        # arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
+        local_identifier = response["Arn"].split(":")[-1].split("/")
+        if len(local_identifier) != 3 or local_identifier[0] != "assumed-role":
+            raise Exception(
+                "Failed to extract assumed role from arn: " + response["Arn"]
+            )
+        return local_identifier[1]
+
+    def _get_region(self):
+        if self._region_name != self.DEFAULT_REGION:
+            return self._region_name
+        else:
+            return None
+
+    def _query_parameter_store(self, secret_key):
+        args = {"service_name": "ssm"}
+        region_name = self._get_region()
+        if region_name:
+            args["region_name"] = region_name
+        client = boto3.client(**args)
+        name = "/hopsworks/role/" + self._assumed_role() + "/type/" + secret_key
+        return client.get_parameter(Name=name, WithDecryption=True)["Parameter"][
+            "Value"
+        ]
+
+    def _get_project_info(self, project_name):
+        """
+        Makes a REST call to hopsworks to get all metadata of a project for the provided project.
+
+        Args:
+            :project_name: the name of the project
+
+        Returns:
+            JSON response
+
+        Raises:
+            :RestAPIError: if there was an error in the REST call to Hopsworks
+        """
+        return self._send_request(
+            "GET", ["hopsworks-api", "api", "project", "getProjectInfo", project_name]
+        )
+
+    def _get_credentials(self, project_id):
+        """
+        Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
+
+        Args:
+            :project_name: id of the project
+
+        Returns:
+            JSON response
+
+        Raises:
+            :RestAPIError: if there was an error in the REST call to Hopsworks
+        """
+        return self._send_request(
+            "GET", ["hopsworks-api", "api", "project", project_id, "credentials"]
+        )
+
+    def _write_b64_cert_to_bytes(self, b64_string, path):
+        """Converts b64 encoded certificate to bytes file .
+
+        Args:
+            :b64_string (str): b64 encoded string of certificate
+            :path (str): path where file is saved, including file name. e.g. /path/key-store.jks
+        """
+
+        with open(path, "wb") as f:
+            cert_b64 = base64.b64decode(b64_string)
+            f.write(cert_b64)
+
+
 class BearerAuth(requests.auth.AuthBase):
     def __init__(self, token):
         self._token = token
 
     def __call__(self, r):
         r.headers["Authorization"] = "Bearer " + self._token
+        return r
+
+
+class ApiKeyAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self._token = token
+
+    def __call__(self, r):
+        r.headers["Authorization"] = "ApiKey " + self._token
         return r
 
 
@@ -156,3 +356,7 @@ class RestAPIError(Exception):
         super().__init__(message)
         self.url = url
         self.response = response
+
+
+class UnkownSecretStorageError(Exception):
+    """This exception will be raised if an unused secrets storage is passed as a parameter"""
