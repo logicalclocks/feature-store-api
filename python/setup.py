@@ -16,7 +16,8 @@ setup(
         "cryptography",
         "pyopenssl",
         "idna",
-        "furl"
+        "furl",
+        "boto3"
     ],
     extras_require={
         "dev": [
