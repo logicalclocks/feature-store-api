@@ -33,12 +33,23 @@ class Connection:
     def connect(self):
         self._connected = True
         if client.BaseClient.REST_ENDPOINT not in os.environ:
-            self._client = client.ExternalClient()
+            self._client = client.ExternalClient(
+                self._host,
+                self._port,
+                self._project,
+                self._region_name,
+                self._secrets_store,
+                self._hostname_verification,
+                self._trust_store_path,
+                self._cert_folder,
+                self._api_key_file,
+            )
         else:
             self._client = client.HopsworksClient()
         print("connected")
 
     def close(self):
+        self._client._close()
         self._client = None
         # clean up certificates
         self._connected = False

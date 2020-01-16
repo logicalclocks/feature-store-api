@@ -27,6 +27,9 @@ class BaseClient(ABC):
     def __init__(self):
         pass
 
+    def _close(self):
+        pass
+
     def _get_verify(self):
         """
         Get verification method for sending HTTP requests to Hopsworks.
@@ -164,6 +167,7 @@ class ExternalClient(BaseClient):
         api_key_file,
     ):
         if not host:
+            # TODO: make custom exception missing possitional arguments
             raise TypeError(
                 "host cannot be of type NoneType, host is a non-optional "
                 "argument to connect to hopsworks from an external environment."
@@ -210,6 +214,15 @@ class ExternalClient(BaseClient):
 
         os.environ[self.CERT_FOLDER] = cert_folder
         os.environ[self.CERT_KEY] = str(credentials["password"])
+
+    def _close(self):
+        del os.environ[self.REST_ENDPOINT]
+        del os.environ[self.HOPSWORKS_PROJECT_NAME]
+        del os.environ[self.HOPSWORKS_PROJECT_ID]
+        del os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
+        del os.environ[self.REQUESTS_VERIFY]
+        del os.environ[self.CERT_FOLDER]
+        del os.environ[self.CERT_KEY]
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """
