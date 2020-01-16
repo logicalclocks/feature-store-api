@@ -179,7 +179,7 @@ class ExternalClient(BaseClient):
                 "environment"
             )
 
-        self._base_url = host + ":" + str(port)
+        self._base_url = "https://" + host + ":" + str(port)
         self._host = host
         self._port = port
         self._project = project
@@ -189,7 +189,7 @@ class ExternalClient(BaseClient):
             self._get_secret(secrets_store, "api-key", api_key_file)
         )
 
-        os.environ[self.REST_ENDPOINT] = host + ":" + str(port)
+        os.environ[self.REST_ENDPOINT] = "https://" + host + ":" + str(port)
         os.environ[self.HOPSWORKS_PROJECT_NAME] = project
 
         if trust_store_path:

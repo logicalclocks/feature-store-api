@@ -23,7 +23,7 @@ class Connection:
         self._project = project
         self._region_name = region_name or self.AWS_DEFAULT_REGION
         self._secrets_store = secrets_store or "parameterstore"
-        self._verify = hostname_verification or True
+        self._hostname_verification = hostname_verification or True
         self._trust_store_path = trust_store_path
         self._cert_folder = cert_folder or ""
         self._api_key_file = api_key_file
@@ -32,20 +32,24 @@ class Connection:
 
     def connect(self):
         self._connected = True
-        if client.BaseClient.REST_ENDPOINT not in os.environ:
-            self._client = client.ExternalClient(
-                self._host,
-                self._port,
-                self._project,
-                self._region_name,
-                self._secrets_store,
-                self._hostname_verification,
-                self._trust_store_path,
-                self._cert_folder,
-                self._api_key_file,
-            )
-        else:
-            self._client = client.HopsworksClient()
+        try:
+            if client.BaseClient.REST_ENDPOINT not in os.environ:
+                self._client = client.ExternalClient(
+                    self._host,
+                    self._port,
+                    self._project,
+                    self._region_name,
+                    self._secrets_store,
+                    self._hostname_verification,
+                    self._trust_store_path,
+                    self._cert_folder,
+                    self._api_key_file,
+                )
+            else:
+                self._client = client.HopsworksClient()
+        except TypeError:
+            self._connected = False
+            raise
         print("connected")
 
     def close(self):
