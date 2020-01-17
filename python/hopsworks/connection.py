@@ -5,6 +5,10 @@ from hopsworks.core import client
 
 class Connection:
     AWS_DEFAULT_REGION = "default"
+    HOPSWORKS_PORT_DEFAULT = 443
+    SECRETS_STORE_DEFAULT = "parameterstore"
+    HOSTNAME_VERIFICATION_DEFAULT = True
+    CERT_FOLDER_DEFAULT = ""
 
     def __init__(
         self,
@@ -19,13 +23,15 @@ class Connection:
         api_key_file=None,
     ):
         self._host = host
-        self._port = port or 443
+        self._port = port or self.HOPSWORKS_PORT_DEFAULT
         self._project = project
         self._region_name = region_name or self.AWS_DEFAULT_REGION
-        self._secrets_store = secrets_store or "parameterstore"
-        self._hostname_verification = hostname_verification or True
+        self._secrets_store = secrets_store or self.SECRETS_STORE_DEFAULT
+        self._hostname_verification = (
+            hostname_verification or self.HOSTNAME_VERIFICATION_DEFAULT
+        )
         self._trust_store_path = trust_store_path
-        self._cert_folder = cert_folder or ""
+        self._cert_folder = cert_folder or self.CERT_FOLDER_DEFAULT
         self._api_key_file = api_key_file
         self._connected = False
         self._client = None
@@ -50,18 +56,17 @@ class Connection:
         except TypeError:
             self._connected = False
             raise
-        print("connected")
+        print("CONNECTED")
 
     def close(self):
         self._client._close()
         self._client = None
         # clean up certificates
         self._connected = False
-        print("closed")
+        print("CONNECTION CLOSED")
 
     @property
     def host(self):
-        print("prop")
         return self._host
 
     @host.setter
