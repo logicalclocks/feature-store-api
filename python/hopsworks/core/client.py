@@ -27,10 +27,7 @@ class BaseClient(ABC):
     def __init__(self):
         pass
 
-    def _close(self):
-        pass
-
-    def _get_verify(self):
+    def _get_verify(self, host, port, verify, trust_store_path):
         """
         Get verification method for sending HTTP requests to Hopsworks.
         Credit to https://gist.github.com/gdamjan/55a8b9eec6cf7b771f92021d93b87b2c
@@ -41,15 +38,12 @@ class BaseClient(ABC):
             else if hopsworks is not self-signed, return true
             return false
         """
-        if (
-            self.REQUESTS_VERIFY in os.environ
-            and os.environ[self.REQUESTS_VERIFY] == "true"
-        ):
+        if verify == "true":
 
-            hostname_idna = idna.encode(self._host)
+            hostname_idna = idna.encode(host)
             sock = socket.socket()
 
-            sock.connect((self._host, int(self._port)))
+            sock.connect((host, int(port)))
             ctx = SSL.Context(SSL.SSLv23_METHOD)
             ctx.check_hostname = False
             ctx.verify_mode = SSL.VERIFY_NONE
@@ -70,8 +64,8 @@ class BaseClient(ABC):
                 issuer = crypto_cert.issuer.get_attributes_for_oid(NameOID.COMMON_NAME)[
                     0
                 ].value
-                if commonname == issuer and self.DOMAIN_CA_TRUSTSTORE_PEM in os.environ:
-                    return os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
+                if commonname == issuer and trust_store_path:
+                    return trust_store_path
                 else:
                     return True
             except x509.ExtensionNotFound:
@@ -137,22 +131,30 @@ class BaseClient(ABC):
 class HopsworksClient(BaseClient):
     def __init__(self):
         self._base_url = self._get_hopsworks_rest_endpoint()
-        self._host, self._port = self._get_host_port_pair()
+        host, port = self._get_host_port_pair()
         # TODO(Fabio) : Have a thread that refreshes the token
+        trust_store_path = (
+            os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
+            if self.DOMAIN_CA_TRUSTSTORE_PEM in os.environ
+            else None
+        )
+        hostname_verification = (
+            os.environ[self.REQUESTS_VERIFY]
+            if self.REQUESTS_VERIFY in os.environ
+            else "true"
+        )
         self._auth = BearerAuth(self._read_jwt())
-        self._verify = self._get_verify()
+        self._verify = self._get_verify(
+            host, port, hostname_verification, trust_store_path
+        )
         self._session = requests.session()
 
 
 class ExternalClient(BaseClient):
-    HOPSWORKS_PROJECT_NAME = "HOPSWORKS_PROJECT_NAME"
-    HOPSWORKS_PROJECT_ID = "HOPSWORKS_PROJECT_ID"
     DEFAULT_REGION = "default"
     SECRETS_MANAGER = "secretsmanager"
     PARAMETER_STORE = "parameterstore"
     LOCAL_STORE = "local"
-    CERT_KEY = "CERT_KEY"
-    CERT_FOLDER = "CERT_FOLDER"
 
     def __init__(
         self,
@@ -180,31 +182,23 @@ class ExternalClient(BaseClient):
             )
 
         self._base_url = "https://" + host + ":" + str(port)
-        self._host = host
-        self._port = port
         self._project = project
         self._region_name = region_name
+        self._cert_folder = cert_folder
 
         self._auth = ApiKeyAuth(
             self._get_secret(secrets_store, "api-key", api_key_file)
         )
 
-        os.environ[self.REST_ENDPOINT] = "https://" + host + ":" + str(port)
-        os.environ[self.HOPSWORKS_PROJECT_NAME] = project
-
-        if trust_store_path:
-            os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM] = trust_store_path
-        if hostname_verification:
-            os.environ[self.REQUESTS_VERIFY] = json.dumps(hostname_verification)
-
         self._session = requests.session()
-        self._verify = self._get_verify()
+        self._verify = self._get_verify(
+            host, port, hostname_verification, trust_store_path
+        )
 
         project_info = self._get_project_info(project)
-        project_id = str(project_info["projectId"])
-        os.environ[self.HOPSWORKS_PROJECT_ID] = project_id
+        self._project_id = str(project_info["projectId"])
 
-        credentials = self._get_credentials(project_id)
+        credentials = self._get_credentials(self._project_id)
         self._write_b64_cert_to_bytes(
             str(credentials["kStore"]), path=os.path.join(cert_folder, "keyStore.jks")
         )
@@ -212,17 +206,9 @@ class ExternalClient(BaseClient):
             str(credentials["tStore"]), path=os.path.join(cert_folder, "trustStore.jks")
         )
 
-        os.environ[self.CERT_FOLDER] = cert_folder
-        os.environ[self.CERT_KEY] = str(credentials["password"])
-
     def _close(self):
-        del os.environ[self.REST_ENDPOINT]
-        del os.environ[self.HOPSWORKS_PROJECT_NAME]
-        del os.environ[self.HOPSWORKS_PROJECT_ID]
-        del os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
-        del os.environ[self.REQUESTS_VERIFY]
-        del os.environ[self.CERT_FOLDER]
-        del os.environ[self.CERT_KEY]
+        self._cleanup_certs(os.path.join(self._cert_folder, "keyStore.jks"))
+        self._cleanup_certs(os.path.join(self._cert_folder, "trustStore.jks"))
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """
@@ -333,6 +319,12 @@ class ExternalClient(BaseClient):
         with open(path, "wb") as f:
             cert_b64 = base64.b64decode(b64_string)
             f.write(cert_b64)
+
+    def _cleanup_certs(self, file_path):
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
 
 
 class BearerAuth(requests.auth.AuthBase):
