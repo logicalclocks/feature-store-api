@@ -164,10 +164,7 @@ class Connection:
 
 
 class ConnectionError(Exception):
-    """Connection Error
-
-    Thrown when attempted to change connection attributes while connected.
-    """
+    """Thrown when attempted to change connection attributes while connected."""
 
     def __init__(self):
         super().__init__(

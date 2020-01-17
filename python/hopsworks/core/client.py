@@ -25,18 +25,28 @@ class BaseClient(ABC):
 
     @abstractmethod
     def __init__(self):
+        """To be implemented by clients."""
         pass
 
     def _get_verify(self, host, port, verify, trust_store_path):
-        """
-        Get verification method for sending HTTP requests to Hopsworks.
+        """Get verification method for sending HTTP requests to Hopsworks.
+
         Credit to https://gist.github.com/gdamjan/55a8b9eec6cf7b771f92021d93b87b2c
-        Returns:
-            if env var HOPS_UTIL_VERIFY is not false
-                then if hopsworks certificate is self-signed, return the path to the
-                truststore (PEM)
+
+        :param host: hopsworks hostname
+        :type host: str
+        :param port: hopsworks port
+        :type port: str or int
+        :param verify: perform hostname verification, 'true' or 'false'
+        :type verify: str
+        :param trust_store_path: path of the truststore locally if it was uploaded manually to
+            the external environment such as AWS Sagemaker
+        :type trust_store_path: str
+        :return: if env var HOPS_UTIL_VERIFY is not false
+                then if hopsworks certificate is self-signed, return the path to the truststore (PEM)
             else if hopsworks is not self-signed, return true
             return false
+        :rtype: str or boolean
         """
         if verify == "true":
 
@@ -74,8 +84,7 @@ class BaseClient(ABC):
         return False
 
     def _get_hopsworks_rest_endpoint(self):
-        """Get the hopsworks REST endpoint for making requests to the REST API
-        """
+        """Get the hopsworks REST endpoint for making requests to the REST API."""
         return os.environ[self.REST_ENDPOINT]
 
     def _get_host_port_pair(self):
@@ -83,8 +92,8 @@ class BaseClient(ABC):
         Removes "http or https" from the rest endpoint and returns a list
         [endpoint, port], where endpoint is on the format /path.. without http://
 
-        Returns:
-            a list [endpoint, port]
+        :return: a list [endpoint, port]
+        :rtype: list
         """
         endpoint = self._base_url
         if "http" in endpoint:
@@ -94,18 +103,33 @@ class BaseClient(ABC):
         return host, port
 
     def _read_jwt(self):
-        """
-        Retrieves jwt from local container.
-
-        Returns:
-            Content of jwt.token file in local container.
-        """
+        """Retrieve jwt from local container."""
         with open(self.TOKEN_FILE, "r") as jwt:
             return jwt.read()
 
     def _send_request(
         self, method, path_params, query_params=None, headers=None, data=None
     ):
+        """Send REST request to Hopsworks.
+
+        Uses the client it is executed from. Path parameters are url encoded automatically.
+
+        :param method: 'GET', 'PUT' or 'POST'
+        :type method: str
+        :param path_params: a list of path params to build the query url from, for example
+            `["hopsworks-api", "api", "project", "getProjectInfo", project_name]`.
+        :type path_params: list
+        :param query_params: A dictionary of key/value pairs to be added as query parameters,
+            defaults to None
+        :type query_params: dict, optional
+        :param headers: Additional header information, defaults to None
+        :type headers: dict, optional
+        :param data: The payload as a python dictionary to be sent as json, defaults to None
+        :type data: dict, optional
+        :raises RestAPIError: Raised when request wasn't correctly received, understood or accepted
+        :return: Response json
+        :rtype: dict
+        """
         f_url = furl.furl(self._base_url)
         f_url.path.segments = path_params
         url = str(f_url)
@@ -130,6 +154,7 @@ class BaseClient(ABC):
 
 class HopsworksClient(BaseClient):
     def __init__(self):
+        """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
         host, port = self._get_host_port_pair()
         # TODO(Fabio) : Have a thread that refreshes the token
@@ -168,18 +193,11 @@ class ExternalClient(BaseClient):
         cert_folder,
         api_key_file,
     ):
+        """Initializes a client in an external environment such as AWS Sagemaker."""
         if not host:
-            # TODO: make custom exception missing possitional arguments
-            raise TypeError(
-                "host cannot be of type NoneType, host is a non-optional "
-                "argument to connect to hopsworks from an external environment."
-            )
+            raise ExternalClientError("host")
         if not project:
-            raise TypeError(
-                "project cannot be of type NoneType, project is a "
-                "non-optional argument to connect to hopsworks from an external "
-                "environment"
-            )
+            raise ExternalClientError("project")
 
         self._base_url = "https://" + host + ":" + str(port)
         self._project = project
@@ -207,19 +225,23 @@ class ExternalClient(BaseClient):
         )
 
     def _close(self):
+        """Closes a client and deletes certificates."""
         self._cleanup_certs(os.path.join(self._cert_folder, "keyStore.jks"))
         self._cleanup_certs(os.path.join(self._cert_folder, "trustStore.jks"))
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
-        """
-        Returns secret value from the AWS Secrets Manager or Parameter Store
+        """Returns secret value from the AWS Secrets Manager or Parameter Store.
 
-        Args:
-            :secrets_store: the underlying secrets storage to be used, e.g. `secretsmanager` or `parameterstore`
-            :secret_type (str): key for the secret value, e.g. `api-key`, `cert-key`, `trust-store`, `key-store`
-            :api_token_file: path to a file containing an api key
-        Returns:
-            :str: secret value
+        :param secrets_store: the underlying secrets storage to be used, e.g. `secretsmanager` or `parameterstore`
+        :type secrets_store: str
+        :param secret_key: key for the secret value, e.g. `api-key`, `cert-key`, `trust-store`, `key-store`, defaults to None
+        :type secret_key: str, optional
+        :param api_key_file: path to a file containing an api key, defaults to None
+        :type api_key_file: str optional
+        :raises ExternalClientError: `api_key_file` needs to be set for local mode
+        :raises UnkownSecretStorageError: Provided secrets storage not supported
+        :return: secret
+        :rtype: str
         """
         if secrets_store == self.SECRETS_MANAGER:
             return self._query_secrets_manager(secret_key)
@@ -227,7 +249,7 @@ class ExternalClient(BaseClient):
             return self._query_parameter_store(secret_key)
         elif secrets_store == self.LOCAL_STORE:
             if not api_key_file:
-                raise Exception("api_key_file needs to be set for local mode")
+                raise ExternalClientError("api_key_file needs to be set for local mode")
             with open(api_key_file) as f:
                 return f.readline().strip()
         else:
@@ -275,34 +297,24 @@ class ExternalClient(BaseClient):
         ]
 
     def _get_project_info(self, project_name):
-        """
-        Makes a REST call to hopsworks to get all metadata of a project for the provided project.
+        """Makes a REST call to hopsworks to get all metadata of a project for the provided project.
 
-        Args:
-            :project_name: the name of the project
-
-        Returns:
-            JSON response
-
-        Raises:
-            :RestAPIError: if there was an error in the REST call to Hopsworks
+        :param project_name: the name of the project
+        :type project_name: str
+        :return: JSON response with project info
+        :rtype: dict
         """
         return self._send_request(
             "GET", ["hopsworks-api", "api", "project", "getProjectInfo", project_name]
         )
 
     def _get_credentials(self, project_id):
-        """
-        Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
+        """Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
 
-        Args:
-            :project_name: id of the project
-
-        Returns:
-            JSON response
-
-        Raises:
-            :RestAPIError: if there was an error in the REST call to Hopsworks
+        :param project_id: id of the project
+        :type project_id: int
+        :return: JSON response with credentials
+        :rtype: dict
         """
         return self._send_request(
             "GET", ["hopsworks-api", "api", "project", project_id, "credentials"]
@@ -311,9 +323,10 @@ class ExternalClient(BaseClient):
     def _write_b64_cert_to_bytes(self, b64_string, path):
         """Converts b64 encoded certificate to bytes file .
 
-        Args:
-            :b64_string (str): b64 encoded string of certificate
-            :path (str): path where file is saved, including file name. e.g. /path/key-store.jks
+        :param b64_string:  b64 encoded string of certificate
+        :type b64_string: str
+        :param path: path where file is saved, including file name. e.g. /path/key-store.jks
+        :type path: str
         """
 
         with open(path, "wb") as f:
@@ -321,6 +334,7 @@ class ExternalClient(BaseClient):
             f.write(cert_b64)
 
     def _cleanup_certs(self, file_path):
+        """Removes local files with `file_path`."""
         try:
             os.remove(file_path)
         except OSError:
@@ -328,6 +342,8 @@ class ExternalClient(BaseClient):
 
 
 class BearerAuth(requests.auth.AuthBase):
+    """Class to encapsulate a Bearer token."""
+
     def __init__(self, token):
         self._token = token
 
@@ -337,6 +353,8 @@ class BearerAuth(requests.auth.AuthBase):
 
 
 class ApiKeyAuth(requests.auth.AuthBase):
+    """Class to encapsulate an API key."""
+
     def __init__(self, token):
         self._token = token
 
@@ -346,8 +364,7 @@ class ApiKeyAuth(requests.auth.AuthBase):
 
 
 class RestAPIError(Exception):
-    """REST Exception encapsulating the response object and url.
-    """
+    """REST Exception encapsulating the response object and url."""
 
     def __init__(self, url, response):
         error_object = response.json()
@@ -369,4 +386,15 @@ class RestAPIError(Exception):
 
 
 class UnkownSecretStorageError(Exception):
-    """This exception will be raised if an unused secrets storage is passed as a parameter"""
+    """This exception will be raised if an unused secrets storage is passed as a parameter."""
+
+
+class ExternalClientError(TypeError):
+    """Raised when external client cannot be initialized due to missing arguments."""
+
+    def __init__(self, missing_argument):
+        message = (
+            "{0} cannot be of type NoneType, {0} is a non-optional "
+            "argument to connect to hopsworks from an external environment."
+        ).format(missing_argument)
+        super().__init__(message)
