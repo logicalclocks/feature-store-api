@@ -36,6 +36,31 @@ class Connection:
         self._connected = False
         self._client = None
 
+    @classmethod
+    def connection(
+        cls,
+        host=None,
+        port=None,
+        project=None,
+        region_name=None,
+        secrets_store=None,
+        hostname_verification=None,
+        trust_store_path=None,
+        cert_folder=None,
+        api_key_file=None,
+    ):
+        return cls(
+            host,
+            port,
+            project,
+            region_name,
+            secrets_store,
+            hostname_verification,
+            trust_store_path,
+            cert_folder,
+            api_key_file,
+        )
+
     def connect(self):
         self._connected = True
         try:
