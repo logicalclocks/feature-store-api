@@ -226,8 +226,8 @@ class ExternalClient(BaseClient):
 
     def _close(self):
         """Closes a client and deletes certificates."""
-        self._cleanup_certs(os.path.join(self._cert_folder, "keyStore.jks"))
-        self._cleanup_certs(os.path.join(self._cert_folder, "trustStore.jks"))
+        self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
+        self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
@@ -333,7 +333,7 @@ class ExternalClient(BaseClient):
             cert_b64 = base64.b64decode(b64_string)
             f.write(cert_b64)
 
-    def _cleanup_certs(self, file_path):
+    def _cleanup_file(self, file_path):
         """Removes local files with `file_path`."""
         try:
             os.remove(file_path)

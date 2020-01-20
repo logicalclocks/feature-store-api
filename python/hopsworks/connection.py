@@ -61,7 +61,6 @@ class Connection:
     def close(self):
         self._client._close()
         self._client = None
-        # clean up certificates
         self._connected = False
         print("CONNECTION CLOSED")
 
