@@ -6,4 +6,7 @@ public class FeatureStoreException extends Exception {
     super(msg);
   }
 
+  public FeatureStoreException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 }
