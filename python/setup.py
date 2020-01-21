@@ -1,6 +1,10 @@
 import os
+import imp
 from setuptools import setup, find_packages
-from hopsworks.version import __version__
+
+
+__version__ = imp.load_source(
+    'hopsworks.version', os.path.join('hopsworks', 'version.py')).__version__
 
 
 def read(fname):
