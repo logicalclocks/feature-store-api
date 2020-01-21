@@ -151,6 +151,10 @@ class BaseClient(ABC):
         else:
             return response.json()
 
+    def _close(self):
+        """Closes a client. Can be implemented for clean up purposes, not mandatory."""
+        pass
+
 
 class HopsworksClient(BaseClient):
     def __init__(self):
