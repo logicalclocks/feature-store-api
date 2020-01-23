@@ -65,17 +65,11 @@ public class FeatureGroup {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    String sqlQuery = queryConstructorApi.constructQuery(featureStore,
-        new Query(this, Arrays.asList(new Feature("*"))));
-    LOGGER.info("Executing query: " + sqlQuery);
-    return SparkEngine.getInstance().read(sqlQuery);
+    return selectAll().read();
   }
 
   public Object head(int numRows) throws FeatureStoreException, IOException {
-    String sqlQuery = queryConstructorApi.constructQuery(featureStore,
-        new Query(this, Arrays.asList(new Feature("*"))));
-    LOGGER.info("Executing query: " + sqlQuery);
-    return SparkEngine.getInstance().read(sqlQuery).head(numRows);
+    return selectAll().head(numRows);
   }
 
   public Query select(List<Feature> features) throws FeatureStoreException, IOException {
