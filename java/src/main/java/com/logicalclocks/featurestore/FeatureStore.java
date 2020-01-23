@@ -1,19 +1,31 @@
 package com.logicalclocks.featurestore;
 
 import com.google.common.base.Strings;
-import lombok.AllArgsConstructor;
+import com.logicalclocks.featurestore.engine.SparkEngine;
+import com.logicalclocks.featurestore.metadata.FeatureGroupApi;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
-@AllArgsConstructor
-@NoArgsConstructor
+import java.io.IOException;
+
 public class FeatureStore {
 
-  @Getter
+  @Getter @Setter
   private Integer id;
 
-  @Getter
+  @Getter @Setter
   private String name;
+
+  @Getter @Setter
+  private Integer projectId;
+
+  private FeatureGroupApi featureGroupApi;
+
+  public FeatureStore() throws FeatureStoreException {
+    featureGroupApi = new FeatureGroupApi();
+  }
 
   /**
    * Get a feature group from the feature store
@@ -22,10 +34,15 @@ public class FeatureStore {
    * @return
    * @throws FeatureStoreException
    */
-  public FeatureGroup getFeatureGroup(String name, Integer version) throws FeatureStoreException {
+  public FeatureGroup getFeatureGroup(String name, Integer version)
+      throws FeatureStoreException, IOException {
     if (Strings.isNullOrEmpty(name) || version == null) {
       throw new FeatureStoreException("Both name and version are required");
     }
-    return null;
+    return featureGroupApi.get(this, name, version);
+  }
+
+  public Dataset<Row> sql(String query) {
+    return SparkEngine.getInstance().sql(query);
   }
 }
