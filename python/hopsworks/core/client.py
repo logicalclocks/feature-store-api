@@ -5,6 +5,7 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 import idna
 import furl
+import boto3
 import json
 import base64
 from abc import ABC, abstractmethod
@@ -12,10 +13,6 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
-try:
-    import boto3
-except ModuleNotFoundError:
-    pass
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

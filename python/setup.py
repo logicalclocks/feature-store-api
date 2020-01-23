@@ -20,15 +20,14 @@ setup(
         "cryptography",
         "pyopenssl",
         "idna",
-        "furl"
+        "furl",
+        "boto3"
     ],
     extras_require={
         "dev": [
             "pytest",
             "flake8",
-            "black"],
-        "external": [
-            "boto3"]
+            "black"]
     },
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
