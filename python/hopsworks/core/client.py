@@ -146,7 +146,16 @@ class BaseClient(ABC):
         prepped = self._session.prepare_request(request)
         response = self._session.send(prepped, verify=self._verify)
 
-        if response.status_code // 100 != 2:
+        if response.status_code == 401 and isinstance(self, HopsworksClient):
+            # refresh token and retry request - only on hopsworks
+            self._auth = BearerAuth(self._read_jwt())
+            prepped = self._session.prepare_request(request)
+            response = self._session.send(prepped, verify=self._verify)
+            if response.status_code // 100 != 2:
+                raise RestAPIError(url, response)
+            else:
+                return response.json()
+        elif response.status_code // 100 != 2:
             raise RestAPIError(url, response)
         else:
             return response.json()
@@ -161,7 +170,6 @@ class HopsworksClient(BaseClient):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
         host, port = self._get_host_port_pair()
-        # TODO(Fabio) : Have a thread that refreshes the token
         trust_store_path = (
             os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
             if self.DOMAIN_CA_TRUSTSTORE_PEM in os.environ
