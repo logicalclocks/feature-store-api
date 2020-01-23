@@ -1,6 +1,10 @@
 import os
+import imp
 from setuptools import setup, find_packages
-from hopsworks.version import __version__
+
+
+__version__ = imp.load_source(
+    'hopsworks.version', os.path.join('hopsworks', 'version.py')).__version__
 
 
 def read(fname):
@@ -15,13 +19,15 @@ setup(
         "requests",
         "cryptography",
         "pyopenssl",
-        "idna"
+        "idna",
+        "furl",
+        "boto3"
     ],
     extras_require={
         "dev": [
             "pytest",
             "flake8",
-            "black"],
+            "black"]
     },
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
