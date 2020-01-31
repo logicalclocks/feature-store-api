@@ -18,15 +18,12 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  private HopsworksClient hopsworksClient;
-
-  public FeatureGroupApi() throws FeatureStoreException {
-    hopsworksClient = HopsworksClient.getInstance();
-  }
+  public FeatureGroupApi() throws FeatureStoreException { }
 
   public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
-   String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
 
