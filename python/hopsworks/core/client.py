@@ -267,6 +267,8 @@ class ExternalClient(BaseClient):
             str(credentials["tStore"]), path=os.path.join(cert_folder, "trustStore.jks")
         )
 
+        self._cert_key = str(credentials["password"])
+
     def _close(self):
         """Closes a client and deletes certificates."""
         self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
