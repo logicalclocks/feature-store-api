@@ -73,12 +73,17 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     apiKey = readAPIKey(secretStore, region, APIKeyFilePath);
   }
 
+  public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
+    this.httpClient = httpClient;
+    this.httpHost = httpHost;
+  }
+
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
                                                                     String trustStorePath)
       throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, KeyManagementException {
 
     SSLContext sslCtx = null;
-    if (Strings.isNullOrEmpty(trustStorePath)) {
+    if (!Strings.isNullOrEmpty(trustStorePath)) {
       sslCtx = SSLContexts.custom()
           .loadTrustMaterial(Paths.get(trustStorePath).toFile(), null, new TrustSelfSignedStrategy())
           .build();
@@ -107,7 +112,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  private String readAPIKey(SecretStore secretStore, Region region, String APIKeyFilePath)
+  public String readAPIKey(SecretStore secretStore, Region region, String APIKeyFilePath)
       throws IOException, FeatureStoreException {
     if (!Strings.isNullOrEmpty(APIKeyFilePath)) {
       return FileUtils.readFileToString(Paths.get(APIKeyFilePath).toFile());

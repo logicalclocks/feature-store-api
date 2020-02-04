@@ -14,4 +14,7 @@ public class Project {
   @Getter @Setter
   private String owner;
 
+  public Project(Integer projectId) {
+    this.projectId = projectId;
+  }
 }

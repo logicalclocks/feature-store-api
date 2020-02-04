@@ -2,6 +2,7 @@ package com.logicalclocks.featurestore.metadata;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.featurestore.FeatureStoreException;
 import com.logicalclocks.featurestore.Project;
 import com.logicalclocks.featurestore.SecretStore;
@@ -26,7 +27,15 @@ public class HopsworksClient {
   private String certPwd = "";
 
   public static HopsworksClient getInstance() throws FeatureStoreException {
+    if (hopsworksClientInstance == null) {
+      throw new FeatureStoreException("Client not connected. Please establish a Hopsworks connection first");
+    }
     return hopsworksClientInstance;
+  }
+
+  // For testing
+  public static void setInstance(HopsworksClient instance) {
+    hopsworksClientInstance = instance;
   }
 
   public synchronized static HopsworksClient setupHopsworksClient(String host, int port, Region region,
@@ -58,7 +67,8 @@ public class HopsworksClient {
   @Getter
   private ObjectMapper objectMapper;
 
-  private HopsworksClient(HopsworksHttpClient hopsworksHttpClient) {
+  @VisibleForTesting
+  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient) {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);

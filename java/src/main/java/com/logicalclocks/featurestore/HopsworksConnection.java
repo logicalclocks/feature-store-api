@@ -3,7 +3,6 @@ package com.logicalclocks.featurestore;
 import com.google.common.base.Strings;
 import com.logicalclocks.featurestore.metadata.FeatureStoreApi;
 import com.logicalclocks.featurestore.metadata.HopsworksClient;
-import com.logicalclocks.featurestore.metadata.HopsworksInternalClient;
 import com.logicalclocks.featurestore.metadata.ProjectApi;
 import com.logicalclocks.featurestore.util.Constants;
 import lombok.Builder;
@@ -109,14 +108,5 @@ public class HopsworksConnection implements Closeable {
     }
     LOGGER.info("Getting information for project name: " + project);
     return projectApi.get(project);
-  }
-
-  /**
-   * In case of connection from outside Hopsworks, fetch the certificates for the project
-   */
-  private void localizeCertificates() {
-    if (System.getProperties().contains(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
-      return;
-    }
   }
 }
