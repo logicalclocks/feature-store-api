@@ -1,6 +1,7 @@
 package com.logicalclocks.featurestore.metadata;
 
 import com.logicalclocks.featurestore.FeatureStoreException;
+import com.logicalclocks.featurestore.Project;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -19,9 +20,7 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -126,6 +125,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
     return jwt;
   }
 
+  @Override
   public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler)
       throws IOException, FeatureStoreException {
     LOGGER.debug("Handling metadata request: " + request);
@@ -142,5 +142,11 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
       // Internal exception, try one more time
       return httpClient.execute(httpHost, request, responseHandler);
     }
+  }
+
+  @Override
+  public String downloadCredentials(Project project, String certPath) {
+    // In Hopsworks internal client credentials are already setup.
+    return null;
   }
 }

@@ -6,19 +6,18 @@ import com.logicalclocks.featurestore.metadata.HopsworksClient;
 import com.logicalclocks.featurestore.metadata.HopsworksInternalClient;
 import com.logicalclocks.featurestore.metadata.ProjectApi;
 import com.logicalclocks.featurestore.util.Constants;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 
 import java.io.Closeable;
 import java.io.IOException;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class HopsworksConnection implements Closeable {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksConnection.class);
 
   @Getter
   private String host;
@@ -53,15 +52,24 @@ public class HopsworksConnection implements Closeable {
 
   private Project projectObj;
 
-  /**
-   * Setup the connection with the Hopsworks feature store.
-   * @throws IOException
-   * @throws FeatureStoreException
-   */
-  public void connect() throws IOException, FeatureStoreException {
-    HopsworksClient.setupHopsworksClient(host, port, project, region, secretStore,
-        hostnameVerification, trustStorePath, certPath, APIKeyFilePath);
+  @Builder
+  public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
+                             boolean hostnameVerification, String trustStorePath,
+                             String certPath, String APIKeyFilePath) throws IOException, FeatureStoreException {
+    this.host = host;
+    this.port = port;
+    this.project = project;
+    this.region = region;
+    this.secretStore = secretStore;
+    this.hostnameVerification = hostnameVerification;
+    this.trustStorePath = trustStorePath;
+    this.certPath = certPath;
+    this.APIKeyFilePath = APIKeyFilePath;
+
+    HopsworksClient hopsworksClient = HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
+        hostnameVerification, trustStorePath, APIKeyFilePath);
     projectObj = getProject();
+    hopsworksClient.downloadCredentials(projectObj, certPath);
   }
 
   /**
@@ -97,8 +105,9 @@ public class HopsworksConnection implements Closeable {
     if (Strings.isNullOrEmpty(project)) {
       // User didn't specify a project in the connection construction. Assume they are running
       // from within Hopsworks and the project name is available a system property
-      project = System.getProperties().getProperty(Constants.PROJECTNAME_ENV);
+      project = System.getProperty(Constants.PROJECTNAME_ENV);
     }
+    LOGGER.info("Getting information for project name: " + project);
     return projectApi.get(project);
   }
 
@@ -109,8 +118,5 @@ public class HopsworksConnection implements Closeable {
     if (System.getProperties().contains(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
       return;
     }
-
-
-
   }
 }

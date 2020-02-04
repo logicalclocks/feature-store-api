@@ -1,9 +1,10 @@
 package com.logicalclocks.featurestore.metadata;
 
-import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.featurestore.FeatureStoreException;
+import com.logicalclocks.featurestore.Project;
 import com.logicalclocks.featurestore.SecretStore;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.net.util.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -51,9 +52,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   private String apiKey = "";
 
-  public HopsworksExternalClient(String host, int port, String project, Region region,
+  public HopsworksExternalClient(String host, int port, Region region,
                                  SecretStore secretStore, boolean hostnameVerification,
-                                 String trustStorePath, String certPath, String APIKeyFilePath)
+                                 String trustStorePath, String APIKeyFilePath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -163,8 +164,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   @Override
-  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException, FeatureStoreException {
-        LOGGER.debug("Handling metadata request: " + request);
+  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException,
+      FeatureStoreException {
+    LOGGER.debug("Handling metadata request: " + request);
     AuthorizationHandler<T> authHandler = new AuthorizationHandler<>(responseHandler);
     request.setHeader(HttpHeaders.AUTHORIZATION, "ApiKey " + apiKey);
     try {
@@ -173,5 +175,18 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       // Internal exception, try one more time
       return httpClient.execute(httpHost, request, responseHandler);
     }
+  }
+
+  @Override
+  public String downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {
+    LOGGER.info("Fetching certificates for the project");
+    ProjectApi projectApi = new ProjectApi();
+    Credentials credentials = projectApi.downloadCredentials(project);
+
+    FileUtils.writeByteArrayToFile(Paths.get(certPath, "keyStore.jks").toFile(),
+        Base64.decodeBase64(credentials.getKStore()));
+    FileUtils.writeByteArrayToFile(Paths.get(certPath, "trustStore.jks").toFile(),
+        Base64.decodeBase64(credentials.getTStore()));
+    return credentials.getPassword();
   }
 }

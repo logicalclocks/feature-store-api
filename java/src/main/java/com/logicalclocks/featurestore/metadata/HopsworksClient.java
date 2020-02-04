@@ -3,6 +3,7 @@ package com.logicalclocks.featurestore.metadata;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.featurestore.FeatureStoreException;
+import com.logicalclocks.featurestore.Project;
 import com.logicalclocks.featurestore.SecretStore;
 import lombok.Getter;
 import org.apache.http.HttpRequest;
@@ -10,15 +11,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.util.EntityUtils;
-import org.apache.parquet.Strings;
 import software.amazon.awssdk.regions.Region;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 
 public class HopsworksClient {
 
@@ -27,31 +23,34 @@ public class HopsworksClient {
 
   private static HopsworksClient hopsworksClientInstance = null;
 
+  private String certPwd = "";
+
   public static HopsworksClient getInstance() throws FeatureStoreException {
     return hopsworksClientInstance;
   }
 
-  public synchronized static void setupHopsworksClient(String host, int port, String project, Region region,
+  public synchronized static HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                        SecretStore secretStore, boolean hostnameVerification,
-                                                       String trustStorePath, String certPath, String APIKeyFilePath)
+                                                       String trustStorePath, String APIKeyFilePath)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
-      return;
+      return hopsworksClientInstance;
     }
 
     HopsworksHttpClient hopsworksHttpClient = null;
     try {
-      if (System.getProperties().contains(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+      if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
-        hopsworksHttpClient = new HopsworksExternalClient(host, port, project, region,
-            secretStore, hostnameVerification, trustStorePath, certPath, APIKeyFilePath);
+        hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
+            secretStore, hostnameVerification, trustStorePath, APIKeyFilePath);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
     }
 
     hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient);
+    return hopsworksClientInstance;
   }
 
   private HopsworksHttpClient hopsworksHttpClient;
@@ -91,5 +90,9 @@ public class HopsworksClient {
 
   public <T> T handleRequest(HttpRequest request, Class<T> cls) throws IOException, FeatureStoreException {
     return hopsworksHttpClient.handleRequest(request, new BaseHandler<>(cls, objectMapper));
+  }
+
+  public void downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {
+    certPwd = hopsworksHttpClient.downloadCredentials(project, certPath);
   }
 }
