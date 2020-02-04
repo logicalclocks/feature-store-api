@@ -183,8 +183,6 @@ class HopsworksClient(BaseClient):
             if self.REQUESTS_VERIFY in os.environ
             else "true"
         )
-        # TODO: what if user wants to connect to different project or other hopsworks
-        # instance from within hopsworks
         self._project_id = os.environ[self.PROJECT_ID]
         self._project_name = self._project_name()
         self._auth = BearerAuth(self._read_jwt())
