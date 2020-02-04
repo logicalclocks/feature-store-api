@@ -27,13 +27,7 @@ public class SparkEngine {
     sparkSession = SparkSession.builder().enableHiveSupport().getOrCreate();
   }
 
-  public Dataset<Row> read(String query) {
-    LOGGER.info("Lazily executing query: " + query);
-    return sparkSession.sql(query);
-  }
-
   public Dataset<Row> sql(String query) {
-    LOGGER.info("Lazily executing query: " + query);
     return sparkSession.sql(query);
   }
 }
