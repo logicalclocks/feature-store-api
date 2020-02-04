@@ -1,6 +1,7 @@
 import os
+import functools
 
-from hopsworks.core import client
+from hopsworks.core import client, feature_store_api
 
 
 class Connection:
@@ -81,22 +82,57 @@ class Connection:
         except TypeError:
             self._connected = False
             raise
+        self._feature_store_api = feature_store_api.FeatureStoreApi(self._client)
         print("CONNECTED")
 
     def close(self):
         self._client._close()
+        self._feature_store_api = None
         self._client = None
         self._connected = False
         print("CONNECTION CLOSED")
+
+    def not_connected(fn):
+        @functools.wraps(fn)
+        def if_not_connected(inst, *args, **kwargs):
+            if inst._connected:
+                raise ConnectionError
+            return fn(inst, *args, **kwargs)
+
+        return if_not_connected
+
+    def connected(fn):
+        @functools.wraps(fn)
+        def if_connected(inst, *args, **kwargs):
+            if not inst._connected:
+                raise NoConnectionError
+            return fn(inst, *args, **kwargs)
+
+        return if_connected
+
+    @connected
+    def get_feature_store(self, name=None):
+        """Get a reference to a feature store, to perform operations on.
+
+        Defaulting to the project's default feature store. Shared feature stores can be
+        retrieved by passing the `name`.
+
+        :param name: the name of the feature store, defaults to None
+        :type name: str, optional
+        :return: feature store object
+        :rtype: FeatureStore
+        """
+        if not name:
+            name = self._client._project_name + "_featurestore"
+        return self._feature_store_api.get(name)
 
     @property
     def host(self):
         return self._host
 
     @host.setter
+    @not_connected
     def host(self, host):
-        if self._connected:
-            raise ConnectionError
         self._host = host
 
     @property
@@ -104,9 +140,8 @@ class Connection:
         return self._port
 
     @port.setter
+    @not_connected
     def port(self, port):
-        if self._connected:
-            raise ConnectionError
         self._port = port
 
     @property
@@ -114,9 +149,8 @@ class Connection:
         return self._project
 
     @project.setter
+    @not_connected
     def project(self, project):
-        if self._connected:
-            raise ConnectionError
         self._project = project
 
     @property
@@ -124,9 +158,8 @@ class Connection:
         return self._region_name
 
     @region_name.setter
+    @not_connected
     def region_name(self, region_name):
-        if self._connected:
-            raise ConnectionError
         self._region_name = region_name
 
     @property
@@ -134,9 +167,8 @@ class Connection:
         return self._secrets_store
 
     @secrets_store.setter
+    @not_connected
     def secrets_store(self, secrets_store):
-        if self._connected:
-            raise ConnectionError
         self._secrets_store = secrets_store
 
     @property
@@ -144,9 +176,8 @@ class Connection:
         return self._hostname_verification
 
     @hostname_verification.setter
+    @not_connected
     def hostname_verification(self, hostname_verification):
-        if self._connected:
-            raise ConnectionError
         self._hostname_verification = hostname_verification
 
     @property
@@ -154,9 +185,8 @@ class Connection:
         return self._trust_store_path
 
     @trust_store_path.setter
+    @not_connected
     def trust_store_path(self, trust_store_path):
-        if self._connected:
-            raise ConnectionError
         self._trust_store_path = trust_store_path
 
     @property
@@ -164,9 +194,8 @@ class Connection:
         return self._cert_folder
 
     @cert_folder.setter
+    @not_connected
     def cert_folder(self, cert_folder):
-        if self._connected:
-            raise ConnectionError
         self._cert_folder = cert_folder
 
     @property
@@ -174,9 +203,8 @@ class Connection:
         return self._api_key_file
 
     @api_key_file.setter
+    @not_connected
     def api_key_file(self, api_key_file):
-        if self._connected:
-            raise ConnectionError
         self._api_key_file = api_key_file
 
     def __enter__(self):
@@ -193,4 +221,13 @@ class ConnectionError(Exception):
     def __init__(self):
         super().__init__(
             "Connection is currently in use. Needs to be closed for modification."
+        )
+
+
+class NoConnectionError(Exception):
+    """Thrown when attempted to perform operation on connection while not connected."""
+
+    def __init__(self):
+        super().__init__(
+            "Connection is not active. Needs to be connected for feature store operations."
         )

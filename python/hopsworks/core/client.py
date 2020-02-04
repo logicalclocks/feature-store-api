@@ -21,8 +21,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class BaseClient(ABC):
     TOKEN_FILE = "token.jwt"
     REST_ENDPOINT = "REST_ENDPOINT"
-    REQUESTS_VERIFY = "REQUESTS_VERIFY"
-    DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"
 
     @abstractmethod
     def __init__(self):
@@ -84,10 +82,6 @@ class BaseClient(ABC):
 
         return False
 
-    def _get_hopsworks_rest_endpoint(self):
-        """Get the hopsworks REST endpoint for making requests to the REST API."""
-        return os.environ[self.REST_ENDPOINT]
-
     def _get_host_port_pair(self):
         """
         Removes "http or https" from the rest endpoint and returns a list
@@ -117,8 +111,8 @@ class BaseClient(ABC):
 
         :param method: 'GET', 'PUT' or 'POST'
         :type method: str
-        :param path_params: a list of path params to build the query url from, for example
-            `["hopsworks-api", "api", "project", "getProjectInfo", project_name]`.
+        :param path_params: a list of path params to build the query url from starting after
+            the api resource, for example `["project", 119, "featurestores", 67]`.
         :type path_params: list
         :param query_params: A dictionary of key/value pairs to be added as query parameters,
             defaults to None
@@ -131,8 +125,9 @@ class BaseClient(ABC):
         :return: Response json
         :rtype: dict
         """
+        base_path_params = ["hopsworks-api", "api"]
         f_url = furl.furl(self._base_url)
-        f_url.path.segments = path_params
+        f_url.path.segments = base_path_params + path_params
         url = str(f_url)
 
         request = requests.Request(
@@ -167,6 +162,13 @@ class BaseClient(ABC):
 
 
 class HopsworksClient(BaseClient):
+    REQUESTS_VERIFY = "REQUESTS_VERIFY"
+    DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"
+    PROJECT_ID = "HOPSWORKS_PROJECT_ID"
+    PROJECT_NAME = "HOPSWORKS_PROJECT_NAME"
+    HADOOP_USER_NAME = "HADOOP_USER_NAME"
+    HDFS_USER = "HDFS_USER"
+
     def __init__(self):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
@@ -181,11 +183,37 @@ class HopsworksClient(BaseClient):
             if self.REQUESTS_VERIFY in os.environ
             else "true"
         )
+        self._project_id = os.environ[self.PROJECT_ID]
+        self._project_name = self._project_name()
         self._auth = BearerAuth(self._read_jwt())
         self._verify = self._get_verify(
             host, port, hostname_verification, trust_store_path
         )
         self._session = requests.session()
+
+    def _get_hopsworks_rest_endpoint(self):
+        """Get the hopsworks REST endpoint for making requests to the REST API."""
+        return os.environ[self.REST_ENDPOINT]
+
+    def _project_name(self):
+        try:
+            return os.environ[self.PROJECT_NAME]
+        except KeyError:
+            pass
+
+        hops_user = self._project_user()
+        hops_user_split = hops_user.split(
+            "__"
+        )  # project users have username project__user
+        project = hops_user_split[0]
+        return project
+
+    def _project_user(self):
+        try:
+            hops_user = os.environ[self.HADOOP_USER_NAME]
+        except KeyError:
+            hops_user = os.environ[self.HDFS_USER]
+        return hops_user
 
 
 class ExternalClient(BaseClient):
@@ -213,7 +241,7 @@ class ExternalClient(BaseClient):
             raise ExternalClientError("project")
 
         self._base_url = "https://" + host + ":" + str(port)
-        self._project = project
+        self._project_name = project
         self._region_name = region_name
         self._cert_folder = cert_folder
 
@@ -226,7 +254,7 @@ class ExternalClient(BaseClient):
             host, port, hostname_verification, trust_store_path
         )
 
-        project_info = self._get_project_info(project)
+        project_info = self._get_project_info(self._project_name)
         self._project_id = str(project_info["projectId"])
 
         credentials = self._get_credentials(self._project_id)
@@ -236,6 +264,8 @@ class ExternalClient(BaseClient):
         self._write_b64_cert_to_bytes(
             str(credentials["tStore"]), path=os.path.join(cert_folder, "trustStore.jks")
         )
+
+        self._cert_key = str(credentials["password"])
 
     def _close(self):
         """Closes a client and deletes certificates."""
@@ -317,9 +347,7 @@ class ExternalClient(BaseClient):
         :return: JSON response with project info
         :rtype: dict
         """
-        return self._send_request(
-            "GET", ["hopsworks-api", "api", "project", "getProjectInfo", project_name]
-        )
+        return self._send_request("GET", ["project", "getProjectInfo", project_name])
 
     def _get_credentials(self, project_id):
         """Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
@@ -329,9 +357,7 @@ class ExternalClient(BaseClient):
         :return: JSON response with credentials
         :rtype: dict
         """
-        return self._send_request(
-            "GET", ["hopsworks-api", "api", "project", project_id, "credentials"]
-        )
+        return self._send_request("GET", ["project", project_id, "credentials"])
 
     def _write_b64_cert_to_bytes(self, b64_string, path):
         """Converts b64 encoded certificate to bytes file .
