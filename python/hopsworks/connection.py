@@ -1,7 +1,7 @@
 import os
 from requests.exceptions import ConnectionError
 
-from hopsworks import util
+from hopsworks import util, engine
 from hopsworks.core import client, feature_store_api
 
 
@@ -80,6 +80,7 @@ class Connection:
                 )
             else:
                 self._client = client.HopsworksClient()
+                engine.init("spark")
             self._feature_store_api = feature_store_api.FeatureStoreApi(self._client)
         except (TypeError, ConnectionError):
             self._connected = False

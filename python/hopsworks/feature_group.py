@@ -1,7 +1,7 @@
 import humps
 
 from hopsworks.core import query, query_constructor_api
-from hopsworks.engine import spark
+from hopsworks import engine
 
 
 class FeatureGroup:
@@ -76,7 +76,7 @@ class FeatureGroup:
 
     def read(self):
         """Get the feature group as a Spark DataFrame."""
-        spark.SparkEngine().setJobGroup(
+        engine.get_instance().setJobGroup(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
@@ -86,7 +86,7 @@ class FeatureGroup:
 
     def head(self, n):
         """Get the first n rows of the feature group."""
-        spark.SparkEngine().setJobGroup(
+        engine.get_instance().setJobGroup(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
@@ -96,7 +96,7 @@ class FeatureGroup:
 
     def show(self, n):
         """Show the first n rows of the feature group."""
-        spark.SparkEngine().setJobGroup(
+        engine.get_instance().setJobGroup(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name

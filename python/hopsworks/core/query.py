@@ -1,7 +1,6 @@
 import json
 
-from hopsworks import util
-from hopsworks.engine import spark
+from hopsworks import util, engine
 
 
 class Query:
@@ -15,15 +14,15 @@ class Query:
 
     def read(self):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return spark.SparkEngine().sql(sql_query)
+        return engine.get_instance().sql(sql_query)
 
     def head(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return spark.SparkEngine().sql(sql_query).head(n)
+        return engine.get_instance().sql(sql_query).head(n)
 
     def show(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return spark.SparkEngine().sql(sql_query).show(n)
+        return engine.get_instance().sql(sql_query).show(n)
 
     def json(self):
         return json.dumps(self, cls=util.QueryEncoder)
