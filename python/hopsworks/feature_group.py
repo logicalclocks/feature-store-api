@@ -76,7 +76,7 @@ class FeatureGroup:
 
     def read(self):
         """Get the feature group as a Spark DataFrame."""
-        engine.get_instance().setJobGroup(
+        engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
@@ -86,7 +86,7 @@ class FeatureGroup:
 
     def head(self, n):
         """Get the first n rows of the feature group."""
-        engine.get_instance().setJobGroup(
+        engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
@@ -96,7 +96,7 @@ class FeatureGroup:
 
     def show(self, n):
         """Show the first n rows of the feature group."""
-        engine.get_instance().setJobGroup(
+        engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name

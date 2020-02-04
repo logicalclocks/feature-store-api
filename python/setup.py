@@ -21,7 +21,9 @@ setup(
         "pyopenssl",
         "idna",
         "furl",
-        "boto3"
+        "boto3",
+        "pandas",
+        "pyhopshive[thrift]"
     ],
     extras_require={
         "dev": [

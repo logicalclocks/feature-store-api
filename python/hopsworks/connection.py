@@ -32,6 +32,7 @@ class Connection:
         self._hostname_verification = (
             hostname_verification or self.HOSTNAME_VERIFICATION_DEFAULT
         )
+        # what's the difference between trust store path and cert folder
         self._trust_store_path = trust_store_path
         self._cert_folder = cert_folder or self.CERT_FOLDER_DEFAULT
         self._api_key_file = api_key_file
@@ -78,6 +79,9 @@ class Connection:
                     self._cert_folder,
                     self._api_key_file,
                 )
+                engine.init(
+                    "hive", self._host, self._cert_folder, self._client._cert_key
+                )
             else:
                 self._client = client.HopsworksClient()
                 engine.init("spark")
@@ -90,6 +94,7 @@ class Connection:
     def close(self):
         self._client._close()
         self._feature_store_api = None
+        engine.stop()
         self._connected = False
         print("CONNECTION CLOSED")
 
@@ -107,6 +112,8 @@ class Connection:
         """
         if not name:
             name = self._client._project_name + "_featurestore"
+        # TODO: this won't work with multiple feature stores
+        engine.get_instance()._feature_store = name
         return self._feature_store_api.get(name)
 
     @property
