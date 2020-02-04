@@ -1,6 +1,7 @@
 import os
-import functools
+from requests.exceptions import ConnectionError
 
+from hopsworks import util
 from hopsworks.core import client, feature_store_api
 
 
@@ -79,38 +80,19 @@ class Connection:
                 )
             else:
                 self._client = client.HopsworksClient()
-        except TypeError:
+            self._feature_store_api = feature_store_api.FeatureStoreApi(self._client)
+        except (TypeError, ConnectionError):
             self._connected = False
             raise
-        self._feature_store_api = feature_store_api.FeatureStoreApi(self._client)
         print("CONNECTED")
 
     def close(self):
         self._client._close()
         self._feature_store_api = None
-        self._client = None
         self._connected = False
         print("CONNECTION CLOSED")
 
-    def not_connected(fn):
-        @functools.wraps(fn)
-        def if_not_connected(inst, *args, **kwargs):
-            if inst._connected:
-                raise ConnectionError
-            return fn(inst, *args, **kwargs)
-
-        return if_not_connected
-
-    def connected(fn):
-        @functools.wraps(fn)
-        def if_connected(inst, *args, **kwargs):
-            if not inst._connected:
-                raise NoConnectionError
-            return fn(inst, *args, **kwargs)
-
-        return if_connected
-
-    @connected
+    @util.connected
     def get_feature_store(self, name=None):
         """Get a reference to a feature store, to perform operations on.
 
@@ -131,7 +113,7 @@ class Connection:
         return self._host
 
     @host.setter
-    @not_connected
+    @util.not_connected
     def host(self, host):
         self._host = host
 
@@ -140,7 +122,7 @@ class Connection:
         return self._port
 
     @port.setter
-    @not_connected
+    @util.not_connected
     def port(self, port):
         self._port = port
 
@@ -149,7 +131,7 @@ class Connection:
         return self._project
 
     @project.setter
-    @not_connected
+    @util.not_connected
     def project(self, project):
         self._project = project
 
@@ -158,7 +140,7 @@ class Connection:
         return self._region_name
 
     @region_name.setter
-    @not_connected
+    @util.not_connected
     def region_name(self, region_name):
         self._region_name = region_name
 
@@ -167,7 +149,7 @@ class Connection:
         return self._secrets_store
 
     @secrets_store.setter
-    @not_connected
+    @util.not_connected
     def secrets_store(self, secrets_store):
         self._secrets_store = secrets_store
 
@@ -176,7 +158,7 @@ class Connection:
         return self._hostname_verification
 
     @hostname_verification.setter
-    @not_connected
+    @util.not_connected
     def hostname_verification(self, hostname_verification):
         self._hostname_verification = hostname_verification
 
@@ -185,7 +167,7 @@ class Connection:
         return self._trust_store_path
 
     @trust_store_path.setter
-    @not_connected
+    @util.not_connected
     def trust_store_path(self, trust_store_path):
         self._trust_store_path = trust_store_path
 
@@ -194,7 +176,7 @@ class Connection:
         return self._cert_folder
 
     @cert_folder.setter
-    @not_connected
+    @util.not_connected
     def cert_folder(self, cert_folder):
         self._cert_folder = cert_folder
 
@@ -203,7 +185,7 @@ class Connection:
         return self._api_key_file
 
     @api_key_file.setter
-    @not_connected
+    @util.not_connected
     def api_key_file(self, api_key_file):
         self._api_key_file = api_key_file
 
@@ -215,7 +197,7 @@ class Connection:
         self.close()
 
 
-class ConnectionError(Exception):
+class HopsworksConnectionError(Exception):
     """Thrown when attempted to change connection attributes while connected."""
 
     def __init__(self):
@@ -224,7 +206,7 @@ class ConnectionError(Exception):
         )
 
 
-class NoConnectionError(Exception):
+class NoHopsworksConnectionError(Exception):
     """Thrown when attempted to perform operation on connection while not connected."""
 
     def __init__(self):

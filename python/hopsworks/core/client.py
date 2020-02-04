@@ -13,6 +13,8 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
+from hopsworks import util
+
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -102,6 +104,7 @@ class BaseClient(ABC):
         with open(self.TOKEN_FILE, "r") as jwt:
             return jwt.read()
 
+    @util.connected
     def _send_request(
         self, method, path_params, query_params=None, headers=None, data=None
     ):
@@ -158,7 +161,7 @@ class BaseClient(ABC):
 
     def _close(self):
         """Closes a client. Can be implemented for clean up purposes, not mandatory."""
-        pass
+        self._connected = False
 
 
 class HopsworksClient(BaseClient):
@@ -190,6 +193,8 @@ class HopsworksClient(BaseClient):
             host, port, hostname_verification, trust_store_path
         )
         self._session = requests.session()
+
+        self._connected = True
 
     def _get_hopsworks_rest_endpoint(self):
         """Get the hopsworks REST endpoint for making requests to the REST API."""
@@ -250,6 +255,7 @@ class ExternalClient(BaseClient):
         )
 
         self._session = requests.session()
+        self._connected = True
         self._verify = self._get_verify(
             host, port, hostname_verification, trust_store_path
         )
@@ -271,6 +277,7 @@ class ExternalClient(BaseClient):
         """Closes a client and deletes certificates."""
         self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
         self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+        self._connected = False
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
