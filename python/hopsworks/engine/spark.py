@@ -16,5 +16,8 @@ class Engine:
         self.set_job_group("", "")
         return result_df
 
+    def show(self, sql_query, n):
+        return self.sql(sql_query).show(n)
+
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)

@@ -16,13 +16,9 @@ class Query:
         sql_query = self._query_constructor_api.construct_query(self)["query"]
         return engine.get_instance().sql(sql_query)
 
-    def head(self, n):
-        sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query).head(n)
-
     def show(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query).show(n)
+        return engine.get_instance().show(sql_query, n)
 
     def json(self):
         return json.dumps(self, cls=util.QueryEncoder)

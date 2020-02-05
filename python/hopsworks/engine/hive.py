@@ -16,6 +16,9 @@ class Engine:
             result_df = pd.read_sql(sql_query, hive_conn)
         return result_df
 
+    def show(self, sql_query, n):
+        return self.sql(sql_query).head(n)
+
     def set_job_group(self, group_id, description):
         pass
 
