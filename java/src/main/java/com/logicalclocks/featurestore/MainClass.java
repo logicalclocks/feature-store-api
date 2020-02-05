@@ -9,11 +9,14 @@ public class MainClass {
   private final static Logger LOGGER = LoggerFactory.getLogger(MainClass.class);
 
   public static void main(String[] args) throws Exception {
-    FeatureStore fs = new FeatureStore();
-    fs.setProjectId(120);
-    fs.setId(67);
+
+    HopsworksConnection connection = HopsworksConnection.builder().build();
+
+    FeatureStore fs = connection.getFeatureStore();
+    LOGGER.info("Feature Store " + fs);
 
     FeatureGroup fg = fs.getFeatureGroup("attendances_features", 1);
+
     LOGGER.info("Name " + fg.getName());
 
     LOGGER.info("Brace yourself, I'm running the query");

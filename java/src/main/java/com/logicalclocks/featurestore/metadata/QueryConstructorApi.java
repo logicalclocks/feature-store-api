@@ -3,8 +3,10 @@ package com.logicalclocks.featurestore.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.featurestore.FeatureStore;
 import com.logicalclocks.featurestore.FeatureStoreException;
+import com.logicalclocks.featurestore.FsQuery;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -35,13 +37,13 @@ public class QueryConstructorApi {
         .expand();
 
     String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(query);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(queryJson));
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    putRequest.setEntity(new StringEntity(queryJson));
 
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info("Sending query: " + queryJson);
-    return hopsworksClient.handleRequest(postRequest,
-        response -> EntityUtils.toString(response.getEntity(), Charset.defaultCharset()).replace("\n", " "));
+    FsQuery fsQuery = hopsworksClient.handleRequest(putRequest, FsQuery.class);
+    return fsQuery.getQuery().replace("\n", " ");
   }
 }
