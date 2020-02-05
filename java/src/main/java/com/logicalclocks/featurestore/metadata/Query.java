@@ -65,13 +65,13 @@ public class Query {
     String sqlQuery =
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     LOGGER.info("Executing query: " + sqlQuery);
-    return SparkEngine.getInstance().read(sqlQuery);
+    return SparkEngine.getInstance().sql(sqlQuery);
   }
 
-  public Object head(int numRows) throws FeatureStoreException, IOException {
+  public void show(int numRows) throws FeatureStoreException, IOException {
     String sqlQuery =
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     LOGGER.info("Executing query: " + sqlQuery);
-    return SparkEngine.getInstance().read(sqlQuery).head(numRows);
+    SparkEngine.getInstance().sql(sqlQuery).show(numRows);
   }
 }

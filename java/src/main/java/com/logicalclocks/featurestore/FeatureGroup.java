@@ -53,8 +53,8 @@ public class FeatureGroup {
     return selectAll().read();
   }
 
-  public Object head(int numRows) throws FeatureStoreException, IOException {
-    return selectAll().head(numRows);
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    selectAll().show(numRows);
   }
 
   public Query select(List<Feature> features) throws FeatureStoreException, IOException {
