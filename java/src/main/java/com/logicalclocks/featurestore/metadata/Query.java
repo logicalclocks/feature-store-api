@@ -28,7 +28,7 @@ public class Query {
 
   private QueryConstructorApi queryConstructorApi;
 
-  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) throws FeatureStoreException {
+  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 

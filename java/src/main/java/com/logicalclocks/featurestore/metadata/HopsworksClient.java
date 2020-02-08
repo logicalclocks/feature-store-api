@@ -1,5 +1,6 @@
 package com.logicalclocks.featurestore.metadata;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -72,6 +73,7 @@ public class HopsworksClient {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+    this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     this.hopsworksHttpClient = hopsworksHttpClient;
   }

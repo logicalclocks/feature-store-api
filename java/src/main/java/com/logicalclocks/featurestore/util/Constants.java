@@ -7,4 +7,9 @@ public class Constants {
 
   public static final String FEATURESTORE_SUFFIX = "_featurestore";
 
+  // Spark options
+  public static final String DELIMITER = "delimiter";
+  public static final String HEADER = "header";
+
+  public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
 }
