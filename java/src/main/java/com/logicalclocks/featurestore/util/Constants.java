@@ -12,4 +12,5 @@ public class Constants {
   public static final String HEADER = "header";
 
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
+  public static final String SPLIT_SUFFIX = "_split_";
 }

@@ -58,11 +58,14 @@ public class TrainingDataset {
   @Getter @Setter
   private String hdfsStorePath;
 
+  @Getter @Setter
+  @JsonIgnore
+  private double[] splits;
 
   @Builder
   public TrainingDataset(Integer id, @NonNull String name, @NonNull Integer version, String description,
                          DataFormat dataFormat, Query features, Dataset<Row> featuresDataframe,
-                         Map<String, String> writeOptions, StorageConnector storageConnector)
+                         Map<String, String> writeOptions, StorageConnector storageConnector, double[] splits)
       throws FeatureStoreException{
     if (featuresDataframe == null && features == null) {
       throw new FeatureStoreException("Neither FeaturesDataFrame nor Features options was specified");
@@ -79,5 +82,6 @@ public class TrainingDataset {
     this.featuresDataframe = featuresDataframe;
     this.writeOptions = writeOptions;
     this.hopsfsConnectorId = storageConnector.getId();
+    this.splits = splits;
   }
 }

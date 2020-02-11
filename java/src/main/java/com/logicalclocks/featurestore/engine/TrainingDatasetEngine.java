@@ -5,6 +5,8 @@ import com.logicalclocks.featurestore.FeatureStoreException;
 import com.logicalclocks.featurestore.TrainingDataset;
 import com.logicalclocks.featurestore.metadata.TrainingDatasetApi;
 import com.logicalclocks.featurestore.util.Constants;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
@@ -38,13 +40,13 @@ public class TrainingDatasetEngine {
     // for cases such as tfrecords in which we need to store also the schema
     String path = Paths.get(apiTD.getHdfsStorePath(), trainingDataset.getName()).toString();
 
-    // Write the dataframe
-    trainingDataset.getFeaturesDataframe()
-        .write()
-        .format(trainingDataset.getDataFormat().toString())
-        .options(writeOptions)
-        .mode(SaveMode.Overwrite)
-        .save(path);
+    if (trainingDataset.getSplits() == null) {
+      // Write a single dataset
+      writeSingle(trainingDataset.getFeaturesDataframe(), trainingDataset.getDataFormat(), writeOptions, path);
+    } else {
+      writeSplits(trainingDataset.getFeaturesDataframe().randomSplit(trainingDataset.getSplits()),
+          trainingDataset.getDataFormat(), writeOptions, path);
+    }
   }
 
   private Map<String, String> getWriteOptions(Map<String, String> providedOptions, DataFormat dataformat) {
@@ -69,4 +71,20 @@ public class TrainingDatasetEngine {
     return writeOptions;
   }
 
+  private void writeSplits(Dataset[] datasets, DataFormat dataFormat, Map<String, String> writeOptions, String basePath)
+      throws IOException {
+    for (int i=0; i < datasets.length; i++) {
+      writeSingle(datasets[i], dataFormat, writeOptions, basePath + Constants.SPLIT_SUFFIX + i);
+    }
+  }
+
+  private void writeSingle(Dataset dataset, DataFormat dataFormat,
+                           Map<String, String> writeOptions, String path) throws IOException {
+    dataset
+        .write()
+        .format(dataFormat.toString())
+        .options(writeOptions)
+        .mode(SaveMode.Overwrite)
+        .save(path);
+  }
 }
