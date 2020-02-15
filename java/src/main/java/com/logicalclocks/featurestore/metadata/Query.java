@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Query {
 
@@ -38,12 +39,21 @@ public class Query {
     return join(subquery, JoinType.INNER);
   }
 
-  public Query join(Query subquery, List<Feature> on) {
-    return join(subquery, on, JoinType.INNER);
+  public Query join(Query subquery, List<String> on) {
+    return joinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
-  public Query join(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
-    return join(subquery, leftOn, rightOn, JoinType.INNER);
+  public Query joinFeatures(Query subquery, List<Feature> on) {
+    return joinFeatures(subquery, on, JoinType.INNER);
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
   }
 
   public Query join(Query subquery, JoinType joinType) {
@@ -51,12 +61,23 @@ public class Query {
     return this;
   }
 
-  public Query join(Query subquery, List<Feature> on, JoinType joinType) {
+  public Query join(Query subquery, List<String> on, JoinType joinType) {
+    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
     joins.add(new Join(subquery, on, joinType));
     return this;
   }
 
-  public Query join(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
+    joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
     joins.add(new Join(subquery, leftOn, rightOn, joinType));
     return this;
   }

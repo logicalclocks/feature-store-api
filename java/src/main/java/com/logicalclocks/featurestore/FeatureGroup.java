@@ -10,6 +10,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroup {
@@ -57,7 +58,14 @@ public class FeatureGroup {
     selectAll().show(numRows);
   }
 
-  public Query select(List<Feature> features) throws FeatureStoreException, IOException {
+  public Query select(List<String> features) throws FeatureStoreException, IOException {
+    // Create a feature object for each string feature given by the user.
+    // For the query building each feature need only the name set.
+    List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
+    return selectFeatures(featureObjList);
+  }
+
+  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
     return new Query(this, features);
   }
 
