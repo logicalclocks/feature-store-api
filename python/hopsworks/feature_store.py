@@ -1,5 +1,6 @@
 import humps
 
+from hopsworks import engine
 from hopsworks.core import feature_group_api
 
 
@@ -50,3 +51,6 @@ class FeatureStore:
 
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)
+
+    def sql(self, query):
+        return engine.get_instance().sql(query, self._name)

@@ -96,10 +96,14 @@ class FeatureGroup:
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(self._query_constructor_api, self, self._features)
+        return query.Query(
+            self._feature_store_name, self._query_constructor_api, self, self._features
+        )
 
     def select(self, features=[]):
-        return query.Query(self._query_constructor_api, self, features)
+        return query.Query(
+            self._feature_store_name, self._query_constructor_api, self, features
+        )
 
     @classmethod
     def from_response_json(cls, client, json_dict):

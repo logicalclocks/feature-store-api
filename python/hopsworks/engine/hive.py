@@ -6,27 +6,27 @@ from pyhive import hive
 class Engine:
     def __init__(self, host, cert_folder, cert_key):
         self._host = host
-        self._feature_store = None
         self._cert_folder = cert_folder
         self._cert_key = cert_key
 
-    def sql(self, sql_query, dataframe_type):
+    def sql(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
-        with self._create_hive_connection() as hive_conn:
+        with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, n):
-        return self.sql(sql_query, "default").head(n)
+    def show(self, sql_query, feature_store, n):
+        return self.sql(sql_query, feature_store, "default").head(n)
 
     def set_job_group(self, group_id, description):
         pass
 
-    def _create_hive_connection(self):
+    def _create_hive_connection(self, feature_store):
         return hive.Connection(
             host=self._host,
             port=9085,
-            database=self._feature_store,
+            # database needs to be set every time, 'default' doesn't work in pyhive
+            database=feature_store,
             auth="CERTIFICATES",
             truststore=os.path.join(self._cert_folder, "trustStore.jks"),
             keystore=os.path.join(self._cert_folder, "keyStore.jks"),

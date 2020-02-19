@@ -13,11 +13,11 @@ class Query:
 
     def read(self, dataframe_type="default"):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query, dataframe_type)
+        return engine.get_instance().sql(sql_query, self._feature_store, dataframe_type)
 
     def show(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().show(sql_query, n)
+        return engine.get_instance().show(sql_query, self._feature_store, n)
 
     def join(self, sub_query, on=[], left_on=[], right_on=[], join_type="inner"):
         self._joins.append(
