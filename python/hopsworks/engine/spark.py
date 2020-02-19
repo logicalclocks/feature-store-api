@@ -14,7 +14,7 @@ class Engine:
         print("Lazily executing query: {}".format(sql_query))
         result_df = self._spark_session.sql(sql_query)
         self.set_job_group("", "")
-        return self._return_data_frame(result_df, dataframe_type)
+        return self._return_dataframe_type(result_df, dataframe_type)
 
     def show(self, sql_query, dataframe_type, n):
         return self.sql(sql_query, dataframe_type).show(n)
