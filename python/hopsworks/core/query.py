@@ -5,7 +5,10 @@ from hopsworks.core import join
 
 
 class Query:
-    def __init__(self, query_constructor_api, left_feature_group, left_features):
+    def __init__(
+        self, feature_store, query_constructor_api, left_feature_group, left_features
+    ):
+        self._feature_store = feature_store
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
         self._joins = []

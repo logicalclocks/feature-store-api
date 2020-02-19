@@ -52,5 +52,5 @@ class FeatureStore:
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)
 
-    def sql(self, query):
-        return engine.get_instance().sql(query, self._name)
+    def sql(self, query, dataframe_type="default"):
+        return engine.get_instance().sql(query, self._name, dataframe_type)
