@@ -34,7 +34,7 @@ class Engine:
         )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() == ["default", "pandas"]:
+        if dataframe_type.lower() in ["default", "pandas"]:
             return dataframe
         if dataframe_type.lower() == "numpy":
             return dataframe.values

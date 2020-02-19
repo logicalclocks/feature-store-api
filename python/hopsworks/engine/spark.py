@@ -22,7 +22,7 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def _return_dataframe_type(dataframe, dataframe_type):
+    def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
         if dataframe_type.lower() == "pandas":
