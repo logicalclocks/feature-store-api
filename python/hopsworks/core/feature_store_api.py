@@ -15,5 +15,5 @@ class FeatureStoreApi:
         """
         path_params = ["project", self._client._project_id, "featurestores", identifier]
         return FeatureStore.from_response_json(
-            self._client._send_request("GET", path_params)
+            self._client, self._client._send_request("GET", path_params)
         )

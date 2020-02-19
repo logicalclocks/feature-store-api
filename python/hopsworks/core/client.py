@@ -13,6 +13,8 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
+from hopsworks import util
+
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -102,6 +104,7 @@ class BaseClient(ABC):
         with open(self.TOKEN_FILE, "r") as jwt:
             return jwt.read()
 
+    @util.connected
     def _send_request(
         self, method, path_params, query_params=None, headers=None, data=None
     ):
@@ -158,7 +161,7 @@ class BaseClient(ABC):
 
     def _close(self):
         """Closes a client. Can be implemented for clean up purposes, not mandatory."""
-        pass
+        self._connected = False
 
 
 class HopsworksClient(BaseClient):
@@ -172,7 +175,7 @@ class HopsworksClient(BaseClient):
     def __init__(self):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
-        host, port = self._get_host_port_pair()
+        self._host, self._port = self._get_host_port_pair()
         trust_store_path = (
             os.environ[self.DOMAIN_CA_TRUSTSTORE_PEM]
             if self.DOMAIN_CA_TRUSTSTORE_PEM in os.environ
@@ -187,9 +190,11 @@ class HopsworksClient(BaseClient):
         self._project_name = self._project_name()
         self._auth = BearerAuth(self._read_jwt())
         self._verify = self._get_verify(
-            host, port, hostname_verification, trust_store_path
+            self._host, self._port, hostname_verification, trust_store_path
         )
         self._session = requests.session()
+
+        self._connected = True
 
     def _get_hopsworks_rest_endpoint(self):
         """Get the hopsworks REST endpoint for making requests to the REST API."""
@@ -240,7 +245,9 @@ class ExternalClient(BaseClient):
         if not project:
             raise ExternalClientError("project")
 
-        self._base_url = "https://" + host + ":" + str(port)
+        self._host = host
+        self._port = port
+        self._base_url = "https://" + self._host + ":" + str(self._port)
         self._project_name = project
         self._region_name = region_name
         self._cert_folder = cert_folder
@@ -250,8 +257,9 @@ class ExternalClient(BaseClient):
         )
 
         self._session = requests.session()
+        self._connected = True
         self._verify = self._get_verify(
-            host, port, hostname_verification, trust_store_path
+            self._host, self._port, hostname_verification, trust_store_path
         )
 
         project_info = self._get_project_info(self._project_name)
@@ -259,10 +267,12 @@ class ExternalClient(BaseClient):
 
         credentials = self._get_credentials(self._project_id)
         self._write_b64_cert_to_bytes(
-            str(credentials["kStore"]), path=os.path.join(cert_folder, "keyStore.jks")
+            str(credentials["kStore"]),
+            path=os.path.join(self._cert_folder, "keyStore.jks"),
         )
         self._write_b64_cert_to_bytes(
-            str(credentials["tStore"]), path=os.path.join(cert_folder, "trustStore.jks")
+            str(credentials["tStore"]),
+            path=os.path.join(self._cert_folder, "trustStore.jks"),
         )
 
         self._cert_key = str(credentials["password"])
@@ -271,6 +281,7 @@ class ExternalClient(BaseClient):
         """Closes a client and deletes certificates."""
         self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
         self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+        self._connected = False
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
