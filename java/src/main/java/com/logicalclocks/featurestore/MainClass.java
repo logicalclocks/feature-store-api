@@ -30,10 +30,11 @@ public class MainClass {
     TrainingDataset td = TrainingDataset.builder()
         .name("new_api_td")
         .description("This is a test")
-        .version(1)
+        .version(2)
         .features(query)
         .dataFormat(DataFormat.CSV)
         .storageConnector(hopsFSConnector)
+        .splits(new double[]{0.75, 0.25})
         .build();
 
     fs.createTrainingDataset(td);
