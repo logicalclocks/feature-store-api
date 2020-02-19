@@ -108,7 +108,7 @@ class FeatureGroup:
         )
 
     @classmethod
-    def from_response_json(cls, client, json_dict, dataframe_type):
+    def from_response_json(cls, client, dataframe_type, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
         # i.e. offline, online, on-demand
