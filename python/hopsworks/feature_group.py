@@ -8,7 +8,6 @@ class FeatureGroup:
     def __init__(
         self,
         client,
-        dataframe_type,
         type,
         featurestore_id,
         featurestore_name,
@@ -74,17 +73,16 @@ class FeatureGroup:
         self._online_feature_group_enabled = online_featuregroup_enabled
 
         self._query_constructor_api = query_constructor_api.QueryConstructorApi(client)
-        self._dataframe_type = dataframe_type
 
-    def read(self):
-        """Get the feature group as a Spark DataFrame."""
+    def read(self, dataframe_type="default"):
+        """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read()
+        return self.select_all().read(dataframe_type)
 
     def show(self, n):
         """Show the first n rows of the feature group."""
@@ -98,21 +96,17 @@ class FeatureGroup:
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(
-            self._dataframe_type, self._query_constructor_api, self, self._features
-        )
+        return query.Query(self._query_constructor_api, self, self._features)
 
     def select(self, features=[]):
-        return query.Query(
-            self._dataframe_type, self._query_constructor_api, self, features
-        )
+        return query.Query(self._query_constructor_api, self, features)
 
     @classmethod
-    def from_response_json(cls, client, dataframe_type, json_dict):
+    def from_response_json(cls, client, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
         # i.e. offline, online, on-demand
-        return cls(client, dataframe_type, **json_decamelized)
+        return cls(client, **json_decamelized)
 
     @classmethod
     def new_featuregroup(cls):

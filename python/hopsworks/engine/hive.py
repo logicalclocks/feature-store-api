@@ -16,8 +16,8 @@ class Engine:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, dataframe_type, n):
-        return self.sql(sql_query, dataframe_type).head(n)
+    def show(self, sql_query, n):
+        return self.sql(sql_query, "default").head(n)
 
     def set_job_group(self, group_id, description):
         pass

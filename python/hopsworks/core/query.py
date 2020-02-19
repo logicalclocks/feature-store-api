@@ -17,15 +17,13 @@ class Query:
         self._joins = joins
         self._query_constructor_api = query_constructor_api
 
-        self._dataframe_type = dataframe_type
-
-    def read(self):
+    def read(self, dataframe_type="default"):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query, self._dataframe_type)
+        return engine.get_instance().sql(sql_query, dataframe_type)
 
     def show(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().show(sql_query, self._dataframe_type, n)
+        return engine.get_instance().show(sql_query, n)
 
     def json(self):
         return json.dumps(self, cls=util.QueryEncoder)
