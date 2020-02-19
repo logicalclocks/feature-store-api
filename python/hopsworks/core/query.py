@@ -5,12 +5,7 @@ from hopsworks import util, engine
 
 class Query:
     def __init__(
-        self,
-        dataframe_type,
-        query_constructor_api,
-        left_feature_group,
-        left_features,
-        joins=None,
+        self, query_constructor_api, left_feature_group, left_features, joins=None,
     ):
         self._left_feature_group = left_feature_group
         self._left_features = left_features
