@@ -5,20 +5,27 @@ from hopsworks import util, engine
 
 class Query:
     def __init__(
-        self, query_constructor_api, left_feature_group, left_features, joins=None
+        self,
+        dataframe_type,
+        query_constructor_api,
+        left_feature_group,
+        left_features,
+        joins=None,
     ):
         self._left_feature_group = left_feature_group
         self._left_features = left_features
         self._joins = joins
         self._query_constructor_api = query_constructor_api
 
+        self._dataframe_type = dataframe_type
+
     def read(self):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query)
+        return engine.get_instance().sql(sql_query, self._dataframe_type)
 
     def show(self, n):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().show(sql_query, n)
+        return engine.get_instance().show(sql_query, self._dataframe_type, n)
 
     def json(self):
         return json.dumps(self, cls=util.QueryEncoder)

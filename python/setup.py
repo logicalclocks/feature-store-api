@@ -23,6 +23,7 @@ setup(
         "furl",
         "boto3",
         "pandas",
+        "numpy",
         "pyhopshive[thrift]"
     ],
     extras_require={

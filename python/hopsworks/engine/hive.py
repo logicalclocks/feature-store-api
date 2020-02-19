@@ -10,14 +10,14 @@ class Engine:
         self._cert_folder = cert_folder
         self._cert_key = cert_key
 
-    def sql(self, sql_query):
+    def sql(self, sql_query, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection() as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
-        return result_df
+        return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, n):
-        return self.sql(sql_query).head(n)
+    def show(self, sql_query, dataframe_type, n):
+        return self.sql(sql_query, dataframe_type).head(n)
 
     def set_job_group(self, group_id, description):
         pass
@@ -31,4 +31,16 @@ class Engine:
             truststore=os.path.join(self._cert_folder, "trustStore.jks"),
             keystore=os.path.join(self._cert_folder, "keyStore.jks"),
             keystore_password=self._cert_key,
+        )
+
+    def _return_dataframe_type(self, dataframe, dataframe_type):
+        if dataframe_type.lower() == ["default", "pandas"]:
+            return dataframe
+        if dataframe_type.lower() == "numpy":
+            return dataframe.values
+        if dataframe_type == "python":
+            return dataframe.values.tolist()
+
+        raise TypeError(
+            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )

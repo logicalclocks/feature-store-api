@@ -48,5 +48,5 @@ class FeatureStore:
         json_decamelized = humps.decamelize(json_dict)
         return cls(client, **json_decamelized)
 
-    def get_feature_group(self, name, version):
-        return self._feature_group_api.get(name, version)
+    def get_feature_group(self, name, version, dataframe_type="default"):
+        return self._feature_group_api.get(name, version, dataframe_type)

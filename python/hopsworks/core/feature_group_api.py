@@ -7,7 +7,7 @@ class FeatureGroupApi:
         self._client = client
         self._feature_store_id = feature_store_id
 
-    def get(self, name, version):
+    def get(self, name, version, dataframe_type):
         """Get feature store with specific id or name.
 
         :param identifier: id or name of the feature store
@@ -26,5 +26,6 @@ class FeatureGroupApi:
         query_params = {"version": version}
         return feature_group.FeatureGroup.from_response_json(
             self._client,
+            dataframe_type,
             self._client._send_request("GET", path_params, query_params)[0],
         )

@@ -8,6 +8,7 @@ class FeatureGroup:
     def __init__(
         self,
         client,
+        dataframe_type,
         type,
         featurestore_id,
         featurestore_name,
@@ -73,6 +74,7 @@ class FeatureGroup:
         self._online_feature_group_enabled = online_featuregroup_enabled
 
         self._query_constructor_api = query_constructor_api.QueryConstructorApi(client)
+        self._dataframe_type = dataframe_type
 
     def read(self):
         """Get the feature group as a Spark DataFrame."""
@@ -96,17 +98,21 @@ class FeatureGroup:
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(self._query_constructor_api, self, self._features)
+        return query.Query(
+            self._dataframe_type, self._query_constructor_api, self, self._features
+        )
 
     def select(self, features=[]):
-        return query.Query(self._query_constructor_api, self, features)
+        return query.Query(
+            self._dataframe_type, self._query_constructor_api, self, features
+        )
 
     @classmethod
-    def from_response_json(cls, client, json_dict):
+    def from_response_json(cls, client, json_dict, dataframe_type):
         json_decamelized = humps.decamelize(json_dict)
         # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
         # i.e. offline, online, on-demand
-        return cls(client, **json_decamelized)
+        return cls(client, dataframe_type, **json_decamelized)
 
     @classmethod
     def new_featuregroup(cls):
