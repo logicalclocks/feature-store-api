@@ -14,7 +14,9 @@ def init(engine_type, host=None, cert_folder=None, cert_key=None):
 
 def get_instance():
     global _engine
-    return _engine
+    if _engine:
+        return _engine
+    raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
 
 def stop():
