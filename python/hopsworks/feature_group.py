@@ -1,7 +1,7 @@
 import humps
 
 from hopsworks.core import query, query_constructor_api
-from hopsworks import engine
+from hopsworks import engine, feature
 
 
 class FeatureGroup:
@@ -53,7 +53,7 @@ class FeatureGroup:
         self._cluster_analysis = cluster_analysis
         self._name = name
         self._id = id
-        self._features = features
+        self._features = [feature.Feature(**feat) for feat in features]
         self._location = location
         self._jobs = jobs
         self._feature_group_typ = featuregroup_type
