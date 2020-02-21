@@ -39,6 +39,8 @@ class Connection:
         self._connected = False
         self._client = None
 
+        self.connect()
+
     @classmethod
     def connection(
         cls,
@@ -64,6 +66,7 @@ class Connection:
             api_key_file,
         )
 
+    @util.not_connected
     def connect(self):
         self._connected = True
         try:
@@ -89,14 +92,14 @@ class Connection:
         except (TypeError, ConnectionError):
             self._connected = False
             raise
-        print("CONNECTED")
+        print("Connected. Call `.close()` to terminate connection gracefully.")
 
     def close(self):
         self._client._close()
         self._feature_store_api = None
         engine.stop()
         self._connected = False
-        print("CONNECTION CLOSED")
+        print("Connection closed.")
 
     @util.connected
     def get_feature_store(self, name=None):
