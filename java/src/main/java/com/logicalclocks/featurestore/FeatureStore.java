@@ -3,7 +3,6 @@ package com.logicalclocks.featurestore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.logicalclocks.featurestore.engine.SparkEngine;
-import com.logicalclocks.featurestore.engine.TrainingDatasetEngine;
 import com.logicalclocks.featurestore.metadata.FeatureGroupApi;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +26,6 @@ public class FeatureStore {
 
   private FeatureGroupApi featureGroupApi;
   private StorageConnectorApi storageConnectorApi;
-  private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
 
   public FeatureStore() throws FeatureStoreException {
     featureGroupApi = new FeatureGroupApi();
@@ -58,9 +56,9 @@ public class FeatureStore {
     return storageConnectorApi.getByNameAndType(this, name, type);
   }
 
-  public void createTrainingDataset(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    trainingDataset.setFeatureStore(this);
-    trainingDatasetEngine.saveTrainingDataset(trainingDataset);
+  public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
+    return TrainingDataset.builder()
+        .featureStore(this);
   }
 
   @Override

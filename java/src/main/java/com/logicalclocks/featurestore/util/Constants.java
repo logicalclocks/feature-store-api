@@ -10,6 +10,7 @@ public class Constants {
   // Spark options
   public static final String DELIMITER = "delimiter";
   public static final String HEADER = "header";
+  public static final String INFER_SCHEMA = "inferSchema";
 
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
   public static final String SPLIT_SUFFIX = "_split_";
