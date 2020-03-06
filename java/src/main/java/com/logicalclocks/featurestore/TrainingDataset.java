@@ -58,7 +58,7 @@ public class TrainingDataset {
   private FeatureStore featureStore;
 
   @Getter @Setter
-  private int storageConnectorId;
+  private Integer storageConnectorId;
 
   @Getter @Setter
   private String location;
@@ -89,7 +89,11 @@ public class TrainingDataset {
     this.featuresQuery = featuresQuery;
     this.featuresDataframe = featuresDataframe;
     this.writeOptions = writeOptions;
-    this.storageConnectorId = storageConnector.getId();
+
+    if (storageConnector != null) {
+      this.storageConnectorId = storageConnector.getId();
+    }
+
     this.splits = splits;
     this.featureStore = featureStore;
 

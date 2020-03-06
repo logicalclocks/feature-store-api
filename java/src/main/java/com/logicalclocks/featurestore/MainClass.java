@@ -22,22 +22,19 @@ public class MainClass {
     Query query = attendance.selectAll().join(players.selectAll());
 
     // Get the storage connector where to write
-    StorageConnector hopsFSConnector = fs.getStorageConnector("demo_featurestore_admin000_Training_Datasets",
-        StorageConnectorType.HOPSFS);
+    //StorageConnector hopsFSConnector = fs.getStorageConnector("demo_featurestore_admin000_Training_Datasets",
+    //    StorageConnectorType.HOPSFS);
 
-    LOGGER.info("Storage connector ID" + hopsFSConnector.getId());
+    //LOGGER.info("Storage connector ID" + hopsFSConnector.getId());
 
-    TrainingDataset td = TrainingDataset.builder()
+    fs.createTrainingDataset()
         .name("new_api_td")
         .description("This is a test")
-        .version(2)
-        .features(query)
+        .version(1)
+        .featuresQuery(query)
         .dataFormat(DataFormat.CSV)
-        .storageConnector(hopsFSConnector)
         .splits(new double[]{0.75, 0.25})
         .build();
-
-    fs.createTrainingDataset(td);
 
     SparkEngine.getInstance().getSparkSession().close();
   }
