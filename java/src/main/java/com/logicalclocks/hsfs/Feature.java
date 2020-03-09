@@ -49,4 +49,11 @@ public class Feature {
     this.name = name;
     this.type = type;
   }
+
+  public Feature(String name, String type, Boolean primary, Boolean partition) {
+    this.name = name;
+    this.type = type;
+    this.primary = primary;
+    this.partition = partition;
+  }
 }

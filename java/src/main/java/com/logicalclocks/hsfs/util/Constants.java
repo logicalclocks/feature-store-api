@@ -22,6 +22,8 @@ public class Constants {
 
   public static final String FEATURESTORE_SUFFIX = "_featurestore";
 
+  public static final String HIVE_FORMAT = "hive";
+
   // Spark options
   public static final String DELIMITER = "delimiter";
   public static final String HEADER = "header";

@@ -74,6 +74,21 @@ public class FeatureStore {
     return storageConnectorApi.getByNameAndType(this, name, type);
   }
 
+  public OfflineFeatureGroup.OfflineFeatureGroupBuilder createOfflineFeatureGroup() {
+    return OfflineFeatureGroup.builder()
+        .featureStore(this);
+  }
+
+  public OnlineFeatureGroup.OnlineFeatureGroupBuilder createOnlineFeatureGroup() {
+    return OnlineFeatureGroup.builder()
+        .featureStore(this);
+  }
+
+  public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
+    return OnDemandFeatureGroup.builder()
+        .featureStore(this);
+  }
+
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
     return TrainingDataset.builder()
         .featureStore(this);

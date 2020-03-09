@@ -17,12 +17,15 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.OfflineFeatureGroup;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +37,7 @@ public class Utils {
   public List<Feature> parseSchema(Dataset<Row> dataset) {
     return Arrays.stream(dataset.schema().fields())
         // TODO(Fabio): unit test this one for complext types
-        .map(f -> new Feature(f.name(), f.dataType().catalogString()))
+        .map(f -> new Feature(f.name(), f.dataType().catalogString(), false, false))
         .collect(Collectors.toList());
   }
 
@@ -50,5 +53,20 @@ public class Utils {
       throw new FeatureStoreException("The Dataframe schema: " + dataset.schema() +
           " does not match the training dataset schema: " + tdStructType);
     }
+  }
+
+  // TODO(Fabio): this should be moved in the backend
+  public String getTableName(OfflineFeatureGroup offlineFeatureGroup) {
+    return offlineFeatureGroup.getFeatureStore().getName() + "." +
+        offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+  }
+
+  public Seq<String> getPartitionColumns(OfflineFeatureGroup offlineFeatureGroup) {
+    List<String> jPartitionCols = offlineFeatureGroup.getFeatures().stream()
+        .filter(Feature::getPartition)
+        .map(Feature::getName)
+        .collect(Collectors.toList());
+
+    return JavaConverters.asScalaIteratorConverter(jPartitionCols.iterator()).asScala().toSeq();
   }
 }

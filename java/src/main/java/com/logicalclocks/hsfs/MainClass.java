@@ -34,6 +34,14 @@ public class MainClass {
     FeatureStore fs = connection.getFeatureStore();
     LOGGER.info("Feature Store " + fs);
 
+    OfflineFeatureGroup housingFeatureGroup = fs.createOfflineFeatureGroup()
+        .name("housing")
+        .description("fake description")
+        .version(1)
+        .build();
+
+    housingFeatureGroup.create(null);
+
     FeatureGroup attendance = fs.getFeatureGroup("attendances_features", 1);
     FeatureGroup players = fs.getFeatureGroup("players_features", 1);
 
