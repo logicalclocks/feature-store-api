@@ -115,8 +115,6 @@ class Connection:
         """
         if not name:
             name = self._client._project_name + "_featurestore"
-        # TODO: this won't work with multiple feature stores
-        engine.get_instance()._feature_store = name
         return self._feature_store_api.get(name)
 
     @property
