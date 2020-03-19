@@ -10,16 +10,15 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
-from hopsworks import util
-from hopsworks.client.exceptions import RestAPIError
-from hopsworks.client.auth import BearerAuth
+from hopsworks.client import exceptions, auth
+from hopsworks.decorators import connected
 
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class BaseClient(ABC):
+class Client(ABC):
     TOKEN_FILE = "token.jwt"
     REST_ENDPOINT = "REST_ENDPOINT"
 
@@ -103,7 +102,7 @@ class BaseClient(ABC):
         with open(self.TOKEN_FILE, "r") as jwt:
             return jwt.read()
 
-    @util.connected
+    @connected
     def _send_request(
         self, method, path_params, query_params=None, headers=None, data=None
     ):
@@ -146,15 +145,15 @@ class BaseClient(ABC):
 
         if response.status_code == 401 and self.REST_ENDPOINT not in os.environ:
             # refresh token and retry request - only on hopsworks
-            self._auth = BearerAuth(self._read_jwt())
+            self._auth = auth.BearerAuth(self._read_jwt())
             prepped = self._session.prepare_request(request)
             response = self._session.send(prepped, verify=self._verify)
             if response.status_code // 100 != 2:
-                raise RestAPIError(url, response)
+                raise exceptions.RestAPIError(url, response)
             else:
                 return response.json()
         elif response.status_code // 100 != 2:
-            raise RestAPIError(url, response)
+            raise exceptions.RestAPIError(url, response)
         else:
             return response.json()
 

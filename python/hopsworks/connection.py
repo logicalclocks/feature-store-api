@@ -1,7 +1,8 @@
 import os
 from requests.exceptions import ConnectionError
 
-from hopsworks import util, engine, client
+from hopsworks.decorators import connected, not_connected
+from hopsworks import engine, client
 from hopsworks.core import feature_store_api
 
 
@@ -65,11 +66,11 @@ class Connection:
             api_key_file,
         )
 
-    @util.not_connected
+    @not_connected
     def connect(self):
         self._connected = True
         try:
-            if client.base.BaseClient.REST_ENDPOINT not in os.environ:
+            if client.base.Client.REST_ENDPOINT not in os.environ:
                 client.init(
                     "aws",
                     self._host,
@@ -104,7 +105,7 @@ class Connection:
         self._connected = False
         print("Connection closed.")
 
-    @util.connected
+    @connected
     def get_feature_store(self, name=None):
         """Get a reference to a feature store, to perform operations on.
 
@@ -125,7 +126,7 @@ class Connection:
         return self._host
 
     @host.setter
-    @util.not_connected
+    @not_connected
     def host(self, host):
         self._host = host
 
@@ -134,7 +135,7 @@ class Connection:
         return self._port
 
     @port.setter
-    @util.not_connected
+    @not_connected
     def port(self, port):
         self._port = port
 
@@ -143,7 +144,7 @@ class Connection:
         return self._project
 
     @project.setter
-    @util.not_connected
+    @not_connected
     def project(self, project):
         self._project = project
 
@@ -152,7 +153,7 @@ class Connection:
         return self._region_name
 
     @region_name.setter
-    @util.not_connected
+    @not_connected
     def region_name(self, region_name):
         self._region_name = region_name
 
@@ -161,7 +162,7 @@ class Connection:
         return self._secrets_store
 
     @secrets_store.setter
-    @util.not_connected
+    @not_connected
     def secrets_store(self, secrets_store):
         self._secrets_store = secrets_store
 
@@ -170,7 +171,7 @@ class Connection:
         return self._hostname_verification
 
     @hostname_verification.setter
-    @util.not_connected
+    @not_connected
     def hostname_verification(self, hostname_verification):
         self._hostname_verification = hostname_verification
 
@@ -179,7 +180,7 @@ class Connection:
         return self._trust_store_path
 
     @trust_store_path.setter
-    @util.not_connected
+    @not_connected
     def trust_store_path(self, trust_store_path):
         self._trust_store_path = trust_store_path
 
@@ -188,7 +189,7 @@ class Connection:
         return self._cert_folder
 
     @cert_folder.setter
-    @util.not_connected
+    @not_connected
     def cert_folder(self, cert_folder):
         self._cert_folder = cert_folder
 
@@ -197,7 +198,7 @@ class Connection:
         return self._api_key_file
 
     @api_key_file.setter
-    @util.not_connected
+    @not_connected
     def api_key_file(self, api_key_file):
         self._api_key_file = api_key_file
 
@@ -207,21 +208,3 @@ class Connection:
 
     def __exit__(self, type, value, traceback):
         self.close()
-
-
-class HopsworksConnectionError(Exception):
-    """Thrown when attempted to change connection attributes while connected."""
-
-    def __init__(self):
-        super().__init__(
-            "Connection is currently in use. Needs to be closed for modification."
-        )
-
-
-class NoHopsworksConnectionError(Exception):
-    """Thrown when attempted to perform operation on connection while not connected."""
-
-    def __init__(self):
-        super().__init__(
-            "Connection is not active. Needs to be connected for feature store operations."
-        )

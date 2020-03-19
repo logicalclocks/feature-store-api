@@ -18,9 +18,9 @@ def init(
     global _client
     if not _client:
         if client_type == "hopsworks":
-            _client = hopsworks.HopsworksClient()
+            _client = hopsworks.Client()
         elif client_type == "aws":
-            _client = aws.AWSClient(
+            _client = aws.Client(
                 host,
                 port,
                 project,

@@ -4,12 +4,10 @@ import base64
 import json
 import requests
 
-from hopsworks.client.base import BaseClient
-from hopsworks.client.auth import ApiKeyAuth
-from hopsworks.client.exceptions import ExternalClientError, UnknownSecretStorageError
+from hopsworks.client import base, auth, exceptions
 
 
-class AWSClient(BaseClient):
+class Client(base.Client):
     DEFAULT_REGION = "default"
     SECRETS_MANAGER = "secretsmanager"
     PARAMETER_STORE = "parameterstore"
@@ -29,9 +27,9 @@ class AWSClient(BaseClient):
     ):
         """Initializes a client in an external environment such as AWS Sagemaker."""
         if not host:
-            raise ExternalClientError("host")
+            raise exceptions.ExternalClientError("host")
         if not project:
-            raise ExternalClientError("project")
+            raise exceptions.ExternalClientError("project")
 
         self._host = host
         self._port = port
@@ -40,7 +38,7 @@ class AWSClient(BaseClient):
         self._region_name = region_name
         self._cert_folder = cert_folder
 
-        self._auth = ApiKeyAuth(
+        self._auth = auth.ApiKeyAuth(
             self._get_secret(secrets_store, "api-key", api_key_file)
         )
 
@@ -91,11 +89,13 @@ class AWSClient(BaseClient):
             return self._query_parameter_store(secret_key)
         elif secrets_store == self.LOCAL_STORE:
             if not api_key_file:
-                raise ExternalClientError("api_key_file needs to be set for local mode")
+                raise exceptions.ExternalClientError(
+                    "api_key_file needs to be set for local mode"
+                )
             with open(api_key_file) as f:
                 return f.readline().strip()
         else:
-            raise UnknownSecretStorageError(
+            raise exceptions.UnknownSecretStorageError(
                 "Secrets storage " + secrets_store + " is not supported."
             )
 

@@ -1,8 +1,6 @@
 import json
-import functools
 
-
-from hopsworks import feature_group, feature, connection
+from hopsworks import feature_group, feature
 from hopsworks.core import query, join
 
 
@@ -28,26 +26,6 @@ class QueryEncoder(json.JSONEncoder):
             }
         else:
             return super().default(o)
-
-
-def not_connected(fn):
-    @functools.wraps(fn)
-    def if_not_connected(inst, *args, **kwargs):
-        if inst._connected:
-            raise connection.HopsworksConnectionError
-        return fn(inst, *args, **kwargs)
-
-    return if_not_connected
-
-
-def connected(fn):
-    @functools.wraps(fn)
-    def if_connected(inst, *args, **kwargs):
-        if not inst._connected:
-            raise connection.NoHopsworksConnectionError
-        return fn(inst, *args, **kwargs)
-
-    return if_connected
 
 
 def validate_feature(ft):

@@ -1,11 +1,10 @@
 import os
 import requests
 
-from hopsworks.client.base import BaseClient
-from hopsworks.client.auth import BearerAuth
+from hopsworks.client import base, auth
 
 
-class HopsworksClient(BaseClient):
+class Client(base.Client):
     REQUESTS_VERIFY = "REQUESTS_VERIFY"
     DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"
     PROJECT_ID = "HOPSWORKS_PROJECT_ID"
@@ -29,7 +28,7 @@ class HopsworksClient(BaseClient):
         )
         self._project_id = os.environ[self.PROJECT_ID]
         self._project_name = self._project_name()
-        self._auth = BearerAuth(self._read_jwt())
+        self._auth = auth.BearerAuth(self._read_jwt())
         self._verify = self._get_verify(
             self._host, self._port, hostname_verification, trust_store_path
         )
