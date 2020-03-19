@@ -1,8 +1,8 @@
 import os
 from requests.exceptions import ConnectionError
 
-from hopsworks import util, engine
-from hopsworks.core import client, feature_store_api
+from hopsworks import util, engine, client
+from hopsworks.core import feature_store_api
 
 
 class Connection:
@@ -37,7 +37,6 @@ class Connection:
         self._cert_folder = cert_folder or self.CERT_FOLDER_DEFAULT
         self._api_key_file = api_key_file
         self._connected = False
-        self._client = None
 
         self.connect()
 
@@ -70,8 +69,9 @@ class Connection:
     def connect(self):
         self._connected = True
         try:
-            if client.BaseClient.REST_ENDPOINT not in os.environ:
-                self._client = client.ExternalClient(
+            if client.base.BaseClient.REST_ENDPOINT not in os.environ:
+                client.init(
+                    "aws",
                     self._host,
                     self._port,
                     self._project,
@@ -83,19 +83,22 @@ class Connection:
                     self._api_key_file,
                 )
                 engine.init(
-                    "hive", self._host, self._cert_folder, self._client._cert_key
+                    "hive",
+                    self._host,
+                    self._cert_folder,
+                    client.get_instance()._cert_key,
                 )
             else:
-                self._client = client.HopsworksClient()
+                client.init("hopsworks")
                 engine.init("spark")
-            self._feature_store_api = feature_store_api.FeatureStoreApi(self._client)
+            self._feature_store_api = feature_store_api.FeatureStoreApi()
         except (TypeError, ConnectionError):
             self._connected = False
             raise
         print("Connected. Call `.close()` to terminate connection gracefully.")
 
     def close(self):
-        self._client._close()
+        client.get_instance().stop()
         self._feature_store_api = None
         engine.stop()
         self._connected = False
@@ -114,7 +117,7 @@ class Connection:
         :rtype: FeatureStore
         """
         if not name:
-            name = self._client._project_name + "_featurestore"
+            name = client.get_instance()._project_name + "_featurestore"
         return self._feature_store_api.get(name)
 
     @property

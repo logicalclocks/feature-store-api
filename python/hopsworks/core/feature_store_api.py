@@ -1,9 +1,10 @@
+from hopsworks import client
 from hopsworks.feature_store import FeatureStore
 
 
 class FeatureStoreApi:
-    def __init__(self, client):
-        self._client = client
+    def __init__(self):
+        pass
 
     def get(self, identifier):
         """Get feature store with specific id or name.
@@ -13,7 +14,8 @@ class FeatureStoreApi:
         :return: the featurestore metadata
         :rtype: FeatureStore
         """
-        path_params = ["project", self._client._project_id, "featurestores", identifier]
+        _client = client.get_instance()
+        path_params = ["project", _client._project_id, "featurestores", identifier]
         return FeatureStore.from_response_json(
-            self._client, self._client._send_request("GET", path_params)
+            _client._send_request("GET", path_params)
         )
