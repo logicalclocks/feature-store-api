@@ -143,7 +143,7 @@ class Client(ABC):
         prepped = self._session.prepare_request(request)
         response = self._session.send(prepped, verify=self._verify)
 
-        if response.status_code == 401 and self.REST_ENDPOINT not in os.environ:
+        if response.status_code == 401 and self.REST_ENDPOINT in os.environ:
             # refresh token and retry request - only on hopsworks
             self._auth = auth.BearerAuth(self._read_jwt())
             prepped = self._session.prepare_request(request)
