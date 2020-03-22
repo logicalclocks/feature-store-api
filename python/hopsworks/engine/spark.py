@@ -1,8 +1,15 @@
+import json
+import pandas as pd
+import numpy as np
+
 # in case importing in %%local
 try:
-    from pyspark.sql import SparkSession
+    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.rdd import RDD
 except ModuleNotFoundError:
     pass
+
+from hopsworks import feature
 
 
 class Engine:
@@ -36,3 +43,40 @@ class Engine:
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
+
+    def convert_to_default_dataframe(self, dataframe):
+        if isinstance(dataframe, pd.DataFrame):
+            return self._spark_session.createDataFrame(dataframe)
+        if isinstance(dataframe, list):
+            dataframe = np.array(dataframe)
+        if isinstance(dataframe, np.ndarray):
+            if dataframe.ndim != 2:
+                raise TypeError(
+                    "Cannot convert numpy array that do not have two dimensions to a dataframe. "
+                    "The number of dimensions are: {}".format(dataframe.ndim)
+                )
+            num_cols = dataframe.shape[1]
+            dataframe_dict = {}
+            for n_col in list(range(num_cols)):
+                col_name = "col_" + str(n_col)
+                dataframe_dict[col_name] = dataframe[:, n_col]
+            pandas_df = pd.DataFrame(dataframe_dict)
+            return self._spark_session.createDataFrame(pandas_df)
+        if isinstance(dataframe, RDD):
+            return dataframe.toDF()
+        if isinstance(dataframe, DataFrame):
+            return dataframe
+        raise TypeError(
+            "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
+            "pandas dataframes, python 2D lists, and numpy 2D arrays. The provided dataframe has type: {}".format(
+                type(dataframe)
+            )
+        )
+
+    def parse_schema(self, dataframe):
+        return [
+            feature.Feature(
+                feat["name"], feat["type"], feat["metadata"].get("description", "")
+            )
+            for feat in json.loads(dataframe.schema.json())["fields"]
+        ]

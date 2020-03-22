@@ -1,7 +1,7 @@
 import humps
 
-from hopsworks import engine
-from hopsworks.core import feature_group_api
+from hopsworks import engine, training_dataset
+from hopsworks.core import feature_group_api, storage_connector_api
 
 
 class FeatureStore:
@@ -42,6 +42,9 @@ class FeatureStore:
         self._online_enabled = online_enabled
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            self._id
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -53,3 +56,29 @@ class FeatureStore:
 
     def sql(self, query, dataframe_type="default"):
         return engine.get_instance().sql(query, self._name, dataframe_type)
+
+    def create_training_dataset(
+        self,
+        name,
+        version,
+        description="",
+        data_format="tfrecords",
+        write_options={},
+        storage_connector=None,
+        splits=[],
+        location="",
+    ):
+        return training_dataset.TrainingDataset(
+            name,
+            version,
+            description,
+            data_format,
+            write_options,
+            storage_connector,
+            splits,
+            location,
+            self._id,
+        )
+
+    def get_storage_connector(self, name, connector_type):
+        return self._storage_connector_api.get(name, connector_type)

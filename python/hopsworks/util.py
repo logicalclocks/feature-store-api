@@ -1,30 +1,14 @@
 import json
 
-from hopsworks import feature_group, feature
-from hopsworks.core import query, join
+
+from hopsworks import feature
 
 
-class QueryEncoder(json.JSONEncoder):
+class FeatureStoreEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, feature.Feature):
-            return {"name": o._name}
-        elif isinstance(o, feature_group.FeatureGroup):
-            return {"id": o._id}
-        elif isinstance(o, join.Join):
-            return {
-                "query": o._query,
-                "on": o._on,
-                "leftOn": o._left_on,
-                "rightOn": o._right_on,
-                "type": o._join_type,
-            }
-        elif isinstance(o, query.Query):
-            return {
-                "leftFeatureGroup": o._left_feature_group,
-                "leftFeatures": o._left_features,
-                "joins": o._joins,
-            }
-        else:
+        try:
+            return o.to_dict()
+        except AttributeError:
             return super().default(o)
 
 

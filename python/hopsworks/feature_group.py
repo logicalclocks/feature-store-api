@@ -55,7 +55,7 @@ class FeatureGroup:
         self._features = [feature.Feature(**feat) for feat in features]
         self._location = location
         self._jobs = jobs
-        self._feature_group_typ = featuregroup_type
+        self._feature_group_type = featuregroup_type
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
         self._feat_hist_enabled = feat_hist_enabled
@@ -108,3 +108,6 @@ class FeatureGroup:
     @classmethod
     def new_featuregroup(cls):
         pass
+
+    def to_dict(self):
+        return {"id": self._id}

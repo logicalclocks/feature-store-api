@@ -27,4 +27,11 @@ class Query:
         return self
 
     def json(self):
-        return json.dumps(self, cls=util.QueryEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "leftFeatureGroup": self._left_feature_group,
+            "leftFeatures": self._left_features,
+            "joins": self._joins,
+        }

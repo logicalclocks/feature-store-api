@@ -17,3 +17,12 @@ class Join:
         self._left_on = util.parse_features(left_on)
         self._right_on = util.parse_features(right_on)
         self._join_type = join_type or self.INNER
+
+    def to_dict(self):
+        return {
+            "query": self._query,
+            "on": self._on,
+            "leftOn": self._left_on,
+            "rightOn": self._right_on,
+            "type": self._join_type,
+        }
