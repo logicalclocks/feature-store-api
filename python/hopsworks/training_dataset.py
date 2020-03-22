@@ -8,7 +8,6 @@ from hopsworks.core import query, training_dataset_api
 class TrainingDataset:
     def __init__(
         self,
-        client,
         id,
         name,
         version,
@@ -38,7 +37,7 @@ class TrainingDataset:
         self._training_dataset_type = "HOPSFS_TRAINING_DATASET"
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
-            client, feature_store_id
+            feature_store_id
         )
 
     def create(self, features):
