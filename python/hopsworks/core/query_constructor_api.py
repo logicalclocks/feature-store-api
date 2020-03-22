@@ -1,10 +1,11 @@
-class QueryConstructorApi:
-    def __init__(self, client):
-        self._client = client
+from hopsworks import client
 
+
+class QueryConstructorApi:
     def construct_query(self, query):
-        path_params = ["project", self._client._project_id, "featurestores", "query"]
+        _client = client.get_instance()
+        path_params = ["project", _client._project_id, "featurestores", "query"]
         headers = {"content-type": "application/json"}
-        return self._client._send_request(
+        return _client._send_request(
             "PUT", path_params, headers=headers, data=query.json()
         )

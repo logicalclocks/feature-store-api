@@ -7,7 +7,6 @@ from hopsworks.core import feature_group_api
 class FeatureStore:
     def __init__(
         self,
-        client,
         featurestore_id,
         featurestore_name,
         created,
@@ -42,12 +41,12 @@ class FeatureStore:
         self._mysql_server_endpoint = mysql_server_endpoint
         self._online_enabled = online_enabled
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi(client, self._id)
+        self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
 
     @classmethod
-    def from_response_json(cls, client, json_dict):
+    def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        return cls(client, **json_decamelized)
+        return cls(**json_decamelized)
 
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)

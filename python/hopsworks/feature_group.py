@@ -1,13 +1,12 @@
 import humps
 
-from hopsworks.core import query, query_constructor_api
+from hopsworks.core import query
 from hopsworks import engine, feature
 
 
 class FeatureGroup:
     def __init__(
         self,
-        client,
         type,
         featurestore_id,
         featurestore_name,
@@ -72,8 +71,6 @@ class FeatureGroup:
         self._input_format = input_format
         self._online_feature_group_enabled = online_featuregroup_enabled
 
-        self._query_constructor_api = query_constructor_api.QueryConstructorApi(client)
-
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
@@ -96,21 +93,17 @@ class FeatureGroup:
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(
-            self._feature_store_name, self._query_constructor_api, self, self._features
-        )
+        return query.Query(self._feature_store_name, self, self._features)
 
     def select(self, features=[]):
-        return query.Query(
-            self._feature_store_name, self._query_constructor_api, self, features
-        )
+        return query.Query(self._feature_store_name, self, features)
 
     @classmethod
-    def from_response_json(cls, client, json_dict):
+    def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
         # i.e. offline, online, on-demand
-        return cls(client, **json_decamelized)
+        return cls(**json_decamelized)
 
     @classmethod
     def new_featuregroup(cls):
