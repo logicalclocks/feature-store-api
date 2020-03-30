@@ -10,11 +10,13 @@ except ModuleNotFoundError:
     pass
 
 from hopsworks import feature
+from hopsworks.storage_connector import StorageConnector
 
 
 class Engine:
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_context = self._spark_session.sparkContext
 
     def sql(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
@@ -72,6 +74,39 @@ class Engine:
                 type(dataframe)
             )
         )
+
+    def write(
+        self, dataframe, storage_connector, data_format, write_mode, write_options, path
+    ):
+        print("write feature dataframe, write_mode: {}".format(write_mode))
+
+        if data_format.lower() == "tsv":
+            data_format = "csv"
+
+        if storage_connector.connector_type == StorageConnector.S3:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.access.key", storage_connector.access_key
+            )
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.secret.key", storage_connector.access_key
+            )
+            path = path.replace("s3", "s3a", 1)
+            print(path)
+
+        dataframe.write.format(data_format).options(**write_options).mode(
+            write_mode
+        ).save(path)
+
+    def write_options(self, data_format, provided_options):
+        if data_format.lower() == "tfrecords":
+            options = dict(recordType="Example", **provided_options)
+        elif data_format.lower() == "csv":
+            options = dict(delimiter=",", header="true", **provided_options)
+        elif data_format.lower() == "tsv":
+            options = dict(delimiter="\t", header="true", **provided_options)
+        else:
+            options = {}
+        return options
 
     def parse_schema(self, dataframe):
         return [

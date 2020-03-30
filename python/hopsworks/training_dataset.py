@@ -2,23 +2,40 @@ import humps
 import json
 
 from hopsworks import util, engine
-from hopsworks.core import query, training_dataset_api
+from hopsworks.storage_connector import StorageConnector
+from hopsworks.core import query, training_dataset_api, storage_connector_api
 
 
 class TrainingDataset:
+    HOPSFS = "HOPSFS_TRAINING_DATASET"
+    EXTERNAL = "EXTERNAL_TRAINING_DATASET"
+
     def __init__(
         self,
-        id,
         name,
         version,
         description,
         data_format,
-        write_options,
-        storage_connector,
-        splits,
         location,
-        features,
-        feature_store_id,
+        featurestore_id,
+        storage_connector=None,
+        splits=None,
+        type=None,
+        cluster_analysis=None,
+        created=None,
+        creator=None,
+        descriptive_statistics=None,
+        feature_correlation_matrix=None,
+        features=None,
+        features_histogram=None,
+        featurestore_name=None,
+        id=None,
+        jobs=None,
+        inode_id=None,
+        storage_connector_name=None,
+        storage_connector_id=None,
+        storage_connector_type=None,
+        training_dataset_type=None,
     ):
         self._id = id
         self._name = name
@@ -27,35 +44,91 @@ class TrainingDataset:
         self._data_format = data_format
         self._feature_query = None
         self._feature_dataframe = None
-        self._write_options = write_options
-        self._storage_connector = storage_connector
-        self._storage_connector_id = storage_connector.id
         self._splits = splits
         self._location = location
 
-        # TODO: fix
-        self._training_dataset_type = "HOPSFS_TRAINING_DATASET"
+        self._storage_connector_name = storage_connector_name
+        self._storage_connector_id = storage_connector_id
+        self._storage_connector_type = storage_connector_type
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
-            feature_store_id
+            featurestore_id
         )
 
-    def create(self, features):
-        if isinstance(features, query.Query):
-            self._feature_dataframe = self._feature_query.read()
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            featurestore_id
+        )
+
+        # set up depending on user initialized or coming from backend response
+        if training_dataset_type is None:
+            # no type -> user init
+            self.storage_connector = storage_connector
         else:
-            self._feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+            # type available -> init from backend response
+            # make rest call to get all connector information, description etc.
+            self._storage_connector = self._storage_connector_api.get_by_id(
+                storage_connector_id, storage_connector_type
+            )
+            self._training_dataset_type = training_dataset_type
+
+    def create(self, features, write_options={}):
+        # TODO: Decide if we want to have potentially dangerous defaults like {}
+        if isinstance(features, query.Query):
+            feature_dataframe = features.read()
+        else:
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features
             )
 
-        self._features = engine.get_instance().parse_schema(self._feature_dataframe)
+        self._features = engine.get_instance().parse_schema(feature_dataframe)
+        self._training_dataset_api.post(self)
+
+        # post updates reinstantiates the instance so set these after the REST call
+        self._feature_dataframe = feature_dataframe
+        if isinstance(features, query.Query):
+            self._feature_query = features
+
+        write_options = engine.get_instance().write_options(
+            self.data_format, write_options
+        )
+
+        # TODO: currently not supported petastorm, hdf5 and npy file formats
+        engine.get_instance().write(
+            feature_dataframe,
+            self._storage_connector,
+            self._data_format,
+            "overwrite",
+            write_options,
+            self._location + "/" + self._name,
+        )
 
         return self
 
     @classmethod
-    def from_json_response(cls, client, json_dict):
+    def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        return cls(client, **json_decamelized)
+        return cls(**json_decamelized)
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        # here we lose the information that the user set
+        # need to find solution for that
+        self.__init__(**json_decamelized)
+        return self
+
+    def _infer_training_dataset_type(self, connector_type):
+        if connector_type == StorageConnector.HOPSFS:
+            return self.HOPSFS
+        elif connector_type == StorageConnector.S3:
+            return self.EXTERNAL
+        elif connector_type is None:
+            return self.HOPSFS
+        else:
+            raise TypeError(
+                "Storage connectors of type {} are currently not supported for training datasets.".format(
+                    connector_type
+                )
+            )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -66,7 +139,7 @@ class TrainingDataset:
             "version": self._version,
             "description": self._description,
             "dataFormat": self._data_format,
-            "storageConnectorId": self._storage_connector_id,
+            "storageConnectorId": self._storage_connector.id,
             "location": self._location,
             "trainingDatasetType": self._training_dataset_type,
             "features": self._features,
@@ -126,8 +199,23 @@ class TrainingDataset:
 
     @storage_connector.setter
     def storage_connector(self, storage_connector):
-        self._storage_connector = storage_connector
-        self._storage_connector_id = storage_connector.id
+        if isinstance(storage_connector, StorageConnector):
+            self._storage_connector = storage_connector
+        elif storage_connector is None:
+            # init empty connector, otherwise will have to handle it at serialization time
+            # TODO: make prettier
+            self._storage_connector = StorageConnector(
+                None, None, None, None, None, None, None, None
+            )
+        else:
+            raise TypeError(
+                "The argument `storage_connector` has to be `None` or of type `StorageConnector`, is of type: {}".format(
+                    type(storage_connector)
+                )
+            )
+        self._training_dataset_type = self._infer_training_dataset_type(
+            self._storage_connector.connector_type
+        )
 
     @property
     def splits(self):

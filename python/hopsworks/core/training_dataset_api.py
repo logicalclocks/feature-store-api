@@ -1,5 +1,6 @@
 from hopsworks import client
-from hopsworks import training_dataset as td
+
+# from hopsworks import training_dataset as td
 
 
 class TrainingDatasetApi:
@@ -15,6 +16,9 @@ class TrainingDatasetApi:
             self._feature_store_id,
             "trainingdatasets",
         ]
-        return td.TrainingDataset.from_response_json(
-            _client._send_request("POST", path_params)[0],
+        headers = {"content-type": "application/json"}
+        return training_dataset.update_from_response_json(
+            _client._send_request(
+                "POST", path_params, headers=headers, data=training_dataset.json()
+            ),
         )
