@@ -13,5 +13,4 @@ public class Constants {
   public static final String INFER_SCHEMA = "inferSchema";
 
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
-  public static final String SPLIT_SUFFIX = "_split_";
 }

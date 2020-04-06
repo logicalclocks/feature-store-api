@@ -1,5 +1,6 @@
 package com.logicalclocks.featurestore.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.featurestore.DataFormat;
 import com.logicalclocks.featurestore.FeatureStoreException;
 import com.logicalclocks.featurestore.TrainingDataset;
@@ -22,9 +23,6 @@ public class TrainingDatasetEngine {
   private Utils utils = new Utils();
 
   //TODO:
-  //      Parse schema
-  //      Register training dataset
-  //      Write dataset
   //      Compute statistics
   public void create(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> userWriteOptions)
@@ -85,9 +83,16 @@ public class TrainingDatasetEngine {
     }
   }
 
-  public Dataset<Row> read(TrainingDataset trainingDataset, Map<String, String> providedOptions) {
-    // TODO(Fabio)
+  public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions) {
     String path = "";
+    if (Strings.isNullOrEmpty(split)) {
+      // ** glob means "all sub directories"
+      // TODO(Fabio): make sure it works on S3
+      path = Paths.get(trainingDataset.getLocation(), "**").toString();
+    } else {
+      path = Paths.get(trainingDataset.getLocation(), split).toString();
+    }
+
     Map<String, String> readOptions = getReadOptions(providedOptions, trainingDataset.getDataFormat());
     return read(trainingDataset.getDataFormat(), readOptions, path);
   }

@@ -137,7 +137,15 @@ public class TrainingDataset {
   }
 
   public Dataset<Row> read(Map<String, String> readOptions) {
-    return trainingDatasetEngine.read(this, readOptions);
+    return trainingDatasetEngine.read(this, "", readOptions);
+  }
+
+  public Dataset<Row> read(String split) {
+    return read(split, new HashMap<>());
+  }
+
+  public Dataset<Row> read(String split, Map<String, String> readOptions) {
+    return trainingDatasetEngine.read(this, split, readOptions);
   }
 
   public void show(int numRows) {
