@@ -24,6 +24,15 @@ public class TrainingDatasetEngine {
 
   //TODO:
   //      Compute statistics
+
+  /**
+   * Make a REST call to Hopsworks to create the metadata and write the data on the File System
+   * @param trainingDataset
+   * @param dataset
+   * @param userWriteOptions
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public void create(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> userWriteOptions)
       throws FeatureStoreException, IOException {
@@ -42,6 +51,14 @@ public class TrainingDatasetEngine {
     write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
   }
 
+  /**
+   * Insert (append or overwrite) data on a training dataset
+   * @param trainingDataset
+   * @param dataset
+   * @param providedOptions
+   * @param saveMode
+   * @throws FeatureStoreException
+   */
   public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> providedOptions, SaveMode saveMode)
       throws FeatureStoreException {
@@ -54,6 +71,13 @@ public class TrainingDatasetEngine {
     write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
+  /**
+   * Setup Spark to write the data on the File System
+   * @param trainingDataset
+   * @param dataset
+   * @param writeOptions
+   * @param saveMode
+   */
   private void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> writeOptions, SaveMode saveMode) {
 
@@ -143,6 +167,15 @@ public class TrainingDatasetEngine {
     return readOptions;
   }
 
+  /**
+   * Write multiple training dataset splits and name them.
+   * @param datasets
+   * @param dataFormat
+   * @param writeOptions
+   * @param saveMode
+   * @param basePath
+   * @param splitNames
+   */
   private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
                            SaveMode saveMode, String basePath, List<String> splitNames) {
     for (int i=0; i < datasets.length; i++) {
@@ -151,6 +184,14 @@ public class TrainingDatasetEngine {
     }
   }
 
+  /**
+   * Write a single dataset split
+   * @param dataset
+   * @param dataFormat
+   * @param writeOptions
+   * @param saveMode
+   * @param path: it should be the full path
+   */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
     dataset

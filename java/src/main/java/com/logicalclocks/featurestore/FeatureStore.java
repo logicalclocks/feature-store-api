@@ -64,6 +64,14 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+  /**
+   * Get a training dataset object from the selected feature store
+   * @param name: name of the training dataset
+   * @param version: version to get
+   * @return
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public TrainingDataset getTrainingDataset(String name, Integer version)
       throws FeatureStoreException, IOException {
     if (Strings.isNullOrEmpty(name) || version == null) {
