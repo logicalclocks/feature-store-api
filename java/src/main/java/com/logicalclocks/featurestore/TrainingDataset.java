@@ -35,19 +35,18 @@ public class TrainingDataset {
   private DataFormat dataFormat;
 
   @Getter @Setter
-  // TODO(Fabio): sort it out correctly
-  private String trainingDatasetType = "HOPSFS_TRAINING_DATASET";
+  private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter @Setter
   private List<Feature> features;
 
   @Getter @Setter
   @JsonIgnore
-  private Query featuresQuery;
+  private Query featureQuery;
 
   @Getter @Setter
   @JsonIgnore
-  private Dataset<Row> featuresDataframe;
+  private Dataset<Row> featureDataframe;
 
   @Getter @Setter
   @JsonIgnore
@@ -65,39 +64,52 @@ public class TrainingDataset {
 
   @Getter @Setter
   @JsonIgnore
-  private double[] splits;
+  private Map<String, Double> splits;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
 
   @Builder
-  public TrainingDataset(Integer id, @NonNull String name, @NonNull Integer version, String description,
-                         DataFormat dataFormat, Query featuresQuery, Dataset<Row> featuresDataframe,
-                         Map<String, String> writeOptions, StorageConnector storageConnector, double[] splits,
-                         FeatureStore featureStore)
-      throws FeatureStoreException, IOException {
-    if (featuresDataframe == null && featuresQuery == null) {
-      throw new FeatureStoreException("Neither FeaturesDataFrame nor FeaturesQuery options was specified");
-    } else if (featuresDataframe != null && featuresQuery != null) {
-      throw new FeatureStoreException("Both FeaturesDataFrame and FeaturesQuery options were specified");
-    }
-
-    this.id = id;
+  public TrainingDataset(@NonNull String name, @NonNull Integer version, String description,
+                         DataFormat dataFormat, StorageConnector storageConnector,
+                         String location, Map<String, Double> splits,
+                         FeatureStore featureStore) {
     this.name = name;
     this.version = version;
     this.description = description;
     this.dataFormat = dataFormat;
-    this.featuresQuery = featuresQuery;
-    this.featuresDataframe = featuresDataframe;
-    this.writeOptions = writeOptions;
+    this.location = location;
 
     if (storageConnector != null) {
       this.storageConnectorId = storageConnector.getId();
+      if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
+        // Default it's already HOPSFS_TRAINING_DATASET
+        this.trainingDatasetType = TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
+      }
     }
 
     this.splits = splits;
     this.featureStore = featureStore;
+  }
 
-    trainingDatasetEngine.saveTrainingDataset(this);
+  public void create(Query query) throws FeatureStoreException, IOException {
+    create(query, null);
+  }
+
+  public void create(Dataset<Row> dataset) throws FeatureStoreException, IOException {
+    create(dataset, null);
+  }
+
+  public void create(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+    this.featureQuery = query;
+    this.writeOptions = writeOptions;
+    trainingDatasetEngine.create(this, featureQuery.read(), writeOptions);
+  }
+
+  public void create(Dataset<Row> dataset, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    this.featureDataframe = dataset;
+    this.writeOptions = writeOptions;
+    trainingDatasetEngine.create(this, featureDataframe, writeOptions);
   }
 
   public void insert(Query query, boolean overwrite) throws FeatureStoreException, IOException {
@@ -120,7 +132,7 @@ public class TrainingDataset {
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
   }
 
-  public Dataset<Row> read() throws FeatureStoreException {
+  public Dataset<Row> read() {
     return read(new HashMap<>());
   }
 
@@ -128,7 +140,7 @@ public class TrainingDataset {
     return trainingDatasetEngine.read(this, readOptions);
   }
 
-  public void show(int numRows) throws FeatureStoreException, IOException {
+  public void show(int numRows) {
     read(new HashMap<>()).show(numRows);
   }
 }

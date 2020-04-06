@@ -15,4 +15,6 @@ public class StorageConnector {
   @Getter @Setter
   private String name;
 
+  @Getter @Setter
+  private StorageConnectorType storageConnectorType;
 }

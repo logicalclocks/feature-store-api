@@ -11,7 +11,9 @@ import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TrainingDatasetEngine {
@@ -24,14 +26,11 @@ public class TrainingDatasetEngine {
   //      Register training dataset
   //      Write dataset
   //      Compute statistics
-  public void  saveTrainingDataset(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    if (trainingDataset.getFeaturesQuery() != null) {
-      // Compile the query and get the dataframe
-      trainingDataset.setFeaturesDataframe(trainingDataset.getFeaturesQuery().read());
-    }
-
+  public void create(TrainingDataset trainingDataset, Dataset<Row> dataset,
+                     Map<String, String> userWriteOptions)
+      throws FeatureStoreException, IOException {
     // TODO(Fabio): make sure we can implement the serving part as well
-    trainingDataset.setFeatures(utils.parseSchema(trainingDataset.getFeaturesDataframe()));
+    trainingDataset.setFeatures(utils.parseSchema(dataset));
 
     // Make the rest call to create the training dataset metadata
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
@@ -40,9 +39,9 @@ public class TrainingDatasetEngine {
 
     // Build write options map
     Map<String, String> writeOptions =
-        getWriteOptions(trainingDataset.getWriteOptions(), trainingDataset.getDataFormat());
+        getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
 
-    write(trainingDataset, trainingDataset.getFeaturesDataframe(), writeOptions, SaveMode.Overwrite);
+    write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
   }
 
   public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
@@ -57,31 +56,40 @@ public class TrainingDatasetEngine {
     write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
-  public Dataset<Row> read(TrainingDataset trainingDataset, Map<String, String> providedOptions) {
-    String path = getDataLocation(trainingDataset);
-    Map<String, String> readOptions = getReadOptions(providedOptions, trainingDataset.getDataFormat());
-    return read(trainingDataset.getDataFormat(), readOptions, path);
-  }
-
   private void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> writeOptions, SaveMode saveMode) {
-    String path = getDataLocation(trainingDataset);
 
     if (trainingDataset.getSplits() == null) {
       // Write a single dataset
+
+      // The actual data will be stored in training_ds_version/training_ds the double directory is needed
+      // for cases such as tfrecords in which we need to store also the schema
+      // also in case of multiple splits, the single splits will be stored inside the training dataset dir
+      String path = Paths.get(trainingDataset.getLocation(), trainingDataset.getName()).toString();
+
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
     } else {
-      writeSplits(dataset.randomSplit(trainingDataset.getSplits()),
-          trainingDataset.getDataFormat(), writeOptions, saveMode, path);
+      // Make sure the names and factors are ordered
+      List<String> splitNames = new ArrayList<>();
+      List<Double> splitFactors = new ArrayList<>();
+      for (Map.Entry<String, Double> entry : trainingDataset.getSplits().entrySet()) {
+        splitNames.add(entry.getKey());
+        splitFactors.add(entry.getValue());
+      }
+
+      // The actual data will be stored in training_ds_version/split_name
+      writeSplits(dataset.randomSplit(splitFactors.stream().mapToDouble(Double::doubleValue).toArray()),
+          trainingDataset.getDataFormat(), writeOptions, saveMode,
+          trainingDataset.getLocation(), splitNames);
     }
   }
 
-  // The actual data will be stored in training_ds_version/training_ds the double directory is needed
-  // for cases such as tfrecords in which we need to store also the schema
-  // TODO(Fabio): is this something we want to keep doing?
-  private String getDataLocation(TrainingDataset trainingDataset) {
-    return Paths.get(trainingDataset.getLocation(), trainingDataset.getName()).toString();
+  public Dataset<Row> read(TrainingDataset trainingDataset, Map<String, String> providedOptions) {
+    // TODO(Fabio)
+    String path = "";
+    Map<String, String> readOptions = getReadOptions(providedOptions, trainingDataset.getDataFormat());
+    return read(trainingDataset.getDataFormat(), readOptions, path);
   }
 
   private Map<String, String> getWriteOptions(Map<String, String> providedOptions, DataFormat dataFormat) {
@@ -131,9 +139,10 @@ public class TrainingDatasetEngine {
   }
 
   private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
-                           SaveMode saveMode, String basePath) {
+                           SaveMode saveMode, String basePath, List<String> splitNames) {
     for (int i=0; i < datasets.length; i++) {
-      writeSingle(datasets[i], dataFormat, writeOptions, saveMode, basePath + Constants.SPLIT_SUFFIX + i);
+      writeSingle(datasets[i], dataFormat, writeOptions, saveMode,
+          Paths.get(basePath, splitNames.get(i)).toString());
     }
   }
 
