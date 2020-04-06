@@ -42,18 +42,6 @@ public class TrainingDataset {
 
   @Getter @Setter
   @JsonIgnore
-  private Query featureQuery;
-
-  @Getter @Setter
-  @JsonIgnore
-  private Dataset<Row> featureDataframe;
-
-  @Getter @Setter
-  @JsonIgnore
-  private Map<String, String> writeOptions;
-
-  @Getter @Setter
-  @JsonIgnore
   private FeatureStore featureStore;
 
   @Getter @Setter
@@ -100,16 +88,12 @@ public class TrainingDataset {
   }
 
   public void create(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
-    this.featureQuery = query;
-    this.writeOptions = writeOptions;
-    trainingDatasetEngine.create(this, featureQuery.read(), writeOptions);
+    trainingDatasetEngine.create(this, query.read(), writeOptions);
   }
 
   public void create(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    this.featureDataframe = dataset;
-    this.writeOptions = writeOptions;
-    trainingDatasetEngine.create(this, featureDataframe, writeOptions);
+    trainingDatasetEngine.create(this, dataset, writeOptions);
   }
 
   public void insert(Query query, boolean overwrite) throws FeatureStoreException, IOException {
