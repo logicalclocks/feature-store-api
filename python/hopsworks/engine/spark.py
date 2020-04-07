@@ -97,6 +97,13 @@ class Engine:
             write_mode
         ).save(path)
 
+    def read(self, data_format, read_options, path):
+        return (
+            self._spark_session.read.format(data_format)
+            .options(read_options)
+            .load(path)
+        )
+
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
@@ -104,6 +111,21 @@ class Engine:
             options = dict(delimiter=",", header="true", **provided_options)
         elif data_format.lower() == "tsv":
             options = dict(delimiter="\t", header="true", **provided_options)
+        else:
+            options = {}
+        return options
+
+    def read_options(self, data_format, provided_options):
+        if data_format.lower() == "tfrecords":
+            options = dict(recordType="Example", **provided_options)
+        elif data_format.lower() == "csv":
+            options = dict(
+                delimiter=",", header="true", inferSchema="true", **provided_options
+            )
+        elif data_format.lower() == "tsv":
+            options = dict(
+                delimiter="\t", header="true", inferSchema="true", **provided_options
+            )
         else:
             options = {}
         return options

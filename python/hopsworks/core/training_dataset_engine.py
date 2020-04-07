@@ -40,6 +40,20 @@ class TrainingDatasetEngine:
             self.OVERWRITE if overwrite else self.APPEND,
         )
 
+    def read(self, training_dataset, split, user_read_options):
+        if split is None:
+            path = training_dataset.location + "/" + "**"
+        else:
+            path = training_dataset.location + "/" + str(split)
+
+        read_options = engine.get_instance().read_options(
+            training_dataset.data_format, user_read_options
+        )
+
+        return engine.get_instance().read(
+            training_dataset.data_format, read_options, path
+        )
+
     def _write(self, training_dataset, dataset, write_options, save_mode):
         if training_dataset.splits is None:
             path = training_dataset.location + "/" + training_dataset.name
