@@ -130,7 +130,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void insert(Query query, boolean overwrite) throws FeatureStoreException, IOException {
-    insert(query, overwrite, new HashMap<>());
+    insert(query, overwrite, null);
   }
 
   /**
@@ -141,7 +141,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void insert(Dataset<Row> dataset, boolean overwrite) throws FeatureStoreException, IOException {
-    insert(dataset, overwrite, new HashMap<>());
+    insert(dataset, overwrite, null);
   }
 
   /**
@@ -177,7 +177,7 @@ public class TrainingDataset {
    * @return
    */
   public Dataset<Row> read() {
-    return read(new HashMap<>());
+    return read("");
   }
 
   /**
@@ -195,7 +195,7 @@ public class TrainingDataset {
    * @return
    */
   public Dataset<Row> read(String split) {
-    return read(split, new HashMap<>());
+    return read(split, null);
   }
 
 
@@ -214,6 +214,6 @@ public class TrainingDataset {
    * @param numRows
    */
   public void show(int numRows) {
-    read(new HashMap<>()).show(numRows);
+    read("").show(numRows);
   }
 }
