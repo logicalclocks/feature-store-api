@@ -12,3 +12,11 @@ class Feature:
             "type": self._type,
             "description": self._description,
         }
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def type(self):
+        return self._type

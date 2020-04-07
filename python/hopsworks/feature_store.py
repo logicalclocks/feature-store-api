@@ -65,8 +65,9 @@ class FeatureStore:
         data_format="tfrecords",
         storage_connector=None,
         write_mode="overwrite",
-        splits=[],
+        splits=None,
         location="",
+        seed=None,
     ):
         return training_dataset.TrainingDataset(
             name=name,
@@ -77,6 +78,7 @@ class FeatureStore:
             location=location,
             featurestore_id=self._id,
             splits=splits,
+            seed=seed,
         )
 
     def get_storage_connector(self, name, connector_type):

@@ -115,3 +115,29 @@ class Engine:
             )
             for feat in json.loads(dataframe.schema.json())["fields"]
         ]
+
+    def parse_schema_dict(self, dataframe):
+        return {
+            feat["name"]: feature.Feature(
+                feat["name"], feat["type"], feat["metadata"].get("description", "")
+            )
+            for feat in json.loads(dataframe.schema.json())["fields"]
+        }
+
+    def schema_matches(self, dataframe, schema):
+        # This does not respect order, for that we would need to make sure the features in the
+        # list coming from the backend are ordered correctly
+        insert_schema = self.parse_schema_dict(dataframe)
+        for feat in schema:
+            insert_feat = insert_schema.pop(feat.name, False)
+            if insert_feat:
+                if insert_feat.type == feat.type:
+                    pass
+            else:
+                raise SchemaError(
+                    "Schemas do not match, could not find feature {} among the data to be inserted.".format()
+                )
+
+
+class SchemaError(Exception):
+    """Thrown when schemas don't match"""

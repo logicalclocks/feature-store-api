@@ -1,9 +1,14 @@
 import humps
 import json
 
-from hopsworks import util, engine
+from hopsworks import util, engine, feature
 from hopsworks.storage_connector import StorageConnector
-from hopsworks.core import query, training_dataset_api, storage_connector_api
+from hopsworks.core import (
+    query,
+    training_dataset_api,
+    storage_connector_api,
+    training_dataset_engine,
+)
 
 
 class TrainingDataset:
@@ -20,7 +25,7 @@ class TrainingDataset:
         featurestore_id,
         storage_connector=None,
         splits=None,
-        type=None,
+        seed=None,
         cluster_analysis=None,
         created=None,
         creator=None,
@@ -42,9 +47,8 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._feature_query = None
-        self._feature_dataframe = None
         self._splits = splits
+        self._seed = seed
         self._location = location
 
         self._storage_connector_name = storage_connector_name
@@ -55,6 +59,10 @@ class TrainingDataset:
             featurestore_id
         )
 
+        self._training_dataset_engine = training_dataset_engine.TrainingDatasetEngine(
+            featurestore_id
+        )
+
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             featurestore_id
         )
@@ -62,6 +70,7 @@ class TrainingDataset:
         # set up depending on user initialized or coming from backend response
         if training_dataset_type is None:
             # no type -> user init
+            self._features = features
             self.storage_connector = storage_connector
         else:
             # type available -> init from backend response
@@ -69,6 +78,7 @@ class TrainingDataset:
             self._storage_connector = self._storage_connector_api.get_by_id(
                 storage_connector_id, storage_connector_type
             )
+            self._features = [feature.Feature(**feat) for feat in features]
             self._training_dataset_type = training_dataset_type
 
     def create(self, features, write_options={}):
@@ -81,38 +91,32 @@ class TrainingDataset:
             )
 
         self._features = engine.get_instance().parse_schema(feature_dataframe)
-        self._training_dataset_api.post(self)
-
-        # post updates reinstantiates the instance so set these after the REST call
-        self._feature_dataframe = feature_dataframe
-        if isinstance(features, query.Query):
-            self._feature_query = features
-
-        write_options = engine.get_instance().write_options(
-            self.data_format, write_options
-        )
-
-        # TODO: currently not supported petastorm, hdf5 and npy file formats
-        engine.get_instance().write(
-            feature_dataframe,
-            self._storage_connector,
-            self._data_format,
-            "overwrite",
-            write_options,
-            self._location + "/" + self._name,
-        )
-
+        self._training_dataset_engine.create(self, feature_dataframe, write_options)
         return self
+
+    def insert(self, features, overwrite, write_options={}, splits=None):
+        if isinstance(features, query.Query):
+            feature_dataframe = features.read()
+        else:
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+                features
+            )
+        # TODO: remove later, only for testing
+        self.splits = splits
+        self._training_dataset_engine.insert(
+            self, feature_dataframe, write_options, overwrite
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        # here we lose the information that the user set
-        # need to find solution for that
+        _ = json_decamelized.pop("type")
+        # here we lose the information that the user set, e.g. write_options
         self.__init__(**json_decamelized)
         return self
 
@@ -232,3 +236,15 @@ class TrainingDataset:
     @location.setter
     def location(self, location):
         self._location = location
+
+    @property
+    def schema(self):
+        return self._features
+
+    @property
+    def seed(self):
+        return self._seed
+
+    @seed.setter
+    def seed(self, seed):
+        self._seed = seed
