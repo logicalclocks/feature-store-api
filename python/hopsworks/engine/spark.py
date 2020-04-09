@@ -99,7 +99,7 @@ class Engine:
             path = self._setup_s3(storage_connector, path)
         return (
             self._spark_session.read.format(data_format)
-            .options(read_options)
+            .options(**read_options)
             .load(path)
         )
 
