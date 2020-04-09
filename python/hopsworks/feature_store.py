@@ -1,7 +1,11 @@
 import humps
 
 from hopsworks import engine, training_dataset
-from hopsworks.core import feature_group_api, storage_connector_api
+from hopsworks.core import (
+    feature_group_api,
+    storage_connector_api,
+    training_dataset_api,
+)
 
 
 class FeatureStore:
@@ -45,6 +49,7 @@ class FeatureStore:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             self._id
         )
+        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -80,6 +85,9 @@ class FeatureStore:
             splits=splits,
             seed=seed,
         )
+
+    def get_training_dataset(self, name, version):
+        return self._training_dataset_api.get(name, version)
 
     def get_storage_connector(self, name, connector_type):
         return self._storage_connector_api.get(name, connector_type)

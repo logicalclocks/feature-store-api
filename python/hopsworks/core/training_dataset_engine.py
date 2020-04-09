@@ -51,7 +51,10 @@ class TrainingDatasetEngine:
         )
 
         return engine.get_instance().read(
-            training_dataset.data_format, read_options, path
+            training_dataset.storage_connector,
+            training_dataset.data_format,
+            read_options,
+            path,
         )
 
     def _write(self, training_dataset, dataset, write_options, save_mode):

@@ -84,20 +84,19 @@ class Engine:
             data_format = "csv"
 
         if storage_connector.connector_type == StorageConnector.S3:
-            self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.access.key", storage_connector.access_key
-            )
-            self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.secret.key", storage_connector.access_key
-            )
-            path = path.replace("s3", "s3a", 1)
-            print(path)
+            path = self._setup_s3(storage_connector, path)
 
         dataframe.write.format(data_format).options(**write_options).mode(
             write_mode
         ).save(path)
 
-    def read(self, data_format, read_options, path):
+    def read(self, storage_connector, data_format, read_options, path):
+
+        if data_format.lower() == "tsv":
+            data_format = "csv"
+
+        if storage_connector.connector_type == StorageConnector.S3:
+            path = self._setup_s3(storage_connector, path)
         return (
             self._spark_session.read.format(data_format)
             .options(read_options)
@@ -159,6 +158,15 @@ class Engine:
                 raise SchemaError(
                     "Schemas do not match, could not find feature {} among the data to be inserted.".format()
                 )
+
+    def _setup_s3(self, storage_connector, path):
+        self._spark_context._jsc.hadoopConfiguration().set(
+            "fs.s3a.access.key", storage_connector.access_key
+        )
+        self._spark_context._jsc.hadoopConfiguration().set(
+            "fs.s3a.secret.key", storage_connector.access_key
+        )
+        return path.replace("s3", "s3a", 1)
 
 
 class SchemaError(Exception):
