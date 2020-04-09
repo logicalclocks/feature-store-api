@@ -69,7 +69,6 @@ class FeatureStore:
         description="",
         data_format="tfrecords",
         storage_connector=None,
-        write_mode="overwrite",
         splits=None,
         location="",
         seed=None,
