@@ -16,7 +16,6 @@ class StorageConnector:
         featurestore_id,
         storage_connector_type,
         # members specific to type of connector
-        # TODO: or should these be subclassed and then init with factory?
         hopsfs_path=None,
         dataset_name=None,
         access_key=None,
