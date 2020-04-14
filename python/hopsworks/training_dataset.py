@@ -47,7 +47,6 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._splits = splits
         self._seed = seed
         self._location = location
 
@@ -68,6 +67,7 @@ class TrainingDataset:
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
+            self.splits = splits
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -77,6 +77,7 @@ class TrainingDataset:
             self._features = [
                 feature.Feature.from_response_json(feat) for feat in features
             ]
+            self._splits = splits
             self._training_dataset_type = training_dataset_type
 
     def create(self, features, write_options={}):
@@ -92,15 +93,13 @@ class TrainingDataset:
         self._training_dataset_engine.create(self, feature_dataframe, write_options)
         return self
 
-    def insert(self, features, overwrite, write_options={}, splits=None):
+    def insert(self, features, overwrite, write_options={}):
         if isinstance(features, query.Query):
             feature_dataframe = features.read()
         else:
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features
             )
-        # TODO: remove later, only for testing
-        self.splits = splits
         self._training_dataset_engine.insert(
             self, feature_dataframe, write_options, overwrite
         )
@@ -148,6 +147,8 @@ class TrainingDataset:
             "location": self._location,
             "trainingDatasetType": self._training_dataset_type,
             "features": self._features,
+            "splits": self._splits,
+            "seed": self._seed,
         }
 
     @property
@@ -223,11 +224,13 @@ class TrainingDataset:
 
     @property
     def splits(self):
-        return self._splits
+        return {split["name"]: split["percentage"] for split in self._splits}
 
     @splits.setter
     def splits(self, splits):
-        self._splits = splits
+        # user api differs from how the backend expects the splits to be represented
+        splits_list = [{"name": k, "percentage": v} for k, v in splits.items()]
+        self._splits = splits_list
 
     @property
     def location(self):

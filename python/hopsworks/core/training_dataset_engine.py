@@ -12,10 +12,7 @@ class TrainingDatasetEngine:
         )
 
     def create(self, training_dataset, feature_dataframe, user_write_options):
-        # TODO: remove when backend saves the splits, just for now for testing
-        splits = training_dataset.splits
         self._training_dataset_api.post(training_dataset)
-        training_dataset.splits = splits
 
         write_options = engine.get_instance().write_options(
             training_dataset.data_format, user_write_options

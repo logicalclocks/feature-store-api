@@ -69,7 +69,7 @@ class FeatureStore:
         description="",
         data_format="tfrecords",
         storage_connector=None,
-        splits=None,
+        splits={},
         location="",
         seed=None,
     ):
