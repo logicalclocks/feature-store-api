@@ -14,7 +14,6 @@ class Feature:
     def to_dict(self):
         return {
             "name": self._name,
-            "type": self._type,
             "description": self._description,
             "partition": self._partition,
             "primary": self._primary,
