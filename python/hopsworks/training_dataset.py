@@ -51,10 +51,6 @@ class TrainingDataset:
         self._seed = seed
         self._location = location
 
-        self._storage_connector_name = storage_connector_name
-        self._storage_connector_id = storage_connector_id
-        self._storage_connector_type = storage_connector_type
-
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
         )
@@ -212,7 +208,6 @@ class TrainingDataset:
             self._storage_connector = storage_connector
         elif storage_connector is None:
             # init empty connector, otherwise will have to handle it at serialization time
-            # TODO: make prettier
             self._storage_connector = StorageConnector(
                 None, None, None, None, None, None, None, None
             )
