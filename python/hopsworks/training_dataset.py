@@ -78,7 +78,9 @@ class TrainingDataset:
             self._storage_connector = self._storage_connector_api.get_by_id(
                 storage_connector_id, storage_connector_type
             )
-            self._features = [feature.Feature(**feat) for feat in features]
+            self._features = [
+                feature.Feature.from_response_json(feat) for feat in features
+            ]
             self._training_dataset_type = training_dataset_type
 
     def create(self, features, write_options={}):

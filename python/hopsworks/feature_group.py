@@ -52,7 +52,7 @@ class FeatureGroup:
         self._cluster_analysis = cluster_analysis
         self._name = name
         self._id = id
-        self._features = [feature.Feature(**feat) for feat in features]
+        self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._location = location
         self._jobs = jobs
         self._feature_group_type = featuregroup_type
