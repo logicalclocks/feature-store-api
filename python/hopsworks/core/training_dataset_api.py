@@ -19,7 +19,10 @@ class TrainingDatasetApi:
         headers = {"content-type": "application/json"}
         return training_dataset_instance.update_from_response_json(
             _client._send_request(
-                "POST", path_params, headers=headers, data=training_dataset.json()
+                "POST",
+                path_params,
+                headers=headers,
+                data=training_dataset_instance.json(),
             ),
         )
 
