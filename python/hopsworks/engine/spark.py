@@ -105,28 +105,32 @@ class Engine:
 
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
-            options = dict(recordType="Example", **provided_options)
+            options = dict(recordType="Example")
+            options.update(provided_options)
         elif data_format.lower() == "csv":
-            options = dict(delimiter=",", header="true", **provided_options)
+            options = dict(delimiter=",", header="true")
+            options.update(provided_options)
         elif data_format.lower() == "tsv":
-            options = dict(delimiter="\t", header="true", **provided_options)
+            options = dict(delimiter="\t", header="true")
+            options.update(provided_options)
         else:
             options = {}
+            options.update(provided_options)
         return options
 
     def read_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
+            options.update(provided_options)
         elif data_format.lower() == "csv":
-            options = dict(
-                delimiter=",", header="true", inferSchema="true", **provided_options
-            )
+            options = dict(delimiter=",", header="true", inferSchema="true")
+            options.update(provided_options)
         elif data_format.lower() == "tsv":
-            options = dict(
-                delimiter="\t", header="true", inferSchema="true", **provided_options
-            )
+            options = dict(delimiter="\t", header="true", inferSchema="true")
+            options.update(provided_options)
         else:
             options = {}
+            options.update(provided_options)
         return options
 
     def parse_schema(self, dataframe):
