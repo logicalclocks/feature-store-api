@@ -14,8 +14,9 @@ class Feature:
         self._name = name
         self._type = type
         self._description = description
-        self._primary = primary
-        self._partition = partition
+        # TODO: imo should be managed by the backend
+        self._primary = primary or False
+        self._partition = partition or False
         self._online_type = online_type
 
     def to_dict(self):
@@ -25,6 +26,7 @@ class Feature:
             "description": self._description,
             "partition": self._partition,
             "primary": self._primary,
+            "onlineType": self._online_type,
         }
 
     @classmethod
