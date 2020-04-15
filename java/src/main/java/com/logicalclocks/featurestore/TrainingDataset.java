@@ -51,6 +51,9 @@ public class TrainingDataset {
   private String location;
 
   @Getter @Setter
+  private Long seed;
+
+  @Getter @Setter
   @JsonIgnore
   private Map<String, Double> splits;
 
@@ -59,7 +62,7 @@ public class TrainingDataset {
   @Builder
   public TrainingDataset(@NonNull String name, @NonNull Integer version, String description,
                          DataFormat dataFormat, StorageConnector storageConnector,
-                         String location, Map<String, Double> splits,
+                         String location, Map<String, Double> splits, Long seed,
                          FeatureStore featureStore) {
     this.name = name;
     this.version = version;
@@ -76,6 +79,7 @@ public class TrainingDataset {
     }
 
     this.splits = splits;
+    this.seed = seed;
     this.featureStore = featureStore;
   }
 

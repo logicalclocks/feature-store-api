@@ -101,7 +101,15 @@ public class TrainingDatasetEngine {
       }
 
       // The actual data will be stored in training_ds_version/split_name
-      writeSplits(dataset.randomSplit(splitFactors.stream().mapToDouble(Double::doubleValue).toArray()),
+      Dataset<Row>[] datasetSplits = null;
+      if (trainingDataset.getSeed() != null) {
+        datasetSplits = dataset.randomSplit(
+            splitFactors.stream().mapToDouble(Double::doubleValue).toArray(), trainingDataset.getSeed());
+      } else {
+        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Double::doubleValue).toArray());
+      }
+
+      writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
           trainingDataset.getLocation(), splitNames);
     }
