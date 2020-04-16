@@ -55,7 +55,7 @@ class TrainingDatasetEngine:
         )
 
     def _write(self, training_dataset, dataset, write_options, save_mode):
-        if training_dataset.splits is None:
+        if len(training_dataset.splits) == 0:
             path = training_dataset.location + "/" + training_dataset.name
             self._write_single(
                 dataset,
