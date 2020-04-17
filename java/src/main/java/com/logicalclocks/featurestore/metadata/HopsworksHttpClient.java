@@ -12,4 +12,6 @@ public interface HopsworksHttpClient {
       throws IOException, FeatureStoreException;
 
   String downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException;
+
+  void refreshJWT() throws FeatureStoreException;
 }

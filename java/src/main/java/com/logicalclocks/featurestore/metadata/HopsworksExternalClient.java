@@ -194,4 +194,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         Base64.decodeBase64(credentials.getTStore()));
     return credentials.getPassword();
   }
+
+  @Override
+  public void refreshJWT() throws FeatureStoreException {
+    // NO Op for external clients
+  }
 }

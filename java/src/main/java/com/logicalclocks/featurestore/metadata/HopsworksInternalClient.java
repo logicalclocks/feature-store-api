@@ -90,7 +90,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
         .build();
   }
 
-  private String readContainerJwt() throws FeatureStoreException {
+  public void refreshJWT() throws FeatureStoreException {
     String jwt = null;
     try (FileChannel fc = FileChannel.open(Paths.get(TOKEN_PATH), StandardOpenOption.READ)) {
       FileLock fileLock = fc.tryLock(0, Long.MAX_VALUE, true);

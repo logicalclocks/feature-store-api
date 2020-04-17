@@ -35,10 +35,7 @@ public class FeatureGroupApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    FeatureGroup[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uri), response -> {
-      String responseJSON = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
-      return hopsworksClient.getObjectMapper().readValue(responseJSON, FeatureGroup[].class);
-    });
+    FeatureGroup[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroup[].class);
 
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.

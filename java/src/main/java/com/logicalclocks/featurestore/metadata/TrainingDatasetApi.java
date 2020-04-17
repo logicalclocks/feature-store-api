@@ -37,10 +37,7 @@ public class TrainingDatasetApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    TrainingDataset[] trainingDatasets = hopsworksClient.handleRequest(new HttpGet(uri), response -> {
-      String responseJSON = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
-      return hopsworksClient.getObjectMapper().readValue(responseJSON, TrainingDataset[].class);
-    });
+    TrainingDataset[] trainingDatasets = hopsworksClient.handleRequest(new HttpGet(uri), TrainingDataset[].class);
 
     // There can be only one single training dataset with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.

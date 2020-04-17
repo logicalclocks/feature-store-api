@@ -95,4 +95,13 @@ public class Query {
     LOGGER.info("Executing query: " + sqlQuery);
     SparkEngine.getInstance().sql(sqlQuery).show(numRows);
   }
+
+  @Override
+  public String toString() {
+    try {
+      return queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    } catch (FeatureStoreException | IOException e) {
+      return e.getMessage();
+    }
+  }
 }
