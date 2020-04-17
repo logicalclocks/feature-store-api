@@ -16,5 +16,11 @@ public class StorageConnector {
   private String name;
 
   @Getter @Setter
+  private String accessKey;
+
+  @Getter @Setter
+  private String secretKey;
+
+  @Getter @Setter
   private StorageConnectorType storageConnectorType;
 }

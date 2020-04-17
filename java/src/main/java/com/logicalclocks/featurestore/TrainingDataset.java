@@ -47,13 +47,16 @@ public class TrainingDataset {
   private Integer storageConnectorId;
 
   @Getter @Setter
+  @JsonIgnore
+  private StorageConnector storageConnector;
+
+  @Getter @Setter
   private String location;
 
   @Getter @Setter
   private Long seed;
 
   @Getter @Setter
-  @JsonIgnore
   private Map<String, Double> splits;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
@@ -68,6 +71,7 @@ public class TrainingDataset {
     this.description = description;
     this.dataFormat = dataFormat;
     this.location = location;
+    this.storageConnector = storageConnector;
 
     if (storageConnector != null) {
       this.storageConnectorId = storageConnector.getId();

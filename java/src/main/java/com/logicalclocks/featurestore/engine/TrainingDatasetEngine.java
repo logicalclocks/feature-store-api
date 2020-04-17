@@ -81,6 +81,10 @@ public class TrainingDatasetEngine {
   private void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> writeOptions, SaveMode saveMode) {
 
+    if (trainingDataset.getStorageConnector() != null) {
+      SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
+    }
+
     if (trainingDataset.getSplits() == null) {
       // Write a single dataset
 
@@ -116,6 +120,10 @@ public class TrainingDatasetEngine {
   }
 
   public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions) {
+    if (trainingDataset.getStorageConnector() != null) {
+      SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
+    }
+
     String path = "";
     if (Strings.isNullOrEmpty(split)) {
       // ** glob means "all sub directories"
@@ -207,7 +215,7 @@ public class TrainingDatasetEngine {
         .format(dataFormat.toString())
         .options(writeOptions)
         .mode(saveMode)
-        .save(path);
+        .save(SparkEngine.sparkPath(path));
   }
 
   private Dataset<Row> read(DataFormat dataFormat, Map<String, String> readOptions, String path) {
@@ -215,6 +223,6 @@ public class TrainingDatasetEngine {
         .read()
         .format(dataFormat.toString())
         .options(readOptions)
-        .load(path);
+        .load(SparkEngine.sparkPath(path));
   }
 }
