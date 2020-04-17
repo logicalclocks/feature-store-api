@@ -100,8 +100,6 @@ public class HopsworksClient {
     }
   }
 
-  private static class AuthorizationException extends ClientProtocolException {}
-
   private static class BaseHandler<T> implements ResponseHandler<T> {
 
     private Class<T> cls;
@@ -117,8 +115,6 @@ public class HopsworksClient {
       String responseJSON = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
       if (response.getStatusLine().getStatusCode() / 100 == 2) {
         return objectMapper.readValue(responseJSON, cls);
-      } else if (response.getStatusLine().getStatusCode() == 401) {
-        throw new AuthorizationException();
       } else {
         HopsworksErrorClass error = objectMapper.readValue(responseJSON, HopsworksErrorClass.class);
         LOGGER.info("Request error: " + response.getStatusLine().getStatusCode() + " " + error);
@@ -127,15 +123,12 @@ public class HopsworksClient {
     }
   }
 
+  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException, FeatureStoreException {
+    return hopsworksHttpClient.handleRequest(request, responseHandler);
+  }
+
   public <T> T handleRequest(HttpRequest request, Class<T> cls) throws IOException, FeatureStoreException {
-    try {
-      return hopsworksHttpClient.handleRequest(request, new BaseHandler<>(cls, objectMapper));
-    } catch (AuthorizationException ex) {
-      // In case of authorization exception we should try to reload the JWT from the FS. Maybe it was expired and
-      // it has been renewed
-      hopsworksHttpClient.refreshJWT();
-      return hopsworksHttpClient.handleRequest(request, new BaseHandler<>(cls, objectMapper));
-    }
+    return hopsworksHttpClient.handleRequest(request, new BaseHandler<>(cls, objectMapper));
   }
 
   public void downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {

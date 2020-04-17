@@ -66,7 +66,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
           .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
           .build();
 
-    jwt = readContainerJwt();
+    refreshJWT();
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory()
@@ -91,7 +91,6 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
   }
 
   public void refreshJWT() throws FeatureStoreException {
-    String jwt = null;
     try (FileChannel fc = FileChannel.open(Paths.get(TOKEN_PATH), StandardOpenOption.READ)) {
       FileLock fileLock = fc.tryLock(0, Long.MAX_VALUE, true);
       try {
@@ -122,7 +121,6 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
     } catch (IOException e) {
       throw new FeatureStoreException("Could not read jwt token from local container." + e.getMessage(), e);
     }
-    return jwt;
   }
 
   @Override
@@ -135,7 +133,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
       return httpClient.execute(httpHost, request, authHandler);
     } catch (UnauthorizedException e) {
       // re-read the jwt and try one more time
-      readContainerJwt();
+      refreshJWT();
       request.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
       return httpClient.execute(httpHost, request, responseHandler);
     } catch (InternalException e) {
