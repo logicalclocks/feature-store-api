@@ -57,14 +57,14 @@ public class TrainingDataset {
   private Long seed;
 
   @Getter @Setter
-  private Map<String, Double> splits;
+  private List<Split> splits;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
 
   @Builder
   public TrainingDataset(@NonNull String name, @NonNull Integer version, String description,
                          DataFormat dataFormat, StorageConnector storageConnector,
-                         String location, Map<String, Double> splits, Long seed,
+                         String location, List<Split> splits, Long seed,
                          FeatureStore featureStore) {
     this.name = name;
     this.version = version;

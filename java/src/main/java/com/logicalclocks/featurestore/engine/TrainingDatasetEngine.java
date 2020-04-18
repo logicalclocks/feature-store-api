@@ -3,6 +3,7 @@ package com.logicalclocks.featurestore.engine;
 import com.google.common.base.Strings;
 import com.logicalclocks.featurestore.DataFormat;
 import com.logicalclocks.featurestore.FeatureStoreException;
+import com.logicalclocks.featurestore.Split;
 import com.logicalclocks.featurestore.TrainingDataset;
 import com.logicalclocks.featurestore.metadata.TrainingDatasetApi;
 import com.logicalclocks.featurestore.util.Constants;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TrainingDatasetEngine {
 
@@ -96,26 +98,22 @@ public class TrainingDatasetEngine {
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
     } else {
-      // Make sure the names and factors are ordered
-      List<String> splitNames = new ArrayList<>();
-      List<Double> splitFactors = new ArrayList<>();
-      for (Map.Entry<String, Double> entry : trainingDataset.getSplits().entrySet()) {
-        splitNames.add(entry.getKey());
-        splitFactors.add(entry.getValue());
-      }
+      List<Float> splitFactors = trainingDataset.getSplits().stream()
+          .map(Split::getPercentage)
+          .collect(Collectors.toList());
 
       // The actual data will be stored in training_ds_version/split_name
       Dataset<Row>[] datasetSplits = null;
       if (trainingDataset.getSeed() != null) {
         datasetSplits = dataset.randomSplit(
-            splitFactors.stream().mapToDouble(Double::doubleValue).toArray(), trainingDataset.getSeed());
+            splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
       } else {
-        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Double::doubleValue).toArray());
+        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
       }
 
       writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
-          trainingDataset.getLocation(), splitNames);
+          trainingDataset.getLocation(), trainingDataset.getSplits());
     }
   }
 
@@ -190,13 +188,13 @@ public class TrainingDatasetEngine {
    * @param writeOptions
    * @param saveMode
    * @param basePath
-   * @param splitNames
+   * @param splits
    */
   private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
-                           SaveMode saveMode, String basePath, List<String> splitNames) {
+                           SaveMode saveMode, String basePath, List<Split> splits) {
     for (int i=0; i < datasets.length; i++) {
       writeSingle(datasets[i], dataFormat, writeOptions, saveMode,
-          Paths.get(basePath, splitNames.get(i)).toString());
+          Paths.get(basePath, splits.get(i).getName()).toString());
     }
   }
 

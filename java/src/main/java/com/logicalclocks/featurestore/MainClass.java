@@ -5,7 +5,9 @@ import com.logicalclocks.featurestore.metadata.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainClass {
@@ -29,10 +31,8 @@ public class MainClass {
     //    StorageConnectorType.HOPSFS);
 
     //LOGGER.info("Storage connector ID" + hopsFSConnector.getId());
-    Map<String, Double> splits = new HashMap<>();
-    splits.put("training", 0.70);
-    splits.put("testing", 0.20);
-    splits.put("validatrion", 0.10);
+    List<Split> splits = new ArrayList<>();
+    splits.add(new Split("test", 0.8f));
 
     TrainingDataset td = fs.createTrainingDataset()
         .name("new_api_td")
