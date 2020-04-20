@@ -19,7 +19,6 @@ class Engine:
         self._spark_context = self._spark_session.sparkContext
 
     def sql(self, sql_query, feature_store, dataframe_type):
-        print("Lazily executing query: {}".format(sql_query))
         # set feature store
         self._spark_session.sql("USE {}".format(feature_store))
         result_df = self._spark_session.sql(sql_query)
@@ -78,8 +77,6 @@ class Engine:
     def write(
         self, dataframe, storage_connector, data_format, write_mode, write_options, path
     ):
-        print("write feature dataframe, write_mode: {}".format(write_mode))
-
         if data_format.lower() == "tsv":
             data_format = "csv"
 

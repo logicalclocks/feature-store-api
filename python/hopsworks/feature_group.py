@@ -111,3 +111,7 @@ class FeatureGroup:
 
     def to_dict(self):
         return {"id": self._id}
+
+    @property
+    def features(self):
+        return self._features
