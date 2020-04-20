@@ -107,6 +107,9 @@ class TrainingDataset:
     def read(self, split=None, read_options={}):
         return self._training_dataset_engine.read(self, split, read_options)
 
+    def show(self, n, split=None):
+        self.read(split).show(n)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
