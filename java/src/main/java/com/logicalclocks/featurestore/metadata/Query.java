@@ -28,7 +28,7 @@ public class Query {
 
   private QueryConstructorApi queryConstructorApi;
 
-  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) throws FeatureStoreException {
+  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
@@ -94,5 +94,14 @@ public class Query {
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     LOGGER.info("Executing query: " + sqlQuery);
     SparkEngine.getInstance().sql(sqlQuery).show(numRows);
+  }
+
+  @Override
+  public String toString() {
+    try {
+      return queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    } catch (FeatureStoreException | IOException e) {
+      return e.getMessage();
+    }
   }
 }

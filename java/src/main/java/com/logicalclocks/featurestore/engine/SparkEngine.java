@@ -1,6 +1,10 @@
 package com.logicalclocks.featurestore.engine;
 
+import com.logicalclocks.featurestore.StorageConnector;
+import com.logicalclocks.featurestore.util.Constants;
+import io.netty.util.Constant;
 import lombok.Getter;
+import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -29,5 +33,28 @@ public class SparkEngine {
 
   public Dataset<Row> sql(String query) {
     return sparkSession.sql(query);
+  }
+
+  public void configureConnector(StorageConnector storageConnector) {
+    switch (storageConnector.getStorageConnectorType()) {
+      case S3:
+        configureS3Connector(storageConnector);
+        break;
+    }
+  }
+
+  public static String sparkPath(String path) {
+    if (path.startsWith(Constants.S3_SCHEME)) {
+      return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
+    }
+
+    return path;
+  }
+
+  private void configureS3Connector(StorageConnector storageConnector) {
+    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
+      sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
+      sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
+    }
   }
 }

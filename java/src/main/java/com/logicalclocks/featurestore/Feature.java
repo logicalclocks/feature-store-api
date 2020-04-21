@@ -12,7 +12,7 @@ public class Feature {
   private String name;
 
   @Getter @Setter
-  private String Type;
+  private String type;
 
   @Getter @Setter
   private String onlineType;
@@ -28,5 +28,10 @@ public class Feature {
 
   public Feature(String name) {
     this.name = name;
+  }
+
+  public Feature(String name, String type) {
+    this.name = name;
+    this.type = type;
   }
 }

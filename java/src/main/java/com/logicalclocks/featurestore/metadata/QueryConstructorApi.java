@@ -5,15 +5,12 @@ import com.logicalclocks.featurestore.FeatureStore;
 import com.logicalclocks.featurestore.FeatureStoreException;
 import com.logicalclocks.featurestore.FsQuery;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 public class QueryConstructorApi {
 
@@ -21,13 +18,8 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  private HopsworksClient hopsworksClient;
-
-  public QueryConstructorApi() throws FeatureStoreException {
-    hopsworksClient = HopsworksClient.getInstance();
-  }
-
   public String constructQuery(FeatureStore featureStore, Query query) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH +
         FeatureStoreApi.FEATURE_STORE_SERVICE_PATH +
         QUERY_CONSTRUCTOR_PATH;
