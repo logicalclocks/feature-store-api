@@ -1,5 +1,5 @@
-from hopsworks.connection import Connection
+from hsfs.connection import Connection
 
-connection = Connection.connection
+hsfs = Connection.connection
 
 __all__ = ["connection"]
