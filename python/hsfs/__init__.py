@@ -17,5 +17,6 @@
 from hsfs.connection import Connection
 
 connection = Connection.connection
+setup_databricks = Connection.setup_databricks
 
-__all__ = ["connection"]
+__all__ = ["connection", "setup_databricks"]

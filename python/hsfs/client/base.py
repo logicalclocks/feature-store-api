@@ -37,6 +37,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class Client(ABC):
     TOKEN_FILE = "token.jwt"
     REST_ENDPOINT = "REST_ENDPOINT"
+    DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV = "DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV"
 
     @abstractmethod
     def __init__(self):
@@ -120,7 +121,13 @@ class Client(ABC):
 
     @connected
     def _send_request(
-        self, method, path_params, query_params=None, headers=None, data=None
+        self,
+        method,
+        path_params,
+        query_params=None,
+        headers=None,
+        data=None,
+        stream=False,
     ):
         """Send REST request to Hopsworks.
 
@@ -138,6 +145,8 @@ class Client(ABC):
         :type headers: dict, optional
         :param data: The payload as a python dictionary to be sent as json, defaults to None
         :type data: dict, optional
+        :param stream: Set if response should be a stream, defaults to False
+        :type stream: boolean, optional
         :raises RestAPIError: Raised when request wasn't correctly received, understood or accepted
         :return: Response json
         :rtype: dict
@@ -157,13 +166,13 @@ class Client(ABC):
         )
 
         prepped = self._session.prepare_request(request)
-        response = self._session.send(prepped, verify=self._verify)
+        response = self._session.send(prepped, verify=self._verify, stream=stream)
 
         if response.status_code == 401 and self.REST_ENDPOINT in os.environ:
             # refresh token and retry request - only on hopsworks
             self._auth = auth.BearerAuth(self._read_jwt())
             prepped = self._session.prepare_request(request)
-            response = self._session.send(prepped, verify=self._verify)
+            response = self._session.send(prepped, verify=self._verify, stream=stream)
             if response.status_code // 100 != 2:
                 raise exceptions.RestAPIError(url, response)
             else:
