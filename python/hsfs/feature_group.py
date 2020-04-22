@@ -1,7 +1,7 @@
 import humps
 
-from hopsworks.core import query
-from hopsworks import engine, feature
+from hsfs.core import query
+from hsfs import engine, feature
 
 
 class FeatureGroup:

@@ -1,5 +1,5 @@
-from hopsworks import engine
-from hopsworks.core import training_dataset_api
+from hsfs import engine
+from hsfs.core import training_dataset_api
 
 
 class TrainingDatasetEngine:

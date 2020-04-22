@@ -10,8 +10,8 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
-from hopsworks.client import exceptions, auth
-from hopsworks.decorators import connected
+from hsfs.client import exceptions, auth
+from hsfs.decorators import connected
 
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)

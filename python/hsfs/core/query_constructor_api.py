@@ -1,4 +1,4 @@
-from hopsworks import client
+from hsfs import client
 
 
 class QueryConstructorApi:

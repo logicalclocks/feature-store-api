@@ -1,5 +1,5 @@
-from hopsworks import client
-from hopsworks.feature_store import FeatureStore
+from hsfs import client
+from hsfs.feature_store import FeatureStore
 
 
 class FeatureStoreApi:

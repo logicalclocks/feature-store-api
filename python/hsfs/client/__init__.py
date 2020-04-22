@@ -1,4 +1,4 @@
-from hopsworks.client import aws, hopsworks
+from hsfs.client import aws, hopsworks
 
 _client = None
 

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 __version__ = imp.load_source(
-    'hopsworks.version', os.path.join('hopsworks', 'version.py')).__version__
+    'hsfs.version', os.path.join('hsfs', 'version.py')).__version__
 
 
 def read(fname):
@@ -12,7 +12,7 @@ def read(fname):
 
 
 setup(
-    name="hopsworks",
+    name="hsfs",
     version=__version__,
     install_requires=[
         "pyhumps",

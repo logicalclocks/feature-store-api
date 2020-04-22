@@ -1,4 +1,4 @@
-from hopsworks import util
+from hsfs import util
 
 
 class Join:

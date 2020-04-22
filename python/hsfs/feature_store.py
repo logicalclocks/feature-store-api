@@ -1,7 +1,7 @@
 import humps
 
-from hopsworks import engine, training_dataset
-from hopsworks.core import (
+from hsfs import engine, training_dataset
+from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     training_dataset_api,

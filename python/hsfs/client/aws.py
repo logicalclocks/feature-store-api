@@ -4,7 +4,7 @@ import base64
 import json
 import requests
 
-from hopsworks.client import base, auth, exceptions
+from hsfs.client import base, auth, exceptions
 
 
 class Client(base.Client):

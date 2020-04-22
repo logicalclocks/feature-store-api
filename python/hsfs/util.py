@@ -1,7 +1,7 @@
 import json
 
 
-from hopsworks import feature
+from hsfs import feature
 
 
 class FeatureStoreEncoder(json.JSONEncoder):

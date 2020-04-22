@@ -1,6 +1,6 @@
-from hopsworks import client
+from hsfs import client
 
-from hopsworks import training_dataset
+from hsfs import training_dataset
 
 
 class TrainingDatasetApi:

@@ -9,8 +9,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from hopsworks import feature
-from hopsworks.storage_connector import StorageConnector
+from hsfs import feature
+from hsfs.storage_connector import StorageConnector
 
 
 class Engine:

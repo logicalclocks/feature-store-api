@@ -1,7 +1,7 @@
 import json
 
-from hopsworks import util, engine
-from hopsworks.core import join, query_constructor_api
+from hsfs import util, engine
+from hsfs.core import join, query_constructor_api
 
 
 class Query:

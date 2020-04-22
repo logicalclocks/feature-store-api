@@ -1,7 +1,7 @@
 import os
 import requests
 
-from hopsworks.client import base, auth
+from hsfs.client import base, auth
 
 
 class Client(base.Client):

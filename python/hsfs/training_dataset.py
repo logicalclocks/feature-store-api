@@ -1,9 +1,9 @@
 import humps
 import json
 
-from hopsworks import util, engine, feature
-from hopsworks.storage_connector import StorageConnector
-from hopsworks.core import (
+from hsfs import util, engine, feature
+from hsfs.storage_connector import StorageConnector
+from hsfs.core import (
     query,
     training_dataset_api,
     storage_connector_api,

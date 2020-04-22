@@ -1,5 +1,5 @@
-from hopsworks import client
-from hopsworks import feature_group
+from hsfs import client
+from hsfs import feature_group
 
 
 class FeatureGroupApi:

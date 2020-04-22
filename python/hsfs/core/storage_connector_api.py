@@ -1,4 +1,4 @@
-from hopsworks import client, storage_connector
+from hsfs import client, storage_connector
 
 
 class StorageConnectorApi:

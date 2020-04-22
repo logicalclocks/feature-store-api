@@ -1,9 +1,9 @@
 import os
 from requests.exceptions import ConnectionError
 
-from hopsworks.decorators import connected, not_connected
-from hopsworks import engine, client
-from hopsworks.core import feature_store_api
+from hsfs.decorators import connected, not_connected
+from hsfs import engine, client
+from hsfs.core import feature_store_api
 
 
 class Connection:
