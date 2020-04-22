@@ -35,7 +35,7 @@ setup(
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
     description="",
-    license="GNU Affero General Public License v3",
+    license="Apache License 2.0",
     keywords="",
     url="",
     download_url="",
