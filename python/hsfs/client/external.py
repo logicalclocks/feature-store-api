@@ -51,7 +51,7 @@ class Client(base.Client):
         self._port = port
         self._base_url = "https://" + self._host + ":" + str(self._port)
         self._project_name = project
-        self._region_name = region_name
+        self._region_name = region_name or self.DEFAULT_REGION
         self._cert_folder_base = cert_folder
         self._cert_folder = os.path.join(cert_folder, host)
 
@@ -85,17 +85,17 @@ class Client(base.Client):
 
     def _close(self):
         """Closes a client and deletes certificates."""
-        self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
-        self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
-        # TODO: should this be cleaned up?
-        self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
+        if base.Client.DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV not in os.environ:
+            # Clean up only on AWS, on databricks certs are needed at startup time
+            self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
+            self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+            self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
         try:
             os.rmdir(self._cert_folder)
             # on AWS base dir will be empty, and can be deleted otherwise raises OSError
             # on Databricks there will still be the scripts and clients therefore raises OSError
             os.rmdir(self._cert_folder_base)
         except OSError:
-            # TODO should log something here
             pass
         self._connected = False
 

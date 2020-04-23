@@ -179,6 +179,8 @@ class Client(ABC):
                 return response.json()
         elif response.status_code // 100 != 2:
             raise exceptions.RestAPIError(url, response)
+        elif stream:
+            return response
         else:
             return response.json()
 

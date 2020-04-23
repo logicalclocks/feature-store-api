@@ -110,9 +110,11 @@ class Connection:
         dbfs_folder = client.get_instance()._cert_folder_base
 
         os.makedirs(os.path.join(dbfs_folder, "scripts"), exist_ok=True)
-        connection._get_clients(client.get_instance()._project_id, dbfs_folder)
+        connection._get_clients(dbfs_folder)
         connection._write_init_script(dbfs_folder)
-        connection._print_instructions(cert_folder, dbfs_folder, host)
+        connection._print_instructions(
+            cert_folder, client.get_instance()._cert_folder, internal_ip
+        )
 
         return connection
 
@@ -134,9 +136,13 @@ class Connection:
                         self._region_name,
                         self._secrets_store,
                         self._hostname_verification,
-                        os.path.join("/dbfs", self._trust_store_path),
+                        os.path.join("/dbfs", self._trust_store_path)
+                        if self._trust_store_path is not None
+                        else None,
                         os.path.join("/dbfs", self._cert_folder),
-                        os.path.join("/dbfs", self._api_key_file),
+                        os.path.join("/dbfs", self._api_key_file)
+                        if self._api_key_file is not None
+                        else None,
                     )
                     engine.init("spark")
                 else:
@@ -198,10 +204,12 @@ class Connection:
         Args:
             :dbfs_folder: the folder in which to save the libraries
         """
-        client_libs = self._project_api._get_client()
-        with open(os.path.join(dbfs_folder, "client.tar.gz"), "wb") as f:
-            for chunk in client_libs:
-                f.write(chunk)
+        client_path = os.path.join(dbfs_folder, "client.tar.gz")
+        if not os.path.exists(client_path):
+            client_libs = self._project_api.get_client()
+            with open(client_path, "wb") as f:
+                for chunk in client_libs:
+                    f.write(chunk)
 
     def _write_init_script(self, dbfs_folder):
         """
@@ -217,11 +225,13 @@ class Connection:
             chmod -R +xr /tmp/apache-hive-bin
             cp /tmp/client/hopsfs-client*.jar /databricks/jars/
         """
-        initScript = initScript.replace("PATH", dbfs_folder)
-        with open(os.path.join(dbfs_folder, "scripts/initScript.sh"), "w") as f:
-            f.write(initScript)
+        script_path = os.path.join(dbfs_folder, "scripts/initScript.sh")
+        if not os.path.exists(script_path):
+            initScript = initScript.replace("PATH", dbfs_folder)
+            with open(script_path, "w") as f:
+                f.write(initScript)
 
-    def _print_instructions(self, cert_folder, dbfs_folder, host):
+    def _print_instructions(self, user_cert_folder, cert_folder, internal_ip):
         """
         print the instructions to set up the hopsfs hive connection on databricks
         Args:
@@ -233,6 +243,7 @@ class Connection:
         instructions = """
         In the advanced options of your databricks cluster configuration
         add the following path to Init Scripts: dbfs:/{0}/scripts/initScript.sh
+
         add the following to the Spark Config:
         spark.hadoop.fs.hopsfs.impl io.hops.hopsfs.client.HopsFileSystem
         spark.hadoop.hops.ipc.server.ssl.enabled true
@@ -246,7 +257,7 @@ class Connection:
         spark.hadoop.hive.metastore.uris thrift://{2}:9083
         Then save and restart the cluster.
         """.format(
-            cert_folder, dbfs_folder, host
+            user_cert_folder, cert_folder, internal_ip
         )
 
         print(instructions)
