@@ -22,7 +22,7 @@ from pyhive import hive
 class Engine:
     def __init__(self, host, cert_folder, cert_key):
         self._host = host
-        self._cert_folder = cert_folder
+        self._cert_folder = os.path.join(cert_folder, host)
         self._cert_key = cert_key
 
     def sql(self, sql_query, feature_store, dataframe_type):
