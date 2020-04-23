@@ -170,7 +170,7 @@ class Connection:
         print("Connected. Call `.close()` to terminate connection gracefully.")
 
     def close(self):
-        client.get_instance().stop()
+        client.stop()
         self._feature_store_api = None
         engine.stop()
         self._connected = False
