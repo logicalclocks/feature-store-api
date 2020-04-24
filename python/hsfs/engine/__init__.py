@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hopsworks.engine import spark, hive
+from hsfs.engine import spark, hive
 
 _engine = None
 
