@@ -75,6 +75,12 @@ class FeatureStore:
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)
 
+    def get_training_dataset(self, name, version):
+        return self._training_dataset_api.get(name, version)
+
+    def get_storage_connector(self, name, connector_type):
+        return self._storage_connector_api.get(name, connector_type)
+
     def sql(self, query, dataframe_type="default"):
         return engine.get_instance().sql(query, self._name, dataframe_type)
 
@@ -100,9 +106,3 @@ class FeatureStore:
             splits=splits,
             seed=seed,
         )
-
-    def get_training_dataset(self, name, version):
-        return self._training_dataset_api.get(name, version)
-
-    def get_storage_connector(self, name, connector_type):
-        return self._storage_connector_api.get(name, connector_type)
