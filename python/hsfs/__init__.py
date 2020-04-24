@@ -16,6 +16,6 @@
 
 from hsfs.connection import Connection
 
-hsfs = Connection.connection
+connection = Connection.connection
 
 __all__ = ["connection"]
