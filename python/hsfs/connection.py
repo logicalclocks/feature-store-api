@@ -85,14 +85,14 @@ class Connection:
     def setup_databricks(
         cls,
         host,
-        port,
+        project,
         internal_ip,
-        project=None,
-        region_name=None,
-        secrets_store=None,
-        hostname_verification=None,
+        port=443,
+        region_name="default",
+        secrets_store="parameterstore",
+        cert_folder="hops",
+        hostname_verification=True,
         trust_store_path=None,
-        cert_folder=None,
         api_key_file=None,
     ):
         connection = cls(
@@ -200,9 +200,10 @@ class Connection:
 
     def _get_clients(self, dbfs_folder):
         """
-        get the libraries and save them in the dbfs folder
-        Args:
-            :dbfs_folder: the folder in which to save the libraries
+        Get the client libraries and save them in the dbfs folder.
+
+        :param dbfs_folder: the folder in which to save the libraries
+        :type dbfs_folder: str
         """
         client_path = os.path.join(dbfs_folder, "client.tar.gz")
         if not os.path.exists(client_path):
@@ -213,9 +214,10 @@ class Connection:
 
     def _write_init_script(self, dbfs_folder):
         """
-        write the init script
-        Args:
-            :dbfs_folder: the folder in which to save the script
+        Write the init script for databricks clusters to dbfs.
+
+        :param dbfs_folder: the folder on dbfs in which to save the script
+        :type dbfs_foler: str
         """
         initScript = """
             #!/bin/sh
@@ -233,11 +235,14 @@ class Connection:
 
     def _print_instructions(self, user_cert_folder, cert_folder, internal_ip):
         """
-        print the instructions to set up the hopsfs hive connection on databricks
-        Args:
-            :cert_folder: the path in dbfs of the folder in which the credention were saved
-            :dbfs_folder: the folder in which the credential were saved
-            :host: the host of the hive metastore
+        Print the instructions to set up the hopsfs hive connection on databricks.
+
+        :param user_cert_folder: the original user specified cert_folder without `/dbfs/` prefix
+        :type user_cert_folder: str
+        :cert_folder: the directory in which the credential were saved, prefixed with `/dbfs/` and `[hostname]`
+        :type cert_folder: str
+        :param internal_ip: the internal ip of the hopsworks instance
+        :type internal_ip: str
         """
 
         instructions = """
