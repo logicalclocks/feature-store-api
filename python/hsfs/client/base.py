@@ -173,13 +173,11 @@ class Client(ABC):
             self._auth = auth.BearerAuth(self._read_jwt())
             prepped = self._session.prepare_request(request)
             response = self._session.send(prepped, verify=self._verify, stream=stream)
-            if response.status_code // 100 != 2:
-                raise exceptions.RestAPIError(url, response)
-            else:
-                return response.json()
-        elif response.status_code // 100 != 2:
+
+        if response.status_code // 100 != 2:
             raise exceptions.RestAPIError(url, response)
-        elif stream:
+
+        if stream:
             return response
         else:
             return response.json()
