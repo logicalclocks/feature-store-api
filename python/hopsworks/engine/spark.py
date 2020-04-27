@@ -10,6 +10,8 @@ except ModuleNotFoundError:
     pass
 
 from hopsworks import feature
+
+# from hopsworks.tf_utils import store_tf_record_schema_spark_hdfs
 from hopsworks.storage_connector import StorageConnector
 
 
@@ -86,6 +88,11 @@ class Engine:
         dataframe.write.format(data_format).options(**write_options).mode(
             write_mode
         ).save(path)
+
+        # TODO (davit): if saving  "tfrecords" generate schema and do all the hard job to estimate feature types
+        #  especially for array types
+        # if data_format.lower() == "tfrecords":
+        #     store_tf_record_schema_spark_hdfs(dataframe, path)
 
     def read(self, storage_connector, data_format, read_options, path):
 
