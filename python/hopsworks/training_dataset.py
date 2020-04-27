@@ -8,6 +8,7 @@ from hopsworks.core import (
     training_dataset_api,
     storage_connector_api,
     training_dataset_engine,
+    feed_model_engine,
 )
 
 
@@ -106,6 +107,11 @@ class TrainingDataset:
 
     def read(self, split=None, read_options={}):
         return self._training_dataset_engine.read(self, split, read_options)
+
+    def feed(self, label_name, batch_size, num_epochs, split=None):
+        return feed_model_engine.FeedModelEngine(
+            self, split, batch_size, num_epochs, label_name
+        )
 
     def show(self, n, split=None):
         self.read(split).show(n)

@@ -119,3 +119,6 @@ dmypy.json
 .vscode
 *.iml
 target/
+
+# Mac
+.DS_Store
