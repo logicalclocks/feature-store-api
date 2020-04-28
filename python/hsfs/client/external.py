@@ -53,7 +53,7 @@ class Client(base.Client):
         self._project_name = project
         self._region_name = region_name or self.DEFAULT_REGION
         self._cert_folder_base = cert_folder
-        self._cert_folder = os.path.join(cert_folder, host)
+        self._cert_folder = os.path.join(cert_folder, host, project)
 
         self._auth = auth.ApiKeyAuth(
             self._get_secret(secrets_store, "api-key", api_key_file)
@@ -91,7 +91,10 @@ class Client(base.Client):
             self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
             self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
         try:
+            # delete project level
             os.rmdir(self._cert_folder)
+            # delete host level
+            os.rmdir(os.path.dirname(self._cert_folder))
             # on AWS base dir will be empty, and can be deleted otherwise raises OSError
             # on Databricks there will still be the scripts and clients therefore raises OSError
             os.rmdir(self._cert_folder_base)
