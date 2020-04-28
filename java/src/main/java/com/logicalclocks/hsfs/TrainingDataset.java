@@ -107,8 +107,8 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void create(Query query) throws FeatureStoreException, IOException {
-    create(query, null);
+  public void save(Query query) throws FeatureStoreException, IOException {
+    save(query, null);
   }
 
   /**
@@ -117,8 +117,8 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void create(Dataset<Row> dataset) throws FeatureStoreException, IOException {
-    create(dataset, null);
+  public void save(Dataset<Row> dataset) throws FeatureStoreException, IOException {
+    save(dataset, null);
   }
 
   /**
@@ -128,8 +128,8 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void create(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
-    trainingDatasetEngine.create(this, query.read(), writeOptions);
+  public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+    trainingDatasetEngine.save(this, query.read(), writeOptions);
   }
 
   /**
@@ -139,9 +139,9 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void create(Dataset<Row> dataset, Map<String, String> writeOptions)
+  public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.create(this, dataset, writeOptions);
+    trainingDatasetEngine.save(this, dataset, writeOptions);
   }
 
   /**
