@@ -2,6 +2,8 @@ import tensorflow as tf
 from petastorm import make_reader
 from petastorm.tf_utils import make_petastorm_dataset
 
+import pydoop.hdfs
+
 
 class FeedModelEngine:
     def __init__(
@@ -30,20 +32,24 @@ class FeedModelEngine:
         self.training_dataset_schema = self.training_dataset.schema
 
         if self.split is None:
-            self.path = self.training_dataset.location + "/" + "**"
+            self.path = pydoop.hdfs.path.abspath(
+                self.training_dataset.location + "/" + "**"
+            )
         else:
-            self.path = self.training_dataset.location + "/" + str(split)
+            self.path = pydoop.hdfs.path.abspath(
+                self.training_dataset.location + "/" + str(split)
+            )
+
+        if self.feature_names is None:
+            self.feature_names = self.training_dataset_schema
+            if self.label_name in self.feature_names:
+                self.feature_names.remove(self.label_name)
 
     def TFRecordDataset(self):
         # TODO (davit): check tf version and use compat functions accordingly
 
         input_files = tf.compat.v1.io.gfile.glob(self.path + "/part-r-*")
         dataset = tf.data.TFRecordDataset(input_files)
-
-        if self.feature_names is None:
-            self.feature_names = list(self.training_dataset_schema.keys())
-            if self.label_name in self.feature_names:
-                self.feature_names.remove(self.label_name)
 
         def _decode(sample):
             example = tf.compat.v1.io.parse_single_example(
@@ -74,10 +80,6 @@ class FeedModelEngine:
             shuffle_row_groups=shuffle_row_groups,
         ) as reader:
             dataset = make_petastorm_dataset(reader)
-            if self.feature_names is None:
-                self.feature_names = list(self.training_dataset_schema.keys())
-                if self.label_name in self.feature_names:
-                    self.feature_names.remove(self.label_name)
 
             def _row_mapper(sample):
                 out_dict = dict()
