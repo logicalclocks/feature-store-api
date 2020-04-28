@@ -27,7 +27,7 @@ class FeedModelEngine:
         self.num_classes = num_classes
         self.optimize = optimize
 
-        self.training_dataset_schema = self.training_dataset.training_dataset.schema
+        self.training_dataset_schema = self.training_dataset.schema
 
         if self.split is None:
             self.path = self.training_dataset.location + "/" + "**"
