@@ -96,7 +96,7 @@ class TrainingDataset:
             self._splits = splits
             self._training_dataset_type = training_dataset_type
 
-    def create(self, features, write_options={}):
+    def save(self, features, write_options={}):
         # TODO: Decide if we want to have potentially dangerous defaults like {}
         if isinstance(features, query.Query):
             feature_dataframe = features.read()
@@ -106,7 +106,7 @@ class TrainingDataset:
             )
 
         self._features = engine.get_instance().parse_schema(feature_dataframe)
-        self._training_dataset_engine.create(self, feature_dataframe, write_options)
+        self._training_dataset_engine.save(self, feature_dataframe, write_options)
         return self
 
     def insert(self, features, overwrite, write_options={}):

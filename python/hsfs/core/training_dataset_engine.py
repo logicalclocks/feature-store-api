@@ -27,7 +27,7 @@ class TrainingDatasetEngine:
             feature_store_id
         )
 
-    def create(self, training_dataset, feature_dataframe, user_write_options):
+    def save(self, training_dataset, feature_dataframe, user_write_options):
         self._training_dataset_api.post(training_dataset)
 
         write_options = engine.get_instance().write_options(
