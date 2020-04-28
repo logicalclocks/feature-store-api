@@ -17,7 +17,7 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.OfflineFeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroup;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -56,12 +56,12 @@ public class Utils {
   }
 
   // TODO(Fabio): this should be moved in the backend
-  public String getTableName(OfflineFeatureGroup offlineFeatureGroup) {
+  public String getTableName(FeatureGroup offlineFeatureGroup) {
     return offlineFeatureGroup.getFeatureStore().getName() + "." +
         offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
-  public Seq<String> getPartitionColumns(OfflineFeatureGroup offlineFeatureGroup) {
+  public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
     List<String> jPartitionCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPartition)
         .map(Feature::getName)

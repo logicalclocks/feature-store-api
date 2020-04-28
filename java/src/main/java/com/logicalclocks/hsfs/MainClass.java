@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainClass {
@@ -34,13 +35,17 @@ public class MainClass {
     FeatureStore fs = connection.getFeatureStore();
     LOGGER.info("Feature Store " + fs);
 
-    OfflineFeatureGroup housingFeatureGroup = fs.createOfflineFeatureGroup()
+    FeatureGroup housingFeatureGroup = fs.createFeatureGroup()
         .name("housing")
-        .description("fake description")
+        .description("House pricing model features")
         .version(1)
+        .primaryKeys(Arrays.asList("house_id", "date"))
+        .partitionKeys(Arrays.asList("country"))
+        .onlineEnabled(true)
+        .defaultStorage(Storage.OFFLINE)
         .build();
 
-    housingFeatureGroup.create(null);
+    //housingFeatureGroup.save();
 
     FeatureGroup attendance = fs.getFeatureGroup("attendances_features", 1);
     FeatureGroup players = fs.getFeatureGroup("players_features", 1);

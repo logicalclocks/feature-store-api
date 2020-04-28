@@ -19,7 +19,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
-import com.logicalclocks.hsfs.OfflineFeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroup;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -35,7 +35,7 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public OfflineFeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
+  public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -50,16 +50,16 @@ public class FeatureGroupApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    OfflineFeatureGroup[] offlineFeatureGroups = hopsworksClient.handleRequest(new HttpGet(uri), OfflineFeatureGroup[].class);
+    FeatureGroup[] offlineFeatureGroups = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroup[].class);
 
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
-    OfflineFeatureGroup resultFg = offlineFeatureGroups[0];
+    FeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
 
-  public OfflineFeatureGroup create(OfflineFeatureGroup offlineFeatureGroup) throws FeatureStoreException, IOException {
+  public FeatureGroup create(FeatureGroup offlineFeatureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -78,6 +78,6 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info(featureGroupJson);
 
-    return hopsworksClient.handleRequest(postRequest, OfflineFeatureGroup.class);
+    return hopsworksClient.handleRequest(postRequest, FeatureGroup.class);
   }
 }

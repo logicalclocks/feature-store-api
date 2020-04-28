@@ -31,10 +31,10 @@ import java.util.stream.Collectors;
 
 public class Query {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(OfflineFeatureGroup.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Getter @Setter
-  private OfflineFeatureGroup leftOfflineFeatureGroup;
+  private FeatureGroup leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
 
@@ -43,8 +43,8 @@ public class Query {
 
   private QueryConstructorApi queryConstructorApi;
 
-  public Query(OfflineFeatureGroup leftOfflineFeatureGroup, List<Feature> leftFeatures) {
-    this.leftOfflineFeatureGroup = leftOfflineFeatureGroup;
+  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+    this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
     this.queryConstructorApi = new QueryConstructorApi();
@@ -99,14 +99,14 @@ public class Query {
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     String sqlQuery =
-        queryConstructorApi.constructQuery(leftOfflineFeatureGroup.getFeatureStore(), this);
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     LOGGER.info("Executing query: " + sqlQuery);
     return SparkEngine.getInstance().sql(sqlQuery);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     String sqlQuery =
-        queryConstructorApi.constructQuery(leftOfflineFeatureGroup.getFeatureStore(), this);
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     LOGGER.info("Executing query: " + sqlQuery);
     SparkEngine.getInstance().sql(sqlQuery).show(numRows);
   }
@@ -114,7 +114,7 @@ public class Query {
   @Override
   public String toString() {
     try {
-      return queryConstructorApi.constructQuery(leftOfflineFeatureGroup.getFeatureStore(), this);
+      return queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
     }

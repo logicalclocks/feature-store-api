@@ -1,8 +1,9 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.OfflineFeatureGroup;
+import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
@@ -24,17 +25,17 @@ public class FeatureGroupEngine {
 
   //TODO:
   //      Compute statistics
-  public void createFeatureGroup(OfflineFeatureGroup offlineFeatureGroup, Dataset<Row> dataset,
+  public void createFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
                                  List<String> primaryKeys, List<String> partitionKeys, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    offlineFeatureGroup.setFeatures(utils.parseSchema(dataset));
+    featureGroup.setFeatures(utils.parseSchema(dataset));
 
-    LOGGER.info("Featuregroup features: " + offlineFeatureGroup.getFeatures());
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     /* set primary features */
     if (primaryKeys != null) {
       primaryKeys.forEach(pk ->
-          offlineFeatureGroup.getFeatures().forEach(f -> {
+          featureGroup.getFeatures().forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPrimary(true);
             }
@@ -44,7 +45,7 @@ public class FeatureGroupEngine {
     /* set partition key features */
     if (partitionKeys != null) {
       partitionKeys.forEach(pk ->
-          offlineFeatureGroup.getFeatures().forEach(f -> {
+          featureGroup.getFeatures().forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPartition(true);
             }
@@ -52,25 +53,35 @@ public class FeatureGroupEngine {
     }
 
     // Send Hopsworks the request to create a new feature group
-    featureGroupApi.create(offlineFeatureGroup);
+    featureGroupApi.create(featureGroup);
 
     // Write the dataframe
-    saveDataframe(offlineFeatureGroup, dataset, SaveMode.Append, writeOptions);
+    saveDataframe(featureGroup, dataset, SaveMode.Append, writeOptions);
   }
 
-  public Dataset<Row> read(FeatureGroup featureGroup) {
-    if (featureGroup instanceof OfflineFeatureGroup) {
-      return readOfflineFeatureGroup((OfflineFeatureGroup) featureGroup);
+  public Dataset<Row> read(FeatureGroup featureGroup, Storage storage) throws FeatureStoreException {
+    switch (storage) {
+      case OFFLINE:
+        return readOfflineFeatureGroup(featureGroup);
+      case ONLINE:
+        return readOnlineFeatureGroup(featureGroup);
+      default:
+        throw new FeatureStoreException("ALL storage not supported when reading a feature group");
     }
-    return null;
   }
 
-  private Dataset<Row> readOfflineFeatureGroup(OfflineFeatureGroup offlineFeatureGroup) {
+  private Dataset<Row> readOfflineFeatureGroup(FeatureGroup offlineFeatureGroup) {
     String tableName = utils.getTableName(offlineFeatureGroup);
+    // TODO(Fabio) here we should probably use the dataframe API to integrate better HUDI
     return SparkEngine.getInstance().sql("SELECT * FROM " + tableName);
   }
 
-  public void saveDataframe(OfflineFeatureGroup offlineFeatureGroup, Dataset<Row> dataset,
+  private Dataset<Row> readOnlineFeatureGroup(FeatureGroup onlineFeatureGroup) {
+    // TODO(Fabio): Fix this
+    return null;
+  }
+
+  public void saveDataframe(FeatureGroup offlineFeatureGroup, Dataset<Row> dataset,
                             SaveMode saveMode, Map<String, String> writeOptions) {
     dataset
         .write()

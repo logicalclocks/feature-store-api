@@ -10,7 +10,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.util.List;
 
-public class OnDemandFeatureGroup implements FeatureGroup {
+public class OnDemandFeatureGroup {
 
   @Getter @Setter
   private Integer id;
@@ -44,23 +44,18 @@ public class OnDemandFeatureGroup implements FeatureGroup {
     this.description = description;
   }
 
-  @Override
   public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
     return null;
   }
 
-  @Override
   public Query selectAll() throws FeatureStoreException, IOException {
     return null;
   }
 
-  @Override
   public Dataset<Row> read() {
     return null;
   }
 
-  @Override
   public void show(int n) {
-
   }
 }
