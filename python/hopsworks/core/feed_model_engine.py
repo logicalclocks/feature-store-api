@@ -1,8 +1,12 @@
-import tensorflow as tf
-from petastorm import make_reader
-from petastorm.tf_utils import make_petastorm_dataset
+try:
+    import tensorflow as tf
+    from petastorm import make_reader
+    from petastorm.tf_utils import make_petastorm_dataset
+    from pydoop import hdfs
+except ModuleNotFoundError:
+    pass
 
-import pydoop.hdfs
+from hopsworks.tf_utils import read_training_dataset_tf_record_schema
 
 
 class FeedModelEngine:
@@ -32,11 +36,9 @@ class FeedModelEngine:
         self.training_dataset_schema = self.training_dataset.schema
 
         if self.split is None:
-            self.path = pydoop.hdfs.path.abspath(
-                self.training_dataset.location + "/" + "**"
-            )
+            self.path = hdfs.path.abspath(self.training_dataset.location + "/" + "**")
         else:
-            self.path = pydoop.hdfs.path.abspath(
+            self.path = hdfs.path.abspath(
                 self.training_dataset.location + "/" + str(split)
             )
 
@@ -44,6 +46,8 @@ class FeedModelEngine:
             self.feature_names = self.training_dataset_schema
             if self.label_name in self.feature_names:
                 self.feature_names.remove(self.label_name)
+
+        self.tf_record_schema = read_training_dataset_tf_record_schema(self.path)
 
     def TFRecordDataset(self):
         # TODO (davit): check tf version and use compat functions accordingly
@@ -53,7 +57,7 @@ class FeedModelEngine:
 
         def _decode(sample):
             example = tf.compat.v1.io.parse_single_example(
-                sample, self.training_dataset_schema
+                sample, self.tf_record_schema
             )
             x = []
             for feature_name in self.feature_names:
