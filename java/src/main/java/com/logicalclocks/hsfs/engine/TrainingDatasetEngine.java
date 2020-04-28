@@ -49,7 +49,7 @@ public class TrainingDatasetEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void create(TrainingDataset trainingDataset, Dataset<Row> dataset,
+  public void save(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> userWriteOptions)
       throws FeatureStoreException, IOException {
     // TODO(Fabio): make sure we can implement the serving part as well

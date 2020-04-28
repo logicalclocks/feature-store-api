@@ -55,7 +55,7 @@ public class MainClass {
         .splits(splits)
         .build();
 
-    td.create(query);
+    td.save(query);
 
     SparkEngine.getInstance().getSparkSession().close();
   }
