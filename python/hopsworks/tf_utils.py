@@ -28,9 +28,10 @@ def store_tf_record_schema_spark_hdfs(spark_df, hdfs_path):
 
 
 def read_training_dataset_tf_record_schema(hdfs_path):
-    path = hdfs.path.abspath(hdfs_path)
     tf_record_json_schema = json.loads(
-        hdfs.load(path + "/" + TF_CONSTANTS.TRAINING_DATASET_TF_RECORD_SCHEMA_FILE_NAME)
+        hdfs.load(
+            hdfs_path + "/" + TF_CONSTANTS.TRAINING_DATASET_TF_RECORD_SCHEMA_FILE_NAME
+        )
     )
     return _convert_tf_record_schema_json_to_dict(tf_record_json_schema)
 
