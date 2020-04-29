@@ -127,7 +127,9 @@ def create_tf_record_schema(df_schema, fixed=True):
                     col.type, TF_CONSTANTS.RECOGNIZED_TF_RECORD_TYPES
                 )
             )
-    return example, example_json
+
+        tf_schema = _convert_tf_record_schema_json_to_dict(example_json)
+    return tf_schema
 
 
 def _get_dataframe_tf_record_schema_json(spark_df, fixed=True):
