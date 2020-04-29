@@ -70,13 +70,13 @@ def create_tf_record_schema(df_schema, fixed=True):
     example_json = {}
     for col in df_schema:
         if col.type in TF_CONSTANTS.TF_RECORD_INT_SPARK_TYPES:
-            example[str(col[0])] = tf.io.FixedLenFeature([], tf.int64)
-            example_json[str(col[0])] = {
+            example[str(col.name)] = tf.io.FixedLenFeature([], tf.int64)
+            example_json[str(col.name)] = {
                 TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
                 TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_INT_TYPE,
             }
             tf.io.FixedLenFeature([], tf.int64)
-        if col[1] in TF_CONSTANTS.TF_RECORD_FLOAT_SPARK_TYPES:
+        if col.type in TF_CONSTANTS.TF_RECORD_FLOAT_SPARK_TYPES:
             example[str(col.name)] = tf.io.FixedLenFeature([], tf.float32)
             example_json[str(col.name)] = {
                 TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
