@@ -50,6 +50,86 @@ def _get_spark_array_size(spark_df, array_col_name):
     return len(getattr(spark_df.select(array_col_name).first(), array_col_name))
 
 
+def create_tf_record_schema(df_schema, fixed=True):
+    """
+    generatestf-record schema from a from dbtypes
+    Can only handle one level of nesting, e.g arrays inside the dataframe is okay but having a schema of
+     array<array<float>> will not work.
+
+    Args:
+        :TrainingDataset: the spark dataframe to infer the tensorflow example record from
+        :fixed: boolean flag indicating whether array columns should be treated with fixed size or variable size
+
+    Returns:
+        a dict with the tensorflow example as well as a json friendly version of the schema
+
+    Raises:
+        :InferTFRecordSchemaError: if a tf record schema could not be inferred from the dataframe
+    """
+    example = {}
+    example_json = {}
+    for col in df_schema:
+        if col.type in TF_CONSTANTS.TF_RECORD_INT_SPARK_TYPES:
+            example[str(col[0])] = tf.io.FixedLenFeature([], tf.int64)
+            example_json[str(col[0])] = {
+                TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
+                TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_INT_TYPE,
+            }
+            tf.io.FixedLenFeature([], tf.int64)
+        if col[1] in TF_CONSTANTS.TF_RECORD_FLOAT_SPARK_TYPES:
+            example[str(col.name)] = tf.io.FixedLenFeature([], tf.float32)
+            example_json[str(col.name)] = {
+                TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
+                TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_FLOAT_TYPE,
+            }
+        if col.type in TF_CONSTANTS.TF_RECORD_INT_ARRAY_SPARK_TYPES:
+            if fixed:
+                example[str(col.name)] = tf.io.FixedLenFeature(shape=[], dtype=tf.int64)
+                example_json[str(col.name)] = {
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_INT_TYPE,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_SHAPE: [],
+                }
+            else:
+                example[str(col.name)] = tf.VarLenFeature(tf.int64)
+                example_json[str(col.name)] = {
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_VAR,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_INT_TYPE,
+                }
+        if col.type in TF_CONSTANTS.TF_RECORD_FLOAT_ARRAY_SPARK_TYPES:
+            if fixed:
+                example[str(col.name)] = tf.io.FixedLenFeature(shape=[], dtype=tf.int64)
+                example_json[str(col.name)] = {
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_FIXED,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_FLOAT_TYPE,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_SHAPE: [],
+                }
+            else:
+                example[str(col.name)] = tf.io.VarLenFeature(tf.float32)
+                example_json[str(col.name)] = {
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_VAR,
+                    TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_FLOAT_TYPE,
+                }
+        if (
+            col.type in TF_CONSTANTS.TF_RECORD_STRING_ARRAY_SPARK_TYPES
+            or col.type in TF_CONSTANTS.TF_RECORD_STRING_SPARK_TYPES
+        ):
+            example[str(col.name)] = tf.io.VarLenFeature(tf.string)
+            example_json[str(col.name)] = {
+                TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE: TF_CONSTANTS.TF_RECORD_SCHEMA_FEATURE_VAR,
+                TF_CONSTANTS.TF_RECORD_SCHEMA_TYPE: TF_CONSTANTS.TF_RECORD_STRING_TYPE,
+            }
+
+        if col.type not in TF_CONSTANTS.RECOGNIZED_TF_RECORD_TYPES:
+            raise InferTFRecordSchemaError(
+                "Could not recognize the spark type: {} for inferring the tf-records schema."
+                "Recognized types are: {}".format(
+                    col.type, TF_CONSTANTS.RECOGNIZED_TF_RECORD_TYPES
+                )
+            )
+    return example, example_json
+
+
 def _get_dataframe_tf_record_schema_json(spark_df, fixed=True):
     """
     Infers the tf-record schema from a spark dataframe

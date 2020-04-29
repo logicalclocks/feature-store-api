@@ -6,7 +6,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from hopsworks.tf_utils import read_training_dataset_tf_record_schema
+# from hopsworks.tf_utils import read_training_dataset_tf_record_schema
+from hopsworks.tf_utils import create_tf_record_schema
 
 
 class FeedModelEngine:
@@ -43,11 +44,13 @@ class FeedModelEngine:
             )
 
         if self.feature_names is None:
-            self.feature_names = self.training_dataset_schema
+            self.feature_names = [feat.name for feat in self.training_dataset_schema]
             if self.label_name in self.feature_names:
                 self.feature_names.remove(self.label_name)
 
-        self.tf_record_schema = read_training_dataset_tf_record_schema(self.path)
+        # TODO (davit):
+        # self.tf_record_schema = read_training_dataset_tf_record_schema(self.path)
+        self.tf_record_schema = create_tf_record_schema(self.training_dataset_schema)
 
     def TFRecordDataset(self):
         # TODO (davit): check tf version and use compat functions accordingly
