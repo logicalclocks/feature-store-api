@@ -117,7 +117,6 @@ def _optimize_dataset(dataset, batch_size, num_epochs):
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
-    # https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/data/Options
     options = tf.data.Options()
 
     options.experimental_stats.latency_all_edges = True
@@ -126,11 +125,7 @@ def _optimize_dataset(dataset, batch_size, num_epochs):
     options.experimental_optimization.map_vectorization.enabled = True
     options.experimental_optimization.apply_default_optimizations = False
 
-    options.experimental_threading.private_threadpool_size = (
-        10  # TODO (davit): AUTOTUNE
-    )
-
-    # options.experimental_slack = True # TODO (davit):
+    options.experimental_threading.private_threadpool_size = 10
 
     dataset = dataset.with_options(options)
 
