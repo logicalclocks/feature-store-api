@@ -16,7 +16,7 @@
 
 import humps
 
-from hsfs import engine, training_dataset
+from hsfs import engine, training_dataset, feature_group
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -83,6 +83,26 @@ class FeatureStore:
 
     def sql(self, query, dataframe_type="default"):
         return engine.get_instance().sql(query, self._name, dataframe_type)
+
+    def create_feature_group(
+        self,
+        name,
+        version,
+        description="",
+        online_enabled=False,
+        partition_key=[],
+        primary_key=[],
+    ):
+        return feature_group.FeatureGroup(
+            name=name,
+            version=version,
+            description=description,
+            online_featuregroup_enabled=online_enabled,
+            partition_key=partition_key,
+            primary_key=primary_key,
+            featurestore_id=self._id,
+            featuregroup_type=feature_group.FeatureGroup.CACHED_FEATURE_GROUP,
+        )
 
     def create_training_dataset(
         self,

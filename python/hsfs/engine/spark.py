@@ -30,9 +30,14 @@ from hsfs.storage_connector import StorageConnector
 
 
 class Engine:
+    HIVE_FORMAT = "hive"
+
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
         self._spark_context = self._spark_session.sparkContext
+
+        self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
+        self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
 
     def sql(self, sql_query, feature_store, dataframe_type):
         # set feature store
@@ -89,6 +94,11 @@ class Engine:
                 type(dataframe)
             )
         )
+
+    def save(self, dataframe, table_name, partition_columns, save_mode):
+        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).partitionBy(
+            partition_columns
+        ).saveAsTable(table_name)
 
     def write(
         self, dataframe, storage_connector, data_format, write_mode, write_options, path

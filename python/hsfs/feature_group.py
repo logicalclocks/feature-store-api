@@ -15,47 +15,51 @@
 #
 
 import humps
+import json
 
-from hsfs.core import query
-from hsfs import engine, feature
+from hsfs.core import query, feature_group_engine
+from hsfs import util, engine, feature
 
 
 class FeatureGroup:
+    CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
+    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+
     def __init__(
         self,
-        type,
-        featurestore_id,
-        featurestore_name,
-        description,
-        created,
-        creator,
-        version,
-        descriptive_statistics,
-        feature_correlation_matrix,
-        features_histogram,
-        cluster_analysis,
         name,
-        id,
-        features,
-        location,
-        jobs,
-        featuregroup_type,
-        desc_stats_enabled,
-        feat_corr_enabled,
-        feat_hist_enabled,
-        cluster_analysis_enabled,
-        statistic_columns,
-        num_bins,
-        num_clusters,
-        corr_method,
-        hdfs_store_paths,
-        hive_table_id,
-        hive_table_type,
-        inode_id,
-        input_format,
+        version,
+        description,
         online_featuregroup_enabled,
+        featurestore_id,
+        partition_key=None,
+        primary_key=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        descriptive_statistics=None,
+        feature_correlation_matrix=None,
+        features_histogram=None,
+        cluster_analysis=None,
+        id=None,
+        features=None,
+        location=None,
+        jobs=None,
+        featuregroup_type=None,
+        desc_stats_enabled=None,
+        feat_corr_enabled=None,
+        feat_hist_enabled=None,
+        cluster_analysis_enabled=None,
+        statistic_columns=None,
+        num_bins=None,
+        num_clusters=None,
+        corr_method=None,
+        hdfs_store_paths=None,
+        hive_table_id=None,
+        hive_table_type=None,
+        inode_id=None,
+        input_format=None,
     ):
-        self._type = type
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
@@ -87,6 +91,13 @@ class FeatureGroup:
         self._input_format = input_format
         self._online_feature_group_enabled = online_featuregroup_enabled
 
+        self._primary_key = primary_key
+        self._partition_key = partition_key
+
+        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
+            featurestore_id
+        )
+
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
@@ -114,19 +125,52 @@ class FeatureGroup:
     def select(self, features=[]):
         return query.Query(self._feature_store_name, self, features)
 
+    def save(self, features):
+        if isinstance(features, query.Query):
+            feature_dataframe = features.read()
+        else:
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+                features
+            )
+
+        self._features = engine.get_instance().parse_schema(feature_dataframe)
+
+        # use first column as primary key if not specified
+        # primary key validation should be done in backend
+        if not self._primary_key:
+            self._primary_key = [self._features[0].name]
+        self._feature_group_engine.save(self, feature_dataframe)
+        return self
+
+    def insert(self):
+        pass
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
-        # i.e. offline, online, on-demand
+        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
-    @classmethod
-    def new_featuregroup(cls):
-        pass
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {"id": self._id}
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "onlineFeaturegroupEnabled": self._online_feature_group_enabled,
+            "features": self._features,
+            "featuregroupType": self._feature_group_type,
+            "featurestoreId": self._feature_store_id,
+        }
 
     @property
     def features(self):
