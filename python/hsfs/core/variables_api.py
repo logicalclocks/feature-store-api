@@ -17,12 +17,11 @@
 from hsfs import client
 
 
-class ProjectApi:
-    def get_client(self):
+class VariablesApi:
+    def get_hostname(self):
         _client = client.get_instance()
         path_params = [
-            "project",
-            _client._project_id,
-            "client",
+            "variables",
+            "hopsworks_endpoint",
         ]
-        return _client._send_request("GET", path_params, stream=True)
+        return _client._send_request("GET", path_params)["successMessage"].split(":")[0]

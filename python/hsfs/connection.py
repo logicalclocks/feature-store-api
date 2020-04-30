@@ -19,7 +19,7 @@ from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
 from hsfs import engine, client
-from hsfs.core import feature_store_api, project_api
+from hsfs.core import feature_store_api, project_api, variables_api
 
 
 class Connection:
@@ -86,7 +86,6 @@ class Connection:
         cls,
         host,
         project,
-        internal_ip,
         port=443,
         region_name="default",
         secrets_store="parameterstore",
@@ -111,9 +110,10 @@ class Connection:
 
         os.makedirs(os.path.join(dbfs_folder, "scripts"), exist_ok=True)
         connection._get_clients(dbfs_folder)
+        internal_host = connection._get_hostname()
         connection._write_init_script(dbfs_folder)
         connection._print_instructions(
-            cert_folder, client.get_instance()._cert_folder, internal_ip
+            cert_folder, client.get_instance()._cert_folder, internal_host
         )
 
         return connection
@@ -170,6 +170,7 @@ class Connection:
                 engine.init("spark")
             self._feature_store_api = feature_store_api.FeatureStoreApi()
             self._project_api = project_api.ProjectApi()
+            self._variables_api = variables_api.VariablesApi()
         except (TypeError, ConnectionError):
             self._connected = False
             raise
@@ -212,6 +213,12 @@ class Connection:
                 for chunk in client_libs:
                     f.write(chunk)
 
+    def _get_hostname(self):
+        """
+        Get the internal hostname of the Hopsworks instance.
+        """
+        return self._variables_api.get_hostname()
+
     def _write_init_script(self, dbfs_folder):
         """
         Write the init script for databricks clusters to dbfs.
@@ -233,7 +240,7 @@ class Connection:
             with open(script_path, "w") as f:
                 f.write(initScript)
 
-    def _print_instructions(self, user_cert_folder, cert_folder, internal_ip):
+    def _print_instructions(self, user_cert_folder, cert_folder, internal_host):
         """
         Print the instructions to set up the hopsfs hive connection on databricks.
 
@@ -262,7 +269,7 @@ class Connection:
         spark.hadoop.hive.metastore.uris thrift://{2}:9083
         Then save and restart the cluster.
         """.format(
-            user_cert_folder, cert_folder, internal_ip
+            user_cert_folder, cert_folder, internal_host
         )
 
         print(instructions)
