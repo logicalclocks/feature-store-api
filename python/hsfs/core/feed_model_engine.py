@@ -7,7 +7,7 @@ except ModuleNotFoundError:
     pass
 
 # from hopsworks.tf_utils import read_training_dataset_tf_record_schema
-from hopsworks.tf_utils import create_tf_record_schema
+from hsfs.tf_utils import create_tf_record_schema
 
 
 class FeedModelEngine:
