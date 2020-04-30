@@ -126,8 +126,8 @@ class TrainingDataset:
 
     def feed(
         self,
-        split,
         target_name,
+        split=None,
         feature_names=None,
         one_hot_encode_labels=False,
         num_classes=None,
@@ -147,8 +147,8 @@ class TrainingDataset:
 
     def numpy(
         self,
-        split,
         target_name,
+        split=None,
         feature_names=None,
         one_hot_encode_labels=None,
         num_classes=None,
