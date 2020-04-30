@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 
 __version__ = imp.load_source(
-    'hopsworks.version', os.path.join('hopsworks', 'version.py')).__version__
+    'hsfs.version', os.path.join('hsfs', 'version.py')).__version__
 
 
 def read(fname):
@@ -12,7 +12,7 @@ def read(fname):
 
 
 setup(
-    name="hopsworks",
+    name="hsfs",
     version=__version__,
     install_requires=[
         "pyhumps",
@@ -35,7 +35,7 @@ setup(
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
     description="",
-    license="GNU Affero General Public License v3",
+    license="Apache License 2.0",
     keywords="",
     url="",
     download_url="",
@@ -44,7 +44,7 @@ setup(
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Topic :: Utilities",
-        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
     ],
 )
