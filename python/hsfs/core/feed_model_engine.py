@@ -12,15 +12,14 @@ from hsfs.tf_utils import create_tf_record_schema
 
 
 class FeedModelEngine:
-
     def __init__(
-            self,
-            training_dataset,
-            split,
-            target_name,
-            feature_names=None,
-            one_hot_encode_labels=False,
-            num_classes=None
+        self,
+        training_dataset,
+        split,
+        target_name,
+        feature_names=None,
+        one_hot_encode_labels=False,
+        num_classes=None,
     ):
         """
 
@@ -60,8 +59,9 @@ class FeedModelEngine:
         self.tf_record_schema = create_tf_record_schema(self.training_dataset_schema)
 
         if self.one_hot_encode_labels and self.num_classes is None:
-            raise ValueError("if one_hot_encode_labels is set to True you also need to provide num_classes")
-
+            raise ValueError(
+                "if one_hot_encode_labels is set to True you also need to provide num_classes"
+            )
 
     def tf_record_dataset(self, batch_size=None, num_epochs=None, optimize=False):
         """
@@ -73,7 +73,9 @@ class FeedModelEngine:
         """
 
         if optimize and batch_size is None and num_epochs is None:
-            raise ValueError("if optimize is set to True you also need to provide batch_size and num_epochs")
+            raise ValueError(
+                "if optimize is set to True you also need to provide batch_size and num_epochs"
+            )
 
         input_files = tf.compat.v1.io.gfile.glob(self.path + "/part-r-*")
         dataset = tf.data.TFRecordDataset(input_files)
@@ -93,7 +95,11 @@ class FeedModelEngine:
         dataset = dataset.map(_decode)
 
         if self.one_hot_encode_labels:
-            dataset = dataset.map(lambda *x: _one_hot_encode(x[0], tf.dtypes.cast(x[1], tf.int32), self.num_classes))
+            dataset = dataset.map(
+                lambda *x: _one_hot_encode(
+                    x[0], tf.dtypes.cast(x[1], tf.int32), self.num_classes
+                )
+            )
 
         if optimize:
             dataset = _optimize_dataset(dataset, batch_size, num_epochs)
@@ -124,7 +130,14 @@ class FeedModelEngine:
         return features, target
 
     # TODO  (davit): this function work in progress
-    def tf_petastorm_dataset(self, workers_count, shuffle_row_groups, batch_size=None, num_epochs=None, optimize=False):
+    def tf_petastorm_dataset(
+        self,
+        workers_count,
+        shuffle_row_groups,
+        batch_size=None,
+        num_epochs=None,
+        optimize=False,
+    ):
         """
 
         :param workers_count:
@@ -136,11 +149,11 @@ class FeedModelEngine:
         """
 
         with make_reader(
-                self.path,
-                num_epochs=None,
-                hdfs_driver="libhdfs",
-                workers_count=workers_count,
-                shuffle_row_groups=shuffle_row_groups,
+            self.path,
+            num_epochs=None,
+            hdfs_driver="libhdfs",
+            workers_count=workers_count,
+            shuffle_row_groups=shuffle_row_groups,
         ) as reader:
             dataset = make_petastorm_dataset(reader)
 
@@ -160,7 +173,11 @@ class FeedModelEngine:
             dataset = dataset.map(_row_mapper)
 
         if self.one_hot_encode_labels:
-            dataset = dataset.map(lambda *x: _one_hot_encode(x[0], tf.dtypes.cast(x[1], tf.int32), self.num_classes))
+            dataset = dataset.map(
+                lambda *x: _one_hot_encode(
+                    x[0], tf.dtypes.cast(x[1], tf.int32), self.num_classes
+                )
+            )
 
         if optimize:
             dataset = _optimize_dataset(dataset, batch_size, num_epochs)
@@ -199,4 +216,4 @@ def _optimize_dataset(dataset, batch_size, num_epochs):
 
 
 def _one_hot_encode(features, target, num_classes):
-    return features,  tf.one_hot(target, num_classes)
+    return features, tf.one_hot(target, num_classes)
