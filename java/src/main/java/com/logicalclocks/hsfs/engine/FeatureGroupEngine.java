@@ -1,7 +1,6 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +25,8 @@ public class FeatureGroupEngine {
 
   //TODO:
   //      Compute statistics
-  public void createFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                 List<String> primaryKeys, List<String> partitionKeys, Map<String, String> writeOptions)
+  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
+                               List<String> primaryKeys, List<String> partitionKeys, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     featureGroup.setFeatures(utils.parseSchema(dataset));
 
@@ -53,7 +53,7 @@ public class FeatureGroupEngine {
     }
 
     // Send Hopsworks the request to create a new feature group
-    featureGroupApi.create(featureGroup);
+    featureGroupApi.save(featureGroup);
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, SaveMode.Append, writeOptions);
@@ -87,7 +87,8 @@ public class FeatureGroupEngine {
         .write()
         .format(Constants.HIVE_FORMAT)
         .mode(saveMode)
-        .options(writeOptions)
+        // write options cannot be null
+        .options(writeOptions == null ? new HashMap<>() : writeOptions)
         .partitionBy(utils.getPartitionColumns(offlineFeatureGroup))
         .saveAsTable(utils.getTableName(offlineFeatureGroup));
   }

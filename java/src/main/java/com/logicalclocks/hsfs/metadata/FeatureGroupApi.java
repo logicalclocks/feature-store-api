@@ -59,7 +59,7 @@ public class FeatureGroupApi {
     return resultFg;
   }
 
-  public FeatureGroup create(FeatureGroup offlineFeatureGroup) throws FeatureStoreException, IOException {
+  public FeatureGroup save(FeatureGroup offlineFeatureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH

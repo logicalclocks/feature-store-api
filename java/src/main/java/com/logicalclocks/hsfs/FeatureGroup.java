@@ -36,6 +36,7 @@ public class FeatureGroup {
   private List<Feature> features;
 
   @Getter @Setter
+  @JsonIgnore
   private Storage defaultStorage = Storage.OFFLINE;
 
   @Getter @Setter
@@ -109,7 +110,7 @@ public class FeatureGroup {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.createFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite) {

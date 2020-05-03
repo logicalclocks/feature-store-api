@@ -45,8 +45,6 @@ public class MainClass {
         .defaultStorage(Storage.OFFLINE)
         .build();
 
-    //housingFeatureGroup.save();
-
     FeatureGroup attendance = fs.getFeatureGroup("attendances_features", 1);
     FeatureGroup players = fs.getFeatureGroup("players_features", 1);
 
