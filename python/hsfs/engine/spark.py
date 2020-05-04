@@ -103,11 +103,6 @@ class Engine:
             write_mode
         ).save(path)
 
-        # TODO (davit): if saving  "tfrecords" generate schema and do all the hard job to estimate feature types
-        #  especially for array types
-        # if data_format.lower() == "tfrecords":
-        #     store_tf_record_schema_spark_hdfs(dataframe, path)
-
     def read(self, storage_connector, data_format, read_options, path):
 
         if data_format.lower() == "tsv":
@@ -154,7 +149,9 @@ class Engine:
     def parse_schema(self, dataframe):
         return [
             feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat["name"],
+                _check_if_complex_type(feat["type"]),
+                feat["metadata"].get("description", ""),
             )
             for feat in json.loads(dataframe.schema.json())["fields"]
         ]
@@ -162,7 +159,9 @@ class Engine:
     def parse_schema_dict(self, dataframe):
         return {
             feat["name"]: feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat["name"],
+                _check_if_complex_type(feat["type"]),
+                feat["metadata"].get("description", ""),
             )
             for feat in json.loads(dataframe.schema.json())["fields"]
         }
@@ -189,6 +188,29 @@ class Engine:
             "fs.s3a.secret.key", storage_connector.access_key
         )
         return path.replace("s3", "s3a", 1)
+
+
+def _check_if_complex_type(feat):
+    """
+    Checks if feature type is is complex nested dict and weather its array typy generated from veotor assembler
+    Then returns type that tfrecord cosntants in tf_utils can understant
+    :param feat:
+    :return: feat
+    """
+    if isinstance(feat, dict):
+        if "sqlType" in feat:
+            # this seems VectorAssembler. will pick up last field to determine field
+            feat = feat["sqlType"]["fields"]
+            feat_len = len(feat)
+            if feat_len > 0:
+                feat_len = feat_len - 1
+            feat = feat[feat_len]
+            feat = feat["type"]
+
+        if "type" and "elementType" in feat:
+            feat = "{}<{}>".format(feat["type"], feat["elementType"])
+
+    return feat
 
 
 class SchemaError(Exception):

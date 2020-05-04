@@ -77,13 +77,19 @@ class FeedModelEngine:
                 "if optimize is set to True you also need to provide batch_size and num_epochs"
             )
 
-        input_files = tf.compat.v1.io.gfile.glob(self.path + "/part-r-*")
+        if tf.__version__ >= "2.0":
+            input_files = tf.io.gfile.glob(self.path + "/part-r-*")
+        else:
+            input_files = tf.compat.v1.io.gfile.glob(self.path + "/part-r-*")
         dataset = tf.data.TFRecordDataset(input_files)
 
         def _decode(sample):
-            example = tf.compat.v1.io.parse_single_example(
-                sample, self.tf_record_schema
-            )
+            if tf.__version__ >= "2.0":
+                example = tf.io.parse_single_example(sample, self.tf_record_schema)
+            else:
+                example = tf.compat.v1.io.parse_single_example(
+                    sample, self.tf_record_schema
+                )
             x = []
             for feature_name in self.feature_names:
                 x.append(example[feature_name])
@@ -113,18 +119,24 @@ class FeedModelEngine:
         """
         tfdata = self.tf_record_dataset()
 
-        # TODO (davit): make also for tf2
         iterator = tfdata.make_one_shot_iterator().get_next()
         features = []
         target = []
-        with tf.compat.v1.Session() as sess:
-            while True:
-                try:
-                    batch_array = sess.run(iterator)
-                    features.append(batch_array[0])
-                    target.append(batch_array[1])
-                except tf.errors.OutOfRangeError:
-                    break
+        if tf.__version__ >= "2.0":
+            # TODO (davit): make also for tf2
+            raise NotImplementedError
+        else:
+            with tf.compat.v1.Session() as sess:
+                while True:
+                    # import psutil
+                    # if psutil.virtual_memory() >= 84:
+                    #     break
+                    try:
+                        batch_array = sess.run(iterator)
+                        features.append(batch_array[0])
+                        target.append(batch_array[1])
+                    except tf.errors.OutOfRangeError:
+                        break
         features = np.array(features)
         target = np.array(target).flatten()
         return features, target
