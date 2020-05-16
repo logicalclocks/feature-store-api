@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 public class StorageConnector {
@@ -35,6 +37,12 @@ public class StorageConnector {
 
   @Getter @Setter
   private String secretKey;
+
+  @Getter @Setter
+  private String connectionString;
+
+  @Getter @Setter
+  private String arguments;
 
   @Getter @Setter
   private StorageConnectorType storageConnectorType;

@@ -32,6 +32,9 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
     this.originalResponseHandler = originalResponseHandler;
   }
 
+  AuthorizationHandler() {
+  }
+
   @Override
   public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
@@ -44,6 +47,9 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
       throw new InternalException();
     }
 
-    return originalResponseHandler.handleResponse(response);
+    if (originalResponseHandler != null) {
+      return originalResponseHandler.handleResponse(response);
+    }
+    return null;
   }
 }

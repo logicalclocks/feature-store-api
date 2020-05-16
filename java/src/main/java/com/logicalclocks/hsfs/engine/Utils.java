@@ -18,6 +18,8 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.StorageConnector;
+import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -27,6 +29,7 @@ import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,5 +71,25 @@ public class Utils {
         .collect(Collectors.toList());
 
     return JavaConverters.asScalaIteratorConverter(jPartitionCols.iterator()).asScala().toSeq();
+  }
+
+  /**
+   * Split jdbc comma separated argument list
+   * @param storageConnector
+   * @return
+   */
+  public List<Pair<String, String>> parseJdbcArguments(StorageConnector storageConnector) {
+    List<Pair<String, String>> jdbcArgumentList = new ArrayList<>();
+    String[] argumentsSplits = storageConnector.getArguments().split(",");
+    for (String argument : argumentsSplits) {
+      String[] argumentSplits = argument.split("=");
+      jdbcArgumentList.add(new Pair<>(argumentSplits[0], argumentSplits[1]));
+    }
+
+    return jdbcArgumentList;
+  }
+
+  public String getOnlineFgName(FeatureGroup featureGroup) {
+    return featureGroup.getFeatureStore().getName().toLowerCase() + "." + featureGroup.getName();
   }
 }

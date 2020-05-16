@@ -92,34 +92,70 @@ public class FeatureGroup {
     return new Query(this, getFeatures());
   }
 
-  public Dataset<Row> read() throws FeatureStoreException {
-    return read(this.defaultStorage);
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
+    return read(this.defaultStorage, null);
   }
 
-  public Dataset<Row> read(Storage storage) throws FeatureStoreException {
-    return featureGroupEngine.read(this, storage);
+  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+    return read(storage, null);
   }
 
-  public void show(int numRows) throws FeatureStoreException {
+  public Dataset<Row> read(Map<String, String> options) throws FeatureStoreException, IOException {
+    return read(this.defaultStorage, options);
+  }
+
+  public Dataset<Row> read(Storage storage, Map<String, String> options) throws FeatureStoreException, IOException {
+    return featureGroupEngine.read(this, storage, options);
+  }
+
+  public void show(int numRows) throws FeatureStoreException, IOException {
     read(this.defaultStorage).show(numRows);
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
-    save(featureData, null);
+    save(featureData, defaultStorage, null);
+  }
+
+  public void save(Dataset<Row> featureData, Storage storage) throws FeatureStoreException, IOException {
+    save(featureData, storage, null);
   }
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
+    save(featureData, defaultStorage, writeOptions);
   }
 
-  public void insert(Dataset<Row> featureData, boolean overwrite) {
+  public void save(Dataset<Row> featureData, Storage storage, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, storage, writeOptions);
+  }
+
+  public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
+    insert(featureData, storage, false, null);
+  }
+
+  public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
     insert(featureData, overwrite, null);
   }
 
-  public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions) {
+  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
+      throws IOException, FeatureStoreException {
+    insert(featureData, storage, overwrite, null);
+  }
+
+  public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    insert(featureData, defaultStorage, overwrite, writeOptions);
+  }
+
+  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
     // TODO(Fabio): Overwrite will drop the table.
-    featureGroupEngine.saveDataframe(this, featureData,
+    featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+  }
+
+  public void delete() throws FeatureStoreException, IOException {
+    featureGroupEngine.delete(this);
   }
 }
