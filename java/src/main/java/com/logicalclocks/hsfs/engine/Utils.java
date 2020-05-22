@@ -30,18 +30,21 @@ import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {
 
   // TODO(Fabio): make sure we keep save the feature store/feature group for serving
-  public List<Feature> parseSchema(Dataset<Row> dataset) {
-    return Arrays.stream(dataset.schema().fields())
-        // TODO(Fabio): unit test this one for complext types
-        .map(f -> new Feature(f.name(), f.dataType().catalogString(), false, false))
-        .collect(Collectors.toList());
+  public List<Feature> parseSchema(Dataset<Row> dataset) throws FeatureStoreException {
+    List<Feature> features = new ArrayList<>();
+    for (StructField structField : dataset.schema().fields()) {
+      // TODO(Fabio): unit test this one for complext types
+      features.add(new Feature(structField.name(), structField.dataType().catalogString(),
+          structField.dataType().catalogString(), false, false));
+    }
+
+    return features;
   }
 
   // TODO(Fabio): keep into account the sorting - needs fixing in Hopsworks as well
@@ -90,6 +93,7 @@ public class Utils {
   }
 
   public String getOnlineFgName(FeatureGroup featureGroup) {
-    return featureGroup.getFeatureStore().getName().toLowerCase() + "." + featureGroup.getName();
+    return featureGroup.getFeatureStore().getName().toLowerCase() + "." +
+        featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 }

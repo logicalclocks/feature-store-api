@@ -18,4 +18,7 @@ package com.logicalclocks.hsfs.metadata;
 import org.apache.http.client.ClientProtocolException;
 
 public class InternalException extends ClientProtocolException {
+  public InternalException(String msg) {
+    super(msg);
+  }
 }

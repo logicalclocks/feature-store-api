@@ -1,6 +1,5 @@
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
@@ -46,7 +45,10 @@ public class FeatureGroupEngine {
                                List<String> primaryKeys, List<String> partitionKeys,
                                Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroup.setFeatures(utils.parseSchema(dataset));
+
+    if (featureGroup.getFeatureStore() != null) {
+      featureGroup.setFeatures(utils.parseSchema(dataset));
+    }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
@@ -101,7 +103,18 @@ public class FeatureGroupEngine {
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                            SaveMode saveMode, Map<String, String> writeOptions) {
+                            SaveMode saveMode, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException{
+
+    if (saveMode == SaveMode.Overwrite) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(featureGroup);
+      saveMode = SaveMode.Append;
+    }
+
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)

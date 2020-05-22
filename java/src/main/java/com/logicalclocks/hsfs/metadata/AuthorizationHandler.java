@@ -28,8 +28,7 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
 
   private ResponseHandler<T> originalResponseHandler;
 
-  AuthorizationHandler(ResponseHandler<T> originalResponseHandler) {
-    this.originalResponseHandler = originalResponseHandler;
+  AuthorizationHandler(ResponseHandler<T> originalResponseHandler) { this.originalResponseHandler = originalResponseHandler;
   }
 
   AuthorizationHandler() {
@@ -43,8 +42,8 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
       throw new IOException("Error: " + response.getStatusLine().getStatusCode() +
           EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
     } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
-      // TODO(fabio): Propagate http error upstream
-      throw new InternalException();
+      throw new InternalException("Error: " + response.getStatusLine().getStatusCode() +
+          EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
     }
 
     if (originalResponseHandler != null) {

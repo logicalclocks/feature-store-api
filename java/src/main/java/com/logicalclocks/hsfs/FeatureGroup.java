@@ -12,6 +12,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +36,15 @@ public class FeatureGroup {
   @Getter @Setter
   private List<Feature> features;
 
+  @Getter
+  private Date created;
+
+  @Getter
+  private String creator;
+
   @Getter @Setter
   @JsonIgnore
-  private Storage defaultStorage = Storage.OFFLINE;
+  private Storage defaultStorage;
 
   @Getter @Setter
   private Boolean onlineEnabled;
@@ -63,7 +70,8 @@ public class FeatureGroup {
   // TODO(Fabio): here to be consistent we should also allow people to pass strings instead of feature objects
   public FeatureGroup(FeatureStore featureStore, String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys,
-                      boolean onlineEnabled, Storage defaultStorage) throws FeatureStoreException {
+                      boolean onlineEnabled, Storage defaultStorage, List<Feature> features)
+      throws FeatureStoreException {
     if (name == null) {
       throw new FeatureStoreException("Name is required when creating a feature group");
     }
@@ -78,7 +86,8 @@ public class FeatureGroup {
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
     this.onlineEnabled = onlineEnabled;
-    this.defaultStorage = defaultStorage;
+    this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
+    this.features = features;
   }
 
   public FeatureGroup() {
@@ -109,7 +118,11 @@ public class FeatureGroup {
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
-    read(this.defaultStorage).show(numRows);
+    show(numRows, defaultStorage);
+  }
+
+  public void show(int numRows, Storage storage) throws FeatureStoreException, IOException {
+    read(storage).show(numRows);
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
@@ -150,7 +163,6 @@ public class FeatureGroup {
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    // TODO(Fabio): Overwrite will drop the table.
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
   }

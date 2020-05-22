@@ -34,6 +34,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
+  public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
@@ -99,5 +100,21 @@ public class FeatureGroupApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     hopsworksClient.handleRequest(deleteRequest);
+  }
+
+  public void deleteContent(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    HttpPost postRequest = new HttpPost(uri);
+    hopsworksClient.handleRequest(postRequest);
   }
 }
