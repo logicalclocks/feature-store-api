@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroup {
@@ -98,6 +99,13 @@ public class FeatureGroup {
 
   public Query selectAll() throws FeatureStoreException, IOException {
     return new Query(this, getFeatures());
+  }
+
+  public Query select(List<String> features) throws FeatureStoreException, IOException {
+    // Create a feature object for each string feature given by the user.
+    // For the query building each feature need only the name set.
+    List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
+    return selectFeatures(featureObjList);
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
