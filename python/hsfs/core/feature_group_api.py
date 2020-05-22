@@ -22,6 +22,25 @@ class FeatureGroupApi:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
+    def post(self, feature_group_instance):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+        ]
+        headers = {"content-type": "application/json"}
+        return feature_group_instance.update_from_response_json(
+            _client._send_request(
+                "POST",
+                path_params,
+                headers=headers,
+                data=feature_group_instance.json(),
+            ),
+        )
+
     def get(self, name, version):
         """Get feature store with specific id or name.
 

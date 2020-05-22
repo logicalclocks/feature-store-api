@@ -51,3 +51,9 @@ class Query:
             "leftFeatures": self._left_features,
             "joins": self._joins,
         }
+
+    def to_string(self):
+        return self.__str__()
+
+    def __str__(self):
+        return self._query_constructor_api.construct_query(self)["query"]

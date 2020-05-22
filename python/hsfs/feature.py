@@ -57,3 +57,19 @@ class Feature:
     @property
     def type(self):
         return self._type
+
+    @property
+    def primary(self):
+        return self._primary
+
+    @primary.setter
+    def primary(self, primary):
+        self._primary = primary
+
+    @property
+    def partition(self):
+        return self._partition
+
+    @partition.setter
+    def partition(self, partition):
+        self._partition
