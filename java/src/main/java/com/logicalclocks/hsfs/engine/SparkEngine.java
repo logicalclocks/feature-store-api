@@ -19,13 +19,9 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.parquet.Strings;
-import org.apache.spark.SparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SparkEngine {
 
@@ -38,20 +34,17 @@ public class SparkEngine {
     return INSTANCE;
   }
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(SparkEngine.class);
-
   @Getter
   private SparkSession sparkSession;
 
   private SparkEngine() {
-    sparkSession = SparkSession.builder().enableHiveSupport().getOrCreate();
+    sparkSession = SparkSession.builder()
+        .enableHiveSupport()
+        .getOrCreate();
 
     // Configure the Spark context to allow dynamic partitions
-    SparkContext sparkContext = sparkSession.sparkContext();
-    SQLContext sqlContext = new SQLContext(sparkContext);
-
-    sqlContext.setConf("hive.exec.dynamic.partition", "true");
-    sqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict");
+    sparkSession.conf().set("hive.exec.dynamic.partition", "true");
+    sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
   }
 
   public Dataset<Row> sql(String query) {

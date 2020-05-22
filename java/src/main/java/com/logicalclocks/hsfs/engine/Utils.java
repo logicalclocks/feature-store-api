@@ -92,8 +92,7 @@ public class Utils {
     return jdbcArgumentList;
   }
 
-  public String getOnlineFgName(FeatureGroup featureGroup) {
-    return featureGroup.getFeatureStore().getName().toLowerCase() + "." +
-        featureGroup.getName() + "_" + featureGroup.getVersion();
+  public String getFgName(FeatureGroup featureGroup) {
+    return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 }

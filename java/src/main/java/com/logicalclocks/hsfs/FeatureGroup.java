@@ -43,7 +43,6 @@ public class FeatureGroup {
   private String creator;
 
   @Getter @Setter
-  @JsonIgnore
   private Storage defaultStorage;
 
   @Getter @Setter

@@ -165,7 +165,7 @@ public class FeatureGroupEngine {
     writeOptions.put(Constants.JDBC_PWD, password);
 
     writeOptions.put(Constants.JDBC_URL, storageConnector.getConnectionString());
-    writeOptions.put(Constants.JDBC_TABLE, utils.getOnlineFgName(featureGroup));
+    writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
 
     // add user provided configuration
     if (providedWriteOptions != null) {
