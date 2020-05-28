@@ -178,3 +178,11 @@ class FeatureGroup:
     @property
     def features(self):
         return self._features
+
+    @property
+    def primary_key(self):
+        return self._primary_key
+    
+    @property
+    def partition_key(self):
+        return self._partition_key

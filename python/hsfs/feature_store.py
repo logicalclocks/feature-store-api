@@ -99,7 +99,7 @@ class FeatureStore:
             name=name,
             version=version,
             description=description,
-            online_featuregroup_enabled=online_enabled,
+            online_enabled=online_enabled,
             partition_key=partition_key,
             primary_key=primary_key,
             featurestore_id=self._id,
