@@ -115,7 +115,9 @@ class Engine:
                 offline_write_options,
             )
         elif storage == "online":
-            self._save_online_dataframe(table_name, dataframe, save_mode, online_write_options)
+            self._save_online_dataframe(
+                table_name, dataframe, save_mode, online_write_options
+            )
         elif storage == "all":
             self._save_offline_dataframe(
                 table_name,
