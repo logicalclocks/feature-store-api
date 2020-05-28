@@ -211,7 +211,7 @@ class FeatureGroup:
 
     @description.setter
     def description(self, description):
-        self._description = description 
+        self._description = description
 
     @features.setter
     def features(self, features):
