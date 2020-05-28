@@ -106,9 +106,7 @@ class FeatureGroupEngine:
 
     def _get_online_opts(self, feature_group):
         online_storage_connector = self._storage_connector_api.get_online_connector()
-        args = [
-            arg.split("=") for arg in online_storage_connector.arguments().split(",")
-        ]
+        args = [arg.split("=") for arg in online_storage_connector.arguments.split(",")]
 
         return {
             "url": online_storage_connector.connection_string(),

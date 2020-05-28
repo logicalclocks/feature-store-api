@@ -194,9 +194,29 @@ class FeatureGroup:
         return self._primary_key
 
     @property
+    def online_enabled(self):
+        return self._online_enabled
+
+    @property
     def partition_key(self):
         return self._partition_key
 
     @property
     def feature_store_name(self):
         return self._feature_store_name
+
+    @property
+    def features(self, features):
+        self._features = features
+
+    @property
+    def primary_key(self, primary_key):
+        self._primary_key = primary_key
+
+    @property
+    def partition_key(self, partition_key):
+        self._partition_key = partition_key
+
+    @property
+    def online_enabled(self, online_enabled):
+        self._online_enabled = online_enabled
