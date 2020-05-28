@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-import json
 import pandas as pd
 import numpy as np
 
@@ -206,17 +205,21 @@ class Engine:
     def parse_schema(self, dataframe):
         return [
             feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat.name,
+                feat.dataType.simpleString(),
+                feat.metadata.get("description", ""),
             )
-            for feat in json.loads(dataframe.schema.json())["fields"]
+            for feat in dataframe.schema
         ]
 
     def parse_schema_dict(self, dataframe):
         return {
             feat["name"]: feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat.name,
+                feat.dataType.simpleString(),
+                feat.metadata.get("description", ""),
             )
-            for feat in json.loads(dataframe.schema.json())["fields"]
+            for feat in dataframe.schema
         }
 
     def schema_matches(self, dataframe, schema):
