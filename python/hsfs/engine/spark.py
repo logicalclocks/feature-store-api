@@ -115,7 +115,7 @@ class Engine:
                 offline_write_options,
             )
         elif storage == "online":
-            self._save_online_dataframe(table_name, dataframe, save_mode, write_options)
+            self._save_online_dataframe(table_name, dataframe, save_mode, online_write_options)
         elif storage == "all":
             self._save_offline_dataframe(
                 table_name,
@@ -140,7 +140,7 @@ class Engine:
     def _save_online_dataframe(
         self, feature_group, dataframe, save_mode, write_options
     ):
-        dataset.write.format(self.JDBC_FORMAT).mode(save_mode).options(
+        dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
             write_options
         ).save()
 
