@@ -103,6 +103,7 @@ class FeatureStore:
             partition_key=partition_key,
             primary_key=primary_key,
             featurestore_id=self._id,
+            featurestore_name=self._name,
             featuregroup_type=feature_group.FeatureGroup.CACHED_FEATURE_GROUP,
             features=features,
         )

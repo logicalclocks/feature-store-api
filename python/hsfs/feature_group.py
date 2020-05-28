@@ -188,3 +188,7 @@ class FeatureGroup:
     @property
     def partition_key(self):
         return self._partition_key
+
+    @property
+    def feature_store_name(self):
+        return self._feature_store_name
