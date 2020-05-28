@@ -178,6 +178,14 @@ class FeatureGroup:
         }
 
     @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self.version
+
+    @property
     def features(self):
         return self._features
 
