@@ -30,7 +30,6 @@ class FeatureGroup:
         name,
         version,
         description,
-        online_featuregroup_enabled,
         featurestore_id,
         partition_key=None,
         primary_key=None,
@@ -54,11 +53,11 @@ class FeatureGroup:
         num_bins=None,
         num_clusters=None,
         corr_method=None,
-        hdfs_store_paths=None,
-        hive_table_id=None,
         hive_table_type=None,
         inode_id=None,
         input_format=None,
+        online_enabled=False,
+        default_storage="OFFLINE",
     ):
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -84,12 +83,11 @@ class FeatureGroup:
         self._num_bins = num_bins
         self._num_clusters = num_clusters
         self._corr_method = corr_method
-        self._hdfs_store_paths = hdfs_store_paths
-        self._hive_table_id = hive_table_id
         self._hive_table_type = hive_table_type
         self._inode_id = inode_id
         self._input_format = input_format
-        self._online_feature_group_enabled = online_featuregroup_enabled
+        self._online_enabled = online_enabled
+        self._default_storage = default_storage
 
         self._primary_key = primary_key
         self._partition_key = partition_key
@@ -125,21 +123,15 @@ class FeatureGroup:
     def select(self, features=[]):
         return query.Query(self._feature_store_name, self, features)
 
-    def save(self, features):
-        if isinstance(features, query.Query):
-            feature_dataframe = features.read()
-        else:
-            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
-                features
-            )
+    def save(self, features, storage=None, write_options={}):
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
-        self._features = engine.get_instance().parse_schema(feature_dataframe)
-
-        # use first column as primary key if not specified
-        # primary key validation should be done in backend
-        if not self._primary_key:
-            self._primary_key = [self._features[0].name]
-        self._feature_group_engine.save(self, feature_dataframe)
+        self._feature_group_engine.save(
+            self,
+            feature_dataframe,
+            storage if storage else self._default_storage,
+            write_options,
+        )
         return self
 
     def insert(self):

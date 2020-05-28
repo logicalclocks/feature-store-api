@@ -31,6 +31,7 @@ from hsfs.storage_connector import StorageConnector
 
 class Engine:
     HIVE_FORMAT = "hive"
+    JDBC_FORMAT = "jdbc"
 
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
@@ -95,10 +96,53 @@ class Engine:
             )
         )
 
-    def save(self, dataframe, table_name, partition_columns, save_mode):
-        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).partitionBy(
-            partition_columns
-        ).saveAsTable(table_name)
+    def save_dataframe(
+        self,
+        table_name,
+        partition_columns,
+        dataframe,
+        save_mode,
+        storage,
+        offline_write_options,
+        online_write_options,
+    ):
+        if storage == "offline":
+            self._save_offline_dataframe(
+                table_name,
+                partition_columns,
+                dataframe,
+                save_mode,
+                offline_write_options,
+            )
+        elif storage == "online":
+            self._save_online_dataframe(table_name, dataframe, save_mode, write_options)
+        elif storage == "all":
+            self._save_offline_dataframe(
+                table_name,
+                partition_columns,
+                dataframe,
+                save_mode,
+                offline_write_options,
+            )
+            self._save_online_dataframe(
+                table_name, dataframe, save_mode, online_write_options
+            )
+        else:
+            raise FeatureStoreException("Storage not supported")
+
+    def _save_offline_dataframe(
+        self, table_name, partition_columns, dataframe, save_mode, write_options
+    ):
+        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
+            write_options
+        ).partitionBy(partition_columns).saveAsTable(table_name)
+
+    def _save_online_dataframe(
+        self, feature_group, dataframe, save_mode, write_options
+    ):
+        dataset.write.format(self.JDBC_FORMAT).mode(save_mode).options(
+            write_options
+        ).save()
 
     def write(
         self, dataframe, storage_connector, data_format, write_mode, write_options, path

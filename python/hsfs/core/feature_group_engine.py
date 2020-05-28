@@ -16,6 +16,7 @@
 
 # from hsfs import engine
 from hsfs.core import feature_group_api
+from hsfs.core import storage_connector_api
 
 
 class FeatureGroupEngine:
@@ -24,8 +25,16 @@ class FeatureGroupEngine:
 
     def __init__(self, feature_store_id):
         self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(feature_store_id)
 
-    def save(self, feature_group, feature_dataframe):
+    def save(self, feature_group, feature_dataframe, storage, write_options):
+
+        if len(feature_group._features) == 0:
+            # User didn't provide a schema. extract it from the dataframe
+            feature_group._features = engine.get_instance().parse_schema(
+                feature_dataframe
+            )
+
         # set primary and partition key columns
         # we should move this to the backend
         for feat in feature_group.features:
@@ -34,12 +43,20 @@ class FeatureGroupEngine:
             if feat.name in feature_group.partition_key:
                 feat.partition = True
 
-        self._feature_group_api.post(feature_group)
+        self._feature_group_api.save(feature_group)
 
-        table_name = self._get_table_name(feature_group)
-        print(table_name)
+        offline_write_options = write_options
+        online_write_options = write_options
 
-        # engine.get_instance().save(feature_dataframe, table_name, feature_group.partition_key, self.APPEND)
+        if storage == "online" or storage == "all":
+            # Add JDBC connection configuration in case of online feature group
+            jdbc_options = self._get_online_opts(feature_group)
+            online_write_options = {**jdbc_options, **online_write_options}
+             
+    
+        engine.get_instance().save_dataframe(
+            self._get_table_name(feature_group), feature_group.partition_key, feature_dataframe, self.APPEND, storage, offline_write_options, online_write_options 
+        )
 
     def insert(self):
         raise NotImplementedError
@@ -52,3 +69,21 @@ class FeatureGroupEngine:
             + "_"
             + feature_group.version
         )
+
+    def _get_online_table_name(self, feature_group):
+        return (
+            feature_group.name
+            + "_"
+            + feature_group.version
+        )
+
+    def _get_online_opts(self, feature_group):
+        online_storage_connector = self._storage_connector_api.get_online_connector()
+        args = [arg.split("=") for arg in online_storage_connector.arguments().split(",")]
+
+        return {
+            'url': online_storage_connector.connection_string(),
+            'user': [arg[1] for arg in args if arg[0] == "user"][0]
+            'password': [arg[1] for arg in args if arg[0] == "passowrd"][0]
+            'dbtable': self._get_online_table_name(feature_group)
+        }

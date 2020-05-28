@@ -22,7 +22,7 @@ class FeatureGroupApi:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-    def post(self, feature_group_instance):
+    def save(self, feature_group_instance):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -62,3 +62,21 @@ class FeatureGroupApi:
         return feature_group.FeatureGroup.from_response_json(
             _client._send_request("GET", path_params, query_params)[0],
         )
+
+    def delete_content(self, feature_group_instance):
+        """Delete content of the feature group. It simulates the overwrite insert mode
+
+        Args:
+            feature_group feature_group: the feature for which to delete the content 
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "clear",
+        ]
+        _client._send_request("POST", path_params)

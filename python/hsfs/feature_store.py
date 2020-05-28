@@ -89,9 +89,11 @@ class FeatureStore:
         name,
         version,
         description="",
+        default_storage="OFFLINE",
         online_enabled=False,
         partition_key=[],
         primary_key=[],
+        features=[],
     ):
         return feature_group.FeatureGroup(
             name=name,
@@ -102,6 +104,7 @@ class FeatureStore:
             primary_key=primary_key,
             featurestore_id=self._id,
             featuregroup_type=feature_group.FeatureGroup.CACHED_FEATURE_GROUP,
+            features=features,
         )
 
     def create_training_dataset(
