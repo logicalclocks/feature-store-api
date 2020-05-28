@@ -136,14 +136,14 @@ class Engine:
         self, table_name, partition_columns, dataframe, save_mode, write_options
     ):
         dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
-            write_options
+            **write_options
         ).partitionBy(partition_columns).saveAsTable(table_name)
 
     def _save_online_dataframe(
         self, feature_group, dataframe, save_mode, write_options
     ):
         dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
-            write_options
+            **write_options
         ).save()
 
     def write(
