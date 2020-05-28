@@ -169,7 +169,8 @@ class FeatureGroup:
             "name": self._name,
             "description": self._description,
             "version": self._version,
-            "onlineFeaturegroupEnabled": self._online_feature_group_enabled,
+            "onlineEnabled": self._online_enabled,
+            "defaultStorage": self._default_storage,
             "features": self._features,
             "featuregroupType": self._feature_group_type,
             "featurestoreId": self._feature_store_id,
@@ -182,7 +183,7 @@ class FeatureGroup:
     @property
     def primary_key(self):
         return self._primary_key
-    
+
     @property
     def partition_key(self):
         return self._partition_key

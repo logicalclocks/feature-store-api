@@ -27,6 +27,7 @@ except ModuleNotFoundError:
 
 from hsfs import feature
 from hsfs.storage_connector import StorageConnector
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class Engine:
