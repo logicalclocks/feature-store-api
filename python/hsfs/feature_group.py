@@ -134,8 +134,19 @@ class FeatureGroup:
         )
         return self
 
-    def insert(self):
-        pass
+    def insert(self, features, overwrite=False, storage=None, write_options={}):
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        self._feature_group_engine.insert(
+            self,
+            feature_dataframe,
+            overwrite,
+            storage if storage else self._default_storage,
+            write_options,
+        )
+
+    def delete(self):
+        self._feature_group_engine.delete(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
