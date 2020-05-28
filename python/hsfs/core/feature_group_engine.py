@@ -98,11 +98,11 @@ class FeatureGroupEngine:
             + "."
             + feature_group.name
             + "_"
-            + feature_group.version
+            + str(feature_group.version)
         )
 
     def _get_online_table_name(self, feature_group):
-        return feature_group.name + "_" + feature_group.version
+        return feature_group.name + "_" + str(feature_group.version)
 
     def _get_online_opts(self, feature_group):
         online_storage_connector = self._storage_connector_api.get_online_connector()
