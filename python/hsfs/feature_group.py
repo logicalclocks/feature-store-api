@@ -186,6 +186,10 @@ class FeatureGroup:
         return self._version
 
     @property
+    def description(self):
+        return self._description
+
+    @property
     def features(self):
         return self._features
 
@@ -205,18 +209,22 @@ class FeatureGroup:
     def feature_store_name(self):
         return self._feature_store_name
 
-    @property
+    @description.setter
+    def description(self, description):
+        self._description = description 
+
+    @features.setter
     def features(self, features):
         self._features = features
 
-    @property
+    @primary_key.setter
     def primary_key(self, primary_key):
         self._primary_key = primary_key
 
-    @property
+    @partition_key.setter
     def partition_key(self, partition_key):
         self._partition_key = partition_key
 
-    @property
+    @online_enabled.setter
     def online_enabled(self, online_enabled):
         self._online_enabled = online_enabled

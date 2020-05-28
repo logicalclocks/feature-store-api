@@ -31,7 +31,7 @@ class FeatureGroupEngine:
 
     def save(self, feature_group, feature_dataframe, storage, write_options):
 
-        if len(feature_group._features) == 0:
+        if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema(
                 feature_dataframe
