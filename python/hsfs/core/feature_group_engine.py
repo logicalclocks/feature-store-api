@@ -109,7 +109,7 @@ class FeatureGroupEngine:
         args = [arg.split("=") for arg in online_storage_connector.arguments.split(",")]
 
         return {
-            "url": online_storage_connector.connection_string(),
+            "url": online_storage_connector.connection_string,
             "user": [arg[1] for arg in args if arg[0] == "user"][0],
             "password": [arg[1] for arg in args if arg[0] == "passowrd"][0],
             "dbtable": self._get_online_table_name(feature_group),

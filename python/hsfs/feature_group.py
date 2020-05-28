@@ -96,7 +96,7 @@ class FeatureGroup:
             featurestore_id
         )
 
-    def read(self, dataframe_type="default"):
+    def read(self, storage=None, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -209,22 +209,30 @@ class FeatureGroup:
     def feature_store_name(self):
         return self._feature_store_name
 
+    @property
+    def creator(self):
+        return self._creator
+
+    @property
+    def created(self):
+        return self._created
+
     @description.setter
-    def description(self, description):
-        self._description = description
+    def description(self, new_description):
+        self._description = new_description
 
     @features.setter
-    def features(self, features):
-        self._features = features
+    def features(self, new_features):
+        self._features = new_features
 
     @primary_key.setter
-    def primary_key(self, primary_key):
-        self._primary_key = primary_key
+    def primary_key(self, new_primary_key):
+        self._primary_key = new_primary_key
 
     @partition_key.setter
-    def partition_key(self, partition_key):
-        self._partition_key = partition_key
+    def partition_key(self, new_partition_key):
+        self._partition_key = new_partition_key
 
     @online_enabled.setter
-    def online_enabled(self, online_enabled):
-        self._online_enabled = online_enabled
+    def online_enabled(self, new_online_enabled):
+        self._online_enabled = new_online_enabled
