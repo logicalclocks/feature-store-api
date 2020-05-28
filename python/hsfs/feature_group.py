@@ -174,6 +174,7 @@ class FeatureGroup:
             "features": self._features,
             "featuregroupType": self._feature_group_type,
             "featurestoreId": self._feature_store_id,
+            "type": "cachedFeaturegroupDTO",
         }
 
     @property
