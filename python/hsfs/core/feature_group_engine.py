@@ -76,7 +76,7 @@ class FeatureGroupEngine:
             jdbc_options = self._get_online_opts(feature_group)
             online_write_options = {**jdbc_options, **online_write_options}
 
-        if (storage == "online" or storage == "all") and overwrite:
+        if (storage == "offline" or storage == "all") and overwrite:
             self._feature_group_api.delete_content(feature_group)
 
         engine.get_instance().save_dataframe(

@@ -57,7 +57,7 @@ class FeatureGroup:
         inode_id=None,
         input_format=None,
         online_enabled=False,
-        default_storage="OFFLINE",
+        default_storage="offline",
     ):
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
