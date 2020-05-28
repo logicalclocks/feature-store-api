@@ -183,7 +183,7 @@ class FeatureGroup:
 
     @property
     def version(self):
-        return self.version
+        return self._version
 
     @property
     def features(self):
