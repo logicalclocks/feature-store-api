@@ -42,6 +42,7 @@ class Query:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             sql_query = query["query"]
+            online_conn = None
 
         return engine.get_instance().sql(
             sql_query, self._feature_store_name, online_conn, dataframe_type
@@ -55,6 +56,7 @@ class Query:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             sql_query = query["query"]
+            online_conn = None
 
         return engine.get_instance().show(
             sql_query, self._feature_store_name, n, online_conn
