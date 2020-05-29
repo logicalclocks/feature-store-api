@@ -78,8 +78,10 @@ class Query:
             "joins": self._joins,
         }
 
-    def to_string(self):
-        return self.__str__()
+    def to_string(self, online):
+        return self._query_constructor_api.construct_query(self)[
+            "queryOnline" if online else "query"
+        ]
 
     def __str__(self):
-        return self._query_constructor_api.construct_query(self)["query"]
+        return self._query_constructor_api.construct_query(self)
