@@ -104,9 +104,11 @@ class FeatureGroup:
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type)
+        return self.select_all().read(
+            storage if storage else self._default_storage, dataframe_type
+        )
 
-    def show(self, n):
+    def show(self, n, storage=None):
         """Show the first n rows of the feature group."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -114,11 +116,13 @@ class FeatureGroup:
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        return self.select_all().show(n, storage if storage else self._default_storage)
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(self._feature_store_name, self, self._features)
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, self._features
+        )
 
     def select(self, features=[]):
         return query.Query(self._feature_store_name, self, features)
@@ -176,6 +180,10 @@ class FeatureGroup:
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
         }
+
+    @property
+    def id(self):
+        return self._id
 
     @property
     def name(self):

@@ -40,15 +40,30 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
 
-    def sql(self, sql_query, feature_store, dataframe_type):
-        # set feature store
-        self._spark_session.sql("USE {}".format(feature_store))
-        result_df = self._spark_session.sql(sql_query)
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+        if not online_conn:
+            result_df = self._sql_offline(sql_query, feature_store)
+        else:
+            result_df = self._sql_online(sql_query, feature_store, online_conn)
+
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, feature_store, n):
-        return self.sql(sql_query, feature_store, "default").show(n)
+    def _sql_offline(self, sql_query, feature_store):
+        # set feature store
+        self._spark_session.sql("USE {}".format(feature_store))
+        return self._spark_session.sql(sql_query)
+
+    def _sql_online(self, sql_query, feature_store, online_conn):
+        options = online_conn.spark_options()
+        options["query"] = sql_query
+
+        return (
+            self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
+        )
+
+    def show(self, sql_query, feature_store, n, online_conn):
+        return self.sql(sql_query, feature_store, online_conn, "default").show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
@@ -141,9 +156,9 @@ class Engine:
             table_name
         )
 
-    def _save_online_dataframe(
-        self, feature_group, dataframe, save_mode, write_options
-    ):
+    def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
+        write_options["dbtable"] = table_name
+
         dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
             **write_options
         ).save()

@@ -50,13 +50,19 @@ class FeatureGroupEngine:
         offline_write_options = write_options
         online_write_options = write_options
 
+        table_name = self._get_table_name(feature_group)
+
         if storage == "online" or storage == "all":
             # Add JDBC connection configuration in case of online feature group
-            jdbc_options = self._get_online_opts(feature_group)
+            online_conn = self._storage_connector_api.get_online_connector()
+
+            jdbc_options = online_conn.spark_options()
+            jdbc_options["dbtable"] = table_name
+
             online_write_options = {**jdbc_options, **online_write_options}
 
         engine.get_instance().save_dataframe(
-            self._get_table_name(feature_group),
+            table_name,
             feature_group.partition_key,
             feature_dataframe,
             self.APPEND,
@@ -103,14 +109,3 @@ class FeatureGroupEngine:
 
     def _get_online_table_name(self, feature_group):
         return feature_group.name + "_" + str(feature_group.version)
-
-    def _get_online_opts(self, feature_group):
-        online_storage_connector = self._storage_connector_api.get_online_connector()
-        args = [arg.split("=") for arg in online_storage_connector.arguments.split(",")]
-
-        return {
-            "url": online_storage_connector.connection_string,
-            "user": [arg[1] for arg in args if arg[0] == "user"][0],
-            "password": [arg[1] for arg in args if arg[0] == "password"][0],
-            "dbtable": self._get_online_table_name(feature_group),
-        }

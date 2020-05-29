@@ -82,3 +82,12 @@ class StorageConnector:
     @property
     def arguments(self):
         return self._arguments
+
+    def spark_options(self):
+        args = [arg.split("=") for arg in self._arguments.split(",")]
+
+        return {
+            "url": self._connection_string,
+            "user": [arg[1] for arg in args if arg[0] == "user"][0],
+            "password": [arg[1] for arg in args if arg[0] == "password"][0],
+        }

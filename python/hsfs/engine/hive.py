@@ -34,6 +34,18 @@ class Engine:
     def show(self, sql_query, feature_store, n):
         return self.sql(sql_query, feature_store, "default").head(n)
 
+    def save_dataframe(
+        self,
+        table_name,
+        partition_columns,
+        dataframe,
+        save_mode,
+        storage,
+        offline_write_options,
+        online_write_options,
+    ):
+        raise NotImplementedError
+
     def set_job_group(self, group_id, description):
         pass
 

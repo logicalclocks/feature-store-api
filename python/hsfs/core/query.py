@@ -17,24 +17,42 @@
 import json
 
 from hsfs import util, engine
-from hsfs.core import join, query_constructor_api
+from hsfs.core import join, query_constructor_api, storage_connector_api
 
 
 class Query:
-    def __init__(self, feature_store, left_feature_group, left_features):
-        self._feature_store = feature_store
+    def __init__(
+        self, feature_store_name, feature_store_id, left_feature_group, left_features
+    ):
+        self._feature_store_name = feature_store_name
+        self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
         self._joins = []
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            feature_store_id
+        )
 
-    def read(self, dataframe_type="default"):
+    def read(self, storage, dataframe_type="default"):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().sql(sql_query, self._feature_store, dataframe_type)
 
-    def show(self, n):
+        if storage == "online":
+            online_conn = self._storage_connector_api.get_online_connector()
+
+        return engine.get_instance().sql(
+            sql_query, self._feature_store_name, storage, online_conn, dataframe_type
+        )
+
+    def show(self, n, storage):
         sql_query = self._query_constructor_api.construct_query(self)["query"]
-        return engine.get_instance().show(sql_query, self._feature_store, n)
+
+        if storage == "online":
+            online_conn = self._storage_connector_api.get_online_connector()
+
+        return engine.get_instance().show(
+            sql_query, self._feature_store_store, n, online_conn
+        )
 
     def join(self, sub_query, on=[], left_on=[], right_on=[], join_type="inner"):
         self._joins.append(
