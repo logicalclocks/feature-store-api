@@ -44,7 +44,7 @@ class Engine:
         if not online_conn:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = self._sql_online(sql_query, feature_store, online_conn)
+            result_df = self._sql_online(sql_query, online_conn)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -54,7 +54,7 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def _sql_online(self, sql_query, feature_store, online_conn):
+    def _sql_online(self, sql_query, online_conn):
         options = online_conn.spark_options()
         options["query"] = sql_query
 

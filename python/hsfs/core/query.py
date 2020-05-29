@@ -41,7 +41,7 @@ class Query:
             online_conn = self._storage_connector_api.get_online_connector()
 
         return engine.get_instance().sql(
-            sql_query, self._feature_store_name, storage, online_conn, dataframe_type
+            sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
     def show(self, n, storage):
@@ -51,7 +51,7 @@ class Query:
             online_conn = self._storage_connector_api.get_online_connector()
 
         return engine.get_instance().show(
-            sql_query, self._feature_store_store, n, online_conn
+            sql_query, self._feature_store_name, n, online_conn
         )
 
     def join(self, sub_query, on=[], left_on=[], right_on=[], join_type="inner"):
