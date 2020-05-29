@@ -35,20 +35,26 @@ class Query:
         )
 
     def read(self, storage, dataframe_type="default"):
-        sql_query = self._query_constructor_api.construct_query(self)["query"]
+        query = self._query_constructor_api.construct_query(self)
 
         if storage == "online":
+            sql_query = query["queryOnline"]
             online_conn = self._storage_connector_api.get_online_connector()
+        else:
+            sql_query = query["query"]
 
         return engine.get_instance().sql(
             sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
     def show(self, n, storage):
-        sql_query = self._query_constructor_api.construct_query(self)["query"]
+        query = self._query_constructor_api.construct_query(self)["query"]
 
         if storage == "online":
+            sql_query = query["queryOnline"]
             online_conn = self._storage_connector_api.get_online_connector()
+        else:
+            sql_query = query["query"]
 
         return engine.get_instance().show(
             sql_query, self._feature_store_name, n, online_conn
