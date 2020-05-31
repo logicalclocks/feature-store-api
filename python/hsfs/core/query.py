@@ -49,7 +49,7 @@ class Query:
         )
 
     def show(self, n, storage):
-        query = self._query_constructor_api.construct_query(self)["query"]
+        query = self._query_constructor_api.construct_query(self)
 
         if storage == "online":
             sql_query = query["queryOnline"]
