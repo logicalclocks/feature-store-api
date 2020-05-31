@@ -25,13 +25,22 @@ class Engine:
         self._cert_folder = os.path.join(cert_folder, host)
         self._cert_key = cert_key
 
-    def sql(self, sql_query, feature_store, dataframe_type):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+        if not online_conn:
+            pass
+        else:
+            pass
+
+    def _sql_offline():
         print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, feature_store, n):
+    def _sql_online():
+        pass
+
+    def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, "default").head(n)
 
     def save_dataframe(
