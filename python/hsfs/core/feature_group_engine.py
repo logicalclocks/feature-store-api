@@ -79,7 +79,8 @@ class FeatureGroupEngine:
 
         if storage == "online" or storage == "all":
             # Add JDBC connection configuration in case of online feature group
-            jdbc_options = self._get_online_opts(feature_group)
+            online_conn = self._storage_connector_api.get_online_connector()
+            jdbc_options = online_conn.spark_options()
             online_write_options = {**jdbc_options, **online_write_options}
 
         if (storage == "offline" or storage == "all") and overwrite:
