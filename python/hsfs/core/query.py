@@ -34,7 +34,7 @@ class Query:
             feature_store_id
         )
 
-    def read(self, storage, dataframe_type="default"):
+    def read(self, storage="offline", dataframe_type="default"):
         query = self._query_constructor_api.construct_query(self)
 
         if storage == "online":
@@ -48,7 +48,7 @@ class Query:
             sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
-    def show(self, n, storage):
+    def show(self, n, storage="offline"):
         query = self._query_constructor_api.construct_query(self)
 
         if storage == "online":
