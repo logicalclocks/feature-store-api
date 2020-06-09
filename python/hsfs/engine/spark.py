@@ -157,8 +157,6 @@ class Engine:
         )
 
     def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
-        write_options["dbtable"] = table_name
-
         dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
             **write_options
         ).save()

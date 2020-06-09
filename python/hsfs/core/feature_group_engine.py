@@ -57,7 +57,7 @@ class FeatureGroupEngine:
             online_conn = self._storage_connector_api.get_online_connector()
 
             jdbc_options = online_conn.spark_options()
-            jdbc_options["dbtable"] = table_name
+            jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
 
             online_write_options = {**jdbc_options, **online_write_options}
 
@@ -80,7 +80,10 @@ class FeatureGroupEngine:
         if storage == "online" or storage == "all":
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
+
             jdbc_options = online_conn.spark_options()
+            jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
+
             online_write_options = {**jdbc_options, **online_write_options}
 
         if (storage == "offline" or storage == "all") and overwrite:
@@ -90,7 +93,7 @@ class FeatureGroupEngine:
             self._get_table_name(feature_group),
             feature_group.partition_key,
             feature_dataframe,
-            self.OVERWRITE if overwrite else self.APPEND,
+            self.APPEND,
             storage,
             offline_write_options,
             online_write_options,

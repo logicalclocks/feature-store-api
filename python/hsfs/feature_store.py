@@ -35,14 +35,12 @@ class FeatureStore:
         project_id,
         featurestore_description,
         inode_id,
-        online_featurestore_type,
-        online_featurestore_name,
-        online_featurestore_size,
-        offline_featurestore_type,
         offline_featurestore_name,
         hive_endpoint,
         mysql_server_endpoint,
         online_enabled,
+        online_featurestore_name = None,
+        online_featurestore_size = None,
     ):
         self._id = featurestore_id
         self._name = featurestore_name
@@ -52,10 +50,8 @@ class FeatureStore:
         self._project_id = project_id
         self._description = featurestore_description
         self._inode_id = inode_id
-        self._online_feature_store_type = online_featurestore_type
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
-        self._offline_feature_store_type = offline_featurestore_type
         self._offline_feature_store_name = offline_featurestore_name
         self._hive_endpoint = hive_endpoint
         self._mysql_server_endpoint = mysql_server_endpoint
