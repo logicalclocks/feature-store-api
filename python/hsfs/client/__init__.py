@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.client import aws, hopsworks
+from hsfs.client import external, hopsworks
 
 _client = None
 
@@ -35,8 +35,8 @@ def init(
     if not _client:
         if client_type == "hopsworks":
             _client = hopsworks.Client()
-        elif client_type == "aws":
-            _client = aws.Client(
+        elif client_type == "external":
+            _client = external.Client(
                 host,
                 port,
                 project,

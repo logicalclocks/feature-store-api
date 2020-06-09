@@ -51,8 +51,9 @@ class Client(base.Client):
         self._port = port
         self._base_url = "https://" + self._host + ":" + str(self._port)
         self._project_name = project
-        self._region_name = region_name
-        self._cert_folder = cert_folder
+        self._region_name = region_name or self.DEFAULT_REGION
+        self._cert_folder_base = cert_folder
+        self._cert_folder = os.path.join(cert_folder, host, project)
 
         self._auth = auth.ApiKeyAuth(
             self._get_secret(secrets_store, "api-key", api_key_file)
@@ -67,6 +68,7 @@ class Client(base.Client):
         project_info = self._get_project_info(self._project_name)
         self._project_id = str(project_info["projectId"])
 
+        os.makedirs(self._cert_folder, exist_ok=True)
         credentials = self._get_credentials(self._project_id)
         self._write_b64_cert_to_bytes(
             str(credentials["kStore"]),
@@ -78,11 +80,26 @@ class Client(base.Client):
         )
 
         self._cert_key = str(credentials["password"])
+        with open(os.path.join(self._cert_folder, "material_passwd"), "w") as f:
+            f.write(str(credentials["password"]))
 
     def _close(self):
         """Closes a client and deletes certificates."""
-        self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
-        self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+        if base.Client.DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV not in os.environ:
+            # Clean up only on AWS, on databricks certs are needed at startup time
+            self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
+            self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+            self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
+        try:
+            # delete project level
+            os.rmdir(self._cert_folder)
+            # delete host level
+            os.rmdir(os.path.dirname(self._cert_folder))
+            # on AWS base dir will be empty, and can be deleted otherwise raises OSError
+            # on Databricks there will still be the scripts and clients therefore raises OSError
+            os.rmdir(self._cert_folder_base)
+        except OSError:
+            pass
         self._connected = False
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):

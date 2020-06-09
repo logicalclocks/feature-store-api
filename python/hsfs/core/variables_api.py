@@ -14,9 +14,14 @@
 #   limitations under the License.
 #
 
-from hsfs.connection import Connection
+from hsfs import client
 
-connection = Connection.connection
-setup_databricks = Connection.setup_databricks
 
-__all__ = ["connection", "setup_databricks"]
+class VariablesApi:
+    def get_hostname(self):
+        _client = client.get_instance()
+        path_params = [
+            "variables",
+            "hopsworks_endpoint",
+        ]
+        return _client._send_request("GET", path_params)["successMessage"].split(":")[0]
