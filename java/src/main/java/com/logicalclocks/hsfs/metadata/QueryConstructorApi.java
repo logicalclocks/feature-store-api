@@ -33,7 +33,7 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public String constructQuery(FeatureStore featureStore, Query query) throws FeatureStoreException, IOException {
+  public FsQuery constructQuery(FeatureStore featureStore, Query query) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH +
         FeatureStoreApi.FEATURE_STORE_SERVICE_PATH +
@@ -51,6 +51,7 @@ public class QueryConstructorApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info("Sending query: " + queryJson);
     FsQuery fsQuery = hopsworksClient.handleRequest(putRequest, FsQuery.class);
-    return fsQuery.getQuery().replace("\n", " ");
+    fsQuery.removeNewLines();
+    return fsQuery;
   }
 }

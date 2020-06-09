@@ -98,23 +98,36 @@ public class Query {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
+    return read(Storage.OFFLINE);
+  }
+
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    show(Storage.OFFLINE, numRows);
+  }
+
+  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
     String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
     LOGGER.info("Executing query: " + sqlQuery);
     return SparkEngine.getInstance().sql(sqlQuery);
   }
 
-  public void show(int numRows) throws FeatureStoreException, IOException {
+  public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
     String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
     LOGGER.info("Executing query: " + sqlQuery);
     SparkEngine.getInstance().sql(sqlQuery).show(numRows);
   }
 
-  @Override
   public String toString() {
+    return toString(Storage.OFFLINE);
+  }
+
+  public String toString(Storage storage) {
     try {
-      return queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+      return queryConstructorApi
+          .constructQuery(leftFeatureGroup.getFeatureStore(), this)
+          .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
     }
