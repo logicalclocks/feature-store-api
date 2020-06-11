@@ -125,7 +125,9 @@ class FeatureGroup:
         )
 
     def select(self, features=[]):
-        return query.Query(self._feature_store_name, self._feature_store_id, self, features)
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, features
+        )
 
     def save(self, features, storage=None, write_options={}):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)

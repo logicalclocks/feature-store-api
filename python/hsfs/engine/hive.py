@@ -70,6 +70,9 @@ class Engine:
             keystore_password=self._cert_key,
         )
 
+    def _create_mysql_connection(self, feature_store):
+
+
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
             return dataframe

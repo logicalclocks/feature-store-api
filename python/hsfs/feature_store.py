@@ -39,8 +39,8 @@ class FeatureStore:
         hive_endpoint,
         mysql_server_endpoint,
         online_enabled,
-        online_featurestore_name = None,
-        online_featurestore_size = None,
+        online_featurestore_name=None,
+        online_featurestore_size=None,
     ):
         self._id = featurestore_id
         self._name = featurestore_name

@@ -24,7 +24,8 @@ setup(
         "boto3",
         "pandas",
         "numpy",
-        "pyhopshive[thrift]"
+        "pyhopshive[thrift]",
+        "PyMySQL"
     ],
     extras_require={
         "dev": [
