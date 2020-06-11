@@ -191,39 +191,6 @@ public class FeatureGroupEngine {
         .save();
   }
 
-  public Dataset<Row> read(FeatureGroup featureGroup, Storage storage, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException {
-    switch (storage) {
-      case OFFLINE:
-        return readOfflineFeatureGroup(featureGroup);
-      case ONLINE:
-        return readOnlineFeatureGroup(featureGroup, readOptions);
-      default:
-        throw new FeatureStoreException("ALL storage not supported when reading a feature group");
-    }
-  }
-
-  private Dataset<Row> readOfflineFeatureGroup(FeatureGroup offlineFeatureGroup) {
-    String tableName = utils.getTableName(offlineFeatureGroup);
-    // TODO(Fabio) here we should probably use the dataframe API to integrate better HUDI
-    return SparkEngine.getInstance().sql("SELECT * FROM " + tableName);
-  }
-
-  private Dataset<Row> readOnlineFeatureGroup(FeatureGroup featureGroup, Map<String, String> providedReadOptions)
-      throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getOnlineStorageConnector(featureGroup.getFeatureStore());
-    Map<String, String> readOptions = getOnlineOptions(providedReadOptions, featureGroup, storageConnector);
-    return readOnlineDataFrame(readOptions);
-  }
-
-  private Dataset<Row> readOnlineDataFrame(Map<String, String> readOptions) {
-    return SparkEngine.getInstance().getSparkSession()
-        .read()
-        .format(Constants.JDBC_FORMAT)
-        .options(readOptions)
-        .load();
-  }
-
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroup);
   }

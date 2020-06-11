@@ -15,6 +15,7 @@
  */
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
@@ -22,6 +23,8 @@ import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+
+import java.util.Map;
 
 public class SparkEngine {
 
@@ -49,6 +52,15 @@ public class SparkEngine {
 
   public Dataset<Row> sql(String query) {
     return sparkSession.sql(query);
+  }
+
+  public Dataset<Row> jdbc(StorageConnector storageConnector, String query) throws FeatureStoreException {
+    Map<String, String> readOptions = storageConnector.getSparkOptions();
+    readOptions.put("query", query);
+    return sparkSession.read()
+        .format(Constants.JDBC_FORMAT)
+        .options(readOptions)
+        .load();
   }
 
   public void configureConnector(StorageConnector storageConnector) {

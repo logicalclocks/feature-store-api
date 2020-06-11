@@ -67,7 +67,6 @@ public class FeatureGroup {
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
   @Builder
-  // TODO(Fabio): here to be consistent we should also allow people to pass strings instead of feature objects
   public FeatureGroup(FeatureStore featureStore, String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys,
                       boolean onlineEnabled, Storage defaultStorage, List<Feature> features)
@@ -109,19 +108,11 @@ public class FeatureGroup {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(this.defaultStorage, null);
+    return read(this.defaultStorage);
   }
 
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
-    return read(storage, null);
-  }
-
-  public Dataset<Row> read(Map<String, String> options) throws FeatureStoreException, IOException {
-    return read(this.defaultStorage, options);
-  }
-
-  public Dataset<Row> read(Storage storage, Map<String, String> options) throws FeatureStoreException, IOException {
-    return featureGroupEngine.read(this, storage, options);
+    return selectAll().read(storage);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
