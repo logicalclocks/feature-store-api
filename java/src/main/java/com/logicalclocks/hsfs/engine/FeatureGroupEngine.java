@@ -146,25 +146,7 @@ public class FeatureGroupEngine {
   private Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
                                                FeatureGroup featureGroup,
                                                StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> writeOptions = new HashMap<>();
-
-    List<Pair<String, String>> jdbcArguments = utils.parseJdbcArguments(storageConnector);
-
-    String user = jdbcArguments.stream()
-        .filter(p -> p.getL().equals(Constants.JDBC_USER))
-        .map(Pair::getR)
-        .findFirst()
-        .orElseThrow(() -> new FeatureStoreException("Could not find USER for online feature store JDBC connector"));
-    writeOptions.put(Constants.JDBC_USER, user);
-
-    String password = jdbcArguments.stream()
-        .filter(p -> p.getL().equals(Constants.JDBC_PWD))
-        .map(Pair::getR)
-        .findFirst()
-        .orElseThrow(() -> new FeatureStoreException("Could not find PASSWORD for online feature store JDBC connector"));
-    writeOptions.put(Constants.JDBC_PWD, password);
-
-    writeOptions.put(Constants.JDBC_URL, storageConnector.getConnectionString());
+    Map<String, String> writeOptions = storageConnector.getSparkOptions();
     writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
 
     // add user provided configuration

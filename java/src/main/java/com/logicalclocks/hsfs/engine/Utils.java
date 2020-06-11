@@ -76,22 +76,6 @@ public class Utils {
     return JavaConverters.asScalaIteratorConverter(jPartitionCols.iterator()).asScala().toSeq();
   }
 
-  /**
-   * Split jdbc comma separated argument list
-   * @param storageConnector
-   * @return
-   */
-  public List<Pair<String, String>> parseJdbcArguments(StorageConnector storageConnector) {
-    List<Pair<String, String>> jdbcArgumentList = new ArrayList<>();
-    String[] argumentsSplits = storageConnector.getArguments().split(",");
-    for (String argument : argumentsSplits) {
-      String[] argumentSplits = argument.split("=");
-      jdbcArgumentList.add(new Pair<>(argumentSplits[0], argumentSplits[1]));
-    }
-
-    return jdbcArgumentList;
-  }
-
   public String getFgName(FeatureGroup featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
