@@ -17,6 +17,8 @@
 import os
 import pandas as pd
 from pyhive import hive
+from sqlalchemy import create_engine
+import pymysql
 
 
 class Engine:
@@ -27,18 +29,20 @@ class Engine:
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
-            pass
+            return _sql_offline(feature_store, dataframe_type)
         else:
-            pass
+            return _sql_online(online_conn, dataframe_type)
 
-    def _sql_offline():
+    def _sql_offline(feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _sql_online():
-        pass
+    def _sql_online(online_conn, dataframe_type):
+        with self._create_mysql_connection(online_conn) as mysql_conn:
+            result_df = pd.read_sql(sql_query, mysql_conn)
+        return self._return_dataframe_type(result_df, dataframe_type)
 
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, "default").head(n)
@@ -70,8 +74,20 @@ class Engine:
             keystore_password=self._cert_key,
         )
 
-    def _create_mysql_connection(self, feature_store):
-
+    def _create_mysql_connection(self, online_conn):
+        online_options = online_conn.spark_options()
+        # Here we are replacing the first part of the string returned by Hopsworks,
+        # jdbc:mysql:// with the sqlalchemy one + username and password
+        sql_alchemy_conn_str = online_options.url.replace(
+            "jdbc:mysql://",
+            "mysql+pymysql://"
+            + online_options["user"]
+            + ":"
+            + online_options["password"]
+            + "@",
+        )
+        sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
+        return sql_alchemy_engine.connect()
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
