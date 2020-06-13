@@ -45,7 +45,7 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, "default").head(n)
+        return self.sql(sql_query, feature_store, online_conn, "default").head(n)
 
     def save_dataframe(
         self,
