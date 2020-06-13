@@ -29,17 +29,17 @@ class Engine:
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
-            return self._sql_offline(feature_store, dataframe_type)
+            return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
-            return self._sql_online(online_conn, dataframe_type)
+            return self._sql_online(sql_query, online_conn, dataframe_type)
 
-    def _sql_offline(self, feature_store, dataframe_type):
+    def _sql_offline(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _sql_online(self, online_conn, dataframe_type):
+    def _sql_online(self, sql_query, online_conn, dataframe_type):
         with self._create_mysql_connection(online_conn) as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
