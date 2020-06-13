@@ -29,9 +29,9 @@ class Engine:
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
-            return _sql_offline(feature_store, dataframe_type)
+            return self._sql_offline(feature_store, dataframe_type)
         else:
-            return _sql_online(online_conn, dataframe_type)
+            return self._sql_online(online_conn, dataframe_type)
 
     def _sql_offline(feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
