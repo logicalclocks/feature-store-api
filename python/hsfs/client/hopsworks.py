@@ -16,6 +16,7 @@
 
 import os
 import requests
+import textwrap
 
 from pathlib import Path
 from hsfs.client import base, auth
