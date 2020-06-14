@@ -88,7 +88,7 @@ class Client(base.Client):
             self._get_jks_trust_store_path(), keystore_pw
         )
 
-        with ca_cert_path.open("w") as f:
+        with ca_chain_path.open("w") as f:
             f.write(keystore_ca_cert + truststore_ca_cert)
 
     def _convert_jks_to_pem(self, jks_path, keystore_pw):
