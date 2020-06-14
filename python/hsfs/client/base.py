@@ -16,10 +16,6 @@
 
 import os
 import socket
-from OpenSSL import SSL
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-import idna
 import furl
 from abc import ABC, abstractmethod
 
@@ -44,57 +40,25 @@ class Client(ABC):
         """To be implemented by clients."""
         pass
 
-    def _get_verify(self, host, port, verify, trust_store_path):
+    def _get_verify(self, verify, trust_store_path):
         """Get verification method for sending HTTP requests to Hopsworks.
 
         Credit to https://gist.github.com/gdamjan/55a8b9eec6cf7b771f92021d93b87b2c
 
-        :param host: hopsworks hostname
-        :type host: str
-        :param port: hopsworks port
-        :type port: str or int
         :param verify: perform hostname verification, 'true' or 'false'
         :type verify: str
         :param trust_store_path: path of the truststore locally if it was uploaded manually to
             the external environment such as AWS Sagemaker
         :type trust_store_path: str
-        :return: if env var HOPS_UTIL_VERIFY is not false
-                then if hopsworks certificate is self-signed, return the path to the truststore (PEM)
-            else if hopsworks is not self-signed, return true
-            return false
+        :return: if verify is true and the truststore is provided, then return the trust store location
+                 if verify is true but the truststore wasn't provided, then return true
+                 if verify is false, then return false 
         :rtype: str or boolean
         """
         if verify == "true":
-
-            hostname_idna = idna.encode(host)
-            sock = socket.socket()
-
-            sock.connect((host, int(port)))
-            ctx = SSL.Context(SSL.SSLv23_METHOD)
-            ctx.check_hostname = False
-            ctx.verify_mode = SSL.VERIFY_NONE
-
-            sock_ssl = SSL.Connection(ctx, sock)
-            sock_ssl.set_connect_state()
-            sock_ssl.set_tlsext_host_name(hostname_idna)
-            sock_ssl.do_handshake()
-            cert = sock_ssl.get_peer_certificate()
-            crypto_cert = cert.to_cryptography()
-            sock_ssl.close()
-            sock.close()
-
-            try:
-                commonname = crypto_cert.subject.get_attributes_for_oid(
-                    NameOID.COMMON_NAME
-                )[0].value
-                issuer = crypto_cert.issuer.get_attributes_for_oid(NameOID.COMMON_NAME)[
-                    0
-                ].value
-                if commonname == issuer and trust_store_path:
-                    return trust_store_path
-                else:
-                    return True
-            except x509.ExtensionNotFound:
+            if trust_store_path != None:
+                return trust_store_path
+            else:
                 return True
 
         return False

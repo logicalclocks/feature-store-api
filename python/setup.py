@@ -17,9 +17,6 @@ setup(
     install_requires=[
         "pyhumps",
         "requests",
-        "cryptography",
-        "pyopenssl",
-        "idna",
         "furl",
         "boto3",
         "pandas",
