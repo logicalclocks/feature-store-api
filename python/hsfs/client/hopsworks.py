@@ -74,7 +74,7 @@ class Client(base.Client):
             self._write_ca_chain(ca_chain_path)
         return str(ca_chain_path)
 
-    def _write_ca_chain(ca_chain_path):
+    def _write_ca_chain(self, ca_chain_path):
         """
         Converts JKS trustore file into PEM to be compatible with Python libraries
         """
@@ -89,7 +89,7 @@ class Client(base.Client):
         with ca_cert_path.open("w") as f:
             f.write(keystore_ca_cert + truststore_ca_cert)
 
-    def _convert_jks_to_pem(jks_path, keystore_pw):
+    def _convert_jks_to_pem(self, jks_path, keystore_pw):
         """
         Converts a keystore JKS that contains client private key,
          client certificate and CA certificate that was used to
@@ -109,7 +109,7 @@ class Client(base.Client):
             ca_certs = ca_certs + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
         return ca_certs
 
-    def _bytes_to_pem_str(der_bytes, pem_type):
+    def _bytes_to_pem_str(self, der_bytes, pem_type):
         """
         Utility function for creating PEM files
 
@@ -132,7 +132,7 @@ class Client(base.Client):
         pem_str = pem_str + "-----END {}-----".format(pem_type) + "\n"
         return pem_str
 
-    def _get_cert_pw():
+    def _get_cert_pw(self):
         """
         Get keystore password from local container
 
@@ -148,7 +148,7 @@ class Client(base.Client):
         with pwd_path.open() as f:
             return f.read()
 
-    def _get_jks_trust_store_path():
+    def _get_jks_trust_store_path(self):
         """
         Get truststore location
 
@@ -163,7 +163,7 @@ class Client(base.Client):
             material_directory = Path(os.environ[self.MATERIAL_DIRECTORY])
             return str(material_directory.joinpath(username + self.TRUSTSTORE_SUFFIX))
 
-    def _get_jks_key_store_path():
+    def _get_jks_key_store_path(self):
         """
         Get keystore location
 
