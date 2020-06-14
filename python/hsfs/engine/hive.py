@@ -78,7 +78,7 @@ class Engine:
         online_options = online_conn.spark_options()
         # Here we are replacing the first part of the string returned by Hopsworks,
         # jdbc:mysql:// with the sqlalchemy one + username and password
-        sql_alchemy_conn_str = online_options.url.replace(
+        sql_alchemy_conn_str = online_options["url"].replace(
             "jdbc:mysql://",
             "mysql+pymysql://"
             + online_options["user"]
