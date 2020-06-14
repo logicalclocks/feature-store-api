@@ -57,9 +57,7 @@ class Client(base.Client):
         self._project_id = os.environ[self.PROJECT_ID]
         self._project_name = self._project_name()
         self._auth = auth.BearerAuth(self._read_jwt())
-        self._verify = self._get_verify(
-            self._host, self._port, hostname_verification, trust_store_path
-        )
+        self._verify = self._get_verify(hostname_verification, trust_store_path)
         self._session = requests.session()
 
         self._connected = True
