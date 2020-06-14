@@ -26,8 +26,6 @@ except:
     pass
 
 
-
-
 class Client(base.Client):
     REQUESTS_VERIFY = "REQUESTS_VERIFY"
     DOMAIN_CA_TRUSTSTORE_PEM = "DOMAIN_CA_TRUSTSTORE_PEM"

@@ -22,7 +22,8 @@ setup(
         "pandas",
         "numpy",
         "pyhopshive[thrift]",
-        "PyMySQL"
+        "PyMySQL",
+        "pyjks"
     ],
     extras_require={
         "dev": [
