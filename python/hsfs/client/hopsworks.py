@@ -79,10 +79,10 @@ class Client(base.Client):
         Converts JKS trustore file into PEM to be compatible with Python libraries
         """
         keystore_pw = self._get_cert_pw()
-        keystore_ca_cert = _convert_jks_to_pem(
+        keystore_ca_cert = self._convert_jks_to_pem(
             self._get_jks_key_store_path(), keystore_pw
         )
-        truststore_ca_cert = _convert_jks_to_pem(
+        truststore_ca_cert = self._convert_jks_to_pem(
             self._get_jks_trust_store_path(), keystore_pw
         )
 
