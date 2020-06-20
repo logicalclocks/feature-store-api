@@ -44,7 +44,6 @@ class FeatureGroup:
         features=None,
         location=None,
         jobs=None,
-        featuregroup_type=None,
         desc_stats_enabled=None,
         feat_corr_enabled=None,
         feat_hist_enabled=None,
@@ -53,9 +52,6 @@ class FeatureGroup:
         num_bins=None,
         num_clusters=None,
         corr_method=None,
-        hive_table_type=None,
-        inode_id=None,
-        input_format=None,
         online_enabled=False,
         default_storage="offline",
     ):
@@ -74,7 +70,6 @@ class FeatureGroup:
         self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._location = location
         self._jobs = jobs
-        self._feature_group_type = featuregroup_type
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
         self._feat_hist_enabled = feat_hist_enabled
@@ -83,9 +78,6 @@ class FeatureGroup:
         self._num_bins = num_bins
         self._num_clusters = num_clusters
         self._corr_method = corr_method
-        self._hive_table_type = hive_table_type
-        self._inode_id = inode_id
-        self._input_format = input_format
         self._online_enabled = online_enabled
         self._default_storage = default_storage
 
@@ -178,7 +170,6 @@ class FeatureGroup:
             "onlineEnabled": self._online_enabled,
             "defaultStorage": self._default_storage,
             "features": self._features,
-            "featuregroupType": self._feature_group_type,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
         }
