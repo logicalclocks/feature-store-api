@@ -146,6 +146,12 @@ class FeatureGroup:
     def delete(self):
         self._feature_group_engine.delete(self)
 
+    def add_tag(self, name, value=None):
+        self._feature_group_engine.add_tag(name, value)
+
+    def delete_tag(self, name):
+        self._feature_group_engine.delete_tag(name)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

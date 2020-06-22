@@ -97,3 +97,43 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         _client._send_request("DELETE", path_params)
+
+    def add_tag(self, name, value=None):
+        """Attach a tag to a feature group 
+
+        Args:
+            name (string): the name of the tag to attach 
+            value (string): the value of the tag. can be none 
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "tags",
+            name,
+        ]
+        query_params = {"value": value} if not value else None
+        _client._send_request("PUT", path_params, query_params=query_params)
+
+    def delete_tag(self, name):
+        """Remove a tag from a feature group
+
+        Args:
+            name (string): the name of the tag to remove 
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "tags",
+            name,
+        ]
+        _client._send_request("DELETE", path_params)
