@@ -16,18 +16,23 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import com.logicalclocks.hsfs.FeatureGroup;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.*;
 
 public class FeatureGroupApi {
 
@@ -35,13 +40,14 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
+  public static final String FEATURE_GROUP_TAGS_PATH = FEATURE_GROUP_ID_PATH + "/tags{/name}{?value}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
   public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
 
@@ -63,8 +69,8 @@ public class FeatureGroupApi {
   }
 
   public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
 
@@ -85,8 +91,8 @@ public class FeatureGroupApi {
   }
 
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
 
@@ -103,8 +109,8 @@ public class FeatureGroupApi {
   }
 
   public void deleteContent(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_CLEAR_PATH;
 
@@ -116,5 +122,85 @@ public class FeatureGroupApi {
 
     HttpPost postRequest = new HttpPost(uri);
     hopsworksClient.handleRequest(postRequest);
+  }
+
+  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name);
+
+    if (value != null) {
+      uriTemplate.set("value", value);
+    }
+
+    HttpPut putRequest = new HttpPut(uriTemplate.expand());
+    hopsworksClient.handleRequest(putRequest);
+  }
+
+  public String getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name)
+        .expand();
+
+    HttpGet getRequest = new HttpGet(uri);
+    Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
+
+    // If there is a tag, then it's the first one
+    if (tags.getItems().isEmpty()) {
+      throw new FeatureStoreException("Tag " + name + " not found");
+    }
+
+    return tags.getItems().get(0).getValue();
+  }
+
+  public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    HttpGet getRequest = new HttpGet(uri);
+    Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
+
+    return tags.getItems().stream()
+        .collect(Collectors.toMap(Tags::getName, Tags::getValue));
+  }
+
+  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name)
+        .expand();
+
+    HttpDelete httpDelete = new HttpDelete(uri);
+    hopsworksClient.handleRequest(httpDelete);
   }
 }

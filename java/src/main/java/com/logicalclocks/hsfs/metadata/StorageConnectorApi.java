@@ -13,11 +13,13 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.FeatureStore;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StorageConnectorType;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -50,10 +50,6 @@ public class FeatureGroup {
   private Boolean onlineEnabled;
 
   @Getter @Setter
-  private String featuregroupType = "CACHED_FEATURE_GROUP";
-
-  @Getter @Setter
-  // TODO(Fabio): Refactor Hopsworks to remove this garbage here.
   private String type = "cachedFeaturegroupDTO";
 
   @JsonIgnore
@@ -167,5 +163,25 @@ public class FeatureGroup {
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupEngine.delete(this);
+  }
+
+  public void addTag(String name) throws FeatureStoreException, IOException {
+    addTag(name, null);
+  }
+
+  public void addTag(String name, String value) throws FeatureStoreException, IOException {
+    featureGroupEngine.addTag(this, name, value);
+  }
+
+  public Map<String, String> getTags() throws FeatureStoreException, IOException {
+    return featureGroupEngine.getTags(this);
+  }
+
+  public String getTag(String name) throws FeatureStoreException, IOException {
+    return featureGroupEngine.getTag(this, name);
+  }
+
+  public void deleteTag(String name) throws FeatureStoreException, IOException {
+    featureGroupEngine.deleteTag(this, name);
   }
 }

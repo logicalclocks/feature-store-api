@@ -4,10 +4,9 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.util.Constants;
-import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -176,4 +175,21 @@ public class FeatureGroupEngine {
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroup);
   }
+
+  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
+    featureGroupApi.addTag(featureGroup, name, value);
+  }
+
+  public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return featureGroupApi.getTags(featureGroup);
+  }
+
+  public String getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    return featureGroupApi.getTag(featureGroup, name);
+  }
+
+  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    featureGroupApi.deleteTag(featureGroup, name);
+  }
+
 }

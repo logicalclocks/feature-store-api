@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
 import lombok.Setter;
