@@ -18,11 +18,13 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class RestDTO<D> {
-  protected List<D> items;
+
+  protected List<D> items = new ArrayList<>();
 
   public RestDTO() {
   }

@@ -120,6 +120,7 @@ public class FeatureGroupApi {
         .set("fgId", featureGroup.getId())
         .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
     HttpPost postRequest = new HttpPost(uri);
     hopsworksClient.handleRequest(postRequest);
   }
@@ -128,7 +129,7 @@ public class FeatureGroupApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_CLEAR_PATH;
+        + FEATURE_GROUP_TAGS_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
@@ -140,6 +141,7 @@ public class FeatureGroupApi {
       uriTemplate.set("value", value);
     }
 
+    LOGGER.info("Sending metadata request: " + uriTemplate.expand());
     HttpPut putRequest = new HttpPut(uriTemplate.expand());
     hopsworksClient.handleRequest(putRequest);
   }
@@ -148,7 +150,7 @@ public class FeatureGroupApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_CLEAR_PATH;
+        + FEATURE_GROUP_TAGS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
@@ -157,13 +159,9 @@ public class FeatureGroupApi {
         .set("name", name)
         .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
     HttpGet getRequest = new HttpGet(uri);
     Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
-
-    // If there is a tag, then it's the first one
-    if (tags.getItems().isEmpty()) {
-      throw new FeatureStoreException("Tag " + name + " not found");
-    }
 
     return tags.getItems().get(0).getValue();
   }
@@ -172,7 +170,7 @@ public class FeatureGroupApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_CLEAR_PATH;
+        + FEATURE_GROUP_TAGS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
@@ -180,6 +178,7 @@ public class FeatureGroupApi {
         .set("fgId", featureGroup.getId())
         .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
     HttpGet getRequest = new HttpGet(uri);
     Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
 
@@ -191,7 +190,7 @@ public class FeatureGroupApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_CLEAR_PATH;
+        + FEATURE_GROUP_TAGS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
@@ -200,6 +199,7 @@ public class FeatureGroupApi {
         .set("name", name)
         .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
     HttpDelete httpDelete = new HttpDelete(uri);
     hopsworksClient.handleRequest(httpDelete);
   }
