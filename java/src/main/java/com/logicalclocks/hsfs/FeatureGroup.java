@@ -173,10 +173,12 @@ public class FeatureGroup {
     featureGroupEngine.addTag(this, name, value);
   }
 
+  @JsonIgnore
   public Map<String, String> getTags() throws FeatureStoreException, IOException {
     return featureGroupEngine.getTags(this);
   }
 
+  @JsonIgnore
   public String getTag(String name) throws FeatureStoreException, IOException {
     return featureGroupEngine.getTag(this, name);
   }
