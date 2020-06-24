@@ -15,24 +15,19 @@
 #
 
 import humps
-import json 
+
 
 class Tag:
-    def __init__(self, name, value, href=None, expand=None, items=None, count=None):
+    def __init__(
+        self, name, value, href=None, expand=None, items=None, count=None, type=None
+    ):
         self._name = name
         self._value = value
-        self._href = href
-        self._expand = expand
-        self._items = items
-        self._count = count
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        return cls(**json_decamelized)
+        return [cls(**tag) for tag in json_decamelized["items"]]
 
     def to_dict(self):
-        if not self._items:
-            return {self._name: self._value}
-
-        return {t._name: t._value for t in self._items}
+        return {self._name: self._value}
