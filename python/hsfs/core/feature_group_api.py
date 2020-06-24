@@ -43,7 +43,6 @@ class FeatureGroupApi:
 
     def get(self, name, version):
         """Get feature store with specific id or name.
-j
         :param identifier: id or name of the feature store
         :type identifier: int, str
         :return: the featurestore metadata
