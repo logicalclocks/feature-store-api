@@ -43,7 +43,7 @@ class FeatureGroupApi:
 
     def get(self, name, version):
         """Get feature store with specific id or name.
-
+j
         :param identifier: id or name of the feature store
         :type identifier: int, str
         :return: the featurestore metadata
@@ -98,10 +98,11 @@ class FeatureGroupApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def add_tag(self, name, value=None):
+    def add_tag(self, feature_group_instance, name, value=None):
         """Attach a tag to a feature group 
 
         Args:
+            feature_group_instance feature_group: the feature group to which to attach the tag 
             name (string): the name of the tag to attach 
             value (string): the value of the tag. can be none 
         """
@@ -119,10 +120,11 @@ class FeatureGroupApi:
         query_params = {"value": value} if not value else None
         _client._send_request("PUT", path_params, query_params=query_params)
 
-    def delete_tag(self, name):
+    def delete_tag(self, feature_group_instance, name):
         """Remove a tag from a feature group
 
         Args:
+            feature_group_instance feature_group: the feature group from which to delete the tag 
             name (string): the name of the tag to remove 
         """
         _client = client.get_instance()
@@ -137,3 +139,26 @@ class FeatureGroupApi:
             name,
         ]
         _client._send_request("DELETE", path_params)
+
+    def get_tags(self, name=None):
+        """[summary]
+
+        Args:
+            feature_group_instance feature_group: the feature group for which to retrieve the tags 
+            name ([type], optional): [description]. Defaults to None.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "tags",
+        ]
+
+        if name:
+            path_params.append(["name", name])
+
+        return tag.Tag.from_response_json(_client._send_request("GET", path_params)[0])
