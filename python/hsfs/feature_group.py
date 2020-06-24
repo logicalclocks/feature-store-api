@@ -53,6 +53,7 @@ class FeatureGroup:
         num_clusters=None,
         corr_method=None,
         online_enabled=False,
+        hudi_enabled=False,
         default_storage="offline",
     ):
         self._feature_store_id = featurestore_id
@@ -80,6 +81,7 @@ class FeatureGroup:
         self._corr_method = corr_method
         self._online_enabled = online_enabled
         self._default_storage = default_storage
+        self._hudi_enabled = hudi_enabled
 
         self._primary_key = primary_key
         self._partition_key = partition_key
