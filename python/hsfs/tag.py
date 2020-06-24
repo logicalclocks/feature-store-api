@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+import humps
+import json 
 
 class Tag:
     def __init__(self, name, value, href=None, expand=None, items=None, count=None):
