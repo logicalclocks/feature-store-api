@@ -158,6 +158,6 @@ class FeatureGroupApi:
         ]
 
         if name:
-            path_params.extend(["name", name])
+            path_params.append(name)
 
         return tag.Tag.from_response_json(_client._send_request("GET", path_params))
