@@ -149,10 +149,13 @@ class FeatureGroup:
         self._feature_group_engine.delete(self)
 
     def add_tag(self, name, value=None):
-        self._feature_group_engine.add_tag(name, value)
+        self._feature_group_engine.add_tag(self, name, value)
 
     def delete_tag(self, name):
-        self._feature_group_engine.delete_tag(name)
+        self._feature_group_engine.delete_tag(self, name)
+
+    def get_tag(self, name=None):
+        return self._feature_group_engine.get_tags(self, name)
 
     @classmethod
     def from_response_json(cls, json_dict):
