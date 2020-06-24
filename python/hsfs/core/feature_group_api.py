@@ -15,7 +15,7 @@
 #
 
 from hsfs import client
-from hsfs import feature_group
+from hsfs import feature_group, tag
 
 
 class FeatureGroupApi:
