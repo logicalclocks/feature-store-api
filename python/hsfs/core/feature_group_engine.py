@@ -118,7 +118,7 @@ class FeatureGroupEngine:
         self._feature_group_api.add_tag(feature_group, name, value)
 
     def delete_tag(self, feature_group, name):
-        self._feature_group_api.delete_tag(feature_group, name, value)
+        self._feature_group_api.delete_tag(feature_group, name)
 
     def get_tags(self, feature_group, name=None):
         return self._feature_group_api.get_tags(feature_group, name).to_dict()

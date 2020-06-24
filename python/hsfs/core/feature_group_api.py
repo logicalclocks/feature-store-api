@@ -117,7 +117,7 @@ j
             "tags",
             name,
         ]
-        query_params = {"value": value} if not value else None
+        query_params = {"value": value} if value else None
         _client._send_request("PUT", path_params, query_params=query_params)
 
     def delete_tag(self, feature_group_instance, name):
@@ -140,7 +140,7 @@ j
         ]
         _client._send_request("DELETE", path_params)
 
-    def get_tags(self, name=None):
+    def get_tags(self, feature_group_instance, name=None):
         """[summary]
 
         Args:
