@@ -17,14 +17,13 @@ setup(
     install_requires=[
         "pyhumps",
         "requests",
-        "cryptography",
-        "pyopenssl",
-        "idna",
         "furl",
         "boto3",
         "pandas",
         "numpy",
-        "pyhopshive[thrift]"
+        "pyhopshive[thrift]",
+        "PyMySQL",
+        "pyjks"
     ],
     extras_require={
         "dev": [

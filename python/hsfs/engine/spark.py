@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-import json
 import pandas as pd
 import numpy as np
 
@@ -27,22 +26,44 @@ except ModuleNotFoundError:
 
 from hsfs import feature
 from hsfs.storage_connector import StorageConnector
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class Engine:
+    HIVE_FORMAT = "hive"
+    JDBC_FORMAT = "jdbc"
+
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
         self._spark_context = self._spark_session.sparkContext
 
-    def sql(self, sql_query, feature_store, dataframe_type):
-        # set feature store
-        self._spark_session.sql("USE {}".format(feature_store))
-        result_df = self._spark_session.sql(sql_query)
+        self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
+        self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
+
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+        if not online_conn:
+            result_df = self._sql_offline(sql_query, feature_store)
+        else:
+            result_df = self._sql_online(sql_query, online_conn)
+
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, feature_store, n):
-        return self.sql(sql_query, feature_store, "default").show(n)
+    def _sql_offline(self, sql_query, feature_store):
+        # set feature store
+        self._spark_session.sql("USE {}".format(feature_store))
+        return self._spark_session.sql(sql_query)
+
+    def _sql_online(self, sql_query, online_conn):
+        options = online_conn.spark_options()
+        options["query"] = sql_query
+
+        return (
+            self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
+        )
+
+    def show(self, sql_query, feature_store, n, online_conn):
+        return self.sql(sql_query, feature_store, online_conn, "default").show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
@@ -89,6 +110,56 @@ class Engine:
                 type(dataframe)
             )
         )
+
+    def save_dataframe(
+        self,
+        table_name,
+        partition_columns,
+        dataframe,
+        save_mode,
+        storage,
+        offline_write_options,
+        online_write_options,
+    ):
+        if storage == "offline":
+            self._save_offline_dataframe(
+                table_name,
+                partition_columns,
+                dataframe,
+                save_mode,
+                offline_write_options,
+            )
+        elif storage == "online":
+            self._save_online_dataframe(
+                table_name, dataframe, save_mode, online_write_options
+            )
+        elif storage == "all":
+            self._save_offline_dataframe(
+                table_name,
+                partition_columns,
+                dataframe,
+                save_mode,
+                offline_write_options,
+            )
+            self._save_online_dataframe(
+                table_name, dataframe, save_mode, online_write_options
+            )
+        else:
+            raise FeatureStoreException("Storage not supported")
+
+    def _save_offline_dataframe(
+        self, table_name, partition_columns, dataframe, save_mode, write_options
+    ):
+        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
+            **write_options
+        ).partitionBy(partition_columns if partition_columns else []).saveAsTable(
+            table_name
+        )
+
+    def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
+        dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
+            **write_options
+        ).save()
 
     def write(
         self, dataframe, storage_connector, data_format, write_mode, write_options, path
@@ -149,17 +220,21 @@ class Engine:
     def parse_schema(self, dataframe):
         return [
             feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat.name,
+                feat.dataType.simpleString(),
+                feat.metadata.get("description", ""),
             )
-            for feat in json.loads(dataframe.schema.json())["fields"]
+            for feat in dataframe.schema
         ]
 
     def parse_schema_dict(self, dataframe):
         return {
             feat["name"]: feature.Feature(
-                feat["name"], feat["type"], feat["metadata"].get("description", "")
+                feat.name,
+                feat.dataType.simpleString(),
+                feat.metadata.get("description", ""),
             )
-            for feat in json.loads(dataframe.schema.json())["fields"]
+            for feat in dataframe.schema
         }
 
     def schema_matches(self, dataframe, schema):

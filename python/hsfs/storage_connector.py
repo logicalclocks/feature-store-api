@@ -37,6 +37,8 @@ class StorageConnector:
         access_key=None,
         secret_key=None,
         bucket=None,
+        connection_string=None,
+        arguments=None,
     ):
         self._id = id
         self._name = name
@@ -48,6 +50,8 @@ class StorageConnector:
         self._access_key = access_key
         self._secret_key = secret_key
         self._bucket = bucket
+        self._connection_string = connection_string
+        self._arguments = arguments
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -70,3 +74,20 @@ class StorageConnector:
     @property
     def secret_key(self):
         return self._secret_key
+
+    @property
+    def connection_string(self):
+        return self._connection_string
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+    def spark_options(self):
+        args = [arg.split("=") for arg in self._arguments.split(",")]
+
+        return {
+            "url": self._connection_string,
+            "user": [arg[1] for arg in args if arg[0] == "user"][0],
+            "password": [arg[1] for arg in args if arg[0] == "password"][0],
+        }

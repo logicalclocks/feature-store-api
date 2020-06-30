@@ -163,6 +163,7 @@ class Connection:
                         "hive",
                         self._host,
                         self._cert_folder,
+                        self._project,
                         client.get_instance()._cert_key,
                     )
             else:

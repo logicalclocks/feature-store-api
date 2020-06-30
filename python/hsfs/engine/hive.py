@@ -17,22 +17,47 @@
 import os
 import pandas as pd
 from pyhive import hive
+from sqlalchemy import create_engine
+import pymysql
 
 
 class Engine:
-    def __init__(self, host, cert_folder, cert_key):
+    def __init__(self, host, cert_folder, project, cert_key):
         self._host = host
-        self._cert_folder = os.path.join(cert_folder, host)
+        self._cert_folder = os.path.join(cert_folder, host, project)
         self._cert_key = cert_key
 
-    def sql(self, sql_query, feature_store, dataframe_type):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+        if not online_conn:
+            return self._sql_offline(sql_query, feature_store, dataframe_type)
+        else:
+            return self._sql_online(sql_query, online_conn, dataframe_type)
+
+    def _sql_offline(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def show(self, sql_query, feature_store, n):
-        return self.sql(sql_query, feature_store, "default").head(n)
+    def _sql_online(self, sql_query, online_conn, dataframe_type):
+        with self._create_mysql_connection(online_conn) as mysql_conn:
+            result_df = pd.read_sql(sql_query, mysql_conn)
+        return self._return_dataframe_type(result_df, dataframe_type)
+
+    def show(self, sql_query, feature_store, n, online_conn):
+        return self.sql(sql_query, feature_store, online_conn, "default").head(n)
+
+    def save_dataframe(
+        self,
+        table_name,
+        partition_columns,
+        dataframe,
+        save_mode,
+        storage,
+        offline_write_options,
+        online_write_options,
+    ):
+        raise NotImplementedError
 
     def set_job_group(self, group_id, description):
         pass
@@ -48,6 +73,21 @@ class Engine:
             keystore=os.path.join(self._cert_folder, "keyStore.jks"),
             keystore_password=self._cert_key,
         )
+
+    def _create_mysql_connection(self, online_conn):
+        online_options = online_conn.spark_options()
+        # Here we are replacing the first part of the string returned by Hopsworks,
+        # jdbc:mysql:// with the sqlalchemy one + username and password
+        sql_alchemy_conn_str = online_options["url"].replace(
+            "jdbc:mysql://",
+            "mysql+pymysql://"
+            + online_options["user"]
+            + ":"
+            + online_options["password"]
+            + "@",
+        )
+        sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
+        return sql_alchemy_engine.connect()
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
