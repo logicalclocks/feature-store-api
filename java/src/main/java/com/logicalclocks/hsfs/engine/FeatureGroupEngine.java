@@ -102,8 +102,8 @@ public class FeatureGroupEngine {
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                            SaveMode saveMode, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException{
+                                    SaveMode saveMode, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
@@ -114,63 +114,18 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    dataset
-        .write()
-        .format(Constants.HIVE_FORMAT)
-        .mode(saveMode)
-        // write options cannot be null
-        .options(writeOptions == null ? new HashMap<>() : writeOptions)
-        .partitionBy(utils.getPartitionColumns(featureGroup))
-        .saveAsTable(utils.getTableName(featureGroup));
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
                                    SaveMode saveMode, Map<String, String> providedWriteOptions)
       throws IOException, FeatureStoreException {
     StorageConnector storageConnector = storageConnectorApi.getOnlineStorageConnector(featureGroup.getFeatureStore());
-    Map<String, String> writeOptions = getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
-    writeOnlineDataframe(dataset, saveMode, writeOptions);
+    Map<String, String> writeOptions =
+        SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
+    SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  /**
-   * Build the option maps to write the dataset to the JDBC sink. URL, username and password are taken from the
-   * storage connector.
-   * They can however be overwritten by the user if they pass a option map. For instance if they want to change the
-   * @param providedWriteOptions
-   * @param featureGroup
-   * @param storageConnector
-   * @return
-   * @throws FeatureStoreException
-   */
-  private Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
-                                               FeatureGroup featureGroup,
-                                               StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> writeOptions = storageConnector.getSparkOptions();
-    writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
-
-    // add user provided configuration
-    if (providedWriteOptions != null) {
-      writeOptions.putAll(providedWriteOptions);
-    }
-
-    return writeOptions;
-  }
-
-  /**
-   * Write dataset on the JDBC sink
-   * @param dataset
-   * @param saveMode
-   * @param writeOptions
-   * @throws FeatureStoreException
-   */
-  private void writeOnlineDataframe(Dataset<Row> dataset, SaveMode saveMode, Map<String, String> writeOptions) {
-    dataset
-        .write()
-        .format(Constants.JDBC_FORMAT)
-        .options(writeOptions)
-        .mode(saveMode)
-        .save();
-  }
 
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroup);

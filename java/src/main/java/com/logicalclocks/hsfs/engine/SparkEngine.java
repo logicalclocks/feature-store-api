@@ -15,16 +15,26 @@
  */
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SparkEngine {
 
@@ -39,6 +49,7 @@ public class SparkEngine {
 
   @Getter
   private SparkSession sparkSession;
+  private Utils utils = new Utils();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -84,5 +95,191 @@ public class SparkEngine {
       sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
       sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
     }
+  }
+
+  /**
+   * Setup Spark to write the data on the File System
+   * @param trainingDataset
+   * @param dataset
+   * @param writeOptions
+   * @param saveMode
+   */
+  public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
+                     Map<String, String> writeOptions, SaveMode saveMode) {
+
+    if (trainingDataset.getStorageConnector() != null) {
+      SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
+    }
+
+    if (trainingDataset.getSplits() == null) {
+      // Write a single dataset
+
+      // The actual data will be stored in training_ds_version/training_ds the double directory is needed
+      // for cases such as tfrecords in which we need to store also the schema
+      // also in case of multiple splits, the single splits will be stored inside the training dataset dir
+      String path = Paths.get(trainingDataset.getLocation(), trainingDataset.getName()).toString();
+
+      writeSingle(dataset, trainingDataset.getDataFormat(),
+          writeOptions, saveMode, path);
+    } else {
+      List<Float> splitFactors = trainingDataset.getSplits().stream()
+          .map(Split::getPercentage)
+          .collect(Collectors.toList());
+
+      // The actual data will be stored in training_ds_version/split_name
+      Dataset<Row>[] datasetSplits = null;
+      if (trainingDataset.getSeed() != null) {
+        datasetSplits = dataset.randomSplit(
+            splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
+      } else {
+        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
+      }
+
+      writeSplits(datasetSplits,
+          trainingDataset.getDataFormat(), writeOptions, saveMode,
+          trainingDataset.getLocation(), trainingDataset.getSplits());
+    }
+  }
+
+  public Map<String, String> getWriteOptions(Map<String, String> providedOptions, DataFormat dataFormat) {
+    Map<String, String> writeOptions = new HashMap<>();
+    switch (dataFormat) {
+      case CSV:
+        writeOptions.put(Constants.HEADER, "true");
+        writeOptions.put(Constants.DELIMITER, ",");
+        break;
+      case TSV:
+        writeOptions.put(Constants.HEADER, "true");
+        writeOptions.put(Constants.DELIMITER, "\t");
+        break;
+      case TFRECORDS:
+        writeOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
+    }
+
+    if (providedOptions != null && !providedOptions.isEmpty()) {
+      writeOptions.putAll(providedOptions);
+    }
+
+    return writeOptions;
+  }
+
+  public Map<String, String> getReadOptions(Map<String, String> providedOptions, DataFormat dataFormat) {
+    Map<String, String> readOptions = new HashMap<>();
+    switch (dataFormat) {
+      case CSV:
+        readOptions.put(Constants.HEADER, "true");
+        readOptions.put(Constants.DELIMITER, ",");
+        readOptions.put(Constants.INFER_SCHEMA, "true");
+        break;
+      case TSV:
+        readOptions.put(Constants.HEADER, "true");
+        readOptions.put(Constants.DELIMITER, "\t");
+        readOptions.put(Constants.INFER_SCHEMA, "true");
+        break;
+      case TFRECORDS:
+        readOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
+    }
+
+    if (providedOptions != null && !providedOptions.isEmpty()) {
+      readOptions.putAll(providedOptions);
+    }
+
+    return readOptions;
+  }
+
+  /**
+   * Write multiple training dataset splits and name them.
+   * @param datasets
+   * @param dataFormat
+   * @param writeOptions
+   * @param saveMode
+   * @param basePath
+   * @param splits
+   */
+  private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
+                           SaveMode saveMode, String basePath, List<Split> splits) {
+    for (int i=0; i < datasets.length; i++) {
+      writeSingle(datasets[i], dataFormat, writeOptions, saveMode,
+          Paths.get(basePath, splits.get(i).getName()).toString());
+    }
+  }
+
+  /**
+   * Write a single dataset split
+   * @param dataset
+   * @param dataFormat
+   * @param writeOptions
+   * @param saveMode
+   * @param path: it should be the full path
+   */
+  private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
+                           Map<String, String> writeOptions, SaveMode saveMode, String path) {
+    dataset
+        .write()
+        .format(dataFormat.toString())
+        .options(writeOptions)
+        .mode(saveMode)
+        .save(SparkEngine.sparkPath(path));
+  }
+
+  public Dataset<Row> read(DataFormat dataFormat, Map<String, String> readOptions, String path) {
+    return SparkEngine.getInstance().getSparkSession()
+        .read()
+        .format(dataFormat.toString())
+        .options(readOptions)
+        .load(SparkEngine.sparkPath(path));
+  }
+
+  /**
+   * Build the option maps to write the dataset to the JDBC sink. URL, username and password are taken from the
+   * storage connector.
+   * They can however be overwritten by the user if they pass a option map. For instance if they want to change the
+   * @param providedWriteOptions
+   * @param featureGroup
+   * @param storageConnector
+   * @return
+   * @throws FeatureStoreException
+   */
+  public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
+                                               FeatureGroup featureGroup,
+                                               StorageConnector storageConnector) throws FeatureStoreException {
+    Map<String, String> writeOptions = storageConnector.getSparkOptions();
+    writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
+
+    // add user provided configuration
+    if (providedWriteOptions != null) {
+      writeOptions.putAll(providedWriteOptions);
+    }
+
+    return writeOptions;
+  }
+
+  /**
+   * Write dataset on the JDBC sink
+   * @param dataset
+   * @param saveMode
+   * @param writeOptions
+   * @throws FeatureStoreException
+   */
+  public void writeOnlineDataframe(Dataset<Row> dataset, SaveMode saveMode, Map<String, String> writeOptions) {
+    dataset
+        .write()
+        .format(Constants.JDBC_FORMAT)
+        .options(writeOptions)
+        .mode(saveMode)
+        .save();
+  }
+
+
+  public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
+                                    SaveMode saveMode, Map<String, String> writeOptions) {
+    dataset
+        .write()
+        .format(Constants.HIVE_FORMAT)
+        .mode(saveMode)
+        // write options cannot be null
+        .options(writeOptions == null ? new HashMap<>() : writeOptions)
+        .partitionBy(utils.getPartitionColumns(featureGroup))
+        .saveAsTable(utils.getTableName(featureGroup));
   }
 }
