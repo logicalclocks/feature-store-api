@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import warnings
 import humps
 
 from hsfs import training_dataset, feature_group
@@ -26,6 +27,8 @@ from hsfs.core import (
 
 
 class FeatureStore:
+    DEFAULT_VERSION = 1
+
     def __init__(
         self,
         featurestore_id,
@@ -74,7 +77,14 @@ class FeatureStore:
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)
 
-    def get_training_dataset(self, name, version):
+    def get_training_dataset(self, name, version=None):
+        if version is None:
+            warnings.warn(
+                "No training dataset version provided, defaulting to `{}`.".format(
+                    self.DEFAULT_VERSION
+                )
+            )
+            version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
     def get_storage_connector(self, name, connector_type):
@@ -112,7 +122,7 @@ class FeatureStore:
     def create_training_dataset(
         self,
         name,
-        version,
+        version=None,
         description="",
         data_format="tfrecords",
         storage_connector=None,
