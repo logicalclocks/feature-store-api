@@ -125,3 +125,12 @@ class FeatureGroupEngine:
             tag.to_dict()
             for tag in self._feature_group_api.get_tags(feature_group, name)
         ]
+
+    def sql(self, query, feature_store_name, dataframe_type, storage):
+        if storage == "online":
+            online_conn = self._storage_connector_api.get_online_connector()
+        else:
+            online_conn = None
+        return engine.get_instance().sql(
+            query, feature_store_name, online_conn, dataframe_type
+        )
