@@ -80,11 +80,6 @@ public class FeatureStore {
         .featureStore(this);
   }
 
-  public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
-    return OnDemandFeatureGroup.builder()
-        .featureStore(this);
-  }
-
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
     return TrainingDataset.builder()
         .featureStore(this);
