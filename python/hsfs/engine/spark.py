@@ -192,11 +192,12 @@ class Engine:
 
 def _check_if_complex_type(feat):
     """
-    Checks if feature type is is complex nested dict and weather its array typy generated from veotor assembler
+    Checks if feature type is is complex nested dict and weather its array typ generated from veotor assembler
     Then returns type that tfrecord cosntants in tf_utils can understant
     :param feat:
     :return: feat
     """
+    # https://stackoverflow.com/questions/46053318/convert-a-spark-vector-of-features-into-an-array
     if isinstance(feat, dict):
         if "sqlType" in feat:
             # this seems VectorAssembler. will pick up last field to determine field

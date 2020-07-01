@@ -8,7 +8,7 @@ except ModuleNotFoundError:
     pass
 
 # from hopsworks.tf_utils import read_training_dataset_tf_record_schema
-from hsfs.tf_utils import create_tf_record_schema
+from hsfs.tf_utils import create_tfrecord_feature_description
 
 
 class FeedModelEngine:
@@ -31,8 +31,6 @@ class FeedModelEngine:
         :param num_classes:
         """
 
-        # TODO (davit): check tf version and use compat functions accordingly
-
         self.training_dataset = training_dataset
         self.split = split
         self.target_name = target_name
@@ -54,9 +52,9 @@ class FeedModelEngine:
             if self.target_name in self.feature_names:
                 self.feature_names.remove(self.target_name)
 
-        # TODO (davit): save tfrecords schema properly when creating training dataset
-        # self.tf_record_schema = read_training_dataset_tf_record_schema(self.path)
-        self.tf_record_schema = create_tf_record_schema(self.training_dataset_schema)
+        self.tf_record_schema = create_tfrecord_feature_description(
+            self.training_dataset_schema
+        )
 
         if self.one_hot_encode_labels and self.num_classes is None:
             raise ValueError(
@@ -65,7 +63,6 @@ class FeedModelEngine:
 
     def tf_record_dataset(self, batch_size=None, num_epochs=None, optimize=False):
         """
-
         :param batch_size:
         :param num_epochs:
         :param optimize:
@@ -77,19 +74,11 @@ class FeedModelEngine:
                 "if optimize is set to True you also need to provide batch_size and num_epochs"
             )
 
-        if tf.__version__ >= "2.0":
-            input_files = tf.io.gfile.glob(self.path + "/part-r-*")
-        else:
-            input_files = tf.compat.v1.io.gfile.glob(self.path + "/part-r-*")
+        input_files = tf.io.gfile.glob(self.path + "/part-r-*")
         dataset = tf.data.TFRecordDataset(input_files)
 
         def _decode(sample):
-            if tf.__version__ >= "2.0":
-                example = tf.io.parse_single_example(sample, self.tf_record_schema)
-            else:
-                example = tf.compat.v1.io.parse_single_example(
-                    sample, self.tf_record_schema
-                )
+            example = tf.io.parse_single_example(sample, self.tf_record_schema)
             x = []
             for feature_name in self.feature_names:
                 x.append(example[feature_name])
@@ -141,7 +130,7 @@ class FeedModelEngine:
         target = np.array(target).flatten()
         return features, target
 
-    # TODO  (davit): this function work in progress
+    # TODO  (davit): this function is work in progress
     def tf_petastorm_dataset(
         self,
         workers_count,
@@ -212,17 +201,14 @@ def _optimize_dataset(dataset, batch_size, num_epochs):
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
-    options = tf.data.Options()
-
-    options.experimental_stats.latency_all_edges = True
-
-    options.experimental_optimization.noop_elimination = True
-    options.experimental_optimization.map_vectorization.enabled = True
-    options.experimental_optimization.apply_default_optimizations = False
-
-    # options.experimental_threading.private_threadpool_size = 10
-
-    dataset = dataset.with_options(options)
+    # options = tf.data.Options()
+    #
+    # options.experimental_stats.latency_all_edges = True
+    # options.experimental_optimization.noop_elimination = True
+    # options.experimental_optimization.map_vectorization.enabled = True
+    # options.experimental_optimization.apply_default_optimizations = False
+    # # options.experimental_threading.private_threadpool_size = 10
+    # dataset = dataset.with_options(options)
 
     return dataset
 
