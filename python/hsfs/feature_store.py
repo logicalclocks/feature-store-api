@@ -77,8 +77,8 @@ class FeatureStore:
     def get_feature_group(self, name, version=None):
         if version is None:
             warnings.warn(
-                "No feature group version provided, defaulting to `{}`.".format(
-                    self.DEFAULT_VERSION
+                "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
             )
@@ -90,8 +90,8 @@ class FeatureStore:
         # the user specifically set the version to 1 himself
         if version is None:
             warnings.warn(
-                "No training dataset version provided, defaulting to `{}`.".format(
-                    self.DEFAULT_VERSION
+                "No version provided for getting training dataset `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
             )

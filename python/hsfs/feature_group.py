@@ -136,8 +136,8 @@ class FeatureGroup:
         )
         if user_version is None:
             warnings.warn(
-                "No feature group version provided, incremented version to `{}`".format(
-                    self._version
+                "No version provided for creating feature group `{}`, incremented version to `{}`".format(
+                    self._name, self._version
                 ),
                 util.VersionWarning,
             )
