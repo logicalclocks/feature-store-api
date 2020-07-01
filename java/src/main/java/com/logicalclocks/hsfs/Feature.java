@@ -16,9 +16,11 @@
 package com.logicalclocks.hsfs;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.parquet.Strings;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -48,5 +50,22 @@ public class Feature {
   public Feature(String name, String type) {
     this.name = name;
     this.type = type;
+  }
+
+  @Builder
+  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition)
+      throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new FeatureStoreException("Name is required when creating a feature");
+    }
+    this.name = name;
+
+    if (Strings.isNullOrEmpty(type)) {
+      throw new FeatureStoreException("Type is required when creating a feature");
+    }
+    this.type = type;
+    this.onlineType = onlineType;
+    this.primary = primary;
+    this.partition = partition;
   }
 }

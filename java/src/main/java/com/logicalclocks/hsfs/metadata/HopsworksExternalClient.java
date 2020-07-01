@@ -193,7 +193,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       return httpClient.execute(httpHost, request, authHandler);
     } catch (InternalException e) {
       // Internal exception, try one more time
-      return httpClient.execute(httpHost, request, responseHandler);
+      return httpClient.execute(httpHost, request, authHandler);
     }
   }
 

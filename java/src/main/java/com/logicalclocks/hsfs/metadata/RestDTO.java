@@ -13,12 +13,27 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
-import org.apache.http.client.ClientProtocolException;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public class InternalException extends ClientProtocolException {
-  public InternalException(String msg) {
-    super(msg);
+import java.util.ArrayList;
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public abstract class RestDTO<D> {
+
+  protected List<D> items = new ArrayList<>();
+
+  public RestDTO() {
+  }
+
+  public List<D> getItems() {
+    return items;
+  }
+
+  public void setItems(List<D> items) {
+    this.items = items;
   }
 }

@@ -150,10 +150,10 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
       // re-read the jwt and try one more time
       refreshJWT();
       request.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-      return httpClient.execute(httpHost, request, responseHandler);
+      return httpClient.execute(httpHost, request, authHandler);
     } catch (InternalException e) {
       // Internal exception, try one more time
-      return httpClient.execute(httpHost, request, responseHandler);
+      return httpClient.execute(httpHost, request, authHandler);
     }
   }
 

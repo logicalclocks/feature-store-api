@@ -27,4 +27,23 @@ import lombok.Setter;
 public class FsQuery {
   @Getter @Setter
   private String query;
+
+  @Getter @Setter
+  private String queryOnline;
+
+  public void removeNewLines() {
+    query = query.replace("\n", " ");
+    queryOnline =  queryOnline.replace("\n", " ");
+  }
+
+  public String getStorageQuery(Storage storage) throws FeatureStoreException {
+    switch (storage) {
+      case OFFLINE:
+        return query;
+      case ONLINE:
+        return queryOnline;
+      default:
+        throw new FeatureStoreException("Cannot run query on ALL storages");
+    }
+  }
 }
