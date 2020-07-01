@@ -42,3 +42,7 @@ def parse_features(feature_names):
         return [validate_feature(feat) for feat in feature_names]
     else:
         return []
+
+
+class VersionWarning(Warning):
+    pass
