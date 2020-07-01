@@ -111,7 +111,7 @@ class TrainingDataset:
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
         if user_version is None:
             warnings.warn(
-                "No version provided for creating training dataset `{}`, incremented version to `{}`".format(
+                "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
                     self._name, self._version
                 ),
                 util.VersionWarning,
