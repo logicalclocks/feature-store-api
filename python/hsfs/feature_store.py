@@ -16,11 +16,12 @@
 
 import humps
 
-from hsfs import engine, training_dataset, feature_group
+from hsfs import training_dataset, feature_group
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     training_dataset_api,
+    feature_group_engine,
 )
 
 
@@ -63,6 +64,8 @@ class FeatureStore:
         )
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
 
+        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -77,8 +80,10 @@ class FeatureStore:
     def get_storage_connector(self, name, connector_type):
         return self._storage_connector_api.get(name, connector_type)
 
-    def sql(self, query, dataframe_type="default"):
-        return engine.get_instance().sql(query, self._name, dataframe_type)
+    def sql(self, query, dataframe_type="default", storage="offline"):
+        return self._feature_group_engine.sql(
+            query, self._name, dataframe_type, storage.lower()
+        )
 
     def create_feature_group(
         self,
