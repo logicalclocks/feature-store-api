@@ -23,7 +23,8 @@ setup(
         "numpy",
         "pyhopshive[thrift]",
         "PyMySQL",
-        "pyjks"
+        "pyjks",
+        "sqlalchemy"
     ],
     extras_require={
         "dev": [
