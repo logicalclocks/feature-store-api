@@ -146,6 +146,10 @@ public class HopsworksClient {
     return hopsworksHttpClient.handleRequest(request, new BaseHandler<>(cls, objectMapper));
   }
 
+  public <T> T handleRequest(HttpRequest request) throws IOException, FeatureStoreException {
+    return hopsworksHttpClient.handleRequest(request, null);
+  }
+
   public void downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {
     certPwd = hopsworksHttpClient.downloadCredentials(project, certPath);
   }

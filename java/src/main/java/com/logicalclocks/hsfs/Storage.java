@@ -13,12 +13,11 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
-package com.logicalclocks.hsfs.metadata;
 
-import org.apache.http.client.ClientProtocolException;
+package com.logicalclocks.hsfs;
 
-public class InternalException extends ClientProtocolException {
-  public InternalException(String msg) {
-    super(msg);
-  }
+public enum Storage {
+  OFFLINE,
+  ONLINE,
+  ALL
 }

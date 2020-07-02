@@ -17,25 +17,34 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.StorageConnector;
+import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {
 
   // TODO(Fabio): make sure we keep save the feature store/feature group for serving
-  public List<Feature> parseSchema(Dataset<Row> dataset) {
-    return Arrays.stream(dataset.schema().fields())
-        // TODO(Fabio): unit test this one for complext types
-        .map(f -> new Feature(f.name(), f.dataType().catalogString()))
-        .collect(Collectors.toList());
+  public List<Feature> parseSchema(Dataset<Row> dataset) throws FeatureStoreException {
+    List<Feature> features = new ArrayList<>();
+    for (StructField structField : dataset.schema().fields()) {
+      // TODO(Fabio): unit test this one for complext types
+      features.add(new Feature(structField.name(), structField.dataType().catalogString(),
+          structField.dataType().catalogString(), false, false));
+    }
+
+    return features;
   }
 
   // TODO(Fabio): keep into account the sorting - needs fixing in Hopsworks as well
@@ -50,5 +59,24 @@ public class Utils {
       throw new FeatureStoreException("The Dataframe schema: " + dataset.schema() +
           " does not match the training dataset schema: " + tdStructType);
     }
+  }
+
+  // TODO(Fabio): this should be moved in the backend
+  public String getTableName(FeatureGroup offlineFeatureGroup) {
+    return offlineFeatureGroup.getFeatureStore().getName() + "." +
+        offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+  }
+
+  public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
+    List<String> jPartitionCols = offlineFeatureGroup.getFeatures().stream()
+        .filter(Feature::getPartition)
+        .map(Feature::getName)
+        .collect(Collectors.toList());
+
+    return JavaConverters.asScalaIteratorConverter(jPartitionCols.iterator()).asScala().toSeq();
+  }
+
+  public String getFgName(FeatureGroup featureGroup) {
+    return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 }

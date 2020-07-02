@@ -61,9 +61,7 @@ class Client(base.Client):
 
         self._session = requests.session()
         self._connected = True
-        self._verify = self._get_verify(
-            self._host, self._port, hostname_verification, trust_store_path
-        )
+        self._verify = self._get_verify(self._host, trust_store_path)
 
         project_info = self._get_project_info(self._project_name)
         self._project_id = str(project_info["projectId"])

@@ -19,24 +19,35 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.*;
 
 public class FeatureGroupApi {
 
-  public static final String FEATURE_GROUP_PATH = "/featuregroups{/fgName}{?version}";
+  public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
+  public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
+  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
+  public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
+  public static final String FEATURE_GROUP_TAGS_PATH = FEATURE_GROUP_ID_PATH + "/tags{/name}{?value}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public FeatureGroupApi() throws FeatureStoreException { }
-
   public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
 
@@ -48,12 +59,148 @@ public class FeatureGroupApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    FeatureGroup[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroup[].class);
+    FeatureGroup[] offlineFeatureGroups = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroup[].class);
 
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
-    FeatureGroup resultFg = featureGroups[0];
+    FeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
     return resultFg;
+  }
+
+  public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_ROOT_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .expand();
+
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(new StringEntity(featureGroupJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(featureGroupJson);
+
+    return hopsworksClient.handleRequest(postRequest, FeatureGroup.class);
+  }
+
+  public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_ID_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    HttpDelete deleteRequest = new HttpDelete(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    hopsworksClient.handleRequest(deleteRequest);
+  }
+
+  public void deleteContent(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_CLEAR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpPost postRequest = new HttpPost(uri);
+    hopsworksClient.handleRequest(postRequest);
+  }
+
+  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_TAGS_PATH;
+
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name);
+
+    if (value != null) {
+      uriTemplate.set("value", value);
+    }
+
+    LOGGER.info("Sending metadata request: " + uriTemplate.expand());
+    HttpPut putRequest = new HttpPut(uriTemplate.expand());
+    hopsworksClient.handleRequest(putRequest);
+  }
+
+  public String getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_TAGS_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpGet getRequest = new HttpGet(uri);
+    Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
+
+    return tags.getItems().get(0).getValue();
+  }
+
+  public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_TAGS_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpGet getRequest = new HttpGet(uri);
+    Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
+
+    return tags.getItems().stream()
+        .collect(Collectors.toMap(Tags::getName, Tags::getValue));
+  }
+
+  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_TAGS_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("name", name)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpDelete httpDelete = new HttpDelete(uri);
+    hopsworksClient.handleRequest(httpDelete);
   }
 }

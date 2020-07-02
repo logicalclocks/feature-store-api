@@ -69,3 +69,18 @@ class StorageConnectorApi:
         return storage_connector.StorageConnector.from_response_json(
             _client._send_request("GET", path_params)
         )
+
+    def get_online_connector(self):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "storageconnectors",
+            "onlinefeaturestore",
+        ]
+
+        return storage_connector.StorageConnector.from_response_json(
+            _client._send_request("GET", path_params)
+        )

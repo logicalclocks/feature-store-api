@@ -42,12 +42,14 @@ public class Query {
   private List<Join> joins = new ArrayList<>();
 
   private QueryConstructorApi queryConstructorApi;
+  private StorageConnectorApi storageConnectorApi;
 
   public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
     this.queryConstructorApi = new QueryConstructorApi();
+    this.storageConnectorApi = new StorageConnectorApi();
   }
 
   public Query join(Query subquery) {
@@ -98,23 +100,42 @@ public class Query {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
-    LOGGER.info("Executing query: " + sqlQuery);
-    return SparkEngine.getInstance().sql(sqlQuery);
+    return read(Storage.OFFLINE);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
-    LOGGER.info("Executing query: " + sqlQuery);
-    SparkEngine.getInstance().sql(sqlQuery).show(numRows);
+    show(Storage.OFFLINE, numRows);
   }
 
-  @Override
+  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+    String sqlQuery =
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
+    LOGGER.info("Executing query: " + sqlQuery);
+    switch (storage) {
+      case OFFLINE:
+        return SparkEngine.getInstance().sql(sqlQuery);
+      case ONLINE:
+        StorageConnector onlineConnector
+            = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
+        return SparkEngine.getInstance().jdbc(onlineConnector, sqlQuery);
+      default:
+        throw new FeatureStoreException("Storage not supported");
+    }
+  }
+
+  public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
+    read(storage).show(numRows);
+  }
+
   public String toString() {
+    return toString(Storage.OFFLINE);
+  }
+
+  public String toString(Storage storage) {
     try {
-      return queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+      return queryConstructorApi
+          .constructQuery(leftFeatureGroup.getFeatureStore(), this)
+          .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
     }

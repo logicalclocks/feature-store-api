@@ -13,12 +13,29 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
-import org.apache.http.client.ClientProtocolException;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public class InternalException extends ClientProtocolException {
-  public InternalException(String msg) {
-    super(msg);
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Tags extends RestDTO<Tags> {
+  private String name;
+  private String value;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
   }
 }

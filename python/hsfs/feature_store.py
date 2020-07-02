@@ -16,11 +16,12 @@
 
 import humps
 
-from hsfs import engine, training_dataset
+from hsfs import training_dataset, feature_group
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     training_dataset_api,
+    feature_group_engine,
 )
 
 
@@ -35,14 +36,12 @@ class FeatureStore:
         project_id,
         featurestore_description,
         inode_id,
-        online_featurestore_type,
-        online_featurestore_name,
-        online_featurestore_size,
-        offline_featurestore_type,
         offline_featurestore_name,
         hive_endpoint,
         mysql_server_endpoint,
         online_enabled,
+        online_featurestore_name=None,
+        online_featurestore_size=None,
     ):
         self._id = featurestore_id
         self._name = featurestore_name
@@ -52,10 +51,8 @@ class FeatureStore:
         self._project_id = project_id
         self._description = featurestore_description
         self._inode_id = inode_id
-        self._online_feature_store_type = online_featurestore_type
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
-        self._offline_feature_store_type = offline_featurestore_type
         self._offline_feature_store_name = offline_featurestore_name
         self._hive_endpoint = hive_endpoint
         self._mysql_server_endpoint = mysql_server_endpoint
@@ -67,6 +64,8 @@ class FeatureStore:
         )
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
 
+        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -75,8 +74,40 @@ class FeatureStore:
     def get_feature_group(self, name, version):
         return self._feature_group_api.get(name, version)
 
-    def sql(self, query, dataframe_type="default"):
-        return engine.get_instance().sql(query, self._name, dataframe_type)
+    def get_training_dataset(self, name, version):
+        return self._training_dataset_api.get(name, version)
+
+    def get_storage_connector(self, name, connector_type):
+        return self._storage_connector_api.get(name, connector_type)
+
+    def sql(self, query, dataframe_type="default", storage="offline"):
+        return self._feature_group_engine.sql(
+            query, self._name, dataframe_type, storage.lower()
+        )
+
+    def create_feature_group(
+        self,
+        name,
+        version,
+        description="",
+        default_storage="offline",
+        online_enabled=False,
+        partition_key=[],
+        primary_key=[],
+        features=[],
+    ):
+        return feature_group.FeatureGroup(
+            name=name,
+            version=version,
+            description=description,
+            online_enabled=online_enabled,
+            default_storage=default_storage,
+            partition_key=partition_key,
+            primary_key=primary_key,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+            features=features,
+        )
 
     def create_training_dataset(
         self,
@@ -100,9 +131,3 @@ class FeatureStore:
             splits=splits,
             seed=seed,
         )
-
-    def get_training_dataset(self, name, version):
-        return self._training_dataset_api.get(name, version)
-
-    def get_storage_connector(self, name, connector_type):
-        return self._storage_connector_api.get(name, connector_type)

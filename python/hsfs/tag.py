@@ -14,27 +14,20 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark, hive
-
-_engine = None
+import humps
 
 
-def init(engine_type, host=None, cert_folder=None, project=None, cert_key=None):
-    global _engine
-    if not _engine:
-        if engine_type == "spark":
-            _engine = spark.Engine()
-        elif engine_type == "hive":
-            _engine = hive.Engine(host, cert_folder, project, cert_key)
+class Tag:
+    def __init__(
+        self, name, value, href=None, expand=None, items=None, count=None, type=None
+    ):
+        self._name = name
+        self._value = value
 
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        return [cls(**tag) for tag in json_decamelized["items"]]
 
-def get_instance():
-    global _engine
-    if _engine:
-        return _engine
-    raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
-
-
-def stop():
-    global _engine
-    _engine = None
+    def to_dict(self):
+        return {self._name: self._value}

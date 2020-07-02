@@ -100,7 +100,7 @@ class TrainingDataset:
     def save(self, features, write_options={}):
         # TODO: Decide if we want to have potentially dangerous defaults like {}
         if isinstance(features, query.Query):
-            feature_dataframe = features.read()
+            feature_dataframe = features.read("offline")
         else:
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features

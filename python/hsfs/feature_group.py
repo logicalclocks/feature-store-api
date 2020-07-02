@@ -15,47 +15,47 @@
 #
 
 import humps
+import json
 
-from hsfs.core import query
-from hsfs import engine, feature
+from hsfs.core import query, feature_group_engine
+from hsfs import util, engine, feature
 
 
 class FeatureGroup:
+    CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
+    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+
     def __init__(
         self,
-        type,
-        featurestore_id,
-        featurestore_name,
-        description,
-        created,
-        creator,
-        version,
-        descriptive_statistics,
-        feature_correlation_matrix,
-        features_histogram,
-        cluster_analysis,
         name,
-        id,
-        features,
-        location,
-        jobs,
-        featuregroup_type,
-        desc_stats_enabled,
-        feat_corr_enabled,
-        feat_hist_enabled,
-        cluster_analysis_enabled,
-        statistic_columns,
-        num_bins,
-        num_clusters,
-        corr_method,
-        hdfs_store_paths,
-        hive_table_id,
-        hive_table_type,
-        inode_id,
-        input_format,
-        online_featuregroup_enabled,
+        version,
+        description,
+        featurestore_id,
+        partition_key=None,
+        primary_key=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        descriptive_statistics=None,
+        feature_correlation_matrix=None,
+        features_histogram=None,
+        cluster_analysis=None,
+        id=None,
+        features=None,
+        location=None,
+        jobs=None,
+        desc_stats_enabled=None,
+        feat_corr_enabled=None,
+        feat_hist_enabled=None,
+        cluster_analysis_enabled=None,
+        statistic_columns=None,
+        num_bins=None,
+        num_clusters=None,
+        corr_method=None,
+        online_enabled=False,
+        hudi_enabled=False,
+        default_storage="offline",
     ):
-        self._type = type
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
@@ -71,7 +71,6 @@ class FeatureGroup:
         self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._location = location
         self._jobs = jobs
-        self._feature_group_type = featuregroup_type
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
         self._feat_hist_enabled = feat_hist_enabled
@@ -80,14 +79,18 @@ class FeatureGroup:
         self._num_bins = num_bins
         self._num_clusters = num_clusters
         self._corr_method = corr_method
-        self._hdfs_store_paths = hdfs_store_paths
-        self._hive_table_id = hive_table_id
-        self._hive_table_type = hive_table_type
-        self._inode_id = inode_id
-        self._input_format = input_format
-        self._online_feature_group_enabled = online_featuregroup_enabled
+        self._online_enabled = online_enabled
+        self._default_storage = default_storage
+        self._hudi_enabled = hudi_enabled
 
-    def read(self, dataframe_type="default"):
+        self._primary_key = primary_key
+        self._partition_key = partition_key
+
+        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
+            featurestore_id
+        )
+
+    def read(self, storage=None, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -95,9 +98,11 @@ class FeatureGroup:
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type)
+        return self.select_all().read(
+            storage if storage else self._default_storage, dataframe_type
+        )
 
-    def show(self, n):
+    def show(self, n, storage=None):
         """Show the first n rows of the feature group."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -105,29 +110,141 @@ class FeatureGroup:
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        return self.select_all().show(n, storage if storage else self._default_storage)
 
     def select_all(self):
         """Select all features in the feature group and return a query object."""
-        return query.Query(self._feature_store_name, self, self._features)
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, self._features
+        )
 
     def select(self, features=[]):
-        return query.Query(self._feature_store_name, self, features)
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, features
+        )
+
+    def save(self, features, storage=None, write_options={}):
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        self._feature_group_engine.save(
+            self,
+            feature_dataframe,
+            storage if storage else self._default_storage,
+            write_options,
+        )
+        return self
+
+    def insert(self, features, overwrite=False, storage=None, write_options={}):
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        self._feature_group_engine.insert(
+            self,
+            feature_dataframe,
+            overwrite,
+            storage if storage else self._default_storage,
+            write_options,
+        )
+
+    def delete(self):
+        self._feature_group_engine.delete(self)
+
+    def add_tag(self, name, value=None):
+        self._feature_group_engine.add_tag(self, name, value)
+
+    def delete_tag(self, name):
+        self._feature_group_engine.delete_tag(self, name)
+
+    def get_tag(self, name=None):
+        return self._feature_group_engine.get_tags(self, name)
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        # TODO(Moritz): Later we can add a factory here to generate featuregroups depending on the type in the return json
-        # i.e. offline, online, on-demand
+        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
-    @classmethod
-    def new_featuregroup(cls):
-        pass
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {"id": self._id}
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "onlineEnabled": self._online_enabled,
+            "defaultStorage": self._default_storage,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "type": "cachedFeaturegroupDTO",
+        }
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def description(self):
+        return self._description
 
     @property
     def features(self):
         return self._features
+
+    @property
+    def primary_key(self):
+        return self._primary_key
+
+    @property
+    def online_enabled(self):
+        return self._online_enabled
+
+    @property
+    def partition_key(self):
+        return self._partition_key
+
+    @property
+    def feature_store_name(self):
+        return self._feature_store_name
+
+    @property
+    def creator(self):
+        return self._creator
+
+    @property
+    def created(self):
+        return self._created
+
+    @description.setter
+    def description(self, new_description):
+        self._description = new_description
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
+
+    @primary_key.setter
+    def primary_key(self, new_primary_key):
+        self._primary_key = new_primary_key
+
+    @partition_key.setter
+    def partition_key(self, new_partition_key):
+        self._partition_key = new_partition_key
+
+    @online_enabled.setter
+    def online_enabled(self, new_online_enabled):
+        self._online_enabled = new_online_enabled
