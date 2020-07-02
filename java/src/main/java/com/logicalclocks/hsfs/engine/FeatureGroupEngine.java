@@ -72,7 +72,12 @@ public class FeatureGroupEngine {
     }
 
     // Send Hopsworks the request to create a new feature group
-    featureGroupApi.save(featureGroup);
+    FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+
+    if (featureGroup.getVersion() == null) {
+      LOGGER.warn("No version provided for creating feature group `" + featureGroup.getName() +
+        "`, incremented version to `" + apiFG.getVersion() + "`.");
+    }
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);

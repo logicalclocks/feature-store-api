@@ -17,6 +17,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -25,6 +26,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -45,6 +48,10 @@ public class FeatureStore {
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
+
+  final Integer DEFAULT_VERSION = 1;
+
   public FeatureStore() throws FeatureStoreException {
     featureGroupApi = new FeatureGroupApi();
     trainingDatasetApi = new TrainingDatasetApi();
@@ -60,8 +67,12 @@ public class FeatureStore {
    */
   public FeatureGroup getFeatureGroup(String name, Integer version)
       throws FeatureStoreException, IOException {
-    if (Strings.isNullOrEmpty(name) || version == null) {
-      throw new FeatureStoreException("Both name and version are required");
+    if (Strings.isNullOrEmpty(name)) {
+      throw new FeatureStoreException("Name is required");
+    }
+    if (version == null) {
+      LOGGER.warn("No version provided for getting feature group `" + name + "`, defaulting to `" + DEFAULT_VERSION +
+        "`.");
     }
     return featureGroupApi.get(this, name, version);
   }
@@ -95,8 +106,12 @@ public class FeatureStore {
    */
   public TrainingDataset getTrainingDataset(String name, Integer version)
       throws FeatureStoreException, IOException {
-    if (Strings.isNullOrEmpty(name) || version == null) {
-      throw new FeatureStoreException("Both name and version are required");
+    if (Strings.isNullOrEmpty(name)) {
+      throw new FeatureStoreException("Name is required");
+    }
+    if (version == null) {
+      LOGGER.warn("No version provided for getting training dataset `" + name + "`, defaulting to `" + DEFAULT_VERSION +
+        "`.");
     }
     return trainingDatasetApi.get(this, name, version);
   }

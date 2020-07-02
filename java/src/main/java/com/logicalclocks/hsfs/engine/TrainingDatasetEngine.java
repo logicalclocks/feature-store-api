@@ -21,6 +21,8 @@ import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -30,6 +32,8 @@ public class TrainingDatasetEngine {
 
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
   private Utils utils = new Utils();
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
 
   //TODO:
   //      Compute statistics
@@ -50,8 +54,14 @@ public class TrainingDatasetEngine {
 
     // Make the rest call to create the training dataset metadata
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
-    // Update the original object - Hopsworks returns the full location
-    trainingDataset.setLocation(apiTD.getLocation());
+
+    if (trainingDataset.getVersion() == null) {
+      LOGGER.warn("No version provided for creating training dataset `" + trainingDataset.getName() +
+        "`, incremented version to `" + apiTD.getVersion() + "`.");
+    }
+
+    // Update the original object - Hopsworks returns the full location and incremented version
+    trainingDataset.update(apiTD);
 
     // Build write options map
     Map<String, String> writeOptions =
