@@ -81,7 +81,9 @@ class FeedModelEngine:
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
 
-        tfrecord_feature_description = create_tfrecord_feature_description(dataset)
+        tfrecord_feature_description = create_tfrecord_feature_description(
+            dataset, input_files
+        )
 
         def _de_serialize(serialized_example):
             example = tf.io.parse_single_example(
