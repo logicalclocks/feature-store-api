@@ -56,7 +56,7 @@ public class TrainingDatasetEngine {
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
 
     if (trainingDataset.getVersion() == null) {
-      LOGGER.warn("No version provided for creating training dataset `" + trainingDataset.getName() +
+      LOGGER.info("VersionWarning: No version provided for creating training dataset `" + trainingDataset.getName() +
         "`, incremented version to `" + apiTD.getVersion() + "`.");
     }
 

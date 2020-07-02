@@ -71,8 +71,8 @@ public class FeatureStore {
       throw new FeatureStoreException("Name is required");
     }
     if (version == null) {
-      LOGGER.warn("No version provided for getting feature group `" + name + "`, defaulting to `" + DEFAULT_VERSION +
-        "`.");
+      LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `" +
+        DEFAULT_VERSION + "`.");
     }
     return featureGroupApi.get(this, name, version);
   }
@@ -110,8 +110,8 @@ public class FeatureStore {
       throw new FeatureStoreException("Name is required");
     }
     if (version == null) {
-      LOGGER.warn("No version provided for getting training dataset `" + name + "`, defaulting to `" + DEFAULT_VERSION +
-        "`.");
+      LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `" +
+        DEFAULT_VERSION + "`.");
     }
     return trainingDatasetApi.get(this, name, version);
   }

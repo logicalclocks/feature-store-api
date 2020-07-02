@@ -75,9 +75,12 @@ public class FeatureGroupEngine {
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
     if (featureGroup.getVersion() == null) {
-      LOGGER.warn("No version provided for creating feature group `" + featureGroup.getName() +
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName() +
         "`, incremented version to `" + apiFG.getVersion() + "`.");
     }
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.update(apiFG);
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);

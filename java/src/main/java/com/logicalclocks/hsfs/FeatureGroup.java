@@ -98,6 +98,10 @@ public class FeatureGroup {
   public FeatureGroup() {
   }
 
+  public void update(FeatureGroup featureGroup) {
+    this.version = featureGroup.getVersion();
+  }
+
   public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
     return new Query(this, features);
   }
