@@ -83,7 +83,7 @@ class Client(base.Client):
 
     def _close(self):
         """Closes a client and deletes certificates."""
-        if base.Client.DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV not in os.environ:
+        if not os.path.exists("/dbfs/"):
             # Clean up only on AWS, on databricks certs are needed at startup time
             self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
             self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
