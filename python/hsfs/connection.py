@@ -19,7 +19,7 @@ from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
 from hsfs import engine, client
-from hsfs.core import feature_store_api, project_api, variables_api
+from hsfs.core import feature_store_api, project_api, hosts_api, services_api
 
 
 class Connection:
@@ -110,10 +110,10 @@ class Connection:
 
         os.makedirs(os.path.join(dbfs_folder, "scripts"), exist_ok=True)
         connection._get_clients(dbfs_folder)
-        internal_host = connection._get_hostname()
+        hive_host = connection._get_hivemetastore_hostname()
         connection._write_init_script(dbfs_folder)
         connection._print_instructions(
-            cert_folder, client.get_instance()._cert_folder, internal_host
+            cert_folder, client.get_instance()._cert_folder, hive_host
         )
 
         return connection
@@ -123,10 +123,7 @@ class Connection:
         self._connected = True
         try:
             if client.base.Client.REST_ENDPOINT not in os.environ:
-                if (
-                    client.base.Client.DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV
-                    in os.environ
-                ):
+                if os.path.exists("/dbfs/"):
                     # databricks
                     client.init(
                         "external",
@@ -171,7 +168,8 @@ class Connection:
                 engine.init("spark")
             self._feature_store_api = feature_store_api.FeatureStoreApi()
             self._project_api = project_api.ProjectApi()
-            self._variables_api = variables_api.VariablesApi()
+            self._hosts_api = hosts_api.HostsApi()
+            self._services_api = services_api.ServicesApi()
         except (TypeError, ConnectionError):
             self._connected = False
             raise
@@ -214,11 +212,14 @@ class Connection:
                 for chunk in client_libs:
                     f.write(chunk)
 
-    def _get_hostname(self):
+    def _get_hivemetastore_hostname(self):
         """
         Get the internal hostname of the Hopsworks instance.
         """
-        return self._variables_api.get_hostname()
+        hosts = self._hosts_api.get()
+        hivemetastore = self._services_api.get_service("hivemetastore")
+        hosts = [host for host in hosts if host["id"] == hivemetastore["hostId"]]
+        return hosts[0]["hostname"]
 
     def _write_init_script(self, dbfs_folder):
         """
@@ -229,6 +230,7 @@ class Connection:
         """
         initScript = """
             #!/bin/sh
+
             tar -xvf PATH/client.tar.gz -C /tmp
             tar -xvf /tmp/client/apache-hive-*-bin.tar.gz -C /tmp
             mv /tmp/apache-hive-*-bin /tmp/apache-hive-bin
@@ -258,6 +260,7 @@ class Connection:
         add the following path to Init Scripts: dbfs:/{0}/scripts/initScript.sh
 
         add the following to the Spark Config:
+
         spark.hadoop.fs.hopsfs.impl io.hops.hopsfs.client.HopsFileSystem
         spark.hadoop.hops.ipc.server.ssl.enabled true
         spark.hadoop.hops.ssl.hostname.verifier ALLOW_ALL
@@ -268,6 +271,7 @@ class Connection:
         spark.hadoop.hops.ssl.trustore.name {1}/trustStore.jks
         spark.sql.hive.metastore.jars /tmp/apache-hive-bin/lib/*
         spark.hadoop.hive.metastore.uris thrift://{2}:9083
+
         Then save and restart the cluster.
         """.format(
             user_cert_folder, cert_folder, internal_host
