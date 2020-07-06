@@ -80,7 +80,7 @@ public class FeatureGroupEngine {
     }
 
     // Update the original object - Hopsworks returns the incremented version
-    featureGroup.update(apiFG);
+    featureGroup.setVersion(apiFG.getVersion());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);

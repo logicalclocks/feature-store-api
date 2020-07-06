@@ -101,11 +101,6 @@ public class TrainingDataset {
     this.featureStore = featureStore;
   }
 
-  public void update(TrainingDataset newTrainingDataset) {
-    this.version = newTrainingDataset.getVersion();
-    this.location = newTrainingDataset.getLocation();
-  }
-
   /**
    * Create the training dataset based on the content of the feature store query
    * @param query
