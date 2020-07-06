@@ -15,6 +15,7 @@
  */
 package com.logicalclocks.hsfs.metadata;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.SecretStore;
@@ -54,6 +55,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
 
 public class HopsworksExternalClient implements HopsworksHttpClient {
 
@@ -73,7 +75,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
-    httpHost = new HttpHost(host, port);
+    httpHost = new HttpHost(host, port, "https");
 
     connectionPool = new PoolingHttpClientConnectionManager(
         createConnectionFactory(httpHost, hostnameVerification, trustStorePath));
@@ -157,7 +159,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         .orElseThrow(() -> new FeatureStoreException("Could not find parameter " + paramName + " in parameter store"));
   }
 
-  private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException {
+  private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
     SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder()
         .region(region)
         .build();
@@ -166,8 +168,15 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         .secretId(paramName)
         .build();
     GetSecretValueResponse secretValueResponse = secretsManagerClient.getSecretValue(secretValueRequest);
-    return secretValueResponse.getValueForField(secretKey, String.class)
-        .orElseThrow(() -> new FeatureStoreException("Could not find secret " + paramName + " in secret store"));
+    ObjectMapper objectMapper = new ObjectMapper();
+    HashMap<String, String> secretMap = objectMapper.readValue(secretValueResponse.secretString(), HashMap.class);
+    String apiKey = secretMap.get("api-key");
+    if (!Strings.isNullOrEmpty(apiKey)) {
+      LOGGER.info("Got API-KEY: " + apiKey);
+      return apiKey;
+    } else {
+      throw new FeatureStoreException("Could not find secret " + paramName + " in secret store");
+    }
   }
 
   private String getAssumedRole() throws FeatureStoreException {
@@ -184,9 +193,8 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   @Override
-  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException,
-      FeatureStoreException {
-    LOGGER.debug("Handling metadata request: " + request);
+  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException {
+    LOGGER.info("Handling metadata request: " + request);
     AuthorizationHandler<T> authHandler = new AuthorizationHandler<>(responseHandler);
     request.setHeader(HttpHeaders.AUTHORIZATION, "ApiKey " + apiKey);
     try {
