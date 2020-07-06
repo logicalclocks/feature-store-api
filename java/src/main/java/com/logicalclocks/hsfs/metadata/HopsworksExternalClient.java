@@ -58,7 +58,7 @@ import java.security.cert.CertificateException;
 public class HopsworksExternalClient implements HopsworksHttpClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
-  private static final String PARAM_NAME = "/hopsworks/role/";
+  private static final String PARAM_NAME = "hopsworks/role/";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -177,7 +177,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
     String arn = callerIdentityResponse.arn();
     String[] arnSplits = arn.split("/");
-    if (arnSplits.length != 3 || !arnSplits[0].equals("assumed-role")) {
+    if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
       throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
     }
     return arnSplits[1];
