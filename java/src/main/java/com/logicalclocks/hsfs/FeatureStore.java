@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -59,22 +60,27 @@ public class FeatureStore {
   }
 
   /**
-   * Get a feature group from the feature store
+   * Get a feature group object from the feature store
    * @param name: the name of the feature group
    * @param version: the version of the feature group
    * @return
    * @throws FeatureStoreException
    */
-  public FeatureGroup getFeatureGroup(String name, Integer version)
+  public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    if (Strings.isNullOrEmpty(name)) {
-      throw new FeatureStoreException("Name is required");
-    }
-    if (version == null) {
-      LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `" +
-        DEFAULT_VERSION + "`.");
-    }
     return featureGroupApi.get(this, name, version);
+  }
+
+  /**
+   * Get a feature group object with default version `1` from the feature store
+   * @param name: the name of the feature group
+   * @return
+   * @throws FeatureStoreException
+   */
+  public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `" +
+      DEFAULT_VERSION + "`.");
+    return getFeatureGroup(name, DEFAULT_VERSION);
   }
 
   public Dataset<Row> sql(String query) {
@@ -104,16 +110,22 @@ public class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public TrainingDataset getTrainingDataset(String name, Integer version)
+  public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    if (Strings.isNullOrEmpty(name)) {
-      throw new FeatureStoreException("Name is required");
-    }
-    if (version == null) {
-      LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `" +
-        DEFAULT_VERSION + "`.");
-    }
     return trainingDatasetApi.get(this, name, version);
+  }
+
+  /**
+   * Get a training dataset object with the default version `1` from the selected feature store
+   * @param name: name of the training dataset
+   * @return
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `" +
+      DEFAULT_VERSION + "`.");
+    return getTrainingDataset(name, DEFAULT_VERSION);
   }
 
   @Override
