@@ -80,7 +80,7 @@ class Query:
 
     def to_string(self, storage="offline"):
         return self._query_constructor_api.construct_query(self)[
-            "query" if sotrage == "offline" else "queryOnline"
+            "query" if storage == "offline" else "queryOnline"
         ]
 
     def __str__(self):

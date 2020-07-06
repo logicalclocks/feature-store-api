@@ -17,7 +17,7 @@
 import warnings
 import humps
 
-from hsfs import engine, training_dataset, feature_group, util
+from hsfs import training_dataset, feature_group, util
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,

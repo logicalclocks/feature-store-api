@@ -15,7 +15,6 @@
 #
 
 import os
-import socket
 import furl
 from abc import ABC, abstractmethod
 
@@ -52,11 +51,11 @@ class Client(ABC):
         :type trust_store_path: str
         :return: if verify is true and the truststore is provided, then return the trust store location
                  if verify is true but the truststore wasn't provided, then return true
-                 if verify is false, then return false 
+                 if verify is false, then return false
         :rtype: str or boolean
         """
         if verify == "true":
-            if trust_store_path != None:
+            if trust_store_path is not None:
                 return trust_store_path
             else:
                 return True
