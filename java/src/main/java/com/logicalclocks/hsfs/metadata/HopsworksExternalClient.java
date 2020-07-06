@@ -60,7 +60,8 @@ import java.util.HashMap;
 public class HopsworksExternalClient implements HopsworksHttpClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
-  private static final String PARAM_NAME = "hopsworks/role/";
+  private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
+  private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -149,21 +150,25 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     SsmClient ssmClient = SsmClient.builder()
         .region(region)
         .build();
-    String paramName = PARAM_NAME + getAssumedRole() + "/type/" + secretKey;
+    String paramName = PARAM_NAME_PARAMETER_STORE + getAssumedRole() + "/type/" + secretKey;
     GetParameterRequest paramRequest = GetParameterRequest.builder()
         .name(paramName)
         .withDecryption(true)
        .build();
     GetParameterResponse parameterResponse = ssmClient.getParameter(paramRequest);
-    return parameterResponse.getValueForField("Parameter", String.class)
-        .orElseThrow(() -> new FeatureStoreException("Could not find parameter " + paramName + " in parameter store"));
+    String apiKey = parameterResponse.parameter().value();
+    if (!Strings.isNullOrEmpty(apiKey)) {
+      return apiKey;
+    } else {
+      throw new FeatureStoreException("Could not find parameter " + paramName + " in parameter store");
+    }
   }
 
   private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
     SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder()
         .region(region)
         .build();
-    String paramName = PARAM_NAME + getAssumedRole();
+    String paramName = PARAM_NAME_SECRET_STORE + getAssumedRole();
     GetSecretValueRequest secretValueRequest = GetSecretValueRequest.builder()
         .secretId(paramName)
         .build();
