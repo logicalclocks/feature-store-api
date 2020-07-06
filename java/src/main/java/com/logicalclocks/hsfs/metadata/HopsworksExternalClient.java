@@ -172,7 +172,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     HashMap<String, String> secretMap = objectMapper.readValue(secretValueResponse.secretString(), HashMap.class);
     String apiKey = secretMap.get("api-key");
     if (!Strings.isNullOrEmpty(apiKey)) {
-      LOGGER.info("Got API-KEY: " + apiKey);
       return apiKey;
     } else {
       throw new FeatureStoreException("Could not find secret " + paramName + " in secret store");
