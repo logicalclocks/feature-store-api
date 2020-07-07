@@ -238,4 +238,63 @@ public class TrainingDataset {
   public void show(int numRows) {
     read("").show(numRows);
   }
+
+  /**
+   * Add a tag without value to the training dataset
+   *
+   * @param name: name of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void addTag(String name) throws FeatureStoreException, IOException {
+    addTag(name, null);
+  }
+
+  /**
+   * Add name/value tag to the training dataset
+   *
+   * @param name: name of the tag
+   * @param value: value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void addTag(String name, String value) throws FeatureStoreException, IOException {
+    trainingDatasetEngine.addTag(this, name, value);
+  }
+
+  /**
+   * Get all tags of the training dataset
+   *
+   * @return map of all tags from name to value
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Map<String, String> getTags() throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getTags(this);
+  }
+
+  /**
+   * Get a single tag value of the training dataset
+   *
+   * @param name: name of tha tag
+   * @return string value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public String getTag(String name) throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getTag(this, name);
+  }
+
+  /**
+   * Delete a tag of the training dataset
+   *
+   * @param name: name of the tag to be deleted
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void deleteTag(String name) throws FeatureStoreException, IOException {
+    trainingDatasetEngine.deleteTag(this, name);
+  }
 }

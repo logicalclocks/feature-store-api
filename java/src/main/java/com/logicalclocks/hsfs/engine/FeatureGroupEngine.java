@@ -1,11 +1,13 @@
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -22,6 +24,7 @@ public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -140,19 +143,18 @@ public class FeatureGroupEngine {
   }
 
   public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
-    featureGroupApi.addTag(featureGroup, name, value);
+    tagsApi.add(featureGroup, name, value);
   }
 
   public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return featureGroupApi.getTags(featureGroup);
+    return tagsApi.getTags(featureGroup);
   }
 
   public String getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return featureGroupApi.getTag(featureGroup, name);
+    return tagsApi.get(featureGroup, name);
   }
 
   public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    featureGroupApi.deleteTag(featureGroup, name);
+    tagsApi.deleteTag(featureGroup, name);
   }
-
 }
