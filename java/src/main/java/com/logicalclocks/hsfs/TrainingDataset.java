@@ -77,7 +77,7 @@ public class TrainingDataset {
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
 
   @Builder
-  public TrainingDataset(@NonNull String name, @NonNull Integer version, String description,
+  public TrainingDataset(@NonNull String name, Integer version, String description,
                          DataFormat dataFormat, StorageConnector storageConnector,
                          String location, List<Split> splits, Long seed,
                          FeatureStore featureStore) {

@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.Query;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -78,16 +79,10 @@ public class FeatureGroup {
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
   @Builder
-  public FeatureGroup(FeatureStore featureStore, String name, Integer version, String description,
+  public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys,
                       boolean onlineEnabled, Storage defaultStorage, List<Feature> features)
       throws FeatureStoreException {
-    if (name == null) {
-      throw new FeatureStoreException("Name is required when creating a feature group");
-    }
-    if (version == null) {
-      throw new FeatureStoreException("Version is required when creating a feature group");
-    }
 
     this.featureStore = featureStore;
     this.name = name;
