@@ -114,13 +114,16 @@ class FeatureGroupEngine:
     def _get_online_table_name(self, feature_group):
         return feature_group.name + "_" + str(feature_group.version)
 
-    def add_tag(self, feature_group, name, value=None):
+    def add_tag(self, feature_group, name, value):
+        """Attach a name/value tag to a feature group."""
         self._feature_group_api.add_tag(feature_group, name, value)
 
     def delete_tag(self, feature_group, name):
+        """Remove a tag from a feature group."""
         self._feature_group_api.delete_tag(feature_group, name)
 
-    def get_tags(self, feature_group, name=None):
+    def get_tags(self, feature_group, name):
+        """Get tag with a certain name or all tags for a feature group."""
         return [
             tag.to_dict()
             for tag in self._feature_group_api.get_tags(feature_group, name)

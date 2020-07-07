@@ -133,3 +133,18 @@ class TrainingDatasetEngine:
             write_options,
             path,
         )
+
+    def add_tag(self, training_dataset, name, value):
+        """Attach a name/value tag to a training dataset."""
+        self._training_dataset_api.add_tag(training_dataset, name, value)
+
+    def delete_tag(self, training_dataset, name):
+        """Remove a tag from a training dataset."""
+        self._training_dataset_api.delete_tag(training_dataset, name)
+
+    def get_tags(self, training_dataset, name):
+        """Get tag with a certain name or all tags for a training dataset."""
+        return [
+            tag.to_dict()
+            for tag in self._training_dataset_api.get_tags(training_dataset, name)
+        ]

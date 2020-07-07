@@ -23,6 +23,14 @@ class FeatureGroupApi:
         self._feature_store_id = feature_store_id
 
     def save(self, feature_group_instance):
+        """Save feature group metadata to the feature store.
+
+        :param feature_group_instance: metadata object of feature group to be
+            saved
+        :type feature_group_instance: FeatureGroup
+        :return: updated metadata object of the feature group
+        :rtype: FeatureGroup
+        """
         _client = client.get_instance()
         path_params = [
             "project",
@@ -42,11 +50,14 @@ class FeatureGroupApi:
         )
 
     def get(self, name, version):
-        """Get feature store with specific id or name.
-        :param identifier: id or name of the feature store
-        :type identifier: int, str
-        :return: the featurestore metadata
-        :rtype: FeatureStore
+        """Get the metadata of a feature group with a certain name and version.
+
+        :param name: name of the feature group
+        :type name: str
+        :param version: version of the feature group
+        :type version: int
+        :return: feature group metadata object
+        :rtype: FeatureGroup
         """
         _client = client.get_instance()
         path_params = [
@@ -63,10 +74,13 @@ class FeatureGroupApi:
         )
 
     def delete_content(self, feature_group_instance):
-        """Delete content of the feature group. It simulates the overwrite insert mode
+        """Delete the content of a feature group.
 
-        Args:
-            feature_group feature_group: the feature for which to delete the content 
+        This endpoint serves to simulate the overwrite/insert mode.
+
+        :param feature_group_instance: metadata object of feature group to clear
+            the content for
+        :type feature_group_instance: FeatureGroup
         """
         _client = client.get_instance()
         path_params = [
@@ -81,10 +95,12 @@ class FeatureGroupApi:
         _client._send_request("POST", path_params)
 
     def delete(self, feature_group_instance):
-        """Drop a feature group from the feature store
+        """Drop a feature group from the feature store.
 
-        Args:
-            feature_group_instance feature_group: the feature_group to drop 
+        Drops the metadata and data of a version of a feature group.
+
+        :param feature_group_instance: metadata object of feature group
+        :type feature_group_instance: FeatureGroup
         """
         _client = client.get_instance()
         path_params = [
@@ -97,13 +113,19 @@ class FeatureGroupApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def add_tag(self, feature_group_instance, name, value=None):
-        """Attach a tag to a feature group 
+    def add_tag(self, feature_group_instance, name, value):
+        """Attach a name/value tag to a feature group.
 
-        Args:
-            feature_group_instance feature_group: the feature group to which to attach the tag 
-            name (string): the name of the tag to attach 
-            value (string): the value of the tag. can be none 
+        A tag can consist of a name only or a name/value pair. Tag names are
+        unique identifiers.
+
+        :param feature_group_instance: metadata object of feature group to add
+            the tag for
+        :type feature_group_instance: FeatureGroup
+        :param name: name of the tag to be added
+        :type name: str
+        :param value: value of the tag to be added
+        :type value: str
         """
         _client = client.get_instance()
         path_params = [
@@ -120,11 +142,15 @@ class FeatureGroupApi:
         _client._send_request("PUT", path_params, query_params=query_params)
 
     def delete_tag(self, feature_group_instance, name):
-        """Remove a tag from a feature group
+        """Delete a tag from a feature group.
 
-        Args:
-            feature_group_instance feature_group: the feature group from which to delete the tag 
-            name (string): the name of the tag to remove 
+        Tag names are unique identifiers.
+
+        :param feature_group_instance: metadata object of feature group to delete
+            the tag for
+        :type feature_group_instance: FeatureGroup
+        :param name: name of the tag to be removed
+        :type name: str
         """
         _client = client.get_instance()
         path_params = [
@@ -139,12 +165,18 @@ class FeatureGroupApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def get_tags(self, feature_group_instance, name=None):
-        """[summary]
+    def get_tags(self, feature_group_instance, name):
+        """Get the tags of a feature group.
 
-        Args:
-            feature_group_instance feature_group: the feature group for which to retrieve the tags 
-            name ([type], optional): [description]. Defaults to None.
+        Gets all tags if no tag name is specified.
+
+        :param feature_group_instance: metadata object of feature group to get
+            the tags for
+        :type feature_group_instance: FeatureGroup
+        :param name: tag name
+        :type name: str
+        :return: list of tags as name/value pairs
+        :rtype: list of dict
         """
         _client = client.get_instance()
         path_params = [
