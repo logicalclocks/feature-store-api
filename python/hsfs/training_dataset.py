@@ -16,6 +16,7 @@
 
 import humps
 import json
+import warnings
 
 from hsfs import util, engine, feature
 from hsfs.storage_connector import StorageConnector
@@ -105,8 +106,16 @@ class TrainingDataset:
                 features
             )
 
+        user_version = self._version
         self._features = engine.get_instance().parse_schema(feature_dataframe)
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
+                    self._name, self._version
+                ),
+                util.VersionWarning,
+            )
         return self
 
     def insert(self, features, overwrite, write_options={}):

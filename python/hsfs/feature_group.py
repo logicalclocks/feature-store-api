@@ -16,6 +16,7 @@
 
 import humps
 import json
+import warnings
 
 from hsfs.core import query, feature_group_engine
 from hsfs import util, engine, feature
@@ -126,12 +127,20 @@ class FeatureGroup:
     def save(self, features, storage=None, write_options={}):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        user_version = self._version
         self._feature_group_engine.save(
             self,
             feature_dataframe,
             storage if storage else self._default_storage,
             write_options,
         )
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
+                    self._name, self._version
+                ),
+                util.VersionWarning,
+            )
         return self
 
     def insert(self, features, overwrite=False, storage=None, write_options={}):

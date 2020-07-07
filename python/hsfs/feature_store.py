@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
+import warnings
 import humps
 
-from hsfs import training_dataset, feature_group
+from hsfs import training_dataset, feature_group, util
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -26,6 +27,8 @@ from hsfs.core import (
 
 
 class FeatureStore:
+    DEFAULT_VERSION = 1
+
     def __init__(
         self,
         featurestore_id,
@@ -71,10 +74,28 @@ class FeatureStore:
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
-    def get_feature_group(self, name, version):
+    def get_feature_group(self, name, version=None):
+        if version is None:
+            warnings.warn(
+                "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
         return self._feature_group_api.get(name, version)
 
-    def get_training_dataset(self, name, version):
+    def get_training_dataset(self, name, version=None):
+        # None is necessary because otherwise it's not possible to detect if
+        # the user specifically set the version to 1 himself
+        if version is None:
+            warnings.warn(
+                "No version provided for getting training dataset `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
     def get_storage_connector(self, name, connector_type):
@@ -88,7 +109,7 @@ class FeatureStore:
     def create_feature_group(
         self,
         name,
-        version,
+        version=None,
         description="",
         default_storage="offline",
         online_enabled=False,
@@ -112,7 +133,7 @@ class FeatureStore:
     def create_training_dataset(
         self,
         name,
-        version,
+        version=None,
         description="",
         data_format="tfrecords",
         storage_connector=None,

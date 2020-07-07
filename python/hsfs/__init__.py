@@ -14,9 +14,20 @@
 #   limitations under the License.
 #
 
+import warnings
+
+from hsfs import util
 from hsfs.connection import Connection
 
 connection = Connection.connection
 setup_databricks = Connection.setup_databricks
+
+
+def fs_formatwarning(message, category, filename, lineno, line=None):
+    return "{}: {}\n".format(category.__name__, message)
+
+
+warnings.formatwarning = fs_formatwarning
+warnings.simplefilter("always", util.VersionWarning)
 
 __all__ = ["connection", "setup_databricks"]
