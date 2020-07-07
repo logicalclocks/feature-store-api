@@ -15,7 +15,7 @@
 #
 
 from hsfs import client
-from hsfs import feature_group, tag
+from hsfs import feature_group
 
 
 class FeatureGroupApi:
@@ -112,84 +112,3 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         _client._send_request("DELETE", path_params)
-
-    def add_tag(self, feature_group_instance, name, value):
-        """Attach a name/value tag to a feature group.
-
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
-
-        :param feature_group_instance: metadata object of feature group to add
-            the tag for
-        :type feature_group_instance: FeatureGroup
-        :param name: name of the tag to be added
-        :type name: str
-        :param value: value of the tag to be added
-        :type value: str
-        """
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            "featuregroups",
-            feature_group_instance.id,
-            "tags",
-            name,
-        ]
-        query_params = {"value": value} if value else None
-        _client._send_request("PUT", path_params, query_params=query_params)
-
-    def delete_tag(self, feature_group_instance, name):
-        """Delete a tag from a feature group.
-
-        Tag names are unique identifiers.
-
-        :param feature_group_instance: metadata object of feature group to delete
-            the tag for
-        :type feature_group_instance: FeatureGroup
-        :param name: name of the tag to be removed
-        :type name: str
-        """
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            "featuregroups",
-            feature_group_instance.id,
-            "tags",
-            name,
-        ]
-        _client._send_request("DELETE", path_params)
-
-    def get_tags(self, feature_group_instance, name):
-        """Get the tags of a feature group.
-
-        Gets all tags if no tag name is specified.
-
-        :param feature_group_instance: metadata object of feature group to get
-            the tags for
-        :type feature_group_instance: FeatureGroup
-        :param name: tag name
-        :type name: str
-        :return: list of tags as name/value pairs
-        :rtype: list of dict
-        """
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            "featuregroups",
-            feature_group_instance.id,
-            "tags",
-        ]
-
-        if name:
-            path_params.append(name)
-
-        return tag.Tag.from_response_json(_client._send_request("GET", path_params))
