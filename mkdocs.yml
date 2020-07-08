@@ -1,0 +1,28 @@
+site_name: HSFS Documentation
+
+# Repository
+repo_name: logicalclocks/feature-store-api
+repo_url: https://github.com/logicalclocks/hops-util-py
+edit_uri: ""
+
+nav:
+    - Introduction: ../../README.md
+    - Quickstart: quickstart.md
+    - Installation: installation.md
+    - Advanced Usage: adv_usage.md
+    - Example Notebook: notebooks.md
+    - API Reference:
+        - Python: api.md
+        - Java: japi.md
+theme:
+    name: material
+    favicon: assets/images/favicon.ico
+    logo: assets/images/hops-logo.png
+extra_css:
+    - css/custom.css
+plugins:
+    - search
+markdown_extensions:
+    - mkautodoc
+    - codehilite
+    - admonition

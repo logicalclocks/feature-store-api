@@ -49,6 +49,14 @@ from hsfs.core import feature_store_api, project_api, hosts_api, services_api
 
 
 class Connection:
+    """summ
+
+    [extended_summary]
+
+    :return: [description]
+    :rtype: [type]
+    """
+
     AWS_DEFAULT_REGION = "default"
     HOPSWORKS_PORT_DEFAULT = 443
     SECRETS_STORE_DEFAULT = "parameterstore"
