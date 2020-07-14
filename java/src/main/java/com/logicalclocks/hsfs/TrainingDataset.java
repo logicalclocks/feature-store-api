@@ -270,8 +270,8 @@ public class TrainingDataset {
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTags() throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getTags(this);
+  public Map<String, String> getTag() throws FeatureStoreException, IOException {
+    return getTag(null);
   }
 
   /**
@@ -283,7 +283,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   @JsonIgnore
-  public String getTag(String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getTag(this, name);
   }
 

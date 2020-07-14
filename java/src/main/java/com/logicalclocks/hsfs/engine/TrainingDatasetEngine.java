@@ -118,11 +118,7 @@ public class TrainingDatasetEngine {
     tagsApi.add(trainingDataset, name, value);
   }
 
-  public Map<String, String> getTags(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    return tagsApi.getTags(trainingDataset);
-  }
-
-  public String getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
     return tagsApi.get(trainingDataset, name);
   }
 

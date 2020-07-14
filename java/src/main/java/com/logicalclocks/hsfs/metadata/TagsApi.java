@@ -16,6 +16,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -83,49 +84,24 @@ public class TagsApi {
       trainingDataset.getId(), name, value);
   }
 
-  private String get(Integer projectId, Integer featurestoreId, Integer entityId, String name) throws FeatureStoreException, IOException {
+  private Map<String, String> get(Integer projectId, Integer featurestoreId, Integer entityId, String name)
+    throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
       + FeatureStoreApi.FEATURE_STORE_PATH
       + TAGS_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
       .set("projectId", projectId)
       .set("fsId", featurestoreId)
       .set("entityType", entityType.getValue())
-      .set("entityId", entityId)
-      .set("name", name)
-      .expand();
+      .set("entityId", entityId);
 
-    LOGGER.info("Sending metadata request: " + uri);
-    HttpGet getRequest = new HttpGet(uri);
-    Tags tags = hopsworksClient.handleRequest(getRequest, Tags.class);
+    if (!Strings.isNullOrEmpty(name)) {
+      uriTemplate.set("name", name);
+    }
 
-    return tags.getItems().get(0).getValue();
-  }
-
-  public String get(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), name);
-  }
-
-  public String get(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
-    return get(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-      trainingDataset.getId(), name);
-  }
-
-  private Map<String, String> getTags(Integer projectId, Integer featurestoreId, Integer entityId) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH
-      + FeatureStoreApi.FEATURE_STORE_PATH
-      + TAGS_PATH;
-
-    String uri = UriTemplate.fromTemplate(pathTemplate)
-      .set("projectId", projectId)
-      .set("fsId", featurestoreId)
-      .set("entityType", entityType.getValue())
-      .set("entityId", entityId)
-      .expand();
+    String uri = uriTemplate.expand();
 
     LOGGER.info("Sending metadata request: " + uri);
     HttpGet getRequest = new HttpGet(uri);
@@ -135,14 +111,15 @@ public class TagsApi {
       .collect(Collectors.toMap(Tags::getName, Tags::getValue));
   }
 
-  public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return getTags(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId());
+  public Map<String, String> get(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+      featureGroup.getId(), name);
   }
 
-  public Map<String, String> getTags(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    return getTags(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-      trainingDataset.getId());
+  public Map<String, String> get(TrainingDataset trainingDataset, String name)
+    throws FeatureStoreException, IOException {
+    return get(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+      trainingDataset.getId(), name);
   }
 
   private void deleteTag(Integer projectId, Integer featurestoreId, Integer entityId, String name) throws FeatureStoreException, IOException {

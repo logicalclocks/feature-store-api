@@ -206,8 +206,8 @@ public class FeatureGroup {
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTags() throws FeatureStoreException, IOException {
-    return featureGroupEngine.getTags(this);
+  public Map<String, String> getTag() throws FeatureStoreException, IOException {
+    return getTag(null);
   }
 
   /**
@@ -219,7 +219,7 @@ public class FeatureGroup {
    * @throws IOException
    */
   @JsonIgnore
-  public String getTag(String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
     return featureGroupEngine.getTag(this, name);
   }
 

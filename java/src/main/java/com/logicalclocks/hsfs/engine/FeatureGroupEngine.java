@@ -161,11 +161,7 @@ public class FeatureGroupEngine {
     tagsApi.add(featureGroup, name, value);
   }
 
-  public Map<String, String> getTags(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return tagsApi.getTags(featureGroup);
-  }
-
-  public String getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
     return tagsApi.get(featureGroup, name);
   }
 
