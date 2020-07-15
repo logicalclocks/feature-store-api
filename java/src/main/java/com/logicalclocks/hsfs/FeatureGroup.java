@@ -175,24 +175,61 @@ public class FeatureGroup {
     featureGroupEngine.delete(this);
   }
 
+  /**
+   * Add a tag without value to the feature group
+   *
+   * @param name: name of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public void addTag(String name) throws FeatureStoreException, IOException {
     addTag(name, null);
   }
 
+  /**
+   * Add name/value tag to the feature group
+   *
+   * @param name: name of the tag
+   * @param value: value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public void addTag(String name, String value) throws FeatureStoreException, IOException {
     featureGroupEngine.addTag(this, name, value);
   }
 
+  /**
+   * Get all tags of the feature group
+   *
+   * @return map of all tags from name to value
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   @JsonIgnore
-  public Map<String, String> getTags() throws FeatureStoreException, IOException {
-    return featureGroupEngine.getTags(this);
+  public Map<String, String> getTag() throws FeatureStoreException, IOException {
+    return getTag(null);
   }
 
+  /**
+   * Get a single tag value of the feature group
+   *
+   * @param name: name of tha tag
+   * @return string value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   @JsonIgnore
-  public String getTag(String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
     return featureGroupEngine.getTag(this, name);
   }
 
+  /**
+   * Delete a tag of the feature group
+   *
+   * @param name: name of the tag to be deleted
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureGroupEngine.deleteTag(this, name);
   }

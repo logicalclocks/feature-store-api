@@ -15,8 +15,11 @@
  */
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.EntityEndpointType;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -31,6 +34,7 @@ import java.util.Map;
 public class TrainingDatasetEngine {
 
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
+  private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
@@ -110,4 +114,15 @@ public class TrainingDatasetEngine {
     return SparkEngine.getInstance().read(trainingDataset.getDataFormat(), readOptions, path);
   }
 
+  public void addTag(TrainingDataset trainingDataset, String name, String value) throws FeatureStoreException, IOException {
+    tagsApi.add(trainingDataset, name, value);
+  }
+
+  public Map<String, String> getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
+    return tagsApi.get(trainingDataset, name);
+  }
+
+  public void deleteTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
+    tagsApi.deleteTag(trainingDataset, name);
+  }
 }
