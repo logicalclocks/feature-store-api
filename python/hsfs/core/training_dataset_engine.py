@@ -15,7 +15,7 @@
 #
 
 from hsfs import engine
-from hsfs.core import training_dataset_api
+from hsfs.core import training_dataset_api, tags_api
 
 
 class TrainingDatasetEngine:
@@ -26,6 +26,7 @@ class TrainingDatasetEngine:
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
         )
+        self._tags_api = tags_api.TagsApi(feature_store_id, "trainingdatasets")
 
     def save(self, training_dataset, feature_dataframe, user_write_options):
         self._training_dataset_api.post(training_dataset)
@@ -133,3 +134,15 @@ class TrainingDatasetEngine:
             write_options,
             path,
         )
+
+    def add_tag(self, training_dataset, name, value):
+        """Attach a name/value tag to a training dataset."""
+        self._tags_api.add(training_dataset, name, value)
+
+    def delete_tag(self, training_dataset, name):
+        """Remove a tag from a training dataset."""
+        self._tags_api.delete(training_dataset, name)
+
+    def get_tags(self, training_dataset, name):
+        """Get tag with a certain name or all tags for a training dataset."""
+        return [tag.to_dict() for tag in self._tags_api.get(training_dataset, name)]

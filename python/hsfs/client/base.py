@@ -145,6 +145,9 @@ class Client(ABC):
         if stream:
             return response
         else:
+            # handle different success reponse codes
+            if response.status_code == 204:
+                return None
             return response.json()
 
     def _close(self):
