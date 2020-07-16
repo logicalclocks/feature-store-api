@@ -16,6 +16,7 @@
 
 import humps
 import json
+import warnings
 
 from hsfs.core import query, feature_group_engine
 from hsfs import util, engine, feature
@@ -126,12 +127,20 @@ class FeatureGroup:
     def save(self, features, storage=None, write_options={}):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        user_version = self._version
         self._feature_group_engine.save(
             self,
             feature_dataframe,
             storage if storage else self._default_storage,
             write_options,
         )
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
+                    self._name, self._version
+                ),
+                util.VersionWarning,
+            )
         return self
 
     def insert(self, features, overwrite=False, storage=None, write_options={}):
@@ -149,12 +158,39 @@ class FeatureGroup:
         self._feature_group_engine.delete(self)
 
     def add_tag(self, name, value=None):
+        """Attach a name/value tag to a feature group.
+
+        A tag can consist of a name only or a name/value pair. Tag names are
+        unique identifiers.
+
+        :param name: name of the tag to be added
+        :type name: str
+        :param value: value of the tag to be added, defaults to None
+        :type value: str, optional
+        """
         self._feature_group_engine.add_tag(self, name, value)
 
     def delete_tag(self, name):
+        """Delete a tag from a feature group.
+
+        Tag names are unique identifiers.
+
+        :param name: name of the tag to be removed
+        :type name: str
+        """
         self._feature_group_engine.delete_tag(self, name)
 
     def get_tag(self, name=None):
+        """Get the tags of a feature group.
+
+        Tag names are unique identifiers. Returns all tags if no tag name is
+        specified.
+
+        :param name: name of the tag to get, defaults to None
+        :type name: str, optional
+        :return: list of tags as name/value pairs
+        :rtype: list of dict
+        """
         return self._feature_group_engine.get_tags(self, name)
 
     @classmethod

@@ -23,3 +23,26 @@ Python development setup
 
     $ flake8 hopsworks
     $ black hopsworks
+
+
+Python documentation
+~~~~~~~~~~~~~~~~
+We follow a few best practices for generating the Python documentation:
+
+1. Use the sphinx docstring style.
+
+        """[single line summary]
+
+        [extended summary]
+
+        :param [param1]: [description]
+        :type [param1]: [type]
+        :param [param2]: [description]
+        :type [param2]: [type]
+        :return: [description]
+        :rtype: [type]
+        """
+
+2. Feature store entity engine methods (e.g. FeatureGroupEngine etc.) only require a single line docstring.
+3. REST Api implementations (e.g. FeatureGroupApi etc.) should be fully documented with docstrings without defaults.
+4. Public Api such as metadata objects should be fully documented with defaults.

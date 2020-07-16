@@ -15,8 +15,7 @@
 #
 
 from hsfs import engine
-from hsfs.core import feature_group_api
-from hsfs.core import storage_connector_api
+from hsfs.core import feature_group_api, storage_connector_api, tags_api
 
 
 class FeatureGroupEngine:
@@ -28,6 +27,7 @@ class FeatureGroupEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._tags_api = tags_api.TagsApi(feature_store_id, "featuregroups")
 
     def save(self, feature_group, feature_dataframe, storage, write_options):
 
@@ -114,17 +114,17 @@ class FeatureGroupEngine:
     def _get_online_table_name(self, feature_group):
         return feature_group.name + "_" + str(feature_group.version)
 
-    def add_tag(self, feature_group, name, value=None):
-        self._feature_group_api.add_tag(feature_group, name, value)
+    def add_tag(self, feature_group, name, value):
+        """Attach a name/value tag to a feature group."""
+        self._tags_api.add(feature_group, name, value)
 
     def delete_tag(self, feature_group, name):
-        self._feature_group_api.delete_tag(feature_group, name)
+        """Remove a tag from a feature group."""
+        self._tags_api.delete(feature_group, name)
 
-    def get_tags(self, feature_group, name=None):
-        return [
-            tag.to_dict()
-            for tag in self._feature_group_api.get_tags(feature_group, name)
-        ]
+    def get_tags(self, feature_group, name):
+        """Get tag with a certain name or all tags for a feature group."""
+        return [tag.to_dict() for tag in self._tags_api.get(feature_group, name)]
 
     def sql(self, query, feature_store_name, dataframe_type, storage):
         if storage == "online":

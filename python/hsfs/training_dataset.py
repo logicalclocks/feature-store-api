@@ -16,6 +16,7 @@
 
 import humps
 import json
+import warnings
 
 from hsfs import util, engine, feature
 from hsfs.storage_connector import StorageConnector
@@ -106,8 +107,16 @@ class TrainingDataset:
                 features
             )
 
+        user_version = self._version
         self._features = engine.get_instance().parse_schema(feature_dataframe)
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
+                    self._name, self._version
+                ),
+                util.VersionWarning,
+            )
         return self
 
     def insert(self, features, overwrite, write_options={}):
@@ -169,6 +178,42 @@ class TrainingDataset:
 
     def show(self, n, split=None):
         self.read(split).show(n)
+
+    def add_tag(self, name, value=None):
+        """Attach a name/value tag to a training dataset.
+
+        A tag can consist of a name only or a name/value pair. Tag names are
+        unique identifiers.
+
+        :param name: name of the tag to be added
+        :type name: str
+        :param value: value of the tag to be added, defaults to None
+        :type value: str, optional
+        """
+        self._training_dataset_engine.add_tag(self, name, value)
+
+    def delete_tag(self, name):
+        """Delete a tag from a training dataset.
+
+        Tag names are unique identifiers.
+
+        :param name: name of the tag to be removed
+        :type name: str
+        """
+        self._training_dataset_engine.delete_tag(self, name)
+
+    def get_tag(self, name=None):
+        """Get the tags of a training dataset.
+
+        Tag names are unique identifiers. Returns all tags if no tag name is
+        specified.
+
+        :param name: name of the tag to get, defaults to None
+        :type name: str, optional
+        :return: list of tags as name/value pairs
+        :rtype: list of dict
+        """
+        return self._training_dataset_engine.get_tags(self, name)
 
     @classmethod
     def from_response_json(cls, json_dict):

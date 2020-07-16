@@ -17,11 +17,10 @@
 from hsfs import client
 
 
-class VariablesApi:
-    def get_hostname(self):
+class HostsApi:
+    def get(self):
         _client = client.get_instance()
         path_params = [
-            "variables",
-            "hopsworks_endpoint",
+            "hosts",
         ]
-        return _client._send_request("GET", path_params)["successMessage"].split(":")[0]
+        return _client._send_request("GET", path_params)["items"]

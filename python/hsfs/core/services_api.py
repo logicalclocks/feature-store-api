@@ -14,22 +14,14 @@
 #   limitations under the License.
 #
 
-import humps
+from hsfs import client
 
 
-class Tag:
-    def __init__(
-        self, name, value, href=None, expand=None, items=None, count=None, type=None
-    ):
-        self._name = name
-        self._value = value
-
-    @classmethod
-    def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        if json_decamelized["count"] == 0:
-            return []
-        return [cls(**tag) for tag in json_decamelized["items"]]
-
-    def to_dict(self):
-        return {self._name: self._value}
+class ServicesApi:
+    def get_service(self, service):
+        _client = client.get_instance()
+        path_params = [
+            "services",
+            service,
+        ]
+        return _client._send_request("GET", path_params)["items"][0]

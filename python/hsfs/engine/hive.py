@@ -18,7 +18,6 @@ import os
 import pandas as pd
 from pyhive import hive
 from sqlalchemy import create_engine
-import pymysql
 
 
 class Engine:

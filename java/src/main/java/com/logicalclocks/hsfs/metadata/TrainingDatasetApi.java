@@ -16,24 +16,34 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
 public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
+  public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/tdId}";
+  public static final String TRAINING_DATASET_TAGS_PATH = TRAINING_DATASET_ID_PATH + "/tags{/name}{?value}";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
   public TrainingDataset get(FeatureStore featureStore, String tdName, Integer tdVersion)
       throws IOException, FeatureStoreException {
