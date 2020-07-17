@@ -108,9 +108,14 @@ public class Query {
   }
 
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+    if (storage == null) {
+      throw new FeatureStoreException("Storage not supported");
+    }
+
     String sqlQuery =
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
     LOGGER.info("Executing query: " + sqlQuery);
+
     switch (storage) {
       case OFFLINE:
         return SparkEngine.getInstance().sql(sqlQuery);
