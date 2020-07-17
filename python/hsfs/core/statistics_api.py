@@ -40,4 +40,7 @@ class StatisticsApi:
             metadata_instance.id,
             "statistics",
         ]
-        _client._send_request("POST", path_params, data=statistics.json())
+        headers = {"content-type": "application/json"}
+        _client._send_request(
+            "POST", path_params, headers=headers, data=statistics.json()
+        )
