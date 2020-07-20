@@ -134,33 +134,26 @@ class TrainingDataset:
         return self._training_dataset_engine.read(self, split, read_options)
 
     def feed(
-        self,
-        target_name,
-        split=None,
-        feature_names=None,
-        one_hot_encode_labels=False,
-        num_classes=None,
+        self, target_name, split=None, feature_names=None, num_classes=None,
     ):
         """
 
         :param split:
         :param target_name:
         :param feature_names:
-        :param one_hot_encode_labels:
         :param num_classes:
         :return:
         """
         return feed_model_engine.FeedModelEngine(
-            self, split, target_name, feature_names, one_hot_encode_labels, num_classes
+            self,
+            split=split,
+            target_name=target_name,
+            feature_names=feature_names,
+            num_classes=num_classes,
         )
 
     def numpy(
-        self,
-        target_name,
-        split=None,
-        feature_names=None,
-        one_hot_encode_labels=None,
-        num_classes=None,
+        self, target_name, split=None, feature_names=None, num_classes=None,
     ):
 
         """
@@ -173,7 +166,11 @@ class TrainingDataset:
         :return:
         """
         return feed_model_engine.FeedModelEngine(
-            self, split, target_name, feature_names, one_hot_encode_labels, num_classes
+            self,
+            split=split,
+            target_name=target_name,
+            feature_names=feature_names,
+            num_classes=num_classes,
         ).numpy()
 
     def show(self, n, split=None):

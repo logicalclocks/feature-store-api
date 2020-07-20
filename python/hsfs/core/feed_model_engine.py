@@ -67,6 +67,7 @@ class FeedModelEngine:
                 "if optimize is set to True you also need to provide batch_size and num_epochs"
             )
 
+        # TODO (davit): this will be valid if spark is engine
         input_files = tf.io.gfile.glob(self.path + "/part-r-*")
 
         dataset = tf.data.Dataset.from_tensor_slices(input_files)
