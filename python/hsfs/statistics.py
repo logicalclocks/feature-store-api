@@ -40,7 +40,7 @@ class Statistics:
         return cls(**json_decamelized)
 
     def to_dict(self):
-        return {"commitTime": self._commit_time, "content": json.dumps(self._content)}
+        return {"commitTime": self._commit_time, "content": self._content}
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
