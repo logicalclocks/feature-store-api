@@ -52,12 +52,16 @@ class FeedModelEngine:
         self,
         batch_size=None,
         num_epochs=None,
+        one_hot_encode_labels=False,
+        num_classes=None,
         optimize=False,
         serialized_ndarray_fname=[],
     ):
         """
         :param batch_size:
         :param num_epochs:
+        :param one_hot_encode_labels:
+        :param num_classes:
         :param optimize:
         :param serialized_ndarray_fname:
         :return:
@@ -66,6 +70,11 @@ class FeedModelEngine:
         if optimize and batch_size is None and num_epochs is None:
             raise ValueError(
                 "if optimize is set to True you also need to provide batch_size and num_epochs"
+            )
+
+        if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
+            raise ValueError(
+                "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
         # TODO (davit): this will be valid if spark is engine
@@ -101,6 +110,8 @@ class FeedModelEngine:
                     x.append(example[feature_name])
 
             y = example[self.target_name]
+            if one_hot_encode_labels:
+                y = tf.one_hot(y, num_classes)
             return x, y
 
         dataset = dataset.map(
@@ -133,7 +144,3 @@ def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
     return dataset
-
-
-def _one_hot_encode(features, target, num_classes):
-    return features, tf.one_hot(target, num_classes)
