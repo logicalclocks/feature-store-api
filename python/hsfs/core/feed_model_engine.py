@@ -108,6 +108,11 @@ class FeedModelEngine:
                 else:
                     x.append(example[feature_name])
 
+            if len(x) == 1:
+                x = x[0]
+            else:
+                x = tf.stack(x)
+
             y = example[self.target_name]
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
