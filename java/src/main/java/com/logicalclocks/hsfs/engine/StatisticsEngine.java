@@ -35,6 +35,10 @@ public class StatisticsEngine {
     return profile(df, restrictToColumns, true, true);
   }
 
+  public String profile(Dataset<Row> df, boolean correlation, boolean histogram) {
+    return profile(df, null, correlation, histogram);
+  }
+
   public String profile(Dataset<Row> df) {
     return profile(df, null, true, true);
   }
