@@ -25,6 +25,7 @@ from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
     training_dataset_engine,
+    feed_model_engine,
 )
 
 
@@ -131,6 +132,32 @@ class TrainingDataset:
 
     def read(self, split=None, read_options={}):
         return self._training_dataset_engine.read(self, split, read_options)
+
+    def feed(
+        self,
+        target_name,
+        split=None,
+        feature_names=None,
+        is_training=True,
+        cycle_length=2,
+    ):
+        """
+
+        :param split:
+        :param target_name:
+        :param feature_names:
+        :param is_training:
+        :param cycle_length:
+        :return:
+        """
+        return feed_model_engine.FeedModelEngine(
+            self,
+            split=split,
+            target_name=target_name,
+            feature_names=feature_names,
+            is_training=is_training,
+            cycle_length=cycle_length,
+        )
 
     def show(self, n, split=None):
         self.read(split).show(n)
