@@ -107,6 +107,10 @@ public class FeatureGroupEngine {
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
+    if (storage == null) {
+      throw new FeatureStoreException("Storage not supported");
+    }
+
     switch (storage) {
       case OFFLINE:
         saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
