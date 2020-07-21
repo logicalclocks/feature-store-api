@@ -41,11 +41,19 @@ def _infer_tf_dtype(k, v):
     if v.int64_list.value:
         result = v.int64_list.value
         feature_length = len(result)
-        feature_type = tf.io.FixedLenFeature([feature_length], tf.int64)
+        if feature_length > 1:
+            feature_type = tf.io.FixedLenFeature([feature_length], tf.int64)
+        else:
+            feature_type = tf.io.FixedLenFeature([], tf.int64)
+
     elif v.float_list.value:
         result = v.float_list.value
         feature_length = len(result)
-        feature_type = tf.io.FixedLenFeature([feature_length], tf.float32)
+        if feature_length > 1:
+            feature_type = tf.io.FixedLenFeature([feature_length], tf.float32)
+        else:
+            feature_type = tf.io.FixedLenFeature([], tf.float32)
+
     elif v.bytes_list.value:
         feature_type = tf.io.FixedLenFeature([], tf.string)
 

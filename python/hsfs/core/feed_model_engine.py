@@ -47,6 +47,18 @@ class FeedModelEngine:
             if target_name in self.feature_names:
                 self.feature_names.remove(target_name)
 
+    @staticmethod
+    def get_serialized_example_schema(path_to_tfrecord):
+
+        input_files = tf.io.gfile.glob(path_to_tfrecord)
+
+        dataset = tf.data.Dataset.from_tensor_slices(input_files)
+
+        tfrecord_feature_description = create_tfrecord_feature_description(
+            dataset, input_files
+        )
+        return tfrecord_feature_description
+
     def tf_record_dataset(
         self,
         batch_size=None,
