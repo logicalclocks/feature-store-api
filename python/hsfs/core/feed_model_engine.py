@@ -44,9 +44,8 @@ class FeedModelEngine:
         if self.feature_names is None:
             self.feature_names = [feat.name for feat in self.training_dataset_schema]
 
-            for target_name in self.target_names:
-                if target_name in self.feature_names:
-                    self.feature_names.remove(target_name)
+            if target_name in self.feature_names:
+                self.feature_names.remove(target_name)
 
     def tf_record_dataset(
         self,
