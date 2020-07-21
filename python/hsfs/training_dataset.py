@@ -153,7 +153,7 @@ class TrainingDataset:
         return feed_model_engine.FeedModelEngine(
             self,
             split=split,
-            target_names=target_name,
+            target_name=target_name,
             feature_names=feature_names,
             is_training=is_training,
             cycle_length=cycle_length,

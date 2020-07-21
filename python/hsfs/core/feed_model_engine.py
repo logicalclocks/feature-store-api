@@ -12,7 +12,7 @@ class FeedModelEngine:
         self,
         training_dataset,
         split,
-        target_names=None,
+        target_name=None,
         feature_names=None,
         is_training=True,
         cycle_length=2,
@@ -27,7 +27,7 @@ class FeedModelEngine:
 
         self.training_dataset = training_dataset
         self.split = split
-        self.target_names = target_names
+        self.target_name = target_name
         self.feature_names = feature_names
         self.is_training = is_training
         self.cycle_length = cycle_length
@@ -59,6 +59,7 @@ class FeedModelEngine:
         :param batch_size:
         :param num_epochs:
         :param optimize:
+        :param serialized_ndarray_fname:
         :return:
         """
 
@@ -99,10 +100,8 @@ class FeedModelEngine:
                 else:
                     x.append(example[feature_name])
 
-            y = []
-            for target_name in self.target_names:
-                y.append(example[target_name])
-            return tuple(x), tuple(y)
+            y = example[self.target_name]
+            return x, y
 
         dataset = dataset.map(
             lambda value: _de_serialize(value),
