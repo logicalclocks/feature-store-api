@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.TrainingDataset;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
@@ -33,8 +34,7 @@ public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
-  public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/tdId}";
-  public static final String TRAINING_DATASET_TAGS_PATH = TRAINING_DATASET_ID_PATH + "/tags{/name}{?value}";
+  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
@@ -82,5 +82,24 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info(trainingDatasetJson);
     return hopsworksClient.handleRequest(postRequest, TrainingDataset.class);
+  }
+
+  public FsQuery getQuery(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_QUERY_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("tdId", trainingDataset.getId())
+        .expand();
+
+    HttpGet getRequest = new HttpGet(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+
+    return hopsworksClient.handleRequest(getRequest, FsQuery.class);
   }
 }

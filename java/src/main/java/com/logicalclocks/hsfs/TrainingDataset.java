@@ -56,7 +56,7 @@ public class TrainingDataset {
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter @Setter
-  private List<Feature> features;
+  private List<TrainingDatasetFeature> features;
 
   @Getter @Setter
   @JsonIgnore
@@ -93,6 +93,10 @@ public class TrainingDataset {
   @Getter @Setter
   @JsonIgnore
   private List<String> statisticColumns;
+
+  @Getter @Setter
+  @JsonProperty("queryDTO")
+  private Query queryInt;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -157,11 +161,8 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
-    Dataset<Row> dataset = query.read();
-    trainingDatasetEngine.save(this, dataset, writeOptions);
-    if (statisticsEnabled) {
-      statisticsEngine.computeStatistics(this, dataset);
-    }
+    this.queryInt = query;
+    save(query.read(), writeOptions);
   }
 
   /**
@@ -382,5 +383,15 @@ public class TrainingDataset {
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     trainingDatasetEngine.deleteTag(this, name);
+  }
+
+  @JsonIgnore
+  public String getQuery() throws FeatureStoreException, IOException  {
+    return getQuery(Storage.ONLINE);
+  }
+
+  @JsonIgnore
+  public String getQuery(Storage storage) throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getQuery(this, storage);
   }
 }

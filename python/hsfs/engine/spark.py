@@ -26,7 +26,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-from hsfs import feature
+from hsfs import feature, training_dataset_feature
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 
@@ -236,12 +236,20 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema(self, dataframe):
+    def parse_schema_feature_group(self, dataframe):
         return [
             feature.Feature(
                 feat.name,
                 feat.dataType.simpleString(),
                 feat.metadata.get("description", ""),
+            )
+            for feat in dataframe.schema
+        ]
+
+    def parse_schema_training_dataset(self, dataframe):
+        return [
+            training_dataset_feature.TrainingDatasetFeature(
+                feat.name, feat.dataType.simpleString()
             )
             for feat in dataframe.schema
         ]

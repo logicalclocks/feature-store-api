@@ -34,7 +34,7 @@ class FeatureGroupEngine:
 
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
-            feature_group._features = engine.get_instance().parse_schema(
+            feature_group._features = engine.get_instance().parse_schema_feature_group(
                 feature_dataframe
             )
 
