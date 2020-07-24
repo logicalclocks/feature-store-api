@@ -52,7 +52,7 @@ public class TrainingDataset {
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter @Setter
-  private List<Feature> features;
+  private List<TrainingDatasetFeature> features;
 
   @Getter @Setter
   @JsonIgnore
@@ -73,6 +73,9 @@ public class TrainingDataset {
 
   @Getter @Setter
   private List<Split> splits;
+
+  @Getter @Setter
+  private Query query;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
 
@@ -129,6 +132,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+    this.query = query;
     trainingDatasetEngine.save(this, query.read(), writeOptions);
   }
 
@@ -296,5 +300,13 @@ public class TrainingDataset {
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     trainingDatasetEngine.deleteTag(this, name);
+  }
+
+  public String getOriginatingQuery() throws FeatureStoreException, IOException  {
+    return getOriginatingQuery(Storage.ONLINE);
+  }
+
+  public String getOriginatingQuery(Storage storage) throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getOriginatingQuery(this, storage);
   }
 }
