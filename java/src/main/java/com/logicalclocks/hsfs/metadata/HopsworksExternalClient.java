@@ -222,9 +222,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     Credentials credentials = projectApi.downloadCredentials(project);
 
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "keyStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getKStore()));
+        Base64.decodeBase64(credentials.getkStore()));
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "trustStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getTStore()));
+        Base64.decodeBase64(credentials.gettStore()));
     return credentials.getPassword();
   }
 }
