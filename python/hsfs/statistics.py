@@ -37,6 +37,8 @@ class Statistics:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        # for now there is no case where we get multliple commits in one rest
+        # call with the client, only in the front-end relevant
         return cls(**json_decamelized)
 
     def to_dict(self):

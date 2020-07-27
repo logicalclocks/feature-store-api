@@ -19,7 +19,7 @@ import json
 import warnings
 
 from hsfs.core import query, feature_group_engine
-from hsfs import util, engine, feature
+from hsfs import util, engine, feature, statistics_config
 
 
 class FeatureGroup:
@@ -37,10 +37,6 @@ class FeatureGroup:
         featurestore_name=None,
         created=None,
         creator=None,
-        descriptive_statistics=None,
-        feature_correlation_matrix=None,
-        features_histogram=None,
-        cluster_analysis=None,
         id=None,
         features=None,
         location=None,
@@ -48,14 +44,11 @@ class FeatureGroup:
         desc_stats_enabled=None,
         feat_corr_enabled=None,
         feat_hist_enabled=None,
-        cluster_analysis_enabled=None,
         statistic_columns=None,
-        num_bins=None,
-        num_clusters=None,
-        corr_method=None,
         online_enabled=False,
         hudi_enabled=False,
         default_storage="offline",
+        statistics_config=None,
     ):
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -63,29 +56,29 @@ class FeatureGroup:
         self._created = created
         self._creator = creator
         self._version = version
-        self._descriptive_statistics = descriptive_statistics
-        self._feature_correlation_matrix = feature_correlation_matrix
-        self._features_histogram = features_histogram
-        self._cluster_analysis = cluster_analysis
         self._name = name
         self._id = id
         self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._location = location
         self._jobs = jobs
-        self._desc_stats_enabled = desc_stats_enabled
-        self._feat_corr_enabled = feat_corr_enabled
-        self._feat_hist_enabled = feat_hist_enabled
-        self._cluster_analysis_enabled = cluster_analysis_enabled
-        self._statistic_columns = statistic_columns
-        self._num_bins = num_bins
-        self._num_clusters = num_clusters
-        self._corr_method = corr_method
         self._online_enabled = online_enabled
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
         self._primary_key = primary_key
         self._partition_key = partition_key
+
+        if id is not None:
+            # initialized by backend
+            self.statistics_config = statistics_config.StatisticsConfig(
+                desc_stats_enabled,
+                feat_corr_enabled,
+                feat_hist_enabled,
+                statistic_columns,
+            )
+        else:
+            # initialized by user
+            self.statistics_config = statistics_config
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -219,6 +212,10 @@ class FeatureGroup:
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
+            "descStatsEnabled": self._statistics_config.enabled,
+            "featHistEnabled": self._statistics_config.histograms,
+            "featCorrEnabled": self._statistics_config.correlations,
+            "statisticColums": self._statistics_config.columns,
         }
 
     @property
@@ -284,3 +281,22 @@ class FeatureGroup:
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
+
+    @property
+    def statistics_config(self):
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, config):
+        if isinstance(config, statistics_config.StatisticsConfig):
+            self._statistics_config = config
+        elif isinstance(config, dict):
+            self._statistics_config = statistics_config.StatisticsConfig(**config)
+        elif config is None:
+            self._statistics_config = statistics_config.StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig` or a dict, but is of type: {}".format(
+                    type(config)
+                )
+            )
