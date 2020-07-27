@@ -112,3 +112,15 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         _client._send_request("DELETE", path_params)
+
+    def update(self, feature_group_instance):
+        """Update the metadata of a feature group.
+
+        It is only possible to update the description and statistics config
+        of a feature group.
+
+        :param feature_group_instance: [description]
+        :type feature_group_instance: [type]
+        :raises NotImplementedError: [description]
+        """
+        raise NotImplementedError

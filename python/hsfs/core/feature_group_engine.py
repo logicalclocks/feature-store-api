@@ -102,6 +102,9 @@ class FeatureGroupEngine:
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
 
+    def update(self, feature_group):
+        self._feature_group_api.update(feature_group)
+
     def _get_table_name(self, feature_group):
         return (
             feature_group.feature_store_name

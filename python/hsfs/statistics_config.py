@@ -40,6 +40,7 @@ class StatisticsConfig:
     @correlations.setter
     def correlations(self, correlations):
         if correlations and not self._enabled:
+            # do validation to fail fast, backend implements same logic
             raise ValueError(
                 "Correlations can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
             )
@@ -50,8 +51,9 @@ class StatisticsConfig:
         return self._histograms
 
     @histograms.setter
-    def histogroms(self, histograms):
+    def histograms(self, histograms):
         if histograms and not self._enabled:
+            # do validation to fail fast, backend implements same logic
             raise ValueError(
                 "Histograms can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
             )

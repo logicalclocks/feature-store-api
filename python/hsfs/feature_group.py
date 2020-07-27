@@ -19,7 +19,8 @@ import json
 import warnings
 
 from hsfs.core import query, feature_group_engine
-from hsfs import util, engine, feature, statistics_config
+from hsfs import util, engine, feature
+from hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureGroup:
@@ -76,15 +77,23 @@ class FeatureGroup:
 
         if id is not None:
             # initialized by backend
-            self.statistics_config = statistics_config.StatisticsConfig(
+            self.statistics_config = StatisticsConfig(
                 desc_stats_enabled,
                 feat_corr_enabled,
                 feat_hist_enabled,
                 statistic_columns,
             )
+            self._primary_key = [
+                feat.name for feat in self._features if feat.primary is True
+            ]
+            self._partition_key = [
+                feat.name for feat in self._features if feat.partition is True
+            ]
         else:
             # initialized by user
             self.statistics_config = statistics_config
+            self._primary_key = primary_key
+            self._partition_key = partition_key
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -153,6 +162,10 @@ class FeatureGroup:
     def delete(self):
         self._feature_group_engine.delete(self)
 
+    def update(self):
+        self._feature_group_engine.update(self)
+        return self
+
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.
 
@@ -218,7 +231,7 @@ class FeatureGroup:
             "descStatsEnabled": self._statistics_config.enabled,
             "featHistEnabled": self._statistics_config.histograms,
             "featCorrEnabled": self._statistics_config.correlations,
-            "statisticColums": self._statistics_config.columns,
+            "statisticColumns": self._statistics_config.columns,
         }
 
     @property
@@ -265,6 +278,10 @@ class FeatureGroup:
     def created(self):
         return self._created
 
+    @version.setter
+    def version(self, version):
+        self._version = version
+
     @description.setter
     def description(self, new_description):
         self._description = new_description
@@ -290,16 +307,18 @@ class FeatureGroup:
         return self._statistics_config
 
     @statistics_config.setter
-    def statistics_config(self, config):
-        if isinstance(config, statistics_config.StatisticsConfig):
-            self._statistics_config = config
-        elif isinstance(config, dict):
-            self._statistics_config = statistics_config.StatisticsConfig(**config)
-        elif config is None:
-            self._statistics_config = statistics_config.StatisticsConfig()
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
         else:
             raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig` or a dict, but is of type: {}".format(
-                    type(config)
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
                 )
             )
