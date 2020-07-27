@@ -140,15 +140,23 @@ class TrainingDataset:
         feature_names=None,
         is_training=True,
         cycle_length=2,
+        engine="spark",
     ):
         """
-
-        :param split:
-        :param target_name:
-        :param feature_names:
-        :param is_training:
-        :param cycle_length:
-        :return:
+        :param target_name: name of the target variable
+        :type target_name: str, required
+        :param split: training dataset split name, train, test or eval, defaults to None
+        :type split: str, optional
+        :param feature_names: name of training variables, defaults to None
+        :type feature_names: 1d array, optional
+        :param is_training:  whether it is for training, testing or eval, defaults to True
+        :type  is_training: boolean, optional
+        :param cycle_length: number of files to be read and deserialized in parallel, defoults to 2
+        :type cycle_length: int, optional
+        :param engine: execution engine. defaults  to spark
+        :type engine: str, optional
+        :return: feed model engine object
+        :rtype: FeedModelEngine
         """
         return feed_model_engine.FeedModelEngine(
             self,
@@ -157,6 +165,7 @@ class TrainingDataset:
             feature_names=feature_names,
             is_training=is_training,
             cycle_length=cycle_length,
+            engine=engine,
         )
 
     def show(self, n, split=None):
