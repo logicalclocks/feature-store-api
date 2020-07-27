@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import lombok.AllArgsConstructor;
@@ -23,9 +24,7 @@ import lombok.NoArgsConstructor;
 public class Credentials {
 
   private String kStore;
-
   private String tStore;
-
   private String password;
 
   public String getkStore() {

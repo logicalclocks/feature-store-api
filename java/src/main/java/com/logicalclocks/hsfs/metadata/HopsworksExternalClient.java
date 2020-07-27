@@ -73,7 +73,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   public HopsworksExternalClient(String host, int port, Region region,
                                  SecretStore secretStore, boolean hostnameVerification,
-                                 String trustStorePath, String APIKeyFilePath)
+                                 String trustStorePath, String ApiKeyFilepath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -89,7 +89,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
           .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
           .build();
 
-    apiKey = readAPIKey(secretStore, region, APIKeyFilePath);
+    apiKey = readAPIKey(secretStore, region, ApiKeyFilepath);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -131,15 +131,15 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
    * - FIle on the local file system
    * @param secretStore
    * @param region
-   * @param APIKeyFilePath
+   * @param ApiKeyFilepath
    * @return
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public String readAPIKey(SecretStore secretStore, Region region, String APIKeyFilePath)
+  public String readAPIKey(SecretStore secretStore, Region region, String ApiKeyFilepath)
       throws IOException, FeatureStoreException {
-    if (!Strings.isNullOrEmpty(APIKeyFilePath)) {
-      return FileUtils.readFileToString(Paths.get(APIKeyFilePath).toFile());
+    if (!Strings.isNullOrEmpty(ApiKeyFilepath)) {
+      return FileUtils.readFileToString(Paths.get(ApiKeyFilepath).toFile());
     }
 
     switch (secretStore) {
@@ -148,7 +148,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       case SECRET_MANAGER:
         return readAPIKeySecretManager(region, "api-key");
       default:
-        throw new FeatureStoreException("APIKeyFilePath needs to be set for local mode");
+        throw new FeatureStoreException("ApiKeyFilepath needs to be set for local mode");
     }
   }
 

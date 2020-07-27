@@ -13,11 +13,10 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -60,9 +59,10 @@ public class FeatureStore {
   }
 
   /**
-   * Get a feature group object from the feature store
-   * @param name: the name of the feature group
-   * @param version: the version of the feature group
+   * Get a feature group object from the feature store.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
    * @return
    * @throws FeatureStoreException
    */
@@ -72,8 +72,9 @@ public class FeatureStore {
   }
 
   /**
-   * Get a feature group object with default version `1` from the feature store
-   * @param name: the name of the feature group
+   * Get a feature group object with default version `1` from the feature store.
+   *
+   * @param name the name of the feature group
    * @return
    * @throws FeatureStoreException
    */
@@ -103,9 +104,10 @@ public class FeatureStore {
   }
 
   /**
-   * Get a training dataset object from the selected feature store
-   * @param name: name of the training dataset
-   * @param version: version to get
+   * Get a training dataset object from the selected feature store.
+   *
+   * @param name name of the training dataset
+   * @param version version to get
    * @return
    * @throws FeatureStoreException
    * @throws IOException
@@ -116,8 +118,9 @@ public class FeatureStore {
   }
 
   /**
-   * Get a training dataset object with the default version `1` from the selected feature store
-   * @param name: name of the training dataset
+   * Get a training dataset object with the default version `1` from the selected feature store.
+   *
+   * @param name name of the training dataset
    * @return
    * @throws FeatureStoreException
    * @throws IOException
@@ -131,10 +134,10 @@ public class FeatureStore {
   @Override
   public String toString() {
     return "FeatureStore{" +
-        "id=" + id +
-        ", name='" + name + '\'' +
-        ", projectId=" + projectId +
-        ", featureGroupApi=" + featureGroupApi +
-        '}';
+        "id=" + id
+        + ", name='" + name + '\''
+        + ", projectId=" + projectId
+        + ", featureGroupApi=" + featureGroupApi
+        + '}';
   }
 }

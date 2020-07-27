@@ -40,8 +40,8 @@ import java.nio.charset.Charset;
 
 public class HopsworksClient {
 
-  public final static String API_PATH = "/hopsworks-api/api";
-  public final static String PROJECT_PATH = API_PATH + "/project{/projectId}";
+  public static final String API_PATH = "/hopsworks-api/api";
+  public static final String PROJECT_PATH = API_PATH + "/project{/projectId}";
 
   private static HopsworksClient hopsworksClientInstance = null;
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
@@ -60,9 +60,9 @@ public class HopsworksClient {
     hopsworksClientInstance = instance;
   }
 
-  public synchronized static HopsworksClient setupHopsworksClient(String host, int port, Region region,
-                                                       SecretStore secretStore, boolean hostnameVerification,
-                                                       String trustStorePath, String APIKeyFilePath)
+  public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
+                                                                  SecretStore secretStore, boolean hostnameVerification,
+                                                                  String trustStorePath, String ApiKeyFilePath)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -74,7 +74,7 @@ public class HopsworksClient {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
         hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
-            secretStore, hostnameVerification, trustStorePath, APIKeyFilePath);
+            secretStore, hostnameVerification, trustStorePath, ApiKeyFilePath);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
@@ -127,11 +127,11 @@ public class HopsworksClient {
 
     @Override
     public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-      String responseJSON = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
       if (response.getStatusLine().getStatusCode() / 100 == 2) {
-        return objectMapper.readValue(responseJSON, cls);
+        return objectMapper.readValue(responseJson, cls);
       } else {
-        HopsworksErrorClass error = objectMapper.readValue(responseJSON, HopsworksErrorClass.class);
+        HopsworksErrorClass error = objectMapper.readValue(responseJson, HopsworksErrorClass.class);
         LOGGER.info("Request error: " + response.getStatusLine().getStatusCode() + " " + error);
         throw new ClientProtocolException("Request error: " + response.getStatusLine().getStatusCode() + " " + error);
       }
