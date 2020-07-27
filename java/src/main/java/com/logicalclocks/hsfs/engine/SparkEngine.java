@@ -23,14 +23,13 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +116,7 @@ public class SparkEngine {
       // The actual data will be stored in training_ds_version/training_ds the double directory is needed
       // for cases such as tfrecords in which we need to store also the schema
       // also in case of multiple splits, the single splits will be stored inside the training dataset dir
-      String path = Paths.get(trainingDataset.getLocation(), trainingDataset.getName()).toString();
+      String path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
 
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
@@ -200,7 +199,7 @@ public class SparkEngine {
                            SaveMode saveMode, String basePath, List<Split> splits) {
     for (int i=0; i < datasets.length; i++) {
       writeSingle(datasets[i], dataFormat, writeOptions, saveMode,
-          Paths.get(basePath, splits.get(i).getName()).toString());
+          new Path(basePath, splits.get(i).getName()).toString());
     }
   }
 

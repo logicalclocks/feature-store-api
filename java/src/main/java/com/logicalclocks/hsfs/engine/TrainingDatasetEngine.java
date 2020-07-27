@@ -16,11 +16,11 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Map;
 
 public class TrainingDatasetEngine {
@@ -103,10 +102,9 @@ public class TrainingDatasetEngine {
     String path = "";
     if (com.google.common.base.Strings.isNullOrEmpty(split)) {
       // ** glob means "all sub directories"
-      // TODO(Fabio): make sure it works on S3
-      path = Paths.get(trainingDataset.getLocation(), "**").toString();
+      path = new Path(trainingDataset.getLocation(), "**").toString();
     } else {
-      path = Paths.get(trainingDataset.getLocation(), split).toString();
+      path = new Path(trainingDataset.getLocation(), split).toString();
     }
 
     Map<String, String> readOptions =
