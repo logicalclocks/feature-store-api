@@ -139,6 +139,8 @@ class FeatureGroup:
         self._feature_group_engine.save(
             self, feature_dataframe, self._default_storage, write_options,
         )
+        if self.statistics_config.enabled:
+            self._feature_group_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(

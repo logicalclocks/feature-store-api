@@ -32,7 +32,7 @@ class Statistics:
         type=None,
     ):
         self._commit_time = commit_time
-        self._content = content
+        self._content = json.loads(content)
 
     @classmethod
     def from_response_json(cls, json_dict):
