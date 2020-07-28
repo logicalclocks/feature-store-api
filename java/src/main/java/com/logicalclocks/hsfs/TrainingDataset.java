@@ -84,7 +84,7 @@ public class TrainingDataset {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.dataFormat = dataFormat;
+    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.TFRECORDS;
     this.location = location;
     this.storageConnector = storageConnector;
 

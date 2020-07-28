@@ -30,6 +30,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -104,6 +105,11 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     if (!Strings.isNullOrEmpty(trustStorePath)) {
       sslCtx = SSLContexts.custom()
           .loadTrustMaterial(Paths.get(trustStorePath).toFile(), null, new TrustSelfSignedStrategy())
+          .build();
+    } else if (!hostnameVerification) {
+      // if hostnameVerification is set to false then accept also self signed certificates
+      sslCtx = SSLContexts.custom()
+          .loadTrustMaterial(new TrustAllStrategy())
           .build();
     } else {
       sslCtx = SSLContext.getDefault();
@@ -216,9 +222,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     Credentials credentials = projectApi.downloadCredentials(project);
 
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "keyStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getKStore()));
+        Base64.decodeBase64(credentials.getkStore()));
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "trustStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getTStore()));
+        Base64.decodeBase64(credentials.gettStore()));
     return credentials.getPassword();
   }
 }
