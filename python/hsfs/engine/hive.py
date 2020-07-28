@@ -99,3 +99,24 @@ class Engine:
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
+
+    @staticmethod
+    def get_training_dataset_files(training_dataset_location, split):
+        """
+        returns list of absolute path of training input files
+        :param training_dataset_location: training_dataset_location
+        :type training_dataset_location: str
+        :param split: name of training dataset split. train, test or eval
+        :type split: str
+        :return: absolute path of input files
+        :rtype: 1d array
+        """
+
+        if split is None:
+            path = os.path.abspath(training_dataset_location)
+        else:
+            path = os.path.abspath(training_dataset_location + "/" + str(split))
+
+        input_files = [file for file in os.walk(path)]
+
+        return input_files

@@ -21,11 +21,6 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    from pydoop import hdfs
-except ModuleNotFoundError:
-    pass
-
 
 class FeedModelEngine:
     def __init__(
@@ -52,7 +47,7 @@ class FeedModelEngine:
         :type is_training: boolean, required
         :param cycle_length: number of files to be read and deserialized in parallel.
         :type cycle_length: int, required
-        :param engine: execution engine. Currently only spark is supported
+        :param engine: hsfs.engine instance. spark or hive
         :type engine: str, required
 
         :return: feed model object
@@ -69,12 +64,9 @@ class FeedModelEngine:
 
         self._training_dataset_schema = self._training_dataset.schema
 
-        if self._split is None:
-            self._path = hdfs.path.abspath(self._training_dataset.location + "/" + "**")
-        else:
-            self._path = hdfs.path.abspath(
-                self._training_dataset.location + "/" + str(split)
-            )
+        self._input_files = engine.get_training_dataset_abspath(
+            self._training_dataset.location, self._split
+        )
 
         if self._feature_names is None:
             self._feature_names = [feat.name for feat in self._training_dataset_schema]
@@ -90,7 +82,7 @@ class FeedModelEngine:
         :rtype: dict
         """
         _, tfrecord_feature_description = _get_tfdataset(
-            self._path, self._cycle_length, engine=self._engine
+            self._input_files, self._cycle_length
         )
         return tfrecord_feature_description
 
@@ -134,7 +126,7 @@ class FeedModelEngine:
             )
 
         dataset, tfrecord_feature_description = _get_tfdataset(
-            self._path, self._cycle_length, engine=self._engine
+            self._input_files, self._cycle_length
         )
 
         def _de_serialize(serialized_example):
@@ -239,11 +231,7 @@ def _infer_tf_dtype(k, v):
     return k, feature_type
 
 
-def _get_tfdataset(path, cycle_length, engine):
-    if engine == "spark":
-        input_files = tf.io.gfile.glob(path + "/part-r-*")
-    else:
-        raise NotImplementedError("Currently on spark is supported")
+def _get_tfdataset(input_files, cycle_length):
 
     dataset = tf.data.Dataset.from_tensor_slices(input_files)
 
