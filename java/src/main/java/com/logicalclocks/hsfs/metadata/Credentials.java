@@ -16,18 +16,39 @@
 package com.logicalclocks.hsfs.metadata;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
 public class Credentials {
 
-  @Getter @Setter
   private String kStore;
-  @Getter @Setter
+
   private String tStore;
-  @Getter @Setter
+
   private String password;
+
+  public String getkStore() {
+    return kStore;
+  }
+
+  public void setkStore(String kStore) {
+    this.kStore = kStore;
+  }
+
+  public String gettStore() {
+    return tStore;
+  }
+
+  public void settStore(String tStore) {
+    this.tStore = tStore;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
 }

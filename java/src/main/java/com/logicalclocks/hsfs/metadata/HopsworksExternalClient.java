@@ -15,6 +15,7 @@
  */
 package com.logicalclocks.hsfs.metadata;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.SecretStore;
@@ -29,6 +30,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -54,11 +56,13 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
 
 public class HopsworksExternalClient implements HopsworksHttpClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
-  private static final String PARAM_NAME = "/hopsworks/role/";
+  private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
+  private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -73,7 +77,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
-    httpHost = new HttpHost(host, port);
+    httpHost = new HttpHost(host, port, "https");
 
     connectionPool = new PoolingHttpClientConnectionManager(
         createConnectionFactory(httpHost, hostnameVerification, trustStorePath));
@@ -101,6 +105,11 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     if (!Strings.isNullOrEmpty(trustStorePath)) {
       sslCtx = SSLContexts.custom()
           .loadTrustMaterial(Paths.get(trustStorePath).toFile(), null, new TrustSelfSignedStrategy())
+          .build();
+    } else if (!hostnameVerification) {
+      // if hostnameVerification is set to false then accept also self signed certificates
+      sslCtx = SSLContexts.custom()
+          .loadTrustMaterial(new TrustAllStrategy())
           .build();
     } else {
       sslCtx = SSLContext.getDefault();
@@ -147,27 +156,37 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     SsmClient ssmClient = SsmClient.builder()
         .region(region)
         .build();
-    String paramName = PARAM_NAME + getAssumedRole() + "/type/" + secretKey;
+    String paramName = PARAM_NAME_PARAMETER_STORE + getAssumedRole() + "/type/" + secretKey;
     GetParameterRequest paramRequest = GetParameterRequest.builder()
         .name(paramName)
         .withDecryption(true)
        .build();
     GetParameterResponse parameterResponse = ssmClient.getParameter(paramRequest);
-    return parameterResponse.getValueForField("Parameter", String.class)
-        .orElseThrow(() -> new FeatureStoreException("Could not find parameter " + paramName + " in parameter store"));
+    String apiKey = parameterResponse.parameter().value();
+    if (!Strings.isNullOrEmpty(apiKey)) {
+      return apiKey;
+    } else {
+      throw new FeatureStoreException("Could not find parameter " + paramName + " in parameter store");
+    }
   }
 
-  private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException {
+  private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
     SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder()
         .region(region)
         .build();
-    String paramName = PARAM_NAME + getAssumedRole();
+    String paramName = PARAM_NAME_SECRET_STORE + getAssumedRole();
     GetSecretValueRequest secretValueRequest = GetSecretValueRequest.builder()
         .secretId(paramName)
         .build();
     GetSecretValueResponse secretValueResponse = secretsManagerClient.getSecretValue(secretValueRequest);
-    return secretValueResponse.getValueForField(secretKey, String.class)
-        .orElseThrow(() -> new FeatureStoreException("Could not find secret " + paramName + " in secret store"));
+    ObjectMapper objectMapper = new ObjectMapper();
+    HashMap<String, String> secretMap = objectMapper.readValue(secretValueResponse.secretString(), HashMap.class);
+    String apiKey = secretMap.get("api-key");
+    if (!Strings.isNullOrEmpty(apiKey)) {
+      return apiKey;
+    } else {
+      throw new FeatureStoreException("Could not find secret " + paramName + " in secret store");
+    }
   }
 
   private String getAssumedRole() throws FeatureStoreException {
@@ -177,16 +196,15 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
     String arn = callerIdentityResponse.arn();
     String[] arnSplits = arn.split("/");
-    if (arnSplits.length != 3 || !arnSplits[0].equals("assumed-role")) {
+    if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
       throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
     }
     return arnSplits[1];
   }
 
   @Override
-  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException,
-      FeatureStoreException {
-    LOGGER.debug("Handling metadata request: " + request);
+  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException {
+    LOGGER.info("Handling metadata request: " + request);
     AuthorizationHandler<T> authHandler = new AuthorizationHandler<>(responseHandler);
     request.setHeader(HttpHeaders.AUTHORIZATION, "ApiKey " + apiKey);
     try {
@@ -204,9 +222,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     Credentials credentials = projectApi.downloadCredentials(project);
 
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "keyStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getKStore()));
+        Base64.decodeBase64(credentials.getkStore()));
     FileUtils.writeByteArrayToFile(Paths.get(certPath, "trustStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getTStore()));
+        Base64.decodeBase64(credentials.gettStore()));
     return credentials.getPassword();
   }
 }
