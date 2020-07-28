@@ -284,6 +284,16 @@ class Engine:
 
         input_files = hdfs.ls(path, recursive=True)
 
+        # Remove direcories if any
+        for file in input_files:
+            if hdfs.path.isdir(file):
+                input_files.remove(file)
+
+        # Remove spark '_SUCCESS' file if any
+        for file in input_files:
+            if file.endswith("_SUCCESS"):
+                input_files.remove(file)
+
         return input_files
 
 

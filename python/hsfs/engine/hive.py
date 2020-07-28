@@ -15,6 +15,7 @@
 #
 
 import os
+import glob
 import pandas as pd
 from pyhive import hive
 from sqlalchemy import create_engine
@@ -117,6 +118,16 @@ class Engine:
         else:
             path = os.path.abspath(training_dataset_location + "/" + str(split))
 
-        input_files = [file for file in os.walk(path)]
+        input_files = [file for file in glob.glob(path + "/**/*", recursive=True)]
+
+        # Remove direcories if any
+        for file in input_files:
+            if os.path.isdir(file):
+                input_files.remove(file)
+
+        # Remove spark '_SUCCESS' file if any
+        for file in input_files:
+            if file.endswith("_SUCCESS"):
+                input_files.remove(file)
 
         return input_files
