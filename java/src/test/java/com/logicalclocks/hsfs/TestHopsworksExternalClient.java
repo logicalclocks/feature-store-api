@@ -61,7 +61,7 @@ public class TestHopsworksExternalClient {
     HttpHost httpHost = new HttpHost("test");
     HopsworksExternalClient hopsworksExternalClient = new HopsworksExternalClient(
         httpClient, httpHost);
-    String apiKey = hopsworksExternalClient.readAPIKey(null, null, apiFilePath.toString());
+    String apiKey = hopsworksExternalClient.readApiKey(null, null, apiFilePath.toString());
     Assert.assertEquals("hello", apiKey);
   }
 

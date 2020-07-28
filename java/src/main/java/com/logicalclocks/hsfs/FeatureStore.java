@@ -50,7 +50,7 @@ public class FeatureStore {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
-  final Integer DEFAULT_VERSION = 1;
+  private static final Integer DEFAULT_VERSION = 1;
 
   public FeatureStore() throws FeatureStoreException {
     featureGroupApi = new FeatureGroupApi();
@@ -63,8 +63,9 @@ public class FeatureStore {
    *
    * @param name the name of the feature group
    * @param version the version of the feature group
-   * @return
+   * @return FeatureGroup
    * @throws FeatureStoreException
+   * @throws IOException
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -75,12 +76,13 @@ public class FeatureStore {
    * Get a feature group object with default version `1` from the feature store.
    *
    * @param name the name of the feature group
-   * @return
+   * @return FeatureGroup
    * @throws FeatureStoreException
+   * @throws IOException
    */
   public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `" +
-      DEFAULT_VERSION + "`.");
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
     return getFeatureGroup(name, DEFAULT_VERSION);
   }
 
@@ -89,7 +91,7 @@ public class FeatureStore {
   }
 
   public StorageConnector getStorageConnector(String name, StorageConnectorType type)
-     throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException {
     return storageConnectorApi.getByNameAndType(this, name, type);
   }
 
@@ -108,7 +110,7 @@ public class FeatureStore {
    *
    * @param name name of the training dataset
    * @param version version to get
-   * @return
+   * @return TrainingDataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -121,20 +123,20 @@ public class FeatureStore {
    * Get a training dataset object with the default version `1` from the selected feature store.
    *
    * @param name name of the training dataset
-   * @return
+   * @return TrainingDataset
    * @throws FeatureStoreException
    * @throws IOException
    */
   public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `" +
-      DEFAULT_VERSION + "`.");
+    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
   }
 
   @Override
   public String toString() {
-    return "FeatureStore{" +
-        "id=" + id
+    return "FeatureStore{"
+        + "id=" + id
         + ", name='" + name + '\''
         + ", projectId=" + projectId
         + ", featureGroupApi=" + featureGroupApi

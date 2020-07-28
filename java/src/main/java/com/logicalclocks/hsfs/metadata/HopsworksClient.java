@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -62,7 +63,7 @@ public class HopsworksClient {
 
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
-                                                                  String trustStorePath, String ApiKeyFilePath)
+                                                                  String trustStorePath, String apiKeyFilePath)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -74,7 +75,7 @@ public class HopsworksClient {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
         hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
-            secretStore, hostnameVerification, trustStorePath, ApiKeyFilePath);
+            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
@@ -138,7 +139,8 @@ public class HopsworksClient {
     }
   }
 
-  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler) throws IOException, FeatureStoreException {
+  public <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler)
+      throws IOException, FeatureStoreException {
     return hopsworksHttpClient.handleRequest(request, responseHandler);
   }
 

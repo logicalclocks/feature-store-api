@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
@@ -23,16 +24,13 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.*;
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
 public class FeatureGroupApi {
 
@@ -46,7 +44,7 @@ public class FeatureGroupApi {
 
   public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
-    HopsworksClient hopsworksClient = getInstance();
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
@@ -69,7 +67,7 @@ public class FeatureGroupApi {
   }
 
   public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
@@ -91,7 +89,7 @@ public class FeatureGroupApi {
   }
 
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
@@ -109,7 +107,7 @@ public class FeatureGroupApi {
   }
 
   public void deleteContent(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_CLEAR_PATH;
