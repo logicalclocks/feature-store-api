@@ -18,7 +18,7 @@ import humps
 import json
 import warnings
 
-from hsfs.core import query, feature_group_engine
+from hsfs.core import query, feature_group_engine, statistics_engine
 from hsfs import util, engine, feature
 from hsfs.statistics_config import StatisticsConfig
 
@@ -26,6 +26,7 @@ from hsfs.statistics_config import StatisticsConfig
 class FeatureGroup:
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
 
     def __init__(
         self,
@@ -99,6 +100,10 @@ class FeatureGroup:
             featurestore_id
         )
 
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
     def read(self, storage=None, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
@@ -140,7 +145,7 @@ class FeatureGroup:
             self, feature_dataframe, self._default_storage, write_options,
         )
         if self.statistics_config.enabled:
-            self._feature_group_engine.compute_statistics(self, feature_dataframe)
+            self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(

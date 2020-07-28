@@ -142,6 +142,7 @@ class FeatureStore:
         splits={},
         location="",
         seed=None,
+        statistics_config=None,
     ):
         return training_dataset.TrainingDataset(
             name=name,
@@ -153,4 +154,5 @@ class FeatureStore:
             featurestore_id=self._id,
             splits=splits,
             seed=seed,
+            statistics_config=statistics_config,
         )
