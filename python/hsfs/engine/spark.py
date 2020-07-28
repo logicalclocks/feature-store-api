@@ -188,9 +188,9 @@ class Engine:
             .load(path)
         )
 
-    def profile_df(self, dataframe, relevant_columns, correlations, histograms):
+    def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.StatisticsEngine.getInstance().profile(
+        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
             dataframe._jdf, relevant_columns, correlations, histograms
         )
 
