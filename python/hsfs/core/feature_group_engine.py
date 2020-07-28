@@ -14,8 +14,10 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
-from hsfs.core import feature_group_api, storage_connector_api, tags_api
+import datetime
+
+from hsfs import engine, statistics
+from hsfs.core import feature_group_api, storage_connector_api, tags_api, statistics_api
 
 
 class FeatureGroupEngine:
@@ -28,6 +30,9 @@ class FeatureGroupEngine:
             feature_store_id
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, "featuregroups")
+        self._statistics_api = statistics_api.StatisticsApi(
+            feature_store_id, "featuregroups"
+        )
 
     def save(self, feature_group, feature_dataframe, storage, write_options):
 
@@ -137,3 +142,15 @@ class FeatureGroupEngine:
         return engine.get_instance().sql(
             query, feature_store_name, online_conn, dataframe_type
         )
+
+    def compute_statistics(self, feature_group, feature_dataframe):
+        """Compute statistics for a dataframe and send the result json to Hopsworks."""
+        commit_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        content_str = engine.get_instance().profile_df(
+            feature_dataframe,
+            feature_group.statistics_config.columns,
+            feature_group.statistics_config.correlations,
+            feature_group.statistics_config.histograms,
+        )
+        stats = statistics.Statistics(commit_str, content_str)
+        self._statistics_api.post(feature_group, stats)
