@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@SuppressWarnings("checkstyle:MemberName")
 public class Credentials {
 
   private String kStore;

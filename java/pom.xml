@@ -207,6 +207,7 @@
                 </executions>
                 <configuration>
                     <configLocation>src/main/resources/checkstyle.xml</configLocation>
+                    <suppressionsLocation>src/main/resources/suppressions.xml</suppressionsLocation>
                     <failOnViolation>true</failOnViolation>
                     <failsOnError>true</failsOnError>
                     <consoleOutput>true</consoleOutput>
