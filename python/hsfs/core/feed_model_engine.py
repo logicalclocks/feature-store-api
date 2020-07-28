@@ -64,7 +64,7 @@ class FeedModelEngine:
 
         self._training_dataset_schema = self._training_dataset.schema
 
-        self._input_files = engine.get_training_dataset_abspath(
+        self._input_files = engine.get_training_dataset_files(
             self._training_dataset.location, self._split
         )
 
