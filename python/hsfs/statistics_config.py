@@ -17,7 +17,7 @@
 
 class StatisticsConfig:
     def __init__(
-        self, enabled=None, correlations=None, histograms=None, columns=None,
+        self, enabled=True, correlations=None, histograms=None, columns=None,
     ):
         self._enabled = enabled
         # use setters for input validation
