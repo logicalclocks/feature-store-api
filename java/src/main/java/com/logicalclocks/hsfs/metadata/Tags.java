@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Tags extends RestDTO<Tags> {
+public class Tags extends RestDto<Tags> {
   private String name;
   private String value;
 

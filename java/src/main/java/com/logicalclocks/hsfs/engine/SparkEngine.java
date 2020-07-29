@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.DataFormat;
@@ -20,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
@@ -74,10 +76,8 @@ public class SparkEngine {
   }
 
   public void configureConnector(StorageConnector storageConnector) {
-    switch (storageConnector.getStorageConnectorType()) {
-      case S3:
-        configureS3Connector(storageConnector);
-        break;
+    if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
+      configureS3Connector(storageConnector);
     }
   }
 
@@ -97,7 +97,8 @@ public class SparkEngine {
   }
 
   /**
-   * Setup Spark to write the data on the File System
+   * Setup Spark to write the data on the File System.
+   *
    * @param trainingDataset
    * @param dataset
    * @param writeOptions
@@ -153,6 +154,9 @@ public class SparkEngine {
         break;
       case TFRECORDS:
         writeOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
+        break;
+      default:
+        break;
     }
 
     if (providedOptions != null && !providedOptions.isEmpty()) {
@@ -177,6 +181,9 @@ public class SparkEngine {
         break;
       case TFRECORDS:
         readOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
+        break;
+      default:
+        break;
     }
 
     if (providedOptions != null && !providedOptions.isEmpty()) {
@@ -197,19 +204,20 @@ public class SparkEngine {
    */
   private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
                            SaveMode saveMode, String basePath, List<Split> splits) {
-    for (int i=0; i < datasets.length; i++) {
+    for (int i = 0; i < datasets.length; i++) {
       writeSingle(datasets[i], dataFormat, writeOptions, saveMode,
           new Path(basePath, splits.get(i).getName()).toString());
     }
   }
 
   /**
-   * Write a single dataset split
+   * Write a single dataset split.
+   *
    * @param dataset
    * @param dataFormat
    * @param writeOptions
    * @param saveMode
-   * @param path: it should be the full path
+   * @param path it should be the full path
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
@@ -230,13 +238,14 @@ public class SparkEngine {
   }
 
   /**
-   * Build the option maps to write the dataset to the JDBC sink. URL, username and password are taken from the
-   * storage connector.
+   * Build the option maps to write the dataset to the JDBC sink.
+   * URL, username and password are taken from the storage connector.
    * They can however be overwritten by the user if they pass a option map. For instance if they want to change the
+   *
    * @param providedWriteOptions
    * @param featureGroup
    * @param storageConnector
-   * @return
+   * @return Map
    * @throws FeatureStoreException
    */
   public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
@@ -254,7 +263,8 @@ public class SparkEngine {
   }
 
   /**
-   * Write dataset on the JDBC sink
+   * Write dataset on the JDBC sink.
+   *
    * @param dataset
    * @param saveMode
    * @param writeOptions

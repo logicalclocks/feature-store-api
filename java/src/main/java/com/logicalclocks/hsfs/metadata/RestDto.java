@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class RestDTO<D> {
+public abstract class RestDto<D> {
 
   protected List<D> items = new ArrayList<>();
 
-  public RestDTO() {
+  public RestDto() {
   }
 
   public List<D> getItems() {

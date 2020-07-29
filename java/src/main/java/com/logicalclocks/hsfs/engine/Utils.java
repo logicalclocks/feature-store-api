@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.Feature;
@@ -56,24 +57,24 @@ public class Utils {
     ).toArray(StructField[]::new));
 
     if (!dataset.schema().equals(tdStructType)) {
-      throw new FeatureStoreException("The Dataframe schema: " + dataset.schema() +
-          " does not match the training dataset schema: " + tdStructType);
+      throw new FeatureStoreException("The Dataframe schema: " + dataset.schema()
+          + " does not match the training dataset schema: " + tdStructType);
     }
   }
 
   // TODO(Fabio): this should be moved in the backend
   public String getTableName(FeatureGroup offlineFeatureGroup) {
-    return offlineFeatureGroup.getFeatureStore().getName() + "." +
-        offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+    return offlineFeatureGroup.getFeatureStore().getName() + "."
+        + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
   public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
-    List<String> jPartitionCols = offlineFeatureGroup.getFeatures().stream()
+    List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPartition)
         .map(Feature::getName)
         .collect(Collectors.toList());
 
-    return JavaConverters.asScalaIteratorConverter(jPartitionCols.iterator()).asScala().toSeq();
+    return JavaConverters.asScalaIteratorConverter(partitionCols.iterator()).asScala().toSeq();
   }
 
   public String getFgName(FeatureGroup featureGroup) {

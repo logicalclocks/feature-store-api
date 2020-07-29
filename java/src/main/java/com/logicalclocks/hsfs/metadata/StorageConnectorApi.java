@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
@@ -53,7 +54,8 @@ public class StorageConnectorApi {
 
     return Arrays.stream(storageConnectors).filter(s -> s.getName().equals(name))
         .findFirst()
-        .orElseThrow(() -> new FeatureStoreException("Could not find storage connector " + name + " with type " + type));
+        .orElseThrow(() ->
+            new FeatureStoreException("Could not find storage connector " + name + " with type " + type));
   }
 
   public StorageConnector getOnlineStorageConnector(FeatureStore featureStore)

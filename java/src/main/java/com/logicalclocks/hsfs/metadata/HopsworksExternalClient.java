@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,7 +74,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   public HopsworksExternalClient(String host, int port, Region region,
                                  SecretStore secretStore, boolean hostnameVerification,
-                                 String trustStorePath, String APIKeyFilePath)
+                                 String trustStorePath, String apiKeyFilepath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -89,7 +90,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
           .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
           .build();
 
-    apiKey = readAPIKey(secretStore, region, APIKeyFilePath);
+    apiKey = readApiKey(secretStore, region, apiKeyFilepath);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -125,34 +126,35 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   /**
-   * Read API key - We currently support 3 options:
+   * Read API key.
+   * We currently support 3 options:
    * - AWS Parameter store
    * - AWS Secrets manager
    * - FIle on the local file system
    * @param secretStore
    * @param region
-   * @param APIKeyFilePath
-   * @return
+   * @param apiKeyFilepath
+   * @return String
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public String readAPIKey(SecretStore secretStore, Region region, String APIKeyFilePath)
+  public String readApiKey(SecretStore secretStore, Region region, String apiKeyFilepath)
       throws IOException, FeatureStoreException {
-    if (!Strings.isNullOrEmpty(APIKeyFilePath)) {
-      return FileUtils.readFileToString(Paths.get(APIKeyFilePath).toFile());
+    if (!Strings.isNullOrEmpty(apiKeyFilepath)) {
+      return FileUtils.readFileToString(Paths.get(apiKeyFilepath).toFile());
     }
 
     switch (secretStore) {
       case PARAMETER_STORE:
-        return readAPIKeyParamStore(region, "api-key");
+        return readApiKeyParamStore(region, "api-key");
       case SECRET_MANAGER:
-        return readAPIKeySecretManager(region, "api-key");
+        return readApiKeySecretManager(region, "api-key");
       default:
-        throw new FeatureStoreException("APIKeyFilePath needs to be set for local mode");
+        throw new FeatureStoreException("ApiKeyFilepath needs to be set for local mode");
     }
   }
 
-  private String readAPIKeyParamStore(Region region, String secretKey) throws FeatureStoreException {
+  private String readApiKeyParamStore(Region region, String secretKey) throws FeatureStoreException {
     SsmClient ssmClient = SsmClient.builder()
         .region(region)
         .build();
@@ -160,7 +162,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     GetParameterRequest paramRequest = GetParameterRequest.builder()
         .name(paramName)
         .withDecryption(true)
-       .build();
+        .build();
     GetParameterResponse parameterResponse = ssmClient.getParameter(paramRequest);
     String apiKey = parameterResponse.parameter().value();
     if (!Strings.isNullOrEmpty(apiKey)) {
@@ -170,7 +172,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     }
   }
 
-  private String readAPIKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
+  private String readApiKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
     SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder()
         .region(region)
         .build();

@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
@@ -35,11 +36,11 @@ public class QueryConstructorApi {
 
   public FsQuery constructQuery(FeatureStore featureStore, Query query) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH +
-        FeatureStoreApi.FEATURE_STORE_SERVICE_PATH +
-        QUERY_CONSTRUCTOR_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_SERVICE_PATH
+        + QUERY_CONSTRUCTOR_PATH;
 
-    String uri = UriTemplate .fromTemplate(pathTemplate)
+    String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStore.getProjectId())
         .expand();
 

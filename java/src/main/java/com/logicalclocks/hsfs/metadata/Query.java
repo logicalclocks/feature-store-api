@@ -13,9 +13,15 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
-import com.logicalclocks.hsfs.*;
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.JoinType;
+import com.logicalclocks.hsfs.Storage;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,17 +66,9 @@ public class Query {
     return joinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
-  public Query joinFeatures(Query subquery, List<Feature> on) {
-    return joinFeatures(subquery, on, JoinType.INNER);
-  }
-
   public Query join(Query subquery, List<String> leftOn, List<String> rightOn) {
     return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
-  }
-
-  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
-    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
   }
 
   public Query join(Query subquery, JoinType joinType) {
@@ -83,14 +81,22 @@ public class Query {
     return this;
   }
 
-  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
-    joins.add(new Join(subquery, on, joinType));
-    return this;
-  }
-
   public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on) {
+    return joinFeatures(subquery, on, JoinType.INNER);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
+    joins.add(new Join(subquery, on, joinType));
     return this;
   }
 
@@ -101,10 +107,6 @@ public class Query {
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(Storage.OFFLINE);
-  }
-
-  public void show(int numRows) throws FeatureStoreException, IOException {
-    show(Storage.OFFLINE, numRows);
   }
 
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
@@ -126,6 +128,10 @@ public class Query {
       default:
         throw new FeatureStoreException("Storage not supported");
     }
+  }
+
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    show(Storage.OFFLINE, numRows);
   }
 
   public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {

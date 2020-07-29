@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import org.apache.http.HttpResponse;
@@ -28,7 +29,8 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
 
   private ResponseHandler<T> originalResponseHandler;
 
-  AuthorizationHandler(ResponseHandler<T> originalResponseHandler) { this.originalResponseHandler = originalResponseHandler;
+  AuthorizationHandler(ResponseHandler<T> originalResponseHandler) {
+    this.originalResponseHandler = originalResponseHandler;
   }
 
   AuthorizationHandler() {
@@ -39,11 +41,11 @@ public class AuthorizationHandler<T> implements ResponseHandler<T> {
     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
       throw new UnauthorizedException();
     } else if (response.getStatusLine().getStatusCode() / 100 == 4) {
-      throw new IOException("Error: " + response.getStatusLine().getStatusCode() +
-          EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
+      throw new IOException("Error: " + response.getStatusLine().getStatusCode()
+          + EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
     } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
-      throw new InternalException("Error: " + response.getStatusLine().getStatusCode() +
-          EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
+      throw new InternalException("Error: " + response.getStatusLine().getStatusCode()
+          + EntityUtils.toString(response.getEntity(), Charset.defaultCharset()));
     }
 
     if (originalResponseHandler != null) {

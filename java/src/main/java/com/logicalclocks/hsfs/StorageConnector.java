@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.util.Constants;
@@ -26,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -53,7 +53,7 @@ public class StorageConnector {
   @Getter @Setter
   private StorageConnectorType storageConnectorType;
 
-  public Map<String, String> getSparkOptions() throws FeatureStoreException{
+  public Map<String, String> getSparkOptions() throws FeatureStoreException {
     List<String[]> args = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
         .collect(Collectors.toList());
