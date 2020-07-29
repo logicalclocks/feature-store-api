@@ -296,9 +296,16 @@ public class SparkEngine {
         .saveAsTable(utils.getTableName(featureGroup));
   }
 
-  public String profile(Dataset<Row> df, List<String> restrictToColumns, boolean correlation, boolean histogram) {
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+    // only needed for training datasets, as the backend is not setting the defaults
+    if (correlation == null) {
+      correlation = true;
+    }
+    if (histogram == null) {
+      histogram = true;
+    }
     ColumnProfilerRunBuilder runner =
-      new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
