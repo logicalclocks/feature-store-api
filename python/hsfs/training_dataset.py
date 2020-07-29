@@ -140,8 +140,18 @@ class TrainingDataset:
             self, feature_dataframe, write_options, overwrite
         )
 
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read())
+
     def read(self, split=None, read_options={}):
         return self._training_dataset_engine.read(self, split, read_options)
+
+    def compute_statistics(self):
+        """Recompute the statistics for the training dataset and save them to the
+        feature store.
+        """
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read())
 
     def feed(
         self,

@@ -166,12 +166,25 @@ class FeatureGroup:
             write_options,
         )
 
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read(storage))
+
     def delete(self):
         self._feature_group_engine.delete(self)
 
     def update(self):
         self._feature_group_engine.update(self)
         return self
+
+    def compute_statistics(self, storage=None):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+
+        :param storage: storage to read data from, defaults to None
+        :type storage: str, optional
+        """
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read(storage))
 
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.
