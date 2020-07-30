@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import re
 import itertools
 
 try:
@@ -23,6 +24,11 @@ except ModuleNotFoundError:
 
 try:
     from pydoop import hdfs
+except ModuleNotFoundError:
+    pass
+
+try:
+    import boto3
 except ModuleNotFoundError:
     pass
 
@@ -263,7 +269,7 @@ def _get_training_dataset_files(training_dataset_location, split):
     if training_dataset_location.startswith("hopsfs"):
         input_files = _get_hopsfs_dataset_files(training_dataset_location, split)
     elif training_dataset_location.startswith("s3"):
-        raise NotImplementedError(" s3 connector is not implemented")
+        input_files = _get_s3_dataset_files(training_dataset_location, split)
     else:
         raise Exception("Couldn't find execution engine.")
 
@@ -271,21 +277,49 @@ def _get_training_dataset_files(training_dataset_location, split):
 
 
 def _get_hopsfs_dataset_files(training_dataset_location, split):
+    path = training_dataset_location.replace("hopsfs", "hdfs")
     if split is None:
-        path = hdfs.path.abspath(training_dataset_location)
+        path = hdfs.path.abspath(path)
     else:
-        path = hdfs.path.abspath(training_dataset_location + "/" + str(split))
+        path = hdfs.path.abspath(path + "/" + str(split))
 
-    input_files = hdfs.ls(path, recursive=True)
+    input_files = []
 
-    # Remove directories if any
-    for file in input_files:
-        if hdfs.path.isdir(file):
-            input_files.remove(file)
+    all_list = hdfs.ls(path, recursive=True)
 
-    # Remove spark '_SUCCESS' file if any
-    for file in input_files:
-        if file.endswith("_SUCCESS"):
-            input_files.remove(file)
+    # Remove directories and spark '_SUCCESS' file if any
+    for file in all_list:
+        if not hdfs.path.isdir(file) and not file.endswith("_SUCCESS"):
+            input_files.append(file)
+
+    return input_files
+
+
+def _get_s3_dataset_files(training_dataset_location, split):
+    """
+    returns list of absolute path of training input files
+    :param training_dataset_location: training_dataset_location
+    :type training_dataset_location: str
+    :param split: name of training dataset split. train, test or eval
+    :type split: str
+    :return: absolute path of input files
+    :rtype: 1d array
+    """
+
+    if split is None:
+        path = training_dataset_location
+    else:
+        path = training_dataset_location + "/" + str(split)
+
+    match = re.match(r"s3:\/\/(.+?)\/(.+)", path)
+    bucketname = match.group(1)
+
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket(bucketname)
+
+    input_files = []
+    for s3_obj_summary in bucket.objects.all():
+        if s3_obj_summary.get()["ContentType"] != "application/x-directory":
+            input_files.append(path + "/" + s3_obj_summary.key)
 
     return input_files
