@@ -262,11 +262,11 @@ class Engine:
             )
         if storage_connector.encryption_algorithm:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.server-side-encryption-algorithm", storage_connector.encryption_algorithm
+                "fs.s3a.server-side-encryption-algorithm", storage_connector.server_encryption_algorithm
             )
         if storage_connector.encryption_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                 "fs.s3a.server-side-encryption-key", storage_connector.encryption_key
+                 "fs.s3a.server-side-encryption-key", storage_connector.server_encryption_key
             )
         return path.replace("s3", "s3a", 1)
 
