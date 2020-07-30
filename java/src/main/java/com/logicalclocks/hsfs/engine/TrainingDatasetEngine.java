@@ -64,10 +64,12 @@ public class TrainingDatasetEngine {
       LOGGER.info("VersionWarning: No version provided for creating training dataset `" + trainingDataset.getName()
           + "`, incremented version to `" + apiTD.getVersion() + "`.");
     }
-
+    
     // Update the original object - Hopsworks returns the full location and incremented version
     trainingDataset.setLocation(apiTD.getLocation());
     trainingDataset.setVersion(apiTD.getVersion());
+  
+    LOGGER.info("Training dataset location set to " + apiTD.getLocation());
 
     // Build write options map
     Map<String, String> writeOptions =
@@ -75,7 +77,7 @@ public class TrainingDatasetEngine {
 
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
   }
-
+  
   /**
    * Insert (append or overwrite) data on a training dataset.
    *

@@ -36,6 +36,8 @@ class StorageConnector:
         dataset_name=None,
         access_key=None,
         secret_key=None,
+        encryption_algorithm=None,
+        encryption_key=None,
         bucket=None,
         connection_string=None,
         arguments=None,
@@ -49,6 +51,8 @@ class StorageConnector:
         self._dataset_name = dataset_name
         self._access_key = access_key
         self._secret_key = secret_key
+        self._encryption_algorithm = encryption_algorithm
+        self._encryption_key = encryption_key
         self._bucket = bucket
         self._connection_string = connection_string
         self._arguments = arguments
@@ -74,6 +78,14 @@ class StorageConnector:
     @property
     def secret_key(self):
         return self._secret_key
+
+    @property
+    def encryption_algorithm(self):
+        return self._encryption_algorithm
+
+    @property
+    def encryption_key(self):
+        return self._encryption_key
 
     @property
     def connection_string(self):

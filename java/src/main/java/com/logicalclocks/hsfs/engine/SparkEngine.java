@@ -84,8 +84,10 @@ public class SparkEngine {
   public static String sparkPath(String path) {
     if (path.startsWith(Constants.S3_SCHEME)) {
       return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
+    }else if(path.startsWith(Constants.S3_SCHEME_ROOT_REGEX)){
+      return path.replaceFirst(Constants.S3_SCHEME_ROOT_REGEX, Constants.S3_SPARK_SCHEME);
     }
-
+    
     return path;
   }
 
@@ -93,6 +95,12 @@ public class SparkEngine {
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
       sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
+    }
+    if(!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())){
+      sparkSession.conf().set("fs.s3a.server-side-encryption-algorithm", storageConnector.getServerEncryptionAlgorithm());
+    }
+    if(!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())){
+      sparkSession.conf().set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
     }
   }
 
@@ -221,6 +229,7 @@ public class SparkEngine {
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
+    
     dataset
         .write()
         .format(dataFormat.toString())
