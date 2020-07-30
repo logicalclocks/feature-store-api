@@ -34,11 +34,12 @@ public class Constants {
   public static final String JDBC_PWD = "password";
   public static final String JDBC_URL = "url";
   public static final String JDBC_TABLE = "dbtable";
-
+  
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
 
   
   public static final String S3_SCHEME = "s3://";
   public static final String S3_SPARK_SCHEME = "s3a://";
   public static final String S3_SCHEME_ROOT_REGEX = "s3:/";
+  public static final String S3_BUFFER_DIR = "tmp/s3a";
 }

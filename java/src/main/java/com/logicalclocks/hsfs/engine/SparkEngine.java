@@ -92,6 +92,7 @@ public class SparkEngine {
   }
 
   private void configureS3Connector(StorageConnector storageConnector) {
+    sparkSession.sparkContext().hadoopConfiguration().set("fs.s3a.buffer.dir", Constants.S3_BUFFER_DIR);
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
       sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
