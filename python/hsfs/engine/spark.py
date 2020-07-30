@@ -24,11 +24,6 @@ try:
 except ModuleNotFoundError:
     pass
 
-try:
-    from pydoop import hdfs
-except ModuleNotFoundError:
-    pass
-
 from hsfs import feature
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
@@ -264,37 +259,6 @@ class Engine:
             "fs.s3a.secret.key", storage_connector.access_key
         )
         return path.replace("s3", "s3a", 1)
-
-    @staticmethod
-    def get_training_dataset_files(training_dataset_location, split):
-        """
-        returns list of absolute path of training input files
-        :param training_dataset_location: training_dataset_location
-        :type training_dataset_location: str
-        :param split: name of training dataset split. train, test or eval
-        :type split: str
-        :return: absolute path of input files
-        :rtype: 1d array
-        """
-
-        if split is None:
-            path = hdfs.path.abspath(training_dataset_location)
-        else:
-            path = hdfs.path.abspath(training_dataset_location + "/" + str(split))
-
-        input_files = hdfs.ls(path, recursive=True)
-
-        # Remove direcories if any
-        for file in input_files:
-            if hdfs.path.isdir(file):
-                input_files.remove(file)
-
-        # Remove spark '_SUCCESS' file if any
-        for file in input_files:
-            if file.endswith("_SUCCESS"):
-                input_files.remove(file)
-
-        return input_files
 
 
 class SchemaError(Exception):

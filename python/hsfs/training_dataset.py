@@ -164,7 +164,6 @@ class TrainingDataset:
             feature_names=feature_names,
             is_training=is_training,
             cycle_length=cycle_length,
-            engine=engine.get_instance(),
         )
 
     def show(self, n, split=None):

@@ -21,6 +21,11 @@ try:
 except ModuleNotFoundError:
     pass
 
+try:
+    from pydoop import hdfs
+except ModuleNotFoundError:
+    pass
+
 
 class FeedModelEngine:
     def __init__(
@@ -31,7 +36,6 @@ class FeedModelEngine:
         feature_names,
         is_training,
         cycle_length,
-        engine,
     ):
         """FeedModelEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
 
@@ -60,11 +64,10 @@ class FeedModelEngine:
         self._feature_names = feature_names
         self._is_training = is_training
         self._cycle_length = cycle_length
-        self._engine = engine
 
         self._training_dataset_schema = self._training_dataset.schema
 
-        self._input_files = engine.get_training_dataset_files(
+        self._input_files = _get_training_dataset_files(
             self._training_dataset.location, self._split
         )
 
@@ -166,7 +169,6 @@ class FeedModelEngine:
 
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
-
     if is_training:
         dataset = dataset.shuffle(num_epochs * batch_size)
         dataset = (
@@ -232,7 +234,6 @@ def _infer_tf_dtype(k, v):
 
 
 def _get_tfdataset(input_files, cycle_length):
-
     dataset = tf.data.Dataset.from_tensor_slices(input_files)
 
     dataset = dataset.interleave(
@@ -246,3 +247,45 @@ def _get_tfdataset(input_files, cycle_length):
     )
 
     return dataset, tfrecord_feature_description
+
+
+def _get_training_dataset_files(training_dataset_location, split):
+    """
+    returns list of absolute path of training input files
+    :param training_dataset_location: training_dataset_location
+    :type training_dataset_location: str
+    :param split: name of training dataset split. train, test or eval
+    :type split: str
+    :return: absolute path of input files
+    :rtype: 1d array
+    """
+
+    if training_dataset_location.startswith("hopsfs"):
+        input_files = _get_hopsfs_dataset_files(training_dataset_location, split)
+    elif training_dataset_location.startswith("s3"):
+        raise NotImplementedError(" s3 connector is not implemented")
+    else:
+        raise Exception("Couldn't find execution engine.")
+
+    return input_files
+
+
+def _get_hopsfs_dataset_files(training_dataset_location, split):
+    if split is None:
+        path = hdfs.path.abspath(training_dataset_location)
+    else:
+        path = hdfs.path.abspath(training_dataset_location + "/" + str(split))
+
+    input_files = hdfs.ls(path, recursive=True)
+
+    # Remove directories if any
+    for file in input_files:
+        if hdfs.path.isdir(file):
+            input_files.remove(file)
+
+    # Remove spark '_SUCCESS' file if any
+    for file in input_files:
+        if file.endswith("_SUCCESS"):
+            input_files.remove(file)
+
+    return input_files
