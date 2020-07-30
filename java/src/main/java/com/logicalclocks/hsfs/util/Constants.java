@@ -40,6 +40,5 @@ public class Constants {
   
   public static final String S3_SCHEME = "s3://";
   public static final String S3_SPARK_SCHEME = "s3a://";
-  public static final String S3_SCHEME_ROOT_REGEX = "s3:/";
   public static final String S3_BUFFER_DIR = "tmp/s3a";
 }
