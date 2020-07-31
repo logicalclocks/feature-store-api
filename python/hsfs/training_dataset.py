@@ -102,6 +102,7 @@ class TrainingDataset:
             ]
             self._splits = splits
             self._training_dataset_type = training_dataset_type
+            self.statistics_config = None
 
     def save(self, features, write_options={}):
         # TODO: Decide if we want to have potentially dangerous defaults like {}
