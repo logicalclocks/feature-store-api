@@ -89,7 +89,6 @@ public class SparkEngine {
   }
 
   private void configureS3Connector(StorageConnector storageConnector) {
-    sparkSession.sparkContext().hadoopConfiguration().set("fs.s3a.buffer.dir", Constants.S3_BUFFER_DIR);
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
       sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
@@ -141,7 +140,7 @@ public class SparkEngine {
       } else {
         datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
       }
-      
+
       writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
           trainingDataset.getLocation(), trainingDataset.getSplits());
@@ -225,7 +224,7 @@ public class SparkEngine {
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
-    
+
     dataset
         .write()
         .format(dataFormat.toString())
