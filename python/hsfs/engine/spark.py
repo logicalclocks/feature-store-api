@@ -252,9 +252,6 @@ class Engine:
                 )
 
     def _setup_s3(self, storage_connector, path):
-        self._spark_context._jsc.hadoopConfiguration().set(
-            "fs.s3a.buffer.dir", "tmp/s3a"
-        )
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.access.key", storage_connector.access_key
