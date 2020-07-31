@@ -57,7 +57,6 @@ class FeedModelEngine:
         :type is_training: boolean, required
         :param cycle_length: number of files to be read and deserialized in parallel.
         :type cycle_length: int, required
-        :param engine: hsfs.engine instance. spark or hive
         :type engine: str, required
 
         :return: feed model object
