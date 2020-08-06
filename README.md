@@ -54,6 +54,12 @@ td = fs.create_training_dataset("training_dataset",
 td.save(feature_join)
 ```
 
+Feed the training dataset to a TensorFlow model:
+```python 
+train_input_feeder = training_dataset.feed(target_name='label',split='train', is_training=True)
+train_input = train_input_feeder.tf_record_dataset()
+```
+
 You can find more examples on how to use the library in our [hops-examples](https://github.com/logicalclocks/hops-examples) repository.
 
 Issues
