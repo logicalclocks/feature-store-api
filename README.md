@@ -1,5 +1,5 @@
-Python feature store API.
-=========================
+Hopsworks Feature Store API
+===========================
 
 HSFS is the new library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easier. 
 
