@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.SparkEngine;
@@ -26,7 +27,7 @@ import java.util.List;
 
 public class MainClass {
 
-  private final static Logger LOGGER = LoggerFactory.getLogger(MainClass.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MainClass.class);
 
   public static void main(String[] args) throws Exception {
 

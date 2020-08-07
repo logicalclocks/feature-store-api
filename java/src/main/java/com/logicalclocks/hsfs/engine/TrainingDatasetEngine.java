@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
@@ -42,7 +43,8 @@ public class TrainingDatasetEngine {
   //      Compute statistics
 
   /**
-   * Make a REST call to Hopsworks to create the metadata and write the data on the File System
+   * Make a REST call to Hopsworks to create the metadata and write the data on the File System.
+   *
    * @param trainingDataset
    * @param dataset
    * @param userWriteOptions
@@ -59,8 +61,8 @@ public class TrainingDatasetEngine {
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
 
     if (trainingDataset.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating training dataset `" + trainingDataset.getName() +
-        "`, incremented version to `" + apiTD.getVersion() + "`.");
+      LOGGER.info("VersionWarning: No version provided for creating training dataset `" + trainingDataset.getName()
+          + "`, incremented version to `" + apiTD.getVersion() + "`.");
     }
 
     // Update the original object - Hopsworks returns the full location and incremented version
@@ -75,7 +77,8 @@ public class TrainingDatasetEngine {
   }
 
   /**
-   * Insert (append or overwrite) data on a training dataset
+   * Insert (append or overwrite) data on a training dataset.
+   *
    * @param trainingDataset
    * @param dataset
    * @param providedOptions
@@ -112,11 +115,13 @@ public class TrainingDatasetEngine {
     return SparkEngine.getInstance().read(trainingDataset.getDataFormat(), readOptions, path);
   }
 
-  public void addTag(TrainingDataset trainingDataset, String name, String value) throws FeatureStoreException, IOException {
+  public void addTag(TrainingDataset trainingDataset, String name, String value)
+      throws FeatureStoreException, IOException {
     tagsApi.add(trainingDataset, name, value);
   }
 
-  public Map<String, String> getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
+  public Map<String, String> getTag(TrainingDataset trainingDataset, String name)
+      throws FeatureStoreException, IOException {
     return tagsApi.get(trainingDataset, name);
   }
 

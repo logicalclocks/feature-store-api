@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -52,12 +53,12 @@ import java.util.Properties;
 
 public class HopsworksInternalClient implements HopsworksHttpClient {
 
-  public final static String REST_ENDPOINT_SYS = "hopsworks.restendpoint";
+  public static final String REST_ENDPOINT_SYS = "hopsworks.restendpoint";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksInternalClient.class.getName());
 
-  private final static String DOMAIN_CA_TRUSTSTORE = "hopsworks.domain.truststore";
-  private final static String TOKEN_PATH = "token.jwt";
+  private static final String DOMAIN_CA_TRUSTSTORE = "hopsworks.domain.truststore";
+  private static final String TOKEN_PATH = "token.jwt";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -81,7 +82,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
           .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
           .build();
 
-    refreshJWT();
+    refreshJwt();
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory()
@@ -105,7 +106,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
         .build();
   }
 
-  public void refreshJWT() throws FeatureStoreException {
+  public void refreshJwt() throws FeatureStoreException {
     try (FileChannel fc = FileChannel.open(Paths.get(TOKEN_PATH), StandardOpenOption.READ)) {
       FileLock fileLock = fc.tryLock(0, Long.MAX_VALUE, true);
       try {
@@ -119,8 +120,8 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
         }
         //If could not acquire lock in reasonable time, throw exception
         if (fileLock == null) {
-          throw new FeatureStoreException("Could not read jwt token from local container, possibly another process has" +
-            " acquired the lock");
+          throw new FeatureStoreException("Could not read jwt token from local container, possibly another process has"
+              + " acquired the lock");
         }
         ByteBuffer buf = ByteBuffer.allocateDirect(512);
         fc.read(buf);
@@ -148,7 +149,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
       return httpClient.execute(httpHost, request, authHandler);
     } catch (UnauthorizedException e) {
       // re-read the jwt and try one more time
-      refreshJWT();
+      refreshJwt();
       request.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
       return httpClient.execute(httpHost, request, authHandler);
     } catch (InternalException e) {

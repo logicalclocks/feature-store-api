@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
@@ -58,7 +59,7 @@ public class HopsworksConnection implements Closeable {
   private String certPath;
 
   @Getter
-  private String APIKeyFilePath;
+  private String apiKeyFilePath;
 
 
   private FeatureStoreApi featureStoreApi = new FeatureStoreApi();
@@ -69,7 +70,7 @@ public class HopsworksConnection implements Closeable {
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,
-                             String certPath, String APIKeyFilePath) throws IOException, FeatureStoreException {
+                             String certPath, String apiKeyFilePath) throws IOException, FeatureStoreException {
     this.host = host;
     this.port = port;
     this.project = project;
@@ -78,29 +79,31 @@ public class HopsworksConnection implements Closeable {
     this.hostnameVerification = hostnameVerification;
     this.trustStorePath = trustStorePath;
     this.certPath = certPath;
-    this.APIKeyFilePath = APIKeyFilePath;
+    this.apiKeyFilePath = apiKeyFilePath;
 
     HopsworksClient hopsworksClient = HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, APIKeyFilePath);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath);
     projectObj = getProject();
     hopsworksClient.downloadCredentials(projectObj, certPath);
   }
 
   /**
-   * Retrieve the project feature store
-   * @return
+   * Retrieve the project feature store.
+   *
+   * @return FeatureStore
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public FeatureStore getFeatureStore() throws IOException, FeatureStoreException{
+  public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
     return getFeatureStore(project + Constants.FEATURESTORE_SUFFIX);
   }
 
   /**
    * Retrieve a feature store based on name. The feature store needs to be shared with
    * the connection's project.
-   * @param name
-   * @return
+   *
+   * @param name the name of the feature store to get the handle for
+   * @return FeatureStore
    * @throws IOException
    * @throws FeatureStoreException
    */

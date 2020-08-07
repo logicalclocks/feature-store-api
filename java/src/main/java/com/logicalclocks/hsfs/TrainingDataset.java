@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -102,8 +103,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on the content of the feature store query
-   * @param query
+   * Create the training dataset based on the content of the feature store query.
+   *
+   * @param query the query to save as training dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -112,8 +114,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on teh content of the dataset
-   * @param dataset
+   * Create the training dataset based on teh content of the dataset.
+   *
+   * @param dataset the dataset to save as training dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -122,9 +125,10 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on the content of the feature store query
-   * @param query
-   * @param writeOptions: options to pass to the Spark write operation
+   * Create the training dataset based on the content of the feature store query.
+   *
+   * @param query the query to save as training dataset
+   * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -133,9 +137,10 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on teh content of the dataset
-   * @param dataset
-   * @param writeOptions: options to pass to the Spark write operation
+   * Create the training dataset based on teh content of the dataset.
+   *
+   * @param dataset the dataset to save as training dataset
+   * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -145,9 +150,10 @@ public class TrainingDataset {
   }
 
   /**
-   * Insert the content of the feature store query in the training dataset
-   * @param query
-   * @param overwrite: true to overwrite the current content of the training dataset
+   * Insert the content of the feature store query in the training dataset.
+   *
+   * @param query the query to write as training dataset
+   * @param overwrite true to overwrite the current content of the training dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -156,9 +162,10 @@ public class TrainingDataset {
   }
 
   /**
-   * Insert the content of the dataset in the training dataset
-   * @param dataset
-   * @param overwrite: true to overwrite the current content of the training dataset
+   * Insert the content of the dataset in the training dataset.
+   *
+   * @param dataset the dataset to write as training dataset
+   * @param overwrite true to overwrite the current content of the training dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -167,10 +174,11 @@ public class TrainingDataset {
   }
 
   /**
-   * Insert the content of the feature store query in the training dataset
-   * @param query
-   * @param overwrite: true to overwrite the current content of the training dataset
-   * @param writeOptions: options to pass to the Spark write operation
+   * Insert the content of the feature store query in the training dataset.
+   *
+   * @param query the query to execute to generate the training dataset
+   * @param overwrite true to overwrite the current content of the training dataset
+   * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -181,10 +189,11 @@ public class TrainingDataset {
   }
 
   /**
-   * Insert the content of the dataset in the training dataset
-   * @param dataset
-   * @param overwrite: true to overwrite the current content of the training dataset
-   * @param writeOptions: options to pass to the Spark write operation
+   * Insert the content of the dataset in the training dataset.
+   *
+   * @param dataset the spark dataframe to write as training dataset
+   * @param overwrite true to overwrite the current content of the training dataset
+   * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -195,7 +204,8 @@ public class TrainingDataset {
   }
 
   /**
-   * Read the content (all splits if multiple available) of the training dataset
+   * Read the content (all splits if multiple available) of the training dataset.
+   *
    * @return
    */
   public Dataset<Row> read() {
@@ -203,8 +213,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Read the content (all splits if multiple available) of the training dataset
-   * @param readOptions: options to pass to the Spark read operation
+   * Read the content (all splits if multiple available) of the training dataset.
+   *
+   * @param readOptions options to pass to the Spark read operation
    * @return
    */
   public Dataset<Row> read(Map<String, String> readOptions) {
@@ -212,8 +223,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Read all a single split from the training dataset
-   * @param split: the split name
+   * Read all a single split from the training dataset.
+   *
+   * @param split the split name
    * @return
    */
   public Dataset<Row> read(String split) {
@@ -222,9 +234,10 @@ public class TrainingDataset {
 
 
   /**
-   * Read a single split from the training dataset
-   * @param split: the split name
-   * @param readOptions: options to pass to the Spark read operation
+   * Read a single split from the training dataset.
+   *
+   * @param split the split name
+   * @param readOptions options to pass to the Spark read operation
    * @return
    */
   public Dataset<Row> read(String split, Map<String, String> readOptions) {
@@ -232,7 +245,8 @@ public class TrainingDataset {
   }
 
   /**
-   * Show numRows from the training dataset (across all splits)
+   * Show numRows from the training dataset (across all splits).
+   *
    * @param numRows
    */
   public void show(int numRows) {
@@ -240,9 +254,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Add a tag without value to the training dataset
+   * Add a tag without value to the training dataset.
    *
-   * @param name: name of the tag
+   * @param name name of the tag
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -251,10 +265,10 @@ public class TrainingDataset {
   }
 
   /**
-   * Add name/value tag to the training dataset
+   * Add name/value tag to the training dataset.
    *
-   * @param name: name of the tag
-   * @param value: value of the tag
+   * @param name name of the tag
+   * @param value value of the tag
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -263,7 +277,7 @@ public class TrainingDataset {
   }
 
   /**
-   * Get all tags of the training dataset
+   * Get all tags of the training dataset.
    *
    * @return map of all tags from name to value
    * @throws FeatureStoreException
@@ -275,9 +289,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Get a single tag value of the training dataset
+   * Get a single tag value of the training dataset.
    *
-   * @param name: name of tha tag
+   * @param name name of tha tag
    * @return string value of the tag
    * @throws FeatureStoreException
    * @throws IOException
@@ -288,9 +302,9 @@ public class TrainingDataset {
   }
 
   /**
-   * Delete a tag of the training dataset
+   * Delete a tag of the training dataset.
    *
-   * @param name: name of the tag to be deleted
+   * @param name name of the tag to be deleted
    * @throws FeatureStoreException
    * @throws IOException
    */

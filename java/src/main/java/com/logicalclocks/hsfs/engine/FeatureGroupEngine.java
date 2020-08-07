@@ -13,10 +13,12 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
@@ -48,7 +50,8 @@ public class FeatureGroupEngine {
   //      Compute statistics
 
   /**
-   * Create the metadata and write the data to the online/offline feature store
+   * Create the metadata and write the data to the online/offline feature store.
+   *
    * @param featureGroup
    * @param dataset
    * @param primaryKeys
@@ -93,8 +96,8 @@ public class FeatureGroupEngine {
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
     if (featureGroup.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName() +
-        "`, incremented version to `" + apiFG.getVersion() + "`.");
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
     }
 
     // Update the original object - Hopsworks returns the incremented version
@@ -121,11 +124,15 @@ public class FeatureGroupEngine {
       case ALL:
         saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        break;
+      default:
+        throw new FeatureStoreException("Storage: " +  storage + " not recognized");
     }
   }
 
   /**
-   * Write dataframe to the offline feature store
+   * Write dataframe to the offline feature store.
+   *
    * @param featureGroup
    * @param dataset
    * @param saveMode

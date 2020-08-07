@@ -13,6 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -176,9 +177,9 @@ public class FeatureGroup {
   }
 
   /**
-   * Add a tag without value to the feature group
+   * Add a tag without value to the feature group.
    *
-   * @param name: name of the tag
+   * @param name name of the tag
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -187,10 +188,10 @@ public class FeatureGroup {
   }
 
   /**
-   * Add name/value tag to the feature group
+   * Add name/value tag to the feature group.
    *
-   * @param name: name of the tag
-   * @param value: value of the tag
+   * @param name name of the tag
+   * @param value value of the tag
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -199,7 +200,7 @@ public class FeatureGroup {
   }
 
   /**
-   * Get all tags of the feature group
+   * Get all tags of the feature group.
    *
    * @return map of all tags from name to value
    * @throws FeatureStoreException
@@ -211,9 +212,9 @@ public class FeatureGroup {
   }
 
   /**
-   * Get a single tag value of the feature group
+   * Get a single tag value of the feature group.
    *
-   * @param name: name of tha tag
+   * @param name name of tha tag
    * @return string value of the tag
    * @throws FeatureStoreException
    * @throws IOException
@@ -224,9 +225,9 @@ public class FeatureGroup {
   }
 
   /**
-   * Delete a tag of the feature group
+   * Delete a tag of the feature group.
    *
-   * @param name: name of the tag to be deleted
+   * @param name name of the tag to be deleted
    * @throws FeatureStoreException
    * @throws IOException
    */

@@ -13,11 +13,10 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -51,7 +50,7 @@ public class FeatureStore {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
-  final Integer DEFAULT_VERSION = 1;
+  private static final Integer DEFAULT_VERSION = 1;
 
   public FeatureStore() throws FeatureStoreException {
     featureGroupApi = new FeatureGroupApi();
@@ -60,11 +59,13 @@ public class FeatureStore {
   }
 
   /**
-   * Get a feature group object from the feature store
-   * @param name: the name of the feature group
-   * @param version: the version of the feature group
-   * @return
+   * Get a feature group object from the feature store.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @return FeatureGroup
    * @throws FeatureStoreException
+   * @throws IOException
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -72,14 +73,16 @@ public class FeatureStore {
   }
 
   /**
-   * Get a feature group object with default version `1` from the feature store
-   * @param name: the name of the feature group
-   * @return
+   * Get a feature group object with default version `1` from the feature store.
+   *
+   * @param name the name of the feature group
+   * @return FeatureGroup
    * @throws FeatureStoreException
+   * @throws IOException
    */
   public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `" +
-      DEFAULT_VERSION + "`.");
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
     return getFeatureGroup(name, DEFAULT_VERSION);
   }
 
@@ -88,7 +91,7 @@ public class FeatureStore {
   }
 
   public StorageConnector getStorageConnector(String name, StorageConnectorType type)
-     throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException {
     return storageConnectorApi.getByNameAndType(this, name, type);
   }
 
@@ -103,10 +106,11 @@ public class FeatureStore {
   }
 
   /**
-   * Get a training dataset object from the selected feature store
-   * @param name: name of the training dataset
-   * @param version: version to get
-   * @return
+   * Get a training dataset object from the selected feature store.
+   *
+   * @param name name of the training dataset
+   * @param version version to get
+   * @return TrainingDataset
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -116,25 +120,26 @@ public class FeatureStore {
   }
 
   /**
-   * Get a training dataset object with the default version `1` from the selected feature store
-   * @param name: name of the training dataset
-   * @return
+   * Get a training dataset object with the default version `1` from the selected feature store.
+   *
+   * @param name name of the training dataset
+   * @return TrainingDataset
    * @throws FeatureStoreException
    * @throws IOException
    */
   public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `" +
-      DEFAULT_VERSION + "`.");
+    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
   }
 
   @Override
   public String toString() {
-    return "FeatureStore{" +
-        "id=" + id +
-        ", name='" + name + '\'' +
-        ", projectId=" + projectId +
-        ", featureGroupApi=" + featureGroupApi +
-        '}';
+    return "FeatureStore{"
+        + "id=" + id
+        + ", name='" + name + '\''
+        + ", projectId=" + projectId
+        + ", featureGroupApi=" + featureGroupApi
+        + '}';
   }
 }
