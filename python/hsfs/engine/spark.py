@@ -191,6 +191,9 @@ class Engine:
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")
             options.update(provided_options)
+        elif data_format.lower() == "tfrecord":
+            options = dict(recordType="Example")
+            options.update(provided_options)
         elif data_format.lower() == "csv":
             options = dict(delimiter=",", header="true")
             options.update(provided_options)
@@ -205,6 +208,9 @@ class Engine:
     def read_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
+            options.update(provided_options)
+        elif data_format.lower() == "tfrecord":
+            options = dict(recordType="Example")
             options.update(provided_options)
         elif data_format.lower() == "csv":
             options = dict(delimiter=",", header="true", inferSchema="true")
