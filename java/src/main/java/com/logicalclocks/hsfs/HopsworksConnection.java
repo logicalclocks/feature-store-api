@@ -69,7 +69,6 @@ public class HopsworksConnection implements Closeable {
 
   private Project projectObj;
 
-
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,

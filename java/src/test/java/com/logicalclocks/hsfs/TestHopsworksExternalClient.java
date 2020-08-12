@@ -75,11 +75,10 @@ public class TestHopsworksExternalClient {
     CloseableHttpClient httpClient = HttpClients.createSystem();
     HttpHost httpHost = new HttpHost("test");
     HopsworksExternalClient hopsworksExternalClient = new HopsworksExternalClient(
-            httpClient, httpHost);
+        httpClient, httpHost);
     String apiKey = hopsworksExternalClient.readApiKey(null, null, apiFilePath.toString());
     Assert.assertEquals("hello", apiKey);
   }
-
 
   @Test
   public void testDownloadCredential() throws Exception {

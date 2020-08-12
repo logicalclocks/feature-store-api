@@ -108,14 +108,14 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     httpHost = new HttpHost(host, port, "https");
 
     connectionPool = new PoolingHttpClientConnectionManager(
-            createConnectionFactory(httpHost, hostnameVerification, trustStorePath));
+        createConnectionFactory(httpHost, hostnameVerification, trustStorePath));
     connectionPool.setMaxTotal(10);
     connectionPool.setDefaultMaxPerRoute(10);
 
     httpClient = HttpClients.custom()
-            .setConnectionManager(connectionPool)
-            .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
-            .build();
+           .setConnectionManager(connectionPool)
+           .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
+           .build();
 
     if (!Strings.isNullOrEmpty(apiKeyValue)) {
       this.apiKey = apiKeyValue;
@@ -169,7 +169,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     if (!Strings.isNullOrEmpty(apiKeyFilepath)) {
       return FileUtils.readFileToString(Paths.get(apiKeyFilepath).toFile());
     }
-
 
     switch (secretStore) {
       case PARAMETER_STORE:
