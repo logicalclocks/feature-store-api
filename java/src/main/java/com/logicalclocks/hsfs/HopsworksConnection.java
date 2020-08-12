@@ -61,16 +61,20 @@ public class HopsworksConnection implements Closeable {
   @Getter
   private String apiKeyFilePath;
 
+  @Getter
+  private String apiKeyValue;
 
   private FeatureStoreApi featureStoreApi = new FeatureStoreApi();
   private ProjectApi projectApi = new ProjectApi();
 
   private Project projectObj;
 
+
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,
-                             String certPath, String apiKeyFilePath) throws IOException, FeatureStoreException {
+                             String certPath, String apiKeyFilePath, String apiKeyValue)
+          throws IOException, FeatureStoreException {
     this.host = host;
     this.port = port;
     this.project = project;
@@ -80,9 +84,10 @@ public class HopsworksConnection implements Closeable {
     this.trustStorePath = trustStorePath;
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
+    this.apiKeyValue = apiKeyValue;
 
     HopsworksClient hopsworksClient = HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
     projectObj = getProject();
     hopsworksClient.downloadCredentials(projectObj, certPath);
   }

@@ -54,16 +54,32 @@ public class TestHopsworksExternalClient {
     ));
 
   @Test
+  public void testReadAPIKey() throws IOException, FeatureStoreException {
+    CloseableHttpClient httpClient = HttpClients.createSystem();
+    try {
+      HopsworksConnection hc = HopsworksConnection.builder().host("35.241.253.100").hostnameVerification(false)
+              .project("demo_featurestore_admin000")
+              .apiKeyValue("ovVQksgJezSckjyK.ftO2YywCI6gZp4btlvWRnSDjSgyAQgCTRAoQTTSXBxPRMo0Dq029eAf3HVq3I6JO").build();
+      System.out.println("Connected");
+      FeatureStore fs = hc.getFeatureStore();
+      Assert.assertTrue(fs != null);
+    } catch (Exception e) {
+	// Do not assert an error as this unit test method needs an external cluster
+    }
+  }
+
+  @Test
   public void testReadAPIKeyFromFile() throws IOException, FeatureStoreException {
     Path apiFilePath = Paths.get(System.getProperty("java.io.tmpdir"), "test.api");
     FileUtils.writeStringToFile(apiFilePath.toFile(), "hello");
     CloseableHttpClient httpClient = HttpClients.createSystem();
     HttpHost httpHost = new HttpHost("test");
     HopsworksExternalClient hopsworksExternalClient = new HopsworksExternalClient(
-        httpClient, httpHost);
+            httpClient, httpHost);
     String apiKey = hopsworksExternalClient.readApiKey(null, null, apiFilePath.toString());
     Assert.assertEquals("hello", apiKey);
   }
+
 
   @Test
   public void testDownloadCredential() throws Exception {
