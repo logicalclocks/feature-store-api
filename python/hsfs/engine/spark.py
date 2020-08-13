@@ -235,7 +235,7 @@ class Engine:
 
     def parse_schema_dict(self, dataframe):
         return {
-            feat["name"]: feature.Feature(
+            feat.name: feature.Feature(
                 feat.name,
                 feat.dataType.simpleString(),
                 feat.metadata.get("description", ""),
