@@ -40,7 +40,9 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
 
-        self._setup_pydoop()
+        if not os.path.exists("/dbfs/"):
+            # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
+            self._setup_pydoop()
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:

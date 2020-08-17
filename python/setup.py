@@ -4,7 +4,8 @@ from setuptools import setup, find_packages
 
 
 __version__ = imp.load_source(
-    'hsfs.version', os.path.join('hsfs', 'version.py')).__version__
+    "hsfs.version", os.path.join("hsfs", "version.py")
+).__version__
 
 
 def read(fname):
@@ -24,14 +25,9 @@ setup(
         "pyhopshive[thrift]",
         "PyMySQL",
         "pyjks",
-        "sqlalchemy"
+        "sqlalchemy",
     ],
-    extras_require={
-        "dev": [
-            "pytest",
-            "flake8",
-            "black"]
-    },
+    extras_require={"dev": ["pytest", "flake8", "black"]},
     author="Moritz Meister",
     author_email="moritz@logicalclocks.com",
     description="",
