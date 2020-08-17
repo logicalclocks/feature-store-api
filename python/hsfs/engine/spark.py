@@ -17,6 +17,8 @@
 import pandas as pd
 import numpy as np
 
+import os
+
 # in case importing in %%local
 try:
     from pyspark.sql import SparkSession, DataFrame
