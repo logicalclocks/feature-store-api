@@ -252,12 +252,24 @@ class Engine:
                 )
 
     def _setup_s3(self, storage_connector, path):
-        self._spark_context._jsc.hadoopConfiguration().set(
-            "fs.s3a.access.key", storage_connector.access_key
-        )
-        self._spark_context._jsc.hadoopConfiguration().set(
-            "fs.s3a.secret.key", storage_connector.access_key
-        )
+        if storage_connector.access_key:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.access.key", storage_connector.access_key
+            )
+        if storage_connector.secret_key:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.secret.key", storage_connector.secret_key
+            )
+        if storage_connector.server_encryption_algorithm:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.server-side-encryption-algorithm",
+                storage_connector.server_encryption_algorithm,
+            )
+        if storage_connector.server_encryption_key:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.server-side-encryption-key",
+                storage_connector.server_encryption_key,
+            )
         return path.replace("s3", "s3a", 1)
 
 

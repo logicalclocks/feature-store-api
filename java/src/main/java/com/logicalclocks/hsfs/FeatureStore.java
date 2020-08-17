@@ -104,7 +104,7 @@ public class FeatureStore {
     return TrainingDataset.builder()
         .featureStore(this);
   }
-
+  
   /**
    * Get a training dataset object from the selected feature store.
    *

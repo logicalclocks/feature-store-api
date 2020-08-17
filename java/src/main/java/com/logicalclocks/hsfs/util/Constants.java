@@ -37,6 +37,7 @@ public class Constants {
 
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
 
+
   public static final String S3_SCHEME = "s3://";
   public static final String S3_SPARK_SCHEME = "s3a://";
 }

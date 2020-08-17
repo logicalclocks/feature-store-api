@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class StorageConnector {
 
   @Getter @Setter
@@ -43,6 +45,15 @@ public class StorageConnector {
 
   @Getter @Setter
   private String secretKey;
+  
+  @Getter @Setter
+  private String serverEncryptionAlgorithm;
+  
+  @Getter @Setter
+  private String serverEncryptionKey;
+  
+  @Getter @Setter
+  private String bucket;
 
   @Getter @Setter
   private String connectionString;

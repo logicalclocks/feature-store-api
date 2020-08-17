@@ -38,7 +38,6 @@ public class TrainingDatasetEngine {
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
-
   //TODO:
   //      Compute statistics
 

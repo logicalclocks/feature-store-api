@@ -85,7 +85,6 @@ public class SparkEngine {
     if (path.startsWith(Constants.S3_SCHEME)) {
       return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
     }
-
     return path;
   }
 
@@ -93,6 +92,15 @@ public class SparkEngine {
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
       sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
+      sparkSession.conf().set(
+          "fs.s3a.server-side-encryption-algorithm",
+          storageConnector.getServerEncryptionAlgorithm()
+      );
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
+      sparkSession.conf().set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
     }
   }
 
@@ -110,7 +118,6 @@ public class SparkEngine {
     if (trainingDataset.getStorageConnector() != null) {
       SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
     }
-
     if (trainingDataset.getSplits() == null) {
       // Write a single dataset
 
@@ -118,7 +125,6 @@ public class SparkEngine {
       // for cases such as tfrecords in which we need to store also the schema
       // also in case of multiple splits, the single splits will be stored inside the training dataset dir
       String path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
-
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
     } else {
@@ -162,7 +168,6 @@ public class SparkEngine {
     if (providedOptions != null && !providedOptions.isEmpty()) {
       writeOptions.putAll(providedOptions);
     }
-
     return writeOptions;
   }
 
@@ -185,11 +190,9 @@ public class SparkEngine {
       default:
         break;
     }
-
     if (providedOptions != null && !providedOptions.isEmpty()) {
       readOptions.putAll(providedOptions);
     }
-
     return readOptions;
   }
 
@@ -221,6 +224,7 @@ public class SparkEngine {
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
+
     dataset
         .write()
         .format(dataFormat.toString())
@@ -258,7 +262,6 @@ public class SparkEngine {
     if (providedWriteOptions != null) {
       writeOptions.putAll(providedWriteOptions);
     }
-
     return writeOptions;
   }
 
