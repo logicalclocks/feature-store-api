@@ -84,8 +84,14 @@ class FeatureGroup:
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
-        self._primary_key = primary_key
-        self._partition_key = partition_key
+        if id is None:
+            # Initialized from the API
+            self._primary_key = primary_key
+            self._partition_key = partition_key
+        else:
+            # Initialized from the backend
+            self._primary_key = [f.name for f in self._features if f.primary]
+            self._partition_key = [f.name for f in self._features if f.partition]
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
