@@ -52,7 +52,7 @@ class FeatureGroupEngine:
 
         table_name = self._get_table_name(feature_group)
 
-        if storage == "online" or storage == "all":
+        if storage.lower() == "online" or storage.lower() == "all":
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -77,7 +77,7 @@ class FeatureGroupEngine:
         offline_write_options = write_options
         online_write_options = write_options
 
-        if storage == "online" or storage == "all":
+        if storage.lower() == "online" or storage.lower() == "all":
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -86,7 +86,7 @@ class FeatureGroupEngine:
 
             online_write_options = {**jdbc_options, **online_write_options}
 
-        if (storage == "offline" or storage == "all") and overwrite:
+        if (storage.lower() == "offline" or storage.lower() == "all") and overwrite:
             self._feature_group_api.delete_content(feature_group)
 
         engine.get_instance().save_dataframe(
@@ -127,7 +127,7 @@ class FeatureGroupEngine:
         return [tag.to_dict() for tag in self._tags_api.get(feature_group, name)]
 
     def sql(self, query, feature_store_name, dataframe_type, storage):
-        if storage == "online":
+        if storage.lower() == "online":
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             online_conn = None

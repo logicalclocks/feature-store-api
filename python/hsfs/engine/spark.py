@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+import os
+
 import pandas as pd
 import numpy as np
 
@@ -39,6 +41,10 @@ class Engine:
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
+
+        if not os.path.exists("/dbfs/"):
+            # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
+            self._setup_pydoop()
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
@@ -121,7 +127,7 @@ class Engine:
         offline_write_options,
         online_write_options,
     ):
-        if storage == "offline":
+        if storage.lower() == "offline":
             self._save_offline_dataframe(
                 table_name,
                 partition_columns,
@@ -129,11 +135,11 @@ class Engine:
                 save_mode,
                 offline_write_options,
             )
-        elif storage == "online":
+        elif storage.lower() == "online":
             self._save_online_dataframe(
                 table_name, dataframe, save_mode, online_write_options
             )
-        elif storage == "all":
+        elif storage.lower() == "all":
             self._save_offline_dataframe(
                 table_name,
                 partition_columns,
@@ -271,6 +277,39 @@ class Engine:
                 storage_connector.server_encryption_key,
             )
         return path.replace("s3", "s3a", 1)
+
+    def _setup_pydoop(self):
+        # Import Pydoop only here, so it doesn't trigger if the execution environment
+        # does not support Pydoop. E.g. Sagemaker
+        from pydoop import hdfs
+
+        # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
+        class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
+            @classmethod
+            def split(cls, hdfs_path, user):
+                if not hdfs_path:
+                    cls.raise_bad_path(hdfs_path, "empty")
+                scheme, netloc, path = cls.parse(hdfs_path)
+                if not scheme:
+                    scheme = "file" if hdfs_fs.default_is_local() else "hdfs"
+                if scheme == "hdfs" or scheme == "hopsfs":
+                    if not path:
+                        cls.raise_bad_path(hdfs_path, "path part is empty")
+                    if ":" in path:
+                        cls.raise_bad_path(
+                            hdfs_path, "':' not allowed outside netloc part"
+                        )
+                    hostname, port = cls.split_netloc(netloc)
+                    if not path.startswith("/"):
+                        path = "/user/%s/%s" % (user, path)
+                elif scheme == "file":
+                    hostname, port, path = "", 0, netloc + path
+                else:
+                    cls.raise_bad_path(hdfs_path, "unsupported scheme %r" % scheme)
+                return hostname, port, path
+
+        # Monkey patch the class to use the one defined above.
+        hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
 
 class SchemaError(Exception):
