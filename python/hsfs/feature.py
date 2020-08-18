@@ -72,4 +72,4 @@ class Feature:
 
     @partition.setter
     def partition(self, partition):
-        self._partition
+        self._partition = partition
