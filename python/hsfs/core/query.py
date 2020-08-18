@@ -37,7 +37,7 @@ class Query:
     def read(self, storage="offline", dataframe_type="default"):
         query = self._query_constructor_api.construct_query(self)
 
-        if storage == "online":
+        if storage.lower() == "online":
             sql_query = query["queryOnline"]
             online_conn = self._storage_connector_api.get_online_connector()
         else:
@@ -51,7 +51,7 @@ class Query:
     def show(self, n, storage="offline"):
         query = self._query_constructor_api.construct_query(self)
 
-        if storage == "online":
+        if storage.lower() == "online":
             sql_query = query["queryOnline"]
             online_conn = self._storage_connector_api.get_online_connector()
         else:

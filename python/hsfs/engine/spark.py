@@ -121,7 +121,7 @@ class Engine:
         offline_write_options,
         online_write_options,
     ):
-        if storage == "offline":
+        if storage.lower() == "offline":
             self._save_offline_dataframe(
                 table_name,
                 partition_columns,
@@ -129,11 +129,11 @@ class Engine:
                 save_mode,
                 offline_write_options,
             )
-        elif storage == "online":
+        elif storage.lower() == "online":
             self._save_online_dataframe(
                 table_name, dataframe, save_mode, online_write_options
             )
-        elif storage == "all":
+        elif storage.lower() == "all":
             self._save_offline_dataframe(
                 table_name,
                 partition_columns,

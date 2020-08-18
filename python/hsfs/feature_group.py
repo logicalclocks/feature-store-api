@@ -215,7 +215,7 @@ class FeatureGroup:
             "description": self._description,
             "version": self._version,
             "onlineEnabled": self._online_enabled,
-            "defaultStorage": self._default_storage,
+            "defaultStorage": self._default_storage.upper(),
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
