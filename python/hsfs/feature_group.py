@@ -166,8 +166,7 @@ class FeatureGroup:
             write_options,
         )
 
-        if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read(storage))
+        self.compute_statistics()
 
     def delete(self):
         self._feature_group_engine.delete(self)
@@ -176,15 +175,21 @@ class FeatureGroup:
         self._feature_group_engine.update(self)
         return self
 
-    def compute_statistics(self, storage=None):
+    def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
         feature store.
-
-        :param storage: storage to read data from, defaults to None
-        :type storage: str, optional
         """
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read(storage))
+            if self._default_storage.lower() in ["all", "offline"]:
+                self._statistics_engine.compute_statistics(self, self.read("offline"))
+            else:
+                warnings.warn(
+                    (
+                        "The default storage of feature group `{}`, with version `{}`, is `{}`. "
+                        "Statistics are only computed for default storage `offline` and `all`."
+                    ).format(self._name, self._version, self._default_storage),
+                    util.StorageWarning,
+                )
 
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.
