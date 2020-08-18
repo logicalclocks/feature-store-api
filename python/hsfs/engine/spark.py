@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 
+import os
+
 import pandas as pd
 import numpy as np
-
-import os
 
 # in case importing in %%local
 try:
