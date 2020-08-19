@@ -37,9 +37,11 @@ class Statistics:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        # for now there is no case where we get multliple commits in one rest
-        # call with the client, only in the front-end relevant
-        return cls(**json_decamelized)
+        # Currently getting multiple commits at the same time is not allowed
+        if json_decamelized["count"] == 0:
+            return None
+        elif json_decamelized["count"] == 1:
+            return cls(json_decamelized["items"][0])
 
     def to_dict(self):
         return {"commitTime": self._commit_time, "content": json.dumps(self._content)}

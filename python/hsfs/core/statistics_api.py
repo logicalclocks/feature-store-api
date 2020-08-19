@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client
+from hsfs import client, statistics
 
 
 class StatisticsApi:
@@ -59,10 +59,12 @@ class StatisticsApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {
-            "filter_by": "commit_time_eq:" + str(commit_time),
+            "filter_by:commit_time_eq:": str(commit_time),
             "fields": "content",
         }
-        return _client._send_request("POST", path_params, query_params, headers=headers)
+        return statistics.Statistics.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )
 
     def get_last(self, metadata_instance):
         """Gets the statistics of the last commit for an instance."""
@@ -83,4 +85,6 @@ class StatisticsApi:
             "limit": 1,
             "fields": "content",
         }
-        return _client._send_request("POST", path_params, query_params, headers=headers)
+        return statistics.Statistics.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )

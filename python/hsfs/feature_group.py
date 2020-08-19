@@ -347,3 +347,22 @@ class FeatureGroup:
                     type(statistics_config)
                 )
             )
+
+    @property
+    def statistics(self):
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time=None):
+        """Returns the statistics for this feature group at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        :param commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to None
+        :type commit_time: str, optional
+        :return: Statistics information
+        :rtype: Statistics
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)
