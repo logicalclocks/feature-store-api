@@ -84,8 +84,14 @@ class FeatureGroup:
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
-        self._primary_key = primary_key
-        self._partition_key = partition_key
+        if id is None:
+            # Initialized from the API
+            self._primary_key = primary_key
+            self._partition_key = partition_key
+        else:
+            # Initialized from the backend
+            self._primary_key = [f.name for f in self._features if f.primary]
+            self._partition_key = [f.name for f in self._features if f.partition]
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -124,15 +130,12 @@ class FeatureGroup:
             self._feature_store_name, self._feature_store_id, self, features
         )
 
-    def save(self, features, storage=None, write_options={}):
+    def save(self, features, write_options={}):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
         self._feature_group_engine.save(
-            self,
-            feature_dataframe,
-            storage if storage else self._default_storage,
-            write_options,
+            self, feature_dataframe, self._default_storage, write_options,
         )
         if user_version is None:
             warnings.warn(
@@ -215,7 +218,7 @@ class FeatureGroup:
             "description": self._description,
             "version": self._version,
             "onlineEnabled": self._online_enabled,
-            "defaultStorage": self._default_storage,
+            "defaultStorage": self._default_storage.upper(),
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
