@@ -131,21 +131,12 @@ public class FeatureGroup {
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
-    save(featureData, defaultStorage, null);
-  }
-
-  public void save(Dataset<Row> featureData, Storage storage) throws FeatureStoreException, IOException {
-    save(featureData, storage, null);
+    save(featureData, null);
   }
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    save(featureData, defaultStorage, writeOptions);
-  }
-
-  public void save(Dataset<Row> featureData, Storage storage, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, storage, writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, defaultStorage, writeOptions);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
