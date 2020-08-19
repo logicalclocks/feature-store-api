@@ -44,3 +44,43 @@ class StatisticsApi:
         _client._send_request(
             "POST", path_params, headers=headers, data=statistics.json()
         )
+
+    def get(self, metadata_instance, commit_time):
+        """Gets the statistics for a specific commit time for an instance."""
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            self._entity_type,
+            metadata_instance.id,
+            "statistics",
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "filter_by": "commit_time_eq:" + str(commit_time),
+            "fields": "content",
+        }
+        return _client._send_request("POST", path_params, query_params, headers=headers)
+
+    def get_last(self, metadata_instance):
+        """Gets the statistics of the last commit for an instance."""
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            self._entity_type,
+            metadata_instance.id,
+            "statistics",
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "sort_by": "commit_time:desc",
+            "offset": 0,
+            "limit": 1,
+            "fields": "content",
+        }
+        return _client._send_request("POST", path_params, query_params, headers=headers)
