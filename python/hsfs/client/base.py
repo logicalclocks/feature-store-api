@@ -145,8 +145,8 @@ class Client(ABC):
         if stream:
             return response
         else:
-            # handle different success reponse codes
-            if response.status_code == 204:
+            # handle different success response codes
+            if len(response.content) == 0: 
                 return None
             return response.json()
 
