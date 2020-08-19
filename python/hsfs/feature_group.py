@@ -130,15 +130,12 @@ class FeatureGroup:
             self._feature_store_name, self._feature_store_id, self, features
         )
 
-    def save(self, features, storage=None, write_options={}):
+    def save(self, features, write_options={}):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
         self._feature_group_engine.save(
-            self,
-            feature_dataframe,
-            storage if storage else self._default_storage,
-            write_options,
+            self, feature_dataframe, self._default_storage, write_options,
         )
         if user_version is None:
             warnings.warn(
