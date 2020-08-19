@@ -113,14 +113,29 @@ class FeatureGroupApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def update(self, feature_group_instance):
-        """Update the metadata of a feature group.
+    def update_statistics_config(self, feature_group_instance):
+        """Update the statistics configuration of a feature group.
 
-        It is only possible to update the description and statistics config
-        of a feature group.
-
-        :param feature_group_instance: [description]
-        :type feature_group_instance: [type]
-        :raises NotImplementedError: [description]
+        :param feature_group_instance: metadata object of feature group
+        :type feature_group_instance: FeatureGroup
         """
-        raise NotImplementedError
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {"updateStatsSettings": True}
+        return feature_group_instance.update_from_response_json(
+            _client._send_request(
+                "PUT",
+                path_params,
+                query_params,
+                headers=headers,
+                data=feature_group_instance.json(),
+            ),
+        )

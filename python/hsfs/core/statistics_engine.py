@@ -37,6 +37,7 @@ class StatisticsEngine:
         )
         stats = statistics.Statistics(commit_str, content_str)
         self._statistics_api.post(metadata_instance, stats)
+        return stats
 
     def get_last(self, metadata_instance):
         """Get the most recent Statistics of an entity."""

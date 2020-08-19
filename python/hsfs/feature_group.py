@@ -171,17 +171,30 @@ class FeatureGroup:
     def delete(self):
         self._feature_group_engine.delete(self)
 
-    def update(self):
-        self._feature_group_engine.update(self)
+    def update_statistics_config(self):
+        """Update the statistics configuration of the feature group.
+
+        Change the `statistics_config` object and persist the changes by calling
+        this method.
+
+        :return: the updated metadata object of the feature group.
+        :rtype: FeatureGroup
+        """
+        self._feature_group_engine.update_statistics_config(self)
         return self
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
         feature store.
+
+        :return: the statistics metadata object.
+        :rtype: Statistics
         """
         if self.statistics_config.enabled:
             if self._default_storage.lower() in ["all", "offline"]:
-                self._statistics_engine.compute_statistics(self, self.read("offline"))
+                return self._statistics_engine.compute_statistics(
+                    self, self.read("offline")
+                )
             else:
                 warnings.warn(
                     (
