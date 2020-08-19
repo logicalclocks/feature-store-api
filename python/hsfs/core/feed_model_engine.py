@@ -176,9 +176,7 @@ class FeedModelEngine:
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     if is_training:
         dataset = dataset.shuffle(num_epochs * batch_size)
-        dataset = (
-            dataset.repeat()
-        )  # TODO (davit): decide if we want to provide: num_epochs * steps_per_epoch
+        dataset = dataset.repeat(num_epochs * batch_size)
     dataset = dataset.cache()
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
