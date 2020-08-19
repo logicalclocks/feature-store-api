@@ -105,7 +105,7 @@ class FeatureGroupEngine:
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update(feature_group)
+        self._feature_group_api.update_statistics_config(feature_group)
 
     def _get_table_name(self, feature_group):
         return (
