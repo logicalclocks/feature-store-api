@@ -41,7 +41,7 @@ class Statistics:
         if json_decamelized["count"] == 0:
             return None
         elif json_decamelized["count"] == 1:
-            return cls(json_decamelized["items"][0])
+            return cls(**json_decamelized["items"][0])
 
     def to_dict(self):
         return {"commitTime": self._commit_time, "content": json.dumps(self._content)}
