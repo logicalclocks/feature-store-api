@@ -195,7 +195,7 @@ class Connection:
         :rtype: FeatureStore
         """
         if not name:
-            name = client.get_instance()._project_name + "_featurestore"
+            name = client.get_instance()._project_name.lower() + "_featurestore"
         return self._feature_store_api.get(name)
 
     def _get_clients(self, dbfs_folder):
