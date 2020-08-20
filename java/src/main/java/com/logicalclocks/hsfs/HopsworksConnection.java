@@ -95,7 +95,7 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
-    return getFeatureStore(project + Constants.FEATURESTORE_SUFFIX);
+    return getFeatureStore(project.toLowerCase() + Constants.FEATURESTORE_SUFFIX);
   }
 
   /**
