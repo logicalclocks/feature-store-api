@@ -16,6 +16,9 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
+import com.amazon.deequ.profiles.ColumnProfilerRunner;
+import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -31,6 +34,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import scala.collection.JavaConverters;
 
 import java.util.HashMap;
 import java.util.List;
@@ -293,5 +297,35 @@ public class SparkEngine {
         .options(writeOptions == null ? new HashMap<>() : writeOptions)
         .partitionBy(utils.getPartitionColumns(featureGroup))
         .saveAsTable(utils.getTableName(featureGroup));
+  }
+
+
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+    // only needed for training datasets, as the backend is not setting the defaults
+    if (correlation == null) {
+      correlation = true;
+    }
+    if (histogram == null) {
+      histogram = true;
+    }
+    ColumnProfilerRunBuilder runner =
+        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+    if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
+      runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
+    }
+    ColumnProfiles result = runner.run();
+    return ColumnProfiles.toJson(result.profiles().values().toSeq());
+  }
+
+  public String profile(Dataset<Row> df, List<String> restrictToColumns) {
+    return profile(df, restrictToColumns, true, true);
+  }
+
+  public String profile(Dataset<Row> df, boolean correlation, boolean histogram) {
+    return profile(df, null, correlation, histogram);
+  }
+
+  public String profile(Dataset<Row> df) {
+    return profile(df, null, true, true);
   }
 }
