@@ -53,20 +53,20 @@ public class TestHopsworksExternalClient {
         .willReturn(success().body(HttpBodyConverter.json(credentials)))
     ));
 
-  @Test
-  public void testReadAPIKey() throws IOException, FeatureStoreException {
-    CloseableHttpClient httpClient = HttpClients.createSystem();
-    try {
-      HopsworksConnection hc = HopsworksConnection.builder().host("35.241.253.100").hostnameVerification(false)
-              .project("demo_featurestore_admin000")
-              .apiKeyValue("ovVQksgJezSckjyK.ftO2YywCI6gZp4btlvWRnSDjSgyAQgCTRAoQTTSXBxPRMo0Dq029eAf3HVq3I6JO").build();
-      System.out.println("Connected");
-      FeatureStore fs = hc.getFeatureStore();
-      Assert.assertTrue(fs != null);
-    } catch (Exception e) {
-	// Do not assert an error as this unit test method needs an external cluster
-    }
-  }
+  // @Test
+  // public void testReadAPIKey() throws IOException, FeatureStoreException {
+  //   CloseableHttpClient httpClient = HttpClients.createSystem();
+  //   try {
+  //     HopsworksConnection hc = HopsworksConnection.builder().host("35.241.253.100").hostnameVerification(false)
+  //             .project("demo_featurestore_admin000")
+  //             .apiKeyValue("ovVQksgJezSckjyK.ftO2YywCI6gZp4btlvWRnSDjSgyAQgCTRAoQTTSXBxPRMo0Dq029eAf3HVq3I6JO").build();
+  //     System.out.println("Connected");
+  //     FeatureStore fs = hc.getFeatureStore();
+  //     Assert.assertTrue(fs != null);
+  //   } catch (Exception e) {
+  // 	// Do not assert an error as this unit test method needs an external cluster
+  //   }
+  // }
 
   @Test
   public void testReadAPIKeyFromFile() throws IOException, FeatureStoreException {

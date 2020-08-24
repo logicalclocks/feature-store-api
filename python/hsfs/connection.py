@@ -40,7 +40,6 @@ A feature store connection object. Clients in external clusters need to connect 
 """
 
 
-
 import os
 from requests.exceptions import ConnectionError
 
@@ -230,7 +229,7 @@ class Connection:
         :rtype: FeatureStore
         """
         if not name:
-            name = client.get_instance()._project_name + "_featurestore"
+            name = client.get_instance()._project_name.lower() + "_featurestore"
         return self._feature_store_api.get(name)
 
     def _get_clients(self, dbfs_folder):
@@ -393,17 +392,17 @@ class Connection:
     @property
     def api_key_value(self):
         return self._api_key_value
-    
+
     @api_key_file.setter
     @not_connected
     def api_key_file(self, api_key_file):
         self._api_key_file = api_key_file
 
-    @api_key_file.setter
+    @api_key_value.setter
     @not_connected
     def api_key_value(self, api_key_value):
         self._api_key_value = api_key_value
-        
+
     def __enter__(self):
         self.connect()
         return self
