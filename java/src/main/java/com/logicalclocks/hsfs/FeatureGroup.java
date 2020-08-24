@@ -18,8 +18,11 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Query;
+import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,6 +30,8 @@ import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -69,6 +74,21 @@ public class FeatureGroup {
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
 
+  @Getter @Setter
+  @JsonProperty("descStatsEnabled")
+  private Boolean statisticsEnabled;
+
+  @Getter @Setter
+  @JsonProperty("featHistEnabled")
+  private Boolean histograms;
+
+  @Getter @Setter
+  @JsonProperty("featCorrEnabled")
+  private Boolean correlations;
+
+  @Getter @Setter
+  private List<String> statisticColumns;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> primaryKeys;
@@ -78,11 +98,15 @@ public class FeatureGroup {
   private List<String> partitionKeys;
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys,
-                      boolean onlineEnabled, Storage defaultStorage, List<Feature> features)
+                      List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
+                      Storage defaultStorage, List<Feature> features, Boolean statisticsEnabled, Boolean histograms,
+                      Boolean correlations, List<String> statisticColumns)
       throws FeatureStoreException {
 
     this.featureStore = featureStore;
@@ -94,6 +118,10 @@ public class FeatureGroup {
     this.onlineEnabled = onlineEnabled;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
     this.features = features;
+    this.statisticsEnabled = statisticsEnabled;
+    this.histograms = histograms;
+    this.correlations = correlations;
+    this.statisticColumns = statisticColumns;
   }
 
   public FeatureGroup() {
@@ -137,6 +165,9 @@ public class FeatureGroup {
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, defaultStorage, writeOptions);
+    if (statisticsEnabled) {
+      statisticsEngine.computeStatistics(this, featureData);
+    }
   }
 
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
@@ -161,10 +192,23 @@ public class FeatureGroup {
       throws FeatureStoreException, IOException {
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+    computeStatistics();
   }
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupEngine.delete(this);
+  }
+
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsEnabled) {
+      if (defaultStorage == Storage.ALL || defaultStorage == Storage.OFFLINE) {
+        return statisticsEngine.computeStatistics(this, read(Storage.OFFLINE));
+      } else {
+        LOGGER.info("StorageWarning: The default storage of feature group `" + name + "`, with version `" + version
+            + "`, is `" + defaultStorage + "`. Statistics are only computed for default storage `offline and `all`.");
+      }
+    }
+    return null;
   }
 
   /**

@@ -299,7 +299,6 @@ public class SparkEngine {
         .saveAsTable(utils.getTableName(featureGroup));
   }
 
-
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {

@@ -18,14 +18,12 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
-import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -33,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,9 +42,6 @@ public class FeatureGroupEngine {
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
-
-  //TODO:
-  //      Compute statistics
 
   /**
    * Create the metadata and write the data to the online/offline feature store.
@@ -102,6 +96,11 @@ public class FeatureGroupEngine {
 
     // Update the original object - Hopsworks returns the incremented version
     featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setStatisticsEnabled(apiFG.getStatisticsEnabled());
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
+    featureGroup.setStatisticColumns(apiFG.getStatisticColumns());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);
