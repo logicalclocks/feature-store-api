@@ -151,7 +151,7 @@ class TrainingDataset:
         feature store.
         """
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read())
+            return self._statistics_engine.compute_statistics(self, self.read())
 
     def feed(
         self,
