@@ -200,6 +200,13 @@ public class FeatureGroup {
   }
 
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    /**
+     * Recompute the statistics for the feature group and save them to the feature store.
+     *
+     * @return statistics object of computed statistics
+     * @throws FeatureStoreException
+     * @throws IOException
+     */
     if (statisticsEnabled) {
       if (defaultStorage == Storage.ALL || defaultStorage == Storage.OFFLINE) {
         return statisticsEngine.computeStatistics(this, read(Storage.OFFLINE));

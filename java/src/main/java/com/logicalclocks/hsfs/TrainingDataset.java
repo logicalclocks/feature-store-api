@@ -17,8 +17,11 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.metadata.Query;
+import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -75,13 +78,30 @@ public class TrainingDataset {
   @Getter @Setter
   private List<Split> splits;
 
+  @Getter @Setter
+  @JsonIgnore
+  private Boolean statisticsEnabled = true;
+
+  @Getter @Setter
+  @JsonIgnore
+  private Boolean histograms;
+
+  @Getter @Setter
+  @JsonIgnore
+  private Boolean correlations;
+
+  @Getter @Setter
+  @JsonIgnore
+  private List<String> statisticColumns;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
+  private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
 
   @Builder
-  public TrainingDataset(@NonNull String name, Integer version, String description,
-                         DataFormat dataFormat, StorageConnector storageConnector,
-                         String location, List<Split> splits, Long seed,
-                         FeatureStore featureStore) {
+  public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
+                         StorageConnector storageConnector, String location, List<Split> splits, Long seed,
+                         FeatureStore featureStore, Boolean statisticsEnabled, Boolean histograms,
+                         Boolean correlations, List<String> statisticColumns) {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -100,6 +120,10 @@ public class TrainingDataset {
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;
+    this.statisticsEnabled = statisticsEnabled;
+    this.histograms = histograms;
+    this.correlations = correlations;
+    this.statisticColumns = statisticColumns;
   }
 
   /**
@@ -133,7 +157,11 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
-    trainingDatasetEngine.save(this, query.read(), writeOptions);
+    Dataset<Row> dataset = query.read();
+    trainingDatasetEngine.save(this, dataset, writeOptions);
+    if (statisticsEnabled) {
+      statisticsEngine.computeStatistics(this, dataset);
+    }
   }
 
   /**
@@ -147,6 +175,9 @@ public class TrainingDataset {
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.save(this, dataset, writeOptions);
+    if (statisticsEnabled) {
+      statisticsEngine.computeStatistics(this, dataset);
+    }
   }
 
   /**
@@ -186,6 +217,7 @@ public class TrainingDataset {
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.insert(this, query.read(),
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
+    computeStatistics();
   }
 
   /**
@@ -201,6 +233,7 @@ public class TrainingDataset {
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.insert(this, dataset,
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
+    computeStatistics();
   }
 
   /**
@@ -251,6 +284,20 @@ public class TrainingDataset {
    */
   public void show(int numRows) {
     read("").show(numRows);
+  }
+
+  /**
+   * Recompute the statistics for the entire training dataset and save them to the feature store.
+   *
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsEnabled) {
+      return statisticsEngine.computeStatistics(this, read());
+    }
+    return null;
   }
 
   /**
