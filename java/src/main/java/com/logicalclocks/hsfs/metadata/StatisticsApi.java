@@ -22,6 +22,11 @@ public class StatisticsApi {
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics";
+  public static final String STATISTICS_FILTER_COMMIT_TIME_EQ = "filter_by=commit_time_eq:{commitTime}";
+  public static final String CONTENT_FIELD = "fields=content";
+  public static final String SORT_BY_COMMIT_TIME_DESC = "sort_by=commit_time:desc";
+  public static final String OFFSET = "offset={offset}";
+  public static final String LIMIT = "limit={limit}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsApi.class);
 
@@ -63,6 +68,13 @@ public class StatisticsApi {
     LOGGER.info(statisticsJson);
 
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
+  }
+
+  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
+
+
   }
 
 }
