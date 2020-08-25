@@ -59,7 +59,7 @@ class StatisticsApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {
-            "filter_by:commit_time_eq:": str(commit_time),
+            "filter_by": "commit_time_eq:" + str(commit_time),
             "fields": "content",
         }
         return statistics.Statistics.from_response_json(
