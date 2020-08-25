@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import re
 import itertools
 
 try:
@@ -23,6 +24,11 @@ except ModuleNotFoundError:
 
 try:
     from pydoop import hdfs
+except ModuleNotFoundError:
+    pass
+
+try:
+    import boto3
 except ModuleNotFoundError:
     pass
 
@@ -36,7 +42,6 @@ class FeedModelEngine:
         feature_names,
         is_training,
         cycle_length,
-        engine,
     ):
         """FeedModelEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
 
@@ -52,7 +57,6 @@ class FeedModelEngine:
         :type is_training: boolean, required
         :param cycle_length: number of files to be read and deserialized in parallel.
         :type cycle_length: int, required
-        :param engine: execution engine. Currently only spark is supported
         :type engine: str, required
 
         :return: feed model object
@@ -65,16 +69,12 @@ class FeedModelEngine:
         self._feature_names = feature_names
         self._is_training = is_training
         self._cycle_length = cycle_length
-        self._engine = engine
 
         self._training_dataset_schema = self._training_dataset.schema
 
-        if self._split is None:
-            self._path = hdfs.path.abspath(self._training_dataset.location + "/" + "**")
-        else:
-            self._path = hdfs.path.abspath(
-                self._training_dataset.location + "/" + str(split)
-            )
+        self._input_files = _get_training_dataset_files(
+            self._training_dataset.location, self._split
+        )
 
         if self._feature_names is None:
             self._feature_names = [feat.name for feat in self._training_dataset_schema]
@@ -90,7 +90,7 @@ class FeedModelEngine:
         :rtype: dict
         """
         _, tfrecord_feature_description = _get_tfdataset(
-            self._path, self._cycle_length, engine=self._engine
+            self._input_files, self._cycle_length
         )
         return tfrecord_feature_description
 
@@ -134,7 +134,7 @@ class FeedModelEngine:
             )
 
         dataset, tfrecord_feature_description = _get_tfdataset(
-            self._path, self._cycle_length, engine=self._engine
+            self._input_files, self._cycle_length
         )
 
         def _de_serialize(serialized_example):
@@ -174,12 +174,9 @@ class FeedModelEngine:
 
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
-
     if is_training:
         dataset = dataset.shuffle(num_epochs * batch_size)
-        dataset = (
-            dataset.repeat()
-        )  # TODO (davit): decide if we want to provide: num_epochs * steps_per_epoch
+        dataset = dataset.repeat(num_epochs * batch_size)
     dataset = dataset.cache()
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
@@ -239,12 +236,7 @@ def _infer_tf_dtype(k, v):
     return k, feature_type
 
 
-def _get_tfdataset(path, cycle_length, engine):
-    if engine == "spark":
-        input_files = tf.io.gfile.glob(path + "/part-r-*")
-    else:
-        raise NotImplementedError("Currently on spark is supported")
-
+def _get_tfdataset(input_files, cycle_length):
     dataset = tf.data.Dataset.from_tensor_slices(input_files)
 
     dataset = dataset.interleave(
@@ -258,3 +250,73 @@ def _get_tfdataset(path, cycle_length, engine):
     )
 
     return dataset, tfrecord_feature_description
+
+
+def _get_training_dataset_files(training_dataset_location, split):
+    """
+    returns list of absolute path of training input files
+    :param training_dataset_location: training_dataset_location
+    :type training_dataset_location: str
+    :param split: name of training dataset split. train, test or eval
+    :type split: str
+    :return: absolute path of input files
+    :rtype: 1d array
+    """
+
+    if training_dataset_location.startswith("hopsfs"):
+        input_files = _get_hopsfs_dataset_files(training_dataset_location, split)
+    elif training_dataset_location.startswith("s3"):
+        input_files = _get_s3_dataset_files(training_dataset_location, split)
+    else:
+        raise Exception("Couldn't find execution engine.")
+
+    return input_files
+
+
+def _get_hopsfs_dataset_files(training_dataset_location, split):
+    path = training_dataset_location.replace("hopsfs", "hdfs")
+    if split is None:
+        path = hdfs.path.abspath(path)
+    else:
+        path = hdfs.path.abspath(path + "/" + str(split))
+
+    input_files = []
+
+    all_list = hdfs.ls(path, recursive=True)
+
+    # Remove directories and spark '_SUCCESS' file if any
+    for file in all_list:
+        if not hdfs.path.isdir(file) and not file.endswith("_SUCCESS"):
+            input_files.append(file)
+
+    return input_files
+
+
+def _get_s3_dataset_files(training_dataset_location, split):
+    """
+    returns list of absolute path of training input files
+    :param training_dataset_location: training_dataset_location
+    :type training_dataset_location: str
+    :param split: name of training dataset split. train, test or eval
+    :type split: str
+    :return: absolute path of input files
+    :rtype: 1d array
+    """
+
+    if split is None:
+        path = training_dataset_location
+    else:
+        path = training_dataset_location + "/" + str(split)
+
+    match = re.match(r"s3:\/\/(.+?)\/(.+)", path)
+    bucketname = match.group(1)
+
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket(bucketname)
+
+    input_files = []
+    for s3_obj_summary in bucket.objects.all():
+        if s3_obj_summary.get()["ContentType"] != "application/x-directory":
+            input_files.append(path + "/" + s3_obj_summary.key)
+
+    return input_files

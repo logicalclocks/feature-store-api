@@ -140,7 +140,6 @@ class TrainingDataset:
         feature_names=None,
         is_training=True,
         cycle_length=2,
-        engine="spark",
     ):
         """
         :param target_name: name of the target variable
@@ -165,7 +164,6 @@ class TrainingDataset:
             feature_names=feature_names,
             is_training=is_training,
             cycle_length=cycle_length,
-            engine=engine,
         )
 
     def show(self, n, split=None):
