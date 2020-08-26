@@ -178,4 +178,12 @@ public class FeatureGroupEngine {
   public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
     tagsApi.deleteTag(featureGroup, name);
   }
+
+  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    FeatureGroup apiFG = featureGroupApi.updateStatsConfig(featureGroup);
+    featureGroup.setStatisticsEnabled(apiFG.getStatisticsEnabled());
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
+    featureGroup.setStatisticColumns(apiFG.getStatisticColumns());
+  }
 }

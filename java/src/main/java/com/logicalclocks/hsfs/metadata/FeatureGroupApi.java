@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -24,11 +25,13 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -38,7 +41,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
-  public static final String FEATURE_GROUP_TAGS_PATH = FEATURE_GROUP_ID_PATH + "/tags{/name}{?value}";
+  public static final String FEATURE_GROUP_UPDATE_STATS_CONGIG = "updateStatsSettings=True";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
@@ -121,5 +124,30 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     HttpPost postRequest = new HttpPost(uri);
     hopsworksClient.handleRequest(postRequest);
+  }
+
+  public FeatureGroup updateStatsConfig(FeatureGroup featureGroup)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_ID_PATH
+        + "?" + FEATURE_GROUP_UPDATE_STATS_CONGIG;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .expand();
+
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    putRequest.setEntity(new StringEntity(featureGroupJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(featureGroupJson);
+
+    return hopsworksClient.handleRequest(putRequest, FeatureGroup.class);
   }
 }

@@ -7,6 +7,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class StatisticsApi {
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics";
-  public static final String STATISTICS_FILTER_COMMIT_TIME_EQ = "filter_by=commit_time_eq:{commitTime}";
+  public static final String FILTER_COMMIT_TIME_EQ = "filter_by=commit_time_eq:{commitTime}";
   public static final String CONTENT_FIELD = "fields=content";
   public static final String SORT_BY_COMMIT_TIME_DESC = "sort_by=commit_time:desc";
   public static final String OFFSET = "offset={offset}";
@@ -70,11 +71,83 @@ public class StatisticsApi {
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
 
-  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException {
+  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException, IOException {
+    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+      featureGroup.getId(), commitTime);
+  }
+
+  public Statistics get(TrainingDataset trainingDataset, String commitTime) throws FeatureStoreException, IOException {
+    return get(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+      trainingDataset.getId(), commitTime);
+  }
+
+  private Statistics get(Integer projectId, Integer featurestoreId, Integer entityId, String commitTime)
+      throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + STATISTICS_PATH + "?"
+        + FILTER_COMMIT_TIME_EQ + "&"
+        + CONTENT_FIELD;
 
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", projectId)
+        .set("fsId", featurestoreId)
+        .set("entityType", entityType.getValue())
+        .set("entityId", entityId)
+        .set("commitTime", commitTime)
+        .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpGet getRequest = new HttpGet(uri);
+    Statistics statistics = hopsworksClient.handleRequest(getRequest, Statistics.class);
+
+    // currently getting multiple commits at the same time is not allowed
+    if (statistics.getItems().size() == 1) {
+      return statistics.getItems().get(0);
+    }
+    return null;
+  }
+
+  public Statistics getLast(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return getLast(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+      featureGroup.getId());
+  }
+
+  public Statistics getLast(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    return getLast(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+      trainingDataset.getId());
+  }
+
+  private Statistics getLast(Integer projectId, Integer featurestoreId, Integer entityId)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + STATISTICS_PATH + "?"
+        + SORT_BY_COMMIT_TIME_DESC + "&"
+        + OFFSET + "&"
+        + LIMIT + "&"
+        + CONTENT_FIELD;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", projectId)
+        .set("fsId", featurestoreId)
+        .set("entityType", entityType.getValue())
+        .set("entityId", entityId)
+        .set("offset", 0)
+        .set("limit", 1)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HttpGet getRequest = new HttpGet(uri);
+    Statistics statistics = hopsworksClient.handleRequest(getRequest, Statistics.class);
+
+    // currently getting multiple commits at the same time is not allowed
+    if (statistics.getItems().size() == 1) {
+      return statistics.getItems().get(0);
+    }
+    return null;
   }
 
 }

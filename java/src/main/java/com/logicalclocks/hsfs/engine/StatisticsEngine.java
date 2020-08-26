@@ -44,4 +44,20 @@ public class StatisticsEngine {
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
     return new Statistics(commitTime, content);
   }
+
+  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException, IOException {
+    return statisticsApi.get(featureGroup, commitTime);
+  }
+
+  public Statistics get(TrainingDataset trainingDataset, String commitTime) throws FeatureStoreException, IOException {
+    return statisticsApi.get(trainingDataset, commitTime);
+  }
+
+  public Statistics getLast(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return statisticsApi.getLast(featureGroup);
+  }
+
+  public Statistics getLast(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    return statisticsApi.getLast(trainingDataset);
+  }
 }

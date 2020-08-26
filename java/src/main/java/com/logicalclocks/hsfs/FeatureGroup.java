@@ -199,14 +199,26 @@ public class FeatureGroup {
     featureGroupEngine.delete(this);
   }
 
+  /**
+   * Update the statistics configuration of the feature group.
+   * Change the `statisticsEnabled`, `histograms`, `correlations` or `statisticColumns` attributes and persist
+   * the changes by calling this method.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateStatisticsConfig() throws FeatureStoreException, IOException {
+    featureGroupEngine.updateStatisticsConfig(this);
+  }
+
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
-    /**
-     * Recompute the statistics for the feature group and save them to the feature store.
-     *
-     * @return statistics object of computed statistics
-     * @throws FeatureStoreException
-     * @throws IOException
-     */
     if (statisticsEnabled) {
       if (defaultStorage == Storage.ALL || defaultStorage == Storage.OFFLINE) {
         return statisticsEngine.computeStatistics(this, read(Storage.OFFLINE));
@@ -216,6 +228,31 @@ public class FeatureGroup {
       }
     }
     return null;
+  }
+
+  /**
+   * Get the last statistics commit for the feature group.
+   *
+   * @return statistics object of latest commit
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    return statisticsEngine.getLast(this);
+  }
+
+  /**
+   * Get the statistics of a specific commit time for the feature group.
+   *
+   * @param commitTime commit time in the format "YYYYMMDDhhmmss"
+   * @return statistics object for the commit time
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
+    return statisticsEngine.get(this, commitTime);
   }
 
   /**

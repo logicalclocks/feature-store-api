@@ -301,6 +301,29 @@ public class TrainingDataset {
   }
 
   /**
+   * Get the last statistics commit for the training dataset.
+   *
+   * @return statistics object of latest commit
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    return statisticsEngine.getLast(this);
+  }
+
+  /**
+   * Get the statistics of a specific commit time for the training dataset.
+   *
+   * @param commitTime commit time in the format "YYYYMMDDhhmmss"
+   * @return statistics object for the commit time
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
+    return statisticsEngine.get(this, commitTime);
+  }
+
+  /**
    * Add a tag without value to the training dataset.
    *
    * @param name name of the tag
