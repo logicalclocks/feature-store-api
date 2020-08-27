@@ -159,6 +159,7 @@ public class SparkEngine {
         writeOptions.put(Constants.DELIMITER, "\t");
         break;
       case TFRECORDS:
+      case TFRECORD:
         writeOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
         break;
       default:
@@ -185,6 +186,7 @@ public class SparkEngine {
         readOptions.put(Constants.INFER_SCHEMA, "true");
         break;
       case TFRECORDS:
+      case TFRECORD:
         readOptions.put(Constants.TF_CONNECTOR_RECORD_TYPE, "Example");
         break;
       default:
