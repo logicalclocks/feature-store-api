@@ -32,5 +32,7 @@ public enum DataFormat {
   @JsonProperty("orc")
   ORC,
   @JsonProperty("tfrecords")
-  TFRECORDS
+  TFRECORDS,
+  @JsonProperty("tfrecord")
+  TFRECORD
 }
