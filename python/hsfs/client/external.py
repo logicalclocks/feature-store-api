@@ -40,6 +40,7 @@ class Client(base.Client):
         trust_store_path,
         cert_folder,
         api_key_file,
+        api_key_value,
     ):
         """Initializes a client in an external environment such as AWS Sagemaker."""
         if not host:
@@ -55,9 +56,11 @@ class Client(base.Client):
         self._cert_folder_base = cert_folder
         self._cert_folder = os.path.join(cert_folder, host, project)
 
-        self._auth = auth.ApiKeyAuth(
-            self._get_secret(secrets_store, "api-key", api_key_file)
-        )
+        if api_key_value is not None:
+            api_key = api_key_value
+        else:
+            api_key = self._get_secret(secrets_store, "api-key", api_key_file)
+        self._auth = auth.ApiKeyAuth(api_key)
 
         self._session = requests.session()
         self._connected = True

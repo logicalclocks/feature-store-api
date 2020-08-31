@@ -14,6 +14,32 @@
 #   limitations under the License.
 #
 
+"""
+A feature store connection object. Clients in external clusters need to connect to the Hopsworks Feature Store using an API key. The API key is generated inside the Hopsworks platform, and requires at least the "project" and "featurestore" scopes to be able to access a feature store. 
+
+    >>> # External Clusters (Sagemaker, Databricks, KubeFlow, etc)
+    >>> # 
+    >>> from hsfs import feature_store as fs
+    >>> # You can connect to the feature store using an API key supplied by:
+    >>> # (1) a shared secret service
+    >>> # (2) a file that contains the API key
+    >>> # (3) a string containing the API key (insecure)
+    >>> # 
+    >>> # Connect by downloading the API key from a shared secret service using an IAM Role (AWS Managed Secrets Service)
+    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1", secrets_store="secretsmanager",
+    >>>     hostname_verification=True)
+    >>> 
+    >>> # Connecting using an API key stored in a local file
+    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1", api_key_file="/home/john/.secrets/hsfs-api-key.txt",
+    >>>     hostname_verification=True)
+    >>>     
+    >>> # Connecting using an API key stored in a local file
+    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1",
+    >>>     api_key_value="PFcy3dZ6wLXYglRd.ydcdq5jH878IdG7xlL9lHVqrS8v3sBUqQgyR4xbpUgDnB5ZpYro6OxNnAzJ7RV6H", hostname_verification=True)
+    >>>     
+"""
+
+
 import os
 from requests.exceptions import ConnectionError
 
@@ -40,6 +66,7 @@ class Connection:
         trust_store_path=None,
         cert_folder=None,
         api_key_file=None,
+        api_key_value=None,
     ):
         self._host = host
         self._port = port or self.HOPSWORKS_PORT_DEFAULT
@@ -52,6 +79,7 @@ class Connection:
         self._trust_store_path = trust_store_path
         self._cert_folder = cert_folder or self.CERT_FOLDER_DEFAULT
         self._api_key_file = api_key_file
+        self._api_key_value = api_key_value
         self._connected = False
 
         self.connect()
@@ -68,6 +96,7 @@ class Connection:
         trust_store_path=None,
         cert_folder=None,
         api_key_file=None,
+        api_key_value=None,
     ):
         return cls(
             host,
@@ -79,6 +108,7 @@ class Connection:
             trust_store_path,
             cert_folder,
             api_key_file,
+            api_key_value,
         )
 
     @classmethod
@@ -93,6 +123,7 @@ class Connection:
         hostname_verification=True,
         trust_store_path=None,
         api_key_file=None,
+        api_key_value=None,
     ):
         connection = cls(
             host,
@@ -104,6 +135,7 @@ class Connection:
             trust_store_path,
             cert_folder,
             api_key_file,
+            api_key_value,
         )
 
         dbfs_folder = client.get_instance()._cert_folder_base
@@ -140,6 +172,7 @@ class Connection:
                         os.path.join("/dbfs", self._api_key_file)
                         if self._api_key_file is not None
                         else None,
+                        self._api_key_value,
                     )
                     engine.init("spark")
                 else:
@@ -155,6 +188,7 @@ class Connection:
                         self._trust_store_path,
                         self._cert_folder,
                         self._api_key_file,
+                        self._api_key_value,
                     )
                     engine.init(
                         "hive",
@@ -355,10 +389,19 @@ class Connection:
     def api_key_file(self):
         return self._api_key_file
 
+    @property
+    def api_key_value(self):
+        return self._api_key_value
+
     @api_key_file.setter
     @not_connected
     def api_key_file(self, api_key_file):
         self._api_key_file = api_key_file
+
+    @api_key_value.setter
+    @not_connected
+    def api_key_value(self, api_key_value):
+        self._api_key_value = api_key_value
 
     def __enter__(self):
         self.connect()

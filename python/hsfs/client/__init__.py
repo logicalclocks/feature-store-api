@@ -30,6 +30,7 @@ def init(
     trust_store_path=None,
     cert_folder=None,
     api_key_file=None,
+    api_key_value=None,
 ):
     global _client
     if not _client:
@@ -46,6 +47,7 @@ def init(
                 trust_store_path,
                 cert_folder,
                 api_key_file,
+                api_key_value,
             )
 
 
