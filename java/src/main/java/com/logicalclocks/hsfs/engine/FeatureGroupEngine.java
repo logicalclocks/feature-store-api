@@ -97,10 +97,8 @@ public class FeatureGroupEngine {
     // Update the original object - Hopsworks returns the incremented version
     featureGroup.setVersion(apiFG.getVersion());
     featureGroup.setId(apiFG.getId());
-    featureGroup.setStatisticsEnabled(apiFG.getStatisticsEnabled());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
-    featureGroup.setStatisticColumns(apiFG.getStatisticColumns());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);
@@ -181,9 +179,7 @@ public class FeatureGroupEngine {
 
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     FeatureGroup apiFG = featureGroupApi.updateStatsConfig(featureGroup);
-    featureGroup.setStatisticsEnabled(apiFG.getStatisticsEnabled());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
-    featureGroup.setStatisticColumns(apiFG.getStatisticColumns());
   }
 }
