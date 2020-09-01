@@ -37,9 +37,8 @@ public class FeatureGroupApi {
 
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
-  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
+  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsSettings}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
-  public static final String FEATURE_GROUP_UPDATE_STATS_CONGIG = "updateStatsSettings=True";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
@@ -129,13 +128,13 @@ public class FeatureGroupApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_ID_PATH
-        + "?" + FEATURE_GROUP_UPDATE_STATS_CONGIG;
+        + FEATURE_GROUP_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
+        .set("updateStatsSettings", true)
         .expand();
 
     String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);

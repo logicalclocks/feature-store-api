@@ -38,12 +38,7 @@ public class StatisticsApi {
 
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics";
-  public static final String FILTER_COMMIT_TIME_EQ = "filter_by=commit_time_eq:{commitTime}";
-  public static final String CONTENT_FIELD = "fields=content";
-  public static final String SORT_BY_COMMIT_TIME_DESC = "sort_by=commit_time:desc";
-  public static final String OFFSET = "offset={offset}";
-  public static final String LIMIT = "limit={limit}";
+  public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,sort_by,offset,limit}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsApi.class);
 
@@ -102,16 +97,15 @@ public class StatisticsApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + STATISTICS_PATH + "?"
-        + FILTER_COMMIT_TIME_EQ + "&"
-        + CONTENT_FIELD;
+        + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
-        .set("commitTime", commitTime)
+        .set("filter_by", "commit_time_eq:" + commitTime)
+        .set("fields", "content")
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
@@ -140,19 +134,17 @@ public class StatisticsApi {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + STATISTICS_PATH + "?"
-        + SORT_BY_COMMIT_TIME_DESC + "&"
-        + OFFSET + "&"
-        + LIMIT + "&"
-        + CONTENT_FIELD;
+        + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
+        .set("sort_by", "commit_time:desc")
         .set("offset", 0)
         .set("limit", 1)
+        .set("fields", "content")
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
