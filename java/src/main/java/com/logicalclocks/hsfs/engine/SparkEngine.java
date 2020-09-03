@@ -36,6 +36,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -354,16 +355,21 @@ public class SparkEngine {
                                       SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = setupHudiArgs(featureGroup);
-    // TODO (davit): make sure to check operation values
+
+    List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT, Constants.HUDI_BULK_INSERT);
+    if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
+      throw new IllegalArgumentException("Unknown operation is provided. Please use either " + Constants.HUDI_INSERT
+              + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
+    }
+
     hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
 
-    DataFrameWriter<Row> writer = dataset.write().format("org.apache.hudi");
+    DataFrameWriter<Row> writer = dataset.write().format(Constants.HUDI_SPARK_FORMAT);
 
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
       writer = writer.option(entry.getKey(), entry.getValue());
     }
 
-    // TODO (davit): make sure to check saveMode values
     writer = writer.mode(saveMode);
     writer.save(utils.getTableName(featureGroup));
   }

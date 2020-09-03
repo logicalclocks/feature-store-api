@@ -102,8 +102,8 @@ public class FeatureGroupEngine {
     featureGroup.setVersion(apiFG.getVersion());
 
     // Write the dataframe
-    // TODO (davit): saveMode was Append. check if its important to have SaveMode.Append
-    saveDataframe(featureGroup, dataset, storage, SaveMode.Overwrite,
+    // TODO (davit): Check how HUDI_BULK_INSERT will react to SaveMode.Append
+    saveDataframe(featureGroup, dataset, storage, SaveMode.Append,
             featureGroup.getOnlineEnabled() ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
@@ -146,7 +146,7 @@ public class FeatureGroupEngine {
     if (featureGroup.getOnlineEnabled() && saveMode == SaveMode.Overwrite
             && !operation.equals(Constants.HUDI_BULK_INSERT)) {
       throw new FeatureStoreException("mode overwrite is only supported for bulk_insert for "
-              + "time travel enabled feature group");
+              + "time travel enabled feature groups");
     }
 
     if (saveMode == SaveMode.Overwrite) {

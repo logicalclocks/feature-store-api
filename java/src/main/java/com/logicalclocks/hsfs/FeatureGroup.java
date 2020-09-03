@@ -30,6 +30,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -159,9 +160,17 @@ public class FeatureGroup {
   }
 
   // time-travel enabled insert with upsert op
-  public void insert(Dataset<Row> featureData, Map<String, String> writeOptions)
+  public void insert(Dataset<Row> featureData, String operation)
           throws FeatureStoreException, IOException {
-    insert(featureData, defaultStorage, false, Constants.HUDI_UPSERT, writeOptions);
+
+    List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT);
+
+    if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
+      throw new IllegalArgumentException("For insert only operations " + Constants.HUDI_INSERT
+              + " and " + Constants.HUDI_INSERT + " are supported");
+    }
+
+    insert(featureData, defaultStorage, false, operation, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
