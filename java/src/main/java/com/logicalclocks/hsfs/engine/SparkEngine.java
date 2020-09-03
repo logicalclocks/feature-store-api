@@ -372,7 +372,9 @@ public class SparkEngine {
     }
 
     writer = writer.mode(saveMode);
-    writer.save(utils.getTableName(featureGroup));
+    // TODO (davit): 1) find better way to get project path and 2) decide where hudi parquet files will go
+    writer.save("hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
+            + "/Resources/" + utils.getTableName(featureGroup));
   }
 
   private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
