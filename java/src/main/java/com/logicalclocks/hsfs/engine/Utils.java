@@ -74,7 +74,17 @@ public class Utils {
         .map(Feature::getName)
         .collect(Collectors.toList());
 
+
     return JavaConverters.asScalaIteratorConverter(partitionCols.iterator()).asScala().toSeq();
+  }
+
+  public Seq<String> getPrimaryColumns(FeatureGroup offlineFeatureGroup) {
+    List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
+            .filter(Feature::getPrimary)
+            .map(Feature::getName)
+            .collect(Collectors.toList());
+
+    return JavaConverters.asScalaIteratorConverter(primaryCols.iterator()).asScala().toSeq();
   }
 
   public String getFgName(FeatureGroup featureGroup) {

@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
@@ -33,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -104,11 +102,13 @@ public class FeatureGroupEngine {
     featureGroup.setVersion(apiFG.getVersion());
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);
+    // TODO (davit): saveMode was Append. check if its important to have SaveMode.Append
+    saveDataframe(featureGroup, dataset, storage, SaveMode.Overwrite,
+            featureGroup.getOnlineEnabled() ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, Map<String, String> writeOptions)
+                            SaveMode saveMode, String operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -116,13 +116,13 @@ public class FeatureGroupEngine {
 
     switch (storage) {
       case OFFLINE:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         break;
       case ONLINE:
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       case ALL:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       default:
@@ -136,11 +136,18 @@ public class FeatureGroupEngine {
    * @param featureGroup
    * @param dataset
    * @param saveMode
+   * @param operation
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, Map<String, String> writeOptions)
+                                    SaveMode saveMode, String operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+
+    if (featureGroup.getOnlineEnabled() && saveMode == SaveMode.Overwrite
+            && !operation.equals(Constants.HUDI_BULK_INSERT)) {
+      throw new FeatureStoreException("mode overwrite is only supported for bulk_insert for "
+              + "time travel enabled feature group");
+    }
 
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
@@ -151,7 +158,7 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
