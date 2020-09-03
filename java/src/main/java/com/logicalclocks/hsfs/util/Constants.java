@@ -55,7 +55,7 @@ public class Constants {
   public static final String HUDI_HIVE_SYNC_JDBC_URL = "hoodie.datasource.hive_sync.jdbcurl";
   public static final String HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields";
   public static final String HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class";
-  public static final String HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.ComplexKeyGenerator";
+  public static final String HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator";
   public static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
           "hoodie.datasource.hive_sync.partition_extractor_class";
   public static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
