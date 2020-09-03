@@ -314,8 +314,9 @@ public class SparkEngine {
 
     Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
 
+    // TODO (davit) decide if you allow users to write feature group without primarykey
     if (primaryColumns.isEmpty()) {
-      throw new FeatureStoreException("You must provide at least 1 primary key");
+      throw new FeatureStoreException("For time travel enabled feature groups You must provide at least 1 primary key");
     }
 
     hudiArgs.put(Constants.HUDI_RECORD_KEY, primaryColumns.mkString(","));
@@ -358,8 +359,8 @@ public class SparkEngine {
 
     List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT, Constants.HUDI_BULK_INSERT);
     if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
-      throw new IllegalArgumentException("Unknown operation is provided. Please use either " + Constants.HUDI_INSERT
-              + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
+      throw new IllegalArgumentException("Unknown operation " + operation + " is provided. Please use either "
+              + Constants.HUDI_INSERT + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
     }
 
     hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
