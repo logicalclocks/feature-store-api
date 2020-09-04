@@ -326,7 +326,7 @@ public class SparkEngine {
     // TODO (davit): Decide what happens if particion key is not present
     if (!partitionColumns.isEmpty()) {
       hudiArgs.put(Constants.HUDI_PARTITION_FIELD, partitionColumns.mkString(","));
-      hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.mkString(","));
+      hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.head());
       hudiArgs.put(Constants.HUDI_HIVE_SYNC_PARTITION_FIELDS, partitionColumns.mkString(","));
     }
 
