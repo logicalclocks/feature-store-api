@@ -23,28 +23,21 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDataset;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
 
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import java.io.File;
-import org.apache.commons.io.FileUtils;
-import scala.collection.Seq;
 
 public class SparkEngine {
 
@@ -60,6 +53,7 @@ public class SparkEngine {
   @Getter
   private SparkSession sparkSession;
   private Utils utils = new Utils();
+  private HudiEngine hudiEngine = new HudiEngine();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -299,87 +293,11 @@ public class SparkEngine {
           throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelEnabled()) {
-      writeHudiDataset(featureGroup, dataset, saveMode, operation);
+      hudiEngine.writeTimeTravelEnabledFG(featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }
 
-  }
-
-  private Map<String, String> setupHudiArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-
-    Map<String, String> hudiArgs = new HashMap<String, String>();
-
-    hudiArgs.put(Constants.HUDI_RECORD_KEY, Constants.HUDI_TABLE_STORAGE_TYPE);
-
-    Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
-
-    // TODO (davit) decide if you allow users to write feature group without primarykey
-    if (primaryColumns.isEmpty()) {
-      throw new FeatureStoreException("For time travel enabled feature groups You must provide at least 1 primary key");
-    }
-
-    hudiArgs.put(Constants.HUDI_RECORD_KEY, primaryColumns.mkString(","));
-
-    Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
-
-    // TODO (davit): Decide what happens if particion key is not present
-    if (!partitionColumns.isEmpty()) {
-      hudiArgs.put(Constants.HUDI_PARTITION_FIELD, partitionColumns.mkString(","));
-      hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.head());
-      hudiArgs.put(Constants.HUDI_HIVE_SYNC_PARTITION_FIELDS, partitionColumns.mkString(","));
-    }
-
-    // TODO (davit): Decide what happens if key is not composite
-    hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
-
-    hudiArgs.put(Constants.HUDI_TABLE_OPERATION, Constants.HUDI_BULK_INSERT);
-    hudiArgs.put(Constants.HUDI_TABLE_NAME, utils.getTableName(featureGroup));
-    hudiArgs.put(Constants.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY,
-            Constants.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
-
-    // Hive
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_ENABLE, "true");
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_TABLE, utils.getTableName(featureGroup));
-    // Gets the JDBC Connector for the project's Hive metastore
-    StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-    StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
-            featureGroup.getFeatureStore().getName(), StorageConnectorType.JDBC);
-    String connStr = storageConnector.getConnectionString();
-    String pw = FileUtils.readFileToString(new File("material_passwd"));
-    String jdbcUrl = connStr + "sslTrustStore=t_certificate;trustStorePassword="
-            + pw + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
-
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_JDBC_URL, jdbcUrl);
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
-
-    return hudiArgs;
-  }
-
-
-  private void writeHudiDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                      SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
-
-    Map<String, String> hudiArgs = setupHudiArgs(featureGroup);
-
-    List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT, Constants.HUDI_BULK_INSERT);
-    if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
-      throw new IllegalArgumentException("Unknown operation " + operation + " is provided. Please use either "
-              + Constants.HUDI_INSERT + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
-    }
-
-    hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
-
-    DataFrameWriter<Row> writer = dataset.write().format(Constants.HUDI_SPARK_FORMAT);
-
-    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
-      writer = writer.option(entry.getKey(), entry.getValue());
-    }
-
-    writer = writer.mode(saveMode);
-    // TODO (davit): 1) find better way to get project path and 2) decide where hudi parquet files will go
-    writer.save("hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
-            + "/Resources/" + utils.getTableName(featureGroup));
   }
 
   private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,

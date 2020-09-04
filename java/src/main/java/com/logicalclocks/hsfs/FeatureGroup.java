@@ -136,6 +136,10 @@ public class FeatureGroup {
     read(storage).show(numRows);
   }
 
+  public Map<String, String> getCommitDetails() throws FeatureStoreException, IOException {
+    return null;
+  }
+
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
     save(featureData, null);
   }
@@ -166,8 +170,8 @@ public class FeatureGroup {
     List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT);
 
     if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
-      throw new IllegalArgumentException("For insert only operations " + Constants.HUDI_INSERT
-              + " and " + Constants.HUDI_INSERT + " are supported");
+      throw new IllegalArgumentException("For inserting in time travel enabled feature group only operations "
+              + Constants.HUDI_UPSERT + " and " + Constants.HUDI_INSERT + " are supported");
     }
 
     insert(featureData, defaultStorage, false, operation, null);
@@ -184,7 +188,7 @@ public class FeatureGroup {
 
     // operation is only valid for time travel enabled feature group
     if (!this.timeTravelEnabled && operation != null) {
-      throw new FeatureStoreException("You must specify operation (upsert or insert) for "
+      throw new IllegalArgumentException("Argument operation is only valid for "
               + "time travel enabled feature group");
     }
 
