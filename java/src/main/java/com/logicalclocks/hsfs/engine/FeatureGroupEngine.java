@@ -103,7 +103,7 @@ public class FeatureGroupEngine {
 
     // Write the dataframe
     // TODO (davit): Check how HUDI_BULK_INSERT will react to SaveMode.Append
-    saveDataframe(featureGroup, dataset, storage, SaveMode.Append,
+    saveDataframe(featureGroup, dataset, storage, SaveMode.Overwrite,
             featureGroup.getTimeTravelEnabled() ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
