@@ -9,12 +9,17 @@ import com.logicalclocks.hsfs.util.Constants;
 
 import org.apache.commons.io.FileUtils;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import org.apache.hudi.common.table.HoodieTimeline;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
-//import org.apache.hudi.HoodieDataSourceHelpers;
+import org.apache.hudi.HoodieDataSourceHelpers;
 
 import scala.collection.Seq;
 
@@ -24,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class HudiEngine {
   private Utils utils = new Utils();
@@ -100,9 +106,19 @@ public class HudiEngine {
     }
 
     writer = writer.mode(saveMode);
-    // TODO (davit): 1) find better way to get project path and 2) decide where hudi parquet files will go
-    writer.save("hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
-                + "/Resources/" + utils.getTableName(featureGroup));
+    writer.save(utils.getHudiBasePath(featureGroup));
+  }
+
+  public Map<Integer, String> getTimeLine(SparkSession sparkSession, String basePath) throws IOException {
+
+    FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
+    HoodieTimeline timeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
+
+    Map<Integer, String> commitTimestamps = new HashMap<>();
+    for (int i = 0; i <= timeline.countInstants(); i = i + 2) {
+      commitTimestamps.put(i, timeline.nthInstant(i).get().getTimestamp());
+    }
+    return commitTimestamps;
   }
 
   public void writeTimeTravelEnabledFG(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
@@ -110,4 +126,5 @@ public class HudiEngine {
 
     writeHudiDataset(featureGroup, dataset, saveMode, operation);
   }
+
 }

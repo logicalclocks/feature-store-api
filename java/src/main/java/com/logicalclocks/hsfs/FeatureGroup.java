@@ -19,6 +19,9 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.HudiEngine;
+import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.Query;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Builder;
@@ -83,6 +86,8 @@ public class FeatureGroup {
   private List<String> partitionKeys;
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private HudiEngine hudiEngine = new HudiEngine();
+  private Utils utils = new Utils();
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
@@ -136,8 +141,10 @@ public class FeatureGroup {
     read(storage).show(numRows);
   }
 
-  public Map<String, String> getCommitDetails() throws FeatureStoreException, IOException {
-    return null;
+  public Map<Integer, String> getCommitDetails() throws FeatureStoreException, IOException {
+    //TODO (davit): may be its better to get this info from metadata? for now I will just read it from fs
+    return hudiEngine.getTimeLine(SparkEngine.getInstance().getSparkSession(),
+            utils.getHudiBasePath(this));
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {

@@ -20,6 +20,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.util.Constants;
 import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -66,6 +67,15 @@ public class Utils {
   public String getTableName(FeatureGroup offlineFeatureGroup) {
     return offlineFeatureGroup.getFeatureStore().getName() + "."
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+  }
+
+  // TODO (davit): this should be moved in the backend
+  //   1) find better way to get project path and
+  //   2) decide where hudi parquet files will go
+  //   Also, we need to get this from metadata using API call
+  public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
+    return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
+            + "/Resources/" + getTableName(offlineFeatureGroup);
   }
 
   public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
