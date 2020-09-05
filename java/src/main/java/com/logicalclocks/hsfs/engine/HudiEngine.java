@@ -10,7 +10,6 @@ import com.logicalclocks.hsfs.util.Constants;
 import org.apache.commons.io.FileUtils;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import org.apache.hudi.common.table.HoodieTimeline;
 import org.apache.spark.sql.SparkSession;
@@ -115,7 +114,7 @@ public class HudiEngine {
     HoodieTimeline timeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
     Map<Integer, String> commitTimestamps = new HashMap<>();
-    for (int i = 0; i <= timeline.countInstants(); i = i + 2) {
+    for (int i = 0; i <= timeline.countInstants(); i++) {
       commitTimestamps.put(i, timeline.nthInstant(i).get().getTimestamp());
     }
     return commitTimestamps;

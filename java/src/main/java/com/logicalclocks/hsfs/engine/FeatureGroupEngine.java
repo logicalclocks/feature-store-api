@@ -41,6 +41,7 @@ public class FeatureGroupEngine {
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
   private Utils utils = new Utils();
+  private HudiEngine hudiEngine = new HudiEngine();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -186,4 +187,11 @@ public class FeatureGroupEngine {
   public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
     tagsApi.deleteTag(featureGroup, name);
   }
+
+  public Map<Integer, String> commitDetails(FeatureGroup featureGroup) throws IOException {
+    //TODO (davit): may be its better to get this info from metadata? for now I will just read it from fs
+    return hudiEngine.getTimeLine(SparkEngine.getInstance().getSparkSession(),
+            utils.getHudiBasePath(featureGroup));
+  }
+
 }
