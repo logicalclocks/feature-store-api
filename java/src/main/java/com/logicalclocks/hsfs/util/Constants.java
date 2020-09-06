@@ -64,5 +64,6 @@ public class Constants {
   public static final String HUDI_BULK_INSERT = "bulk_insert";
   public static final String HUDI_INSERT = "insert";
   public static final String HUDI_UPSERT = "upsert";
+  public static final String HUDI_UPPEND = "append";
 
 }

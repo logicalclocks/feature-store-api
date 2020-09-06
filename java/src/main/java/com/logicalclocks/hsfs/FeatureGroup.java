@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Query;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Builder;
