@@ -37,7 +37,7 @@ public class HudiEngine {
 
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
-    hudiArgs.put(Constants.HUDI_RECORD_KEY, Constants.HUDI_TABLE_STORAGE_TYPE);
+    hudiArgs.put(Constants.HUDI_TABLE_STORAGE_TYPE, Constants.HUDI_COPY_ON_WRITE);
 
     Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
 
@@ -60,7 +60,6 @@ public class HudiEngine {
     // TODO (davit): Decide what happens if key is not composite
     hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
-    hudiArgs.put(Constants.HUDI_TABLE_OPERATION, Constants.HUDI_BULK_INSERT);
     hudiArgs.put(Constants.HUDI_TABLE_NAME, utils.getTableName(featureGroup));
     hudiArgs.put(Constants.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY,
                 Constants.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
@@ -114,7 +113,7 @@ public class HudiEngine {
     HoodieTimeline timeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
     Map<Integer, String> commitTimestamps = new HashMap<>();
-    for (int i = 0; i <= timeline.countInstants(); i++) {
+    for (int i = 0; i < timeline.countInstants(); i++) {
       commitTimestamps.put(i, timeline.nthInstant(i).get().getTimestamp());
     }
     return commitTimestamps;
