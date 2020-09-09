@@ -77,7 +77,7 @@ public class SparkEngine {
       reader = reader.option(entry.getKey(), entry.getValue());
     }
     // TODO (davit): decide how to query hudi tables: Spark data source or hive incrementall pull??
-    reader.load(hudiEngine.getTableName()).registerTempTable(hudiEngine.getTableName());
+    reader.load(hudiEngine.getBasePath()).registerTempTable(hudiEngine.getTableName());
     return sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
             + hudiEngine.getTableName() + "`",hudiEngine.getTableName()));
   }
