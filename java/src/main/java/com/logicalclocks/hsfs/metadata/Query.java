@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -106,10 +107,11 @@ public class Query {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE);
+    return read(Storage.OFFLINE, null, null);
   }
 
-  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(Storage storage, String startTime, String  endTime)
+          throws FeatureStoreException, IOException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
     }
@@ -120,7 +122,11 @@ public class Query {
 
     switch (storage) {
       case OFFLINE:
-        return SparkEngine.getInstance().sql(sqlQuery);
+        if (leftFeatureGroup.getTimeTravelEnabled()) {
+          return SparkEngine.getInstance().sql(sqlQuery);
+        } else {
+          return SparkEngine.getInstance().sql(sqlQuery, leftFeatureGroup, startTime, endTime);
+        }
       case ONLINE:
         StorageConnector onlineConnector
             = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
@@ -134,8 +140,9 @@ public class Query {
     show(Storage.OFFLINE, numRows);
   }
 
+  // TODO (davit): implement show function for time travel
   public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
-    read(storage).show(numRows);
+    read(storage, null, null).show(numRows);
   }
 
   public String toString() {

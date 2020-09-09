@@ -7,7 +7,10 @@ import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
 
+import lombok.Getter;
+
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.fs.FileSystem;
 
@@ -30,9 +33,16 @@ import java.util.List;
 import java.util.Map;
 
 public class HudiEngine {
+
+  @Getter
+  private String basePath;
+  @Getter
+  private String tableName;
+
+
   private Utils utils = new Utils();
 
-  private Map<String, String> setupHudiArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
+  private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
@@ -82,10 +92,42 @@ public class HudiEngine {
   }
 
 
+  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime) {
+    Map<String, String> hudiArgs = new HashMap<String, String>();
+
+    Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
+    this.basePath = utils.getHudiBasePath(featureGroup);
+    this.tableName = utils.getTableName(featureGroup);
+
+    //Snapshot query
+    if (startTime == null && endTime == null) {
+      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
+      this.basePath =  this.basePath  + StringUtils.repeat("/*", numberOfpartitionCols + 1);
+    } else if (endTime != null) {
+      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      //point in time  query
+      if (startTime == null) {
+        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, endTime);
+      } else if (startTime != null) {       //incremental  query
+        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, startTime);
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, endTime);
+      }
+    }
+
+    return hudiArgs;
+  }
+
+  public Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime) {
+    Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, startTime, endTime);
+    return hudiArgs;
+  }
+
+
   private void writeHudiDataset(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
                                   String operation) throws IOException, FeatureStoreException {
 
-    Map<String, String> hudiArgs = setupHudiArgs(featureGroup);
+    Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
 
     List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT,
                 Constants.HUDI_BULK_INSERT);

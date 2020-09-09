@@ -124,8 +124,20 @@ public class FeatureGroup {
     return read(this.defaultStorage);
   }
 
+  // time travel read pint in time
+  public Dataset<Row> read(Storage storage, String wallclockPointInTime)
+          throws FeatureStoreException, IOException {
+    return selectAll().read(storage, null, wallclockPointInTime);
+  }
+
+  // time travel read changes
+  public Dataset<Row> readChanges(Storage storage, String wallclockStartTime, String wallclockEndTime)
+          throws FeatureStoreException, IOException {
+    return selectAll().read(storage, wallclockStartTime, wallclockEndTime);
+  }
+
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
-    return selectAll().read(storage);
+    return selectAll().read(storage, null, null);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {

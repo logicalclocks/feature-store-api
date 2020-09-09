@@ -32,6 +32,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.DataFrameReader;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ public class SparkEngine {
 
   @Getter
   private SparkSession sparkSession;
+
   private Utils utils = new Utils();
   private HudiEngine hudiEngine = new HudiEngine();
 
@@ -63,6 +65,20 @@ public class SparkEngine {
     // Configure the Spark context to allow dynamic partitions
     sparkSession.conf().set("hive.exec.dynamic.partition", "true");
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
+  }
+
+  //time time travel sql query
+  public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
+                          String  endTime) {
+    Map<String, String> hudiArgs = hudiEngine.hudiReadArgs(featureGroup, startTime, endTime);
+
+    DataFrameReader reader = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
+    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
+      reader = reader.option(entry.getKey(), entry.getValue());
+    }
+
+    reader.load(hudiEngine.getBasePath()).createOrReplaceTempView(hudiEngine.getTableName());
+    return sparkSession.sql(query);
   }
 
   public Dataset<Row> sql(String query) {
