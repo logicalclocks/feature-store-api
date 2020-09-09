@@ -60,17 +60,16 @@ public class HudiEngine {
 
     hudiArgs.put(Constants.HUDI_RECORD_KEY, primaryColumns.mkString(","));
 
+    hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
+
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
 
     // TODO (davit): Decide what happens if particion key is not present
     if (!partitionColumns.isEmpty()) {
       hudiArgs.put(Constants.HUDI_PARTITION_FIELD, partitionColumns.mkString(","));
-      hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.head());
+      hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.mkString(","));
       hudiArgs.put(Constants.HUDI_HIVE_SYNC_PARTITION_FIELDS, partitionColumns.mkString(","));
     }
-
-    // TODO (davit): Decide what happens if key is not composite
-    //hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
     hudiArgs.put(Constants.HUDI_TABLE_NAME, utils.getTableName(featureGroup));
     hudiArgs.put(Constants.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY,
