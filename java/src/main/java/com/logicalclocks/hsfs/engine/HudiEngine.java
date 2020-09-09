@@ -14,7 +14,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.fs.FileSystem;
 
-import org.apache.hudi.common.table.HoodieTimeline;
+import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;

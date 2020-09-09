@@ -129,15 +129,15 @@ public class FeatureGroup {
   }
 
   // time travel read pint in time
-  public Dataset<Row> read(Storage storage, String wallclockPointInTime)
+  public Dataset<Row> read(String wallclockPointInTime)
           throws FeatureStoreException, IOException {
-    return selectAll().read(storage, null, wallclockPointInTime);
+    return selectAll().read(Storage.OFFLINE, null, wallclockPointInTime);
   }
 
   // time travel read changes
-  public Dataset<Row> readChanges(Storage storage, String wallclockStartTime, String wallclockEndTime)
+  public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
           throws FeatureStoreException, IOException {
-    return selectAll().read(storage, wallclockStartTime, wallclockEndTime);
+    return selectAll().read(Storage.OFFLINE, wallclockStartTime, wallclockEndTime);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
