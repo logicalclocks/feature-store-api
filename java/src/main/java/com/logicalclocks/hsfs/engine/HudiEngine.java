@@ -67,7 +67,7 @@ public class HudiEngine {
     }
 
     // TODO (davit): Decide what happens if key is not composite
-    hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
+    //hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
     hudiArgs.put(Constants.HUDI_TABLE_NAME, utils.getTableName(featureGroup));
     hudiArgs.put(Constants.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY,
