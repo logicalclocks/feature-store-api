@@ -64,7 +64,7 @@ public class Constants {
   public static final String HUDI_BULK_INSERT = "bulk_insert";
   public static final String HUDI_INSERT = "insert";
   public static final String HUDI_UPSERT = "upsert";
-  public static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.view.type";
+  public static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   public static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
   public static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
   public static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";

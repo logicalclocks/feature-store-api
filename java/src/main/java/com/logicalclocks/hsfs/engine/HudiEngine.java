@@ -97,7 +97,7 @@ public class HudiEngine {
 
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
     this.basePath = utils.getHudiBasePath(featureGroup);
-    this.tableName = utils.getTableName(featureGroup);
+    this.tableName = featureGroup.getName();
 
     //Snapshot query
     if (startTime == null && endTime == null) {
