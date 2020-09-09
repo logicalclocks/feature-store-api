@@ -75,7 +75,7 @@ public class HudiEngine {
 
     // Hive
     hudiArgs.put(Constants.HUDI_HIVE_SYNC_ENABLE, "true");
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_TABLE, utils.getTableName(featureGroup));
+    hudiArgs.put(Constants.HUDI_HIVE_SYNC_TABLE, featureGroup.getName());
     // Gets the JDBC Connector for the project's Hive metastore
     StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
     StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
