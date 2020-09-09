@@ -123,9 +123,9 @@ public class Query {
     switch (storage) {
       case OFFLINE:
         if (leftFeatureGroup.getTimeTravelEnabled()) {
-          return SparkEngine.getInstance().sql(sqlQuery);
-        } else {
           return SparkEngine.getInstance().sql(sqlQuery, leftFeatureGroup, startTime, endTime);
+        } else {
+          return SparkEngine.getInstance().sql(sqlQuery);
         }
       case ONLINE:
         StorageConnector onlineConnector
