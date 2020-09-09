@@ -76,8 +76,8 @@ public class SparkEngine {
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
       reader = reader.option(entry.getKey(), entry.getValue());
     }
-
-    reader.load(hudiEngine.getBasePath()).createOrReplaceTempView(hudiEngine.getTableName());
+    reader.load(hudiEngine.getTableName());
+    sparkSession.sql("USE " + featureGroup.getFeatureStore().getName());
     return sparkSession.sql(query);
   }
 

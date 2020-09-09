@@ -44,6 +44,9 @@ public class HudiEngine {
 
   private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
+    this.basePath = utils.getHudiBasePath(featureGroup);
+    this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
+
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
     hudiArgs.put(Constants.HUDI_TABLE_STORAGE_TYPE, Constants.HUDI_COPY_ON_WRITE);
@@ -75,7 +78,7 @@ public class HudiEngine {
 
     // Hive
     hudiArgs.put(Constants.HUDI_HIVE_SYNC_ENABLE, "true");
-    hudiArgs.put(Constants.HUDI_HIVE_SYNC_TABLE, featureGroup.getName());
+    hudiArgs.put(Constants.HUDI_HIVE_SYNC_TABLE, this.tableName);
     // Gets the JDBC Connector for the project's Hive metastore
     StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
     StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
@@ -94,10 +97,9 @@ public class HudiEngine {
 
   private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime) {
     Map<String, String> hudiArgs = new HashMap<String, String>();
-
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
     this.basePath = utils.getHudiBasePath(featureGroup);
-    this.tableName = featureGroup.getName();
+    this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
 
     //Snapshot query
     if (startTime == null && endTime == null) {
@@ -123,7 +125,6 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-
   private void writeHudiDataset(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
                                   String operation) throws IOException, FeatureStoreException {
 
@@ -145,7 +146,7 @@ public class HudiEngine {
     }
 
     writer = writer.mode(saveMode);
-    writer.save(utils.getHudiBasePath(featureGroup));
+    writer.save(this.basePath);
   }
 
   public Map<Integer, String> getTimeLine(SparkSession sparkSession, String basePath) throws IOException {
