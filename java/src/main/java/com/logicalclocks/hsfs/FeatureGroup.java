@@ -134,9 +134,24 @@ public class FeatureGroup {
     return selectAll().read(Storage.OFFLINE, null, wallclockPointInTime);
   }
 
+  // time travel read pint in time with commit id
+  public Dataset<Row> read(Integer commitID)
+          throws FeatureStoreException, IOException {
+    String wallclockPointInTime = this.commitDetails().get(commitID);
+    return selectAll().read(Storage.OFFLINE, null, wallclockPointInTime);
+  }
+
   // time travel read changes
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
           throws FeatureStoreException, IOException {
+    return selectAll().read(Storage.OFFLINE, wallclockStartTime, wallclockEndTime);
+  }
+
+  // time travel read changes with commit ids
+  public Dataset<Row> readChanges(Integer startCommitID, Integer endCommitID)
+          throws FeatureStoreException, IOException {
+    String wallclockStartTime = this.commitDetails().get(startCommitID);
+    String wallclockEndTime = this.commitDetails().get(endCommitID);
     return selectAll().read(Storage.OFFLINE, wallclockStartTime, wallclockEndTime);
   }
 

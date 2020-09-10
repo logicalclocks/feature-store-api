@@ -16,11 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.*;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
@@ -65,8 +61,13 @@ public class FeatureGroupEngine {
                                Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
+    List<Feature> features = utils.parseSchema(dataset);
     if (featureGroup.getFeatureStore() != null) {
-      featureGroup.setFeatures(utils.parseSchema(dataset));
+      features = utils.addHudiSpecFeatures(features);
+    }
+
+    if (featureGroup.getFeatureStore() != null) {
+      featureGroup.setFeatures(features);
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());

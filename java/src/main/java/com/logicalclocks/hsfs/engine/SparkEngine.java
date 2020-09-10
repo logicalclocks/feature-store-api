@@ -69,7 +69,7 @@ public class SparkEngine {
 
   //time time travel sql query
   public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
-                          String  endTime) {
+                          String  endTime){
 
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
@@ -82,9 +82,12 @@ public class SparkEngine {
       reader = reader.option(entry.getKey(), entry.getValue());
     }
     // TODO (davit): decide how to query hudi tables: Spark data source or hive incrementall pull??
+    //    is it a good idea to have temp view name in backend
     reader.load(hudiEngine.getBasePath()).registerTempTable(hudiEngine.getTableName());
-    return sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
+    Dataset<Row>  result = sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
             + hudiEngine.getTableName() + "`",hudiEngine.getTableName()));
+
+    return utils.dropHudiSpecFeatures(result);
   }
 
   public Dataset<Row> sql(String query) {

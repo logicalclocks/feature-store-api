@@ -69,15 +69,6 @@ public class Utils {
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
-  // TODO (davit): this should be moved in the backend
-  //   1) find better way to get project path and
-  //   2) decide where hudi parquet files will go
-  //   Also, we need to get this from metadata using API call
-  public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
-    return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
-            + "/Resources/" + getTableName(offlineFeatureGroup);
-  }
-
   public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
     List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPartition)
@@ -100,4 +91,33 @@ public class Utils {
   public String getFgName(FeatureGroup featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
+
+  // TODO (davit): this should be moved in the backend
+  //   1) find better way to get project path and
+  //   2) decide where hudi parquet files will go
+  //   Also, we need to get this from metadata using API call
+  public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
+    return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
+            + "/Resources/" + getTableName(offlineFeatureGroup);
+  }
+
+  public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
+    features.add(new Feature("_hoodie_record_key", "string",
+            "string", false, false));
+    features.add(new Feature("_hoodie_partition_path", "string",
+            "string", false, false));
+    features.add(new Feature("_hoodie_commit_time", "string",
+            "string", false, false));
+    features.add(new Feature("_hoodie_file_name", "string",
+            "string", false, false));
+    features.add(new Feature("_hoodie_commit_seqno", "string",
+            "string", false, false));
+    return features;
+  }
+
+  public Dataset<Row>  dropHudiSpecFeatures(Dataset<Row> dataset){
+    return  dataset.drop("_hoodie_record_key", "_hoodie_partition_path", "_hoodie_commit_time",
+            "_hoodie_file_name", "_hoodie_commit_seqno");
+  }
+
 }
