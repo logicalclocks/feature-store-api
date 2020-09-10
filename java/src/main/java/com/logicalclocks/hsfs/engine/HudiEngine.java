@@ -64,7 +64,6 @@ public class HudiEngine {
 
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
 
-    // TODO (davit): Decide what happens if particion key is not present
     if (!partitionColumns.isEmpty()) {
       hudiArgs.put(Constants.HUDI_PARTITION_FIELD, partitionColumns.mkString(","));
       hudiArgs.put(Constants.HUDI_PRECOMBINE_FIELD, partitionColumns.mkString(","));

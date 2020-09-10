@@ -70,6 +70,10 @@ public class SparkEngine {
   //time time travel sql query
   public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
                           String  endTime) {
+
+    sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
+            org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
+
     Map<String, String> hudiArgs = hudiEngine.hudiReadArgs(featureGroup, startTime, endTime);
 
     DataFrameReader reader = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
