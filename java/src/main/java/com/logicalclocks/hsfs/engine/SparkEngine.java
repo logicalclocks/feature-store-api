@@ -71,6 +71,7 @@ public class SparkEngine {
   public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
                           String  endTime) {
 
+    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
             org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
 
