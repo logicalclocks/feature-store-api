@@ -115,7 +115,7 @@ public class Utils {
     return features;
   }
 
-  public Dataset<Row>  dropHudiSpecFeatures(Dataset<Row> dataset){
+  public Dataset<Row>  dropHudiSpecFeatures(Dataset<Row> dataset) {
     return  dataset.drop("_hoodie_record_key", "_hoodie_partition_path", "_hoodie_commit_time",
             "_hoodie_file_name", "_hoodie_commit_seqno");
   }

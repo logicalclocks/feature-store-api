@@ -69,7 +69,7 @@ public class SparkEngine {
 
   //time time travel sql query
   public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
-                          String  endTime){
+                          String  endTime) {
 
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
