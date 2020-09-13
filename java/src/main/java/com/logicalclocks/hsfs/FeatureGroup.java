@@ -69,7 +69,7 @@ public class FeatureGroup {
   private Boolean onlineEnabled;
 
   @Getter @Setter
-  private Boolean timeTravelEnabled;
+  private Boolean timeTravelEnabled = false;
 
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
