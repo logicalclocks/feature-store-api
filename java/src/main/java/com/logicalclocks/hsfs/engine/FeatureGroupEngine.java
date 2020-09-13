@@ -67,7 +67,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
-    if (featureGroup.getFeatureStore() != null) {
+    if (featureGroup.getTimeTravelEnabled()) {
       features = utils.addHudiSpecFeatures(features);
     }
 
