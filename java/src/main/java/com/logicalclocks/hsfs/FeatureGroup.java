@@ -69,7 +69,7 @@ public class FeatureGroup {
   private Boolean onlineEnabled;
 
   @Getter @Setter
-  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+  private TimeTravelFormat timeTravelFormat;
 
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
@@ -97,7 +97,7 @@ public class FeatureGroup {
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
     this.onlineEnabled = onlineEnabled;
-    this.timeTravelFormat = timeTravelFormat;
+    this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
     this.features = features;
   }
