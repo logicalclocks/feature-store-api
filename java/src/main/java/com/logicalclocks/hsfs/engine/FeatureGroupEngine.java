@@ -67,7 +67,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
-    if (featureGroup.getTimeTravelEnabled()) {
+    if (featureGroup.getTimeTravelFormat().equals("HUDI")) {
       features = utils.addHudiSpecFeatures(features);
     }
 
@@ -110,7 +110,7 @@ public class FeatureGroupEngine {
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
-            featureGroup.getTimeTravelEnabled() ? Constants.HUDI_BULK_INSERT : null, writeOptions);
+            featureGroup.getTimeTravelFormat().equals("HUDI") ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,

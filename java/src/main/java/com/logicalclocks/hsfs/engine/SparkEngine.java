@@ -317,7 +317,7 @@ public class SparkEngine {
                                     SaveMode saveMode, String operation, Map<String, String> writeOptions)
           throws IOException, FeatureStoreException {
 
-    if (featureGroup.getTimeTravelEnabled()) {
+    if (featureGroup.getTimeTravelFormat().equals("HUDI")) {
       hudiEngine.writeTimeTravelEnabledFG(featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);

@@ -122,7 +122,7 @@ public class Query {
 
     switch (storage) {
       case OFFLINE:
-        if (leftFeatureGroup.getTimeTravelEnabled()) {
+        if (leftFeatureGroup.getTimeTravelFormat().equals("HUDI")) {
           return SparkEngine.getInstance().sql(sqlQuery, leftFeatureGroup, startTime, endTime);
         } else {
           return SparkEngine.getInstance().sql(sqlQuery);
