@@ -16,12 +16,13 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.EntityEndpointType;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
@@ -67,7 +68,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
-    if (featureGroup.getTimeTravelFormat().equals("HUDI")) {
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       features = utils.addHudiSpecFeatures(features);
     }
 
@@ -110,7 +111,8 @@ public class FeatureGroupEngine {
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
-            featureGroup.getTimeTravelFormat().equals("HUDI") ? Constants.HUDI_BULK_INSERT : null, writeOptions);
+            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+                    ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,

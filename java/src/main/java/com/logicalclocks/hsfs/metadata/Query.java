@@ -22,8 +22,8 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.engine.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -122,7 +122,7 @@ public class Query {
 
     switch (storage) {
       case OFFLINE:
-        if (leftFeatureGroup.getTimeTravelFormat().equals("HUDI")) {
+        if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
           return SparkEngine.getInstance().sql(sqlQuery, leftFeatureGroup, startTime, endTime);
         } else {
           return SparkEngine.getInstance().sql(sqlQuery);
@@ -140,7 +140,6 @@ public class Query {
     show(Storage.OFFLINE, numRows);
   }
 
-  // TODO (davit): implement show function for time travel
   public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
     read(storage, null, null).show(numRows);
   }

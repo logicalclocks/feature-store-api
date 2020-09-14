@@ -69,7 +69,7 @@ public class FeatureGroup {
   private Boolean onlineEnabled;
 
   @Getter @Setter
-  private String timeTravelFormat = "HUDI";
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
@@ -86,8 +86,8 @@ public class FeatureGroup {
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys,
-                      boolean onlineEnabled, String timeTravelFormat, Storage defaultStorage, List<Feature> features)
+                      List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
+                      TimeTravelFormat timeTravelFormat, Storage defaultStorage, List<Feature> features)
       throws FeatureStoreException {
 
     this.featureStore = featureStore;
@@ -210,7 +210,7 @@ public class FeatureGroup {
       throws FeatureStoreException, IOException {
 
     // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == null && operation != null) {
+    if (this.timeTravelFormat == TimeTravelFormat.NONE && operation != null) {
       throw new IllegalArgumentException("Argument operation is only valid for "
               + "time travel enabled feature group");
     }

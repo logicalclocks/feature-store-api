@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
@@ -317,7 +318,7 @@ public class SparkEngine {
                                     SaveMode saveMode, String operation, Map<String, String> writeOptions)
           throws IOException, FeatureStoreException {
 
-    if (featureGroup.getTimeTravelFormat().equals("HUDI")) {
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       hudiEngine.writeTimeTravelEnabledFG(featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
