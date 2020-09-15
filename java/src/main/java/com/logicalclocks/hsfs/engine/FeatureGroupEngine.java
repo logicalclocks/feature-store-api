@@ -57,14 +57,15 @@ public class FeatureGroupEngine {
    * @param dataset
    * @param primaryKeys
    * @param partitionKeys
+   * @param precombineKeys
    * @param storage
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
-                               List<String> primaryKeys, List<String> partitionKeys,
-                               Storage storage, Map<String, String> writeOptions)
+  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+                               List<String> partitionKeys, List<String> precombineKeys, Storage storage,
+                               Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
@@ -96,6 +97,16 @@ public class FeatureGroupEngine {
               f.setPartition(true);
             }
           }));
+    }
+
+    /* set precombine key features */
+    if (precombineKeys != null) {
+      precombineKeys.forEach(pk ->
+              featureGroup.getFeatures().forEach(f -> {
+                if (f.getName().equals(pk)) {
+                  f.setPrecombine(true);
+                }
+              }));
     }
 
     // Send Hopsworks the request to create a new feature group

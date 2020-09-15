@@ -82,12 +82,17 @@ public class FeatureGroup {
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
+  @JsonIgnore
+  // These are only used in the client. In the server they are aggregated in the `features` field
+  private List<String> precombineKeys;
+
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
-                      TimeTravelFormat timeTravelFormat, Storage defaultStorage, List<Feature> features)
+                      List<String> primaryKeys, List<String> partitionKeys, List<String> precombineKeys,
+                      boolean onlineEnabled, TimeTravelFormat timeTravelFormat, Storage defaultStorage,
+                      List<Feature> features)
       throws FeatureStoreException {
 
     this.featureStore = featureStore;
@@ -96,6 +101,7 @@ public class FeatureGroup {
     this.description = description;
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
+    this.precombineKeys = precombineKeys;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
@@ -169,8 +175,8 @@ public class FeatureGroup {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, defaultStorage,
-            writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, precombineKeys,
+            defaultStorage, writeOptions);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {

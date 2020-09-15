@@ -44,6 +44,9 @@ public class Feature {
   @Getter @Setter
   private Boolean partition;
 
+  @Getter @Setter
+  private Boolean precombine;
+
   public Feature(String name) {
     this.name = name;
   }
@@ -54,7 +57,7 @@ public class Feature {
   }
 
   @Builder
-  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition)
+  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, Boolean precombine)
       throws FeatureStoreException {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
@@ -68,5 +71,6 @@ public class Feature {
     this.onlineType = onlineType;
     this.primary = primary;
     this.partition = partition;
+    this.precombine = precombine;
   }
 }

@@ -43,7 +43,7 @@ public class Utils {
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
       features.add(new Feature(structField.name(), structField.dataType().catalogString(),
-          structField.dataType().catalogString(), false, false));
+          structField.dataType().catalogString(), false, false, false));
     }
 
     return features;
@@ -103,15 +103,15 @@ public class Utils {
 
   public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
     features.add(new Feature("_hoodie_record_key", "string",
-            "string", false, false));
+            "string", false, false, false));
     features.add(new Feature("_hoodie_partition_path", "string",
-            "string", false, false));
+            "string", false, false, false));
     features.add(new Feature("_hoodie_commit_time", "string",
-            "string", false, false));
+            "string", false, false, false));
     features.add(new Feature("_hoodie_file_name", "string",
-            "string", false, false));
+            "string", false, false, false));
     features.add(new Feature("_hoodie_commit_seqno", "string",
-            "string", false, false));
+            "string", false, false, false));
     return features;
   }
 
