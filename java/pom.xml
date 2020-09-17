@@ -31,7 +31,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.amazon.deequ</groupId>
+            <groupId>com.logicalclocks</groupId>
             <artifactId>deequ</artifactId>
             <version>${deequ.version}</version>
         </dependency>
