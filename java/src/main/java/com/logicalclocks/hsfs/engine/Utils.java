@@ -97,8 +97,9 @@ public class Utils {
   //   2) decide where hudi parquet files will go
   //   Also, we need to get this from metadata using API call
   public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
-    return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
-            + "/Resources/" + getTableName(offlineFeatureGroup);
+    return getTableName(offlineFeatureGroup);
+    //return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
+    //        + "/Resources/" + getTableName(offlineFeatureGroup);
   }
 
   public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
