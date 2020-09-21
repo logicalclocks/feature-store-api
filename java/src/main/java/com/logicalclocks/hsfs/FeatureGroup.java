@@ -74,7 +74,8 @@ public class FeatureGroup {
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
 
-  @Getter
+  // TODO (davit): this must be Getter only.
+  @Getter @Setter
   private String location;
 
   @JsonIgnore
