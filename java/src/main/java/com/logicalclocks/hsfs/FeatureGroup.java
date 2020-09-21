@@ -74,6 +74,9 @@ public class FeatureGroup {
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
 
+  @Getter
+  private String location;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> primaryKeys;

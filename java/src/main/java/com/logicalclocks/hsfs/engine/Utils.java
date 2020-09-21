@@ -92,14 +92,8 @@ public class Utils {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  // TODO (davit): this should be moved in the backend
-  //   1) find better way to get project path and
-  //   2) decide where hudi parquet files will go
-  //   Also, we need to get this from metadata using API call
   public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
-    return getTableName(offlineFeatureGroup);
-    //return  "hdfs:///Projects/" + System.getProperty(Constants.PROJECTNAME_ENV)
-    //        + "/Resources/" + getTableName(offlineFeatureGroup);
+    return offlineFeatureGroup.getLocation();
   }
 
   public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
