@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
+import com.logicalclocks.hsfs.metadata.FeatureGroupInternal;
 import com.logicalclocks.hsfs.metadata.Query;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
@@ -40,9 +41,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroup {
-  @Getter @Setter
-  private Integer id;
+public class FeatureGroup extends FeatureGroupInternal {
 
   @Getter @Setter
   private String name;
@@ -52,9 +51,6 @@ public class FeatureGroup {
 
   @Getter @Setter
   private String description;
-
-  @Getter @Setter
-  private FeatureStore featureStore;
 
   @Getter @Setter
   private List<Feature> features;

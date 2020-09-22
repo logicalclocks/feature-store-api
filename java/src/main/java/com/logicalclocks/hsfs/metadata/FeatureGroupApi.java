@@ -20,6 +20,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
@@ -42,8 +43,32 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public FeatureGroup get(FeatureStore featureStore, String fgName, Integer fgVersion)
+  public FeatureGroup getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
+    FeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, fgVersion, FeatureGroup[].class);
+
+    // There can be only one single feature group with a specific name and version in a feature store
+    // There has to be one otherwise an exception would have been thrown.
+    FeatureGroup resultFg = offlineFeatureGroups[0];
+    resultFg.setFeatureStore(featureStore);
+    return resultFg;
+  }
+
+  public OnDemandFeatureGroup getOnDemandFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
+      throws IOException, FeatureStoreException {
+    OnDemandFeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, fgVersion, OnDemandFeatureGroup[].class);
+
+    // There can be only one single feature group with a specific name and version in a feature store
+    // There has to be one otherwise an exception would have been thrown.
+    OnDemandFeatureGroup resultFg = offlineFeatureGroups[0];
+    resultFg.setFeatureStore(featureStore);
+    return resultFg;
+  }
+
+  private <T> T getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<T> fgType)
+      throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -57,38 +82,45 @@ public class FeatureGroupApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    FeatureGroup[] offlineFeatureGroups = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroup[].class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), fgType);
+  }
 
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    FeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
+  public OnDemandFeatureGroup save(OnDemandFeatureGroup onDemandFeatureGroup)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(onDemandFeatureGroup);
+
+    return saveInternal(onDemandFeatureGroup, new StringEntity(featureGroupJson), OnDemandFeatureGroup.class);
   }
 
   public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+
+    return saveInternal(featureGroup, new StringEntity(featureGroupJson), FeatureGroup.class);
+  }
+
+  private <T> T saveInternal(FeatureGroupInternal featureGroupInternal,
+                             StringEntity entity, Class<T> fgType) throws FeatureStoreException, IOException {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroup.getFeatureStore().getProjectId())
-        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("projectId", featureGroupInternal.getFeatureStore().getProjectId())
+        .set("fsId", featureGroupInternal.getFeatureStore().getId())
         .expand();
 
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
     HttpPost postRequest = new HttpPost(uri);
     postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(featureGroupJson));
+    postRequest.setEntity(entity);
 
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(featureGroupJson);
 
-    return hopsworksClient.handleRequest(postRequest, FeatureGroup.class);
+    return HopsworksClient.getInstance().handleRequest(postRequest, fgType);
   }
 
-  public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public void delete(FeatureGroupInternal featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
