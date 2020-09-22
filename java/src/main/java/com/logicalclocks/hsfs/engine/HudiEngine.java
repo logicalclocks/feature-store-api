@@ -4,6 +4,8 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
 
@@ -14,14 +16,15 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.fs.FileSystem;
 
+import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
+import org.apache.hudi.HoodieDataSourceHelpers;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
-import org.apache.hudi.HoodieDataSourceHelpers;
 
 import scala.collection.Seq;
 
@@ -31,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class HudiEngine {
 
@@ -41,6 +45,7 @@ public class HudiEngine {
 
 
   private Utils utils = new Utils();
+  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
   private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
@@ -124,8 +129,8 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-  private void writeHudiDataset(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                  String operation) throws IOException, FeatureStoreException {
+  private void writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
+                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
 
@@ -138,6 +143,7 @@ public class HudiEngine {
 
     hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
 
+
     DataFrameWriter<Row> writer = dataset.write().format(Constants.HUDI_SPARK_FORMAT);
 
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
@@ -146,6 +152,10 @@ public class HudiEngine {
 
     writer = writer.mode(saveMode);
     writer.save(this.basePath);
+    FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit();
+
+    getLastCommitMetadata(sparkSession, this.basePath);
+    featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
   }
 
   public Map<Integer, String> getTimeLine(SparkSession sparkSession, String basePath) throws IOException {
@@ -160,10 +170,30 @@ public class HudiEngine {
     return commitTimestamps;
   }
 
-  public void writeTimeTravelEnabledFG(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                       String operation) throws IOException, FeatureStoreException {
 
-    writeHudiDataset(featureGroup, dataset, saveMode, operation);
+  public Map<String, Long> getLastCommitMetadata(SparkSession sparkSession, String basePath) throws IOException {
+    FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
+    HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
+    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.nthFromLastInstant(0).get()).get();
+
+    HoodieCommitMetadata metadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
+    long totalUpdateRecordsWritten = metadata.fetchTotalUpdateRecordsWritten();
+    long totalInsertRecordsWritten = metadata.fetchTotalInsertRecordsWritten();
+    long totalRecordsDeleted = metadata.getTotalRecordsDeleted();
+
+    Map<String, Long>  commitMetadata = new HashMap<>();
+    commitMetadata.put("totalUpdateRecordsWritten", totalUpdateRecordsWritten);
+    commitMetadata.put("totalInsertRecordsWritten", totalInsertRecordsWritten);
+    commitMetadata.put("totalRecordsDeleted", totalRecordsDeleted);
+
+    return commitMetadata;
+  }
+
+
+  public void writeTimeTravelEnabledFG(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
+                                       SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
+
+    writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
   }
 
 }

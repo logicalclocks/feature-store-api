@@ -319,7 +319,7 @@ public class SparkEngine {
           throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.writeTimeTravelEnabledFG(featureGroup, dataset, saveMode, operation);
+      hudiEngine.writeTimeTravelEnabledFG(sparkSession,featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }
