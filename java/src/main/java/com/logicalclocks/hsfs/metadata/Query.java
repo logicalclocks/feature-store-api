@@ -40,7 +40,7 @@ public class Query {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Getter @Setter
-  private FeatureGroup leftFeatureGroup;
+  private FeatureGroupInternal leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
 
@@ -50,7 +50,7 @@ public class Query {
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
 
-  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+  public Query(FeatureGroupInternal leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
