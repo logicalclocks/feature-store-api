@@ -40,4 +40,37 @@ public class Constants {
 
   public static final String S3_SCHEME = "s3://";
   public static final String S3_SPARK_SCHEME = "s3a://";
+
+  // hudi options
+  public static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
+  public static final String HUDI_TABLE_NAME = "hoodie.table.name";
+  public static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
+  public static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
+  public static final String HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field";
+  public static final String HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field";
+  public static final String HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field";
+  public static final String HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable";
+  public static final String HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table";
+  public static final String HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database";
+  public static final String HUDI_HIVE_SYNC_JDBC_URL = "hoodie.datasource.hive_sync.jdbcurl";
+  public static final String HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields";
+  public static final String HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class";
+  public static final String HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator";
+  public static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
+          "hoodie.datasource.hive_sync.partition_extractor_class";
+  public static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
+          "org.apache.hudi.hive.MultiPartKeysValueExtractor";
+  public static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
+  public static final String HUDI_BULK_INSERT = "bulk_insert";
+  public static final String HUDI_INSERT = "insert";
+  public static final String HUDI_UPSERT = "upsert";
+  public static final String HUDI_DELETE = "delete";
+  public static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
+  public static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
+  public static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
+  public static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
+  public static final String HUDI_END_INSTANTTIME_OPT_KEY  = "hoodie.datasource.read.end.instanttime";
+  public static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
+  public static final String PAYLOAD_CLASS_OPT_VAL =  "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
+
 }

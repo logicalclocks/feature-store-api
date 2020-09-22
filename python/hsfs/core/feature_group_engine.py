@@ -66,15 +66,29 @@ class FeatureGroupEngine:
         engine.get_instance().save_dataframe(
             table_name,
             feature_group.partition_key,
+            feature_group
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             feature_dataframe,
             self.APPEND,
+            hudi_engine.HudiEngine.HUDI_BULK_INSERT
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             storage,
             offline_write_options,
             online_write_options,
         )
 
     def insert(
-        self, feature_group, feature_dataframe, overwrite, storage, write_options
+        self,
+        feature_group,
+        feature_dataframe,
+        overwrite,
+        operation,
+        storage,
+        write_options,
     ):
         offline_write_options = write_options
         online_write_options = write_options
@@ -94,8 +108,13 @@ class FeatureGroupEngine:
         engine.get_instance().save_dataframe(
             self._get_table_name(feature_group),
             feature_group.partition_key,
+            feature_group
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             feature_dataframe,
             self.APPEND,
+            operation,
             storage,
             offline_write_options,
             online_write_options,

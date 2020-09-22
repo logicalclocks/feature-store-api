@@ -19,10 +19,14 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.util.Constants;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
@@ -56,9 +60,8 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
-                               List<String> primaryKeys, List<String> partitionKeys,
-                               Storage storage, Map<String, String> writeOptions)
+  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+                               List<String> partitionKeys, Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatureStore() != null) {
@@ -96,17 +99,22 @@ public class FeatureGroupEngine {
     }
 
     // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
+    // TODO (davit): this must be Getter only.
+    featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);
+    saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
+            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+                    ? Constants.HUDI_BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, Map<String, String> writeOptions)
+                            SaveMode saveMode, String operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -114,13 +122,13 @@ public class FeatureGroupEngine {
 
     switch (storage) {
       case OFFLINE:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         break;
       case ONLINE:
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       case ALL:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       default:
@@ -134,10 +142,11 @@ public class FeatureGroupEngine {
    * @param featureGroup
    * @param dataset
    * @param saveMode
+   * @param operation
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, Map<String, String> writeOptions)
+                                    SaveMode saveMode, String operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
@@ -149,7 +158,7 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
@@ -182,6 +191,18 @@ public class FeatureGroupEngine {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+  }
+
+  public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroup, Integer limit)
+      throws IOException, FeatureStoreException {
+    FeatureGroupCommit[] commits = featureGroupApi.commitDetails(featureGroup, limit);
+    return commits;
+  }
+
+  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws IOException, FeatureStoreException {
+    FeatureGroupCommit featureGroupCommit = SparkEngine.getInstance().commitDelete(featureGroup, dataset);
+    return featureGroupCommit;
   }
 
   public void updateDescription(FeatureGroup featureGroup, String description)

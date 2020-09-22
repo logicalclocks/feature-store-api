@@ -19,10 +19,13 @@ package com.logicalclocks.hsfs.metadata;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -43,6 +46,10 @@ public class Query {
   private FeatureGroup leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
+  @Getter @Setter
+  private String leftFeaturegroupStartTime;
+  @Getter @Setter
+  private String leftFeaturegroupEndTime;
 
   @Getter @Setter
   private List<Join> joins = new ArrayList<>();
@@ -105,26 +112,46 @@ public class Query {
     return this;
   }
 
+  public Query asOf(String wallclockTime) {
+    for (Join join : this.joins) {
+      Query queryWithTimeStamp = join.getQuery();
+      queryWithTimeStamp.setLeftFeaturegroupEndTime(wallclockTime);
+      join.setQuery(queryWithTimeStamp);
+    }
+    this.setLeftFeaturegroupEndTime(wallclockTime);
+    return this;
+  }
+
+  public Query pullChanges(String wallclockStartTime, String wallclockEndTime) {
+    this.setLeftFeaturegroupStartTime(wallclockStartTime);
+    this.setLeftFeaturegroupEndTime(wallclockEndTime);
+    return this;
+  }
+
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(Storage.OFFLINE);
   }
 
-  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(Storage storage)
+          throws FeatureStoreException, IOException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
     }
 
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
-    LOGGER.info("Executing query: " + sqlQuery);
+    FsQuery fsQuery =
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    LOGGER.info("Executing query: " + fsQuery.getStorageQuery(storage));
 
     switch (storage) {
       case OFFLINE:
-        return SparkEngine.getInstance().sql(sqlQuery);
+        if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+          registerHudiFeatureGroups(fsQuery.getHudiCachedFeaturegroups());
+        }
+        return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
         StorageConnector onlineConnector
             = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-        return SparkEngine.getInstance().jdbc(onlineConnector, sqlQuery);
+        return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
       default:
         throw new FeatureStoreException("Storage not supported");
     }
@@ -151,4 +178,16 @@ public class Query {
       return e.getMessage();
     }
   }
+
+  private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> featureGroups)  {
+    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
+      String alias = hudiFeatureGroupAlias.getAlias();
+      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+
+      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
+          hudiFeatureGroupAlias.getLeftFeaturegroupStartTimestamp(),
+          hudiFeatureGroupAlias.getLeftFeaturegroupEndTimestamp());
+    }
+  }
+
 }

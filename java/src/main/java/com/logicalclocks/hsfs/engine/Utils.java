@@ -19,9 +19,7 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
-import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -89,6 +87,15 @@ public class Utils {
         .collect(Collectors.toList());
 
     return JavaConverters.asScalaIteratorConverter(partitionCols.iterator()).asScala().toSeq();
+  }
+
+  public Seq<String> getPrimaryColumns(FeatureGroup offlineFeatureGroup) {
+    List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
+        .filter(Feature::getPrimary)
+        .map(Feature::getName)
+        .collect(Collectors.toList());
+
+    return JavaConverters.asScalaIteratorConverter(primaryCols.iterator()).asScala().toSeq();
   }
 
   public String getFgName(FeatureGroup featureGroup) {

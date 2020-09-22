@@ -29,7 +29,7 @@ except ModuleNotFoundError:
 from hsfs import feature, training_dataset_feature
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-
+from hsfs.core import hudi_engine, time_travel_format
 
 class Engine:
     HIVE_FORMAT = "hive"
@@ -74,6 +74,16 @@ class Engine:
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
+
+    def register_hudi_temporary_table(self, hudi_fg_alias):
+        hudi_engine_instance = hudi_engine.HudiEngine(
+            hudi_fg_alias.left_featuregroup, self._spark_context
+        )
+        hudi_engine_instance.register_temporary_table(
+            hudi_fg_alias.alias,
+            hudi_fg_alias.left_featuregroup_starttimestamp,
+            hudi_fg_alias.left_featuregroup_endtimestamp,
+        )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
@@ -122,8 +132,10 @@ class Engine:
         self,
         table_name,
         partition_columns,
+        feature_group,
         dataframe,
         save_mode,
+        operation,
         storage,
         offline_write_options,
         online_write_options,
@@ -132,8 +144,10 @@ class Engine:
             self._save_offline_dataframe(
                 table_name,
                 partition_columns,
+                feature_group,
                 dataframe,
                 save_mode,
+                operation,
                 offline_write_options,
             )
         elif storage.lower() == "online":
@@ -155,13 +169,19 @@ class Engine:
             raise FeatureStoreException("Storage not supported")
 
     def _save_offline_dataframe(
-        self, table_name, partition_columns, dataframe, save_mode, write_options
+        self, table_name, partition_columns, feature_group,  dataframe, save_mode, operation, write_options
     ):
-        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
-            **write_options
-        ).partitionBy(partition_columns if partition_columns else []).saveAsTable(
-            table_name
-        )
+        if feature_group.time_travel_fomat == time_travel_format.TimeTravelFormat.HUDI:
+            hudi_engine_instance = hudi_engine.HudiEngine(
+                self._spark_session, feature_group
+            )
+            hudi_engine_instance.save_hudi_fg(dataframe, save_mode, operation)
+        else:
+            dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
+                **write_options
+            ).partitionBy(partition_columns if partition_columns else []).saveAsTable(
+                table_name
+            )
 
     def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
         dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(

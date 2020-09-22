@@ -166,7 +166,7 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on teh content of the dataset.
+   * Create the training dataset based on the content of the dataset.
    *
    * @param dataset the dataset to save as training dataset
    * @param writeOptions options to pass to the Spark write operation

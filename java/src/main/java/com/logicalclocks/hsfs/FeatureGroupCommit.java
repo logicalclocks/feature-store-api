@@ -17,39 +17,35 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
-@AllArgsConstructor
-@NoArgsConstructor
-public class FsQuery {
+public class FeatureGroupCommit {
   @Getter @Setter
-  private String query;
-
+  private Long commitID;
   @Getter @Setter
-  private String queryOnline;
-
+  private String commitDateString;
   @Getter @Setter
-  private List<HudiFeatureGroupAlias> hudiCachedFeaturegroups;
+  private Long rowsInserted;
+  @Getter @Setter
+  private Long rowsUpdated;
+  @Getter @Setter
+  private Long rowsDeleted;
 
-  public void removeNewLines() {
-    query = query.replace("\n", " ");
-    queryOnline =  queryOnline.replace("\n", " ");
+  @Builder
+  public FeatureGroupCommit(Long commitID, String commitDateString, Long rowsInserted,
+                            Long rowsUpdated, Long rowsDeleted) {
+
+    this.commitID = commitID;
+    this.commitDateString = commitDateString;
+    this.rowsInserted = rowsInserted;
+    this.rowsUpdated = rowsUpdated;
+    this.rowsDeleted = rowsDeleted;
   }
 
-  public String getStorageQuery(Storage storage) throws FeatureStoreException {
-    switch (storage) {
-      case OFFLINE:
-        return query;
-      case ONLINE:
-        return queryOnline;
-      default:
-        throw new FeatureStoreException("Cannot run query on ALL storages");
-    }
+  public FeatureGroupCommit() {
   }
+
 }
