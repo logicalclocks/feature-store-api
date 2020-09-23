@@ -147,5 +147,4 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-
 }

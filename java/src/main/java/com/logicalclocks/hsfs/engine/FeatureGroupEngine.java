@@ -118,8 +118,8 @@ public class FeatureGroupEngine {
     }
 
     // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
-
     // TODO (davit): this must be Getter only. I need to investigate why not privide directly apiFG
     featureGroup.setLocation(apiFG.getLocation());
 

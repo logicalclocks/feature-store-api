@@ -16,25 +16,12 @@
 
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.metadata.Query;
-import com.logicalclocks.hsfs.util.Constants;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
-
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroupCommit {

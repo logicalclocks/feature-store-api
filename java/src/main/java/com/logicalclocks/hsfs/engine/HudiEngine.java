@@ -153,6 +153,7 @@ public class HudiEngine {
 
     writer = writer.mode(saveMode);
     writer.save(this.basePath);
+
     // TODO (davit): is this correct place for it
     Map<String, Long> commitMetadata = getLastCommitMetadata(sparkSession, this.basePath);
     FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit();
