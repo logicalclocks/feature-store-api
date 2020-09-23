@@ -35,12 +35,10 @@ public class FeatureGroupCommit {
   private Long rowsUpdated;
   @Getter @Setter
   private Long rowsDeleted;
-  @Getter @Setter
-  private String commitMessage;
 
   @Builder
   public FeatureGroupCommit(Integer commitID, Date commitTimestamp, Long rowsInserted, Long rowsUpdated,
-                            Long rowsDeleted, String commitMessage)
+                            Long rowsDeleted)
       throws FeatureStoreException {
 
     this.commitID = commitID;
@@ -48,7 +46,6 @@ public class FeatureGroupCommit {
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;
     this.rowsDeleted = rowsDeleted;
-    this.commitMessage = commitMessage;
   }
 
   public FeatureGroupCommit() {

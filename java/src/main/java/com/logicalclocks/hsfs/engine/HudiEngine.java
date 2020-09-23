@@ -14,7 +14,6 @@ import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.hadoop.fs.FileSystem;
 
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -31,11 +30,13 @@ import scala.collection.Seq;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class HudiEngine {
 
@@ -95,7 +96,6 @@ public class HudiEngine {
     hudiArgs.put(Constants.HUDI_HIVE_SYNC_JDBC_URL, jdbcUrl);
     hudiArgs.put(Constants.HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
 
-
     return hudiArgs;
   }
 
@@ -131,7 +131,7 @@ public class HudiEngine {
   }
 
   private void writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
+                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException, ParseException {
 
     Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
 
@@ -154,18 +154,8 @@ public class HudiEngine {
     writer = writer.mode(saveMode);
     writer.save(this.basePath);
 
-    // TODO (davit): is this correct place for it
-    Map<String, Long> commitMetadata = getLastCommitMetadata(sparkSession, this.basePath);
-    FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit();
-    int leftLimit = 1;
-    int rightLimit = 10000;
-    int commID = new RandomDataGenerator().nextInt(leftLimit, rightLimit);
-    featureGroupCommit.setCommitID(commID);
-    featureGroupCommit.setCommitTimestamp(new Date());
-    featureGroupCommit.setRowsUpdated(commitMetadata.get("totalUpdateRecordsWritten"));
-    featureGroupCommit.setRowsInserted(commitMetadata.get("totalInsertRecordsWritten"));
-    featureGroupCommit.setRowsDeleted(commitMetadata.get("totalRecordsDeleted"));
-    featureGroupCommit.setCommitMessage("some message");
+    // TODO (davit): make sure writing completed without exception
+    FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
     featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
   }
 
@@ -173,6 +163,7 @@ public class HudiEngine {
 
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline timeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
+
 
     Map<Integer, String> commitTimestamps = new HashMap<>();
     for (int i = 0; i < timeline.countInstants(); i++) {
@@ -182,27 +173,39 @@ public class HudiEngine {
   }
 
 
-  public Map<String, Long> getLastCommitMetadata(SparkSession sparkSession, String basePath) throws IOException {
+  private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
+      throws IOException, ParseException {
+
+    FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
+
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
-    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.nthFromLastInstant(0).get()).get();
+    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
 
-    HoodieCommitMetadata metadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
-    long totalUpdateRecordsWritten = metadata.fetchTotalUpdateRecordsWritten();
-    long totalInsertRecordsWritten = metadata.fetchTotalInsertRecordsWritten();
-    long totalRecordsDeleted = metadata.getTotalRecordsDeleted();
+    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
+    long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();
+    long totalInsertRecordsWritten = commitMetadata.fetchTotalInsertRecordsWritten();
+    long totalRecordsDeleted = commitMetadata.getTotalRecordsDeleted();
 
-    Map<String, Long>  commitMetadata = new HashMap<>();
-    commitMetadata.put("totalUpdateRecordsWritten", totalUpdateRecordsWritten);
-    commitMetadata.put("totalInsertRecordsWritten", totalInsertRecordsWritten);
-    commitMetadata.put("totalRecordsDeleted", totalRecordsDeleted);
+    Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
+        .get().getTimestamp());
 
-    return commitMetadata;
+    // TODO (davit): commit ID at the moment is nth instance. Its
+    int commID = commitTimeline.countInstants();
+    commitTimeline.lastInstant().get().getTimestamp();
+
+    fgCommitMetadata.setCommitID(commID);
+    fgCommitMetadata.setCommitTimestamp(commitTimestamp);
+    fgCommitMetadata.setRowsUpdated(totalUpdateRecordsWritten);
+    fgCommitMetadata.setRowsInserted(totalInsertRecordsWritten);
+    fgCommitMetadata.setRowsDeleted(totalRecordsDeleted);
+    return fgCommitMetadata;
   }
 
 
   public void writeTimeTravelEnabledFG(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                       SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
+                                       SaveMode saveMode, String operation)
+      throws IOException, FeatureStoreException, ParseException {
 
     writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
   }
