@@ -14,6 +14,7 @@ import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.hadoop.fs.FileSystem;
 
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -34,7 +35,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Date;
 
 public class HudiEngine {
 
@@ -152,9 +153,18 @@ public class HudiEngine {
 
     writer = writer.mode(saveMode);
     writer.save(this.basePath);
+    // TODO (davit): is this correct place for it
+    Map<String, Long> commitMetadata = getLastCommitMetadata(sparkSession, this.basePath);
     FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit();
-
-    getLastCommitMetadata(sparkSession, this.basePath);
+    int leftLimit = 1;
+    int rightLimit = 10000;
+    int commID = new RandomDataGenerator().nextInt(leftLimit, rightLimit);
+    featureGroupCommit.setCommitID(commID);
+    featureGroupCommit.setCommitTimestamp(new Date());
+    featureGroupCommit.setRowsUpdated(commitMetadata.get("totalUpdateRecordsWritten"));
+    featureGroupCommit.setRowsInserted(commitMetadata.get("totalInsertRecordsWritten"));
+    featureGroupCommit.setRowsDeleted(commitMetadata.get("totalRecordsDeleted"));
+    featureGroupCommit.setCommitMessage("some message");
     featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
   }
 
