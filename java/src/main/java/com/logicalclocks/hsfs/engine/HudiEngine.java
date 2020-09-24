@@ -185,9 +185,8 @@ public class HudiEngine {
 
     // TODO (davit): commit ID at the moment is nth instance.
     int commID = commitTimeline.countInstants();
-    String commitTimestamp = commitTimeline.lastInstant().get().getTimestamp();
-    //Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
-    //    .get().getTimestamp());
+    Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
+        .get().getTimestamp());
 
     fgCommitMetadata.setCommitID(commID);
     fgCommitMetadata.setCommittedOn(commitTimestamp);

@@ -28,7 +28,7 @@ public class FeatureGroupCommit {
   @Getter @Setter
   private Integer commitID;
   @Getter @Setter
-  private String committedOn;
+  private Date committedOn;
   @Getter @Setter
   private Long rowsInserted;
   @Getter @Setter
@@ -37,7 +37,7 @@ public class FeatureGroupCommit {
   private Long rowsDeleted;
 
   @Builder
-  public FeatureGroupCommit(Integer commitID, String committedOn, Long rowsInserted, Long rowsUpdated,
+  public FeatureGroupCommit(Integer commitID, Date committedOn, Long rowsInserted, Long rowsUpdated,
                             Long rowsDeleted)
       throws FeatureStoreException {
 
