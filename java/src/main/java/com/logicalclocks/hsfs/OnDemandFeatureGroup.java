@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupInternal;
@@ -30,6 +31,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -65,11 +67,12 @@ public class OnDemandFeatureGroup extends FeatureGroupInternal {
   private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();
 
   @Builder
-  public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version,
+  public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               @NonNull StorageConnector storageConnector, String description, List<Feature> features) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
+    this.query = query;
     this.description = description;
     this.storageConnector = storageConnector;
     this.features = features;
@@ -78,7 +81,8 @@ public class OnDemandFeatureGroup extends FeatureGroupInternal {
   public OnDemandFeatureGroup() {
   }
 
-  public void save(String query) throws FeatureStoreException, IOException {
+  public void save() throws FeatureStoreException, IOException {
+    onDemandFeatureGroupEngine.saveFeatureGroup(this);
   }
 
   public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
@@ -102,5 +106,68 @@ public class OnDemandFeatureGroup extends FeatureGroupInternal {
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     read().show(numRows);
+  }
+
+  public void delete() throws FeatureStoreException, IOException {
+    onDemandFeatureGroupEngine.delete(this);
+  }
+
+  /**
+   * Add a tag without value to the feature group.
+   *
+   * @param name name of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void addTag(String name) throws FeatureStoreException, IOException {
+    addTag(name, null);
+  }
+
+  /**
+   * Add name/value tag to the feature group.
+   *
+   * @param name name of the tag
+   * @param value value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void addTag(String name, String value) throws FeatureStoreException, IOException {
+    onDemandFeatureGroupEngine.addTag(this, name, value);
+  }
+
+  /**
+   * Get all tags of the feature group.
+   *
+   * @return map of all tags from name to value
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Map<String, String> getTag() throws FeatureStoreException, IOException {
+    return getTag(null);
+  }
+
+  /**
+   * Get a single tag value of the feature group.
+   *
+   * @param name name of tha tag
+   * @return string value of the tag
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
+    return onDemandFeatureGroupEngine.getTag(this, name);
+  }
+
+  /**
+   * Delete a tag of the feature group.
+   *
+   * @param name name of the tag to be deleted
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void deleteTag(String name) throws FeatureStoreException, IOException {
+    onDemandFeatureGroupEngine.deleteTag(this, name);
   }
 }

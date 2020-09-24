@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
@@ -74,9 +73,10 @@ public class TagsApi {
     hopsworksClient.handleRequest(putRequest);
   }
 
-  public void add(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
-    add(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(), featureGroup.getId(),
-        name, value);
+  public void add(FeatureGroupInternal featureGroupInternal, String name, String value)
+      throws FeatureStoreException, IOException {
+    add(featureGroupInternal.getFeatureStore().getProjectId(), featureGroupInternal.getFeatureStore().getId(),
+        featureGroupInternal.getId(), name, value);
   }
 
   public void add(TrainingDataset trainingDataset, String name, String value)
@@ -112,9 +112,10 @@ public class TagsApi {
         .collect(Collectors.toMap(Tags::getName, Tags::getValue));
   }
 
-  public Map<String, String> get(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-        featureGroup.getId(), name);
+  public Map<String, String> get(FeatureGroupInternal featureGroupInternal, String name)
+      throws FeatureStoreException, IOException {
+    return get(featureGroupInternal.getFeatureStore().getProjectId(), featureGroupInternal.getFeatureStore().getId(),
+        featureGroupInternal.getId(), name);
   }
 
   public Map<String, String> get(TrainingDataset trainingDataset, String name)
@@ -143,7 +144,7 @@ public class TagsApi {
     hopsworksClient.handleRequest(httpDelete);
   }
 
-  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+  public void deleteTag(FeatureGroupInternal featureGroup, String name) throws FeatureStoreException, IOException {
     deleteTag(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), name);
   }

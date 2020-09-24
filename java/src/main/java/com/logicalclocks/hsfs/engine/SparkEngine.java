@@ -21,6 +21,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Split;
@@ -78,6 +79,12 @@ public class SparkEngine {
         .format(Constants.JDBC_FORMAT)
         .options(readOptions)
         .load();
+  }
+
+  public void registerTemporaryTable(String query, StorageConnector storageConnector, String alias)
+      throws FeatureStoreException {
+    Dataset<Row> queryDataset = jdbc(storageConnector, query);
+    queryDataset.registerTempTable(alias);
   }
 
   public void configureConnector(StorageConnector storageConnector) {
