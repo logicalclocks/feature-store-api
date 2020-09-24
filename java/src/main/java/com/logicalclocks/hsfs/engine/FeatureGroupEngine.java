@@ -16,14 +16,11 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -34,11 +31,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureGroupEngine {
+public class FeatureGroupEngine extends FeatureGroupInternalEngine {
 
-  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -158,23 +153,6 @@ public class FeatureGroupEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
-  }
-
-
-  public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    featureGroupApi.delete(featureGroup);
-  }
-
-  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
-    tagsApi.add(featureGroup, name, value);
-  }
-
-  public Map<String, String> getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return tagsApi.get(featureGroup, name);
-  }
-
-  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureGroup, name);
   }
 
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {

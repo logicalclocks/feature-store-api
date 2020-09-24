@@ -120,16 +120,16 @@ public class FeatureGroupApi {
     return HopsworksClient.getInstance().handleRequest(postRequest, fgType);
   }
 
-  public void delete(FeatureGroupInternal featureGroup) throws FeatureStoreException, IOException {
+  public void delete(FeatureGroupInternal featureGroupInternal) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroup.getFeatureStore().getProjectId())
-        .set("fsId", featureGroup.getFeatureStore().getId())
-        .set("fgId", featureGroup.getId())
+        .set("projectId", featureGroupInternal.getFeatureStore().getProjectId())
+        .set("fsId", featureGroupInternal.getFeatureStore().getId())
+        .set("fgId", featureGroupInternal.getId())
         .expand();
 
     HttpDelete deleteRequest = new HttpDelete(uri);

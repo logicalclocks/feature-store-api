@@ -19,7 +19,10 @@ package com.logicalclocks.hsfs.metadata;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.JoinType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
@@ -114,17 +117,18 @@ public class Query {
       throw new FeatureStoreException("Storage not supported");
     }
 
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
-    LOGGER.info("Executing query: " + sqlQuery);
+    FsQuery fsQuery =
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    LOGGER.info("Executing query: " + fsQuery.getStorageQuery(storage));
 
     switch (storage) {
       case OFFLINE:
-        return SparkEngine.getInstance().sql(sqlQuery);
+        registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
+        return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
         StorageConnector onlineConnector
             = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-        return SparkEngine.getInstance().jdbc(onlineConnector, sqlQuery);
+        return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
       default:
         throw new FeatureStoreException("Storage not supported");
     }
@@ -149,6 +153,21 @@ public class Query {
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
+    }
+  }
+
+  private void registerOnDemandFeatureGroups(List<OnDemandFeatureGroupAlias> onDemandFeatureGroups)
+      throws FeatureStoreException {
+    if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
+      return;
+    }
+
+    for (OnDemandFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroups) {
+      String alias = onDemandFeatureGroupAlias.getAlias();
+      OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
+
+      SparkEngine.getInstance().registerTemporaryTable(onDemandFeatureGroup.getQuery(),
+          onDemandFeatureGroup.getStorageConnector(), alias);
     }
   }
 }
