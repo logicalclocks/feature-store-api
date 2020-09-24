@@ -67,7 +67,7 @@ public class HudiEngine {
 
     hudiArgs.put(Constants.HUDI_RECORD_KEY, primaryColumns.mkString(","));
 
-    hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
+    // hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
 
@@ -185,7 +185,7 @@ public class HudiEngine {
     Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
         .get().getTimestamp());
 
-    // TODO (davit): commit ID at the moment is nth instance. Its
+    // TODO (davit): commit ID at the moment is nth instance.
     int commID = commitTimeline.countInstants();
     commitTimeline.lastInstant().get().getTimestamp();
 
