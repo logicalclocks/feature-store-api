@@ -31,11 +31,13 @@ import scala.collection.Seq;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
+import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 
 public class HudiEngine {
@@ -185,7 +187,9 @@ public class HudiEngine {
 
     // TODO (davit): commit ID at the moment is nth instance.
     int commID = commitTimeline.countInstants();
-    Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
+    SimpleDateFormat dtFotmatter = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT);
+    dtFotmatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    Date commitTimestamp = dtFotmatter.parse(commitTimeline.lastInstant()
         .get().getTimestamp());
 
     fgCommitMetadata.setCommitID(commID);

@@ -27,7 +27,7 @@ import java.util.Date;
 public class FeatureGroupCommit {
   @Getter @Setter
   private Integer commitID;
-  @JsonFormat(pattern = "yyyyMMddhhmmss")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyyMMddhhmmss", timezone="UTC")
   @Getter @Setter
   private Date committedOn;
   @Getter @Setter
