@@ -190,7 +190,7 @@ public class HudiEngine {
     commitTimeline.lastInstant().get().getTimestamp();
 
     fgCommitMetadata.setCommitID(commID);
-    fgCommitMetadata.setCommitTimestamp(commitTimestamp);
+    fgCommitMetadata.setCommittedOn(commitTimestamp);
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
     long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();
