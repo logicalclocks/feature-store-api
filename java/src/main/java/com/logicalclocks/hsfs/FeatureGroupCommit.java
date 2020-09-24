@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.Date;
 
@@ -37,9 +36,7 @@ public class FeatureGroupCommit {
   private Long rowsDeleted;
 
   @Builder
-  public FeatureGroupCommit(Integer commitID, Date committedOn, Long rowsInserted, Long rowsUpdated,
-                            Long rowsDeleted)
-      throws FeatureStoreException {
+  public FeatureGroupCommit(Integer commitID, Date committedOn, Long rowsInserted, Long rowsUpdated, Long rowsDeleted) {
 
     this.commitID = commitID;
     this.committedOn = committedOn;
