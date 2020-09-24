@@ -182,12 +182,12 @@ public class HudiEngine {
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
-    Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
-        .get().getTimestamp());
 
     // TODO (davit): commit ID at the moment is nth instance.
     int commID = commitTimeline.countInstants();
-    commitTimeline.lastInstant().get().getTimestamp();
+    String commitTimestamp = commitTimeline.lastInstant().get().getTimestamp();
+    //Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
+    //    .get().getTimestamp());
 
     fgCommitMetadata.setCommitID(commID);
     fgCommitMetadata.setCommittedOn(commitTimestamp);
