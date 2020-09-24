@@ -30,6 +30,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -173,32 +174,34 @@ public class FeatureGroup {
     read(storage).show(numRows);
   }
 
-  public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
+  public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
   }
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, precombineKeys,
             defaultStorage, writeOptions);
   }
 
-  public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData, Storage storage)
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, false, null, null);
   }
 
-  public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, overwrite, null);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, overwrite, null,  null);
   }
 
   // time-travel enabled insert with upsert op
   public void insert(Dataset<Row> featureData, String operation)
-          throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT);
 
@@ -211,13 +214,13 @@ public class FeatureGroup {
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     insert(featureData, defaultStorage, overwrite, null, writeOptions);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, String operation,
                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     // operation is only valid for time travel enabled feature group
     if (this.timeTravelFormat == TimeTravelFormat.NONE && operation != null) {

@@ -131,7 +131,8 @@ public class HudiEngine {
   }
 
   private void writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException, ParseException {
+                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException,
+      ParseException {
 
     Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
 
@@ -180,12 +181,6 @@ public class HudiEngine {
 
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
-    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
-
-    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
-    long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();
-    long totalInsertRecordsWritten = commitMetadata.fetchTotalInsertRecordsWritten();
-    long totalRecordsDeleted = commitMetadata.getTotalRecordsDeleted();
 
     Date commitTimestamp = new SimpleDateFormat(Constants.HUDI_TIMESTAMPFORMAT).parse(commitTimeline.lastInstant()
         .get().getTimestamp());
@@ -196,8 +191,13 @@ public class HudiEngine {
 
     fgCommitMetadata.setCommitID(commID);
     fgCommitMetadata.setCommitTimestamp(commitTimestamp);
+    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
+    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
+    long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();
     fgCommitMetadata.setRowsUpdated(totalUpdateRecordsWritten);
+    long totalInsertRecordsWritten = commitMetadata.fetchTotalInsertRecordsWritten();
     fgCommitMetadata.setRowsInserted(totalInsertRecordsWritten);
+    long totalRecordsDeleted = commitMetadata.getTotalRecordsDeleted();
     fgCommitMetadata.setRowsDeleted(totalRecordsDeleted);
     return fgCommitMetadata;
   }
