@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +27,7 @@ import java.util.Date;
 public class FeatureGroupCommit {
   @Getter @Setter
   private Integer commitID;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyyMMddhhmmss")
   @Getter @Setter
   private Date committedOn;
   @Getter @Setter
