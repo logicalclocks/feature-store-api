@@ -36,7 +36,6 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.DataFrameReader;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -317,7 +316,7 @@ public class SparkEngine {
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
                                     SaveMode saveMode, String operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
+      throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       hudiEngine.writeTimeTravelEnabledFG(sparkSession,featureGroup, dataset, saveMode, operation);

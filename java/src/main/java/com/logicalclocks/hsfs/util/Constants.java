@@ -69,6 +69,5 @@ public class Constants {
   public static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
   public static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   public static final String HUDI_END_INSTANTTIME_OPT_KEY  = "hoodie.datasource.read.end.instanttime";
-  public static final String HUDI_TIMESTAMPFORMAT  = "yyyyMMddhhmmss";
 
 }

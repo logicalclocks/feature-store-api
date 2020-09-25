@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +66,7 @@ public class FeatureGroupEngine {
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                                List<String> partitionKeys, List<String> precombineKeys, Storage storage,
                                Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
@@ -132,7 +131,7 @@ public class FeatureGroupEngine {
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, String operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
+      throws IOException, FeatureStoreException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
     }
@@ -164,7 +163,7 @@ public class FeatureGroupEngine {
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
                                     SaveMode saveMode, String operation, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException {
 
     if (featureGroup.getOnlineEnabled() && saveMode == SaveMode.Overwrite
             && !operation.equals(Constants.HUDI_BULK_INSERT)) {
