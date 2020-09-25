@@ -200,7 +200,7 @@ public class HudiEngine {
   }
 
   @SneakyThrows
-  private Long hudiCommitToTimeStamp (String hudiCommitTime) {
+  private Long hudiCommitToTimeStamp(String hudiCommitTime) {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
     return commitTimeStamp;
