@@ -11,6 +11,7 @@ import com.logicalclocks.hsfs.util.Constants;
 
 import lombok.Getter;
 
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -34,6 +35,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class HudiEngine {
 
@@ -178,11 +182,12 @@ public class HudiEngine {
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
-
     // TODO (davit): commit ID at the moment is nth instance.
     int commID = commitTimeline.countInstants();
     fgCommitMetadata.setCommitID(commID);
-    fgCommitMetadata.setCommittedOn(commitTimeline.lastInstant().get().getTimestamp());
+
+    Long commitTimeStamp = hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
+    fgCommitMetadata.setCommittedOn(commitTimeStamp);
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
     long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();
@@ -194,6 +199,12 @@ public class HudiEngine {
     return fgCommitMetadata;
   }
 
+  @SneakyThrows
+  private Long hudiCommitToTimeStamp (String hudiCommitTime) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
+    return commitTimeStamp;
+  }
 
   public void writeTimeTravelEnabledFG(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
                                        SaveMode saveMode, String operation)

@@ -16,19 +16,17 @@
 
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroupCommit {
   @Getter @Setter
   private Integer commitID;
   @Getter @Setter
-  private String committedOn;
+  private Long committedOn;
   @Getter @Setter
   private Long rowsInserted;
   @Getter @Setter
@@ -37,7 +35,7 @@ public class FeatureGroupCommit {
   private Long rowsDeleted;
 
   @Builder
-  public FeatureGroupCommit(Integer commitID, String committedOn, Long rowsInserted, Long rowsUpdated,
+  public FeatureGroupCommit(Integer commitID, Long committedOn, Long rowsInserted, Long rowsUpdated,
                             Long rowsDeleted) {
 
     this.commitID = commitID;
