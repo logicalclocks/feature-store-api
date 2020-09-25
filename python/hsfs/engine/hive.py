@@ -58,6 +58,9 @@ class Engine:
     ):
         raise NotImplementedError
 
+    def profile_df(self, dataframe, relevant_columns, correlations, histograms):
+        raise NotImplementedError
+
     def set_job_group(self, group_id, description):
         pass
 

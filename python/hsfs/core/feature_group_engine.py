@@ -21,13 +21,14 @@ from hsfs.core import feature_group_api, storage_connector_api, tags_api
 class FeatureGroupEngine:
     OVERWRITE = "overwrite"
     APPEND = "append"
+    ENTITY_TYPE = "featuregroups"
 
     def __init__(self, feature_store_id):
         self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
-        self._tags_api = tags_api.TagsApi(feature_store_id, "featuregroups")
+        self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
 
     def save(self, feature_group, feature_dataframe, storage, write_options):
 
@@ -101,6 +102,10 @@ class FeatureGroupEngine:
 
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
+
+    def update_statistics_config(self, feature_group):
+        """Update the statistics configuration of a feature group."""
+        self._feature_group_api.update_statistics_config(feature_group)
 
     def _get_table_name(self, feature_group):
         return (

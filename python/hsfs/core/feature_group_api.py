@@ -112,3 +112,30 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         _client._send_request("DELETE", path_params)
+
+    def update_statistics_config(self, feature_group_instance):
+        """Update the statistics configuration of a feature group.
+
+        :param feature_group_instance: metadata object of feature group
+        :type feature_group_instance: FeatureGroup
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {"updateStatsSettings": True}
+        return feature_group_instance.update_from_response_json(
+            _client._send_request(
+                "PUT",
+                path_params,
+                query_params,
+                headers=headers,
+                data=feature_group_instance.json(),
+            ),
+        )
