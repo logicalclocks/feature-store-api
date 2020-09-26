@@ -125,7 +125,7 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-  public void featureCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
+  public FeatureGroupCommit featureCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -144,7 +144,7 @@ public class FeatureGroupApi {
     postRequest.setEntity(new StringEntity(featureGroupCommitJson));
 
     LOGGER.info("Sending metadata request: " + uri);
-    hopsworksClient.handleRequest(postRequest);
+    return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
 }
