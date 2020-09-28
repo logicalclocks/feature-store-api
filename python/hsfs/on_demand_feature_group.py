@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+
 class OnDemandFeatureGroup:
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
 
@@ -22,15 +23,13 @@ class OnDemandFeatureGroup:
         version,
         description,
         featurestore_id,
+        query,
+        storage_connector,
         partition_key=None,
         primary_key=None,
         featurestore_name=None,
         created=None,
         creator=None,
-        descriptive_statistics=None,
-        feature_correlation_matrix=None,
-        features_histogram=None,
-        cluster_analysis=None,
         id=None,
         features=None,
         jobs=None,
@@ -39,9 +38,7 @@ class OnDemandFeatureGroup:
         feat_hist_enabled=None,
         cluster_analysis_enabled=None,
         statistic_columns=None,
-        num_bins=None,
-        num_clusters=None,
-        corr_method=None,
+        statistics_config=None,
     ):
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -49,22 +46,16 @@ class OnDemandFeatureGroup:
         self._created = created
         self._creator = creator
         self._version = version
-        self._descriptive_statistics = descriptive_statistics
-        self._feature_correlation_matrix = feature_correlation_matrix
-        self._features_histogram = features_histogram
-        self._cluster_analysis = cluster_analysis
         self._name = name
+        self._query = query
+        self._storage_connector = storage_connector
         self._id = id
         self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
         self._feat_hist_enabled = feat_hist_enabled
-        self._cluster_analysis_enabled = cluster_analysis_enabled
         self._statistic_columns = statistic_columns
-        self._num_bins = num_bins
-        self._num_clusters = num_clusters
-        self._corr_method = corr_method
 
         if id is None:
             # Initialized from the API
@@ -79,3 +70,65 @@ class OnDemandFeatureGroup:
             featurestore_id
         )
 
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        return cls(**json_decamelized)
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def features(self):
+        return self._features
+
+    @property
+    def query(self):
+        return self._query
+
+    @property
+    def storage_connector(self):
+        return self._storage_connector
+
+    @property
+    def creator(self):
+        return self._creator
+
+    @property
+    def created(self):
+        return self._created
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @description.setter
+    def description(self, new_description):
+        self._description = new_description
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
