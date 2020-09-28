@@ -147,7 +147,7 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public FeatureGroupCommit commitDetails(FeatureGroup featureGroup, Long timestamp)
+  public FeatureGroupCommit pointInTimeCommitDetails(FeatureGroup featureGroup, Long timestamp)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH

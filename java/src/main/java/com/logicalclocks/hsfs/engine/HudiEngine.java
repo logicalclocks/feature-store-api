@@ -11,7 +11,6 @@ import com.logicalclocks.hsfs.util.Constants;
 
 import lombok.Getter;
 
-import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -22,6 +21,7 @@ import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.DataFrameWriter;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -101,11 +101,13 @@ public class HudiEngine {
   }
 
 
-  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime) {
+  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime)
+      throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
     this.basePath = utils.getHudiBasePath(featureGroup);
     this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
+
 
     //Snapshot query
     if (startTime == null && endTime == null) {
@@ -113,12 +115,18 @@ public class HudiEngine {
       this.basePath =  this.basePath  + StringUtils.repeat("/*", numberOfpartitionCols + 1);
     } else if (endTime != null) {
       hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      Long endTimeStamp = utils.hudiCommitToTimeStamp(endTime);
+      FeatureGroupCommit endCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, endTimeStamp);
+      String hudiCommitEndTime = utils.timeStampToHudiFormat(endCommit.getCommittedOn());
       //point in time  query
       if (startTime == null) {
         hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
-        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, endTime);
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
       } else if (startTime != null) {       //incremental  query
-        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, startTime);
+        Long startTimeStamp = utils.hudiCommitToTimeStamp(startTime);
+        FeatureGroupCommit startCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, startTimeStamp);
+        String hudiCommitStartTime = utils.timeStampToHudiFormat(startCommit.getCommittedOn());
+        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
         hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, endTime);
       }
     }
@@ -126,7 +134,8 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-  public Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime) {
+  private Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime)
+      throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, startTime, endTime);
     return hudiArgs;
   }
@@ -159,6 +168,29 @@ public class HudiEngine {
     FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
     featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
   }
+
+  //hudi time time travel sql query
+  public Dataset<Row> readHudiDataset(SparkSession sparkSession, String query,  FeatureGroup featureGroup,
+                                      String startTime, String  endTime) throws IOException, FeatureStoreException {
+
+    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+    sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
+        org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
+
+    Map<String, String> hudiArgs = hudiReadArgs(featureGroup, startTime, endTime);
+
+    DataFrameReader reader = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
+    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
+      reader = reader.option(entry.getKey(), entry.getValue());
+    }
+
+    reader.load(getBasePath()).registerTempTable(getTableName());
+    Dataset<Row>  result = sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
+        + getTableName() + "`",getTableName()));
+
+    return utils.dropHudiSpecFeatures(result);
+  }
+
 
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)

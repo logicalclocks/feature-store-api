@@ -19,9 +19,6 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.util.Constants;
-import io.hops.common.Pair;
 import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -32,8 +29,10 @@ import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,6 +122,14 @@ public class Utils {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
     return commitTimeStamp;
+  }
+
+  @SneakyThrows
+  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
+    String strCommitedOnDate = dateFormat.format(commitedOnDate);
+    return strCommitedOnDate;
   }
 
 

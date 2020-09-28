@@ -211,15 +211,4 @@ public class FeatureGroupEngine {
     tagsApi.deleteTag(featureGroup, name);
   }
 
-  public Map<Integer, String> commitDetails(FeatureGroup featureGroup, String pointInTime) throws IOException,
-      FeatureStoreException {
-
-    Long pointInTimestamp = utils.hudiCommitToTimeStamp(pointInTime);
-    FeatureGroupCommit commitDetails = featureGroupApi.commitDetails(featureGroup, pointInTimestamp);
-
-    Map<Integer, String> commitTimestamps = new HashMap<>();
-    commitTimestamps.put(commitDetails.getCommitID(), commitDetails.getCommittedOn().toString());
-    return commitTimestamps;
-  }
-
 }

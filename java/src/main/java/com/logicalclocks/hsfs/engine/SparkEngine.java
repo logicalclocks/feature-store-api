@@ -33,7 +33,6 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.DataFrameReader;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -68,27 +67,13 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
   }
 
-  //time time travel sql query
+  //hudi time time travel sql query
   public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
-                          String  endTime) {
+                          String  endTime) throws IOException, FeatureStoreException {
 
-    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
-    sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
-            org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
+    Dataset<Row>  result = hudiEngine.readHudiDataset(sparkSession, query, featureGroup, startTime, endTime);
 
-    Map<String, String> hudiArgs = hudiEngine.hudiReadArgs(featureGroup, startTime, endTime);
-
-    DataFrameReader reader = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
-    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
-      reader = reader.option(entry.getKey(), entry.getValue());
-    }
-    // TODO (davit): decide how to query hudi tables: Spark data source or hive incrementall pull??
-    //    is it a good idea to have temp view name in backend
-    reader.load(hudiEngine.getBasePath()).registerTempTable(hudiEngine.getTableName());
-    Dataset<Row>  result = sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
-            + hudiEngine.getTableName() + "`",hudiEngine.getTableName()));
-
-    return utils.dropHudiSpecFeatures(result);
+    return result;
   }
 
   public Dataset<Row> sql(String query) {
