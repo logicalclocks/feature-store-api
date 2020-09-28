@@ -120,7 +120,7 @@ public class TrainingDataset {
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;
-    this.statisticsEnabled = statisticsEnabled;
+    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
     this.histograms = histograms;
     this.correlations = correlations;
     this.statisticColumns = statisticColumns;
@@ -307,6 +307,7 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
+  @JsonIgnore
   public Statistics getStatistics() throws FeatureStoreException, IOException {
     return statisticsEngine.getLast(this);
   }
@@ -319,6 +320,7 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    * @throws IOException
    */
+  @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
   }
