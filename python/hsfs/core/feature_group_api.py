@@ -15,7 +15,7 @@
 #
 
 from hsfs import client
-from hsfs import feature_group
+from hsfs import feature_group, on_demand_feature_group
 
 
 class FeatureGroupApi:
@@ -49,13 +49,15 @@ class FeatureGroupApi:
             ),
         )
 
-    def get(self, name, version):
+    def get(self, name, version, fg_type):
         """Get the metadata of a feature group with a certain name and version.
 
         :param name: name of the feature group
         :type name: str
         :param version: version of the feature group
         :type version: int
+        :param fg_type: type of the feature group to return 
+        :type version: string 
         :return: feature group metadata object
         :rtype: FeatureGroup
         """
@@ -69,9 +71,14 @@ class FeatureGroupApi:
             name,
         ]
         query_params = {"version": version}
-        return feature_group.FeatureGroup.from_response_json(
-            _client._send_request("GET", path_params, query_params)[0],
-        )
+        fg_json = (_client._send_request("GET", path_params, query_params)[0],)
+
+        if fg_type == "cached":
+            return feature_group.FeatureGroup.from_response_json(fg_json)
+        else:
+            return on_demand_feature_group.OnDemandFeatureGroup.from_response_json(
+                fg_json
+            )
 
     def delete_content(self, feature_group_instance):
         """Delete the content of a feature group.

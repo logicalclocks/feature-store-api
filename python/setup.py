@@ -43,9 +43,10 @@ setup(
     license="Apache License 2.0",
     keywords="Hopsworks, Feature Store, Spark, Machine Learning, MLOps, DataOps",
     url="https://github.com/logicalclocks/feature-store-api",
-    download_url="https://github.com/logicalclocks/feature-store-api/releases/tag/" + __version__,
+    download_url="https://github.com/logicalclocks/feature-store-api/releases/tag/"
+    + __version__,
     packages=find_packages(),
-    long_description=read('../README.md'),
+    long_description=read("../README.md"),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Topic :: Utilities",
