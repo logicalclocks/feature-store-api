@@ -45,7 +45,7 @@ class OnDemandFeatureGroup:
         self._description = description
         self._created = created
         self._creator = creator
-        self._version = version
+        self._version = n
         self._name = name
         self._query = query
         self._storage_connector = storage_connector

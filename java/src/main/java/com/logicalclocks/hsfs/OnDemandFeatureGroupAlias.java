@@ -16,7 +16,6 @@
 
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +26,6 @@ import lombok.Setter;
 public class OnDemandFeatureGroupAlias {
 
   @Getter @Setter
-  @JsonProperty("onDemandFeaturegroupDTO")
   private OnDemandFeatureGroup onDemandFeatureGroup;
 
   @Getter @Setter
