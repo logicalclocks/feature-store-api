@@ -118,7 +118,7 @@ public class FeatureGroup {
     this.onlineEnabled = onlineEnabled;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
     this.features = features;
-    this.statisticsEnabled = statisticsEnabled;
+    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
     this.histograms = histograms;
     this.correlations = correlations;
     this.statisticColumns = statisticColumns;
