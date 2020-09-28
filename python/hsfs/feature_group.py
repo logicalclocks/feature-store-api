@@ -25,7 +25,6 @@ from hsfs.statistics_config import StatisticsConfig
 
 class FeatureGroup:
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
-    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
