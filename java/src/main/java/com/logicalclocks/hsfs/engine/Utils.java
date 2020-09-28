@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.util.Constants;
 import io.hops.common.Pair;
+import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -31,6 +32,7 @@ import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -114,5 +116,14 @@ public class Utils {
     return  dataset.drop("_hoodie_record_key", "_hoodie_partition_path", "_hoodie_commit_time",
             "_hoodie_file_name", "_hoodie_commit_seqno");
   }
+
+  @SneakyThrows
+  public Long hudiCommitToTimeStamp(String hudiCommitTime) {
+    // TODO (davit): we need to have list of accepted date formats
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
+    return commitTimeStamp;
+  }
+
 
 }

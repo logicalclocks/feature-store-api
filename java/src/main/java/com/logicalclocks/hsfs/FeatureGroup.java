@@ -236,8 +236,12 @@ public class FeatureGroup {
     featureGroupEngine.delete(this);
   }
 
-  public Map<Integer, String> commitDetails() throws IOException {
-    return featureGroupEngine.commitDetails(this);
+  public Map<Integer, String> commitDetails() throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetails(this, null);
+  }
+
+  public Map<Integer, String> commitDetails(String pointInTime) throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetails(this, pointInTime);
   }
 
   /**

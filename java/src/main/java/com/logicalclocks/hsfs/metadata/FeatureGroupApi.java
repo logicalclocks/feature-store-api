@@ -147,4 +147,26 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
+  public FeatureGroupCommit commitDetails(FeatureGroup featureGroup, Long timestamp)
+      throws IOException, FeatureStoreException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_COMMIT_PATH
+        + "{/timestamp}";
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("timestamp", timestamp)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    FeatureGroupCommit commitDetails = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
+
+    return commitDetails;
+  }
+
+
 }

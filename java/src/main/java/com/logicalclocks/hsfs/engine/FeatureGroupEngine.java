@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.util.Constants;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -209,10 +211,15 @@ public class FeatureGroupEngine {
     tagsApi.deleteTag(featureGroup, name);
   }
 
-  public Map<Integer, String> commitDetails(FeatureGroup featureGroup) throws IOException {
-    //TODO (davit): may be its better to get this info from metadata? for now I will just read it from fs
-    return hudiEngine.getTimeLine(SparkEngine.getInstance().getSparkSession(),
-            utils.getHudiBasePath(featureGroup));
+  public Map<Integer, String> commitDetails(FeatureGroup featureGroup, String pointInTime) throws IOException,
+      FeatureStoreException {
+
+    Long pointInTimestamp = utils.hudiCommitToTimeStamp(pointInTime);
+    FeatureGroupCommit commitDetails = featureGroupApi.commitDetails(featureGroup, pointInTimestamp);
+
+    Map<Integer, String> commitTimestamps = new HashMap<>();
+    commitTimestamps.put(commitDetails.getCommitID(), commitDetails.getCommittedOn().toString());
+    return commitTimestamps;
   }
 
 }

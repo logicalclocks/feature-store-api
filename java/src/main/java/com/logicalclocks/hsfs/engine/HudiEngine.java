@@ -160,19 +160,6 @@ public class HudiEngine {
     featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
   }
 
-  public Map<Integer, String> getTimeLine(SparkSession sparkSession, String basePath) throws IOException {
-
-    FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
-    HoodieTimeline timeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
-
-
-    Map<Integer, String> commitTimestamps = new HashMap<>();
-    for (int i = 0; i < timeline.countInstants(); i++) {
-      commitTimestamps.put(i, timeline.nthInstant(i).get().getTimestamp());
-    }
-    return commitTimestamps;
-  }
-
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
       throws IOException {
@@ -186,7 +173,7 @@ public class HudiEngine {
     int commID = commitTimeline.countInstants();
     fgCommitMetadata.setCommitID(commID);
 
-    Long commitTimeStamp = hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
+    Long commitTimeStamp = utils.hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
     fgCommitMetadata.setCommittedOn(commitTimeStamp);
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
@@ -197,13 +184,6 @@ public class HudiEngine {
     long totalRecordsDeleted = commitMetadata.getTotalRecordsDeleted();
     fgCommitMetadata.setRowsDeleted(totalRecordsDeleted);
     return fgCommitMetadata;
-  }
-
-  @SneakyThrows
-  private Long hudiCommitToTimeStamp(String hudiCommitTime) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-    Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
-    return commitTimeStamp;
   }
 
   public void writeTimeTravelEnabledFG(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
