@@ -38,10 +38,12 @@ class Query:
         query = self._query_constructor_api.construct_query(self)
 
         if storage.lower() == "online":
-            sql_query = query["queryOnline"]
+            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            sql_query = query["query"]
+            sql_query = query.query
+            # Register on demand feature groups as temporary tables
+            self._register_on_demand(sql_query, query.on_demand_fg_aliases)
             online_conn = None
 
         return engine.get_instance().sql(
@@ -52,10 +54,12 @@ class Query:
         query = self._query_constructor_api.construct_query(self)
 
         if storage.lower() == "online":
-            sql_query = query["queryOnline"]
+            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            sql_query = query["query"]
+            sql_query = query.query
+            # Register on demand feature groups as temporary tables
+            self._register_on_demand(sql_query, query.on_demand_fg_aliases)
             online_conn = None
 
         return engine.get_instance().show(
@@ -79,9 +83,17 @@ class Query:
         }
 
     def to_string(self, storage="offline"):
-        return self._query_constructor_api.construct_query(self)[
-            "query" if storage == "offline" else "queryOnline"
-        ]
+        query = self._query_constructor_api.construct_query(self)
+        return query.query if storage == "offline" else query.query_online
 
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
+
+    def _register_on_demand(self, query, on_demand_fg_aliases):
+        if on_demand_fg_aliases is None:
+            return
+
+        for on_demand_fg_alias in on_demand_fg_aliases:
+            engine.get_instance().register_temporary_table(
+                query, on_demand_fg_alias.on_demand_feature_group.storage_connector
+            )

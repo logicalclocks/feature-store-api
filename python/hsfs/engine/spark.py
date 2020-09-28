@@ -75,6 +75,10 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
+    def register_temporary_table(self, query, storage_connector, alias):
+        on_demand_dataset = self._jdbc(query, storage_connector)
+        on_demand_dataset.registerTempTable(alias)
+
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
