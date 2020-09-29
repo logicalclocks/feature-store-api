@@ -125,7 +125,7 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-  public FeatureGroupCommit featureCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
+  public FeatureGroupCommit featureGroupCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -153,13 +153,13 @@ public class FeatureGroupApi {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_COMMIT_PATH
-        + "{/timestamp}";
+        + "{/wallclocktime}";
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
-        .set("timestamp", timestamp)
+        .set("wallclocktime", timestamp)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

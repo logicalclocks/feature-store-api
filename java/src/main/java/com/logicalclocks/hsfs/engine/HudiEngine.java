@@ -100,14 +100,12 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-
   private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime)
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
     this.basePath = utils.getHudiBasePath(featureGroup);
     this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
-
 
     //Snapshot query
     if (startTime == null && endTime == null) {
@@ -166,7 +164,7 @@ public class HudiEngine {
 
     // TODO (davit): make sure writing completed without exception
     FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
-    featureGroupApi.featureCommit(featureGroup, featureGroupCommit);
+    featureGroupApi.featureGroupCommit(featureGroup, featureGroupCommit);
   }
 
   //hudi time time travel sql query
@@ -200,10 +198,6 @@ public class HudiEngine {
 
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
-
-    // TODO (davit): commit ID at the moment is nth instance.
-    int commID = commitTimeline.countInstants();
-    fgCommitMetadata.setCommitID(commID);
 
     Long commitTimeStamp = utils.hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
     fgCommitMetadata.setCommittedOn(commitTimeStamp);

@@ -138,7 +138,7 @@ public class FeatureGroup {
     return selectAll().read(storage, null, null);
   }
 
-  // time travel read pint in time
+  // time travel read point in time
   public Dataset<Row> read(String wallclockTime)
           throws FeatureStoreException, IOException {
     return selectAll().read(Storage.OFFLINE, null, wallclockTime);
