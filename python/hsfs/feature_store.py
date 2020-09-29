@@ -41,9 +41,9 @@ class FeatureStore:
         inode_id,
         offline_featurestore_name,
         hive_endpoint,
-        mysql_server_endpoint,
         online_enabled,
         online_featurestore_name=None,
+        mysql_server_endpoint=None,
         online_featurestore_size=None,
     ):
         self._id = featurestore_id
