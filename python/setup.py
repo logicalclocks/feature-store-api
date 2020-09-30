@@ -33,10 +33,9 @@ setup(
             "flake8",
             "black"],
         "docs": [
-            "mkdocs",
-            "mkdocstrings",
+            "mkdocs"
             "mkdocs-material",
-            "mkautodoc"]
+            "keras-autodoc"]
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",

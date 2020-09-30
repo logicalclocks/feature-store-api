@@ -1,28 +1,37 @@
-site_name: HSFS Documentation
+site_name: "HSFS: Hopsworks Feature Store Client"
+site_description: "HSFS: An environment independent client to interact with the Hopsworks Featurestore"
+site_author: "Logical Clocks"
+site_url: "https://docs.hopsworks.ai"
 
 # Repository
 repo_name: logicalclocks/feature-store-api
-repo_url: https://github.com/logicalclocks/hops-util-py
+repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
     - Introduction: ../../README.md
     - Quickstart: quickstart.md
     - Installation: installation.md
-    - Advanced Usage: adv_usage.md
-    - Example Notebook: notebooks.md
     - API Reference:
-        - Python: api.md
-        - Java: japi.md
+        - Connection: generated/connection.md
+
 theme:
     name: material
     favicon: assets/images/favicon.ico
     logo: assets/images/hops-logo.png
+    icon:
+        repo: fontawesome/brands/github
+
 extra_css:
     - css/custom.css
+
 plugins:
     - search
+
 markdown_extensions:
-    - mkautodoc
-    - codehilite
     - admonition
+    - codehilite
+    - footnotes
+    - pymdownx.tabbed
+    - pymdownx.arithmatex
+    - pymdownx.superfences
