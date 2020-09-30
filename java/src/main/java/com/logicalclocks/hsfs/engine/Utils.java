@@ -19,8 +19,6 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.StorageConnector;
-import io.hops.common.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;

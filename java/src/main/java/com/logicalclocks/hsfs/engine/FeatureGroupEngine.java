@@ -20,6 +20,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -31,8 +32,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureGroupEngine extends FeatureGroupInternalEngine {
+public class FeatureGroupEngine {
 
+  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private Utils utils = new Utils();
 
@@ -55,7 +57,7 @@ public class FeatureGroupEngine extends FeatureGroupInternalEngine {
                                Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    if (featureGroup.getFeatureStore() != null) {
+    if (featureGroup.getFeatures() != null) {
       featureGroup.setFeatures(utils.parseSchema(dataset));
     }
 
