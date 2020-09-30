@@ -82,7 +82,7 @@ public class SparkEngine {
   public void registerTemporaryTable(String query, StorageConnector storageConnector, String alias)
       throws FeatureStoreException {
     Dataset<Row> queryDataset = jdbc(storageConnector, query);
-    queryDataset.registerTempTable(alias);
+    queryDataset.createOrReplaceTempView(alias);
   }
 
   public void configureConnector(StorageConnector storageConnector) {
