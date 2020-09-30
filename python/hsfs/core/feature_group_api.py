@@ -74,7 +74,7 @@ class FeatureGroupApi:
             name,
         ]
         query_params = {"version": version}
-        fg_json = (_client._send_request("GET", path_params, query_params)[0],)
+        fg_json = _client._send_request("GET", path_params, query_params)[0]
 
         if fg_type == self.CACHED:
             return feature_group.FeatureGroup.from_response_json(fg_json)
