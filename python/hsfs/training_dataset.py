@@ -18,12 +18,8 @@ import humps
 import json
 import warnings
 
-<<<<<<< HEAD
-from hsfs import util, engine, training_dataset_feature 
-from hsfs.statistics_config import StatisticsConfig
-=======
 from hsfs import util, engine, training_dataset_feature
->>>>>>> 67c2ce8... progress adding replay in python api
+from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector
 from hsfs.core import (
     query,
@@ -127,11 +123,8 @@ class TrainingDataset:
             )
 
         user_version = self._version
-<<<<<<< HEAD
         user_stats_config = self._statistics_config
         self._features = engine.get_instance().parse_schema(feature_dataframe)
-=======
->>>>>>> 67c2ce8... progress adding replay in python api
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config

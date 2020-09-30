@@ -75,9 +75,7 @@ class FeatureGroup:
                 feat_hist_enabled,
                 statistic_columns,
             )
-            self._primary_key = [
-                feat.name for feat in self._features if feat.primary
-            ]
+            self._primary_key = [feat.name for feat in self._features if feat.primary]
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition
             ]
