@@ -24,7 +24,7 @@ import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 
-public class OnDemandFeatureGroupEngine extends FeatureGroupInternalEngine {
+public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   private Utils utils = new Utils();
 
@@ -32,12 +32,13 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupInternalEngine {
 
   public void saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
       throws FeatureStoreException, IOException {
-    Dataset<Row> onDemandDataset = SparkEngine.getInstance()
-        .jdbc(onDemandFeatureGroup.getStorageConnector(), onDemandFeatureGroup.getQuery());
-    onDemandFeatureGroup.setFeatures(utils.parseSchema(onDemandDataset));
+    if (onDemandFeatureGroup.getFeatures() != null) {
+      Dataset<Row> onDemandDataset = SparkEngine.getInstance()
+          .jdbc(onDemandFeatureGroup.getStorageConnector(), onDemandFeatureGroup.getQuery());
+      onDemandFeatureGroup.setFeatures(utils.parseSchema(onDemandDataset));
+    }
 
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);
-
     onDemandFeatureGroup.setId(apiFg.getId());
   }
 }

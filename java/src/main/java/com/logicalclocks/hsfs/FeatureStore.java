@@ -142,7 +142,7 @@ public class FeatureStore {
    * Get a training dataset object from the selected feature store.
    *
    * @param name name of the training dataset
-   * @param version version to getFeatureGroup
+   * @param version version to get
    * @return TrainingDataset
    * @throws FeatureStoreException
    * @throws IOException

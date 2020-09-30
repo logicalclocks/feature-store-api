@@ -100,15 +100,15 @@ public class FeatureGroupApi {
     return saveInternal(featureGroup, new StringEntity(featureGroupJson), FeatureGroup.class);
   }
 
-  private <T> T saveInternal(FeatureGroupInternal featureGroupInternal,
+  private <T> T saveInternal(FeatureGroupBase featureGroupBase,
                              StringEntity entity, Class<T> fgType) throws FeatureStoreException, IOException {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroupInternal.getFeatureStore().getProjectId())
-        .set("fsId", featureGroupInternal.getFeatureStore().getId())
+        .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+        .set("fsId", featureGroupBase.getFeatureStore().getId())
         .expand();
 
     HttpPost postRequest = new HttpPost(uri);
@@ -120,16 +120,16 @@ public class FeatureGroupApi {
     return HopsworksClient.getInstance().handleRequest(postRequest, fgType);
   }
 
-  public void delete(FeatureGroupInternal featureGroupInternal) throws FeatureStoreException, IOException {
+  public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroupInternal.getFeatureStore().getProjectId())
-        .set("fsId", featureGroupInternal.getFeatureStore().getId())
-        .set("fgId", featureGroupInternal.getId())
+        .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+        .set("fsId", featureGroupBase.getFeatureStore().getId())
+        .set("fgId", featureGroupBase.getId())
         .expand();
 
     HttpDelete deleteRequest = new HttpDelete(uri);

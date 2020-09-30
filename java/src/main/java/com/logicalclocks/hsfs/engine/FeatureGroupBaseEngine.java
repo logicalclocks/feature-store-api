@@ -19,32 +19,32 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupInternal;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 
 import java.io.IOException;
 import java.util.Map;
 
-public abstract class FeatureGroupInternalEngine {
+public class FeatureGroupBaseEngine {
   protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
 
-  public void delete(FeatureGroupInternal featureGroupInternal) throws FeatureStoreException, IOException {
-    featureGroupApi.delete(featureGroupInternal);
+  public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
+    featureGroupApi.delete(featureGroupBase);
   }
 
-  public void addTag(FeatureGroupInternal featureGroupInternal, String name, String value)
+  public void addTag(FeatureGroupBase featureGroupBase, String name, String value)
       throws FeatureStoreException, IOException {
-    tagsApi.add(featureGroupInternal, name, value);
+    tagsApi.add(featureGroupBase, name, value);
   }
 
-  public Map<String, String> getTag(FeatureGroupInternal featureGroupInternal, String name)
+  public Map<String, String> getTag(FeatureGroupBase featureGroupBase, String name)
       throws FeatureStoreException, IOException {
-    return tagsApi.get(featureGroupInternal, name);
+    return tagsApi.get(featureGroupBase, name);
   }
 
-  public void deleteTag(FeatureGroupInternal featureGroupInternal, String name)
+  public void deleteTag(FeatureGroupBase featureGroupBase, String name)
       throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureGroupInternal, name);
+    tagsApi.deleteTag(featureGroupBase, name);
   }
 }

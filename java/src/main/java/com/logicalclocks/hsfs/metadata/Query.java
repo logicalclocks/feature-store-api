@@ -43,7 +43,7 @@ public class Query {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Getter @Setter
-  private FeatureGroupInternal leftFeatureGroup;
+  private FeatureGroupBase leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
 
@@ -53,7 +53,7 @@ public class Query {
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
 
-  public Query(FeatureGroupInternal leftFeatureGroup, List<Feature> leftFeatures) {
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 

@@ -73,10 +73,10 @@ public class TagsApi {
     hopsworksClient.handleRequest(putRequest);
   }
 
-  public void add(FeatureGroupInternal featureGroupInternal, String name, String value)
+  public void add(FeatureGroupBase featureGroupBase, String name, String value)
       throws FeatureStoreException, IOException {
-    add(featureGroupInternal.getFeatureStore().getProjectId(), featureGroupInternal.getFeatureStore().getId(),
-        featureGroupInternal.getId(), name, value);
+    add(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+        featureGroupBase.getId(), name, value);
   }
 
   public void add(TrainingDataset trainingDataset, String name, String value)
@@ -112,10 +112,10 @@ public class TagsApi {
         .collect(Collectors.toMap(Tags::getName, Tags::getValue));
   }
 
-  public Map<String, String> get(FeatureGroupInternal featureGroupInternal, String name)
+  public Map<String, String> get(FeatureGroupBase featureGroupBase, String name)
       throws FeatureStoreException, IOException {
-    return get(featureGroupInternal.getFeatureStore().getProjectId(), featureGroupInternal.getFeatureStore().getId(),
-        featureGroupInternal.getId(), name);
+    return get(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+        featureGroupBase.getId(), name);
   }
 
   public Map<String, String> get(TrainingDataset trainingDataset, String name)
@@ -144,7 +144,7 @@ public class TagsApi {
     hopsworksClient.handleRequest(httpDelete);
   }
 
-  public void deleteTag(FeatureGroupInternal featureGroup, String name) throws FeatureStoreException, IOException {
+  public void deleteTag(FeatureGroupBase featureGroup, String name) throws FeatureStoreException, IOException {
     deleteTag(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), name);
   }
