@@ -19,6 +19,9 @@ from hsfs import feature_group, on_demand_feature_group
 
 
 class FeatureGroupApi:
+    CACHED = "cached"
+    ONDEMAND = "ondemand"
+
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
@@ -73,7 +76,7 @@ class FeatureGroupApi:
         query_params = {"version": version}
         fg_json = (_client._send_request("GET", path_params, query_params)[0],)
 
-        if fg_type == "cached":
+        if fg_type == self.CACHED:
             return feature_group.FeatureGroup.from_response_json(fg_json)
         else:
             return on_demand_feature_group.OnDemandFeatureGroup.from_response_json(
