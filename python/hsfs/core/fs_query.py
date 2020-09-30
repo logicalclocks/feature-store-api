@@ -19,7 +19,16 @@ from hsfs.core import on_demand_feature_group_alias
 
 
 class FsQuery:
-    def __init__(self, query, query_online, on_demand_feature_groups):
+    def __init__(
+        self,
+        query,
+        query_online,
+        on_demand_feature_groups,
+        href=None,
+        expand=None,
+        items=None,
+        type=None,
+    ):
         self._query = query
         self._query_online = query_online
 
@@ -34,7 +43,6 @@ class FsQuery:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     @property
