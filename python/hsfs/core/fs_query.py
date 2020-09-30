@@ -34,6 +34,7 @@ class FsQuery:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     @property
