@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import humps
 from hsfs.core import on_demand_feature_group_alias
 
 
