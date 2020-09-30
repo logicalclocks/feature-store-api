@@ -14,17 +14,25 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.core import fs_query
+from hsfs import on_demand_feature_group
 
 
-class QueryConstructorApi:
-    def construct_query(self, query):
-        _client = client.get_instance()
-        path_params = ["project", _client._project_id, "featurestores", "query"]
-        headers = {"content-type": "application/json"}
-        return fs_query.FsQuery.from_response_json(
-            _client._send_request(
-                "PUT", path_params, headers=headers, data=query.json()
-            )
+class OnDemandFeatureGroupAlias:
+    def __init__(self, on_demand_fg, alias):
+        self._on_demand_feature_group = on_demand_feature_group.OnDemandFeatureGroup.from_response_json(
+            on_demand_fg
         )
+        self._alias = alias
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(**json_decamelized)
+
+    @property
+    def on_demand_feature_group(self):
+        return self._on_demand_feature_group
+
+    @property
+    def alias(self):
+        return self._alias

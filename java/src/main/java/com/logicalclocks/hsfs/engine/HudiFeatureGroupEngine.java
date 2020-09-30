@@ -1,10 +1,10 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
@@ -35,11 +35,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
-public class HudiEngine {
+public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
 
   @Getter
   private String basePath;
@@ -138,8 +135,9 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-  private void writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                SaveMode saveMode, String operation) throws IOException, FeatureStoreException {
+  private FeatureGroupCommit writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup,
+                                              Dataset<Row> dataset, SaveMode saveMode, String operation)
+      throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
 
@@ -162,14 +160,13 @@ public class HudiEngine {
     writer = writer.mode(saveMode);
     writer.save(this.basePath);
 
-    // TODO (davit): make sure writing completed without exception
     FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
-    featureGroupApi.featureGroupCommit(featureGroup, featureGroupCommit);
+    return featureGroupCommit;
   }
 
   //hudi time time travel sql query
-  public Dataset<Row> readHudiDataset(SparkSession sparkSession, String query,  FeatureGroup featureGroup,
-                                      String startTime, String  endTime) throws IOException, FeatureStoreException {
+  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
+                                     String startTime, String  endTime) throws IOException, FeatureStoreException {
 
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
@@ -177,16 +174,12 @@ public class HudiEngine {
 
     Map<String, String> hudiArgs = hudiReadArgs(featureGroup, startTime, endTime);
 
-    DataFrameReader reader = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
+    DataFrameReader queryDataset = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
-      reader = reader.option(entry.getKey(), entry.getValue());
+      queryDataset = queryDataset.option(entry.getKey(), entry.getValue());
     }
 
-    reader.load(getBasePath()).registerTempTable(getTableName());
-    Dataset<Row>  result = sparkSession.sql(query.replace("`" + featureGroup.getFeatureStore().getName() + "`.`"
-        + getTableName() + "`",getTableName()));
-
-    return utils.dropHudiSpecFeatures(result);
+    queryDataset.load(getBasePath()).registerTempTable(alias);
   }
 
 
@@ -212,11 +205,17 @@ public class HudiEngine {
     return fgCommitMetadata;
   }
 
-  public void writeTimeTravelEnabledFG(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                       SaveMode saveMode, String operation)
+  public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
+                                   SaveMode saveMode, String operation)
       throws IOException, FeatureStoreException {
 
-    writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
+    // TODO (davit): make sure writing completed without exception
+    FeatureGroupCommit fgCommit = writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
+
+    FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    apiFgCommit.setCommitID(apiFgCommit.getCommitID());
+
   }
+
 
 }

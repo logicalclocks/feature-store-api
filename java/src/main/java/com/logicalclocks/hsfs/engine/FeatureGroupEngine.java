@@ -16,7 +16,6 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -25,9 +24,7 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.util.Constants;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -42,9 +39,8 @@ public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
   private Utils utils = new Utils();
-  private HudiEngine hudiEngine = new HudiEngine();
+  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -67,6 +63,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException {
 
     List<Feature> features = utils.parseSchema(dataset);
+    // TODO (davit): move this to backend?
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       features = utils.addHudiSpecFeatures(features);
     }
@@ -191,23 +188,6 @@ public class FeatureGroupEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
-  }
-
-
-  public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    featureGroupApi.delete(featureGroup);
-  }
-
-  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
-    tagsApi.add(featureGroup, name, value);
-  }
-
-  public Map<String, String> getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return tagsApi.get(featureGroup, name);
-  }
-
-  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureGroup, name);
   }
 
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {

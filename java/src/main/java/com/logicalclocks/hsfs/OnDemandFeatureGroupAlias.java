@@ -16,43 +16,18 @@
 
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class FsQuery {
-  @Getter @Setter
-  private String query;
+public class OnDemandFeatureGroupAlias {
 
   @Getter @Setter
-  private String queryOnline;
+  private OnDemandFeatureGroup onDemandFeatureGroup;
 
   @Getter @Setter
-  private List<OnDemandFeatureGroupAlias> onDemandFeatureGroups;
-
-  @Getter @Setter
-  private List<HudiFeatureGroupAlias> featureGroups;
-
-  public void removeNewLines() {
-    query = query.replace("\n", " ");
-    queryOnline =  queryOnline.replace("\n", " ");
-  }
-
-  public String getStorageQuery(Storage storage) throws FeatureStoreException {
-    switch (storage) {
-      case OFFLINE:
-        return query;
-      case ONLINE:
-        return queryOnline;
-      default:
-        throw new FeatureStoreException("Cannot run query on ALL storages");
-    }
-  }
+  private String alias;
 }

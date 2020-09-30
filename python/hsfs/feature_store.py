@@ -83,7 +83,18 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(name, version)
+        return self._feature_group_api.get(name, version, feature_group_api.FeatureGroupApi.CACHED)
+
+    def get_on_demand_feature_group(self, name, version=None):
+        if version is None:
+            warnings.warn(
+                "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
+        return self._feature_group_api.get(name, version, feature_group_api.FeatureGroupApi.ONDEMAND)
 
     def get_training_dataset(self, name, version=None):
         # None is necessary because otherwise it's not possible to detect if

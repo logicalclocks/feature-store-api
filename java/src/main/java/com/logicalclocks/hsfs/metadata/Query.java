@@ -20,10 +20,16 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JoinType;
+import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
+import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.engine.HudiFeatureGroupEngine;
+import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.engine.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -41,7 +47,7 @@ public class Query {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Getter @Setter
-  private FeatureGroup leftFeatureGroup;
+  private FeatureGroupBase leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
 
@@ -51,7 +57,10 @@ public class Query {
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
 
-  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+  private Utils utils = new Utils();
+  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
+
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
@@ -116,21 +125,21 @@ public class Query {
       throw new FeatureStoreException("Storage not supported");
     }
 
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
-    LOGGER.info("Executing query: " + sqlQuery);
+    FsQuery fsQuery =
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    LOGGER.info("Executing query: " + fsQuery.getStorageQuery(storage));
 
     switch (storage) {
       case OFFLINE:
+        registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
         if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          return SparkEngine.getInstance().sql(sqlQuery, leftFeatureGroup, startTime, endTime);
-        } else {
-          return SparkEngine.getInstance().sql(sqlQuery);
+          registerHudiFeatureGroups(fsQuery, startTime, endTime);
         }
+        return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
         StorageConnector onlineConnector
             = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-        return SparkEngine.getInstance().jdbc(onlineConnector, sqlQuery);
+        return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
       default:
         throw new FeatureStoreException("Storage not supported");
     }
@@ -155,6 +164,32 @@ public class Query {
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
+    }
+  }
+
+  private void registerOnDemandFeatureGroups(List<OnDemandFeatureGroupAlias> onDemandFeatureGroups)
+      throws FeatureStoreException {
+    if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
+      return;
+    }
+
+    for (OnDemandFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroups) {
+      String alias = onDemandFeatureGroupAlias.getAlias();
+      OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
+
+      SparkEngine.getInstance().registerTemporaryTable(onDemandFeatureGroup.getQuery(),
+          onDemandFeatureGroup.getStorageConnector(), alias);
+    }
+  }
+
+  private void registerHudiFeatureGroups(FsQuery fsQuery, String startTime, String endTime)
+      throws FeatureStoreException, IOException {
+    List<HudiFeatureGroupAlias> featureGroups = fsQuery.getFeatureGroups();
+    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
+      String alias = hudiFeatureGroupAlias.getAlias();
+      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+      hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
+          startTime, endTime);
     }
   }
 }

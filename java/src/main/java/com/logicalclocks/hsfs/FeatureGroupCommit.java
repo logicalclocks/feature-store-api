@@ -23,7 +23,7 @@ import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroupCommit {
-  @Getter
+  @Getter @Setter
   private Integer commitID;
   @Getter @Setter
   private Long committedOn;
@@ -35,8 +35,9 @@ public class FeatureGroupCommit {
   private Long rowsDeleted;
 
   @Builder
-  public FeatureGroupCommit(Long committedOn, Long rowsInserted, Long rowsUpdated, Long rowsDeleted) {
+  public FeatureGroupCommit(Integer commitID, Long committedOn, Long rowsInserted, Long rowsUpdated, Long rowsDeleted) {
 
+    this.commitID = commitID;
     this.committedOn = committedOn;
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;

@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
-import com.logicalclocks.hsfs.metadata.Query;
 import com.logicalclocks.hsfs.util.Constants;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,36 +36,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroup {
-  @Getter @Setter
-  private Integer id;
-
-  @Getter @Setter
-  private String name;
-
-  @Getter @Setter
-  private Integer version;
-
-  @Getter @Setter
-  private String description;
-
-  @Getter @Setter
-  private FeatureStore featureStore;
-
-  @Getter @Setter
-  private List<Feature> features;
-
-  @Getter
-  private Date created;
-
-  @Getter
-  private String creator;
+public class FeatureGroup extends FeatureGroupBase {
 
   @Getter @Setter
   private Storage defaultStorage;
@@ -74,14 +49,7 @@ public class FeatureGroup {
   private Boolean onlineEnabled;
 
   @Getter @Setter
-  private TimeTravelFormat timeTravelFormat;
-
-  @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
-
-  // TODO (davit): this must be Getter only.
-  @Getter @Setter
-  private String location;
 
   @Getter @Setter
   @JsonProperty("descStatsEnabled")
@@ -141,21 +109,6 @@ public class FeatureGroup {
   }
 
   public FeatureGroup() {
-  }
-
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
-    return new Query(this, features);
-  }
-
-  public Query selectAll() throws FeatureStoreException, IOException {
-    return new Query(this, getFeatures());
-  }
-
-  public Query select(List<String> features) throws FeatureStoreException, IOException {
-    // Create a feature object for each string feature given by the user.
-    // For the query building each feature need only the name set.
-    List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
-    return selectFeatures(featureObjList);
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
@@ -252,9 +205,6 @@ public class FeatureGroup {
     computeStatistics();
   }
 
-  public void delete() throws FeatureStoreException, IOException {
-    featureGroupEngine.delete(this);
-  }
 
   public FeatureGroupCommit commitDetails() throws IOException, FeatureStoreException {
     // TODO (davit): at the moment this will not work. we need to decide what and how much data we can return
@@ -269,6 +219,7 @@ public class FeatureGroup {
    * @throws FeatureStoreException
    * @throws IOException
    */
+
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupEngine.updateStatisticsConfig(this);
   }
@@ -315,64 +266,5 @@ public class FeatureGroup {
   @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
-  }
-
-  /**
-   * Add a tag without value to the feature group.
-   *
-   * @param name name of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name) throws FeatureStoreException, IOException {
-    addTag(name, null);
-  }
-
-  /**
-   * Add name/value tag to the feature group.
-   *
-   * @param name name of the tag
-   * @param value value of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name, String value) throws FeatureStoreException, IOException {
-    featureGroupEngine.addTag(this, name, value);
-  }
-
-  /**
-   * Get all tags of the feature group.
-   *
-   * @return map of all tags from name to value
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public Map<String, String> getTag() throws FeatureStoreException, IOException {
-    return getTag(null);
-  }
-
-  /**
-   * Get a single tag value of the feature group.
-   *
-   * @param name name of tha tag
-   * @return string value of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
-    return featureGroupEngine.getTag(this, name);
-  }
-
-  /**
-   * Delete a tag of the feature group.
-   *
-   * @param name name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void deleteTag(String name) throws FeatureStoreException, IOException {
-    featureGroupEngine.deleteTag(this, name);
   }
 }

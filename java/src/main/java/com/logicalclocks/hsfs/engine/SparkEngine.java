@@ -36,7 +36,6 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.SparkSession;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
@@ -60,7 +59,7 @@ public class SparkEngine {
   private SparkSession sparkSession;
 
   private Utils utils = new Utils();
-  private HudiEngine hudiEngine = new HudiEngine();
+  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -70,15 +69,6 @@ public class SparkEngine {
     // Configure the Spark context to allow dynamic partitions
     sparkSession.conf().set("hive.exec.dynamic.partition", "true");
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
-  }
-
-  //hudi time time travel sql query
-  public Dataset<Row> sql(String query,  FeatureGroup featureGroup, String startTime,
-                          String  endTime) throws IOException, FeatureStoreException {
-
-    Dataset<Row>  result = hudiEngine.readHudiDataset(sparkSession, query, featureGroup, startTime, endTime);
-
-    return result;
   }
 
   public Dataset<Row> sql(String query) {
@@ -92,6 +82,12 @@ public class SparkEngine {
         .format(Constants.JDBC_FORMAT)
         .options(readOptions)
         .load();
+  }
+
+  public void registerTemporaryTable(String query, StorageConnector storageConnector, String alias)
+      throws FeatureStoreException {
+    Dataset<Row> queryDataset = jdbc(storageConnector, query);
+    queryDataset.registerTempTable(alias);
   }
 
   public void configureConnector(StorageConnector storageConnector) {
@@ -309,7 +305,7 @@ public class SparkEngine {
       throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.writeTimeTravelEnabledFG(sparkSession,featureGroup, dataset, saveMode, operation);
+      hudiFeatureGroupEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }
