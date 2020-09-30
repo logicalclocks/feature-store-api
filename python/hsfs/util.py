@@ -46,3 +46,7 @@ def parse_features(feature_names):
 
 class VersionWarning(Warning):
     pass
+
+
+class StorageWarning(Warning):
+    pass

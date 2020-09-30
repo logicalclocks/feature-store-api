@@ -19,6 +19,7 @@ import json
 import warnings
 
 from hsfs import util, engine, feature
+from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector
 from hsfs.core import (
     query,
@@ -26,12 +27,14 @@ from hsfs.core import (
     storage_connector_api,
     training_dataset_engine,
     feed_model_engine,
+    statistics_engine,
 )
 
 
 class TrainingDataset:
     HOPSFS = "HOPSFS_TRAINING_DATASET"
     EXTERNAL = "EXTERNAL_TRAINING_DATASET"
+    ENTITY_TYPE = "trainingdatasets"
 
     def __init__(
         self,
@@ -44,13 +47,10 @@ class TrainingDataset:
         storage_connector=None,
         splits=None,
         seed=None,
-        cluster_analysis=None,
         created=None,
         creator=None,
-        descriptive_statistics=None,
-        feature_correlation_matrix=None,
         features=None,
-        features_histogram=None,
+        statistics_config=None,
         featurestore_name=None,
         id=None,
         jobs=None,
@@ -80,12 +80,17 @@ class TrainingDataset:
             featurestore_id
         )
 
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
         # set up depending on user initialized or coming from backend response
         if training_dataset_type is None:
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
             self.splits = splits
+            self.statistics_config = statistics_config
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -97,6 +102,7 @@ class TrainingDataset:
             ]
             self._splits = splits
             self._training_dataset_type = training_dataset_type
+            self.statistics_config = None
 
     def save(self, features, write_options={}):
         # TODO: Decide if we want to have potentially dangerous defaults like {}
@@ -108,8 +114,13 @@ class TrainingDataset:
             )
 
         user_version = self._version
+        user_stats_config = self._statistics_config
         self._features = engine.get_instance().parse_schema(feature_dataframe)
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
+        # currently we do not save the training dataset statistics config for training datasets
+        self.statistics_config = user_stats_config
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
@@ -130,8 +141,17 @@ class TrainingDataset:
             self, feature_dataframe, write_options, overwrite
         )
 
+        self.compute_statistics()
+
     def read(self, split=None, read_options={}):
         return self._training_dataset_engine.read(self, split, read_options)
+
+    def compute_statistics(self):
+        """Recompute the statistics for the training dataset and save them to the
+        feature store.
+        """
+        if self.statistics_config.enabled:
+            return self._statistics_engine.compute_statistics(self, self.read())
 
     def feed(
         self,
@@ -349,3 +369,43 @@ class TrainingDataset:
     @seed.setter
     def seed(self, seed):
         self._seed = seed
+
+    @property
+    def statistics_config(self):
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def statistics(self):
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time=None):
+        """Returns the statistics for this training dataset at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        :param commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to None
+        :type commit_time: str, optional
+        :return: Statistics information
+        :rtype: Statistics
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)

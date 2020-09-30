@@ -116,6 +116,7 @@ class FeatureStore:
         partition_key=[],
         primary_key=[],
         features=[],
+        statistics_config=None,
     ):
         return feature_group.FeatureGroup(
             name=name,
@@ -128,6 +129,7 @@ class FeatureStore:
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
+            statistics_config=statistics_config,
         )
 
     def create_training_dataset(
@@ -140,6 +142,7 @@ class FeatureStore:
         splits={},
         location="",
         seed=None,
+        statistics_config=None,
     ):
         return training_dataset.TrainingDataset(
             name=name,
@@ -151,4 +154,5 @@ class FeatureStore:
             featurestore_id=self._id,
             splits=splits,
             seed=seed,
+            statistics_config=statistics_config,
         )

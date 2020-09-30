@@ -22,6 +22,7 @@
         <spark.version>2.4.3.2</spark.version>
         <hudi.version>0.6.0</hudi.version>
         <scala.base>2.11</scala.base>
+        <deequ.version>1.1.0-SNAPSHOT</deequ.version>
     </properties>
 
     <dependencies>
@@ -29,6 +30,12 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.logicalclocks</groupId>
+            <artifactId>deequ</artifactId>
+            <version>${deequ.version}</version>
         </dependency>
 
         <dependency>

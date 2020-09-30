@@ -18,9 +18,12 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Query;
 import com.logicalclocks.hsfs.util.Constants;
+import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -28,6 +31,8 @@ import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -78,6 +83,21 @@ public class FeatureGroup {
   @Getter @Setter
   private String location;
 
+  @Getter @Setter
+  @JsonProperty("descStatsEnabled")
+  private Boolean statisticsEnabled;
+
+  @Getter @Setter
+  @JsonProperty("featHistEnabled")
+  private Boolean histograms;
+
+  @Getter @Setter
+  @JsonProperty("featCorrEnabled")
+  private Boolean correlations;
+
+  @Getter @Setter
+  private List<String> statisticColumns;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> primaryKeys;
@@ -91,12 +111,16 @@ public class FeatureGroup {
   private List<String> precombineKeys;
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys, List<String> precombineKeys,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, Storage defaultStorage,
-                      List<Feature> features)
+                      List<Feature> features, Boolean statisticsEnabled, Boolean histograms,
+                      Boolean correlations, List<String> statisticColumns)
       throws FeatureStoreException {
 
     this.featureStore = featureStore;
@@ -110,6 +134,10 @@ public class FeatureGroup {
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
     this.features = features;
+    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
+    this.histograms = histograms;
+    this.correlations = correlations;
+    this.statisticColumns = statisticColumns;
   }
 
   public FeatureGroup() {
@@ -164,8 +192,13 @@ public class FeatureGroup {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, precombineKeys,
             defaultStorage, writeOptions);
+
+    if (statisticsEnabled) {
+      statisticsEngine.computeStatistics(this, featureData);
+    }
   }
 
   public void insert(Dataset<Row> featureData, Storage storage)
@@ -215,6 +248,8 @@ public class FeatureGroup {
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, operation,
             writeOptions);
+
+    computeStatistics();
   }
 
   public void delete() throws FeatureStoreException, IOException {
@@ -224,6 +259,62 @@ public class FeatureGroup {
   public FeatureGroupCommit commitDetails() throws IOException, FeatureStoreException {
     // TODO (davit): at the moment this will not work. we need to decide what and how much data we can return
     return null;
+  }
+
+  /**
+   * Update the statistics configuration of the feature group.
+   * Change the `statisticsEnabled`, `histograms`, `correlations` or `statisticColumns` attributes and persist
+   * the changes by calling this method.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateStatisticsConfig() throws FeatureStoreException, IOException {
+    featureGroupEngine.updateStatisticsConfig(this);
+  }
+
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsEnabled) {
+      if (defaultStorage == Storage.ALL || defaultStorage == Storage.OFFLINE) {
+        return statisticsEngine.computeStatistics(this, read(Storage.OFFLINE));
+      } else {
+        LOGGER.info("StorageWarning: The default storage of feature group `" + name + "`, with version `" + version
+            + "`, is `" + defaultStorage + "`. Statistics are only computed for default storage `offline and `all`.");
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get the last statistics commit for the feature group.
+   *
+   * @return statistics object of latest commit
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    return statisticsEngine.getLast(this);
+  }
+
+  /**
+   * Get the statistics of a specific commit time for the feature group.
+   *
+   * @param commitTime commit time in the format "YYYYMMDDhhmmss"
+   * @return statistics object for the commit time
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
+    return statisticsEngine.get(this, commitTime);
   }
 
   /**

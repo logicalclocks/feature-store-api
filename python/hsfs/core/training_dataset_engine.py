@@ -21,12 +21,13 @@ from hsfs.core import training_dataset_api, tags_api
 class TrainingDatasetEngine:
     OVERWRITE = "overwrite"
     APPEND = "append"
+    ENTITY_TYPE = "trainingdatasets"
 
     def __init__(self, feature_store_id):
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
         )
-        self._tags_api = tags_api.TagsApi(feature_store_id, "trainingdatasets")
+        self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
 
     def save(self, training_dataset, feature_dataframe, user_write_options):
         self._training_dataset_api.post(training_dataset)

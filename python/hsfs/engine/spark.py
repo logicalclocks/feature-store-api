@@ -38,6 +38,7 @@ class Engine:
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
         self._spark_context = self._spark_session.sparkContext
+        self._jvm = self._spark_context._jvm
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
@@ -193,6 +194,12 @@ class Engine:
             .load(path)
         )
 
+    def profile(self, dataframe, relevant_columns, correlations, histograms):
+        """Profile a dataframe with Deequ."""
+        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf, relevant_columns, correlations, histograms
+        )
+
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")
@@ -260,7 +267,9 @@ class Engine:
                     pass
             else:
                 raise SchemaError(
-                    "Schemas do not match, could not find feature {} among the data to be inserted.".format()
+                    "Schemas do not match, could not find feature {} among the data to be inserted.".format(
+                        feat.name
+                    )
                 )
 
     def _setup_s3(self, storage_connector, path):

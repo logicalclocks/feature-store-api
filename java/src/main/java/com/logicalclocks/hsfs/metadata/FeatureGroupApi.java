@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +38,13 @@ public class FeatureGroupApi {
 
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
+<<<<<<< HEAD
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH + "/commit";
+=======
+  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsSettings}";
+>>>>>>> master
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
-  public static final String FEATURE_GROUP_TAGS_PATH = FEATURE_GROUP_ID_PATH + "/tags{/name}{?value}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
@@ -125,17 +129,26 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
+<<<<<<< HEAD
   public FeatureGroupCommit featureGroupCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
+=======
+  public FeatureGroup updateStatsConfig(FeatureGroup featureGroup)
+>>>>>>> master
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
+<<<<<<< HEAD
         + FEATURE_GROUP_COMMIT_PATH;
+=======
+        + FEATURE_GROUP_ID_PATH;
+>>>>>>> master
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
+<<<<<<< HEAD
         .expand();
 
     String featureGroupCommitJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroupCommit);
@@ -169,4 +182,19 @@ public class FeatureGroupApi {
   }
 
 
+=======
+        .set("updateStatsSettings", true)
+        .expand();
+
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    putRequest.setEntity(new StringEntity(featureGroupJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(featureGroupJson);
+
+    return hopsworksClient.handleRequest(putRequest, FeatureGroup.class);
+  }
+>>>>>>> master
 }

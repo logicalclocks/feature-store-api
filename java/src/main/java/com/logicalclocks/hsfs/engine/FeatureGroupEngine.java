@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,9 +47,6 @@ public class FeatureGroupEngine {
   private HudiEngine hudiEngine = new HudiEngine();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
-
-  //TODO:
-  //      Compute statistics
 
   /**
    * Create the metadata and write the data to the online/offline feature store.
@@ -124,6 +120,9 @@ public class FeatureGroupEngine {
     featureGroup.setVersion(apiFG.getVersion());
     // TODO (davit): this must be Getter only. I need to investigate why not privide directly apiFG
     featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
@@ -211,4 +210,9 @@ public class FeatureGroupEngine {
     tagsApi.deleteTag(featureGroup, name);
   }
 
+  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    FeatureGroup apiFG = featureGroupApi.updateStatsConfig(featureGroup);
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
+  }
 }

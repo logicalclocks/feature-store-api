@@ -67,6 +67,7 @@ public class TrainingDatasetEngine {
     // Update the original object - Hopsworks returns the full location and incremented version
     trainingDataset.setLocation(apiTD.getLocation());
     trainingDataset.setVersion(apiTD.getVersion());
+    trainingDataset.setId(apiTD.getId());
 
     // Build write options map
     Map<String, String> writeOptions =

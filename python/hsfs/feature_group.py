@@ -18,13 +18,15 @@ import humps
 import json
 import warnings
 
-from hsfs.core import query, feature_group_engine
+from hsfs.core import query, feature_group_engine, statistics_engine
 from hsfs import util, engine, feature
+from hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureGroup:
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
 
     def __init__(
         self,
@@ -37,10 +39,6 @@ class FeatureGroup:
         featurestore_name=None,
         created=None,
         creator=None,
-        descriptive_statistics=None,
-        feature_correlation_matrix=None,
-        features_histogram=None,
-        cluster_analysis=None,
         id=None,
         features=None,
         location=None,
@@ -48,14 +46,11 @@ class FeatureGroup:
         desc_stats_enabled=None,
         feat_corr_enabled=None,
         feat_hist_enabled=None,
-        cluster_analysis_enabled=None,
         statistic_columns=None,
-        num_bins=None,
-        num_clusters=None,
-        corr_method=None,
         online_enabled=False,
         hudi_enabled=False,
         default_storage="offline",
+        statistics_config=None,
     ):
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -63,23 +58,11 @@ class FeatureGroup:
         self._created = created
         self._creator = creator
         self._version = version
-        self._descriptive_statistics = descriptive_statistics
-        self._feature_correlation_matrix = feature_correlation_matrix
-        self._features_histogram = features_histogram
-        self._cluster_analysis = cluster_analysis
         self._name = name
         self._id = id
         self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._location = location
         self._jobs = jobs
-        self._desc_stats_enabled = desc_stats_enabled
-        self._feat_corr_enabled = feat_corr_enabled
-        self._feat_hist_enabled = feat_hist_enabled
-        self._cluster_analysis_enabled = cluster_analysis_enabled
-        self._statistic_columns = statistic_columns
-        self._num_bins = num_bins
-        self._num_clusters = num_clusters
-        self._corr_method = corr_method
         self._online_enabled = online_enabled
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
@@ -93,8 +76,32 @@ class FeatureGroup:
             self._primary_key = [f.name for f in self._features if f.primary]
             self._partition_key = [f.name for f in self._features if f.partition]
 
+        if id is not None:
+            # initialized by backend
+            self.statistics_config = StatisticsConfig(
+                desc_stats_enabled,
+                feat_corr_enabled,
+                feat_hist_enabled,
+                statistic_columns,
+            )
+            self._primary_key = [
+                feat.name for feat in self._features if feat.primary is True
+            ]
+            self._partition_key = [
+                feat.name for feat in self._features if feat.partition is True
+            ]
+        else:
+            # initialized by user
+            self.statistics_config = statistics_config
+            self._primary_key = primary_key
+            self._partition_key = partition_key
+
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
+        )
+
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
         )
 
     def read(self, storage=None, dataframe_type="default"):
@@ -137,6 +144,8 @@ class FeatureGroup:
         self._feature_group_engine.save(
             self, feature_dataframe, self._default_storage, write_options,
         )
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
@@ -157,8 +166,43 @@ class FeatureGroup:
             write_options,
         )
 
+        self.compute_statistics()
+
     def delete(self):
         self._feature_group_engine.delete(self)
+
+    def update_statistics_config(self):
+        """Update the statistics configuration of the feature group.
+
+        Change the `statistics_config` object and persist the changes by calling
+        this method.
+
+        :return: the updated metadata object of the feature group.
+        :rtype: FeatureGroup
+        """
+        self._feature_group_engine.update_statistics_config(self)
+        return self
+
+    def compute_statistics(self):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+
+        :return: the statistics metadata object.
+        :rtype: Statistics
+        """
+        if self.statistics_config.enabled:
+            if self._default_storage.lower() in ["all", "offline"]:
+                return self._statistics_engine.compute_statistics(
+                    self, self.read("offline")
+                )
+            else:
+                warnings.warn(
+                    (
+                        "The default storage of feature group `{}`, with version `{}`, is `{}`. "
+                        "Statistics are only computed for default storage `offline` and `all`."
+                    ).format(self._name, self._version, self._default_storage),
+                    util.StorageWarning,
+                )
 
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.
@@ -222,6 +266,10 @@ class FeatureGroup:
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
+            "descStatsEnabled": self._statistics_config.enabled,
+            "featHistEnabled": self._statistics_config.histograms,
+            "featCorrEnabled": self._statistics_config.correlations,
+            "statisticColumns": self._statistics_config.columns,
         }
 
     @property
@@ -268,6 +316,10 @@ class FeatureGroup:
     def created(self):
         return self._created
 
+    @version.setter
+    def version(self, version):
+        self._version = version
+
     @description.setter
     def description(self, new_description):
         self._description = new_description
@@ -287,3 +339,43 @@ class FeatureGroup:
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
+
+    @property
+    def statistics_config(self):
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def statistics(self):
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time=None):
+        """Returns the statistics for this feature group at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        :param commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to None
+        :type commit_time: str, optional
+        :return: Statistics information
+        :rtype: Statistics
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)
