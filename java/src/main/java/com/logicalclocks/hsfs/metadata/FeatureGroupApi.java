@@ -38,12 +38,8 @@ public class FeatureGroupApi {
 
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
-<<<<<<< HEAD
-  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}";
-  public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH + "/commit";
-=======
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsSettings}";
->>>>>>> master
+  public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH + "/commit";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -129,26 +125,17 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-<<<<<<< HEAD
   public FeatureGroupCommit featureGroupCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
-=======
-  public FeatureGroup updateStatsConfig(FeatureGroup featureGroup)
->>>>>>> master
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-<<<<<<< HEAD
         + FEATURE_GROUP_COMMIT_PATH;
-=======
-        + FEATURE_GROUP_ID_PATH;
->>>>>>> master
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
-<<<<<<< HEAD
         .expand();
 
     String featureGroupCommitJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroupCommit);
@@ -181,8 +168,16 @@ public class FeatureGroupApi {
     return commitDetails;
   }
 
+  public FeatureGroup updateStatsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_ID_PATH;
 
-=======
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
         .set("updateStatsSettings", true)
         .expand();
 
@@ -195,6 +190,8 @@ public class FeatureGroupApi {
     LOGGER.info(featureGroupJson);
 
     return hopsworksClient.handleRequest(putRequest, FeatureGroup.class);
+
   }
->>>>>>> master
+
 }
+
