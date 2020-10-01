@@ -17,7 +17,7 @@
 import humps
 import json
 
-from hsfs import util, engine, feature
+from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import on_demand_feature_group_engine, feature_group_base
 
 
@@ -55,9 +55,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
-        self._storage_connector = storage_connector
         self._id = id
-        self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
@@ -67,6 +65,18 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
             featurestore_id
         )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = [
+                feature.Feature.from_response_json(feat) for feat in features
+            ]
+            self._storage_connector = sc.StorageConnector.from_response_json(
+                storage_connector
+            )
+        else:
+            self._features = features
+            self._storage_connector = storage_connector
 
     def save(self):
         self._feature_group_engine.save(self)
