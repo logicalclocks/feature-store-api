@@ -17,7 +17,6 @@ from hsfs import engine
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
-    tags_api,
     feature_group_internal_engine,
 )
 

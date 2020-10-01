@@ -39,7 +39,7 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type):
-        with self._create_mysql_connection(online_conn) as mysql_conn:
+        with self._create_mysql_connection(connector) as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
