@@ -115,17 +115,12 @@ public class Query {
     return this;
   }
 
-  public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE, null, null);
-  }
-
-  // TODO (davit): this is duplicate function with just different name
   public Dataset<Row> asOf(String wallclockTime) throws FeatureStoreException, IOException {
     return read(Storage.OFFLINE, null, wallclockTime);
   }
 
-  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE, null, wallclockTime);
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
+    return read(Storage.OFFLINE, null, null);
   }
 
   public Dataset<Row> read(Storage storage, String wallclockStartTime, String  wallclockEndTime)
