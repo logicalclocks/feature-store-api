@@ -264,21 +264,26 @@ class Engine:
             for feat in dataframe.schema
         }
 
-    def schema_matches(self, dataframe, schema):
-        # This does not respect order, for that we would need to make sure the features in the
-        # list coming from the backend are ordered correctly
-        insert_schema = self.parse_schema_dict(dataframe)
-        for feat in schema:
-            insert_feat = insert_schema.pop(feat.name, False)
-            if insert_feat:
-                if insert_feat.type == feat.type:
-                    pass
-            else:
+    def training_dataset_schema_match(self, dataframe, schema):
+        schema_sorted = sorted(schema, key=lambda f: f.index)
+        insert_schema = dataframe.schema
+        if len(schema_sorted) != len(insert_schema):
+            raise SchemaError(
+                "Schemas do not match. Expected {} features, the dataframe contains {} features".format(
+                    len(schema_sorted), len(insert_schema)
+                )
+            )
+
+        i = 0
+        for feat in schema_sorted:
+            if feat.name != insert_schema[i].name:
                 raise SchemaError(
-                    "Schemas do not match, could not find feature {} among the data to be inserted.".format(
-                        feat.name
+                    "Schemas do not match, expected feature {} in position {}, found {}".format(
+                        feat.name, str(i), insert_schema[i].name
                     )
                 )
+
+            i += 1
 
     def _setup_s3(self, storage_connector, path):
         if storage_connector.access_key:
