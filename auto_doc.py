@@ -1,3 +1,6 @@
+import pathlib
+import shutil
+
 import keras_autodoc
 
 PAGES = {
@@ -7,6 +10,8 @@ PAGES = {
     ]
 }
 
+hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
+
 
 def generate(dest_dir):
     doc_generator = keras_autodoc.DocumentationGenerator(
@@ -14,8 +19,11 @@ def generate(dest_dir):
         project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
         template_dir="./docs/templates",
     )
-    doc_generator.generate(dest_dir)
+    shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "contributing.md")
+    shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")
+
+    doc_generator.generate(dest_dir / "generated")
 
 
 if __name__ == "__main__":
-    generate("./docs/generated")
+    generate(hsfs_dir / "docs")

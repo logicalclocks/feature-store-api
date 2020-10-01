@@ -80,21 +80,14 @@ class Connection:
         on Databricks or Sagemaker.
 
         # Arguments
-            host: String. The hostname of the Hopsworks instance.
-            port: int. The port on which the Hopsworks instance can be reached.
-            width_shift_range: Float, 1-D array-like or int
-                - float: fraction of total width, if < 1, or pixels if >= 1.
-                - 1-D array-like: random elements from the array.
-                - int: integer number of pixels from interval
-                    `(-width_shift_range, +width_shift_range)`
-                - With `width_shift_range=2` possible values
-                    are integers `[-1, 0, +1]`,
-                    same as with `width_shift_range=[-1, 0, +1]`,
-                    while with `width_shift_range=1.0` possible values are floats
-                    in the interval `[-1.0, +1.0)`.
+            host: str, optional.
+                The hostname of the Hopsworks instance, defaults to `None`.
+            port: int, optional.
+                The port on which the Hopsworks instance can be reached, defaults to `None`.
 
         # Returns
-            A connection object.
+            Connection. A connection reference to retrieve and perform operations on a
+                Hopsworks project.
         """
         return cls(
             host,

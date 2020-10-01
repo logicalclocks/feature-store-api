@@ -9,11 +9,12 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-    - Introduction: ../../README.md
+    - Introduction: index.md
     - Quickstart: quickstart.md
     - Installation: installation.md
     - API Reference:
         - Connection: generated/connection.md
+    - Contributing: contributing.md
 
 theme:
     name: material
