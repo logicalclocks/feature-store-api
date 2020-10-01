@@ -17,7 +17,7 @@
 from hsfs.core import feature_group_api, tags_api
 
 
-class FeatureGroupInternalEngine:
+class FeatureGroupBaseEngine:
     ENTITY_TYPE = "featuregroups"
 
     def __init__(self, feature_store_id):
