@@ -22,6 +22,9 @@ theme:
     logo: assets/images/hops-logo.png
     icon:
         repo: fontawesome/brands/github
+    font:
+        text: "Roboto"
+        code: "IBM Plex Mono"
 
 extra_css:
     - css/custom.css
