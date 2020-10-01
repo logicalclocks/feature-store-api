@@ -124,7 +124,6 @@ class TrainingDataset:
 
         user_version = self._version
         user_stats_config = self._statistics_config
-        self._features = engine.get_instance().parse_schema(feature_dataframe)
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
