@@ -420,5 +420,16 @@ class TrainingDataset:
         else:
             return self._statistics_engine.get(self, commit_time)
 
-    def query(self, storage="online"):
+    @property
+    def query(self):
+        return self._training_dataset_engine.query(self, "online")
+
+    def get_query(self, storage="online"):
+        """Returns the query used to generate this training dataset
+
+        :param storage: the storage for which to return the query, Defaults to "online"  
+        :type storage: str, optional
+        :return: query 
+        :rtype: str 
+        """
         return self._training_dataset_engine.query(self, storage)

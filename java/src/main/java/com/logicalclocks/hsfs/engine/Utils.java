@@ -61,7 +61,8 @@ public class Utils {
     return features;
   }
 
-  public void schemaMatches(Dataset<Row> dataset, List<TrainingDatasetFeature> features) throws FeatureStoreException {
+  public void trainingDatasetSchemaMatch(Dataset<Row> dataset, List<TrainingDatasetFeature> features)
+      throws FeatureStoreException {
     StructType tdStructType = new StructType(features.stream()
         .sorted(Comparator.comparingInt(TrainingDatasetFeature::getIndex))
         .map(f -> new StructField(f.getName(),

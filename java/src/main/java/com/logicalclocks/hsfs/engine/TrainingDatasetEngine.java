@@ -69,7 +69,6 @@ public class TrainingDatasetEngine {
     }
 
     // Update the original object - Hopsworks returns the full location and incremented version
-    trainingDataset.setId(apiTD.getId());
     trainingDataset.setLocation(apiTD.getLocation());
     trainingDataset.setVersion(apiTD.getVersion());
     trainingDataset.setId(apiTD.getId());
@@ -94,7 +93,7 @@ public class TrainingDatasetEngine {
                      Map<String, String> providedOptions, SaveMode saveMode)
       throws FeatureStoreException {
     // validate that the schema matches
-    utils.schemaMatches(dataset, trainingDataset.getFeatures());
+    utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
 
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
