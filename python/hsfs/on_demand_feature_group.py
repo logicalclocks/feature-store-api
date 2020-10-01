@@ -84,6 +84,19 @@ class OnDemandFeatureGroup:
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "query": self._query,
+            "storageConnector": self._storage_connector,
+            "type": "onDemandFeaturegroupDTO",
+        }
+
     @property
     def id(self):
         return self._id
