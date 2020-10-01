@@ -66,6 +66,9 @@ class OnDemandFeatureGroup:
             featurestore_id
         )
 
+    def save(self):
+        self._feature_group_engine.save(self)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
