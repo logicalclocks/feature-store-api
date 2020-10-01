@@ -148,11 +148,12 @@ class FeatureStore:
         )
 
     def create_on_demand_feature_group(
-        self, name, query, version=None, description="", features=[],
+        self, name, query, storage_connector, version=None, description="", features=[],
     ):
         return on_demand_feature_group.OnDemandFeatureGroup(
             name=name,
             query=query,
+            storage_connector=storage_connector,
             version=version,
             description=description,
             featurestore_id=self._id,
