@@ -36,7 +36,7 @@ class OnDemandFeatureGroupEngine(
         if len(feature_group.features) == 0:
             # If the user didn't specify the schema, parse it from the query
             on_demand_dataset = engine.get_instance().sql(
-                feature_group.query, None, feature_group.connector, "default"
+                feature_group.query, None, feature_group.storage_connector, "default"
             )
             feature_group._features = engine.get_instance().parse_schema(
                 on_demand_dataset
