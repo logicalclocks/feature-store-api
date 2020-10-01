@@ -17,11 +17,11 @@ from hsfs import engine
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
-    feature_group_internal_engine,
+    feature_group_base_engine,
 )
 
 
-class FeatureGroupEngine(feature_group_internal_engine.FeatureGroupInternalEngine):
+class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     OVERWRITE = "overwrite"
     APPEND = "append"
 

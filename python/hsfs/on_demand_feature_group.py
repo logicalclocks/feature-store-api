@@ -17,11 +17,11 @@
 import humps
 import json
 
-from hsfs import feature, util
-from hsfs.core import on_demand_feature_group_engine
+from hsfs import util, engine, feature
+from hsfs.core import on_demand_feature_group_engine, feature_group_base
 
 
-class OnDemandFeatureGroup:
+class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
 
     def __init__(
@@ -45,6 +45,8 @@ class OnDemandFeatureGroup:
         statistic_columns=None,
         statistics_config=None,
     ):
+        super().__init__(featurestore_id)
+
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
@@ -68,6 +70,26 @@ class OnDemandFeatureGroup:
 
     def save(self):
         self._feature_group_engine.save(self)
+
+    def read(self, dataframe_type="default"):
+        """Get the feature group as a DataFrame."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().read(dataframe_type)
+
+    def show(self, n):
+        """Show the first n rows of the feature group."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().show(n)
 
     @classmethod
     def from_response_json(cls, json_dict):

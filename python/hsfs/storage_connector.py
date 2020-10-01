@@ -65,12 +65,9 @@ class StorageConnector:
         return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
-            "id": self._id,
-            "type": self.JDBC_DTO
-            if self._storage_connector_type.upper() == self.JDBC
-            else self.HOPSFS_DTO,
-        }
+        # Currently we use this method only when creating on demand feature groups.
+        # The backend needs only the id.
+        return {"id": self._id}
 
     @property
     def id(self):
