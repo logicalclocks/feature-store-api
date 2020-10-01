@@ -59,7 +59,7 @@ class FeatureGroupApi:
         :type name: str
         :param version: version of the feature group
         :type version: int
-        :param fg_type: type of the feature group to return 
+        :param fg_type: type of the feature group to return
         :type version: string 
         :return: feature group metadata object
         :rtype: FeatureGroup

@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
-from hsfs.core import feature_group_api, storage_connector_api, tags_api
+from hsfs.core import feature_group_api, tags_api
 
 
 class FeatureGroupInternalEngine:

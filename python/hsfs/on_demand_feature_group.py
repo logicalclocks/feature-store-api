@@ -14,6 +14,13 @@
 #   limitations under the License.
 
 
+import humps
+import json
+
+from hsfs import feature, util
+from hsfs.core import on_demand_feature_group_engine
+
+
 class OnDemandFeatureGroup:
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
 
@@ -25,8 +32,6 @@ class OnDemandFeatureGroup:
         featurestore_id,
         query,
         storage_connector,
-        partition_key=None,
-        primary_key=None,
         featurestore_name=None,
         created=None,
         creator=None,
@@ -45,7 +50,7 @@ class OnDemandFeatureGroup:
         self._description = description
         self._created = created
         self._creator = creator
-        self._version = n
+        self._version = version
         self._name = name
         self._query = query
         self._storage_connector = storage_connector
@@ -57,16 +62,7 @@ class OnDemandFeatureGroup:
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        if id is None:
-            # Initialized from the API
-            self._primary_key = primary_key
-            self._partition_key = partition_key
-        else:
-            # Initialized from the backend
-            self._primary_key = [f.name for f in self._features if f.primary]
-            self._partition_key = [f.name for f in self._features if f.partition]
-
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
             featurestore_id
         )
 
