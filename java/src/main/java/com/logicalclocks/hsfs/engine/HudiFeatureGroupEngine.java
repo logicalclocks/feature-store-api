@@ -1,5 +1,6 @@
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -11,6 +12,7 @@ import com.logicalclocks.hsfs.util.Constants;
 
 import lombok.Getter;
 
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -31,7 +33,10 @@ import scala.collection.Seq;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +54,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
 
   private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
-    this.basePath = utils.getHudiBasePath(featureGroup);
+    this.basePath = featureGroup.getLocation();
     this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
 
     Map<String, String> hudiArgs = new HashMap<String, String>();
@@ -97,41 +102,42 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     return hudiArgs;
   }
 
-  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime)
-      throws IOException, FeatureStoreException {
+  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String wallclockStartTime,
+                                                String wallclockEndTime) throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
-    this.basePath = utils.getHudiBasePath(featureGroup);
+    this.basePath = featureGroup.getLocation();
+    // TODO (davit): get table name from backend
     this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
 
     //Snapshot query
-    if (startTime == null && endTime == null) {
+    if (wallclockStartTime == null && wallclockEndTime == null) {
       hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
       this.basePath =  this.basePath  + StringUtils.repeat("/*", numberOfpartitionCols + 1);
-    } else if (endTime != null) {
+    } else if (wallclockEndTime != null) {
       hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
-      Long endTimeStamp = utils.hudiCommitToTimeStamp(endTime);
+      Long endTimeStamp = hudiCommitToTimeStamp(wallclockEndTime);
       FeatureGroupCommit endCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, endTimeStamp);
-      String hudiCommitEndTime = utils.timeStampToHudiFormat(endCommit.getCommittedOn());
+      String hudiCommitEndTime = timeStampToHudiFormat(endCommit.getCommittedOn());
       //point in time  query
-      if (startTime == null) {
+      if (wallclockStartTime == null) {
         hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
         hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
-      } else if (startTime != null) {       //incremental  query
-        Long startTimeStamp = utils.hudiCommitToTimeStamp(startTime);
+      } else if (wallclockStartTime != null) {       //incremental  query
+        Long startTimeStamp = hudiCommitToTimeStamp(wallclockStartTime);
         FeatureGroupCommit startCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, startTimeStamp);
-        String hudiCommitStartTime = utils.timeStampToHudiFormat(startCommit.getCommittedOn());
+        String hudiCommitStartTime = timeStampToHudiFormat(startCommit.getCommittedOn());
         hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
-        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, endTime);
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, wallclockEndTime);
       }
     }
 
     return hudiArgs;
   }
 
-  private Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String startTime, String  endTime)
-      throws IOException, FeatureStoreException {
-    Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, startTime, endTime);
+  private Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String wallclockStartTime,
+                                           String wallclockEndTime) throws IOException, FeatureStoreException {
+    Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, wallclockStartTime, wallclockEndTime);
     return hudiArgs;
   }
 
@@ -166,13 +172,14 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
 
   //hudi time time travel sql query
   public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
-                                     String startTime, String  endTime) throws IOException, FeatureStoreException {
+                                     String wallclockStartTime, String  wallclockEndTime)
+      throws IOException, FeatureStoreException {
 
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
         org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
 
-    Map<String, String> hudiArgs = hudiReadArgs(featureGroup, startTime, endTime);
+    Map<String, String> hudiArgs = hudiReadArgs(featureGroup, wallclockStartTime, wallclockEndTime);
 
     DataFrameReader queryDataset = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
@@ -192,7 +199,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
-    Long commitTimeStamp = utils.hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
+    Long commitTimeStamp = hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
     fgCommitMetadata.setCommittedOn(commitTimeStamp);
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
@@ -215,6 +222,43 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
     apiFgCommit.setCommitID(apiFgCommit.getCommitID());
 
+  }
+
+  @SneakyThrows
+  private Long hudiCommitToTimeStamp(String hudiCommitTime) {
+    // TODO (davit): we need to have list of accepted date formats
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
+    return commitTimeStamp;
+  }
+
+  @SneakyThrows
+  private String timeStampToHudiFormat(Long commitedOnTimeStamp) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
+    String strCommitedOnDate = dateFormat.format(commitedOnDate);
+    return strCommitedOnDate;
+  }
+
+  // TODO (davit): move to backend
+  public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
+    features.add(new Feature("_hoodie_record_key", "string",
+        "string", false, false, false));
+    features.add(new Feature("_hoodie_partition_path", "string",
+        "string", false, false, false));
+    features.add(new Feature("_hoodie_commit_time", "string",
+        "string", false, false, false));
+    features.add(new Feature("_hoodie_file_name", "string",
+        "string", false, false, false));
+    features.add(new Feature("_hoodie_commit_seqno", "string",
+        "string", false, false, false));
+    return features;
+  }
+
+  // TODO (davit): move to backend
+  public Dataset<Row>  dropHudiSpecFeatures(Dataset<Row> dataset) {
+    return  dataset.drop("_hoodie_record_key", "_hoodie_partition_path", "_hoodie_commit_time",
+        "_hoodie_file_name", "_hoodie_commit_seqno");
   }
 
 

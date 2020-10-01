@@ -65,7 +65,7 @@ public class FeatureGroupEngine {
     List<Feature> features = utils.parseSchema(dataset);
     // TODO (davit): move this to backend?
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      features = utils.addHudiSpecFeatures(features);
+      features = hudiFeatureGroupEngine.addHudiSpecFeatures(features);
     }
 
     if (featureGroup.getFeatureStore() != null) {

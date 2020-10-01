@@ -93,44 +93,4 @@ public class Utils {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  public String getHudiBasePath(FeatureGroup offlineFeatureGroup) {
-    return offlineFeatureGroup.getLocation();
-  }
-
-  public List<Feature> addHudiSpecFeatures(List<Feature> features) throws FeatureStoreException {
-    features.add(new Feature("_hoodie_record_key", "string",
-            "string", false, false, false));
-    features.add(new Feature("_hoodie_partition_path", "string",
-            "string", false, false, false));
-    features.add(new Feature("_hoodie_commit_time", "string",
-            "string", false, false, false));
-    features.add(new Feature("_hoodie_file_name", "string",
-            "string", false, false, false));
-    features.add(new Feature("_hoodie_commit_seqno", "string",
-            "string", false, false, false));
-    return features;
-  }
-
-  public Dataset<Row>  dropHudiSpecFeatures(Dataset<Row> dataset) {
-    return  dataset.drop("_hoodie_record_key", "_hoodie_partition_path", "_hoodie_commit_time",
-            "_hoodie_file_name", "_hoodie_commit_seqno");
-  }
-
-  @SneakyThrows
-  public Long hudiCommitToTimeStamp(String hudiCommitTime) {
-    // TODO (davit): we need to have list of accepted date formats
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-    Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
-    return commitTimeStamp;
-  }
-
-  @SneakyThrows
-  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    String strCommitedOnDate = dateFormat.format(commitedOnDate);
-    return strCommitedOnDate;
-  }
-
-
 }

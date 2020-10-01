@@ -76,7 +76,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> precombineKeys;
+  private List<String> hudiPrecombineKey;
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -85,7 +85,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys, List<String> precombineKeys,
+                      List<String> primaryKeys, List<String> partitionKeys, List<String> hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, Storage defaultStorage,
                       List<Feature> features, Boolean statisticsEnabled, Boolean histograms,
                       Boolean correlations, List<String> statisticColumns)
@@ -97,7 +97,7 @@ public class FeatureGroup extends FeatureGroupBase {
     this.description = description;
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
-    this.precombineKeys = precombineKeys;
+    this.hudiPrecombineKey = hudiPrecombineKey;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
@@ -122,7 +122,7 @@ public class FeatureGroup extends FeatureGroupBase {
   // time travel read point in time
   public Dataset<Row> read(String wallclockTime)
           throws FeatureStoreException, IOException {
-    return selectAll().read(Storage.OFFLINE, null, wallclockTime);
+    return selectAll().read(wallclockTime);
   }
 
   // time travel read changes
@@ -146,7 +146,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, precombineKeys,
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
             defaultStorage, writeOptions);
 
     if (statisticsEnabled) {

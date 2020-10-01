@@ -119,7 +119,16 @@ public class Query {
     return read(Storage.OFFLINE, null, null);
   }
 
-  public Dataset<Row> read(Storage storage, String startTime, String  endTime)
+  // TODO (davit): this is duplicate function with just different name
+  public Dataset<Row> asOf(String wallclockTime) throws FeatureStoreException, IOException {
+    return read(Storage.OFFLINE, null, wallclockTime);
+  }
+
+  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
+    return read(Storage.OFFLINE, null, wallclockTime);
+  }
+
+  public Dataset<Row> read(Storage storage, String wallclockStartTime, String  wallclockEndTime)
           throws FeatureStoreException, IOException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -133,7 +142,7 @@ public class Query {
       case OFFLINE:
         registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
         if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          registerHudiFeatureGroups(fsQuery, startTime, endTime);
+          registerHudiFeatureGroups(fsQuery, wallclockStartTime, wallclockEndTime);
         }
         return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
@@ -182,14 +191,14 @@ public class Query {
     }
   }
 
-  private void registerHudiFeatureGroups(FsQuery fsQuery, String startTime, String endTime)
+  private void registerHudiFeatureGroups(FsQuery fsQuery, String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException {
     List<HudiFeatureGroupAlias> featureGroups = fsQuery.getHudiCachedFeaturegroups();
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
       hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
-          startTime, endTime);
+          wallclockStartTime, wallclockEndTime);
     }
   }
 }
