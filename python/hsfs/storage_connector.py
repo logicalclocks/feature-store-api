@@ -22,6 +22,7 @@ class StorageConnector:
     S3 = "S3"
     JDBC = "JDBC"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
+    JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = ""
 
     def __init__(
@@ -62,6 +63,14 @@ class StorageConnector:
         json_decamelized = humps.decamelize(json_dict)
         _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "type": self.JDBC_DTO
+            if self._storage_connector_type.upper() == self.JDBC
+            else self.HOPSFS_DTO,
+        }
 
     @property
     def id(self):
