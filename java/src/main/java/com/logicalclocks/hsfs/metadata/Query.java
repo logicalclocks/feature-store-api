@@ -184,7 +184,7 @@ public class Query {
 
   private void registerHudiFeatureGroups(FsQuery fsQuery, String startTime, String endTime)
       throws FeatureStoreException, IOException {
-    List<HudiFeatureGroupAlias> featureGroups = fsQuery.getFeatureGroups();
+    List<HudiFeatureGroupAlias> featureGroups = fsQuery.getHudiCachedFeaturegroups();
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
