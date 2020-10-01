@@ -93,7 +93,7 @@ class OnDemandFeatureGroup:
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "query": self._query,
-            "storageConnector": self._storage_connector,
+            "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
         }
 
