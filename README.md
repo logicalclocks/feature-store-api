@@ -1,9 +1,10 @@
 Hopsworks Feature Store API
 ===========================
 
-HSFS is the new library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easier. 
+HSFS is the library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easy.
 
 The library can be used in two modes:
+
 - Spark mode : For data engineering jobs that create and write features into the feature store or generate training datasets. It requires a Spark environment such as the one provided in the Hopsworks platform or Databricks. In Spark mode, HSFS provides binding both for Python and JVM languages.
 
 - Python mode : For data science jobs to explore the features available in the feature store, generate training datasets and feed them in a training pipeline. Python mode requires just a Python interpreter and can be used both in Hopsworks from Python Jobs/Jupyter Kernels, Amazon SageMaker, KubeFlow.
@@ -15,8 +16,8 @@ You can read more about the Hopsworks Feature Store and its concepts [here](http
 Getting Started
 ---------------
 
-Instantiate a connection and get the project feature store handler 
-```python 
+Instantiate a connection and get the project feature store handler
+```python
 import hsfs
 
 connection = hsfs.connection()
@@ -25,7 +26,7 @@ fs = connection.get_feature_store()
 
 Create a new feature group
 ```python
-fg = fs.create_feature_group("rain", 
+fg = fs.create_feature_group("rain",
                         version=1,
                         description="Rain features",
                         primary_key=['date', 'location_id'],
@@ -55,7 +56,7 @@ td.save(feature_join)
 ```
 
 Feed the training dataset to a TensorFlow model:
-```python 
+```python
 train_input_feeder = training_dataset.feed(target_name='label',split='train', is_training=True)
 train_input = train_input_feeder.tf_record_dataset()
 ```
