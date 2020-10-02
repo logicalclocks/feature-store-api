@@ -1,5 +1,5 @@
-site_name: "HSFS: Hopsworks Feature Store Client"
-site_description: "HSFS: An environment independent client to interact with the Hopsworks Featurestore"
+site_name: "HSFS: Hopsworks Feature Store API"
+site_description: "HSFS: An environment independent client to interact with the Hopsworks Feature Store"
 site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
 
@@ -39,3 +39,5 @@ markdown_extensions:
     - pymdownx.tabbed
     - pymdownx.arithmatex
     - pymdownx.superfences
+
+google_analytics: ['UA-85730257-3', 'hopsworks.ai']
