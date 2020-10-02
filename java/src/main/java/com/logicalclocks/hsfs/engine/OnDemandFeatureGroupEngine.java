@@ -35,7 +35,7 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     if (onDemandFeatureGroup.getFeatures() != null) {
       Dataset<Row> onDemandDataset = SparkEngine.getInstance()
           .jdbc(onDemandFeatureGroup.getStorageConnector(), onDemandFeatureGroup.getQuery());
-      onDemandFeatureGroup.setFeatures(utils.parseSchema(onDemandDataset));
+      onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
     }
 
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);

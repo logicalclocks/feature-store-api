@@ -40,7 +40,8 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsSettings}";
-  public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH + "/timetravel{?wallclocktime}";
+  public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
+      + "/timetravel{?committime,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -190,7 +191,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
-        .set("wallclocktime", timestamp)
+        .set("committime", timestamp)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
