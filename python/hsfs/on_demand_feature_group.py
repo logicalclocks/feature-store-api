@@ -26,12 +26,12 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
 
     def __init__(
         self,
-        name,
-        version,
-        description,
-        featurestore_id,
         query,
         storage_connector,
+        name=None,
+        version=None,
+        description=None,
+        featurestore_id=None,
         featurestore_name=None,
         created=None,
         creator=None,
