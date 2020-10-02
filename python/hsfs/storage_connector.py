@@ -23,7 +23,7 @@ class StorageConnector:
     JDBC = "JDBC"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
-    S3_DTO = ""
+    S3_DTO = "featurestoreS3ConnectorDTO"
 
     def __init__(
         self,

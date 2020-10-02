@@ -104,12 +104,14 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
         return self
 
