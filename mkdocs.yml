@@ -1,0 +1,43 @@
+site_name: "HSFS: Hopsworks Feature Store API"
+site_description: "HSFS: An environment independent client to interact with the Hopsworks Feature Store"
+site_author: "Logical Clocks"
+site_url: "https://docs.hopsworks.ai"
+
+# Repository
+repo_name: logicalclocks/feature-store-api
+repo_url: https://github.com/logicalclocks/feature-store-api
+edit_uri: ""
+
+nav:
+    - Introduction: index.md
+    - Quickstart: quickstart.md
+    - Installation: installation.md
+    - API Reference:
+        - Connection: generated/connection.md
+    - Contributing: contributing.md
+
+theme:
+    name: material
+    favicon: assets/images/favicon.ico
+    logo: assets/images/hops-logo.png
+    icon:
+        repo: fontawesome/brands/github
+    font:
+        text: "Roboto"
+        code: "IBM Plex Mono"
+
+extra_css:
+    - css/custom.css
+
+plugins:
+    - search
+
+markdown_extensions:
+    - admonition
+    - codehilite
+    - footnotes
+    - pymdownx.tabbed
+    - pymdownx.arithmatex
+    - pymdownx.superfences
+
+google_analytics: ['UA-85730257-3', 'hopsworks.ai']

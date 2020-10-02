@@ -27,7 +27,16 @@ setup(
         "pyjks",
         "sqlalchemy",
     ],
-    extras_require={"dev": ["pytest", "flake8", "black"]},
+    extras_require={
+        "dev": [
+            "pytest",
+            "flake8",
+            "black"],
+        "docs": [
+            "mkdocs"
+            "mkdocs-material",
+            "keras-autodoc"]
+    },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",
     description="HSFS: An environment independent client to interact with the Hopsworks Featurestore",

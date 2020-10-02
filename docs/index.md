@@ -1,10 +1,9 @@
 Hopsworks Feature Store API
 ===========================
 
-HSFS is the library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easy.
+HSFS is the new library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easier.
 
 The library can be used in two modes:
-
 - Spark mode : For data engineering jobs that create and write features into the feature store or generate training datasets. It requires a Spark environment such as the one provided in the Hopsworks platform or Databricks. In Spark mode, HSFS provides binding both for Python and JVM languages.
 
 - Python mode : For data science jobs to explore the features available in the feature store, generate training datasets and feed them in a training pipeline. Python mode requires just a Python interpreter and can be used both in Hopsworks from Python Jobs/Jupyter Kernels, Amazon SageMaker, KubeFlow.

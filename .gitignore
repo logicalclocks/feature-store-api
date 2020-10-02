@@ -122,3 +122,6 @@ target/
 
 # Mac
 .DS_Store
+
+# mkdocs intemediate files
+docs/generated

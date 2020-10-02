@@ -1,0 +1,20 @@
+
+.md-header {
+    background-color: #1EB382 !important;
+}
+
+.md-logo {
+      margin: px2rem(4px);
+      padding: px2rem(8px);
+
+      // Image or icon
+      img {
+        width: px2rm(500px);
+},
+      svg {
+        display: block;
+        width: px2rem(500px);
+        height: px2rem(48px);
+        fill: currentColor;
+}
+}
