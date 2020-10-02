@@ -71,11 +71,14 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             self._features = [
                 feature.Feature.from_response_json(feat) for feat in features
             ]
+        else:
+            self._features = features
+
+        if storage_connector is not None and type(storage_connector) is dict:
             self._storage_connector = sc.StorageConnector.from_response_json(
                 storage_connector
             )
         else:
-            self._features = features
             self._storage_connector = storage_connector
 
     def save(self):
