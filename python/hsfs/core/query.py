@@ -43,7 +43,7 @@ class Query:
         else:
             sql_query = query.query
             # Register on demand feature groups as temporary tables
-            self._register_on_demand(sql_query, query.on_demand_fg_aliases)
+            self._register_on_demand(query.on_demand_fg_aliases)
             online_conn = None
 
         return engine.get_instance().sql(
@@ -59,7 +59,7 @@ class Query:
         else:
             sql_query = query.query
             # Register on demand feature groups as temporary tables
-            self._register_on_demand(sql_query, query.on_demand_fg_aliases)
+            self._register_on_demand(query.on_demand_fg_aliases)
             online_conn = None
 
         return engine.get_instance().show(
@@ -89,11 +89,13 @@ class Query:
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
 
-    def _register_on_demand(self, query, on_demand_fg_aliases):
+    def _register_on_demand(self, on_demand_fg_aliases):
         if on_demand_fg_aliases is None:
             return
 
         for on_demand_fg_alias in on_demand_fg_aliases:
             engine.get_instance().register_temporary_table(
-                query, on_demand_fg_alias.on_demand_feature_group.storage_connector
+                on_demand_fg_alias.on_demand_feature_group.query,
+                on_demand_fg_alias.on_demand_feature_group.storage_connector,
+                on_demand_fg_alias.alias,
             )
