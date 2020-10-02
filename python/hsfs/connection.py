@@ -14,31 +14,6 @@
 #   limitations under the License.
 #
 
-"""
-A feature store connection object. Clients in external clusters need to connect to the Hopsworks Feature Store using an API key. The API key is generated inside the Hopsworks platform, and requires at least the "project" and "featurestore" scopes to be able to access a feature store. 
-
-    >>> # External Clusters (Sagemaker, Databricks, KubeFlow, etc)
-    >>> # 
-    >>> from hsfs import feature_store as fs
-    >>> # You can connect to the feature store using an API key supplied by:
-    >>> # (1) a shared secret service
-    >>> # (2) a file that contains the API key
-    >>> # (3) a string containing the API key (insecure)
-    >>> # 
-    >>> # Connect by downloading the API key from a shared secret service using an IAM Role (AWS Managed Secrets Service)
-    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1", secrets_store="secretsmanager",
-    >>>     hostname_verification=True)
-    >>> 
-    >>> # Connecting using an API key stored in a local file
-    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1", api_key_file="/home/john/.secrets/hsfs-api-key.txt",
-    >>>     hostname_verification=True)
-    >>>     
-    >>> # Connecting using an API key stored in a local file
-    >>> fs.connect(host="abc.hopsworks.ai", project="prod_fs", region_name="eu-west-1",
-    >>>     api_key_value="PFcy3dZ6wLXYglRd.ydcdq5jH878IdG7xlL9lHVqrS8v3sBUqQgyR4xbpUgDnB5ZpYro6OxNnAzJ7RV6H", hostname_verification=True)
-    >>>     
-"""
-
 
 import os
 from requests.exceptions import ConnectionError
@@ -87,17 +62,33 @@ class Connection:
     @classmethod
     def connection(
         cls,
-        host=None,
-        port=None,
-        project=None,
-        region_name=None,
-        secrets_store=None,
-        hostname_verification=None,
-        trust_store_path=None,
-        cert_folder=None,
-        api_key_file=None,
-        api_key_value=None,
+        host: str = None,
+        port: int = None,
+        project: str = None,
+        region_name: str = None,
+        secrets_store: str = None,
+        hostname_verification: bool = None,
+        trust_store_path: str = None,
+        cert_folder: str = None,
+        api_key_file: str = None,
+        api_key_value: str = None,
     ):
+        """Instantiate a connection to a feature store.
+
+        This feature store can be located on the same cluster if you are
+        running it from within Hopsworks, or an external cluster when running
+        on Databricks or Sagemaker.
+
+        # Arguments
+            host: str, optional.
+                The hostname of the Hopsworks instance, defaults to `None`.
+            port: int, optional.
+                The port on which the Hopsworks instance can be reached, defaults to `None`.
+
+        # Returns
+            Connection. A connection reference to retrieve and perform operations on a
+                Hopsworks project.
+        """
         return cls(
             host,
             port,
