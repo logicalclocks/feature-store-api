@@ -14,13 +14,15 @@
 #   limitations under the License.
 #
 
-from hsfs import on_demand_feature_group
+import humps
+
+from hsfs import on_demand_feature_group as on_demand_fg
 
 
 class OnDemandFeatureGroupAlias:
-    def __init__(self, on_demand_fg, alias):
-        self._on_demand_feature_group = on_demand_feature_group.OnDemandFeatureGroup.from_response_json(
-            on_demand_fg
+    def __init__(self, on_demand_feature_group, alias):
+        self._on_demand_feature_group = on_demand_fg.OnDemandFeatureGroup.from_response_json(
+            on_demand_feature_group
         )
         self._alias = alias
 

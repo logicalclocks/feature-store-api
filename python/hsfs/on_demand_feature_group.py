@@ -14,19 +14,24 @@
 #   limitations under the License.
 
 
-class OnDemandFeatureGroup:
+import humps
+import json
+
+from hsfs import util, engine, feature, storage_connector as sc
+from hsfs.core import on_demand_feature_group_engine, feature_group_base
+
+
+class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
 
     def __init__(
         self,
-        name,
-        version,
-        description,
-        featurestore_id,
         query,
         storage_connector,
-        partition_key=None,
-        primary_key=None,
+        name=None,
+        version=None,
+        description=None,
+        featurestore_id=None,
         featurestore_name=None,
         created=None,
         creator=None,
@@ -40,50 +45,94 @@ class OnDemandFeatureGroup:
         statistic_columns=None,
         statistics_config=None,
     ):
+        super().__init__(featurestore_id)
+
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = creator
-        self._version = n
+        self._version = version
         self._name = name
         self._query = query
-        self._storage_connector = storage_connector
         self._id = id
-        self._features = [feature.Feature.from_response_json(feat) for feat in features]
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
         self._feat_corr_enabled = feat_corr_enabled
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        if id is None:
-            # Initialized from the API
-            self._primary_key = primary_key
-            self._partition_key = partition_key
-        else:
-            # Initialized from the backend
-            self._primary_key = [f.name for f in self._features if f.primary]
-            self._partition_key = [f.name for f in self._features if f.partition]
-
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
             featurestore_id
         )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = [
+                feature.Feature.from_response_json(feat) for feat in features
+            ]
+        else:
+            self._features = features
+
+        if storage_connector is not None and type(storage_connector) is dict:
+            self._storage_connector = sc.StorageConnector.from_response_json(
+                storage_connector
+            )
+        else:
+            self._storage_connector = storage_connector
+
+    def save(self):
+        self._feature_group_engine.save(self)
+
+    def read(self, dataframe_type="default"):
+        """Get the feature group as a DataFrame."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().read(dataframe_type)
+
+    def show(self, n):
+        """Show the first n rows of the feature group."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().show(n)
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
         return self
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "query": self._query,
+            "storageConnector": self._storage_connector.to_dict(),
+            "type": "onDemandFeaturegroupDTO",
+        }
 
     @property
     def id(self):

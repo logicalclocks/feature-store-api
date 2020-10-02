@@ -77,7 +77,7 @@ class Engine:
 
     def register_temporary_table(self, query, storage_connector, alias):
         on_demand_dataset = self._jdbc(query, storage_connector)
-        on_demand_dataset.registerTempTable(alias)
+        on_demand_dataset.createOrReplaceTempView(alias)
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:

@@ -17,7 +17,7 @@
 import warnings
 import humps
 
-from hsfs import training_dataset, feature_group, util
+from hsfs import training_dataset, feature_group, on_demand_feature_group, util
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -83,7 +83,9 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(name, version, feature_group_api.FeatureGroupApi.CACHED)
+        return self._feature_group_api.get(
+            name, version, feature_group_api.FeatureGroupApi.CACHED
+        )
 
     def get_on_demand_feature_group(self, name, version=None):
         if version is None:
@@ -94,7 +96,9 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(name, version, feature_group_api.FeatureGroupApi.ONDEMAND)
+        return self._feature_group_api.get(
+            name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+        )
 
     def get_training_dataset(self, name, version=None):
         # None is necessary because otherwise it's not possible to detect if
@@ -141,6 +145,20 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+        )
+
+    def create_on_demand_feature_group(
+        self, name, query, storage_connector, version=None, description="", features=[],
+    ):
+        return on_demand_feature_group.OnDemandFeatureGroup(
+            name=name,
+            query=query,
+            storage_connector=storage_connector,
+            version=version,
+            description=description,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+            features=features,
         )
 
     def create_training_dataset(

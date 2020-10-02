@@ -17,14 +17,11 @@ from hsfs import engine
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
-    tags_api,
-    feature_group_internal_engine,
+    feature_group_base_engine,
 )
 
 
-class OnDemandFeatureGroupEngine(
-    feature_group_internal_engine.FeatureGroupInternalEngine
-):
+class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def __init__(self, feature_store_id):
         super().__init__(feature_store_id)
 
@@ -34,9 +31,13 @@ class OnDemandFeatureGroupEngine(
         )
 
     def save(self, feature_group):
-        on_demand_dataset = engine.get_instance().sql(
-            feature_group.query, None, feature_group.connector, "default"
-        )
-        feature_group._features = engine.get_instance().parse_schema(on_demand_dataset)
+        if len(feature_group.features) == 0:
+            # If the user didn't specify the schema, parse it from the query
+            on_demand_dataset = engine.get_instance().sql(
+                feature_group.query, None, feature_group.storage_connector, "default"
+            )
+            feature_group._features = engine.get_instance().parse_schema(
+                on_demand_dataset
+            )
 
         self._feature_group_api.save(feature_group)
