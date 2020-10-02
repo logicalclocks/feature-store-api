@@ -18,7 +18,7 @@ import humps
 import json
 import warnings
 
-from hsfs import util, engine, feature
+from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector
 from hsfs.core import (
@@ -40,10 +40,10 @@ class TrainingDataset:
         self,
         name,
         version,
-        description,
         data_format,
         location,
         featurestore_id,
+        description=None,
         storage_connector=None,
         splits=None,
         seed=None,
@@ -59,6 +59,8 @@ class TrainingDataset:
         storage_connector_id=None,
         storage_connector_type=None,
         training_dataset_type=None,
+        from_query=None,
+        querydto=None,
     ):
         self._id = id
         self._name = name
@@ -67,6 +69,8 @@ class TrainingDataset:
         self._data_format = data_format
         self._seed = seed
         self._location = location
+        self._from_query = from_query
+        self._querydto = querydto
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -98,7 +102,8 @@ class TrainingDataset:
                 storage_connector_id, storage_connector_type
             )
             self._features = [
-                feature.Feature.from_response_json(feat) for feat in features
+                training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
+                for feat in features
             ]
             self._splits = splits
             self._training_dataset_type = training_dataset_type
@@ -108,14 +113,17 @@ class TrainingDataset:
         # TODO: Decide if we want to have potentially dangerous defaults like {}
         if isinstance(features, query.Query):
             feature_dataframe = features.read("offline")
+            self._querydto = features
         else:
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features
             )
+            self._features = engine.get_instance().parse_schema_training_dataset(
+                feature_dataframe
+            )
 
         user_version = self._version
         user_stats_config = self._statistics_config
-        self._features = engine.get_instance().parse_schema(feature_dataframe)
         self._training_dataset_engine.save(self, feature_dataframe, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
@@ -267,6 +275,7 @@ class TrainingDataset:
             "features": self._features,
             "splits": self._splits,
             "seed": self._seed,
+            "queryDTO": self._querydto.to_dict() if self._querydto else None,
         }
 
     @property
@@ -409,3 +418,17 @@ class TrainingDataset:
             return self.statistics
         else:
             return self._statistics_engine.get(self, commit_time)
+
+    @property
+    def query(self):
+        return self._training_dataset_engine.query(self, "online")
+
+    def get_query(self, storage="online"):
+        """Returns the query used to generate this training dataset
+
+        :param storage: the storage for which to return the query, Defaults to "online"  
+        :type storage: str, optional
+        :return: query 
+        :rtype: str 
+        """
+        return self._training_dataset_engine.query(self, storage)

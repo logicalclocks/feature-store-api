@@ -66,15 +66,6 @@ class FeatureGroup:
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
-        if id is None:
-            # Initialized from the API
-            self._primary_key = primary_key
-            self._partition_key = partition_key
-        else:
-            # Initialized from the backend
-            self._primary_key = [f.name for f in self._features if f.primary]
-            self._partition_key = [f.name for f in self._features if f.partition]
-
         if id is not None:
             # initialized by backend
             self.statistics_config = StatisticsConfig(

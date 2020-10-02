@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -29,13 +30,13 @@ import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {
 
-  // TODO(Fabio): make sure we keep save the feature store/feature group for serving
-  public List<Feature> parseSchema(Dataset<Row> dataset) throws FeatureStoreException {
+  public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
@@ -46,10 +47,23 @@ public class Utils {
     return features;
   }
 
-  // TODO(Fabio): keep into account the sorting - needs fixing in Hopsworks as well
-  public void schemaMatches(Dataset<Row> dataset, List<Feature> features) throws FeatureStoreException {
-    StructType tdStructType = new StructType(features.stream().map(
-        f -> new StructField(f.getName(),
+  public List<TrainingDatasetFeature> parseTrainingDatasetSchema(Dataset<Row> dataset) throws FeatureStoreException {
+    List<TrainingDatasetFeature> features = new ArrayList<>();
+
+    int index = 0;
+    for (StructField structField : dataset.schema().fields()) {
+      // TODO(Fabio): unit test this one for complext types
+      features.add(new TrainingDatasetFeature(structField.name(), structField.dataType().catalogString(), index++));
+    }
+
+    return features;
+  }
+
+  public void trainingDatasetSchemaMatch(Dataset<Row> dataset, List<TrainingDatasetFeature> features)
+      throws FeatureStoreException {
+    StructType tdStructType = new StructType(features.stream()
+        .sorted(Comparator.comparingInt(TrainingDatasetFeature::getIndex))
+        .map(f -> new StructField(f.getName(),
             // What should we do about the nullables
             new CatalystSqlParser(null).parseDataType(f.getType()), true, Metadata.empty())
     ).toArray(StructField[]::new));

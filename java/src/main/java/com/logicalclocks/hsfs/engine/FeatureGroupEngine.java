@@ -62,7 +62,7 @@ public class FeatureGroupEngine {
                                Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    List<Feature> features = utils.parseSchema(dataset);
+    List<Feature> features = utils.parseFeatureGroupSchema(dataset);
     // TODO (davit): move this to backend?
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       features = hudiFeatureGroupEngine.addHudiSpecFeatures(features);
