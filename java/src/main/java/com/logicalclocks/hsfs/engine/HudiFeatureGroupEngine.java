@@ -118,7 +118,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
       hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
       Long endTimeStamp = hudiCommitToTimeStamp(wallclockEndTime);
       FeatureGroupCommit endCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, endTimeStamp);
-      String hudiCommitEndTime = timeStampToHudiFormat(endCommit.getCommittedOn());
+      String hudiCommitEndTime = timeStampToHudiFormat(endCommit.getCommittime());
       //point in time  query
       if (wallclockStartTime == null) {
         hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
@@ -126,7 +126,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
       } else if (wallclockStartTime != null) {       //incremental  query
         Long startTimeStamp = hudiCommitToTimeStamp(wallclockStartTime);
         FeatureGroupCommit startCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, startTimeStamp);
-        String hudiCommitStartTime = timeStampToHudiFormat(startCommit.getCommittedOn());
+        String hudiCommitStartTime = timeStampToHudiFormat(startCommit.getCommittime());
         hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
         hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, wallclockEndTime);
       }
@@ -200,7 +200,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
     Long commitTimeStamp = hudiCommitToTimeStamp(commitTimeline.lastInstant().get().getTimestamp());
-    fgCommitMetadata.setCommittedOn(commitTimeStamp);
+    fgCommitMetadata.setCommittime(commitTimeStamp);
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
     long totalUpdateRecordsWritten = commitMetadata.fetchTotalUpdateRecordsWritten();

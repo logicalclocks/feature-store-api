@@ -26,7 +26,7 @@ public class FeatureGroupCommit {
   @Getter @Setter
   private Integer commitID;
   @Getter @Setter
-  private Long committedOn;
+  private Long committime;
   @Getter @Setter
   private Long rowsInserted;
   @Getter @Setter
@@ -35,10 +35,10 @@ public class FeatureGroupCommit {
   private Long rowsDeleted;
 
   @Builder
-  public FeatureGroupCommit(Integer commitID, Long committedOn, Long rowsInserted, Long rowsUpdated, Long rowsDeleted) {
+  public FeatureGroupCommit(Integer commitID, Long committime, Long rowsInserted, Long rowsUpdated, Long rowsDeleted) {
 
     this.commitID = commitID;
-    this.committedOn = committedOn;
+    this.committime = committime;
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;
     this.rowsDeleted = rowsDeleted;
