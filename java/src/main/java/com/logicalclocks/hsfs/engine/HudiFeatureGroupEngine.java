@@ -107,8 +107,6 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     Map<String, String> hudiArgs = new HashMap<String, String>();
     Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
     this.basePath = featureGroup.getLocation();
-    // TODO (davit): get table name from backend
-    this.tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
 
     //Snapshot query
     if (wallclockStartTime == null && wallclockEndTime == null) {

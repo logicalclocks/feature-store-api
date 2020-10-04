@@ -26,8 +26,11 @@ import lombok.Setter;
 public class HudiFeatureGroupAlias {
 
   @Getter @Setter
+  private String alias;
+
+  @Getter @Setter
   private FeatureGroup featureGroup;
 
   @Getter @Setter
-  private String alias;
+  FeatureStore featurestore;
 }
