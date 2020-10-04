@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.FsQuery;
@@ -137,7 +138,7 @@ public class Query {
       case OFFLINE:
         registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
         if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          registerHudiFeatureGroups(fsQuery, wallclockStartTime, wallclockEndTime);
+          registerHudiFeatureGroups(fsQuery, leftFeatureGroup.getFeatureStore(), wallclockStartTime, wallclockEndTime);
         }
         return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
@@ -186,12 +187,14 @@ public class Query {
     }
   }
 
-  private void registerHudiFeatureGroups(FsQuery fsQuery, String wallclockStartTime, String wallclockEndTime)
+  private void registerHudiFeatureGroups(FsQuery fsQuery, FeatureStore featureStore, String wallclockStartTime,
+                                         String wallclockEndTime)
       throws FeatureStoreException, IOException {
     List<HudiFeatureGroupAlias> featureGroups = fsQuery.getHudiCachedFeaturegroups();
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+      featureGroup.setFeatureStore(featureStore);
       hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
           wallclockStartTime, wallclockEndTime);
     }
