@@ -1,19 +1,33 @@
 pipeline {
     agent {
-        docker {
-            label "local"
-            image "docker.hops.works/hopsworks_twine:0.0.2"
-        }
+        node "local"
     }
     stages {
-        stage("publish") {
-            steps {
-                sh "python auto_doc.py"
-                
-                dir("docs") {
-                    sh "python3 ./setup.py sdist"
-                    sh "twine upload -u $PYPI_USR -p $PYPI_PSW --skip-existing dist/*"
+        stage("build") {
+            agent {
+                docker {
+                    label "local"
+                    image "docker.hops.works/hopsworks_twine:0.0.2"
                 }
+            }
+
+            steps {
+                dir("python") {
+                    sh "pip3 install -e .[dev,docs]"
+                }
+                sh "python3 auto_doc.py"
+                sh "mkdocs build"
+            }
+        }
+
+        stage("publish") {
+            agent {
+                node "local"
+            }
+
+            steps {
+                sh "rm -r /opt/docs/*" 
+                sh "cp -r site/* /opt/docs/" 
             }
         }
     }
