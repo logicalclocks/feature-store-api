@@ -30,7 +30,4 @@ public class HudiFeatureGroupAlias {
 
   @Getter @Setter
   private FeatureGroup featureGroup;
-
-  @Getter @Setter
-  FeatureStore featurestore;
 }

@@ -192,7 +192,6 @@ public class Query {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
-      featureGroup.setFeatureStore(hudiFeatureGroupAlias.getFeaturestore());
       hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
           wallclockStartTime, wallclockEndTime);
     }
