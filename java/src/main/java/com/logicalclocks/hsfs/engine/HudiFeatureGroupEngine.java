@@ -48,10 +48,50 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
   @Getter
   private String tableName;
 
-
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+  public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
+                                   SaveMode saveMode, String operation)
+      throws IOException, FeatureStoreException {
+
+    // TODO (davit): make sure writing completed without exception
+    FeatureGroupCommit fgCommit = writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
+
+    FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    apiFgCommit.setCommitID(apiFgCommit.getCommitID());
+
+  }
+
+  private FeatureGroupCommit writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup,
+                                              Dataset<Row> dataset, SaveMode saveMode, String operation)
+      throws IOException, FeatureStoreException {
+
+    Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
+
+    List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT,
+        Constants.HUDI_BULK_INSERT);
+    if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
+      throw new IllegalArgumentException("Unknown operation " + operation + " is provided. Please use either "
+          + Constants.HUDI_INSERT + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
+    }
+
+    hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
+
+
+    DataFrameWriter<Row> writer = dataset.write().format(Constants.HUDI_SPARK_FORMAT);
+
+    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
+      writer = writer.option(entry.getKey(), entry.getValue());
+    }
+
+    writer = writer.mode(saveMode);
+    writer.save(this.basePath);
+
+    FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
+    return featureGroupCommit;
+  }
 
   private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
@@ -64,13 +104,14 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
 
     Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
 
-    // TODO (davit) decide if you allow users to write feature group without primarykey
+    // TODO (davit): allow users to write feature group without primarykey
     if (primaryColumns.isEmpty()) {
       throw new FeatureStoreException("For time travel enabled feature groups You must provide at least 1 primary key");
     }
 
     hudiArgs.put(Constants.HUDI_RECORD_KEY, primaryColumns.mkString(","));
 
+    // TODO (davit):
     // hudiArgs.put(Constants.HUDI_KEY_GENERATOR_OPT_KEY, Constants.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
@@ -103,82 +144,16 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     return hudiArgs;
   }
 
-  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, String wallclockStartTime,
-                                                String wallclockEndTime) throws IOException, FeatureStoreException {
-    Map<String, String> hudiArgs = new HashMap<String, String>();
-    Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
-    this.basePath = featureGroup.getLocation();
-
-    //Snapshot query
-    if (wallclockStartTime == null && wallclockEndTime == null) {
-      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
-      this.basePath =  this.basePath  + StringUtils.repeat("/*", numberOfpartitionCols + 1);
-    } else if (wallclockEndTime != null) {
-      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
-      Long endTimeStamp = hudiCommitToTimeStamp(wallclockEndTime);
-      FeatureGroupCommit endCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, endTimeStamp);
-      String hudiCommitEndTime = timeStampToHudiFormat(endCommit.getCommittime());
-      //point in time  query
-      if (wallclockStartTime == null) {
-        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
-        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
-      } else if (wallclockStartTime != null) {       //incremental  query
-        Long startTimeStamp = hudiCommitToTimeStamp(wallclockStartTime);
-        FeatureGroupCommit startCommit = featureGroupApi.pointInTimeCommitDetails(featureGroup, startTimeStamp);
-        String hudiCommitStartTime = timeStampToHudiFormat(startCommit.getCommittime());
-        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
-        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, wallclockEndTime);
-      }
-    }
-
-    return hudiArgs;
-  }
-
-  private Map<String, String> hudiReadArgs(FeatureGroup featureGroup, String wallclockStartTime,
-                                           String wallclockEndTime) throws IOException, FeatureStoreException {
-    Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, wallclockStartTime, wallclockEndTime);
-    return hudiArgs;
-  }
-
-  private FeatureGroupCommit writeHudiDataset(SparkSession sparkSession, FeatureGroup featureGroup,
-                                              Dataset<Row> dataset, SaveMode saveMode, String operation)
-      throws IOException, FeatureStoreException {
-
-    Map<String, String> hudiArgs = setupHudiWriteArgs(featureGroup);
-
-    List<String> supportedOps = Arrays.asList(Constants.HUDI_UPSERT, Constants.HUDI_INSERT,
-                Constants.HUDI_BULK_INSERT);
-    if (!supportedOps.stream().anyMatch(x -> x.equalsIgnoreCase(operation))) {
-      throw new IllegalArgumentException("Unknown operation " + operation + " is provided. Please use either "
-                    + Constants.HUDI_INSERT + ", " + Constants.HUDI_INSERT + " or " + Constants.HUDI_BULK_INSERT);
-    }
-
-    hudiArgs.put(Constants.HUDI_TABLE_OPERATION,operation);
-
-
-    DataFrameWriter<Row> writer = dataset.write().format(Constants.HUDI_SPARK_FORMAT);
-
-    for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
-      writer = writer.option(entry.getKey(), entry.getValue());
-    }
-
-    writer = writer.mode(saveMode);
-    writer.save(this.basePath);
-
-    FeatureGroupCommit featureGroupCommit = getLastCommitMetadata(sparkSession, this.basePath);
-    return featureGroupCommit;
-  }
-
   //hudi time time travel sql query
   public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
-                                     String wallclockStartTime, String  wallclockEndTime)
-      throws IOException, FeatureStoreException {
+                                     Long startTimestamp, Long  endTimestamp) {
 
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
     sparkSession.sparkContext().hadoopConfiguration().setClass("mapreduce.input.pathFilter.class",
         org.apache.hudi.hadoop.HoodieROTablePathFilter.class, org.apache.hadoop.fs.PathFilter.class);
 
-    Map<String, String> hudiArgs = hudiReadArgs(featureGroup, wallclockStartTime, wallclockEndTime);
+    Map<String, String> hudiArgs = setupHudiReadArgs(featureGroup, startTimestamp,
+        endTimestamp);
 
     DataFrameReader queryDataset = sparkSession.read().format(Constants.HUDI_SPARK_FORMAT);
     for (Map.Entry<String, String> entry : hudiArgs.entrySet()) {
@@ -188,7 +163,31 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     queryDataset.load(getBasePath()).registerTempTable(alias);
   }
 
+  private Map<String, String> setupHudiReadArgs(FeatureGroup featureGroup, Long startTimestamp, Long endTimestamp) {
+    Map<String, String> hudiArgs = new HashMap<String, String>();
+    Integer numberOfpartitionCols = utils.getPartitionColumns(featureGroup).length();
+    this.basePath = featureGroup.getLocation();
 
+    //Snapshot query
+    if (startTimestamp == null && endTimestamp == null) {
+      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
+      this.basePath =  this.basePath  + StringUtils.repeat("/*", numberOfpartitionCols + 1);
+    } else if (endTimestamp != null) {
+      hudiArgs.put(Constants.HUDI_QUERY_TYPE_OPT_KEY, Constants.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      String hudiCommitEndTime = timeStampToHudiFormat(endTimestamp);
+      //point in time  query
+      if (startTimestamp == null) {
+        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, "000");
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
+      } else if (startTimestamp != null) {       //incremental  query
+        String hudiCommitStartTime = timeStampToHudiFormat(startTimestamp);
+        hudiArgs.put(Constants.HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
+        hudiArgs.put(Constants.HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
+      }
+    }
+
+    return hudiArgs;
+  }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
       throws IOException {
@@ -211,17 +210,6 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
     return fgCommitMetadata;
   }
 
-  public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                   SaveMode saveMode, String operation)
-      throws IOException, FeatureStoreException {
-
-    // TODO (davit): make sure writing completed without exception
-    FeatureGroupCommit fgCommit = writeHudiDataset(sparkSession, featureGroup, dataset, saveMode, operation);
-
-    FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
-    apiFgCommit.setCommitID(apiFgCommit.getCommitID());
-
-  }
 
   @SneakyThrows
   public Long hudiCommitToTimeStamp(String hudiCommitTime) {

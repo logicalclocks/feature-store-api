@@ -51,7 +51,9 @@ public class Query {
   @Getter @Setter
   private List<Feature> leftFeatures;
   @Getter @Setter
-  private Long leftFeatureGroupTimestamp;
+  private Long leftFeatureGroupStartTimestamp;
+  @Getter @Setter
+  private Long leftFeatureGroupEndTimestamp;
 
   @Getter @Setter
   private List<Join> joins = new ArrayList<>();
@@ -116,25 +118,30 @@ public class Query {
     return this;
   }
 
-  public Query asOf(Long timestamp) {
+  public Query asOf(String wallclockTime) {
+    Long timestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockTime);
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
-      queryWithTimeStamp.setLeftFeatureGroupTimestamp(timestamp);
+      queryWithTimeStamp.setLeftFeatureGroupEndTimestamp(timestamp);
       join.setQuery(queryWithTimeStamp);
     }
-    this.setLeftFeatureGroupTimestamp(timestamp);
+    this.setLeftFeatureGroupEndTimestamp(timestamp);
     return this;
   }
 
-  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE, null, wallclockTime);
+  public Query pullChanges(String wallclockStartTime, String wallclockEndTime) {
+    Long startTimestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockStartTime);
+    Long endTimestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockEndTime);
+    this.setLeftFeatureGroupStartTimestamp(startTimestamp);
+    this.setLeftFeatureGroupEndTimestamp(endTimestamp);
+    return this;
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE, null, null);
+    return read(Storage.OFFLINE);
   }
 
-  public Dataset<Row> read(Storage storage, String wallclockStartTime, String  wallclockEndTime)
+  public Dataset<Row> read(Storage storage)
           throws FeatureStoreException, IOException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -148,7 +155,7 @@ public class Query {
       case OFFLINE:
         registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
         if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          registerHudiFeatureGroups(fsQuery, leftFeatureGroup.getFeatureStore(), wallclockStartTime, wallclockEndTime);
+          registerHudiFeatureGroups(fsQuery, leftFeatureGroup.getFeatureStore());
         }
         return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
@@ -165,7 +172,7 @@ public class Query {
   }
 
   public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
-    read(storage, null, null).show(numRows);
+    read(storage).show(numRows);
   }
 
   public String toString() {
@@ -197,16 +204,15 @@ public class Query {
     }
   }
 
-  private void registerHudiFeatureGroups(FsQuery fsQuery, FeatureStore featureStore, String wallclockStartTime,
-                                         String wallclockEndTime)
-      throws FeatureStoreException, IOException {
+  private void registerHudiFeatureGroups(FsQuery fsQuery, FeatureStore featureStore)  {
     List<HudiFeatureGroupAlias> featureGroups = fsQuery.getHudiCachedFeaturegroups();
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
       featureGroup.setFeatureStore(featureStore);
       hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
-          wallclockStartTime, wallclockEndTime);
+          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp());
     }
   }
 

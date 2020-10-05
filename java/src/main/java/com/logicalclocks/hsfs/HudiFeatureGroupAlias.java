@@ -30,4 +30,10 @@ public class HudiFeatureGroupAlias {
 
   @Getter @Setter
   private FeatureGroup featureGroup;
+
+  @Getter @Setter
+  private Long leftFeatureGroupStartTimestamp;
+  @Getter @Setter
+  private Long leftFeatureGroupEndTimestamp;
+
 }
