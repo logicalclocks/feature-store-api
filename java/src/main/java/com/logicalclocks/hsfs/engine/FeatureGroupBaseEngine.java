@@ -47,4 +47,5 @@ public class FeatureGroupBaseEngine {
       throws FeatureStoreException, IOException {
     tagsApi.deleteTag(featureGroupBase, name);
   }
+
 }

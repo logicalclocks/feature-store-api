@@ -66,15 +66,15 @@ public abstract class FeatureGroupBase {
 
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
 
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+  public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  public Query selectAll() throws FeatureStoreException, IOException {
+  public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
-  public Query select(List<String> features) throws FeatureStoreException, IOException {
+  public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());

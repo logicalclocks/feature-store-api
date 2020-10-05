@@ -115,7 +115,7 @@ public class FeatureGroupEngine {
     // Update the original object - Hopsworks returns the incremented version
     featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
-    // TODO (davit): this must be Getter only. I need to investigate why not privide directly apiFG
+    // TODO (davit): this must be Getter only.
     featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
@@ -194,5 +194,14 @@ public class FeatureGroupEngine {
     FeatureGroup apiFG = featureGroupApi.updateStatsConfig(featureGroup);
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+  }
+
+  public Integer getCommitIdOnWallclocktime(FeatureGroup featureGroup, String wallclocktime)
+      throws IOException, FeatureStoreException {
+    Long timestamp = null;
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      timestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclocktime);
+    }
+    return featureGroupApi.pointInTimeCommitDetails(featureGroup, timestamp).getCommitID();
   }
 }

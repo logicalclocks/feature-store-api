@@ -122,8 +122,9 @@ public class FeatureGroup extends FeatureGroupBase {
   // time travel read point in time
   public Dataset<Row> read(String wallclockTime)
           throws FeatureStoreException, IOException {
-    return selectAll().asOf(wallclockTime);
+    return selectAll().read(wallclockTime);
   }
+
 
   // time travel read changes
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)

@@ -30,7 +30,6 @@ import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.HudiFeatureGroupEngine;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.engine.Utils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -51,6 +50,8 @@ public class Query {
   private FeatureGroupBase leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
+  @Getter @Setter
+  private Long leftFeatureGroupTimestamp;
 
   @Getter @Setter
   private List<Join> joins = new ArrayList<>();
@@ -58,7 +59,6 @@ public class Query {
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
 
-  private Utils utils = new Utils();
   private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
@@ -116,7 +116,12 @@ public class Query {
     return this;
   }
 
-  public Dataset<Row> asOf(String wallclockTime) throws FeatureStoreException, IOException {
+  public Query asOf(Long timestamp) {
+    this.setLeftFeatureGroupTimestamp(timestamp);
+    return this;
+  }
+
+  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
     return read(Storage.OFFLINE, null, wallclockTime);
   }
 
@@ -199,4 +204,5 @@ public class Query {
           wallclockStartTime, wallclockEndTime);
     }
   }
+
 }

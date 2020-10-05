@@ -51,6 +51,7 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
   private Map<String, String> setupHudiWriteArgs(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
 
@@ -223,16 +224,14 @@ public class HudiFeatureGroupEngine extends FeatureGroupBaseEngine  {
   }
 
   @SneakyThrows
-  private Long hudiCommitToTimeStamp(String hudiCommitTime) {
-    // TODO (davit): we need to have list of accepted date formats
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  public Long hudiCommitToTimeStamp(String hudiCommitTime) {
+    // TODO (davit): we need to have util fucntion that will accepted date formats and convert to hudi spec dateformat
     Long commitTimeStamp = dateFormat.parse(hudiCommitTime).getTime();
     return commitTimeStamp;
   }
 
   @SneakyThrows
   private String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
     String strCommitedOnDate = dateFormat.format(commitedOnDate);
     return strCommitedOnDate;
