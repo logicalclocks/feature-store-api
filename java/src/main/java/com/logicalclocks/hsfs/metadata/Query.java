@@ -118,7 +118,9 @@ public class Query {
 
   public Query asOf(Long timestamp) {
     for (Join join : this.joins) {
-      join.getQuery().setLeftFeatureGroupTimestamp(timestamp);
+      Query queryWithTimeStamp = join.getQuery();
+      queryWithTimeStamp.setLeftFeatureGroupTimestamp(timestamp);
+      join.setQuery(queryWithTimeStamp);
     }
     this.setLeftFeatureGroupTimestamp(timestamp);
     return this;
