@@ -54,3 +54,16 @@ class TrainingDatasetApi:
         return training_dataset.TrainingDataset.from_response_json(
             _client._send_request("GET", path_params, query_params)[0],
         )
+
+    def get_query(self, training_dataset_instance):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "trainingdatasets",
+            training_dataset_instance.id,
+            "query",
+        ]
+        return _client._send_request("GET", path_params)

@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
@@ -53,8 +54,11 @@ public class TrainingDatasetEngine {
   public void save(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> userWriteOptions)
       throws FeatureStoreException, IOException {
-    // TODO(Fabio): make sure we can implement the serving part as well
-    trainingDataset.setFeatures(utils.parseSchema(dataset));
+
+    if (trainingDataset.getQueryInt() == null) {
+      // if the training dataset hasn't been generated from a query, parse the schema and set the features
+      trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
+    }
 
     // Make the rest call to create the training dataset metadata
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
@@ -89,7 +93,7 @@ public class TrainingDatasetEngine {
                      Map<String, String> providedOptions, SaveMode saveMode)
       throws FeatureStoreException {
     // validate that the schema matches
-    utils.schemaMatches(dataset, trainingDataset.getFeatures());
+    utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
 
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
@@ -127,5 +131,10 @@ public class TrainingDatasetEngine {
 
   public void deleteTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
     tagsApi.deleteTag(trainingDataset, name);
+  }
+
+  public String getQuery(TrainingDataset trainingDataset, Storage storage)
+      throws FeatureStoreException, IOException {
+    return trainingDatasetApi.getQuery(trainingDataset).getStorageQuery(storage);
   }
 }

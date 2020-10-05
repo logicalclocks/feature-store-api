@@ -61,7 +61,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatureStore() != null) {
-      featureGroup.setFeatures(utils.parseSchema(dataset));
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());

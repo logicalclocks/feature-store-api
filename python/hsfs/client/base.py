@@ -146,7 +146,7 @@ class Client(ABC):
             return response
         else:
             # handle different success response codes
-            if len(response.content) == 0: 
+            if len(response.content) == 0:
                 return None
             return response.json()
 

@@ -42,7 +42,9 @@ class TrainingDatasetEngine:
         self, training_dataset, feature_dataframe, user_write_options, overwrite
     ):
         # validate matching schema
-        engine.get_instance().schema_matches(feature_dataframe, training_dataset.schema)
+        engine.get_instance().training_dataset_schema_match(
+            feature_dataframe, training_dataset.schema
+        )
 
         write_options = engine.get_instance().write_options(
             training_dataset.data_format, user_write_options
@@ -71,6 +73,11 @@ class TrainingDatasetEngine:
             read_options,
             path,
         )
+
+    def query(self, training_dataset, storage):
+        return self._training_dataset_api.get_query(training_dataset)[
+            "queryOnline" if storage.lower() == "online" else "query"
+        ]
 
     def _write(self, training_dataset, dataset, write_options, save_mode):
         if len(training_dataset.splits) == 0:
