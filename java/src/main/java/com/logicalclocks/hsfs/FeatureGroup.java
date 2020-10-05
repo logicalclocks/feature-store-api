@@ -118,12 +118,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
     return selectAll().read(storage);
   }
-
-  public Dataset<Row> read(String wallclockTime)
-          throws FeatureStoreException, IOException {
-    return selectAll().read();
-  }
-
+  
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, defaultStorage);
   }
