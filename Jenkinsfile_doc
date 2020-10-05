@@ -1,0 +1,34 @@
+pipeline {
+    agent {
+        node "local"
+    }
+    stages {
+        stage("build") {
+            agent {
+                docker {
+                    label "local"
+                    image "docker.hops.works/hopsworks_twine:0.0.2"
+                }
+            }
+
+            steps {
+                dir("python") {
+                    sh "pip3 install -e .[dev,docs]"
+                }
+                sh "python3 auto_doc.py"
+                sh "mkdocs build"
+            }
+        }
+
+        stage("publish") {
+            agent {
+                node "local"
+            }
+
+            steps {
+                sh "rm -r /opt/docs/*" 
+                sh "cp -r site/* /opt/docs/" 
+            }
+        }
+    }
+}
