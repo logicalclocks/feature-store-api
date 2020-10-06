@@ -50,9 +50,9 @@ public class Query {
   private FeatureGroupBase leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
-  @Getter @Setter
+  @Setter
   private Long leftFeatureGroupStartTimestamp;
-  @Getter @Setter
+  @Setter
   private Long leftFeatureGroupEndTimestamp;
 
   @Getter @Setter

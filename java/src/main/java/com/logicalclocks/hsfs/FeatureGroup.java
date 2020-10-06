@@ -119,10 +119,6 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().read(storage);
   }
 
-  public void show(int numRows) throws FeatureStoreException, IOException {
-    show(numRows, defaultStorage);
-  }
-
   // Time travel queries
   public Dataset<Row> read(String wallclocktime) throws FeatureStoreException, IOException {
     return selectAll().asOf(wallclocktime).read(this.defaultStorage);
@@ -133,6 +129,9 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().pullChanges(startWallclocktime, endWallclocktime).read(this.defaultStorage);
   }
 
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    show(numRows, defaultStorage);
+  }
 
   public void show(int numRows, Storage storage) throws FeatureStoreException, IOException {
     read(storage).show(numRows);

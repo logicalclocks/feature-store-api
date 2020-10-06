@@ -33,7 +33,7 @@ setup(
             "flake8",
             "black"],
         "docs": [
-            "mkdocs"
+            "mkdocs",
             "mkdocs-material",
             "keras-autodoc"]
     },
