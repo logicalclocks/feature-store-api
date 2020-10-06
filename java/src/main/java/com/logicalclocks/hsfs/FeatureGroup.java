@@ -118,10 +118,21 @@ public class FeatureGroup extends FeatureGroupBase {
   public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
     return selectAll().read(storage);
   }
-  
+
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, defaultStorage);
   }
+
+  // Time travel queries
+  public Dataset<Row> read(String wallclocktime) throws FeatureStoreException, IOException {
+    return selectAll().asOf(wallclocktime).read(this.defaultStorage);
+  }
+
+  public Dataset<Row> readChanges(String startWallclocktime, String endWallclocktime)
+      throws FeatureStoreException, IOException {
+    return selectAll().pullChanges(startWallclocktime, endWallclocktime).read(this.defaultStorage);
+  }
+
 
   public void show(int numRows, Storage storage) throws FeatureStoreException, IOException {
     read(storage).show(numRows);
