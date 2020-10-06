@@ -51,10 +51,6 @@ public abstract class FeatureGroupBase {
   @Getter @Setter
   protected String description;
 
-  // TODO (davit): this must be Getter only.
-  @Getter @Setter
-  protected String location;
-
   @Getter @Setter
   protected List<Feature> features;
 

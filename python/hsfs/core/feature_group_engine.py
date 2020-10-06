@@ -18,7 +18,9 @@ from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     feature_group_base_engine,
+    time_travel_format,
 )
+from hsfs.core.hudi_engine import HudiEngine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -68,15 +70,29 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         engine.get_instance().save_dataframe(
             table_name,
             feature_group.partition_key,
+            feature_group
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             feature_dataframe,
             self.APPEND,
+            HudiEngine.HUDI_BULK_INSERT
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             storage,
             offline_write_options,
             online_write_options,
         )
 
     def insert(
-        self, feature_group, feature_dataframe, overwrite, storage, write_options
+        self,
+        feature_group,
+        feature_dataframe,
+        overwrite,
+        operation,
+        storage,
+        write_options,
     ):
         offline_write_options = write_options
         online_write_options = write_options
@@ -96,8 +112,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         engine.get_instance().save_dataframe(
             self._get_table_name(feature_group),
             feature_group.partition_key,
+            feature_group
+            if feature_group.time_travel_fomat
+            == time_travel_format.TimeTravelFormat.HUDI
+            else None,
             feature_dataframe,
             self.APPEND,
+            operation,
             storage,
             offline_write_options,
             online_write_options,

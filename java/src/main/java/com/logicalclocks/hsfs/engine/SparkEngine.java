@@ -21,6 +21,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
@@ -59,7 +60,7 @@ public class SparkEngine {
   private SparkSession sparkSession;
 
   private Utils utils = new Utils();
-  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
+  private HudiEngine hudiEngine = new HudiEngine();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -88,6 +89,13 @@ public class SparkEngine {
       throws FeatureStoreException {
     Dataset<Row> queryDataset = jdbc(storageConnector, query);
     queryDataset.createOrReplaceTempView(alias);
+  }
+
+  public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias,
+                                         Long leftFeaturegroupStartTimestamp, Long leftFeaturegroupEndTimestamp) {
+    hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,
+        leftFeaturegroupStartTimestamp,
+        leftFeaturegroupEndTimestamp);
   }
 
   public void configureConnector(StorageConnector storageConnector) {
@@ -305,7 +313,7 @@ public class SparkEngine {
       throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiFeatureGroupEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation);
+      hudiEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }
@@ -353,5 +361,11 @@ public class SparkEngine {
 
   public String profile(Dataset<Row> df) {
     return profile(df, null, true, true);
+  }
+
+  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> deleteDF)
+      throws IOException, FeatureStoreException {
+    FeatureGroupCommit featureGroupCommit = hudiEngine.deleteRecord(sparkSession, featureGroup, deleteDF);
+    return featureGroupCommit;
   }
 }

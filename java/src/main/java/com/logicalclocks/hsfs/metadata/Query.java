@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.FsQuery;
@@ -28,7 +27,6 @@ import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
-import com.logicalclocks.hsfs.engine.HudiFeatureGroupEngine;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,17 +49,15 @@ public class Query {
   @Getter @Setter
   private List<Feature> leftFeatures;
   @Setter
-  private Long leftFeatureGroupStartTimestamp;
+  private String leftFeaturegroupStartTime;
   @Setter
-  private Long leftFeatureGroupEndTimestamp;
+  private String leftFeaturegroupEndTime;
 
   @Getter @Setter
   private List<Join> joins = new ArrayList<>();
 
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
-
-  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
@@ -119,21 +115,18 @@ public class Query {
   }
 
   public Query asOf(String wallclockTime) {
-    Long timestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockTime);
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
-      queryWithTimeStamp.setLeftFeatureGroupEndTimestamp(timestamp);
+      queryWithTimeStamp.setLeftFeaturegroupEndTime(wallclockTime);
       join.setQuery(queryWithTimeStamp);
     }
-    this.setLeftFeatureGroupEndTimestamp(timestamp);
+    this.setLeftFeaturegroupEndTime(wallclockTime);
     return this;
   }
 
   public Query pullChanges(String wallclockStartTime, String wallclockEndTime) {
-    Long startTimestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockStartTime);
-    Long endTimestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclockEndTime);
-    this.setLeftFeatureGroupStartTimestamp(startTimestamp);
-    this.setLeftFeatureGroupEndTimestamp(endTimestamp);
+    this.setLeftFeaturegroupStartTime(wallclockStartTime);
+    this.setLeftFeaturegroupEndTime(wallclockEndTime);
     return this;
   }
 
@@ -155,7 +148,7 @@ public class Query {
       case OFFLINE:
         registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
         if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          registerHudiFeatureGroups(fsQuery, leftFeatureGroup.getFeatureStore());
+          registerHudiFeatureGroups(fsQuery.getHudiCachedFeaturegroups());
         }
         return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
@@ -204,15 +197,14 @@ public class Query {
     }
   }
 
-  private void registerHudiFeatureGroups(FsQuery fsQuery, FeatureStore featureStore)  {
-    List<HudiFeatureGroupAlias> featureGroups = fsQuery.getHudiCachedFeaturegroups();
+  private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> featureGroups)  {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : featureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
-      featureGroup.setFeatureStore(featureStore);
-      hudiFeatureGroupEngine.registerTemporaryTable(SparkEngine.getInstance().getSparkSession(),  featureGroup, alias,
-          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp());
+
+      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
+          hudiFeatureGroupAlias.getLeftFeaturegroupStartTimestamp(),
+          hudiFeatureGroupAlias.getLeftFeaturegroupEndTimestamp());
     }
   }
 

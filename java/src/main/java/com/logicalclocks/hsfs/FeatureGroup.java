@@ -51,6 +51,10 @@ public class FeatureGroup extends FeatureGroupBase {
   @Getter @Setter
   private String type = "cachedFeaturegroupDTO";
 
+  // TODO (davit): this must be Getter only.
+  @Getter @Setter
+  protected String location;
+
   @Getter @Setter
   @JsonProperty("descStatsEnabled")
   private Boolean statisticsEnabled;
@@ -74,10 +78,6 @@ public class FeatureGroup extends FeatureGroupBase {
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> hudiPrecombineKey;
-
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
 
@@ -85,11 +85,10 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys, List<String> hudiPrecombineKey,
-                      boolean onlineEnabled, TimeTravelFormat timeTravelFormat, Storage defaultStorage,
-                      List<Feature> features, Boolean statisticsEnabled, Boolean histograms,
-                      Boolean correlations, List<String> statisticColumns)
-      throws FeatureStoreException {
+                      List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
+                      TimeTravelFormat timeTravelFormat, Storage defaultStorage, List<Feature> features,
+                      Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
+                      List<String> statisticColumns) {
 
     this.featureStore = featureStore;
     this.name = name;
@@ -97,7 +96,6 @@ public class FeatureGroup extends FeatureGroupBase {
     this.description = description;
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
-    this.hudiPrecombineKey = hudiPrecombineKey;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
@@ -144,7 +142,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys,
             defaultStorage, writeOptions);
 
     if (statisticsEnabled) {
@@ -204,9 +202,20 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
 
-  public FeatureGroupCommit commitDetails() throws IOException, FeatureStoreException {
-    // TODO (davit): at the moment this will not work. we need to decide what and how much data we can return
-    return null;
+  public void delete(Dataset<Row> featureData)
+      throws FeatureStoreException, IOException {
+
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("delete function is only valid for "
+          + "time travel enabled feature group");
+    }
+
+    featureGroupEngine.commitDelete(this, featureData);
+  }
+
+  public FeatureGroupCommit[] commitDetails(Integer limit) throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetails(this, limit);
   }
 
   /**

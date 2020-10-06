@@ -20,6 +20,7 @@ import warnings
 
 from hsfs import util, engine, feature
 from hsfs.core import feature_group_engine, statistics_engine, feature_group_base
+from hsfs.core.time_travel_format import TimeTravelFormat
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -47,6 +48,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         feat_hist_enabled=None,
         statistic_columns=None,
         online_enabled=False,
+        time_travel_fomat=TimeTravelFormat.HUDI,
         hudi_enabled=False,
         default_storage="offline",
         statistics_config=None,
@@ -65,6 +67,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
+        self._time_travel_fomat = (time_travel_fomat,)
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
@@ -96,7 +99,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             featurestore_id, self.ENTITY_TYPE
         )
 
-    def read(self, storage=None, dataframe_type="default"):
+    def read(self, wallclocktime=None, storage=None, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -104,8 +107,38 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(
-            storage if storage else self._default_storage, dataframe_type
+        if wallclocktime:
+            return (
+                self.select_all()
+                .as_of(wallclocktime)
+                .read(
+                    storage if storage else self._default_storage,
+                    dataframe_type,
+                    self._time_travel_fomat,
+                )
+            )
+        else:
+            return self.select_all().read(
+                storage if storage else self._default_storage,
+                dataframe_type,
+                self._time_travel_fomat,
+            )
+
+    def read_changes(
+        self,
+        start_wallclocktime,
+        end_wallclocktime,
+        storage=None,
+        dataframe_type="default",
+    ):
+        return (
+            self.select_all()
+            .pull_changes(start_wallclocktime, end_wallclocktime)
+            .read(
+                storage if storage else self._default_storage,
+                dataframe_type,
+                self._time_travel_fomat,
+            )
         )
 
     def show(self, n, storage=None):
@@ -136,13 +169,16 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             )
         return self
 
-    def insert(self, features, overwrite=False, storage=None, write_options={}):
+    def insert(
+        self, features, overwrite=False, operation=None, storage=None, write_options={}
+    ):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         self._feature_group_engine.insert(
             self,
             feature_dataframe,
             overwrite,
+            operation,
             storage if storage else self._default_storage,
             write_options,
         )
@@ -204,6 +240,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             "description": self._description,
             "version": self._version,
             "onlineEnabled": self._online_enabled,
+            "TimeTravelFormat": self._time_travel_fomat,
             "defaultStorage": self._default_storage.upper(),
             "features": self._features,
             "featurestoreId": self._feature_store_id,
@@ -241,6 +278,10 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
     @property
     def online_enabled(self):
         return self._online_enabled
+
+    @property
+    def time_travel_fomat(self):
+        return self._time_travel_fomat
 
     @property
     def partition_key(self):

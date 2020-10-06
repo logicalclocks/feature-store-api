@@ -42,3 +42,11 @@ class Join:
             "rightOn": self._right_on,
             "type": self._join_type,
         }
+
+    @property
+    def query(self):
+        return self._query
+
+    @query.setter
+    def query(self, query):
+        self._query = query

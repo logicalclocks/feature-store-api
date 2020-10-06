@@ -17,7 +17,7 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
@@ -40,7 +40,6 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private Utils utils = new Utils();
-  private HudiFeatureGroupEngine hudiFeatureGroupEngine = new HudiFeatureGroupEngine();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -51,28 +50,17 @@ public class FeatureGroupEngine {
    * @param dataset
    * @param primaryKeys
    * @param partitionKeys
-   * @param precombineKeys
    * @param storage
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, List<String> precombineKeys, Storage storage,
-                               Map<String, String> writeOptions)
+                               List<String> partitionKeys, Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    //----------------------------------------
-    // TODO (davit): move this to backend
-    List<Feature> features = utils.parseFeatureGroupSchema(dataset);
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      features = hudiFeatureGroupEngine.addHudiSpecFeatures(features);
-    }
-    //----------------------------------------
-
     if (featureGroup.getFeatureStore() != null) {
-      featureGroup.setFeatures(features);
-      //featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
@@ -95,16 +83,6 @@ public class FeatureGroupEngine {
               f.setPartition(true);
             }
           }));
-    }
-
-    /* set precombine key features */
-    if (precombineKeys != null) {
-      precombineKeys.forEach(pk ->
-              featureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPrecombine(true);
-                }
-              }));
     }
 
     // Send Hopsworks the request to create a new feature group
@@ -166,12 +144,6 @@ public class FeatureGroupEngine {
                                     SaveMode saveMode, String operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    if (featureGroup.getOnlineEnabled() && saveMode == SaveMode.Overwrite
-            && !operation.equals(Constants.HUDI_BULK_INSERT)) {
-      throw new FeatureStoreException("mode overwrite is only supported for bulk_insert for "
-              + "time travel enabled feature groups");
-    }
-
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
@@ -199,12 +171,15 @@ public class FeatureGroupEngine {
     featureGroup.setHistograms(apiFG.getHistograms());
   }
 
-  public Integer getCommitIdOnWallclocktime(FeatureGroup featureGroup, String wallclocktime)
+  public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
-    Long timestamp = null;
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      timestamp = hudiFeatureGroupEngine.hudiCommitToTimeStamp(wallclocktime);
-    }
-    return featureGroupApi.pointInTimeCommitDetails(featureGroup, timestamp).getCommitID();
+    FeatureGroupCommit[] commits = featureGroupApi.commitDetails(featureGroup, limit);
+    return commits;
+  }
+
+  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws IOException, FeatureStoreException {
+    FeatureGroupCommit featureGroupCommit = SparkEngine.getInstance().commitDelete(featureGroup, dataset);
+    return featureGroupCommit;
   }
 }

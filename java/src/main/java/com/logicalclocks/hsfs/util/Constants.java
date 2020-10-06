@@ -64,10 +64,13 @@ public class Constants {
   public static final String HUDI_BULK_INSERT = "bulk_insert";
   public static final String HUDI_INSERT = "insert";
   public static final String HUDI_UPSERT = "upsert";
+  public static final String HUDI_DELETE = "delete";
   public static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   public static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
   public static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
   public static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   public static final String HUDI_END_INSTANTTIME_OPT_KEY  = "hoodie.datasource.read.end.instanttime";
+  public static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
+  public static final String PAYLOAD_CLASS_OPT_VAL =  "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
 }

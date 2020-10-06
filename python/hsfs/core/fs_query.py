@@ -15,7 +15,7 @@
 #
 
 import humps
-from hsfs.core import on_demand_feature_group_alias
+from hsfs.core import on_demand_feature_group_alias, hudi_feature_group_alias
 
 
 class FsQuery:
@@ -24,6 +24,7 @@ class FsQuery:
         query,
         query_online,
         on_demand_feature_groups,
+        hudi_feature_groups,
         href=None,
         expand=None,
         items=None,
@@ -38,6 +39,12 @@ class FsQuery:
                     fg
                 )
                 for fg in on_demand_feature_groups
+            ]
+
+        if hudi_feature_groups is not None:
+            self._hudi_fg_aliases = [
+                hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
+                for fg in hudi_feature_groups
             ]
 
     @classmethod
@@ -56,3 +63,7 @@ class FsQuery:
     @property
     def on_demand_fg_aliases(self):
         return self._on_demand_fg_aliases
+
+    @property
+    def hudi_fg_aliases(self):
+        return self._hudi_fg_aliases
