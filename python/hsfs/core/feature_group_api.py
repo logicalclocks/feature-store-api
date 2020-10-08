@@ -139,3 +139,37 @@ class FeatureGroupApi:
                 data=feature_group_instance.json(),
             ),
         )
+
+    def update_metadata(self, feature_group_instance, feature_group_copy):
+        """Update the metadata of a feature group.
+
+        This only updates description and schema/features. The
+        `feature_group_copy` is the metadata object sent to the backend, while
+        `feature_group_instance` is the user object, which is only updated
+        after a successful REST call.
+
+        :param feature_group_instance: user metadata object of feature group
+        :type feature_group_instance: FeatureGroup
+        :param feature_group_copy: metadata object of feature group
+        :type feature_group_copy: FeatureGroup
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {"updateMetadata": True}
+        return feature_group_instance.update_from_response_json(
+            _client._send_request(
+                "PUT",
+                path_params,
+                query_params,
+                headers=headers,
+                data=feature_group_copy.json(),
+            ),
+        )

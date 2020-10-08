@@ -133,7 +133,10 @@ class FeatureGroup:
 
         user_version = self._version
         self._feature_group_engine.save(
-            self, feature_dataframe, self._default_storage, write_options,
+            self,
+            feature_dataframe,
+            self._default_storage,
+            write_options,
         )
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self, feature_dataframe)
@@ -370,3 +373,38 @@ class FeatureGroup:
             return self.statistics
         else:
             return self._statistics_engine.get(self, commit_time)
+
+    def append_features(self, features):
+        """Append features to the schema of the feature group.
+
+        It is only possible to append features to a feature group. Removing
+        features is considered a breaking change.
+
+        # Arguments
+            features: str, Feature or list. A feature name, feature object or
+               list thereof to append to the schema of the feature group.
+        """
+        new_features = []
+        if isinstance(features, feature.Feature):
+            new_features.append(features)
+        elif isinstance(features, str):
+            new_features.append(features.Feature(features))
+        elif isinstance(features, list):
+            for feat in features:
+                if isinstance(feat, feature.Feature):
+                    new_features.append(features)
+                elif isinstance(feat, str):
+                    new_features.append(features.Feature(features))
+                else:
+                    raise TypeError(
+                        "The argument `features` has to be of type `Feature`, `str` or a list thereof, but is of type: `{}`".format(
+                            type(features)
+                        )
+                    )
+        else:
+            raise TypeError(
+                "The argument `features` has to be of type `Feature`, `str` or a list thereof, but is of type: `{}`".format(
+                    type(features)
+                )
+            )
+        self._feature_group_engine.append_features(self, new_features)
