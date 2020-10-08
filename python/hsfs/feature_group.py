@@ -177,6 +177,15 @@ class FeatureGroup:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
+    def update_description(self):
+        """Update the description of the feature gorup.
+
+        Change the `description` attribute of the object and persist the changes by
+        calling this method.
+        """
+        self._feature_group_engine.update_description(self)
+        return self
+
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
         feature store.
@@ -221,17 +230,16 @@ class FeatureGroup:
                     new_features.append(features.Feature(features))
                 else:
                     raise TypeError(
-                        "The argument `features` has to be of type `Feature`, `str` or a list thereof, but is of type: `{}`".format(
-                            type(features)
-                        )
+                        "The argument `features` has to be of type `Feature`, `str` or "
+                        "a list thereof, but is of type: `{}`".format(type(features))
                     )
         else:
             raise TypeError(
-                "The argument `features` has to be of type `Feature`, `str` or a list thereof, but is of type: `{}`".format(
-                    type(features)
-                )
+                "The argument `features` has to be of type `Feature`, `str` or a list "
+                "thereof, but is of type: `{}`".format(type(features))
             )
         self._feature_group_engine.append_features(self, new_features)
+        return self
 
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.

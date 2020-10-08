@@ -146,11 +146,23 @@ class FeatureGroupEngine:
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
         copy_feature_group = fg.FeatureGroup(
-            feature_group.name,
+            None,
             None,
             None,
             None,
             id=feature_group.id,
             features=feature_group.features + new_features,
+        )
+        self._feature_group_api.update_metadata(feature_group, copy_feature_group)
+
+    def update_description(self, feature_group):
+        """Updates the description of a feature group."""
+        copy_feature_group = fg.FeatureGroup(
+            None,
+            None,
+            feature_group.description,
+            None,
+            id=feature_group.id,
+            features=[],
         )
         self._feature_group_api.update_metadata(feature_group, copy_feature_group)
