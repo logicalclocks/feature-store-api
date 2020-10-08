@@ -14,9 +14,8 @@
 #   limitations under the License.
 #
 
-import copy
-
 from hsfs import engine
+from hsfs import feature_group as fg
 from hsfs.core import feature_group_api, storage_connector_api, tags_api
 
 
@@ -146,6 +145,12 @@ class FeatureGroupEngine:
         """Appends features to a feature group."""
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
-        copy_feature_group = copy.deepcopy(feature_group)
-        feature_group.features = feature_group.features + new_features
+        copy_feature_group = fg.FeatureGroup(
+            feature_group.name,
+            None,
+            None,
+            None,
+            id=feature_group.id,
+            features=feature_group.features + new_features,
+        )
         self._feature_group_api.update_metadata(feature_group, copy_feature_group)

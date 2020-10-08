@@ -45,6 +45,7 @@ class Feature:
             "partition": self._partition,
             "primary": self._primary,
             "onlineType": self._online_type,
+            "defaultValue": self._default_value,
         }
 
     @classmethod
@@ -56,9 +57,17 @@ class Feature:
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @property
     def type(self):
         return self._type
+
+    @type.setter
+    def type(self, type):
+        self._type = type
 
     @property
     def primary(self):
@@ -75,3 +84,11 @@ class Feature:
     @partition.setter
     def partition(self, partition):
         self._partition = partition
+
+    @property
+    def default_value(self):
+        return self._default_value
+
+    @default_value.setter
+    def default_value(self, default_value):
+        self._default_value = default_value
