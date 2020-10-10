@@ -158,8 +158,15 @@ class FeedModelEngine:
                             "tf.string feature is not allowed here. please provide optimize=False and preprocess "
                             "dataset accordingly"
                         )
-                    elif example[feature_name].dtype in (tf.float64, tf.float16,  tf.int64, tf.int32):
-                        example[feature_name] = tf.cast(example[feature_name], tf.float32)
+                    elif example[feature_name].dtype in (
+                        tf.float64,
+                        tf.float16,
+                        tf.int64,
+                        tf.int32,
+                    ):
+                        example[feature_name] = tf.cast(
+                            example[feature_name], tf.float32
+                        )
                     x.append(example[feature_name])
 
             if len(x) == 1:
@@ -176,13 +183,13 @@ class FeedModelEngine:
 
         dataset = dataset.map(
             lambda value: _de_serialize(value),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE
+            num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
 
         if optimize:
             dataset = dataset.map(
                 lambda value: _process_example(value),
-                num_parallel_calls=tf.data.experimental.AUTOTUNE
+                num_parallel_calls=tf.data.experimental.AUTOTUNE,
             )
             dataset = _optimize_dataset(
                 dataset, batch_size, num_epochs, self._is_training
@@ -191,12 +198,12 @@ class FeedModelEngine:
         return dataset
 
     def tf_csv_dataset(
-            self,
-            batch_size=None,
-            num_epochs=None,
-            one_hot_encode_labels=False,
-            num_classes=None,
-            optimize=True
+        self,
+        batch_size=None,
+        num_epochs=None,
+        one_hot_encode_labels=False,
+        num_classes=None,
+        optimize=True,
     ):
         """
         Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
@@ -230,12 +237,13 @@ class FeedModelEngine:
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files,
             header=False,
-            record_defaults=[tf.float32,
-                               tf.float32,
-                               tf.float32,
-                               tf.float32,
-                               tf.float32
-                               ]
+            record_defaults=[
+                tf.float32,
+                tf.float32,
+                tf.float32,
+                tf.float32,
+                tf.float32,
+            ],
         )
 
         def _process_csv_dataset(csv_record):
@@ -243,7 +251,7 @@ class FeedModelEngine:
             y = csv_record_list.pop(self._feature_names.index(self._target_name))
             y = tf.convert_to_tensor(y)
             x = tf.convert_to_tensor(tuple(csv_record_list))
-            return x,y
+            return x, y
 
         if optimize:
             csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
@@ -251,6 +259,7 @@ class FeedModelEngine:
                 csv_dataset, batch_size, num_epochs, self._is_training
             )
         return csv_dataset
+
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     if is_training:
