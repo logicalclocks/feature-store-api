@@ -76,6 +76,7 @@ class FeedModelEngine:
             self._training_dataset.location, self._split
         )
 
+        # TODO (davit): get feat.types as well. This will be important for csv dataset
         if self._feature_names is None:
             self._feature_names = [feat.name for feat in self._training_dataset_schema]
 
@@ -100,7 +101,7 @@ class FeedModelEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        optimize=False,
+        optimize=True,
         serialized_ndarray_fname=[],
     ):
         """
@@ -114,7 +115,8 @@ class FeedModelEngine:
         :type one_hot_encode_labels: boolean, optional
         :param num_classes: if above true then provide number of target classes, defaults to None
         :type num_classes: int, optional
-        :param optimize: if set true  api will optimise tf data read operation, , defaults to False
+        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
+        with single input, defaults to True
         :type  optimize: int, optional
         :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
         defaults to []
@@ -141,13 +143,23 @@ class FeedModelEngine:
             example = tf.io.parse_single_example(
                 serialized_example, tfrecord_feature_description
             )
+            return example
+
+        def _process_example(example):
             x = []
             for feature_name in self._feature_names:
                 if feature_name in serialized_ndarray_fname:
                     x.append(
-                        tf.io.parse_tensor(example[feature_name], out_type=tf.float64)
+                        tf.io.parse_tensor(example[feature_name], out_type=tf.float32)
                     )
                 else:
+                    if example[feature_name].dtype == tf.string:
+                        raise ValueError(
+                            "tf.string feature is not allowed here. please provide optimize=False and preprocess "
+                            "dataset accordingly"
+                        )
+                    elif example[feature_name].dtype in (tf.float64, tf.float16,  tf.int64, tf.int32):
+                        example[feature_name] = tf.cast(example[feature_name], tf.float32)
                     x.append(example[feature_name])
 
             if len(x) == 1:
@@ -158,20 +170,86 @@ class FeedModelEngine:
             y = example[self._target_name]
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
+            else:
+                y = [tf.cast(y, tf.float32)]
             return x, y
 
         dataset = dataset.map(
             lambda value: _de_serialize(value),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
 
         if optimize:
+            dataset = dataset.map(
+                lambda value: _process_example(value),
+                num_parallel_calls=tf.data.experimental.AUTOTUNE
+            )
             dataset = _optimize_dataset(
                 dataset, batch_size, num_epochs, self._is_training
             )
 
         return dataset
 
+    def tf_csv_dataset(
+            self,
+            batch_size=None,
+            num_epochs=None,
+            one_hot_encode_labels=False,
+            num_classes=None,
+            optimize=True,
+            serialized_ndarray_fname=[],
+    ):
+        """
+        Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
+
+        :param batch_size: size of batch, defaults to None
+        :type batch_size: int, optional
+        :param num_epochs: number of epochs to train, defaults to None
+        :type num_epochs: int, optional
+        :param one_hot_encode_labels: if set true then one hot encode lables, defaults to False
+        :type one_hot_encode_labels: boolean, optional
+        :param num_classes: if above true then provide number of target classes, defaults to None
+        :type num_classes: int, optional
+        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
+        with single input, defaults to True
+        :type  optimize: int, optional
+        :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
+        defaults to []
+        :type  serialized_ndarray_fname: 1d array, optional
+        :return: tf dataset
+        :rtype: tf.data.TFRecordDataset
+        """
+
+        if optimize and batch_size is None and num_epochs is None:
+            raise ValueError(
+                "if optimize is set to True you also need to provide batch_size and num_epochs"
+            )
+
+        if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
+            raise ValueError(
+                "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
+            )
+
+        self._input_files
+        csv_dataset = tf.data.experimental.CsvDataset(
+            self._input_files,
+            header=False,
+            record_defaults=[tf.float32,
+                               tf.float32,
+                               tf.float32,
+                               tf.float32,
+                               tf.float32
+                               ]
+        )
+
+        def _process_csv_dataset(csv_record):
+            csv_record_list = list(csv_record)
+            y = csv_record_list.pop(self._feature_names.index(self._target_name))
+            y = tf.convert_to_tensor(y)
+            x = tf.convert_to_tensor(tuple(csv_record_list))
+            return x,y
+
+        csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     if is_training:
