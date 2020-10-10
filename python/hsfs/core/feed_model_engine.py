@@ -196,8 +196,7 @@ class FeedModelEngine:
             num_epochs=None,
             one_hot_encode_labels=False,
             num_classes=None,
-            optimize=True,
-            serialized_ndarray_fname=[],
+            optimize=True
     ):
         """
         Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
@@ -213,9 +212,6 @@ class FeedModelEngine:
         :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
         with single input, defaults to True
         :type  optimize: int, optional
-        :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
-        defaults to []
-        :type  serialized_ndarray_fname: 1d array, optional
         :return: tf dataset
         :rtype: tf.data.TFRecordDataset
         """
@@ -249,7 +245,12 @@ class FeedModelEngine:
             x = tf.convert_to_tensor(tuple(csv_record_list))
             return x,y
 
-        csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
+        if optimize:
+            csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
+            csv_dataset = _optimize_dataset(
+                csv_dataset, batch_size, num_epochs, self._is_training
+            )
+        return csv_dataset
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     if is_training:

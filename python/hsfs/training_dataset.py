@@ -161,7 +161,7 @@ class TrainingDataset:
         if self.statistics_config.enabled:
             return self._statistics_engine.compute_statistics(self, self.read())
 
-    def feed(
+    def tf_data(
         self,
         target_name,
         split=None,
