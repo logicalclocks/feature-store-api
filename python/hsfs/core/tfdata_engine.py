@@ -33,7 +33,7 @@ except ModuleNotFoundError:
     pass
 
 
-class TFDataEngine:
+class FeedModelEngine:
     def __init__(
         self,
         training_dataset,
@@ -43,7 +43,7 @@ class TFDataEngine:
         is_training,
         cycle_length,
     ):
-        """TFDataEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
+        """FeedModelEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
 
         :param training_dataset: training dataset name
         :type name: str, required
@@ -60,7 +60,7 @@ class TFDataEngine:
         :type engine: str, required
 
         :return: feed model object
-        :rtype: TFDataEngine
+        :rtype: FeedModelEngine
         """
 
         self._training_dataset = training_dataset
@@ -71,7 +71,6 @@ class TFDataEngine:
         self._cycle_length = cycle_length
 
         self._training_dataset_schema = self._training_dataset.schema
-        self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = _get_training_dataset_files(
             self._training_dataset.location, self._split
@@ -102,7 +101,7 @@ class TFDataEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        process=True,
+        optimize=True,
         serialized_ndarray_fname=[],
     ):
         """
@@ -116,9 +115,9 @@ class TFDataEngine:
         :type one_hot_encode_labels: boolean, optional
         :param num_classes: if above true then provide number of target classes, defaults to None
         :type num_classes: int, optional
-        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
+        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
         with single input, defaults to True
-        :type  process: int, optional
+        :type  optimize: int, optional
         :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
         defaults to []
         :type  serialized_ndarray_fname: 1d array, optional
@@ -126,14 +125,9 @@ class TFDataEngine:
         :rtype: tf.data.TFRecordDataset
         """
 
-        if self._training_dataset_format.lower() not in ["tfrecords", "tfrecord"]:
+        if optimize and batch_size is None and num_epochs is None:
             raise ValueError(
-                "tf_record_dataset function works only for training datasets that have tfrecord or tfrecords format"
-            )
-
-        if process and batch_size is None and num_epochs is None:
-            raise ValueError(
-                "if process is set to True you also need to provide batch_size and num_epochs"
+                "if optimize is set to True you also need to provide batch_size and num_epochs"
             )
 
         if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
@@ -161,18 +155,11 @@ class TFDataEngine:
                 else:
                     if example[feature_name].dtype == tf.string:
                         raise ValueError(
-                            "tf.string feature is not allowed here. please provide process=False and preprocess "
+                            "tf.string feature is not allowed here. please provide optimize=False and preprocess "
                             "dataset accordingly"
                         )
-                    elif example[feature_name].dtype in (
-                        tf.float64,
-                        tf.float16,
-                        tf.int64,
-                        tf.int32,
-                    ):
-                        example[feature_name] = tf.cast(
-                            example[feature_name], tf.float32
-                        )
+                    elif example[feature_name].dtype in (tf.float64, tf.float16,  tf.int64, tf.int32):
+                        example[feature_name] = tf.cast(example[feature_name], tf.float32)
                     x.append(example[feature_name])
 
             if len(x) == 1:
@@ -189,13 +176,13 @@ class TFDataEngine:
 
         dataset = dataset.map(
             lambda value: _de_serialize(value),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            num_parallel_calls=tf.data.experimental.AUTOTUNE
         )
 
-        if process:
+        if optimize:
             dataset = dataset.map(
                 lambda value: _process_example(value),
-                num_parallel_calls=tf.data.experimental.AUTOTUNE,
+                num_parallel_calls=tf.data.experimental.AUTOTUNE
             )
             dataset = _optimize_dataset(
                 dataset, batch_size, num_epochs, self._is_training
@@ -204,12 +191,13 @@ class TFDataEngine:
         return dataset
 
     def tf_csv_dataset(
-        self,
-        batch_size=None,
-        num_epochs=None,
-        one_hot_encode_labels=False,
-        num_classes=None,
-        process=True,
+            self,
+            batch_size=None,
+            num_epochs=None,
+            one_hot_encode_labels=False,
+            num_classes=None,
+            optimize=True,
+            serialized_ndarray_fname=[],
     ):
         """
         Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
@@ -222,21 +210,19 @@ class TFDataEngine:
         :type one_hot_encode_labels: boolean, optional
         :param num_classes: if above true then provide number of target classes, defaults to None
         :type num_classes: int, optional
-        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
+        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
         with single input, defaults to True
-        :type  process: int, optional
+        :type  optimize: int, optional
+        :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
+        defaults to []
+        :type  serialized_ndarray_fname: 1d array, optional
         :return: tf dataset
         :rtype: tf.data.TFRecordDataset
         """
 
-        if self._training_dataset_format != "csv":
+        if optimize and batch_size is None and num_epochs is None:
             raise ValueError(
-                "tf_csv_dataset function works only for training datasets that have csv format"
-            )
-
-        if process and batch_size is None and num_epochs is None:
-            raise ValueError(
-                "if process is set to True you also need to provide batch_size and num_epochs"
+                "if optimize is set to True you also need to provide batch_size and num_epochs"
             )
 
         if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
@@ -244,18 +230,16 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        record_defaults = []
-        for feat in self._training_dataset_schema:
-            if feat.type == "string":
-                raise ValueError(
-                    "string feature is not allowed here. please provide process=False and preprocess "
-                    "dataset accordingly"
-                )
-            else:
-                record_defaults.add(tf.float32)
-
+        self._input_files
         csv_dataset = tf.data.experimental.CsvDataset(
-            self._input_files, header=False, record_defaults=record_defaults,
+            self._input_files,
+            header=False,
+            record_defaults=[tf.float32,
+                               tf.float32,
+                               tf.float32,
+                               tf.float32,
+                               tf.float32
+                               ]
         )
 
         def _process_csv_dataset(csv_record):
@@ -263,15 +247,9 @@ class TFDataEngine:
             y = csv_record_list.pop(self._feature_names.index(self._target_name))
             y = tf.convert_to_tensor(y)
             x = tf.convert_to_tensor(tuple(csv_record_list))
-            return x, y
+            return x,y
 
-        if process:
-            csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
-            csv_dataset = _optimize_dataset(
-                csv_dataset, batch_size, num_epochs, self._is_training
-            )
-        return csv_dataset
-
+        csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
 
 def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
     if is_training:
