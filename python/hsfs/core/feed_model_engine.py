@@ -255,9 +255,7 @@ class FeedModelEngine:
                 record_defaults.add(tf.float32)
 
         csv_dataset = tf.data.experimental.CsvDataset(
-            self._input_files,
-            header=False,
-            record_defaults=record_defaults,
+            self._input_files, header=False, record_defaults=record_defaults,
         )
 
         def _process_csv_dataset(csv_record):
