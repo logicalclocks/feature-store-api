@@ -71,6 +71,7 @@ class FeedModelEngine:
         self._cycle_length = cycle_length
 
         self._training_dataset_schema = self._training_dataset.schema
+        self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = _get_training_dataset_files(
             self._training_dataset.location, self._split
@@ -124,6 +125,11 @@ class FeedModelEngine:
         :return: tf dataset
         :rtype: tf.data.TFRecordDataset
         """
+
+        if self._training_dataset_format.lower() not in ["tfrecords", "tfrecord"]:
+            raise ValueError(
+                "tf_record_dataset function works only for training datasets that have tfrecord or tfrecords format"
+            )
 
         if optimize and batch_size is None and num_epochs is None:
             raise ValueError(
@@ -223,6 +229,11 @@ class FeedModelEngine:
         :rtype: tf.data.TFRecordDataset
         """
 
+        if self._training_dataset_format != "csv":
+            raise ValueError(
+                "tf_csv_dataset function works only for training datasets that have csv format"
+            )
+
         if optimize and batch_size is None and num_epochs is None:
             raise ValueError(
                 "if optimize is set to True you also need to provide batch_size and num_epochs"
@@ -233,17 +244,20 @@ class FeedModelEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        self._input_files
+        record_defaults = []
+        for feat in self._training_dataset_schema:
+            if feat.type == "string":
+                raise ValueError(
+                    "string feature is not allowed here. please provide optimize=False and preprocess "
+                    "dataset accordingly"
+                )
+            else:
+                record_defaults.add(tf.float32)
+
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files,
             header=False,
-            record_defaults=[
-                tf.float32,
-                tf.float32,
-                tf.float32,
-                tf.float32,
-                tf.float32,
-            ],
+            record_defaults=record_defaults,
         )
 
         def _process_csv_dataset(csv_record):
