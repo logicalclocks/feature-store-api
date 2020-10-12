@@ -430,19 +430,12 @@ def _convert2tftype(input_type):
     return tf_type
 
 def _convert2float32(input):
-    if input == tf.string:
+    if input.dtype == tf.string:
         raise ValueError(
             "tf.string feature is not allowed here. please provide process=False and preprocess "
             "dataset accordingly"
         )
-    elif input in (
-            tf.float16,
-            tf.float32,
-            tf.float64,
-            tf.int16,
-            tf.int64,
-            tf.int32,
-    ):
+    elif input.dtype in [tf.float16, tf.float32, tf.float64, tf.int16, tf.int64, tf.int32]:
         input = tf.cast(
             input, tf.float32
         )
