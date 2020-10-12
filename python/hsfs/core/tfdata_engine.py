@@ -160,13 +160,13 @@ class TFDataEngine:
 
             # if there is only 1 feature we return in
             if len(self._feature_names) == 1:
-               # here it is assumed that if user provides serialized_ndarray, it is onle one feature
-               _feature_name = self._feature_names[0]
-               if self._feature_names in serialized_ndarray_fname:
-                  x = tf.io.parse_tensor(example[_feature_name], out_type=tf.float32)
-               else:
-                  x = example[_feature_name]
-               return x, y
+                # here it is assumed that if user provides serialized_ndarray, it is onle one feature
+                _feature_name = self._feature_names[0]
+                if self._feature_names in serialized_ndarray_fname:
+                    x = tf.io.parse_tensor(example[_feature_name], out_type=tf.float32)
+                else:
+                    x = example[_feature_name]
+                return x, y
             # Otherwise we need to have features in the same type, thus tf.float32
             else:
                 x = []
@@ -233,7 +233,9 @@ class TFDataEngine:
             )
 
         csv_header = [feat.name for feat in self._training_dataset_schema]
-        record_defaults = [_convert2tftype(feat.type) for feat in self._training_dataset_schema]
+        record_defaults = [
+            _convert2tfdtype(feat.type) for feat in self._training_dataset_schema
+        ]
 
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files, header=False, record_defaults=record_defaults,
@@ -413,21 +415,22 @@ def _get_s3_dataset_files(training_dataset_location, split):
     return input_files
 
 
-def _convert2tftype(input_type):
-    supported_types = {"string": tf.string,
-                       "short": tf.int16,
-                       "int": tf.int32,
-                       "long": tf.int32,
-                       "float": tf.float32,
-                       "double": tf.float32}
+def _convert2tfdtype(input_type):
+    supported_types = {
+        "string": tf.string,
+        "short": tf.int16,
+        "int": tf.int32,
+        "long": tf.int32,
+        "float": tf.float32,
+        "double": tf.float32,
+    }
 
     try:
         tf_type = supported_types[input_type]
     except KeyError:
-        raise ValueError(
-            "Unknown type of value, please report to hsfs maintainers"
-        )
+        raise ValueError("Unknown type of value, please report to hsfs maintainers")
     return tf_type
+
 
 def _convert2float32(input):
     if input.dtype == tf.string:
@@ -435,12 +438,15 @@ def _convert2float32(input):
             "tf.string feature is not allowed here. please provide process=False and preprocess "
             "dataset accordingly"
         )
-    elif input.dtype in [tf.float16, tf.float32, tf.float64, tf.int16, tf.int64, tf.int32]:
-        input = tf.cast(
-            input, tf.float32
-        )
+    elif input.dtype in [
+        tf.float16,
+        tf.float32,
+        tf.float64,
+        tf.int16,
+        tf.int64,
+        tf.int32,
+    ]:
+        input = tf.cast(input, tf.float32)
     else:
-        raise ValueError(
-            "Unknown type of value, please report to hsfs maintainers"
-        )
+        raise ValueError("Unknown type of value, please report to hsfs maintainers")
     return input
