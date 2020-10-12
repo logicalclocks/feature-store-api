@@ -60,7 +60,10 @@ class FeatureGroup:
         self._version = version
         self._name = name
         self._id = id
-        self._features = [feature.Feature.from_response_json(feat) for feat in features]
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in features
+        ]
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
@@ -231,7 +234,9 @@ class FeatureGroup:
                 else:
                     raise TypeError(
                         "The argument `features` has to be of type `Feature`, `str` or "
-                        "a list thereof, but is of type: `{}`".format(type(features))
+                        "a list thereof, but an element is of type: `{}`".format(
+                            type(features)
+                        )
                     )
         else:
             raise TypeError(
