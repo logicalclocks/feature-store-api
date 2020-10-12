@@ -26,7 +26,7 @@ from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
     training_dataset_engine,
-    feed_model_engine,
+    tfdata_engine,
     statistics_engine,
 )
 
@@ -183,9 +183,9 @@ class TrainingDataset:
         :param engine: execution engine. defaults  to spark
         :type engine: str, optional
         :return: feed model engine object
-        :rtype: FeedModelEngine
+        :rtype: TFDataEngine
         """
-        return feed_model_engine.FeedModelEngine(
+        return tfdata_engine.TFDataEngine(
             self,
             split=split,
             target_name=target_name,
