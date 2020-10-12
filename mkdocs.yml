@@ -9,22 +9,29 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-    - Introduction: index.md
-    - Quickstart: quickstart.md
-    - Installation: installation.md
-    - API Reference:
-        - Connection: generated/connection.md
-    - Contributing: contributing.md
+  - Introduction: index.md
+  - Quickstart: quickstart.md
+  - Setup: installation.md
+  - Concepts:
+    - Project/Connection: project.md
+    - Feature Store: feature_store.md
+    - Feature Group: feature_group.md
+    - Training Dataset: training_dataset.md
+    - Feature: feature.md
+    - Statistics: statistics.md
+  - API Reference:
+    - Connection: generated/connection.md
+  - Contributing: contributing.md
 
 theme:
-    name: material
-    favicon: assets/images/favicon.ico
-    logo: assets/images/hops-logo.png
-    icon:
-        repo: fontawesome/brands/github
-    font:
-        text: "Roboto"
-        code: "IBM Plex Mono"
+  name: material
+  favicon: assets/images/favicon.ico
+  logo: assets/images/hops-logo.png
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: "Roboto"
+    code: "IBM Plex Mono"
 
 extra:
   generator: false
@@ -51,6 +58,8 @@ markdown_extensions:
     - pymdownx.tabbed
     - pymdownx.arithmatex
     - pymdownx.superfences
+    - toc:
+        permalink: "#"
 
 google_analytics:
     - UA-85730257-3

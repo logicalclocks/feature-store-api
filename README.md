@@ -1,7 +1,7 @@
-Hopsworks Feature Store API
-===========================
+# Hopsworks Feature Store API
+
 ![Discourse users](https://img.shields.io/discourse/users?label=Hopsworks%20Community&server=https%3A%2F%2Fcommunity.hopsworks.ai)
-[![Docs](https://img.shields.io/badge/docs-hsfs-orange)](https://docs.hopsworks.ai/)
+[![Docs](https://img.shields.io/badge/docs-HSFS-orange)](https://docs.hopsworks.ai/)
 [![PypiStatus](https://img.shields.io/pypi/v/hsfs?color=blue)](https://pypi.org/project/hsfs/)
 [![Java](https://img.shields.io/badge/java-HSFS-green)](https://archiva.hops.works/#artifact/com.logicalclocks/hsfs)
 [![Downloads](https://pepy.tech/badge/hsfs/month)](https://pepy.tech/project/hsfs/month)
@@ -20,28 +20,15 @@ The library automatically configures itself based on the environment it is run.
 However, to connect from an external environment such as Databricks or AWS Sagemaker,
 additional connection information, such as host and port, is required. For more information about the setup from external environments, see the setup section.
 
-Getting Started On Hopsworks
----------------
+## Getting Started On Hopsworks
 
 Instantiate a connection and get the project feature store handler
-=== "Python"
+```python
+import hsfs
 
-    ```python
-    import hsfs
-
-    connection = hsfs.connection()
-    fs = connection.get_feature_store()
-    ```
-
-=== "Java"
-
-    ```java
-    import com.logicalclocks.hsfs._
-
-    val connection = HopsworksConnection.builder().build();
-    val fs = connection.getFeatureStore();
-    ```
-
+connection = hsfs.connection()
+fs = connection.get_feature_store()
+```
 
 Create a new feature group
 ```python
@@ -57,7 +44,7 @@ fg.save(dataframe)
 Join features together
 ```python
 feature_join = rain_fg.select_all()
-                    .join(temperature_fg.select_all(), ["date", "location_id"])
+                    .join(temperature_fg.select_all(), on=["date", "location_id"])
                     .join(location_fg.select_all()))
 
 feature_join.show(5)
@@ -66,23 +53,35 @@ feature_join.show(5)
 Use the query object to create a training dataset:
 ```python
 td = fs.create_training_dataset("training_dataset",
-                           version=1,
-                           data_format="tfrecords",
-                           description="A test training dataset saved in TfRecords format",
-                           splits={'train': 0.7, 'test': 0.2, 'validate': 0.1})
+                                version=1,
+                                data_format="tfrecords",
+                                description="A test training dataset saved in TfRecords format",
+                                splits={'train': 0.7, 'test': 0.2, 'validate': 0.1})
 
 td.save(feature_join)
 ```
 
 Feed the training dataset to a TensorFlow model:
 ```python
-train_input_feeder = training_dataset.feed(target_name='label',split='train', is_training=True)
+train_input_feeder = training_dataset.feed(target_name="label",
+                                           split="train",
+                                           is_training=True)
 train_input = train_input_feeder.tf_record_dataset()
 ```
 
 You can find more examples on how to use the library in our [hops-examples](https://github.com/logicalclocks/hops-examples) repository.
 
-Issues
-------
+## Documentation
 
-Please report any issue using [Github issue tracking](https://github.com/logicalclocks/feature-store-api/issues)
+Documentation is available at [Hopsworks Feature Store Documentation](https://docs.hopsworks.ai/).
+
+## Issues
+
+For general questions about the usage of Hopsworks and the Feature Store please open a topic on [Hopsworks Community](https://community.hopsworks.ai/).
+
+Please report any issue using [Github issue tracking](https://github.com/logicalclocks/feature-store-api/issues).
+
+
+## Contributing
+
+If you would like to contribute to this library, please see the [Contribution Guidelines](contributing.md).
