@@ -252,7 +252,7 @@ class TFDataEngine:
                     "dataset accordingly"
                 )
             else:
-                record_defaults.add(tf.float32)
+                record_defaults.append(tf.float32)
 
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files, header=False, record_defaults=record_defaults,
