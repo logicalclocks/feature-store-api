@@ -252,8 +252,8 @@ class TFDataEngine:
             # now get feature vector
             x = []
             for feat in csv_record_list:
-                x.append(_convert2float32(feat))
-            x = tf.convert_to_tensor(x)
+                x.append(_convert2float32(tf.convert_to_tensor(feat)))
+            x = tf.stack(x)
             return x, y
 
         if process:
