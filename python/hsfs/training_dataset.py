@@ -170,24 +170,20 @@ class TrainingDataset:
         cycle_length=2,
     ):
         """
-        tf_data function returns TFDataEngine object that has utility methods for tf.data
-
-        # Arguments
-        training_dataset: str, required
-            training dataset name
-        split: split: str, required
-            name of training dataset split. train, test or eval
-        target_name: str, required
-            name of the target variable
-        feature_names: 1d array, required
-            name of training variables
-        is_training: boolean, required
-            whether it is for training, testing or eval
-        cycle_length: int, optional
-            number of files to be read and deserialized in parallel. defaults to `2`
-
-        # Returns
-            TFDataEngine object
+        :param target_name: name of the target variable
+        :type target_name: str, required
+        :param split: training dataset split name, train, test or eval, defaults to None
+        :type split: str, optional
+        :param feature_names: name of training variables, defaults to None
+        :type feature_names: 1d array, optional
+        :param is_training:  whether it is for training, testing or eval, defaults to True
+        :type  is_training: boolean, optional
+        :param cycle_length: number of files to be read and deserialized in parallel, defoults to 2
+        :type cycle_length: int, optional
+        :param engine: execution engine. defaults  to spark
+        :type engine: str, optional
+        :return: feed model engine object
+        :rtype: TFDataEngine
         """
         return tfdata_engine.TFDataEngine(
             self,

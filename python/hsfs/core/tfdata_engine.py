@@ -33,7 +33,7 @@ except ModuleNotFoundError:
     pass
 
 
-class FeedModelEngine:
+class TFDataEngine:
     def __init__(
         self,
         training_dataset,
@@ -43,7 +43,7 @@ class FeedModelEngine:
         is_training,
         cycle_length,
     ):
-        """FeedModelEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
+        """TFDataEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
 
         :param training_dataset: training dataset name
         :type name: str, required
@@ -60,7 +60,7 @@ class FeedModelEngine:
         :type engine: str, required
 
         :return: feed model object
-        :rtype: FeedModelEngine
+        :rtype: TFDataEngine
         """
 
         self._training_dataset = training_dataset
@@ -102,7 +102,7 @@ class FeedModelEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        optimize=True,
+        process=True,
         serialized_ndarray_fname=[],
     ):
         """
@@ -116,9 +116,9 @@ class FeedModelEngine:
         :type one_hot_encode_labels: boolean, optional
         :param num_classes: if above true then provide number of target classes, defaults to None
         :type num_classes: int, optional
-        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
+        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
         with single input, defaults to True
-        :type  optimize: int, optional
+        :type  process: int, optional
         :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
         defaults to []
         :type  serialized_ndarray_fname: 1d array, optional
@@ -131,9 +131,9 @@ class FeedModelEngine:
                 "tf_record_dataset function works only for training datasets that have tfrecord or tfrecords format"
             )
 
-        if optimize and batch_size is None and num_epochs is None:
+        if process and batch_size is None and num_epochs is None:
             raise ValueError(
-                "if optimize is set to True you also need to provide batch_size and num_epochs"
+                "if process is set to True you also need to provide batch_size and num_epochs"
             )
 
         if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
@@ -161,7 +161,7 @@ class FeedModelEngine:
                 else:
                     if example[feature_name].dtype == tf.string:
                         raise ValueError(
-                            "tf.string feature is not allowed here. please provide optimize=False and preprocess "
+                            "tf.string feature is not allowed here. please provide process=False and preprocess "
                             "dataset accordingly"
                         )
                     elif example[feature_name].dtype in (
@@ -192,7 +192,7 @@ class FeedModelEngine:
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
 
-        if optimize:
+        if process:
             dataset = dataset.map(
                 lambda value: _process_example(value),
                 num_parallel_calls=tf.data.experimental.AUTOTUNE,
@@ -209,7 +209,7 @@ class FeedModelEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        optimize=True,
+        process=True,
     ):
         """
         Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
@@ -222,9 +222,9 @@ class FeedModelEngine:
         :type one_hot_encode_labels: boolean, optional
         :param num_classes: if above true then provide number of target classes, defaults to None
         :type num_classes: int, optional
-        :param optimize: if set true  api will optimise tf data read operation, and return feature vector for model
+        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
         with single input, defaults to True
-        :type  optimize: int, optional
+        :type  process: int, optional
         :return: tf dataset
         :rtype: tf.data.TFRecordDataset
         """
@@ -234,9 +234,9 @@ class FeedModelEngine:
                 "tf_csv_dataset function works only for training datasets that have csv format"
             )
 
-        if optimize and batch_size is None and num_epochs is None:
+        if process and batch_size is None and num_epochs is None:
             raise ValueError(
-                "if optimize is set to True you also need to provide batch_size and num_epochs"
+                "if process is set to True you also need to provide batch_size and num_epochs"
             )
 
         if one_hot_encode_labels and (num_classes is None or num_classes <= 1):
@@ -248,7 +248,7 @@ class FeedModelEngine:
         for feat in self._training_dataset_schema:
             if feat.type == "string":
                 raise ValueError(
-                    "string feature is not allowed here. please provide optimize=False and preprocess "
+                    "string feature is not allowed here. please provide process=False and preprocess "
                     "dataset accordingly"
                 )
             else:
@@ -265,7 +265,7 @@ class FeedModelEngine:
             x = tf.convert_to_tensor(tuple(csv_record_list))
             return x, y
 
-        if optimize:
+        if process:
             csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
             csv_dataset = _optimize_dataset(
                 csv_dataset, batch_size, num_epochs, self._is_training
