@@ -1,4 +1,4 @@
-site_name: "HSFS: Hopsworks Feature Store API"
+site_name: "HSFS: Hopsworks Feature Store"
 site_description: "HSFS: An environment independent client to interact with the Hopsworks Feature Store"
 site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
@@ -26,6 +26,18 @@ theme:
         text: "Roboto"
         code: "IBM Plex Mono"
 
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/logicalclocks
+    - icon: fontawesome/brands/github
+      link: https://github.com/logicalclocks/hopsworks
+    - icon: fontawesome/brands/discourse
+      link: https://community.hopsworks.ai/
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/logicalclocks/
+
 extra_css:
     - css/custom.css
 
@@ -40,4 +52,6 @@ markdown_extensions:
     - pymdownx.arithmatex
     - pymdownx.superfences
 
-google_analytics: ['UA-85730257-3', 'hopsworks.ai']
+google_analytics:
+    - UA-85730257-3
+    - auto
