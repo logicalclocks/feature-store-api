@@ -77,7 +77,6 @@ class TFDataEngine:
             self._training_dataset.location, self._split
         )
 
-        # TODO (davit): get feat.types as well. This will be important for csv dataset
         if self._feature_names is None:
             self._feature_names = [feat.name for feat in self._training_dataset_schema]
 
@@ -152,44 +151,28 @@ class TFDataEngine:
             return example
 
         def _process_example(example):
-            x = []
-            for feature_name in self._feature_names:
-                if feature_name in serialized_ndarray_fname:
-                    x.append(
-                        tf.io.parse_tensor(example[feature_name], out_type=tf.float32)
-                    )
-                else:
-                    if example[feature_name].dtype == tf.string:
-                        raise ValueError(
-                            "tf.string feature is not allowed here. please provide process=False and preprocess "
-                            "dataset accordingly"
-                        )
-                    # TODO (davit): make sure these are only type of value we can handle here
-                    elif example[feature_name].dtype in (
-                        tf.float64,
-                        tf.float16,
-                        tf.int64,
-                        tf.int32,
-                    ):
-                        example[feature_name] = tf.cast(
-                            example[feature_name], tf.float32
-                        )
-                    else:
-                        raise ValueError(
-                            "Unknown type of value, please report to hsfs maintainers"
-                        )
-                    x.append(example[feature_name])
-
-            if len(x) == 1:
-                x = x[0]
-            else:
-                x = tf.stack(x)
-
+            # get target variable 1st
             y = example[self._target_name]
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
             else:
-                y = [tf.cast(y, tf.float32)]
+                y = tf.cast(y, tf.float32)
+
+            # if there is only 1 feature we return in
+            if len(self._feature_names) == 1:
+               # here it is assumed that if user provides serialized_ndarray, it is onle one feature
+               _feature_name = self._feature_names[0]
+               if self._feature_names in serialized_ndarray_fname:
+                  x = tf.io.parse_tensor(example[_feature_name], out_type=tf.float32)
+               else:
+                  x = example[_feature_name]
+               return x, y
+            # Otherwise we need to have features in the same type, thus tf.float32
+            else:
+                x = []
+                for _feature_name in self._feature_names:
+                    x.append(_convert2float32(example[_feature_name]))
+                x = tf.stack(x)
             return x, y
 
         dataset = dataset.map(
@@ -250,18 +233,8 @@ class TFDataEngine:
             )
 
         record_defaults = []
-        # TODO (davit): we need better mapping for spark to tf.data types
         for feat in self._training_dataset_schema:
-            if feat.type == "string":
-                record_defaults.append(tf.string)
-            elif feat.type in ["int", "long"]:
-                record_defaults.append(tf.int32)
-            elif feat.type in ["float", "double"]:
-                record_defaults.append(tf.float32)
-            else:
-                raise ValueError(
-                    "Unknown type of value, please report to hsfs maintainers"
-                )
+            record_defaults.append(_convert2tftype(feat.type))
 
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files, header=False, record_defaults=record_defaults,
@@ -269,20 +242,22 @@ class TFDataEngine:
 
         def _process_csv_dataset(csv_record):
             csv_record_list = list(csv_record)
+            # get target variable 1st
             y = csv_record_list.pop(self._feature_names.index(self._target_name))
             y = tf.convert_to_tensor(y)
-            x = tf.convert_to_tensor(tuple(csv_record_list))
+            if one_hot_encode_labels:
+                y = tf.one_hot(y, num_classes)
+            else:
+                y = tf.cast(y, tf.float32)
+
+            # now get feature vector
+            x = []
+            for feat in csv_record_list:
+                x.append(_convert2float32(feat))
+            x = tf.convert_to_tensor(x)
             return x, y
 
         if process:
-            if tf.string in record_defaults:
-                raise ValueError(
-                    "tf.string feature is not allowed here. please provide process=False and preprocess "
-                    "dataset accordingly"
-                )
-            else:
-                record_defaults = [tf.float32] * len(record_defaults)
-
             csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
             csv_dataset = _optimize_dataset(
                 csv_dataset, batch_size, num_epochs, self._is_training
@@ -437,3 +412,43 @@ def _get_s3_dataset_files(training_dataset_location, split):
             input_files.append(path + "/" + s3_obj_summary.key)
 
     return input_files
+
+
+def _convert2tftype(input_type):
+    supported_types = {"string": tf.string,
+                       "short": tf.int16,
+                       "int": tf.int32,
+                       "long": tf.int32,
+                       "float": tf.float32,
+                       "double": tf.float32}
+
+    try:
+        tf_type = supported_types[input_type]
+    except KeyError:
+        raise ValueError(
+            "Unknown type of value, please report to hsfs maintainers"
+        )
+    return tf_type
+
+def _convert2float32(input):
+    if input == tf.string:
+        raise ValueError(
+            "tf.string feature is not allowed here. please provide process=False and preprocess "
+            "dataset accordingly"
+        )
+    elif input in (
+            tf.float16,
+            tf.float32,
+            tf.float64,
+            tf.int16,
+            tf.int64,
+            tf.int32,
+    ):
+        input = tf.cast(
+            input, tf.float32
+        )
+    else:
+        raise ValueError(
+            "Unknown type of value, please report to hsfs maintainers"
+        )
+    return input
