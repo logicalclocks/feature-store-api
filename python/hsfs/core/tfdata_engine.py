@@ -232,9 +232,8 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        record_defaults = []
-        for feat in self._training_dataset_schema:
-            record_defaults.append(_convert2tftype(feat.type))
+        csv_header = [feat.name for feat in self._training_dataset_schema]
+        record_defaults = [_convert2tftype(feat.type) for feat in self._training_dataset_schema]
 
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files, header=False, record_defaults=record_defaults,
@@ -243,7 +242,7 @@ class TFDataEngine:
         def _process_csv_dataset(csv_record):
             csv_record_list = list(csv_record)
             # get target variable 1st
-            y = csv_record_list.pop(self._feature_names.index(self._target_name))
+            y = csv_record_list.pop(csv_header.index(self._target_name))
             y = tf.convert_to_tensor(y)
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
