@@ -16,7 +16,7 @@ An *important* aspect of Project based multi-tenancy is that assets can be share
 
 ## The Hopsworks Feature Store
 
-The Hopsworks Feature Store is a tool for curating and serving machine learning features.
+The Hopsworks Feature Store is a tool for curating and serving machine learning (ML)features.
 
 !!! quote ""
     The Feature Store is a central and unified API between Data Engineers and Data Scientists.
@@ -53,7 +53,16 @@ In order to enable [online serving](overview.md#offline-vs-offline-feature-store
 
 ### Training Datasets
 
-[**Training Datasets**](concepts/training_dataset.md)
+In order to be able to train machine learning models efficiently, the feature data needs to be materialized as a [**Training Dataset**](concepts/training_dataset.md) in the file format most suitable for the ML framework used. For example, when training models with TensorFlow the ideal file format is TensorFlow's **tfrecord** format.
 
+Training datasets can be created with features from any number of feature groups, as long as the feature groups can be joined in a meaningful way.
+
+Users are able to compute [Statistics](concepts/statistics.md) also for training datasets, which will make it easy to understand a dataset's characteristics also in the future.
+
+The Hopsworks Feature Store has support for writing training datasets either to the distributed file system of Hopsworks - HopsFS - or to external storage such as S3.
 
 ## Offline vs. Online Feature Store
+
+<p align="center">
+  <img src="../assets/images/offline-online.png" width="700" alt="Offline vs. Online Feature Store">
+</p>
