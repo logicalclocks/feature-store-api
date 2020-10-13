@@ -1,6 +1,5 @@
-
-.md-header {
-    background-color: #1EB382 !important;
+:root {
+  --md-primary-fg-color: #1EB382;
 }
 
 .md-logo {
