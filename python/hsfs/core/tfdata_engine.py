@@ -74,7 +74,8 @@ class TFDataEngine:
         self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = _get_training_dataset_files(
-            self._training_dataset.location, self._split
+            self._training_dataset.location, self._split,
+            filter_empty=True if self._training_dataset_format == "csv" else False
         )
 
         if self._feature_names is None:
@@ -345,7 +346,7 @@ def _get_tfdataset(input_files, cycle_length):
     return dataset, tfrecord_feature_description
 
 
-def _get_training_dataset_files(training_dataset_location, split):
+def _get_training_dataset_files(training_dataset_location, split, filter_empty=False):
     """
     returns list of absolute path of training input files
     :param training_dataset_location: training_dataset_location
@@ -357,7 +358,7 @@ def _get_training_dataset_files(training_dataset_location, split):
     """
 
     if training_dataset_location.startswith("hopsfs"):
-        input_files = _get_hopsfs_dataset_files(training_dataset_location, split)
+        input_files = _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty)
     elif training_dataset_location.startswith("s3"):
         input_files = _get_s3_dataset_files(training_dataset_location, split)
     else:
@@ -366,7 +367,7 @@ def _get_training_dataset_files(training_dataset_location, split):
     return input_files
 
 
-def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty=False):
+def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty):
     path = training_dataset_location.replace("hopsfs", "hdfs")
     if split is None:
         path = hdfs.path.abspath(path)
