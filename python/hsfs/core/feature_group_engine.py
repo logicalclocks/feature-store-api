@@ -163,6 +163,6 @@ class FeatureGroupEngine:
             description,
             None,
             id=feature_group.id,
-            features=[],
+            features=feature_group.features,
         )
         self._feature_group_api.update_metadata(feature_group, copy_feature_group)
