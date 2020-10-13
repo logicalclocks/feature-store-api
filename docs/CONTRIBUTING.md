@@ -1,6 +1,5 @@
-# Contributing
-
 ## Python development setup
+---
 
 - Fork and clone the repository
 
@@ -31,7 +30,7 @@
     black hopsworks
     ```
 
-## Python documentation
+### Python documentation
 
 We follow a few best practices for writing the Python documentation:
 
@@ -65,7 +64,7 @@ We follow a few best practices for writing the Python documentation:
 3. REST Api implementations (e.g. FeatureGroupApi etc.) should be fully documented with docstrings without defaults.
 4. Public Api such as metadata objects should be fully documented with defaults.
 
-### Setup and Build Documentation
+#### Setup and Build Documentation
 
 We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` to auto generate Python API documentation from docstrings.
 
@@ -95,7 +94,7 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
     mkdocs serve
     ```
 
-### Adding new API documentation
+#### Adding new API documentation
 
 To add new documentation for APIs, you need to add information about the method/class to document to the `auto_doc.py` script:
 
