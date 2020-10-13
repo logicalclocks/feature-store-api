@@ -366,7 +366,7 @@ def _get_training_dataset_files(training_dataset_location, split):
     return input_files
 
 
-def _get_hopsfs_dataset_files(training_dataset_location, split):
+def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty=False):
     path = training_dataset_location.replace("hopsfs", "hdfs")
     if split is None:
         path = hdfs.path.abspath(path)
@@ -378,8 +378,13 @@ def _get_hopsfs_dataset_files(training_dataset_location, split):
     all_list = hdfs.ls(path, recursive=True)
 
     # Remove directories and spark '_SUCCESS' file if any
+    include_file = True
     for file in all_list:
-        if not hdfs.path.isdir(file) and not file.endswith("_SUCCESS"):
+        if filter_empty:
+            _file_size = hdfs.hdfs("default", 0).get_path_info(file)['size']
+            if _file_size == 0:
+                include_file = False
+        if not hdfs.path.isdir(file) and not file.endswith("_SUCCESS") and include_file:
             input_files.append(file)
 
     return input_files
