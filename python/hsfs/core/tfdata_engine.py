@@ -34,6 +34,23 @@ except ModuleNotFoundError:
 
 
 class TFDataEngine:
+    SUPPORTED_TFDTYPES = [
+        tf.float16,
+        tf.float32,
+        tf.float64,
+        tf.int16,
+        tf.int64,
+        tf.int32,
+    ]
+    SPARK_TO_TFDTYPES_MAPPINGS = {
+        "string": tf.string,
+        "short": tf.int16,
+        "int": tf.int32,
+        "long": tf.int64,
+        "float": tf.float32,
+        "double": tf.float64,
+    }
+
     def __init__(
         self,
         training_dataset,
@@ -43,24 +60,24 @@ class TFDataEngine:
         is_training,
         cycle_length,
     ):
-        """TFDataEngine object that has utility methods for efficient tf.data.TFRecordDataset reading.
+        """TFDataEngine object that has utility methods for tf.data
 
-        :param training_dataset: training dataset name
-        :type name: str, required
-        :param split: name of training dataset split. train, test or eval
-        :type split: str, required
-        :param target_name: name of the target variable
-        :type target_name: str, required
-        :param feature_names: name of training variables
-        :type feature_names: 1d array, required
-        :param is_training: whether it is for training, testing or eval
-        :type is_training: boolean, required
-        :param cycle_length: number of files to be read and deserialized in parallel.
-        :type cycle_length: int, required
-        :type engine: str, required
+        # Arguments
+        training_dataset: str, required
+            training dataset name
+        split: split: str, required
+            name of training dataset split. train, test or eval
+        target_name: str, required
+            name of the target variable
+        feature_names: 1d array, required
+            name of training variables
+        is_training: boolean, required
+            whether it is for training, testing or eval
+        cycle_length: int, required
+            number of files to be read and deserialized in parallel.
 
-        :return: feed model object
-        :rtype: TFDataEngine
+        # Returns
+            TFDataEngine object
         """
 
         self._training_dataset = training_dataset
@@ -70,7 +87,7 @@ class TFDataEngine:
         self._is_training = is_training
         self._cycle_length = cycle_length
 
-        self._training_dataset_schema = self._training_dataset.schema
+        self._features = self._training_dataset._features
         self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = _get_training_dataset_files(
@@ -80,7 +97,7 @@ class TFDataEngine:
         )
 
         if self._feature_names is None:
-            self._feature_names = [feat.name for feat in self._training_dataset_schema]
+            self._feature_names = [feat.name for feat in self._features]
 
             if target_name in self._feature_names:
                 self._feature_names.remove(target_name)
@@ -103,28 +120,37 @@ class TFDataEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        process=True,
+        process=False,
         serialized_ndarray_fname=[],
     ):
         """
-        Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
+        Reads tfrecord files and returns ParallelMapDataset or PrefetchDataset object ready to feed tf keras models
 
-        :param batch_size: size of batch, defaults to None
-        :type batch_size: int, optional
-        :param num_epochs: number of epochs to train, defaults to None
-        :type num_epochs: int, optional
-        :param one_hot_encode_labels: if set true then one hot encode lables, defaults to False
-        :type one_hot_encode_labels: boolean, optional
-        :param num_classes: if above true then provide number of target classes, defaults to None
-        :type num_classes: int, optional
-        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
-        with single input, defaults to True
-        :type  process: int, optional
-        :param serialized_ndarray_fname: names of features that contain serialised multi dimentional arrays,
-        defaults to []
-        :type  serialized_ndarray_fname: 1d array, optional
-        :return: tf dataset
-        :rtype: tf.data.TFRecordDataset
+        Example:
+            import hsfs
+            connection = hsfs.connection()
+            fs = connection.get_feature_store();
+            td = fs.get_training_dataset("sample_model", 3)
+            td.tf_data(target_name = "id").tf_csv_dataset(batch_size=1, num_epochs=1, process=True)
+
+        # Arguments
+            batch_size: int, optional
+                size of batch, defaults to `None`.
+            num_epochs: int, optional
+                number of epochs to train, defaults to `None`.
+            one_hot_encode_labels: boolean, optional
+                if set true then one hot encode labels, defaults to `False`.
+            num_classes: int, optional
+                if above true then provide number of target classes, defaults to  `None`
+            process: boolean, optional
+                if set true  api will optimise tf data read operation, and return feature vector for model
+                with single input, defaults to `False`.
+            serialized_ndarray_fname: string array, optional
+                names of features that contain serialised multi dimentional arrays, defaults to `[]`
+
+           # Returns
+                PrefetchDataset if process is set to True
+                ParallelMapDataset if process is set to False
         """
 
         if self._training_dataset_format.lower() not in ["tfrecords", "tfrecord"]:
@@ -132,7 +158,7 @@ class TFDataEngine:
                 "tf_record_dataset function works only for training datasets that have tfrecord or tfrecords format"
             )
 
-        if process and batch_size is None and num_epochs is None:
+        if process and (batch_size is None or num_epochs is None):
             raise ValueError(
                 "if process is set to True you also need to provide batch_size and num_epochs"
             )
@@ -160,10 +186,10 @@ class TFDataEngine:
             else:
                 y = tf.cast(y, tf.float32)
 
-            # if there is only 1 feature we return in
+            # if there is only 1 feature we return it
             if len(self._feature_names) == 1:
-                # here it is assumed that if user provides serialized_ndarray, it is onle one feature
                 _feature_name = self._feature_names[0]
+                # here it is assumed that if user provides serialized_ndarray, it is only one feature
                 if self._feature_names in serialized_ndarray_fname:
                     x = tf.io.parse_tensor(example[_feature_name], out_type=tf.float32)
                 else:
@@ -199,32 +225,44 @@ class TFDataEngine:
         num_epochs=None,
         one_hot_encode_labels=False,
         num_classes=None,
-        process=True,
+        process=False,
     ):
         """
-        Reads and returns tf.data.TFRecordDataset object ready to feed tf keras models
+        Reads csv files and returns CsvDatasetV2 or PrefetchDataset object ready to feed tf keras models
 
-        :param batch_size: size of batch, defaults to None
-        :type batch_size: int, optional
-        :param num_epochs: number of epochs to train, defaults to None
-        :type num_epochs: int, optional
-        :param one_hot_encode_labels: if set true then one hot encode lables, defaults to False
-        :type one_hot_encode_labels: boolean, optional
-        :param num_classes: if above true then provide number of target classes, defaults to None
-        :type num_classes: int, optional
-        :param process: if set true  api will optimise tf data read operation, and return feature vector for model
-        with single input, defaults to True
-        :type  process: int, optional
-        :return: tf dataset
-        :rtype: tf.data.TFRecordDataset
-        """
+        Example:
+            import hsfs
+            connection = hsfs.connection()
+            fs = connection.get_feature_store();
+            td = fs.get_training_dataset("sample_model", 3)
+            td.tf_data(target_name = "id").tf_csv_dataset(batch_size=1, num_epochs=1, process=True)
+
+        # Arguments
+            batch_size: int, optional
+                size of batch, defaults to `None`.
+            num_epochs: int, optional
+                number of epochs to train, defaults to `None`.
+            one_hot_encode_labels: boolean, optional
+                if set true then one hot encode labels, defaults to `False`.
+            num_classes: int, optional
+                if above true then provide number of target classes, defaults to  `None`
+            process: boolean, optional
+                if set true  api will optimise tf data read operation, and return feature vector for model
+                with single input, defaults to `False`.
+            serialized_ndarray_fname: string array, optional
+                names of features that contain serialised multi dimentional arrays, defaults to `[]`
+
+           # Returns
+                PrefetchDataset if process is set to True
+                ParallelMapDataset if process is set to False
+            """
 
         if self._training_dataset_format != "csv":
             raise ValueError(
                 "tf_csv_dataset function works only for training datasets that have csv format"
             )
 
-        if process and batch_size is None and num_epochs is None:
+        if process and (batch_size is None or num_epochs is None):
             raise ValueError(
                 "if process is set to True you also need to provide batch_size and num_epochs"
             )
@@ -234,10 +272,8 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        csv_header = [feat.name for feat in self._training_dataset_schema]
-        record_defaults = [
-            _convert2tfdtype(feat.type) for feat in self._training_dataset_schema
-        ]
+        csv_header = dict((feat.name, feat.index) for feat in self._features)
+        record_defaults = [_convert2tfdtype(feat.type) for feat in self._features]
 
         csv_dataset = tf.data.experimental.CsvDataset(
             self._input_files, header=True, record_defaults=record_defaults,
@@ -246,7 +282,7 @@ class TFDataEngine:
         def _process_csv_dataset(csv_record):
             csv_record_list = list(csv_record)
             # get target variable 1st
-            y = csv_record_list.pop(csv_header.index(self._target_name))
+            y = csv_record_list.pop(csv_header[self._target_name])
             y = tf.convert_to_tensor(y)
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
@@ -428,17 +464,8 @@ def _get_s3_dataset_files(training_dataset_location, split):
 
 
 def _convert2tfdtype(input_type):
-    supported_types = {
-        "string": tf.string,
-        "short": tf.int16,
-        "int": tf.int32,
-        "long": tf.int32,
-        "float": tf.float32,
-        "double": tf.float32,
-    }
-
     try:
-        tf_type = supported_types[input_type]
+        tf_type = TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS[input_type]
     except KeyError:
         raise ValueError("Unknown type of value, please report to hsfs maintainers")
     return tf_type
@@ -450,14 +477,7 @@ def _convert2float32(input):
             "tf.string feature is not allowed here. please provide process=False and preprocess "
             "dataset accordingly"
         )
-    elif input.dtype in [
-        tf.float16,
-        tf.float32,
-        tf.float64,
-        tf.int16,
-        tf.int64,
-        tf.int32,
-    ]:
+    elif input.dtype in TFDataEngine.SUPPORTED_TFDTYPES:
         input = tf.cast(input, tf.float32)
     else:
         raise ValueError("Unknown type of value, please report to hsfs maintainers")
