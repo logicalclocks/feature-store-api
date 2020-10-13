@@ -180,13 +180,13 @@ class FeatureGroup:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
-    def update_description(self):
+    def update_description(self, description):
         """Update the description of the feature gorup.
 
         Change the `description` attribute of the object and persist the changes by
         calling this method.
         """
-        self._feature_group_engine.update_description(self)
+        self._feature_group_engine.update_description(self, description)
         return self
 
     def compute_statistics(self):
@@ -223,24 +223,20 @@ class FeatureGroup:
         new_features = []
         if isinstance(features, feature.Feature):
             new_features.append(features)
-        elif isinstance(features, str):
-            new_features.append(features.Feature(features))
         elif isinstance(features, list):
             for feat in features:
                 if isinstance(feat, feature.Feature):
                     new_features.append(features)
-                elif isinstance(feat, str):
-                    new_features.append(features.Feature(features))
                 else:
                     raise TypeError(
-                        "The argument `features` has to be of type `Feature`, `str` or "
+                        "The argument `features` has to be of type `Feature` or "
                         "a list thereof, but an element is of type: `{}`".format(
                             type(features)
                         )
                     )
         else:
             raise TypeError(
-                "The argument `features` has to be of type `Feature`, `str` or a list "
+                "The argument `features` has to be of type `Feature` or a list "
                 "thereof, but is of type: `{}`".format(type(features))
             )
         self._feature_group_engine.append_features(self, new_features)

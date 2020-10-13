@@ -155,12 +155,12 @@ class FeatureGroupEngine:
         )
         self._feature_group_api.update_metadata(feature_group, copy_feature_group)
 
-    def update_description(self, feature_group):
+    def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup(
             None,
             None,
-            feature_group.description,
+            description,
             None,
             id=feature_group.id,
             features=[],
