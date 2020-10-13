@@ -74,5 +74,5 @@ markdown_extensions:
         clickable_checkbox: true
 
 google_analytics:
-    - UA-85730257-3
+    - UA-85730257-4
     - auto
