@@ -238,7 +238,7 @@ class TFDataEngine:
         ]
 
         csv_dataset = tf.data.experimental.CsvDataset(
-            self._input_files, header=False, record_defaults=record_defaults,
+            self._input_files, header=True, record_defaults=record_defaults,
         )
 
         def _process_csv_dataset(csv_record):
@@ -251,7 +251,7 @@ class TFDataEngine:
             else:
                 y = tf.cast(y, tf.float32)
 
-            # now get feature vector
+            # now get the feature vector
             x = []
             for feat in csv_record_list:
                 x.append(_convert2float32(tf.convert_to_tensor(feat)))
