@@ -1,12 +1,35 @@
 # Hopsworks Feature Store API
 
-![Discourse users](https://img.shields.io/discourse/users?label=Hopsworks%20Community&server=https%3A%2F%2Fcommunity.hopsworks.ai)
-[![Docs](https://img.shields.io/badge/docs-HSFS-orange)](https://docs.hopsworks.ai/)
-[![PypiStatus](https://img.shields.io/pypi/v/hsfs?color=blue)](https://pypi.org/project/hsfs/)
-[![Java](https://img.shields.io/badge/java-HSFS-green)](https://archiva.hops.works/#artifact/com.logicalclocks/hsfs)
-[![Downloads](https://pepy.tech/badge/hsfs/month)](https://pepy.tech/project/hsfs/month)
-[![CodeStyle](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![PyPI - License](https://img.shields.io/pypi/l/hsfs?color=green)
+<p align="center">
+  <a href="https://community.hopsworks.ai"><img
+    src="https://img.shields.io/discourse/users?label=Hopsworks%20Community&server=https%3A%2F%2Fcommunity.hopsworks.ai"
+    alt="Hopsworks Community"
+  /></a>
+    <a href="https://docs.hopsworks.ai"><img
+    src="https://img.shields.io/badge/docs-HSFS-orange"
+    alt="Hopsworks Feature Store Documentation"
+  /></a>
+  <a href="https://pypi.org/project/hsfs/"><img
+    src="https://img.shields.io/pypi/v/hsfs?color=blue"
+    alt="PyPiStatus"
+  /></a>
+  <a href="https://archiva.hops.works/#artifact/com.logicalclocks/hsfs"><img
+    src="https://img.shields.io/badge/java-HSFS-green"
+    alt="Scala/Java Artifacts"
+  /></a>
+  <a href="https://pepy.tech/project/hsfs/month"><img
+    src="https://pepy.tech/badge/hsfs/month"
+    alt="Downloads"
+  /></a>
+  <a href="https://github.com/psf/black"><img
+    src="https://img.shields.io/badge/code%20style-black-000000.svg"
+    alt="CodeStyle"
+  /></a>
+  <a><img
+    src="https://img.shields.io/pypi/l/hsfs?color=green"
+    alt="License"
+  /></a>
+</p>
 
 HSFS is the library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easy.
 
@@ -84,4 +107,4 @@ Please report any issue using [Github issue tracking](https://github.com/logical
 
 ## Contributing
 
-If you would like to contribute to this library, please see the [Contribution Guidelines](contributing.md).
+If you would like to contribute to this library, please see the [Contribution Guidelines](CONTRIBUTING.md).

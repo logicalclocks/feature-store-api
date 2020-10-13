@@ -19,7 +19,7 @@ def generate(dest_dir):
         project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
         template_dir="./docs/templates",
     )
-    shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "contributing.md")
+    shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "CONTRIBUTING.md")
     shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")
 
     doc_generator.generate(dest_dir / "generated")

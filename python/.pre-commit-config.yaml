@@ -1,4 +1,4 @@
-exclude: setup.py
+exclude: setup.py, auto_doc.py
 repos:
 -   repo: https://github.com/psf/black
     rev: 20.8b1

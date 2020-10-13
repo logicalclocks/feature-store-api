@@ -11,17 +11,24 @@ edit_uri: ""
 nav:
   - Introduction: index.md
   - Quickstart: quickstart.md
-  - Setup: installation.md
+  - Integrations:
+    - Overview: setup.md
+    - Databricks: integrations/databricks.md
+    - AWS Sagemaker: integrations/sagemaker.md
+    - Python: integrations/python.md
   - Concepts:
-    - Project/Connection: project.md
-    - Feature Store: feature_store.md
-    - Feature Group: feature_group.md
-    - Training Dataset: training_dataset.md
-    - Feature: feature.md
-    - Statistics: statistics.md
+    - Overview: overview.md
+    - Project/Connection: concepts/project.md
+    - Feature Store: concepts/feature_store.md
+    - Feature Group: concepts/feature_group.md
+    - Feature: concepts/feature.md
+    - Training Dataset: concepts/training_dataset.md
+    - Dataframe vs. Query: concepts/programming_interface.md
+    - Statistics: concepts/statistics.md
+    - Data Validation: concepts/data_validation.md
   - API Reference:
     - Connection: generated/connection.md
-  - Contributing: contributing.md
+  - Contributing: CONTRIBUTING.md
 
 theme:
   name: material
@@ -58,8 +65,11 @@ markdown_extensions:
     - pymdownx.tabbed
     - pymdownx.arithmatex
     - pymdownx.superfences
+    - pymdownx.details
     - toc:
         permalink: "#"
+    - pymdownx.tasklist:
+        clickable_checkbox: true
 
 google_analytics:
     - UA-85730257-3
