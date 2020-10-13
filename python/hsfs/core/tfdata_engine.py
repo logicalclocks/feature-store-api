@@ -74,8 +74,9 @@ class TFDataEngine:
         self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = _get_training_dataset_files(
-            self._training_dataset.location, self._split,
-            filter_empty=True if self._training_dataset_format == "csv" else False
+            self._training_dataset.location,
+            self._split,
+            filter_empty=True if self._training_dataset_format == "csv" else False,
         )
 
         if self._feature_names is None:
@@ -358,7 +359,9 @@ def _get_training_dataset_files(training_dataset_location, split, filter_empty=F
     """
 
     if training_dataset_location.startswith("hopsfs"):
-        input_files = _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty)
+        input_files = _get_hopsfs_dataset_files(
+            training_dataset_location, split, filter_empty
+        )
     elif training_dataset_location.startswith("s3"):
         input_files = _get_s3_dataset_files(training_dataset_location, split)
     else:
@@ -383,7 +386,7 @@ def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty):
     for file in all_list:
         # remove empty file if any
         if filter_empty:
-            _file_size = hdfs.hdfs("default", 0).get_path_info(file)['size']
+            _file_size = hdfs.hdfs("default", 0).get_path_info(file)["size"]
             if _file_size == 0:
                 include_file = False
             else:
