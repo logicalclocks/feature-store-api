@@ -217,8 +217,8 @@ class FeatureGroup:
         features is considered a breaking change.
 
         # Arguments
-            features: str, Feature or list. A feature name, feature object or
-               list thereof to append to the schema of the feature group.
+            features: Feature or list. A feature object or list thereof to append to
+                the schema of the feature group.
         """
         new_features = []
         if isinstance(features, feature.Feature):
