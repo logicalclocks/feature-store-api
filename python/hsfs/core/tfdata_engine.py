@@ -131,7 +131,7 @@ class TFDataEngine:
             connection = hsfs.connection()
             fs = connection.get_feature_store();
             td = fs.get_training_dataset("sample_model", 3)
-            td.tf_data(target_name = "id").tf_csv_dataset(batch_size=1, num_epochs=1, process=True)
+            td.tf_data(target_name = "id").tf_record_dataset(batch_size=1, num_epochs=1, process=True)
 
         # Arguments
             batch_size: int, optional
