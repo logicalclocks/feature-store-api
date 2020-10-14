@@ -43,7 +43,7 @@ public class Utils {
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
       features.add(new Feature(structField.name(), structField.dataType().catalogString(),
-          structField.dataType().catalogString(), false, false));
+          structField.dataType().catalogString(), false, false, null));
     }
 
     return features;
