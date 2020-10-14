@@ -154,7 +154,7 @@ class TFDataEngine:
         """
 
         if self._training_dataset_format.lower() not in ["tfrecords", "tfrecord"]:
-            raise ValueError(
+            raise Exception(
                 "tf_record_dataset function works only for training datasets that have tfrecord or tfrecords format"
             )
 
@@ -258,7 +258,7 @@ class TFDataEngine:
             """
 
         if self._training_dataset_format != "csv":
-            raise ValueError(
+            raise Exception(
                 "tf_csv_dataset function works only for training datasets that have csv format"
             )
 
