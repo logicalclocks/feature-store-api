@@ -183,8 +183,11 @@ class FeatureGroup:
     def update_description(self, description):
         """Update the description of the feature gorup.
 
-        Change the `description` attribute of the object and persist the changes by
-        calling this method.
+        # Arguments
+            description: str. New description string.
+
+        # Returns
+            FeatureGroup. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
         return self
@@ -219,6 +222,9 @@ class FeatureGroup:
         # Arguments
             features: Feature or list. A feature object or list thereof to append to
                 the schema of the feature group.
+
+        # Returns
+            FeatureGroup. The updated feature group object.
         """
         new_features = []
         if isinstance(features, feature.Feature):
