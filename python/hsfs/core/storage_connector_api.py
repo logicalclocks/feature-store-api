@@ -19,6 +19,7 @@ from hsfs import client, storage_connector
 
 class StorageConnectorApi:
     CONST_ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore"
+
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
