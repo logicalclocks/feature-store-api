@@ -19,8 +19,8 @@ from hsfs.core import (
     storage_connector_api,
     feature_group_base_engine,
     time_travel_format,
+    hudi_engine,
 )
-from hsfs.core.hudi_engine import HudiEngine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -76,7 +76,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             else None,
             feature_dataframe,
             self.APPEND,
-            HudiEngine.HUDI_BULK_INSERT
+            hudi_engine.HudiEngine.HUDI_BULK_INSERT
             if feature_group.time_travel_fomat
             == time_travel_format.TimeTravelFormat.HUDI
             else None,
