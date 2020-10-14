@@ -106,7 +106,9 @@ class FeatureGroupEngine:
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_statistics_config(feature_group)
+        self._feature_group_api.update_statistics_config(
+            feature_group, feature_group, "updateStatsSettings"
+        )
 
     def _get_table_name(self, feature_group):
         return (
@@ -153,7 +155,9 @@ class FeatureGroupEngine:
             id=feature_group.id,
             features=feature_group.features + new_features,
         )
-        self._feature_group_api.update_metadata(feature_group, copy_feature_group)
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
@@ -165,4 +169,6 @@ class FeatureGroupEngine:
             id=feature_group.id,
             features=feature_group.features,
         )
-        self._feature_group_api.update_metadata(feature_group, copy_feature_group)
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
