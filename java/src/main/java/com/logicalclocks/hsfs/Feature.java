@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 import org.apache.parquet.Strings;
 
@@ -44,17 +45,26 @@ public class Feature {
   @Getter @Setter
   private Boolean partition;
 
-  public Feature(String name) {
+  @Getter @Setter
+  private String defaultValue;
+
+  public Feature(@NonNull String name) {
     this.name = name;
   }
 
-  public Feature(String name, String type) {
+  public Feature(@NonNull String name, @NonNull String type) {
     this.name = name;
     this.type = type;
   }
 
+  public Feature(@NonNull String name, @NonNull String type, @NonNull String defaultValue) {
+    this.name = name;
+    this.type = type;
+    this.defaultValue = defaultValue;
+  }
+
   @Builder
-  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition)
+  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue)
       throws FeatureStoreException {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
@@ -68,5 +78,6 @@ public class Feature {
     this.onlineType = onlineType;
     this.primary = primary;
     this.partition = partition;
+    this.defaultValue = defaultValue;
   }
 }

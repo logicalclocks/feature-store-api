@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
@@ -178,8 +179,21 @@ public class FeatureGroupEngine {
   }
 
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateStatsConfig(featureGroup);
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+  }
+
+  public void updateDescription(FeatureGroup featureGroup, String description)
+      throws FeatureStoreException, IOException {
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withDescription(description), "updateMetadata");
+    featureGroup.setDescription(apiFG.getDescription());
+  }
+
+  public void appendFeatures(FeatureGroup featureGroup, List<Feature> features)
+      throws FeatureStoreException, IOException {
+    features.addAll(featureGroup.getFeatures());
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withFeatures(features), "updateMetadata");
+    featureGroup.setFeatures(apiFG.getFeatures());
   }
 }
