@@ -18,6 +18,7 @@ import datetime
 
 from hsfs import engine, statistics
 from hsfs.core import statistics_api
+from hsfs.client import exceptions
 
 
 class StatisticsEngine:
@@ -29,6 +30,12 @@ class StatisticsEngine:
     def compute_statistics(self, metadata_instance, feature_dataframe):
         """Compute statistics for a dataframe and send the result json to Hopsworks."""
         commit_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        if len(feature_dataframe.head(1)) == 0:
+            raise exceptions.FeatureStoreException(
+                "There is no data in the entity that you are trying to compute "
+                "statistics for. A possible cause might be that you inserted only data "
+                "to the online storage of a feature group."
+            )
         content_str = engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,

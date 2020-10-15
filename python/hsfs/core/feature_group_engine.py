@@ -17,6 +17,7 @@
 from hsfs import engine
 from hsfs import feature_group as fg
 from hsfs.core import feature_group_api, storage_connector_api, tags_api, hudi_engine
+from hsfs.client import exceptions
 
 
 class FeatureGroupEngine:
@@ -31,7 +32,7 @@ class FeatureGroupEngine:
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
 
-    def save(self, feature_group, feature_dataframe, storage, write_options):
+    def save(self, feature_group, feature_dataframe, write_options):
 
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
@@ -54,7 +55,7 @@ class FeatureGroupEngine:
 
         table_name = self._get_table_name(feature_group)
 
-        if storage.lower() == "online" or storage.lower() == "all":
+        if feature_group.online_enabled:
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -68,10 +69,9 @@ class FeatureGroupEngine:
             feature_group,
             feature_dataframe,
             self.APPEND,
-            hudi_engine.HudiEngine.HUDI_BULK_INSERT
-            if feature_group.time_travel_format == "HUDI"
-            else None,
-            storage,
+            hudi_engine.HudiEngine.HUDI_BULK_INSERT if feature_group.time_travel_format == "HUDI" else None,
+            feature_group.online_enabled,
+            None,
             offline_write_options,
             online_write_options,
         )
@@ -88,7 +88,13 @@ class FeatureGroupEngine:
         offline_write_options = write_options
         online_write_options = write_options
 
-        if storage.lower() == "online" or storage.lower() == "all":
+        if not feature_group.online_enabled and storage == "online":
+            raise exceptions.FeatureStoreException(
+                "Online storage is not enabled for this feature group."
+            )
+        elif (
+            feature_group.online_enabled and storage != "offline"
+        ) or storage == "online":
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -97,7 +103,7 @@ class FeatureGroupEngine:
 
             online_write_options = {**jdbc_options, **online_write_options}
 
-        if (storage.lower() == "offline" or storage.lower() == "all") and overwrite:
+        if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
         engine.get_instance().save_dataframe(
@@ -106,6 +112,7 @@ class FeatureGroupEngine:
             feature_dataframe,
             self.APPEND,
             operation,
+            feature_group.online_enabled,
             storage,
             offline_write_options,
             online_write_options,
@@ -155,8 +162,8 @@ class FeatureGroupEngine:
         """Get tag with a certain name or all tags for a feature group."""
         return [tag.to_dict() for tag in self._tags_api.get(feature_group, name)]
 
-    def sql(self, query, feature_store_name, dataframe_type, storage):
-        if storage.lower() == "online":
+    def sql(self, query, feature_store_name, dataframe_type, online):
+        if online:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             online_conn = None

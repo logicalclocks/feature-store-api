@@ -113,7 +113,7 @@ class TrainingDataset:
     def save(self, features, write_options={}):
         # TODO: Decide if we want to have potentially dangerous defaults like {}
         if isinstance(features, query.Query):
-            feature_dataframe = features.read("offline")
+            feature_dataframe = features.read()
             self._querydto = features
         else:
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
@@ -440,13 +440,15 @@ class TrainingDataset:
         """Query to generate this training dataset from online feature store."""
         return self._training_dataset_engine.query(self, "online")
 
-    def get_query(self, storage: str = "online"):
+    def get_query(self, online: bool = True):
         """Returns the query used to generate this training dataset
 
         # Arguments
-            storage: The storage for which to return the query, defaults to `"online"`.
+            online: boolean, optional. Return the query for the online storage, else
+                for offline storage, defaults to `True` - for online storage.
 
         # Returns
-            `str`. Query used to generate this training dataset.
+            `str`. Query string for the chosen storage used to generate this training
+                dataset.
         """
-        return self._training_dataset_engine.query(self, storage)
+        return self._training_dataset_engine.query(self, online)
