@@ -60,7 +60,10 @@ class FeatureGroup:
         self._version = version
         self._name = name
         self._id = id
-        self._features = [feature.Feature.from_response_json(feat) for feat in features]
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in features
+        ]
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
@@ -133,7 +136,10 @@ class FeatureGroup:
 
         user_version = self._version
         self._feature_group_engine.save(
-            self, feature_dataframe, self._default_storage, write_options,
+            self,
+            feature_dataframe,
+            self._default_storage,
+            write_options,
         )
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self, feature_dataframe)
@@ -174,6 +180,18 @@ class FeatureGroup:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
+    def update_description(self, description):
+        """Update the description of the feature gorup.
+
+        # Arguments
+            description: str. New description string.
+
+        # Returns
+            FeatureGroup. The updated feature group object.
+        """
+        self._feature_group_engine.update_description(self, description)
+        return self
+
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
         feature store.
@@ -194,6 +212,41 @@ class FeatureGroup:
                     ).format(self._name, self._version, self._default_storage),
                     util.StorageWarning,
                 )
+
+    def append_features(self, features):
+        """Append features to the schema of the feature group.
+
+        It is only possible to append features to a feature group. Removing
+        features is considered a breaking change.
+
+        # Arguments
+            features: Feature or list. A feature object or list thereof to append to
+                the schema of the feature group.
+
+        # Returns
+            FeatureGroup. The updated feature group object.
+        """
+        new_features = []
+        if isinstance(features, feature.Feature):
+            new_features.append(features)
+        elif isinstance(features, list):
+            for feat in features:
+                if isinstance(feat, feature.Feature):
+                    new_features.append(features)
+                else:
+                    raise TypeError(
+                        "The argument `features` has to be of type `Feature` or "
+                        "a list thereof, but an element is of type: `{}`".format(
+                            type(features)
+                        )
+                    )
+        else:
+            raise TypeError(
+                "The argument `features` has to be of type `Feature` or a list "
+                "thereof, but is of type: `{}`".format(type(features))
+            )
+        self._feature_group_engine.append_features(self, new_features)
+        return self
 
     def add_tag(self, name, value=None):
         """Attach a name/value tag to a feature group.

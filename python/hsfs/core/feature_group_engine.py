@@ -15,6 +15,7 @@
 #
 
 from hsfs import engine
+from hsfs import feature_group as fg
 from hsfs.core import feature_group_api, storage_connector_api, tags_api
 
 
@@ -105,7 +106,9 @@ class FeatureGroupEngine:
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_statistics_config(feature_group)
+        self._feature_group_api.update_statistics_config(
+            feature_group, feature_group, "updateStatsSettings"
+        )
 
     def _get_table_name(self, feature_group):
         return (
@@ -138,4 +141,34 @@ class FeatureGroupEngine:
             online_conn = None
         return engine.get_instance().sql(
             query, feature_store_name, online_conn, dataframe_type
+        )
+
+    def append_features(self, feature_group, new_features):
+        """Appends features to a feature group."""
+        # perform changes on copy in case the update fails, so we don't leave
+        # the user object in corrupted state
+        copy_feature_group = fg.FeatureGroup(
+            None,
+            None,
+            None,
+            None,
+            id=feature_group.id,
+            features=feature_group.features + new_features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_description(self, feature_group, description):
+        """Updates the description of a feature group."""
+        copy_feature_group = fg.FeatureGroup(
+            None,
+            None,
+            description,
+            None,
+            id=feature_group.id,
+            features=feature_group.features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
         )

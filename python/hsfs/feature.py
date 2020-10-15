@@ -26,6 +26,7 @@ class Feature:
         primary=None,
         partition=None,
         online_type=None,
+        default_value=None,
     ):
         self._name = name
         self._type = type
@@ -34,6 +35,7 @@ class Feature:
         self._primary = primary or False
         self._partition = partition or False
         self._online_type = online_type
+        self._default_value = default_value
 
     def to_dict(self):
         return {
@@ -43,6 +45,7 @@ class Feature:
             "partition": self._partition,
             "primary": self._primary,
             "onlineType": self._online_type,
+            "defaultValue": self._default_value,
         }
 
     @classmethod
@@ -54,9 +57,17 @@ class Feature:
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @property
     def type(self):
         return self._type
+
+    @type.setter
+    def type(self, type):
+        self._type = type
 
     @property
     def primary(self):
@@ -73,3 +84,11 @@ class Feature:
     @partition.setter
     def partition(self, partition):
         self._partition = partition
+
+    @property
+    def default_value(self):
+        return self._default_value
+
+    @default_value.setter
+    def default_value(self, default_value):
+        self._default_value = default_value
