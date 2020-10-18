@@ -4,7 +4,7 @@ Connecting to the Feature Store from SageMaker requires setting up a Feature Sto
 
 ## Generating an API Key
 
-In Hopsworks, click on your username in the top-right corner and select Settings to open the user settings. Select Api keys. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
+In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *Api keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
 
 !!! success "Scopes"
     The created API-Key should at least have the following scopes:
@@ -19,6 +19,9 @@ In Hopsworks, click on your username in the top-right corner and select Settings
     <figcaption>API-Keys can be generated in the User Settings on Hopsworks</figcaption>
   </figure>
 </p>
+
+!!! info
+    You are only ably to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
 
 ## Storing the API Key on AWS
 
@@ -139,7 +142,7 @@ Note that the library will not be persistent. For information around how to perm
 
 ## Connecting to the Feature Store
 
-Your are now ready to connect to the Hopsworks Feature Store from SageMaker:
+You are now ready to connect to the Hopsworks Feature Store from SageMaker:
 
 ```python
 import hsfs
@@ -155,7 +158,7 @@ fs = conn.get_feature_store()           # Get the project's default feature stor
 
 !!! info "Ports"
 
-    If you have trouble connecting, then ensure that the Security Group of your Hopsworks instance on AWS is configured to allow incoming traffic from your SageMaker instance on ports 443, 9083 and 9085. See [VPC Security Groups](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html) for more information. If your SageMaker instances are not in the same VPC as your Hopsworks instance and the Hopsworks instance is not accessible from the internet then you will need to configure [VPC Peering on AWS](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html).
+    If you have trouble connecting, please ensure that the Security Group of your Hopsworks instance on AWS is configured to allow incoming traffic from your SageMaker instance on ports 443, 9083 and 9085. See [VPC Security Groups](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html) for more information. If your SageMaker instances are not in the same VPC as your Hopsworks instance and the Hopsworks instance is not accessible from the internet then you will need to configure [VPC Peering on AWS](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html).
 
 ## Next Steps
 
