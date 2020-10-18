@@ -71,7 +71,7 @@ markdown_extensions:
     - toc:
         permalink: "#"
     - pymdownx.tasklist:
-        clickable_checkbox: true
+        custom_checkbox: true
 
 google_analytics:
     - UA-85730257-4

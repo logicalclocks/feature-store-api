@@ -34,14 +34,17 @@ The Hopsworks Feature Store is a tool for curating and serving machine learning 
 
 ## Feature Store Concepts
 
+<p align="center">
+  <figure>
+    <img src="../assets/images/fs-concepts.png" width="700" alt="Feature Store Concepts">
+    <figcaption>Entities in the Feature Store</figcaption>
+  </figure>
+</p>
+
 Entities within the Feature Store are organized hierarchically. On the most granular level are the **features** itself. Data Engineers ingest the feature data within their organization through the creation of **feature groups**. Data Scientists are then able to read selected features from the feature groups to create training datasets for model training, run batch inference with deployed models or perform inference from online models by scoring single **feature vectors**.
 
 ??? info "Feature Vector"
     A Feature Vector is a single row of feature values associated with a primary key.
-
-<p align="center">
-  <img src="../assets/images/fs-concepts.png" width="700" alt="Feature Store Concepts">
-</p>
 
 ### Feature Groups
 
@@ -63,6 +66,13 @@ The Hopsworks Feature Store has support for writing training datasets either to 
 
 ## Offline vs. Online Feature Store
 
+The Feature Store is a dual database-system, to cover all machine learning use cases it consists of high throughput offline storage layer, and additionally a low-latency online storage. The offline storage is mainly used to generate large batches of feature data, for example to be exported as training datasets. Additionally, the offline storage can be used to score large amounts of data with a machine learning model in regular intervals, so called *batch inference*. The online storage on the other hand is required for online applications, where the goal is to retrieve a single feature vector with the same logic as was applied to generate the training dataset, such that the vector can subsequently be passed to a machine learning model in production to compute a prediction. An example for *online inference* would be an e-commerce business, which would like to predict the credit score of a client when he is about to checkout his shopping cart. A client-id will be sent to the online feature store to retrieve the *historic features* for this customer, which can then be enriched by *real time features* like the value of his shopping cart, and will then be passed to the machine learning model for inference.
+
 <p align="center">
-  <img src="../assets/images/offline-online.png" width="700" alt="Offline vs. Online Feature Store">
+  <figure>
+    <img src="../assets/images/offline-online.png" width="700" alt="Offline vs. Online Feature Store">
+    <figcaption>Offline vs. Online Feature Store</figcaption>
+  </figure>
 </p>
+
+There is no database fullfilling both requirements of very low latency and and high throughput. Therefore, the Hopsworks Feature Store builds on Apache Hive with Apache Hudi as offline storage layer and MySQL Cluster (NDB) as online storage.
