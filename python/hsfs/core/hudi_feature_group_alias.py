@@ -16,23 +16,23 @@
 
 import humps
 
-from hsfs import feature_group
+from hsfs import feature_group as feature_group_module
 
 
 class HudiFeatureGroupAlias:
     def __init__(
         self,
-        hudi_feature_group,
+        feature_group,
         alias,
-        left_featuregroup_starttimestamp,
-        left_featuregroup_endtimestamp,
+        left_feature_group_start_timestamp,
+        left_feature_group_end_timestamp,
     ):
-        self._hudi_feature_group = feature_group.FeatureGroup.from_response_json(
-            hudi_feature_group
+        self._feature_group = feature_group_module.FeatureGroup.from_response_json(
+            feature_group
         )
         self._alias = alias
-        self._left_featuregroup_starttimestamp = left_featuregroup_starttimestamp
-        self._left_featuregroup_endtimestamp = left_featuregroup_endtimestamp
+        self._left_feature_group_start_timestamp = left_feature_group_start_timestamp
+        self._left_feature_group_end_timestamp = left_feature_group_end_timestamp
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -40,13 +40,17 @@ class HudiFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
+    def feature_group(self):
+        return self._feature_group
+
+    @property
     def alias(self):
         return self._alias
 
     @property
-    def left_featuregroup_starttimestamp(self):
-        return self._left_featuregroup_starttimestamp
+    def left_feature_group_start_timestamp(self):
+        return self._left_feature_group_start_timestamp
 
     @property
-    def left_featuregroup_endtimestamp(self):
-        return self._left_featuregroup_endtimestamp
+    def left_feature_group_end_timestamp(self):
+        return self._left_feature_group_end_timestamp

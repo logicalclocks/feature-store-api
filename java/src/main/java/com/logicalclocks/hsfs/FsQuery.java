@@ -35,7 +35,7 @@ public class FsQuery {
   private String queryOnline;
 
   @Getter @Setter
-  private List<HudiFeatureGroupAlias> hudiCachedFeaturegroups;
+  private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
     query = query.replace("\n", " ");

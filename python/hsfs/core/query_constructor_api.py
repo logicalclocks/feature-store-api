@@ -15,6 +15,7 @@
 #
 
 from hsfs import client
+from hsfs.core import fs_query
 
 
 class QueryConstructorApi:
@@ -22,6 +23,8 @@ class QueryConstructorApi:
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "featurestores", "query"]
         headers = {"content-type": "application/json"}
-        return _client._send_request(
-            "PUT", path_params, headers=headers, data=query.json()
+        return fs_query.FsQuery.from_response_json(
+            _client._send_request(
+                "PUT", path_params, headers=headers, data=query.json()
+            )
         )

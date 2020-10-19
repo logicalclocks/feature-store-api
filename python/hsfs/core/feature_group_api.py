@@ -178,12 +178,10 @@ class FeatureGroupApi:
             "commit",
         ]
         headers = {"content-type": "application/json"}
-        query_params = {"updateStatsSettings": True}
         return feature_group_commit_instance.update_from_response_json(
             _client._send_request(
                 "POST",
                 path_params,
-                query_params,
                 headers=headers,
                 data=feature_group_commit_instance.json(),
             ),

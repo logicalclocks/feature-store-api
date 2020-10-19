@@ -17,23 +17,25 @@
 import humps
 import json
 import warnings
+from typing import Optional
 
 from hsfs.core import query, feature_group_engine, statistics_engine
 from hsfs import util, engine, feature
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.core.time_travel_format import TimeTravelFormat
+
 
 class FeatureGroup:
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
+    HUDI = "HUDI"
 
     def __init__(
         self,
         name,
         version,
-        description,
         featurestore_id,
+        description="",
         partition_key=None,
         primary_key=None,
         featurestore_name=None,
@@ -48,7 +50,7 @@ class FeatureGroup:
         feat_hist_enabled=None,
         statistic_columns=None,
         online_enabled=False,
-        time_travel_fomat=TimeTravelFormat.HUDI,
+        time_travel_format=HUDI,
         hudi_enabled=False,
         default_storage="offline",
         statistics_config=None,
@@ -68,7 +70,7 @@ class FeatureGroup:
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
-        self._time_travel_fomat = time_travel_fomat
+        self._time_travel_format = time_travel_format
         self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
@@ -100,46 +102,92 @@ class FeatureGroup:
             featurestore_id, self.ENTITY_TYPE
         )
 
-    def read(self, wallclocktime=None, storage=None, dataframe_type="default"):
-        """Get the feature group as a DataFrame."""
+    def read(
+        self,
+        wallclock_time: Optional[str] = None,
+        storage: Optional[str] = None,
+        dataframe_type: Optional[str] = "default",
+        read_options: Optional[dict] = {},
+    ):
+        """Get the feature group as a DataFrame.
+
+        !!! example "Reading feature group as of specific point in time".
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.read("2020-10-20 07:34:11").show()
+            ```
+
+        # Arguments
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
+            feature group as of specific point in time. If not specified will return as of most recent time. Defaults to `None`.
+            storage: Storage type.
+            dataframe_type: Type of dataframe.
+            read_options: User provided read options. Defaults to `{}`.
+
+        # Returns
+            `DataFrame`.
+
+        # Raises
+            `RestAPIError`.
+        """
+
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
             ),
         )
-        if wallclocktime:
+        if wallclock_time:
             return (
                 self.select_all()
-                    .as_of(wallclocktime)
-                    .read(
+                .as_of(wallclock_time)
+                .read(
                     storage if storage else self._default_storage,
                     dataframe_type,
-                    self._time_travel_fomat,
+                    read_options,
                 )
             )
         else:
             return self.select_all().read(
                 storage if storage else self._default_storage,
                 dataframe_type,
-                self._time_travel_fomat,
+                read_options,
             )
 
     def read_changes(
-            self,
-            start_wallclocktime,
-            end_wallclocktime,
-            storage=None,
-            dataframe_type="default",
+        self,
+        start_wallclock_time: str,
+        end_wallclock_time: str,
+        read_options: Optional[dict] = {},
     ):
+        """Reads updates of this feature that occurred between specified points in time.
+
+        This function only works on feature group's with `HUDI` time travel format.
+
+        !!! example "Reading feature group commits incrementally between specified points in time".
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.read_changes("2020-10-20 07:31:38", "2020-10-20 07:34:11").show()
+            ```
+
+        # Arguments
+            start_wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+            end_wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+            read_options: User provided read options. Defaults to `{}`.
+
+        # Returns
+            `DataFrame`.
+
+        # Raises
+            `RestAPIError`.
+        """
+
         return (
             self.select_all()
-                .pull_changes(start_wallclocktime, end_wallclocktime)
-                .read(
-                storage if storage else self._default_storage,
-                dataframe_type,
-                self._time_travel_fomat,
-            )
+            .pull_changes(start_wallclock_time, end_wallclock_time)
+            .read(self._default_storage, "default", read_options)
         )
 
     def show(self, n, storage=None):
@@ -184,7 +232,34 @@ class FeatureGroup:
             )
         return self
 
-    def insert(self, features, overwrite=False, operation=None, storage=None, write_options={}):
+    def insert(
+        self,
+        features,
+        overwrite: Optional[bool] = False,
+        operation: Optional[str] = None,
+        storage: Optional[str] = None,
+        write_options: Optional[dict] = {},
+    ):
+        """Adds new data to this feature group.
+
+        If feature group's time travel format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
+
+        !!! example "Performing upsert operation on feature group with `time_travel_format="HUDI"`".
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            upsert_df = ...
+            fg.insert(upsert_df, operation="upsert")
+            ```
+
+        # Arguments
+            features: `DataFrame`: DataFrame.
+            overwrite: If set to `True` performs overwrite operation. Otherwise insert or upsert operation. Defaults to `False`.
+            operation: Aoache Hudi operation type `"insert"` or `"upsert"`. Defaults to `None`.
+            storage: Storage type. Defaults to `None`.
+            write_options: User provided write options. Defaults to `{}`.
+        """
+
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         self._feature_group_engine.insert(
@@ -210,6 +285,18 @@ class FeatureGroup:
             `RestAPIError`.
         """
         self._feature_group_engine.delete(self)
+
+    def commit_delete_record(self, delete_df, write_options: Optional[dict] = {}):
+        """Drops records in the provided DataFrame and commits it as update to this Feature group
+
+        # Arguments
+            delete_df: `DataFrame`: DataFrame.
+            write_options: User provided write options
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
     def update_statistics_config(self):
         """Update the statistics configuration of the feature group.
@@ -251,7 +338,7 @@ class FeatureGroup:
         if self.statistics_config.enabled:
             if self._default_storage.lower() in ["all", "offline"]:
                 return self._statistics_engine.compute_statistics(
-                    self, self.read("offline")
+                    self, self.read(storage="offline")
                 )
             else:
                 warnings.warn(
@@ -335,7 +422,7 @@ class FeatureGroup:
             name: Name of the tag to get, defaults to `None`.
 
         # Returns
-            `list[Tag]`. List of tags as name/value pairs
+            `list[Tag]`. List of tags as name/value pairs.
 
         # Raises
             `RestAPIError`.
@@ -361,10 +448,10 @@ class FeatureGroup:
         return {
             "id": self._id,
             "name": self._name,
-            "description": self._description,
             "version": self._version,
+            "description": self._description,
             "onlineEnabled": self._online_enabled,
-            "TimeTravelFormat": self._time_travel_fomat,
+            "timeTravelFormat": self._time_travel_format,
             "defaultStorage": self._default_storage.upper(),
             "features": self._features,
             "featurestoreId": self._feature_store_id,
@@ -401,6 +488,10 @@ class FeatureGroup:
         return self._features
 
     @property
+    def location(self):
+        return self._location
+
+    @property
     def primary_key(self):
         """List of features building the primary key."""
         return self._primary_key
@@ -411,13 +502,18 @@ class FeatureGroup:
         return self._online_enabled
 
     @property
-    def time_travel_fomat(self):
-        return self._time_travel_fomat
+    def time_travel_format(self):
+        """Setting of the feature group time travel format."""
+        return self._time_travel_format
 
     @property
     def partition_key(self):
         """List of features building the partition key."""
         return self._partition_key
+
+    @property
+    def feature_store_id(self):
+        return self._feature_store_id
 
     @property
     def feature_store_name(self):
@@ -446,9 +542,9 @@ class FeatureGroup:
     def features(self, new_features):
         self._features = new_features
 
-    @time_travel_fomat.setter
-    def time_travel_fomat(self, new_time_travel_foma):
-        self._time_travel_fomat = new_time_travel_foma
+    @time_travel_format.setter
+    def time_travel_format(self, new_time_travel_format):
+        self._time_travel_format = new_time_travel_format
 
     @primary_key.setter
     def primary_key(self, new_primary_key):

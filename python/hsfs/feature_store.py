@@ -127,14 +127,15 @@ class FeatureStore:
 
     def create_feature_group(
         self,
-        name: str,
-        version: int = None,
-        description: str = "",
-        default_storage: str = "offline",
-        online_enabled: bool = False,
-        partition_key: list = [],
-        primary_key: list = [],
-        features: list = [],
+        name,
+        version=None,
+        description="",
+        default_storage="offline",
+        online_enabled=False,
+        time_travel_format="HUDI",
+        partition_key=[],
+        primary_key=[],
+        features=[],
         statistics_config: StatisticsConfig = None,
     ):
         """Create a feature group metadata object.
@@ -182,6 +183,7 @@ class FeatureStore:
             version=version,
             description=description,
             online_enabled=online_enabled,
+            time_travel_format=time_travel_format,
             default_storage=default_storage,
             partition_key=partition_key,
             primary_key=primary_key,

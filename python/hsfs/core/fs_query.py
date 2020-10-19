@@ -23,7 +23,7 @@ class FsQuery:
         self,
         query,
         query_online,
-        hudi_feature_groups,
+        hudi_cached_feature_groups,
         href=None,
         expand=None,
         items=None,
@@ -32,10 +32,10 @@ class FsQuery:
         self._query = query
         self._query_online = query_online
 
-        if hudi_feature_groups is not None:
-            self._hudi_fg_aliases = [
+        if hudi_cached_feature_groups is not None:
+            self._hudi_cached_featuregroups = [
                 hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
-                for fg in hudi_feature_groups
+                for fg in hudi_cached_feature_groups
             ]
 
     @classmethod
@@ -52,5 +52,5 @@ class FsQuery:
         return self._query_online
 
     @property
-    def hudi_fg_aliases(self):
-        return self._hudi_fg_aliases
+    def hudi_cached_featuregroups(self):
+        return self._hudi_cached_featuregroups

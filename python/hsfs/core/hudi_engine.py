@@ -14,17 +14,14 @@
 #   limitations under the License.
 #
 
-import os
-from pathlib import Path
 
 from datetime import datetime
 
-from hsfs import feature_group_commit
+from hsfs import feature_group_commit, storage_connector, util
 from hsfs.core import feature_group_api, storage_connector_api
 
 
 class HudiEngine:
-
     HUDI_SPARK_FORMAT = "org.apache.hudi"
     HUDI_TABLE_NAME = "hoodie.table.name"
     HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type"
@@ -58,244 +55,143 @@ class HudiEngine:
     PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
     PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload"
 
-    def __init__(self, feature_group, spark_context):
-        """
-        HudiEngine object that has utility methods for handling interacting with apache hudi on hopsworks.
-
-        # Arguments
-        feature_group: FeatureGroup, required
-            metadata object of feature group
-
-        spark_context: SparkContext, required
-            SparkContext
-        """
-
+    def __init__(
+        self,
+        feature_store_id,
+        feature_store_name,
+        feature_group,
+        spark_context,
+        spark_session,
+    ):
         self._feature_group = feature_group
         self._spark_context = spark_context
-        self._feature_store_name = self._feature_group.feature_store_name
+        self._spark_session = spark_session
+        self._feature_store_id = feature_store_id
+        self._feature_store_name = feature_store_name
         self._base_path = self._feature_group.location
-        self._table_name = feature_group.name + "_" + feature_group.version
-        self._partition_key = feature_group.partition_key
-        self._partition_key = feature_group.partition_key[0]
+        self._table_name = feature_group.name + "_" + str(feature_group.version)
+
+        self._primary_key = ",".join(feature_group.primary_key)
+        self._partition_key = ",".join(feature_group.partition_key)
+        self._partition_path = ":SIMPLE,".join(feature_group.partition_key) + ":SIMPLE"
+        self._pre_combine_key = feature_group.partition_key[0]
+
+        self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_group.feature_store_id
+            self._feature_store_id
         )
         self._connstr = self._storage_connector_api.get(
-            self._feature_group.feature_store_name, "JDBC"
-        )
-
-    def save_hudi_fg(self, dataset, save_mode, operation):
-        """
-        Save feature group as hudi format and save commit metadata in the backend.
-
-        # Arguments
-        feature_group_instance: FeatureGroup, required
-            metadata object of feature group
-        feature_group_commit_instance: FeatureGroupCommit, required
-            metadata object of feature group commit
-
-        # Returns
-            FeatureGroupCommit
-        """
-
-        fg_commit = _write_hudi_dataset(
-            self._spark_context,
-            self._connstr,
-            dataset,
-            save_mode,
-            self._base_path,
-            operation,
             self._feature_store_name,
-            self._table_name,
-            self._recordkey,
-            self._partitionkey,
-            self._precombinekey,
+            storage_connector.StorageConnector.JDBC,
+        ).connection_string
+
+    def save_hudi_fg(self, dataset, save_mode, operation, write_options):
+        fg_commit = self._write_hudi_dataset(
+            dataset, save_mode, operation, write_options
         )
+        return self._feature_group_api.commit(self._feature_group, fg_commit)
 
-        # TODO (davit): make sure writing completed without exception
-        api_responce_fgcommit = feature_group_api.commit(self._feature_group, fg_commit)
-        return api_responce_fgcommit
-
-    def register_temporary_table(self, alias, start_timestamp, end_timestamp):
-        """
-        Register temporary table as hudi format and save commit metadata in the backend.
-
-        # Arguments
-        dataset: Dataset, required
-            Spark Data Frame to be saved as feature group in hopsworks feature store
-        alias: string, required
-            alias name for temporary table
-        start_timestamp: long, required
-             timestamp to start retrieving commits
-        end_timestamp: long, required
-             timestamp till retrieving commits
-
-        # Returns
-
-        """
-        self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
-        self._spark_session.conf.set(
-            "mapreduce.input.pathFilter.class",
-            self._spark_context._jvm.org.apache.hudi.hadoop.HoodieROTablePathFilter.getClass(),
-            self._spark_context._jvm.org.apache.hadoop.fs.PathFilter.getClass(),
+    def delete_record(self, delete_df, write_options):
+        fg_commit = self._write_hudi_dataset(
+            delete_df, "append", self.HUDI_UPSERT, write_options
         )
+        return self._feature_group_api.commit(self._feature_group, fg_commit)
 
-        hudi_options = _setup_hudi_read_opts(
-            self._partition_key, self._base_path, start_timestamp, end_timestamp
+    def register_temporary_table(
+        self, alias, start_timestamp, end_timestamp, read_options
+    ):
+        hudi_options = self._setup_hudi_read_opts(
+            start_timestamp, end_timestamp, read_options
         )
-        self._spark_session.read().format(self.HUDI_SPARK_FORMAT).options(
+        self._spark_session.read.format(self.HUDI_SPARK_FORMAT).options(
             **hudi_options
-        ).load(self._base_path).registerTempTable(alias)
+        ).load(self._base_path).createOrReplaceTempView(alias)
 
+    def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
+        hudi_options = self._setup_hudi_write_opts(operation, write_options)
 
-def _write_hudi_dataset(
-    spark_context,
-    connstr,
-    dataset,
-    save_mode,
-    base_path,
-    operation,
-    feature_store_name,
-    table_name,
-    recordkey,
-    partitionkey,
-    precombinekey,
-):
+        dataset.write.format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
+            save_mode
+        ).save(self._base_path)
 
-    hudi_options = _setup_hudi_write_opts(
-        connstr,
-        feature_store_name,
-        table_name,
-        operation,
-        recordkey,
-        partitionkey,
-        precombinekey,
-    )
-
-    supported_ops = ["upsert", "insert", "bulk_insert"]
-
-    if operation not in supported_ops:
-        raise ValueError(
-            "Unknown operation "
-            + operation
-            + " is provided. Please use either upsert, insert or bulk_insert"
+        feature_group_commit = self._get_last_commit_metadata(
+            self._spark_context, self._base_path
         )
 
-    hudi_options[HudiEngine.HUDI_TABLE_OPERATION] = operation
+        return feature_group_commit
 
-    dataset.write().format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
-        save_mode
-    ).save(base_path)
+    def _setup_hudi_write_opts(self, operation, write_options):
+        _jdbc_url = self._get_conn_str()
+        hudi_options = {
+            self.HUDI_KEY_GENERATOR_OPT_KEY: self.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL,
+            self.HUDI_PRECOMBINE_FIELD: self._pre_combine_key,
+            self.HUDI_RECORD_KEY: self._primary_key,
+            self.HUDI_PARTITION_FIELD: self._partition_path,
+            self.HUDI_TABLE_NAME: self._table_name,
+            self.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY: self.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL,
+            self.HUDI_HIVE_SYNC_ENABLE: "true",
+            self.HUDI_HIVE_SYNC_TABLE: self._table_name,
+            self.HUDI_HIVE_SYNC_JDBC_URL: _jdbc_url,
+            self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
+            self.HUDI_HIVE_SYNC_PARTITION_FIELDS: self._partition_key,
+            self.HUDI_TABLE_OPERATION: operation,
+        }
 
-    feature_group_commit = _get_last_commit_metadata(spark_context, base_path)
-    return feature_group_commit
+        if write_options:
+            hudi_options.update(write_options)
 
+        return hudi_options
 
-def _setup_hudi_write_opts(
-    connstr, feature_store_name, tableName, operation, recordkey, partition, precombine
-):
-    pw = _get_cert_pw()
-    jdbc_url = (
-        connstr
-        + "sslTrustStore=t_certificate;trustStorePassword="
-        + pw
-        + ";sslKeyStore=k_certificate;keyStorePassword="
-        + pw
-    )
+    def _setup_hudi_read_opts(self, start_timestamp, end_timestamp, read_options):
+        _hudi_commit_start_time = self._timestamp_to_hudiformat(start_timestamp)
+        _hudi_commit_end_time = self._timestamp_to_hudiformat(end_timestamp)
 
-    hudi_options = {
-        HudiEngine.HUDI_PRECOMBINE_FIELD: precombine,
-        HudiEngine.HUDI_RECORD_KEY: recordkey,
-        HudiEngine.HUDI_PARTITION_FIELD: partition,
-        HudiEngine.HUDI_TABLE_NAME: tableName,
-        HudiEngine.HUDI_HIVE_SYNC_ENABLE: "true",
-        HudiEngine.HUDI_HIVE_SYNC_TABLE: tableName,
-        HudiEngine.HUDI_HIVE_SYNC_JDBC_URL: jdbc_url,
-        HudiEngine.HUDI_HIVE_SYNC_DB: feature_store_name,
-        # TODO (davit):
-        "hoodie.upsert.shuffle.parallelism": 2,
-        "hoodie.insert.shuffle.parallelism": 2,
-    }
+        hudi_options = {
+            self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
+            self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
+            self.HUDI_END_INSTANTTIME_OPT_KEY: _hudi_commit_end_time,
+        }
 
-    return hudi_options
+        if read_options:
+            hudi_options.update(read_options)
 
+        return hudi_options
 
-def _setup_hudi_read_opts(partition_key, base_path, start_timestamp, end_timestamp):
+    def _get_last_commit_metadata(self, spark_context, base_path):
+        hopsfs_conf = spark_context._jvm.org.apache.hadoop.fs.FileSystem.get(
+            spark_context._jsc.hadoopConfiguration()
+        )
+        commit_timeline = spark_context._jvm.org.apache.hudi.HoodieDataSourceHelpers.allCompletedCommitsCompactions(
+            hopsfs_conf, base_path
+        )
 
-    hudi_options = {}
-    number_partitions = len(partition_key)
+        commits_to_return = commit_timeline.getInstantDetails(
+            commit_timeline.lastInstant().get()
+        ).get()
+        commit_metadata = spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes(
+            commits_to_return,
+            spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata().getClass(),
+        )
+        return feature_group_commit.FeatureGroupCommit(
+            commitid=None,
+            commit_date_string=commit_timeline.lastInstant().get().getTimestamp(),
+            rows_inserted=commit_metadata.fetchTotalInsertRecordsWritten(),
+            rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
+            rows_deleted=commit_metadata.getTotalRecordsDeleted(),
+        )
 
-    # Snapshot query
-    if start_timestamp is None and end_timestamp is None:
-        hudi_options["hoodie.datasource.query.type"] = "snapshot"
-        _base_path = base_path + "/*" * (number_partitions + 1)
-    elif end_timestamp is not None:
-        hudi_options["hoodie.datasource.query.type"] = "incremental"
-        hudi_commit_endtime = _timestamp2hudiformat(end_timestamp)
-        # point in time  query
-        if start_timestamp is None:
-            hudi_options["hoodie.datasource.query.type"] = "000"
-            hudi_options["hoodie.datasource.read.end.instanttime"] = hudi_commit_endtime
-        # incremental  query
-        elif start_timestamp is not None:
-            hudi_commit_starttime = _timestamp2hudiformat(start_timestamp)
-            hudi_options[
-                "hoodie.datasource.read.begin.instanttime"
-            ] = hudi_commit_starttime
-            hudi_options["hoodie.datasource.read.end.instanttime"] = hudi_commit_endtime
+    def _timestamp_to_hudiformat(self, timestamp):
+        date_obj = datetime.fromtimestamp(timestamp / 1000)
+        date_str = date_obj.strftime("%Y%m%d%H%M%S")
+        return date_str
 
-    return hudi_options
-
-
-def _get_last_commit_metadata(spark_context, base_path):
-
-    hopsfs_conf = spark_context._jvm.org.apache.hadoop.fs.FileSystem.get(
-        spark_context._jsc.hadoopConfiguration()
-    )
-    commit_timeline = spark_context._jvm.org.apache.hudi.HoodieDataSourceHelpers.allCompletedCommitsCompactions(
-        hopsfs_conf, base_path
-    )
-
-    commits2return = commit_timeline.getInstantDetails(
-        commit_timeline.lastInstant().get()
-    ).get()
-    commit_metadata = spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes(
-        commits2return,
-        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata().getClass(),
-    )
-
-    rows_inserted = commit_metadata.fetchTotalInsertRecordsWritten()
-    rows_updated = commit_metadata.fetchTotalUpdateRecordsWritten()
-    rows_deleted = commit_metadata.getTotalRecordsDeleted()
-
-    fg_commit_metadata = feature_group_commit.FeatureGroupCommit(
-        commitid=None,
-        commitdatestring=None,
-        rowsinserted=rows_inserted,
-        rowsupdated=rows_updated,
-        rowsdeleted=rows_deleted,
-    )
-
-    return fg_commit_metadata
-
-
-def _timestamp2hudiformat(timestamp):
-    date_obj = datetime.fromtimestamp(timestamp)
-    date_str = date_obj.strftime("%Y%m%d%H%M%S")
-    return date_str
-
-
-def _get_cert_pw():
-    """
-    Get keystore password from local container
-    Returns:
-        Certificate password
-    """
-    pwd_path = Path("material_passwd")
-    if not pwd_path.exists():
-        username = os.environ["HADOOP_USER_NAME"]
-        material_directory = Path(os.environ["MATERIAL_DIRECTORY"])
-        pwd_path = material_directory.joinpath(username + "__cert.key")
-
-    with pwd_path.open() as f:
-        return f.read()
+    def _get_conn_str(self):
+        pw = util.get_cert_pw()
+        jdbc_url = (
+            self._connstr
+            + "sslTrustStore=t_certificate;trustStorePassword="
+            + pw
+            + ";sslKeyStore=k_certificate;keyStorePassword="
+            + pw
+        )
+        return jdbc_url

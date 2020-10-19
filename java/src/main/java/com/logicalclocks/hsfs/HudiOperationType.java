@@ -16,26 +16,18 @@
 
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Setter;
+public enum HudiOperationType {
+  BULK_INSERT("bulk_insert"),
+  INSERT("insert"),
+  UPSERT("upsert");
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroupCommit {
-  @Getter @Setter
-  private Long commitID;
-  @Getter @Setter
-  private String commitDateString;
-  @Getter @Setter
-  private Long rowsInserted;
-  @Getter @Setter
-  private Long rowsUpdated;
-  @Getter @Setter
-  private Long rowsDeleted;
+  private final String value;
+
+  private HudiOperationType(String value) {
+    this.value = value;
+  }
+
+  public String getValue() {
+    return value;
+  }
 }

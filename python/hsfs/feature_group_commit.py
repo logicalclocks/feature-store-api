@@ -24,17 +24,16 @@ class FeatureGroupCommit:
     def __init__(
         self,
         commitid=None,
-        commitdatestring=None,
-        rowsinserted=None,
-        rowsupdated=None,
-        rowsdeleted=None,
+        commit_date_string=None,
+        rows_inserted=None,
+        rows_updated=None,
+        rows_deleted=None,
     ):
-
         self._commitid = commitid
-        self._commitdatestring = commitdatestring
-        self._rowsinserted = rowsinserted
-        self._rowsupdated = rowsupdated
-        self._rowsdeleted = rowsdeleted
+        self._commit_date_string = commit_date_string
+        self._rows_inserted = rows_inserted
+        self._rows_updated = rows_updated
+        self._rows_deleted = rows_deleted
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -43,6 +42,9 @@ class FeatureGroupCommit:
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("href")
+        _ = json_decamelized.pop("committime")
         self.__init__(**json_decamelized)
         return self
 
@@ -52,10 +54,10 @@ class FeatureGroupCommit:
     def to_dict(self):
         return {
             "commitID": self._commitid,
-            "commitDateString": self._commitdatestring,
-            "rowsInserted": self._rowsinserted,
-            "rowsUpdated": self._rowsupdated,
-            "rowsDeleted": self._rowsdeleted,
+            "commitDateString": self._commit_date_string,
+            "rowsInserted": self._rows_inserted,
+            "rowsUpdated": self._rows_updated,
+            "rowsDeleted": self._rows_deleted,
         }
 
     @property
@@ -63,37 +65,37 @@ class FeatureGroupCommit:
         return self._commitid
 
     @property
-    def commitdatestring(self):
-        return self._commitdatestring
+    def commit_date_string(self):
+        return self._commit_date_string
 
     @property
-    def rowsinserted(self):
-        return self._rowsinserted
+    def rows_inserted(self):
+        return self._rows_inserted
 
     @property
-    def rowsupdated(self):
-        return self._rowsupdated
+    def rows_updated(self):
+        return self._rows_updated
 
     @property
-    def rowsdeleted(self):
-        return self._rowsdeleted
+    def rows_deleted(self):
+        return self._rows_deleted
 
     @commitid.setter
     def commitid(self, commitid):
         self._commitid = commitid
 
-    @commitdatestring.setter
-    def commitdatestring(self, commitdatestring):
-        self._commitdatestring = commitdatestring
+    @commit_date_string.setter
+    def commit_date_string(self, commit_date_string):
+        self._commit_date_string = commit_date_string
 
-    @rowsinserted.setter
-    def rowsinserted(self, rowsinserted):
-        self._rowsinserted = rowsinserted
+    @rows_inserted.setter
+    def rows_inserted(self, rows_inserted):
+        self._rows_inserted = rows_inserted
 
-    @rowsupdated.setter
-    def rowsupdated(self, rowsupdated):
-        self._rowsupdated = rowsupdated
+    @rows_updated.setter
+    def rows_updated(self, rows_updated):
+        self._rows_updated = rows_updated
 
-    @rowsdeleted.setter
-    def rowsdeleted(self, rowsdeleted):
-        self._rowsdeleted = rowsdeleted
+    @rows_deleted.setter
+    def rows_deleted(self, rows_deleted):
+        self._rows_deleted = rows_deleted

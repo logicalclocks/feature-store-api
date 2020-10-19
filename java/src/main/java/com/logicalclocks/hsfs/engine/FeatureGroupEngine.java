@@ -21,12 +21,11 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.util.Constants;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
@@ -44,6 +43,7 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  private HudiEngine hudiEngine = new HudiEngine();
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -101,7 +101,6 @@ public class FeatureGroupEngine {
     // Update the original object - Hopsworks returns the incremented version
     featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
-    // TODO (davit): this must be Getter only.
     featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
@@ -110,11 +109,11 @@ public class FeatureGroupEngine {
     // Write the dataframe
     saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
             featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-                    ? Constants.HUDI_BULK_INSERT : null, writeOptions);
+                    ? HudiOperationType.BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, String operation, Map<String, String> writeOptions)
+                            SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -145,8 +144,8 @@ public class FeatureGroupEngine {
    * @param operation
    * @param writeOptions
    */
-  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, String operation, Map<String, String> writeOptions)
+  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
+                                    HudiOperationType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
@@ -169,7 +168,6 @@ public class FeatureGroupEngine {
         SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
-
 
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroup);
@@ -195,14 +193,12 @@ public class FeatureGroupEngine {
 
   public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
-    FeatureGroupCommit[] commits = featureGroupApi.commitDetails(featureGroup, limit);
-    return commits;
+    return featureGroupApi.commitDetails(featureGroup, limit);
   }
 
-  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset)
-      throws IOException, FeatureStoreException {
-    FeatureGroupCommit featureGroupCommit = SparkEngine.getInstance().commitDelete(featureGroup, dataset);
-    return featureGroupCommit;
+  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
+                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException {
+    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 
   public void updateDescription(FeatureGroup featureGroup, String description)

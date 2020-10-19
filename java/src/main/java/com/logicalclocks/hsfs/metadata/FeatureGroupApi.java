@@ -189,8 +189,6 @@ public class FeatureGroupApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    FeatureGroupCommit[] commitDetails = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit[].class);
-
-    return commitDetails;
+    return hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit[].class);
   }
 }

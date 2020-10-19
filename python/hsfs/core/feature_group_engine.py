@@ -16,7 +16,7 @@
 
 from hsfs import engine
 from hsfs import feature_group as fg
-from hsfs.core import feature_group_api, storage_connector_api, tags_api
+from hsfs.core import feature_group_api, storage_connector_api, tags_api, hudi_engine
 
 
 class FeatureGroupEngine:
@@ -65,16 +65,11 @@ class FeatureGroupEngine:
 
         engine.get_instance().save_dataframe(
             table_name,
-            feature_group.partition_key,
-            feature_group
-            if feature_group.time_travel_fomat
-            == time_travel_format.TimeTravelFormat.HUDI
-            else None,
+            feature_group,
             feature_dataframe,
             self.APPEND,
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
-            if feature_group.time_travel_fomat
-            == time_travel_format.TimeTravelFormat.HUDI
+            if feature_group.time_travel_format == "HUDI"
             else None,
             storage,
             offline_write_options,
@@ -107,11 +102,7 @@ class FeatureGroupEngine:
 
         engine.get_instance().save_dataframe(
             self._get_table_name(feature_group),
-            feature_group.partition_key,
-            feature_group
-            if feature_group.time_travel_fomat
-            == time_travel_format.TimeTravelFormat.HUDI
-            else None,
+            feature_group,
             feature_dataframe,
             self.APPEND,
             operation,
@@ -122,6 +113,17 @@ class FeatureGroupEngine:
 
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
+
+    @staticmethod
+    def commit_delete(feature_group, delete_df, write_options):
+        hudi_engine_instance = hudi_engine.HudiEngine(
+            feature_group.feature_store_id,
+            feature_group.feature_store_name,
+            feature_group,
+            engine.get_instance()._spark_context,
+            engine.get_instance()._spark_session,
+        )
+        return hudi_engine_instance.delete_record(delete_df, write_options)
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""

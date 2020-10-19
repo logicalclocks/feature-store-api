@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
+import os
 import json
 
-
+from pathlib import Path
 from hsfs import feature
 
 
@@ -42,6 +43,27 @@ def parse_features(feature_names):
         return [validate_feature(feat) for feat in feature_names]
     else:
         return []
+
+
+def get_cert_pw():
+    """
+    Get keystore password from local container
+
+    Returns:
+        Certificate password
+    """
+    hadoop_user_name = "hadoop_user_name"
+    crypto_material_password = "material_passwd"
+    material_directory = "MATERIAL_DIRECTORY"
+    password_suffix = "__cert.key"
+    pwd_path = Path(crypto_material_password)
+    if not pwd_path.exists():
+        username = os.environ[hadoop_user_name]
+        material_directory = Path(os.environ[material_directory])
+        pwd_path = material_directory.joinpath(username + password_suffix)
+
+    with pwd_path.open() as f:
+        return f.read()
 
 
 class VersionWarning(Warning):
