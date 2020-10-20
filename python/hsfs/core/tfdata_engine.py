@@ -65,7 +65,7 @@ class TFDataEngine:
         # Arguments
             training_dataset: str. Name of the training dataset.
             training dataset name
-        split: split: str, required
+        split: str, required
             name of training dataset split. train, test or eval
         target_name: str, required
             name of the target variable
