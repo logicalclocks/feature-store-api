@@ -61,7 +61,15 @@ class TFDataEngine:
         cycle_length,
     ):
         """TFDataEngine object that has utility methods for tf.data
+        !!! example "TFRecordDataset"
 
+        ```python
+        train_input_feeder = training_dataset.tf_data(target_name="label",
+                                                      split="train",
+                                                      is_training=True)
+        train_input = train_input_feeder.tf_record_dataset()
+        ```
+        
         # Arguments
         training_dataset: str, required
             training dataset name
