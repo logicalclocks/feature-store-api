@@ -63,7 +63,7 @@ class TFDataEngine:
         """TFDataEngine object that has utility methods for tf.data
 
         # Arguments
-        training_dataset: str, required
+            training_dataset: str. Name of the training dataset.
             training dataset name
         split: split: str, required
             name of training dataset split. train, test or eval
