@@ -77,7 +77,8 @@ class TFDataEngine:
             number of files to be read and deserialized in parallel.
 
         # Returns
-            TFDataEngine object
+            TFDataEngine. This engine can be used to generate `tf.data`-Datasets,
+                ready to be consumed as input for model training.
         """
 
         self._training_dataset = training_dataset
