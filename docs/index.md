@@ -1,4 +1,4 @@
-# Hopsworks Feature Store API
+# Hopsworks Feature Store
 
 <p align="center">
   <a href="https://community.hopsworks.ai"><img

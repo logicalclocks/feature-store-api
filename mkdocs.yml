@@ -16,16 +16,16 @@ nav:
     - Databricks: integrations/databricks.md
     - AWS Sagemaker: integrations/sagemaker.md
     - Python: integrations/python.md
-  - Concepts:
+  - Guides:
     - Overview: overview.md
-    - Project/Connection: concepts/project.md
-    - Feature Store: concepts/feature_store.md
-    - Feature Group: concepts/feature_group.md
-    - Feature: concepts/feature.md
-    - Training Dataset: concepts/training_dataset.md
-    - Dataframe vs. Query: concepts/programming_interface.md
-    - Statistics: concepts/statistics.md
-    - Data Validation: concepts/data_validation.md
+    - Project/Connection: guides/project.md
+    - Feature Store: guides/feature_store.md
+    - Feature Group: guides/feature_group.md
+    - Feature: guides/feature.md
+    - Training Dataset: guides/training_dataset.md
+    - Dataframe vs. Query: guides/programming_interface.md
+    - Statistics: guides/statistics.md
+    - Data Validation: guides/data_validation.md
   - API Reference:
     - Connection: generated/connection.md
   - Contributing: CONTRIBUTING.md
