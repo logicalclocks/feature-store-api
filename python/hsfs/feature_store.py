@@ -24,11 +24,14 @@ from hsfs import (
     feature,
     util,
     storage_connector,
+    expectation,
+    rule,
 )
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     training_dataset_api,
+    expectations_api,
     feature_group_engine,
 )
 from hsfs.statistics_config import StatisticsConfig
@@ -80,6 +83,7 @@ class FeatureStore:
             self._id
         )
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
+        self._expectations_api = expectations_api.ExpectationsApi(self._id)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
 
@@ -220,6 +224,39 @@ class FeatureStore:
         """
         return self._storage_connector_api.get_online_connector()
 
+    def get_expectation(self, name: str):
+        """Get an expectation entity from the feature store.
+
+        Getting an expectation from the Feature Store means getting its metadata handle
+        so you can subsequently add features and/or rules and save it which will overwrite the previous instance.
+
+        # Arguments
+            name: Name of the training dataset to get.
+
+        # Returns
+            `Expectation`: The expectation metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve the expectation from the feature store.
+        """
+
+        return self._expectations_api.get(name)
+
+    def get_expectations(self):
+        """Get all expectation entities from the feature store.
+
+        Getting expectations from the Feature Store means getting their metadata handles
+        so you can subsequently add features and/or rules and save it which will overwrite the previous instance.
+
+        # Returns
+            `Expectation`: The expectation metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve the expectations from the feature store.
+        """
+
+        return self._expectations_api.get()
+
     def create_feature_group(
         self,
         name: str,
@@ -232,6 +269,8 @@ class FeatureStore:
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
     ):
         """Create a feature group metadata object.
 
@@ -275,6 +314,12 @@ class FeatureStore:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -292,6 +337,8 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+            validation_type=validation_type,
+            expectations=expectations,
         )
 
     def create_on_demand_feature_group(
@@ -448,6 +495,38 @@ class FeatureStore:
             seed=seed,
             statistics_config=statistics_config,
             label=label,
+        )
+
+    def create_expectation(
+        self,
+        name: str,
+        description: Optional[str] = "",
+        features: Optional[List[str]] = [],
+        rules: Optional[List[rule.Rule]] = [],
+    ):
+        """Create an expectation metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist the expectation in the
+            feature store on its own. To materialize the expectation and save
+            call the `save()` method of the expectation metadata object.
+
+        # Arguments
+            name: Name of the training dataset to create.
+            description: A string describing the expectation that can describe its business logic and applications
+                within the feature store.
+            features: The features this expectation is applied on.
+            rules: The validation rules this expectation will apply to the its features.
+
+        # Returns:
+            `Expectation`: The expectation metadata object.
+        """
+        return expectation.Expectation(
+            name=name,
+            description=description,
+            features=features,
+            rules=rules,
+            featurestore_id=self._id,
         )
 
     @property

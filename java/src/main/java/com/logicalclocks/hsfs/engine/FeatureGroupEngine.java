@@ -24,8 +24,10 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -42,6 +44,7 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private HudiEngine hudiEngine = new HudiEngine();
+
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -126,15 +129,22 @@ public class FeatureGroupEngine {
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
+    Integer validationId = null;
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      FeatureGroupValidation validation = featureGroup.validate(dataset);
+      if (validation != null) {
+        validationId = validation.getValidationId();
+      }
+    }
     if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
           + "write to the offline storage.");
     } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, validationId);
     } else if (storage == Storage.ONLINE) {
       saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, validationId);
       saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
@@ -151,7 +161,8 @@ public class FeatureGroupEngine {
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                    HudiOperationType operation, Map<String, String> writeOptions)
+                                    HudiOperationType operation, Map<String, String> writeOptions,
+                                    Integer validationId)
       throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
@@ -163,7 +174,8 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions,
+        validationId);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
@@ -197,5 +209,9 @@ public class FeatureGroupEngine {
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
+  }
+
+  public void updateValidationType(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    featureGroupApi.updateMetadata(featureGroup, "validationType", featureGroup.getValidationType());
   }
 }

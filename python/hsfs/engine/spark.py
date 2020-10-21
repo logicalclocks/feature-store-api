@@ -17,8 +17,8 @@
 import importlib.util
 import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 # in case importing in %%local
 try:
@@ -171,7 +171,9 @@ class Engine:
         storage,
         offline_write_options,
         online_write_options,
+        validation_id=None,
     ):
+
         if storage == "offline" or not online_enabled:
             self._save_offline_dataframe(
                 table_name,
@@ -180,6 +182,7 @@ class Engine:
                 save_mode,
                 operation,
                 offline_write_options,
+                validation_id,
             )
         elif storage == "online":
             self._save_online_dataframe(
@@ -210,6 +213,7 @@ class Engine:
         save_mode,
         operation,
         write_options,
+        validation_id=None,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -220,7 +224,7 @@ class Engine:
                 self._spark_context,
             )
             hudi_engine_instance.save_hudi_fg(
-                dataframe, save_mode, operation, write_options
+                dataframe, save_mode, operation, write_options, validation_id
             )
         else:
             dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
@@ -330,6 +334,45 @@ class Engine:
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
                 dataframe._jdf, relevant_columns, correlations, histograms
             )
+        )
+
+    def validate(self, dataframe, expectations):
+        """Run data validation on the dataframe with Deequ."""
+
+        expectations_java = []
+        for expectation in expectations:
+            rules = []
+            for rule in expectation.rules:
+                rules.append(
+                    self._jvm.com.logicalclocks.hsfs.metadata.validation.Rule.builder()
+                    .name(
+                        self._jvm.com.logicalclocks.hsfs.metadata.validation.RuleName.valueOf(
+                            rule.get("name")
+                        )
+                    )
+                    .level(
+                        self._jvm.com.logicalclocks.hsfs.metadata.validation.Level.valueOf(
+                            rule.get("level")
+                        )
+                    )
+                    .min(rule.get("min", None))
+                    .max(rule.get("max", None))
+                    .pattern(rule.get("pattern", None))
+                    .legalValues(rule.get("legalValues", None))
+                    .build()
+                )
+            expectation = (
+                self._jvm.com.logicalclocks.hsfs.metadata.Expectation.builder()
+                .name(expectation.name)
+                .description(expectation.description)
+                .features(expectation.features)
+                .rules(rules)
+                .build()
+            )
+            expectations_java.append(expectation)
+
+        return self._jvm.com.logicalclocks.hsfs.engine.DataValidationEngine.getInstance().validate(
+            dataframe._jdf, expectations_java
         )
 
     def write_options(self, data_format, provided_options):

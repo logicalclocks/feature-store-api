@@ -17,35 +17,33 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.logicalclocks.hsfs.metadata.validation.RuleName;
+import com.logicalclocks.hsfs.metadata.validation.Predicate;
+import com.logicalclocks.hsfs.metadata.validation.ValueType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public abstract class RestDto<D> {
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Builder
+/*
+  Used when fetching validation rules from the /rules resource.
+ */
+public class RuleDefinition extends RestDto<RuleDefinition> {
 
-  protected List<D> items = new ArrayList<>();
-  protected Integer count = null;
-
-  public RestDto() {
-  }
-
-  public List<D> getItems() {
-    return items;
-  }
-
-  public void setItems(List<D> items) {
-    this.items = items;
-  }
-
-  public void setCount(Integer count) {
-    this.count = count;
-  }
-
-  public Integer getCount() {
-    return count;
-  }
+  @Getter @Setter
+  private RuleName name;
+  @Getter @Setter
+  private Predicate predicate;
+  @Getter @Setter
+  private ValueType valueType;
+  @Getter @Setter
+  private String description;
 
 }
