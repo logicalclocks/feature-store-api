@@ -132,6 +132,15 @@ train_input = tf_data_object.tf_record_dataset(batch_size=32,
                                                process=True)
 ```
 
+A short introduction to the Scala API:
+```scala
+import com.logicalclocks.hsfs._
+val connection = HopsworksConnection.builder().build()
+val fs = connection.getFeatureStore();
+val attendances_features_fg = fs.getFeatureGroup("games_features", 1);
+attendances_features_fg.show(1)
+```
+
 You can find more examples on how to use the library in our [hops-examples](https://github.com/logicalclocks/hops-examples) repository.
 
 ## Documentation

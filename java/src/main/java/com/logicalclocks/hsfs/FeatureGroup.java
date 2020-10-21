@@ -19,9 +19,12 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.DataValidationEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
+import com.logicalclocks.hsfs.metadata.Rule;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -59,6 +62,10 @@ public class FeatureGroup extends FeatureGroupBase {
   private Boolean statisticsEnabled;
 
   @Getter @Setter
+  @JsonProperty("validationEnabled")
+  private Boolean validationEnabled;
+
+  @Getter @Setter
   @JsonProperty("featHistEnabled")
   private Boolean histograms;
 
@@ -79,6 +86,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+  private DataValidationEngine dataValidationEngine = new DataValidationEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -350,4 +358,43 @@ public class FeatureGroup extends FeatureGroupBase {
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
   }
+
+  public void attachRule(Rule rule) throws FeatureStoreException, IOException {
+    featureGroupEngine.attachRule(this, rule);
+  }
+
+  public Rule getRule(Rule.Name name, Rule.Predicate predicate, String feature)
+      throws FeatureStoreException, IOException {
+    return featureGroupEngine.getRule(this, name, predicate, feature);
+  }
+
+  public List<Rule> getRule() throws FeatureStoreException, IOException {
+    return featureGroupEngine.getRules(this);
+  }
+
+  public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
+    // Fetch all rules
+    FeatureGroupValidation featureGroupValidation = dataValidationEngine.runVerification(this.read(), getRule());
+    return dataValidationEngine.sendResults(this, featureGroupValidation);
+  }
+
+  public FeatureGroupValidation runValidation() throws FeatureStoreException, IOException {
+    // Fetch all rules
+    return dataValidationEngine.runVerification(this.read(), getRule());
+  }
+
+  public FeatureGroupValidation sendResults(FeatureGroupValidation featureGroupValidation)
+      throws FeatureStoreException, IOException {
+    // Fetch all rules
+    return dataValidationEngine.sendResults(this, featureGroupValidation);
+  }
+
+  public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {
+    return dataValidationEngine.getValidations(this);
+  }
+
+  public FeatureGroupValidation getValidation(String validationTime) throws FeatureStoreException, IOException {
+    return dataValidationEngine.getValidation(this, validationTime);
+  }
+
 }

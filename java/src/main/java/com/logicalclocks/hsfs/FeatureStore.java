@@ -19,6 +19,8 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.Rule;
+import com.logicalclocks.hsfs.metadata.RuleDefinitionsApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
@@ -30,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FeatureStore {
 
@@ -47,6 +50,7 @@ public class FeatureStore {
   private FeatureGroupApi featureGroupApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
+  private RuleDefinitionsApi ruleDefinitionsApi;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -56,6 +60,7 @@ public class FeatureStore {
     featureGroupApi = new FeatureGroupApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
+    ruleDefinitionsApi = new RuleDefinitionsApi();
   }
 
   /**
@@ -141,7 +146,7 @@ public class FeatureStore {
     return TrainingDataset.builder()
         .featureStore(this);
   }
-  
+
   /**
    * Get a training dataset object from the selected feature store.
    *
@@ -168,6 +173,18 @@ public class FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
+  }
+
+  public List<Rule> getRule() throws FeatureStoreException, IOException {
+    return ruleDefinitionsApi.get();
+  }
+
+  public List<Rule> getRule(Rule.Name name) throws FeatureStoreException, IOException {
+    return ruleDefinitionsApi.get(name);
+  }
+
+  public Rule getRule(Rule.Name name, Rule.Predicate predicate) throws FeatureStoreException, IOException {
+    return ruleDefinitionsApi.get(name, predicate);
   }
 
   @Override
