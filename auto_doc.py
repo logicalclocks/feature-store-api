@@ -4,10 +4,23 @@ import shutil
 import keras_autodoc
 
 PAGES = {
-    "connection.md": [
-        "hsfs.connection.Connection.connection",
-        "hsfs.connection.Connection.setup_databricks",
-    ]
+    "project.md": {
+        "connection": ["hsfs.connection.Connection"],
+        "connection_methods": keras_autodoc.get_methods(
+            "hsfs.connection.Connection", exclude=["connection"]
+        ),
+    },
+    "feature_store.md": {
+        "fs": ["hsfs.feature_store.FeatureStore"],
+    },
+    "feature_group.md": {
+        "feature_group": ["hsfs.feature_group.FeatureGroup"],
+        "feature_group_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.FeatureGroup"
+        ),
+    },
+    "connection_api.md": ["hsfs.connection.Connection"]
+    + keras_autodoc.get_methods("hsfs.connection.Connection"),
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
@@ -18,6 +31,7 @@ def generate(dest_dir):
         PAGES,
         project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
         template_dir="./docs/templates",
+        titles_size="###",
     )
     shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "CONTRIBUTING.md")
     shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")

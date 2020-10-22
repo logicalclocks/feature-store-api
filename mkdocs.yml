@@ -18,16 +18,16 @@ nav:
     - Python: integrations/python.md
   - Guides:
     - Overview: overview.md
-    - Project/Connection: guides/project.md
-    - Feature Store: guides/feature_store.md
-    - Feature Group: guides/feature_group.md
+    - Project/Connection: generated/project.md
+    - Feature Store: generated/feature_store.md
+    - Feature Group: generated/feature_group.md
     - Feature: guides/feature.md
     - Training Dataset: guides/training_dataset.md
     - Dataframe vs. Query: guides/programming_interface.md
     - Statistics: guides/statistics.md
     - Data Validation: guides/data_validation.md
   - API Reference:
-    - Connection: generated/connection.md
+    - Connection: generated/connection_api.md
   - Contributing: CONTRIBUTING.md
 
 theme:
