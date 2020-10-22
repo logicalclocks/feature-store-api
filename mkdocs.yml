@@ -28,6 +28,7 @@ nav:
     - Data Validation: guides/data_validation.md
   - API Reference:
     - Connection: generated/connection_api.md
+    - FeatureGroup: generated/feature_group_api.md
   - Contributing: CONTRIBUTING.md
 
 theme:

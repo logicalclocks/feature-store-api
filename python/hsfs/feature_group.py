@@ -166,6 +166,16 @@ class FeatureGroup:
         self.compute_statistics()
 
     def delete(self):
+        """Drop the entire feature group along with its feature data.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            feature group **and** all the feature data in offline and online storage
+            associated with it.
+
+        # Raises
+            `RestAPIError`.
+        """
         self._feature_group_engine.delete(self)
 
     def update_statistics_config(self):
@@ -174,8 +184,11 @@ class FeatureGroup:
         Change the `statistics_config` object and persist the changes by calling
         this method.
 
-        :return: the updated metadata object of the feature group.
-        :rtype: FeatureGroup
+        # Returns
+            `FeatureGroup`. The updated metadata object of the feature group.
+
+        # Raises
+            `RestAPIError`.
         """
         self._feature_group_engine.update_statistics_config(self)
         return self
@@ -196,8 +209,11 @@ class FeatureGroup:
         """Recompute the statistics for the feature group and save them to the
         feature store.
 
-        :return: the statistics metadata object.
-        :rtype: Statistics
+        # Returns
+            `Statistics`. The statistics metadata object.
+
+        # Raises
+            `RestAPIError`.
         """
         if self.statistics_config.enabled:
             if self._default_storage.lower() in ["all", "offline"]:
@@ -248,39 +264,48 @@ class FeatureGroup:
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def add_tag(self, name, value=None):
+    def add_tag(self, name: str, value: str = None):
         """Attach a name/value tag to a feature group.
 
         A tag can consist of a name only or a name/value pair. Tag names are
         unique identifiers.
 
-        :param name: name of the tag to be added
-        :type name: str
-        :param value: value of the tag to be added, defaults to None
-        :type value: str, optional
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added, defaults to `None`.
+
+        # Raises
+            `RestAPIError`.
         """
         self._feature_group_engine.add_tag(self, name, value)
 
-    def delete_tag(self, name):
+    def delete_tag(self, name: str):
         """Delete a tag from a feature group.
 
         Tag names are unique identifiers.
 
-        :param name: name of the tag to be removed
-        :type name: str
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError`.
         """
         self._feature_group_engine.delete_tag(self, name)
 
-    def get_tag(self, name=None):
+    def get_tag(self, name: str = None):
         """Get the tags of a feature group.
 
         Tag names are unique identifiers. Returns all tags if no tag name is
         specified.
 
-        :param name: name of the tag to get, defaults to None
-        :type name: str, optional
-        :return: list of tags as name/value pairs
-        :rtype: list of dict
+        # Arguments
+            name: Name of the tag to get, defaults to `None`.
+
+        # Returns
+            `list[Tag]`. List of tags as name/value pairs
+
+        # Raises
+            `RestAPIError`.
         """
         return self._feature_group_engine.get_tags(self, name)
 
@@ -318,46 +343,57 @@ class FeatureGroup:
 
     @property
     def id(self):
+        """Feature group id."""
         return self._id
 
     @property
     def name(self):
+        """Name of the feature group."""
         return self._name
 
     @property
     def version(self):
+        """Version number of the feature group."""
         return self._version
 
     @property
     def description(self):
+        """Description of the feature group contents."""
         return self._description
 
     @property
     def features(self):
+        """Schema information."""
         return self._features
 
     @property
     def primary_key(self):
+        """List of features building the primary key."""
         return self._primary_key
 
     @property
     def online_enabled(self):
+        """Setting if the feature group is available in online storage."""
         return self._online_enabled
 
     @property
     def partition_key(self):
+        """List of features building the partition key."""
         return self._partition_key
 
     @property
     def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
     @property
     def creator(self):
+        """Username of the creator."""
         return self._creator
 
     @property
     def created(self):
+        """Timestamp when the feature group was created."""
         return self._created
 
     @version.setter
@@ -386,6 +422,8 @@ class FeatureGroup:
 
     @property
     def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the feature group."""
         return self._statistics_config
 
     @statistics_config.setter
@@ -407,17 +445,22 @@ class FeatureGroup:
 
     @property
     def statistics(self):
+        """Get the latest computed statistics for the feature group."""
         return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time=None):
+    def get_statistics(self, commit_time: str = None):
         """Returns the statistics for this feature group at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
-        :param commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to None
-        :type commit_time: str, optional
-        :return: Statistics information
-        :rtype: Statistics
+        # Arguments
+            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `RestAPIError`.
         """
         if commit_time is None:
             return self.statistics

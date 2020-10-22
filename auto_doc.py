@@ -14,13 +14,32 @@ PAGES = {
         "fs": ["hsfs.feature_store.FeatureStore"],
     },
     "feature_group.md": {
-        "feature_group": ["hsfs.feature_group.FeatureGroup"],
-        "feature_group_methods": keras_autodoc.get_methods(
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
             "hsfs.feature_group.FeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.FeatureGroup",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
         ),
     },
     "connection_api.md": ["hsfs.connection.Connection"]
     + keras_autodoc.get_methods("hsfs.connection.Connection"),
+    "feature_group_api.md": {
+        "fg": ["hsfs.feature_group.FeatureGroup"],
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.FeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]

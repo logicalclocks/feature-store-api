@@ -93,7 +93,7 @@ Connections are on a project-level, however, it is possible to share feature sto
 
 To share a feature store, you can follow these steps:
 
-! info "Sharing a Feature Store"
+!!! info "Sharing a Feature Store"
 
     1. Open the project of the feature store that you would like to share on Hopsworks.
     2. Go to the *Data Set* browser and right click the `Featurestore.db` entry.
@@ -105,7 +105,7 @@ To share a feature store, you can follow these steps:
 
 <p align="center">
   <figure>
-      <img src="../../assets/images/featurestore-sharing.png" alt="Sharing a feature store between projects">
+      <img src="../../assets/images/featurestore-sharing.png" width="500" alt="Sharing a feature store between projects">
     <figcaption>Sharing a feature store between projects</figcaption>
   </figure>
 </p>

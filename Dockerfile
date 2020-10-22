@@ -7,6 +7,6 @@ RUN apt-get update && \
 RUN pip3 install twine \
                  mkdocs \
                  mkdocs-material \
-                 git+https://github.com/moritzmeister/keras-autodoc@split-tags
+                 git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
 
 RUN mkdir -p /.local && chmod -R 777 /.local
