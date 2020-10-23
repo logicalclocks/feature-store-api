@@ -1,5 +1,7 @@
 # Feature Store
 
+{{fs}}
+
 ## Retrieval
 
 {{fs_get}}

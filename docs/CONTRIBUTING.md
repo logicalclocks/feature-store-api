@@ -71,7 +71,7 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
 1. Currently we are using our own version of `keras-autodoc`
 
     ```bash
-    pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags
+    pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
     ```
 
 2. Install HSFS with `docs` extras:

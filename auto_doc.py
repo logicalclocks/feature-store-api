@@ -11,7 +11,13 @@ PAGES = {
         ),
     },
     "feature_store.md": {
-        "fs": ["hsfs.feature_store.FeatureStore"],
+        "fs_get": ["hsfs.connection.Connection.get_feature_store"],
+        "fs_properties": keras_autodoc.get_properties(
+            "hsfs.feature_store.FeatureStore"
+        ),
+        "fs_methods": keras_autodoc.get_methods(
+            "hsfs.feature_store.FeatureStore", exclude=["from_response_json"]
+        ),
     },
     "feature_group.md": {
         "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
@@ -29,9 +35,22 @@ PAGES = {
             ],
         ),
     },
-    "connection_api.md": ["hsfs.connection.Connection"]
-    + keras_autodoc.get_methods("hsfs.connection.Connection"),
-    "feature_group_api.md": {
+    "api/connection_api.md": {
+        "connection": ["hsfs.connection.Connection"],
+        "connection_properties": keras_autodoc.get_properties(
+            "hsfs.connection.Connection"
+        ),
+        "connection_methods": keras_autodoc.get_methods("hsfs.connection.Connection"),
+    },
+    "api/feature_store_api.md": {
+        "fs": ["hsfs.feature_store.FeatureStore"],
+        "fs_get": ["hsfs.connection.Connection.get_feature_store"],
+        "fs_properties": keras_autodoc.get_properties(
+            "hsfs.feature_store.FeatureStore"
+        ),
+        "fs_methods": keras_autodoc.get_methods("hsfs.feature_store.FeatureStore"),
+    },
+    "api/feature_group_api.md": {
         "fg": ["hsfs.feature_group.FeatureGroup"],
         "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
         "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],
