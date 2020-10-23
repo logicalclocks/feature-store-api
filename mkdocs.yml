@@ -1,4 +1,4 @@
-site_name: "HSFS: Hopsworks Feature Store API"
+site_name: "HSFS: Hopsworks Feature Store"
 site_description: "HSFS: An environment independent client to interact with the Hopsworks Feature Store"
 site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
@@ -9,22 +9,52 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-    - Introduction: index.md
-    - Quickstart: quickstart.md
-    - Installation: installation.md
-    - API Reference:
-        - Connection: generated/connection.md
-    - Contributing: contributing.md
+  - Introduction: index.md
+  - Quickstart: quickstart.md
+  - Integrations:
+    - Overview: setup.md
+    - Databricks: integrations/databricks.md
+    - AWS Sagemaker: integrations/sagemaker.md
+    - Python: integrations/python.md
+  - Guides:
+    - Overview: overview.md
+    - Project/Connection: generated/project.md
+    - Feature Store: generated/feature_store.md
+    - Feature Group: generated/feature_group.md
+    - Feature: guides/feature.md
+    - Training Dataset: guides/training_dataset.md
+    - Dataframe vs. Query: guides/programming_interface.md
+    - Statistics: guides/statistics.md
+    - Data Validation: guides/data_validation.md
+  - API Reference:
+    - Connection: generated/api/connection_api.md
+    - FeatureStore: generated/api/feature_store_api.md
+    - FeatureGroup: generated/api/feature_group_api.md
+  - Contributing: CONTRIBUTING.md
 
 theme:
-    name: material
-    favicon: assets/images/favicon.ico
-    logo: assets/images/hops-logo.png
-    icon:
-        repo: fontawesome/brands/github
-    font:
-        text: "Roboto"
-        code: "IBM Plex Mono"
+  name: material
+  favicon: assets/images/favicon.ico
+  logo: assets/images/hops-logo.png
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: "Roboto"
+    code: "IBM Plex Mono"
+  palette:
+    accent: teal
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/logicalclocks
+    - icon: fontawesome/brands/github
+      link: https://github.com/logicalclocks/hopsworks
+    - icon: fontawesome/brands/discourse
+      link: https://community.hopsworks.ai/
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/logicalclocks/
 
 extra_css:
     - css/custom.css
@@ -39,5 +69,12 @@ markdown_extensions:
     - pymdownx.tabbed
     - pymdownx.arithmatex
     - pymdownx.superfences
+    - pymdownx.details
+    - toc:
+        permalink: "#"
+    - pymdownx.tasklist:
+        custom_checkbox: true
 
-google_analytics: ['UA-85730257-3', 'hopsworks.ai']
+google_analytics:
+    - UA-85730257-4
+    - auto
