@@ -35,6 +35,24 @@ PAGES = {
             ],
         ),
     },
+    "training_dataset.md": {
+        "td_create": ["hsfs.feature_store.FeatureStore.create_training_dataset"],
+        "td_get": ["hsfs.feature_store.FeatureStore.get_training_dataset"],
+        "td_properties": keras_autodoc.get_properties(
+            "hsfs.training_dataset.TrainingDataset"
+        ),
+        "td_methods": keras_autodoc.get_methods(
+            "hsfs.training_dataset.TrainingDataset",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+        "tf_record_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_record_dataset"],
+        "tf_csv_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_csv_dataset"],
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(

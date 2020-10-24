@@ -16,6 +16,7 @@
 
 import re
 import itertools
+from typing import Optional
 
 try:
     import tensorflow as tf
@@ -57,41 +58,23 @@ class TFDataEngine:
         split,
         target_name,
         feature_names,
+        var_len_features,
         is_training,
         cycle_length,
     ):
-        """TFDataEngine object that has utility methods for tf.data
-
-        # Arguments
-            training_dataset: str. Name of the training dataset.
-            training dataset name
-        split: str, required
-            name of training dataset split. train, test or eval
-        target_name: str, required
-            name of the target variable
-        feature_names: 1d array, required
-            name of training variables
-        is_training: boolean, required
-            whether it is for training, testing or eval
-        cycle_length: int, required
-            number of files to be read and deserialized in parallel.
-
-        # Returns
-            TFDataEngine. This engine can be used to generate `tf.data`-Datasets,
-                ready to be consumed as input for model training.
-        """
 
         self._training_dataset = training_dataset
         self._split = split
         self._target_name = target_name
         self._feature_names = feature_names
+        self._var_len_features = var_len_features
         self._is_training = is_training
         self._cycle_length = cycle_length
 
-        self._features = self._training_dataset._features
+        self._features = training_dataset._features
         self._training_dataset_format = self._training_dataset.data_format
 
-        self._input_files = _get_training_dataset_files(
+        self._input_files = self._get_training_dataset_files(
             self._training_dataset.location,
             self._split,
             filter_empty=True if self._training_dataset_format == "csv" else False,
@@ -105,53 +88,50 @@ class TFDataEngine:
 
     def get_serialized_example_schema(self):
         """
-        returns schema for parsing serialized example of ff record file
-
-        :return: schema for tfrecord file
-        :rtype: dict
+        returns schema for parsing serialized example of tfrecord files
         """
-        _, tfrecord_feature_description = _get_tfdataset(
+        _, tfrecord_feature_description = self._get_tf_dataset(
             self._input_files, self._cycle_length
         )
         return tfrecord_feature_description
 
     def tf_record_dataset(
         self,
-        batch_size=None,
-        num_epochs=None,
-        one_hot_encode_labels=False,
-        num_classes=None,
-        process=False,
-        serialized_ndarray_fname=[],
+        batch_size: Optional[int] = None,
+        num_epochs: Optional[int] = None,
+        one_hot_encode_labels: Optional[bool] = False,
+        num_classes: Optional[int] = None,
+        process: Optional[bool] = False,
+        serialized_ndarray_fname: Optional[list] = [],
     ):
         """
-        Reads tfrecord files and returns ParallelMapDataset or PrefetchDataset object ready to feed tf keras models
+        Reads tfrecord files and returns `ParallelMapDataset` or `PrefetchDataset` object, depending on `process` set
+        to `False` or `True`, respectively.
 
-        Example:
-            import hsfs
+        If `process` set to `False` returned object `ParallelMapDataset` can be further processed by user. For example
+        applying custom transformations to features, batching, caching etc. `process=True` will return `PrefetchDataset`
+        object, that contains tuple of feature vector and label, already batched and ready to input into model training.
+
+        !!! example "Example of using tf_record_dataset:"
+            ```python
             connection = hsfs.connection()
             fs = connection.get_feature_store();
             td = fs.get_training_dataset("sample_model", 3)
             td.tf_data(target_name = "id").tf_record_dataset(batch_size=1, num_epochs=1, process=True)
+            ```
 
         # Arguments
-            batch_size: int, optional
-                size of batch, defaults to `None`.
-            num_epochs: int, optional
-                number of epochs to train, defaults to `None`.
-            one_hot_encode_labels: boolean, optional
-                if set true then one hot encode labels, defaults to `False`.
-            num_classes: int, optional
-                if above true then provide number of target classes, defaults to  `None`
-            process: boolean, optional
-                if set true  api will optimise tf data read operation, and return feature vector for model
+            batch_size: Size of batch, defaults to `None`.
+            num_epochs: Number of epochs to train, defaults to `None`.
+            one_hot_encode_labels: If set `True` then one hot encode labels, defaults to `False`.
+            num_classes: If above `True` then provide number of target classes, defaults to  `None`.
+            process: If set `True` api will optimise tf data read operation, and return feature vector for model
                 with single input, defaults to `False`.
-            serialized_ndarray_fname: string array, optional
-                names of features that contain serialised multi dimentional arrays, defaults to `[]`
+            serialized_ndarray_fname: Names of features that contain serialised multi dimensional arrays, defaults to `[]`.
 
-           # Returns
-                PrefetchDataset if process is set to True
-                ParallelMapDataset if process is set to False
+        # Returns
+           `PrefetchDataset`. If `process` is set to `True`. <br/>
+           `ParallelMapDataset`. If `process` is set to `False`.
         """
 
         if self._training_dataset_format.lower() not in ["tfrecords", "tfrecord"]:
@@ -169,7 +149,7 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        dataset, tfrecord_feature_description = _get_tfdataset(
+        dataset, tfrecord_feature_description = self._get_tf_dataset(
             self._input_files, self._cycle_length
         )
 
@@ -200,7 +180,7 @@ class TFDataEngine:
             else:
                 x = []
                 for _feature_name in self._feature_names:
-                    x.append(_convert2float32(example[_feature_name]))
+                    x.append(self._convert2float32(example[_feature_name]))
                 x = tf.stack(x)
             return x, y
 
@@ -214,7 +194,7 @@ class TFDataEngine:
                 lambda value: _process_example(value),
                 num_parallel_calls=tf.data.experimental.AUTOTUNE,
             )
-            dataset = _optimize_dataset(
+            dataset = self._optimize_dataset(
                 dataset, batch_size, num_epochs, self._is_training
             )
 
@@ -222,41 +202,40 @@ class TFDataEngine:
 
     def tf_csv_dataset(
         self,
-        batch_size=None,
-        num_epochs=None,
-        one_hot_encode_labels=False,
-        num_classes=None,
-        process=False,
+        batch_size: Optional[int] = None,
+        num_epochs: Optional[int] = None,
+        one_hot_encode_labels: Optional[bool] = False,
+        num_classes: Optional[int] = None,
+        process: Optional[bool] = False,
     ):
         """
-        Reads csv files and returns CsvDatasetV2 or PrefetchDataset object ready to feed tf keras models
+        Reads csv files and returns `CsvDatasetV2` or `PrefetchDataset` object, depending on `process` set to `False`
+        or `True`, respectively.
 
-        Example:
-            import hsfs
+        If `process` set to `False` returned object `CsvDatasetV2` can be further processed by user. For example
+        applying custom transformations to features, batching, caching etc. `process=True` will return `PrefetchDataset`
+        object, that contains tuple of feature vector and label, already batched and ready to input into model training.
+
+        !!! example "Example of using tf_record_dataset:"
+            ```python
             connection = hsfs.connection()
             fs = connection.get_feature_store();
-            td = fs.get_training_dataset("sample_model", 3)
+            td = fs.get_training_dataset("sample_model", 1)
             td.tf_data(target_name = "id").tf_csv_dataset(batch_size=1, num_epochs=1, process=True)
-
+            ```
         # Arguments
-            batch_size: int, optional
-                size of batch, defaults to `None`.
-            num_epochs: int, optional
-                number of epochs to train, defaults to `None`.
-            one_hot_encode_labels: boolean, optional
-                if set true then one hot encode labels, defaults to `False`.
-            num_classes: int, optional
-                if above true then provide number of target classes, defaults to  `None`
-            process: boolean, optional
-                if set true  api will optimise tf data read operation, and return feature vector for model
+            batch_size: Size of batch, defaults to `None`.
+            num_epochs: Number of epochs to train, defaults to `None`.
+            one_hot_encode_labels: If set true then one hot encode labels, defaults to `False`.
+            num_classes: If above true then provide number of target classes, defaults to  `None`.
+            process: If set true api will optimise tf data read operation, and return feature vector for model
                 with single input, defaults to `False`.
-            serialized_ndarray_fname: string array, optional
-                names of features that contain serialised multi dimentional arrays, defaults to `[]`
+            serialized_ndarray_fname: Names of features that contain serialised multi dimensional arrays, defaults to `[]`.
 
-           # Returns
-                PrefetchDataset if process is set to True
-                ParallelMapDataset if process is set to False
-            """
+        # Returns
+            `PrefetchDataset`. If `process` is set to `True`. <br/>
+            `CsvDatasetV2`. If `process` is set to `False`.
+        """
 
         if self._training_dataset_format != "csv":
             raise Exception(
@@ -273,17 +252,34 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        csv_header = dict((feat.name, feat.index) for feat in self._features)
-        record_defaults = [_convert2tfdtype(feat.type) for feat in self._features]
+        # danger since order may not be correct. This needs to be handled in the backend.
+        csv_header = {}
+        index = 0
+        for feat in self._features:
+            if feat.name in self._feature_names or feat.name == self._target_name:
+                csv_header[feat.name] = index
+            index += 1
+
+        select_col_ind = [csv_header[key] for key, value in csv_header.items()]
+        select_cols_names = [key for key, value in csv_header.items()]
+
+        record_defaults = [
+            self._convert_to_tf_dtype(feat.type)
+            for feat in self._features
+            if feat.name in self._feature_names or feat.name == self._target_name
+        ]
 
         csv_dataset = tf.data.experimental.CsvDataset(
-            self._input_files, header=True, record_defaults=record_defaults,
+            self._input_files,
+            header=True,
+            record_defaults=record_defaults,
+            select_cols=sorted(select_col_ind),
         )
 
         def _process_csv_dataset(csv_record):
             csv_record_list = list(csv_record)
             # get target variable 1st
-            y = csv_record_list.pop(csv_header[self._target_name])
+            y = csv_record_list.pop(select_cols_names.index(self._target_name))
             y = tf.convert_to_tensor(y)
             if one_hot_encode_labels:
                 y = tf.one_hot(y, num_classes)
@@ -293,193 +289,199 @@ class TFDataEngine:
             # now get the feature vector
             x = []
             for feat in csv_record_list:
-                x.append(_convert2float32(tf.convert_to_tensor(feat)))
+                x.append(self._convert2float32(tf.convert_to_tensor(feat)))
             x = tf.stack(x)
             return x, y
 
         if process:
             csv_dataset = csv_dataset.map(lambda *value: _process_csv_dataset(value))
-            csv_dataset = _optimize_dataset(
+            csv_dataset = self._optimize_dataset(
                 csv_dataset, batch_size, num_epochs, self._is_training
             )
         return csv_dataset
 
+    @staticmethod
+    def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
+        if is_training:
+            dataset = dataset.shuffle(num_epochs * batch_size)
+            dataset = dataset.repeat(num_epochs * batch_size)
+        dataset = dataset.cache()
+        dataset = dataset.batch(batch_size, drop_remainder=True)
+        dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
-def _optimize_dataset(dataset, batch_size, num_epochs, is_training):
-    if is_training:
-        dataset = dataset.shuffle(num_epochs * batch_size)
-        dataset = dataset.repeat(num_epochs * batch_size)
-    dataset = dataset.cache()
-    dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+        return dataset
 
-    return dataset
+    @staticmethod
+    def _return_example_tf1(train_filenames):
+        sample = 1
+        record_iterator = tf.compat.v1.io.tf_record_iterator(path=train_filenames[0])
+        for string_record in itertools.islice(record_iterator, sample):
+            example = tf.train.Example()
+            example.ParseFromString(string_record)
+        return example
 
+    @staticmethod
+    def _return_example_tf2(dataset):
+        for raw_record in dataset.take(1):
+            example = tf.train.Example()
+            example.ParseFromString(raw_record.numpy())
+        return example
 
-def _return_example_tf1(train_filenames):
-    sample = 1
-    record_iterator = tf.compat.v1.io.tf_record_iterator(path=train_filenames[0])
-    for string_record in itertools.islice(record_iterator, sample):
-        example = tf.train.Example()
-        example.ParseFromString(string_record)
-    return example
-
-
-def _return_example_tf2(dataset):
-    for raw_record in dataset.take(1):
-        example = tf.train.Example()
-        example.ParseFromString(raw_record.numpy())
-    return example
-
-
-def _create_tfrecord_feature_description(dataset, train_filenames):
-    if tf.__version__ >= "2.0":
-        example = _return_example_tf2(dataset)
-    else:
-        example = _return_example_tf1(train_filenames)
-
-    feature_description = {}
-    for k, v in sorted(example.features.feature.items()):
-        f_name, f_description = _infer_tf_dtype(k, v)
-        feature_description[f_name] = f_description
-    return feature_description
-
-
-def _infer_tf_dtype(k, v):
-    if v.int64_list.value:
-        result = v.int64_list.value
-        feature_length = len(result)
-        if feature_length > 1:
-            feature_type = tf.io.FixedLenFeature([feature_length], tf.int64)
+    def _create_tfrecord_feature_description(self, dataset, train_filenames):
+        if tf.__version__ >= "2.0":
+            example = self._return_example_tf2(dataset)
         else:
-            feature_type = tf.io.FixedLenFeature([], tf.int64)
+            example = self._return_example_tf1(train_filenames)
 
-    elif v.float_list.value:
-        result = v.float_list.value
-        feature_length = len(result)
-        if feature_length > 1:
-            feature_type = tf.io.FixedLenFeature([feature_length], tf.float32)
-        else:
-            feature_type = tf.io.FixedLenFeature([], tf.float32)
+        feature_description = {}
+        for k, v in sorted(example.features.feature.items()):
+            f_name, f_description = self._infer_tf_dtype(k, v, self._var_len_features)
+            feature_description[f_name] = f_description
+        return feature_description
 
-    elif v.bytes_list.value:
-        feature_type = tf.io.FixedLenFeature([], tf.string)
-
-    return k, feature_type
-
-
-def _get_tfdataset(input_files, cycle_length):
-    dataset = tf.data.Dataset.from_tensor_slices(input_files)
-
-    dataset = dataset.interleave(
-        tf.data.TFRecordDataset,
-        cycle_length=cycle_length,
-        num_parallel_calls=tf.data.experimental.AUTOTUNE,
-    )
-
-    tfrecord_feature_description = _create_tfrecord_feature_description(
-        dataset, input_files
-    )
-
-    return dataset, tfrecord_feature_description
-
-
-def _get_training_dataset_files(training_dataset_location, split, filter_empty=False):
-    """
-    returns list of absolute path of training input files
-    :param training_dataset_location: training_dataset_location
-    :type training_dataset_location: str
-    :param split: name of training dataset split. train, test or eval
-    :type split: str
-    :return: absolute path of input files
-    :rtype: 1d array
-    """
-
-    if training_dataset_location.startswith("hopsfs"):
-        input_files = _get_hopsfs_dataset_files(
-            training_dataset_location, split, filter_empty
+    @staticmethod
+    def _infer_tf_dtype(k, v, var_len_features):
+        fixed_or_var_length = (
+            tf.io.VarLenFeature if k in var_len_features else tf.io.FixedLenFeature
         )
-    elif training_dataset_location.startswith("s3"):
-        input_files = _get_s3_dataset_files(training_dataset_location, split)
-    else:
-        raise Exception("Couldn't find execution engine.")
-
-    return input_files
-
-
-def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty):
-    path = training_dataset_location.replace("hopsfs", "hdfs")
-    if split is None:
-        path = hdfs.path.abspath(path)
-    else:
-        path = hdfs.path.abspath(path + "/" + str(split))
-
-    input_files = []
-
-    all_list = hdfs.ls(path, recursive=True)
-
-    # Remove directories and spark '_SUCCESS'
-    include_file = True
-    for file in all_list:
-        # remove empty file if any
-        if filter_empty:
-            _file_size = hdfs.hdfs("default", 0).get_path_info(file)["size"]
-            if _file_size == 0:
-                include_file = False
+        if v.int64_list.value:
+            result = v.int64_list.value
+            feature_length = len(result)
+            if feature_length > 1:
+                feature_type = fixed_or_var_length([feature_length], tf.int64)
             else:
-                include_file = True
-        if not hdfs.path.isdir(file) and not file.endswith("_SUCCESS") and include_file:
-            input_files.append(file)
+                feature_type = fixed_or_var_length([], tf.int64)
 
-    return input_files
+        elif v.float_list.value:
+            result = v.float_list.value
+            feature_length = len(result)
+            if feature_length > 1:
+                feature_type = fixed_or_var_length([feature_length], tf.float32)
+            else:
+                feature_type = fixed_or_var_length([], tf.float32)
 
+        elif v.bytes_list.value:
+            feature_type = fixed_or_var_length([], tf.string)
 
-def _get_s3_dataset_files(training_dataset_location, split):
-    """
-    returns list of absolute path of training input files
-    :param training_dataset_location: training_dataset_location
-    :type training_dataset_location: str
-    :param split: name of training dataset split. train, test or eval
-    :type split: str
-    :return: absolute path of input files
-    :rtype: 1d array
-    """
+        return k, feature_type
 
-    if split is None:
-        path = training_dataset_location
-    else:
-        path = training_dataset_location + "/" + str(split)
+    def _get_tf_dataset(self, input_files, cycle_length):
+        dataset = tf.data.Dataset.from_tensor_slices(input_files)
 
-    match = re.match(r"s3:\/\/(.+?)\/(.+)", path)
-    bucketname = match.group(1)
-
-    s3 = boto3.resource("s3")
-    bucket = s3.Bucket(bucketname)
-
-    input_files = []
-    for s3_obj_summary in bucket.objects.all():
-        if s3_obj_summary.get()["ContentType"] != "application/x-directory":
-            input_files.append(path + "/" + s3_obj_summary.key)
-
-    return input_files
-
-
-def _convert2tfdtype(input_type):
-    try:
-        tf_type = TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS[input_type]
-    except KeyError:
-        raise ValueError("Unknown type of value, please report to hsfs maintainers")
-    return tf_type
-
-
-def _convert2float32(input):
-    if input.dtype == tf.string:
-        raise ValueError(
-            "tf.string feature is not allowed here. please provide process=False and preprocess "
-            "dataset accordingly"
+        dataset = dataset.interleave(
+            tf.data.TFRecordDataset,
+            cycle_length=cycle_length,
+            num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
-    elif input.dtype in TFDataEngine.SUPPORTED_TFDTYPES:
-        input = tf.cast(input, tf.float32)
-    else:
-        raise ValueError("Unknown type of value, please report to hsfs maintainers")
-    return input
+
+        tfrecord_feature_description = self._create_tfrecord_feature_description(
+            dataset, input_files
+        )
+
+        return dataset, tfrecord_feature_description
+
+    def _get_training_dataset_files(
+        self, training_dataset_location, split, filter_empty=False
+    ):
+        """
+        returns list of absolute path of training input files
+        :param training_dataset_location: training_dataset_location
+        :type training_dataset_location: str
+        :param split: name of training dataset split. train, test or eval
+        :type split: str
+        :return: absolute path of input files
+        :rtype: list containing file paths.
+        """
+
+        if training_dataset_location.startswith("hopsfs"):
+            input_files = self._get_hopsfs_dataset_files(
+                training_dataset_location, split, filter_empty
+            )
+        elif training_dataset_location.startswith("s3"):
+            input_files = self._get_s3_dataset_files(training_dataset_location, split)
+        else:
+            raise Exception("Couldn't find execution engine.")
+
+        return input_files
+
+    @staticmethod
+    def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty):
+        path = training_dataset_location.replace("hopsfs", "hdfs")
+        if split is None:
+            path = hdfs.path.abspath(path)
+        else:
+            path = hdfs.path.abspath(path + "/" + str(split))
+
+        input_files = []
+
+        all_list = hdfs.ls(path, recursive=True)
+
+        # Remove directories and spark '_SUCCESS'
+        include_file = True
+        for file in all_list:
+            # remove empty file if any
+            if filter_empty:
+                _file_size = hdfs.hdfs("default", 0).get_path_info(file)["size"]
+                if _file_size == 0:
+                    include_file = False
+                else:
+                    include_file = True
+            if (
+                not hdfs.path.isdir(file)
+                and not file.endswith("_SUCCESS")
+                and include_file
+            ):
+                input_files.append(file)
+
+        return input_files
+
+    @staticmethod
+    def _get_s3_dataset_files(training_dataset_location, split):
+        """
+        returns list of absolute path of training input files
+        :param training_dataset_location: training_dataset_location
+        :type training_dataset_location: str
+        :param split: name of training dataset split. train, test or eval
+        :type split: str
+        :return: absolute path of input files
+        :rtype: list containing file paths.
+        """
+
+        if split is None:
+            path = training_dataset_location
+        else:
+            path = training_dataset_location + "/" + str(split)
+
+        match = re.match(r"s3:\/\/(.+?)\/(.+)", path)
+        bucketname = match.group(1)
+
+        s3 = boto3.resource("s3")
+        bucket = s3.Bucket(bucketname)
+
+        input_files = []
+        for s3_obj_summary in bucket.objects.all():
+            if s3_obj_summary.get()["ContentType"] != "application/x-directory":
+                input_files.append(path + "/" + s3_obj_summary.key)
+
+        return input_files
+
+    @staticmethod
+    def _convert_to_tf_dtype(input_type):
+        try:
+            tf_type = TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS[input_type]
+        except KeyError:
+            raise ValueError("Unknown type of value, please report to hsfs maintainers")
+        return tf_type
+
+    @staticmethod
+    def _convert2float32(input):
+        if input.dtype == tf.string:
+            raise ValueError(
+                "tf.string feature is not allowed here. please provide process=False and preprocess "
+                "dataset accordingly"
+            )
+        elif input.dtype in TFDataEngine.SUPPORTED_TFDTYPES:
+            input = tf.cast(input, tf.float32)
+        else:
+            raise ValueError("Unknown type of value, please report to hsfs maintainers")
+        return input
