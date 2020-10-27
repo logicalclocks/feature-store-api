@@ -83,6 +83,7 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
 3. To build the docs, first run the auto doc script:
 
     ```bash
+    cd ..
     python auto_doc.py
     ```
 
