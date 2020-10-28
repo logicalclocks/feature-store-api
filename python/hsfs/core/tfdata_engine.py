@@ -262,7 +262,6 @@ class TFDataEngine:
             for feat in self._features
             if feat.name in self._feature_names or feat.name == self._target_name
         ]
-
         record_defaults = [
             self._convert_to_tf_dtype(feat.type)
             for feat in self._features
