@@ -71,7 +71,7 @@ class TFDataEngine:
         self._is_training = is_training
         self._cycle_length = cycle_length
 
-        self._features = training_dataset._features
+        self._features = training_dataset.schema
         self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = self._get_training_dataset_files(
@@ -252,16 +252,16 @@ class TFDataEngine:
                 "if one_hot_encode_labels is set to True you also need to provide num_classes > 1"
             )
 
-        # danger since order may not be correct. This needs to be handled in the backend.
-        csv_header = {}
-        index = 0
-        for feat in self._features:
-            if feat.name in self._feature_names or feat.name == self._target_name:
-                csv_header[feat.name] = index
-            index += 1
-
-        select_col_ind = [csv_header[key] for key, value in csv_header.items()]
-        select_cols_names = [key for key, value in csv_header.items()]
+        select_col_ind = [
+            feat.index
+            for feat in self._features
+            if feat.name in self._feature_names or feat.name == self._target_name
+        ]
+        select_cols_names = [
+            feat.name
+            for feat in self._features
+            if feat.name in self._feature_names or feat.name == self._target_name
+        ]
 
         record_defaults = [
             self._convert_to_tf_dtype(feat.type)
