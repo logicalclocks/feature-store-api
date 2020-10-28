@@ -87,8 +87,8 @@ td.save(feature_join)
 Feed the training dataset to a TensorFlow model:
 ```python
 tf_data_object = training_dataset.tf_data(target_name="label",
-                                    split="train",
-                                    is_training=True)
+                                          split="train",
+                                          is_training=True)
 train_input = tf_data_object.tf_record_dataset(batch_size=32,
                                                num_epochs=5,
                                                process=True)
