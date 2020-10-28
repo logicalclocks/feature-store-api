@@ -16,17 +16,18 @@
 
 import re
 import itertools
+import mock
 from typing import Optional
 
 try:
     import tensorflow as tf
 except ModuleNotFoundError:
-    pass
+    tf = mock.Mock()
 
 try:
     from pydoop import hdfs
 except ModuleNotFoundError:
-    pass
+    hdfs = mock.Mock()
 
 try:
     import boto3
