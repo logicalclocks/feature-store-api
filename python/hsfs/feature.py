@@ -55,6 +55,7 @@ class Feature:
 
     @property
     def name(self):
+        """Name of the feature."""
         return self._name
 
     @name.setter
@@ -63,6 +64,13 @@ class Feature:
 
     @property
     def type(self):
+        """Data type of the feature in the feature store.
+
+        !!! danger "Not a Python type"
+            This type property is not to be confused with Python types.
+            The type property represents the actual data type of the feature in
+            the feature store.
+        """
         return self._type
 
     @type.setter
@@ -71,6 +79,7 @@ class Feature:
 
     @property
     def primary(self):
+        """Whether the feature is part of the primary key of the feature group."""
         return self._primary
 
     @primary.setter
@@ -79,6 +88,7 @@ class Feature:
 
     @property
     def partition(self):
+        """Whether the feature is part of the partition key of the feature group."""
         return self._partition
 
     @partition.setter
@@ -87,6 +97,8 @@ class Feature:
 
     @property
     def default_value(self):
+        """Default value of the feature as string, if the feature was appended to the
+        feature group."""
         return self._default_value
 
     @default_value.setter
