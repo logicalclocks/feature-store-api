@@ -17,6 +17,7 @@
 import humps
 import json
 import warnings
+from typing import Optional
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
@@ -26,7 +27,7 @@ from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
     training_dataset_engine,
-    feed_model_engine,
+    tfdata_engine,
     statistics_engine,
 )
 
@@ -161,35 +162,36 @@ class TrainingDataset:
         if self.statistics_config.enabled:
             return self._statistics_engine.compute_statistics(self, self.read())
 
-    def feed(
+    def tf_data(
         self,
-        target_name,
-        split=None,
-        feature_names=None,
-        is_training=True,
-        cycle_length=2,
+        target_name: str,
+        split: Optional[str] = None,
+        feature_names: Optional[list] = None,
+        var_len_features: Optional[list] = [],
+        is_training: Optional[bool] = True,
+        cycle_length: Optional[int] = 2,
     ):
         """
-        :param target_name: name of the target variable
-        :type target_name: str, required
-        :param split: training dataset split name, train, test or eval, defaults to None
-        :type split: str, optional
-        :param feature_names: name of training variables, defaults to None
-        :type feature_names: 1d array, optional
-        :param is_training:  whether it is for training, testing or eval, defaults to True
-        :type  is_training: boolean, optional
-        :param cycle_length: number of files to be read and deserialized in parallel, defoults to 2
-        :type cycle_length: int, optional
-        :param engine: execution engine. defaults  to spark
-        :type engine: str, optional
-        :return: feed model engine object
-        :rtype: FeedModelEngine
+        Returns an object with utility methods to read training dataset as `tf.data.Dataset` object and handle it for further processing.
+
+        # Arguments
+            target_name: Name of the target variable.
+            split: Name of training dataset split. For example, `"train"`, `"test"` or `"val"`, defaults to `None`,
+                returning the full training dataset.
+            feature_names: Names of training variables, defaults to `None`.
+            var_len_features: Feature names that have variable length and need to be returned as `tf.io.VarLenFeature`, defaults to `[]`.
+            is_training: Whether it is for training, testing or validation. Defaults to `True`.
+            cycle_length: Number of files to be read and deserialized in parallel, defaults to `2`.
+
+        # Returns
+            `TFDataEngine`. An object with utility methods to generate and handle `tf.data.Dataset` object.
         """
-        return feed_model_engine.FeedModelEngine(
+        return tfdata_engine.TFDataEngine(
             self,
             split=split,
             target_name=target_name,
             feature_names=feature_names,
+            var_len_features=var_len_features,
             is_training=is_training,
             cycle_length=cycle_length,
         )
@@ -197,26 +199,25 @@ class TrainingDataset:
     def show(self, n, split=None):
         self.read(split).show(n)
 
-    def add_tag(self, name, value=None):
+    def add_tag(self, name: str, value: str = None):
         """Attach a name/value tag to a training dataset.
 
         A tag can consist of a name only or a name/value pair. Tag names are
         unique identifiers.
 
-        :param name: name of the tag to be added
-        :type name: str
-        :param value: value of the tag to be added, defaults to None
-        :type value: str, optional
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added, defaults to `None`.
         """
         self._training_dataset_engine.add_tag(self, name, value)
 
-    def delete_tag(self, name):
+    def delete_tag(self, name: str):
         """Delete a tag from a training dataset.
 
         Tag names are unique identifiers.
 
-        :param name: name of the tag to be removed
-        :type name: str
+        # Arguments
+            name: Name of the tag to be removed.
         """
         self._training_dataset_engine.delete_tag(self, name)
 
@@ -226,10 +227,10 @@ class TrainingDataset:
         Tag names are unique identifiers. Returns all tags if no tag name is
         specified.
 
-        :param name: name of the tag to get, defaults to None
-        :type name: str, optional
-        :return: list of tags as name/value pairs
-        :rtype: list of dict
+        # Arguments
+            name: Name of the tag to get, defaults to `None`.
+        # Returns
+            `List[Tag]`. List of tags as name/value pairs.
         """
         return self._training_dataset_engine.get_tags(self, name)
 
@@ -280,6 +281,7 @@ class TrainingDataset:
 
     @property
     def id(self):
+        """Training dataset id."""
         return self._id
 
     @id.setter
@@ -288,6 +290,7 @@ class TrainingDataset:
 
     @property
     def name(self):
+        """Name of the training dataset."""
         return self._name
 
     @name.setter
@@ -296,6 +299,7 @@ class TrainingDataset:
 
     @property
     def version(self):
+        """Version number of the training dataset."""
         return self._version
 
     @version.setter
@@ -308,10 +312,12 @@ class TrainingDataset:
 
     @description.setter
     def description(self, description):
+        """Description of the training dataset contents."""
         self._description = description
 
     @property
     def data_format(self):
+        """File format of the training dataset."""
         return self._data_format
 
     @data_format.setter
@@ -320,6 +326,7 @@ class TrainingDataset:
 
     @property
     def write_options(self):
+        """User provided options to write training dataset."""
         return self._write_options
 
     @write_options.setter
@@ -328,6 +335,7 @@ class TrainingDataset:
 
     @property
     def storage_connector(self):
+        """Storage connector."""
         return self._storage_connector
 
     @storage_connector.setter
@@ -351,6 +359,7 @@ class TrainingDataset:
 
     @property
     def splits(self):
+        """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
         return {split["name"]: split["percentage"] for split in self._splits}
 
     @splits.setter
@@ -361,6 +370,7 @@ class TrainingDataset:
 
     @property
     def location(self):
+        """Path to the training dataset location."""
         return self._location
 
     @location.setter
@@ -369,10 +379,12 @@ class TrainingDataset:
 
     @property
     def schema(self):
+        """Training dataset schema."""
         return self._features
 
     @property
     def seed(self):
+        """Seed."""
         return self._seed
 
     @seed.setter
@@ -381,6 +393,8 @@ class TrainingDataset:
 
     @property
     def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the training dataset."""
         return self._statistics_config
 
     @statistics_config.setter
@@ -402,17 +416,19 @@ class TrainingDataset:
 
     @property
     def statistics(self):
+        """Get the latest computed statistics for the training dataset."""
         return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time=None):
+    def get_statistics(self, commit_time: str = None):
         """Returns the statistics for this training dataset at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
-        :param commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to None
-        :type commit_time: str, optional
-        :return: Statistics information
-        :rtype: Statistics
+        # Arguments
+            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+
+        # Returns
+            `Statistics`. Object with statistics information.
         """
         if commit_time is None:
             return self.statistics
@@ -421,14 +437,16 @@ class TrainingDataset:
 
     @property
     def query(self):
+        """Query to generate this training dataset from online feature store."""
         return self._training_dataset_engine.query(self, "online")
 
-    def get_query(self, storage="online"):
+    def get_query(self, storage: str = "online"):
         """Returns the query used to generate this training dataset
 
-        :param storage: the storage for which to return the query, Defaults to "online"  
-        :type storage: str, optional
-        :return: query 
-        :rtype: str 
+        # Arguments
+            storage: The storage for which to return the query, defaults to `"online"`.
+
+        # Returns
+            `str`. Query used to generate this training dataset.
         """
         return self._training_dataset_engine.query(self, storage)

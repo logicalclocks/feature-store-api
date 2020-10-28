@@ -84,7 +84,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the feature group to get.
-            version: Version of the feature group to retrieve, defaults to None and will
+            version: Version of the feature group to retrieve, defaults to `None` and will
                 return the `version=1`.
 
         # Returns
@@ -104,9 +104,24 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._feature_group_api.get(name, version)
 
-    def get_training_dataset(self, name, version=None):
-        # None is necessary because otherwise it's not possible to detect if
-        # the user specifically set the version to 1 himself
+    def get_training_dataset(self, name: str, version: int = None):
+        """Get a training dataset entity from the feature store.
+
+        Getting a training dataset from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame.
+
+        # Arguments
+            name: Name of the training dataset to get.
+            version: Version of the training dataset to retrieve, defaults to `None` and will
+                return the `version=1`.
+
+        # Returns
+            `TrainingDataset`: The training dataset metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+
         if version is None:
             warnings.warn(
                 "No version provided for getting training dataset `{}`, defaulting to `{}`.".format(
