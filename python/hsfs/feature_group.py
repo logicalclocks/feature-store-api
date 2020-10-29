@@ -287,11 +287,11 @@ class FeatureGroup:
         self._feature_group_engine.delete(self)
 
     def commit_delete_record(self, delete_df, write_options: Optional[dict] = {}):
-        """Drops records in the provided DataFrame and commits it as update to this Feature group
+        """Drops records in the provided DataFrame and commits it as update to this Feature group.
 
         # Arguments
-            delete_df: `DataFrame`: DataFrame.
-            write_options: User provided write options
+            delete_df: dataFrame containing records to be deleted.
+            write_options: User provided write options. Defaults to `{}`.
 
         # Raises
             `RestAPIError`.
