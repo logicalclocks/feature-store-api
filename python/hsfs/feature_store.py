@@ -16,8 +16,9 @@
 
 import warnings
 import humps
+from typing import Optional, Union, List
 
-from hsfs import training_dataset, feature_group, util
+from hsfs import training_dataset, feature_group, util, training_dataset_feature
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -128,15 +129,15 @@ class FeatureStore:
     def create_feature_group(
         self,
         name,
-        version=None,
-        description="",
-        default_storage="offline",
-        online_enabled=False,
-        time_travel_format="HUDI",
-        partition_key=[],
-        primary_key=[],
-        features=[],
-        statistics_config: StatisticsConfig = None,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        default_storage: Optional[str] = "offline",
+        online_enabled: Optional[bool] = False,
+        time_travel_format: Optional[str] = "HUDI",
+        partition_key: Optional[List[str]] = [],
+        primary_key: Optional[List[str]] = [],
+        features: Optional[List[training_dataset_feature.TrainingDatasetFeature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
         """Create a feature group metadata object.
 

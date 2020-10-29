@@ -17,7 +17,9 @@
 import humps
 import json
 import warnings
-from typing import Optional
+import pandas as pd
+import numpy as np
+from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs.core import query, feature_group_engine, statistics_engine
 from hsfs import util, engine, feature
@@ -109,34 +111,31 @@ class FeatureGroup:
         dataframe_type: Optional[str] = "default",
         read_options: Optional[dict] = {},
     ):
-        """Read the feature group into a dataframe.
-
-        !!! example "Read feature group as of latest state".
-             ```python
-             fs = connection.get_feature_store();
-             fg = fs.get_feature_group("example_feature_group", 1)
-             fg.read()
-             ```
-
-        !!! example "Read feature group as of specific point in time".
-             ```python
-             fs = connection.get_feature_store();
-             fg = fs.get_feature_group("example_feature_group", 1)
-             fg.read("2020-10-20 07:34:11")
-             ```
-
-          # Arguments
-             wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
+        """
+        Read the feature group into a dataframe.
+        !!! example "Read feature group as of latest state:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.read()
+            ```
+        !!! example "Read feature group as of specific point in time:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.read("2020-10-20 07:34:11")
+            ```
+        # Arguments
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
                  feature group as of specific point in time. If not specified will return as of most recent time.
                  Defaults to `None`.
-             storage: Storage type.
-             dataframe_type: Type of dataframe.
-              read_options: Additional read options as key/value pairs, defaults to `{}`.
-          # Returns
-              `DataFrame`: The spark dataframe containing the feature data.
-
-         # Raises
-             `RestAPIError`.
+            storage: Storage type.
+            dataframe_type: Type of dataframe.
+            read_options: Additional read options as key/value pairs, defaults to `{}`.
+        # Returns
+            `DataFrame`: The spark dataframe containing the feature data.
+        # Raises
+            `RestAPIError`.
         """
 
         engine.get_instance().set_job_group(
@@ -172,7 +171,7 @@ class FeatureGroup:
 
         This function only works on feature group's with `HUDI` time travel format.
 
-        !!! example "Reading feature group commits incrementally between specified points in time".
+        !!! example "Reading feature group commits incrementally between specified points in time:"
             ```python
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
@@ -225,11 +224,18 @@ class FeatureGroup:
 
     def save(
         self,
-        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-        write_options: Optional[dict] = {},
+        features: Union[
+            query.Query,
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        write_options: Optional[Dict[Any, Any]] = {},
     ):
 
-        """Materialize the features data to storage.
+        """Materialize features data to storage.
 
         This method materializes the features data from Spark `DataFrame`.
         # Arguments
@@ -266,23 +272,34 @@ class FeatureGroup:
 
     def insert(
         self,
-        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        features: Union[
+            query.Query,
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
         overwrite: Optional[bool] = False,
         operation: Optional[str] = None,
         storage: Optional[str] = None,
-        write_options: Optional[dict] = {},
+        write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Insert additional feature data into the feature group.
 
+        This method appends data to the feature group either from a Feature Store
+        `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
+        lists or Numpy ndarrays. The schemas must match for this operation.
+
         If feature group's time travel format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
 
-        !!! example "Upsert new feature data into the feature group with `time_travel_format="HUDI"`".
-            ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
-            upsert_df = ...
-            fg.insert(upsert_df, operation="upsert")
-            ```
+        !!! example "Upsert new feature data into the feature group with `time_travel_format="HUDI"`:"
+        ```python
+        fs = connection.get_feature_store();
+        fg = fs.get_feature_group("example_feature_group", 1)
+        upsert_df = ...
+        fg.insert(upsert_df, operation="upsert")
+        ```
 
         # Arguments
             features: Feature data to be materialized.
@@ -322,7 +339,11 @@ class FeatureGroup:
         """
         self._feature_group_engine.delete(self)
 
-    def commit_delete_record(self, delete_df, write_options: Optional[dict] = {}):
+    def commit_delete_record(
+        self,
+        delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
         """Drops records in the provided DataFrame and commits it as update to this Feature group.
 
         # Arguments
