@@ -255,7 +255,7 @@ class FeatureGroup:
         # Arguments
             features: `DataFrame`: DataFrame.
             overwrite: If set to `True` performs overwrite operation. Otherwise insert or upsert operation. Defaults to `False`.
-            operation: Aoache Hudi operation type `"insert"` or `"upsert"`. Defaults to `None`.
+            operation: Apache Hudi operation type `"insert"` or `"upsert"`. Defaults to `None`.
             storage: Storage type. Defaults to `None`.
             write_options: User provided write options. Defaults to `{}`.
         """
