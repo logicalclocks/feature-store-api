@@ -166,8 +166,8 @@ public class HudiEngine {
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
     if (!partitionColumns.isEmpty()) {
       hudiArgs.put(HUDI_PARTITION_FIELD, partitionColumns.mkString(":SIMPLE,") + ":SIMPLE");
-      // For precombine key take 1st particion key
-      hudiArgs.put(HUDI_PRECOMBINE_FIELD, partitionColumns.head());
+      // For precombine key take 1st primary key
+      hudiArgs.put(HUDI_PRECOMBINE_FIELD, primaryColumns.head());
       hudiArgs.put(HUDI_HIVE_SYNC_PARTITION_FIELDS, partitionColumns.mkString(","));
     }
 

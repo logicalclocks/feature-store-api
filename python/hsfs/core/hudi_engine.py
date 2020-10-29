@@ -74,7 +74,7 @@ class HudiEngine:
         self._primary_key = ",".join(feature_group.primary_key)
         self._partition_key = ",".join(feature_group.partition_key)
         self._partition_path = ":SIMPLE,".join(feature_group.partition_key) + ":SIMPLE"
-        self._pre_combine_key = feature_group.partition_key[0]
+        self._pre_combine_key = feature_group.primary_key[0]
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
@@ -157,7 +157,8 @@ class HudiEngine:
 
         return hudi_options
 
-    def _get_last_commit_metadata(self, spark_context, base_path):
+    @staticmethod
+    def _get_last_commit_metadata(spark_context, base_path):
         hopsfs_conf = spark_context._jvm.org.apache.hadoop.fs.FileSystem.get(
             spark_context._jsc.hadoopConfiguration()
         )
@@ -180,7 +181,8 @@ class HudiEngine:
             rows_deleted=commit_metadata.getTotalRecordsDeleted(),
         )
 
-    def _timestamp_to_hudiformat(self, timestamp):
+    @staticmethod
+    def _timestamp_to_hudiformat(timestamp):
         date_obj = datetime.fromtimestamp(timestamp / 1000)
         date_str = date_obj.strftime("%Y%m%d%H%M%S")
         return date_str
