@@ -46,7 +46,6 @@ class HudiEngine:
     HUDI_BULK_INSERT = "bulk_insert"
     HUDI_INSERT = "insert"
     HUDI_UPSERT = "upsert"
-    HUDI_DELETE = "delete"
     HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type"
     HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot"
     HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental"
@@ -92,6 +91,7 @@ class HudiEngine:
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
     def delete_record(self, delete_df, write_options):
+        write_options.update({self.PAYLOAD_CLASS_OPT_KEY, self.PAYLOAD_CLASS_OPT_VAL})
         fg_commit = self._write_hudi_dataset(
             delete_df, "append", self.HUDI_UPSERT, write_options
         )

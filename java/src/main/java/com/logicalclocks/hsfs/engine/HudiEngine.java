@@ -79,9 +79,7 @@ public class HudiEngine {
 
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL =  "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
-  private static final String HUDI_DELETE = "delete";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HudiEngine.class);
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -110,6 +108,7 @@ public class HudiEngine {
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
+    hudiArgs.put(PAYLOAD_CLASS_OPT_KEY, PAYLOAD_CLASS_OPT_VAL);
 
     deleteDF.write().format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
