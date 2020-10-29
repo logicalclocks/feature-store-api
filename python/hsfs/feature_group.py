@@ -109,27 +109,34 @@ class FeatureGroup:
         dataframe_type: Optional[str] = "default",
         read_options: Optional[dict] = {},
     ):
-        """Get the feature group as a DataFrame.
+        """Read the feature group into a dataframe.
 
-        !!! example "Reading feature group as of specific point in time".
-            ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
-            fg.read("2020-10-20 07:34:11").show()
-            ```
+        !!! example "Read feature group as of latest state".
+             ```python
+             fs = connection.get_feature_store();
+             fg = fs.get_feature_group("example_feature_group", 1)
+             fg.read()
+             ```
 
-        # Arguments
-            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
-            feature group as of specific point in time. If not specified will return as of most recent time. Defaults to `None`.
-            storage: Storage type.
-            dataframe_type: Type of dataframe.
-            read_options: User provided read options. Defaults to `{}`.
+        !!! example "Read feature group as of specific point in time".
+             ```python
+             fs = connection.get_feature_store();
+             fg = fs.get_feature_group("example_feature_group", 1)
+             fg.read("2020-10-20 07:34:11")
+             ```
 
-        # Returns
-            `DataFrame`.
+          # Arguments
+             wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
+                 feature group as of specific point in time. If not specified will return as of most recent time.
+                 Defaults to `None`.
+             storage: Storage type.
+             dataframe_type: Type of dataframe.
+              read_options: Additional read options as key/value pairs, defaults to `{}`.
+          # Returns
+              `DataFrame`: The spark dataframe containing the feature data.
 
-        # Raises
-            `RestAPIError`.
+         # Raises
+             `RestAPIError`.
         """
 
         engine.get_instance().set_job_group(
@@ -178,7 +185,7 @@ class FeatureGroup:
             read_options: User provided read options. Defaults to `{}`.
 
         # Returns
-            `DataFrame`.
+            `DataFrame`. The spark dataframe containing the incremental changes of feature data.
 
         # Raises
             `RestAPIError`.
@@ -190,8 +197,13 @@ class FeatureGroup:
             .read(self._default_storage, "default", read_options)
         )
 
-    def show(self, n, storage=None):
-        """Show the first n rows of the feature group."""
+    def show(self, n: int, storage: Optional[str] = None):
+        """Show the first `n` rows of the feature group.
+
+        # Arguments
+            n: Number of rows to show.
+            storage: Storage type.
+        """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
@@ -211,7 +223,27 @@ class FeatureGroup:
             self._feature_store_name, self._feature_store_id, self, features
         )
 
-    def save(self, features, write_options={}):
+    def save(
+        self,
+        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        write_options: Optional[dict] = {},
+    ):
+
+        """Materialize the features data to storage.
+
+        This method materializes the features data from Spark `DataFrame`.
+        # Arguments
+            features: Feature data to be materialized.
+            write_options: Additional write options as key/value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `FeatureGroup`: The updated feature group metadata object.
+
+        # Raises
+            `RestAPIError`: Unable to create feature group.
+        """
+
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
@@ -234,17 +266,17 @@ class FeatureGroup:
 
     def insert(
         self,
-        features,
+        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         overwrite: Optional[bool] = False,
         operation: Optional[str] = None,
         storage: Optional[str] = None,
         write_options: Optional[dict] = {},
     ):
-        """Adds new data to this feature group.
+        """Insert additional feature data into the feature group.
 
         If feature group's time travel format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
 
-        !!! example "Performing upsert operation on feature group with `time_travel_format="HUDI"`".
+        !!! example "Upsert new feature data into the feature group with `time_travel_format="HUDI"`".
             ```python
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
@@ -253,11 +285,15 @@ class FeatureGroup:
             ```
 
         # Arguments
-            features: `DataFrame`: DataFrame.
-            overwrite: If set to `True` performs overwrite operation. Otherwise insert or upsert operation. Defaults to `False`.
+            features: Feature data to be materialized.
+            overwrite: Whether to overwrite the entire data in the feature group.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`. Defaults to `None`.
             storage: Storage type. Defaults to `None`.
-            write_options: User provided write options. Defaults to `{}`.
+            write_options: Additional write options as key/value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `FeatureGroup`: The updated feature group metadata object.
         """
 
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
