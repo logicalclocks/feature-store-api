@@ -20,6 +20,7 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import org.apache.hadoop.fs.Path;
@@ -30,7 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class TrainingDatasetEngine {
 
@@ -39,8 +42,6 @@ public class TrainingDatasetEngine {
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
-  //TODO:
-  //      Compute statistics
 
   /**
    * Make a REST call to Hopsworks to create the metadata and write the data on the File System.
@@ -51,13 +52,24 @@ public class TrainingDatasetEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void save(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                     Map<String, String> userWriteOptions)
+  public void save(TrainingDataset trainingDataset, Dataset<Row> dataset, Map<String, String> userWriteOptions,
+                   List<String> label)
       throws FeatureStoreException, IOException {
 
-    if (trainingDataset.getQueryInt() == null) {
-      // if the training dataset hasn't been generated from a query, parse the schema and set the features
-      trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
+    trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
+
+    // set label features
+    if (label != null && !label.isEmpty()) {
+      for (String l : label) {
+        Optional<TrainingDatasetFeature> feature =
+            trainingDataset.getFeatures().stream().filter(f -> f.getName().equals(l)).findFirst();
+        if (feature.isPresent()) {
+          feature.get().setLabel(true);
+        } else {
+          throw new FeatureStoreException("The specified label `" + label + "` could not be found among the features: "
+            + trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName) + ".");
+        }
+      }
     }
 
     // Make the rest call to create the training dataset metadata
@@ -133,8 +145,8 @@ public class TrainingDatasetEngine {
     tagsApi.deleteTag(trainingDataset, name);
   }
 
-  public String getQuery(TrainingDataset trainingDataset, Storage storage)
+  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getQuery(trainingDataset).getStorageQuery(storage);
+    return trainingDatasetApi.getQuery(trainingDataset, withLabel).getStorageQuery(storage);
   }
 }

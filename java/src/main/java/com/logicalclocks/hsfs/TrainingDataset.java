@@ -32,8 +32,10 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class TrainingDataset {
@@ -98,6 +100,10 @@ public class TrainingDataset {
   @JsonProperty("queryDTO")
   private Query queryInt;
 
+  @Setter
+  @JsonIgnore
+  private List<String> label;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
 
@@ -105,7 +111,7 @@ public class TrainingDataset {
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
                          StorageConnector storageConnector, String location, List<Split> splits, Long seed,
                          FeatureStore featureStore, Boolean statisticsEnabled, Boolean histograms,
-                         Boolean correlations, List<String> statisticColumns) {
+                         Boolean correlations, List<String> statisticColumns, List<String> label) {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -128,6 +134,7 @@ public class TrainingDataset {
     this.histograms = histograms;
     this.correlations = correlations;
     this.statisticColumns = statisticColumns;
+    this.label = label;
   }
 
   /**
@@ -175,7 +182,7 @@ public class TrainingDataset {
    */
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.save(this, dataset, writeOptions);
+    trainingDatasetEngine.save(this, dataset, writeOptions, label);
     if (statisticsEnabled) {
       statisticsEngine.computeStatistics(this, dataset);
     }
@@ -387,11 +394,27 @@ public class TrainingDataset {
 
   @JsonIgnore
   public String getQuery() throws FeatureStoreException, IOException  {
-    return getQuery(Storage.ONLINE);
+    return getQuery(Storage.ONLINE, false);
+  }
+
+  @JsonIgnore
+  public String getQuery(boolean withLabel) throws FeatureStoreException, IOException {
+    return getQuery(Storage.ONLINE, withLabel);
   }
 
   @JsonIgnore
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getQuery(this, storage);
+    return getQuery(storage, false);
+  }
+
+  @JsonIgnore
+  public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getQuery(this, storage, withLabel);
+  }
+
+  @JsonIgnore
+  public List<String> getLabel() {
+    return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
+      Collectors.toList());
   }
 }
