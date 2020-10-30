@@ -293,7 +293,7 @@ class FeatureGroup:
 
         If feature group's time travel format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
 
-        !!! example "Upsert new feature data into the feature group with `time_travel_format="HUDI"`:"
+        !!! example "Upsert new feature data into the feature group with time travel format `HUDI`:"
         ```python
         fs = connection.get_feature_store();
         fg = fs.get_feature_group("example_feature_group", 1)

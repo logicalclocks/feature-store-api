@@ -175,7 +175,7 @@ class FeatureGroupApi:
             self._feature_store_id,
             "featuregroups",
             feature_group_instance.id,
-            "commit",
+            "commits",
         ]
         headers = {"content-type": "application/json"}
         return feature_group_commit_instance.update_from_response_json(
