@@ -237,7 +237,7 @@ class FeatureGroup:
 
         """Materialize features data to storage.
 
-        This method materializes the features data from Spark `DataFrame`.
+        This method materializes the features data in to storage.
         # Arguments
             features: Feature data to be materialized.
             write_options: Additional write options as key/value pairs.

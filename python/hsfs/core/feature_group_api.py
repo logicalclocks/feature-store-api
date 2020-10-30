@@ -161,11 +161,11 @@ class FeatureGroupApi:
         Save feature group commit metadata.
         # Arguments
         feature_group_instance: FeatureGroup, required
-            metadata object of feature group
+            metadata object of feature group.
         feature_group_commit_instance: FeatureGroupCommit, required
-            metadata object of feature group commit
+            metadata object of feature group commit.
         # Returns
-            FeatureGroupCommit
+            `FeatureGroupCommit`.
         """
         _client = client.get_instance()
         path_params = [
