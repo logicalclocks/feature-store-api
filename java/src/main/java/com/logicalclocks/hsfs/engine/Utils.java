@@ -20,8 +20,10 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
-import io.hops.common.Pair;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
@@ -31,12 +33,16 @@ import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {
+
+  StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -91,7 +97,25 @@ public class Utils {
     return JavaConverters.asScalaIteratorConverter(partitionCols.iterator()).asScala().toSeq();
   }
 
+  public Seq<String> getPrimaryColumns(FeatureGroup offlineFeatureGroup) {
+    List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
+        .filter(Feature::getPrimary)
+        .map(Feature::getName)
+        .collect(Collectors.toList());
+
+    return JavaConverters.asScalaIteratorConverter(primaryCols.iterator()).asScala().toSeq();
+  }
+
   public String getFgName(FeatureGroup featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
+  }
+
+  public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
+    StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
+        featureGroup.getFeatureStore().getName(), StorageConnectorType.JDBC);
+    String connStr = storageConnector.getConnectionString();
+    String pw = FileUtils.readFileToString(new File("material_passwd"));
+    return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
+        + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
   }
 }

@@ -22,10 +22,12 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
@@ -36,6 +38,7 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import scala.collection.JavaConverters;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +57,9 @@ public class SparkEngine {
 
   @Getter
   private SparkSession sparkSession;
+
   private Utils utils = new Utils();
+  private HudiEngine hudiEngine = new HudiEngine();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -64,6 +69,8 @@ public class SparkEngine {
     // Configure the Spark context to allow dynamic partitions
     sparkSession.conf().set("hive.exec.dynamic.partition", "true");
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
+    // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
+    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
   public Dataset<Row> sql(String query) {
@@ -77,6 +84,12 @@ public class SparkEngine {
         .format(Constants.JDBC_FORMAT)
         .options(readOptions)
         .load();
+  }
+
+  public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
+                                         Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
+    hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,
+        leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
   }
 
   public void configureConnector(StorageConnector storageConnector) {
@@ -230,7 +243,6 @@ public class SparkEngine {
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
-
     dataset
         .write()
         .format(dataFormat.toString())
@@ -288,17 +300,27 @@ public class SparkEngine {
         .save();
   }
 
-
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, Map<String, String> writeOptions) {
+                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException {
+
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      hudiEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
+    } else {
+      writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
+    }
+  }
+
+  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
+                                 SaveMode saveMode,  Map<String, String> writeOptions) {
     dataset
-        .write()
-        .format(Constants.HIVE_FORMAT)
-        .mode(saveMode)
-        // write options cannot be null
-        .options(writeOptions == null ? new HashMap<>() : writeOptions)
-        .partitionBy(utils.getPartitionColumns(featureGroup))
-        .saveAsTable(utils.getTableName(featureGroup));
+            .write()
+            .format(Constants.HIVE_FORMAT)
+            .mode(saveMode)
+            // write options cannot be null
+            .options(writeOptions == null ? new HashMap<>() : writeOptions)
+            .partitionBy(utils.getPartitionColumns(featureGroup))
+            .saveAsTable(utils.getTableName(featureGroup));
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {

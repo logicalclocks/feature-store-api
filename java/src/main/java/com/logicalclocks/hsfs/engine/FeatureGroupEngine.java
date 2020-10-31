@@ -19,9 +19,12 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
@@ -40,6 +43,7 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  private HudiEngine hudiEngine = new HudiEngine();
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -56,9 +60,8 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset,
-                               List<String> primaryKeys, List<String> partitionKeys,
-                               Storage storage, Map<String, String> writeOptions)
+  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+                               List<String> partitionKeys, Storage storage, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatureStore() != null) {
@@ -96,17 +99,21 @@ public class FeatureGroupEngine {
     }
 
     // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, storage, SaveMode.Append, writeOptions);
+    saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
+            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+                    ? HudiOperationType.BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, Map<String, String> writeOptions)
+                            SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
@@ -114,13 +121,13 @@ public class FeatureGroupEngine {
 
     switch (storage) {
       case OFFLINE:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         break;
       case ONLINE:
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       case ALL:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
         saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
         break;
       default:
@@ -134,10 +141,11 @@ public class FeatureGroupEngine {
    * @param featureGroup
    * @param dataset
    * @param saveMode
+   * @param operation
    * @param writeOptions
    */
-  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, Map<String, String> writeOptions)
+  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
+                                    HudiOperationType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
@@ -149,7 +157,7 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, writeOptions);
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
@@ -160,7 +168,6 @@ public class FeatureGroupEngine {
         SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
-
 
   public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroup);
@@ -182,6 +189,16 @@ public class FeatureGroupEngine {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+  }
+
+  public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroup, Integer limit)
+      throws IOException, FeatureStoreException {
+    return featureGroupApi.commitDetails(featureGroup, limit);
+  }
+
+  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
+                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException {
+    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 
   public void updateDescription(FeatureGroup featureGroup, String description)

@@ -22,27 +22,48 @@ from hsfs.core import join, query_constructor_api, storage_connector_api
 
 class Query:
     def __init__(
-        self, feature_store_name, feature_store_id, left_feature_group, left_features
+        self,
+        feature_store_name,
+        feature_store_id,
+        left_feature_group,
+        left_features,
+        left_featuregroup_start_time=None,
+        left_featuregroup_end_time=None,
     ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
+        self._left_featuregroup_start_time = left_featuregroup_start_time
+        self._left_featuregroup_end_time = left_featuregroup_end_time
         self._joins = []
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
 
-    def read(self, storage="offline", dataframe_type="default"):
+    def read(
+        self,
+        storage="offline",
+        dataframe_type="default",
+        read_options={},
+    ):
         query = self._query_constructor_api.construct_query(self)
 
         if storage.lower() == "online":
-            sql_query = query["queryOnline"]
+            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            sql_query = query["query"]
+            sql_query = query.query
             online_conn = None
+            # Register on hudi feature groups as temporary tables
+            if self._left_feature_group.time_travel_format == "HUDI":
+                self._register_hudi_tables(
+                    query.hudi_cached_featuregroups,
+                    self._feature_store_id,
+                    self._feature_store_name,
+                    read_options,
+                )
 
         return engine.get_instance().sql(
             sql_query, self._feature_store_name, online_conn, dataframe_type
@@ -68,6 +89,17 @@ class Query:
         )
         return self
 
+    def as_of(self, wallclock_time):
+        for join in self._joins:
+            join.query.left_featuregroup_end_time = wallclock_time
+        self.left_featuregroup_end_time = wallclock_time
+        return self
+
+    def pull_changes(self, wallclock_start_time, wallclock_end_time):
+        self.left_featuregroup_start_time = wallclock_start_time
+        self.left_featuregroup_end_time = wallclock_end_time
+        return self
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -75,6 +107,8 @@ class Query:
         return {
             "leftFeatureGroup": self._left_feature_group,
             "leftFeatures": self._left_features,
+            "leftFeatureGroupStartTime": self._left_featuregroup_start_time,
+            "leftFeatureGroupEndTime": self._left_featuregroup_end_time,
             "joins": self._joins,
         }
 
@@ -85,3 +119,28 @@ class Query:
 
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
+
+    @property
+    def left_featuregroup_start_time(self):
+        return self._left_featuregroup_start_time
+
+    @property
+    def left_featuregroup_end_time(self):
+        return self._left_featuregroup_start_time
+
+    @left_featuregroup_start_time.setter
+    def left_featuregroup_start_time(self, left_featuregroup_start_time):
+        self._left_featuregroup_start_time = left_featuregroup_start_time
+
+    @left_featuregroup_end_time.setter
+    def left_featuregroup_end_time(self, left_featuregroup_start_time):
+        self._left_featuregroup_end_time = left_featuregroup_start_time
+
+    @staticmethod
+    def _register_hudi_tables(
+        hudi_feature_groups, feature_store_id, feature_store_name, read_options
+    ):
+        for hudi_fg in hudi_feature_groups:
+            engine.get_instance().register_hudi_temporary_table(
+                hudi_fg, feature_store_id, feature_store_name, read_options
+            )

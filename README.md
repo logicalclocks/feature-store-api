@@ -64,18 +64,51 @@ fg = fs.create_feature_group("rain",
 fg.save(dataframe)
 ```
 
+Upsert new data in to the feature group with `time_travel_format="HUDI"`".
+```python
+fg.insert(upsert_df, operation="upsert")
+```
+
+"Reading feature group as of specific point in time".
+```python
+fg = fs.get_feature_group("rain", 1)
+fg.read("2020-10-20 07:34:11").show()
+```
+
+Read updates  that occurred between specified points in time.
+```python
+fg = fs.get_feature_group("rain", 1)
+fg.read_changes("2020-10-20 07:31:38", "2020-10-20 07:34:11").show()
+```
+
 Join features together
 ```python
 feature_join = rain_fg.select_all()
                     .join(temperature_fg.select_all(), on=["date", "location_id"])
-                    .join(location_fg.select_all()))
-
+                    .join(location_fg.select_all())
 feature_join.show(5)
+```
+
+join feature groups that correspond to specific point in time
+```python
+feature_join = rain_fg.select_all()
+                    .join(temperature_fg.select_all(), on=["date", "location_id"])
+                    .join(location_fg.select_all())
+                    .as_of("2020-10-31")
+feature_join.show(5)
+```
+
+join feature groups that correspond to different time
+```python
+rain_fg_q = rain_fg.select_all().as_of("2020-10-20 07:41:43")
+temperature_fg_q = temperature_fg.select_all().as_of("2020-10-20 07:32:33")
+location_fg_q = location_fg.select_all().as_of("2020-10-20 07:33:08")
+joined_features_q = rain_fg_q.join(temperature_fg_q).join(location_fg_q)
 ```
 
 Use the query object to create a training dataset:
 ```python
-td = fs.create_training_dataset("training_dataset",
+td = fs.create_training_dataset("rain_dataset",
                                 version=1,
                                 data_format="tfrecords",
                                 description="A test training dataset saved in TfRecords format",

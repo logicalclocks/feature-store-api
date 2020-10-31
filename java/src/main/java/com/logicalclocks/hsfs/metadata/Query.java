@@ -19,10 +19,13 @@ package com.logicalclocks.hsfs.metadata;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -33,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Query {
@@ -43,6 +47,10 @@ public class Query {
   private FeatureGroup leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
+  @Getter @Setter
+  private String leftFeatureGroupStartTime;
+  @Getter @Setter
+  private String leftFeatureGroupEndTime;
 
   @Getter @Setter
   private List<Join> joins = new ArrayList<>();
@@ -105,26 +113,63 @@ public class Query {
     return this;
   }
 
-  public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE);
+  /**
+   * Reads Feature group data at a specific point in time.
+   *
+   * @param wallclockTime point in time
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query asOf(String wallclockTime) {
+    for (Join join : this.joins) {
+      Query queryWithTimeStamp = join.getQuery();
+      queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTime);
+      join.setQuery(queryWithTimeStamp);
+    }
+    this.setLeftFeatureGroupEndTime(wallclockTime);
+    return this;
   }
 
-  public Dataset<Row> read(Storage storage) throws FeatureStoreException, IOException {
+  /**
+   * Reads changes that occurred between specified points in time.
+   *
+   * @param wallclockStartTime start date.
+   * @param wallclockEndTime end date.
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query pullChanges(String wallclockStartTime, String wallclockEndTime) {
+    this.setLeftFeatureGroupStartTime(wallclockStartTime);
+    this.setLeftFeatureGroupEndTime(wallclockEndTime);
+    return this;
+  }
+
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
+    return read(Storage.OFFLINE, null);
+  }
+
+  public Dataset<Row> read(Storage storage, Map<String,String> readOptions)
+          throws FeatureStoreException, IOException {
     if (storage == null) {
       throw new FeatureStoreException("Storage not supported");
     }
 
-    String sqlQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this).getStorageQuery(storage);
-    LOGGER.info("Executing query: " + sqlQuery);
+    FsQuery fsQuery =
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    LOGGER.info("Executing query: " + fsQuery.getStorageQuery(storage));
 
     switch (storage) {
       case OFFLINE:
-        return SparkEngine.getInstance().sql(sqlQuery);
+        if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+          registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+        }
+        return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
       case ONLINE:
         StorageConnector onlineConnector
             = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-        return SparkEngine.getInstance().jdbc(onlineConnector, sqlQuery);
+        return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
       default:
         throw new FeatureStoreException("Storage not supported");
     }
@@ -135,7 +180,7 @@ public class Query {
   }
 
   public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
-    read(storage).show(numRows);
+    read(storage, null).show(numRows);
   }
 
   public String toString() {
@@ -149,6 +194,19 @@ public class Query {
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
+    }
+  }
+
+  private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> hudiFeatureGroups,
+                                         Map<String, String> readOptions)  {
+    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiFeatureGroups) {
+      String alias = hudiFeatureGroupAlias.getAlias();
+      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+
+      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
+          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
+          readOptions);
     }
   }
 }

@@ -155,3 +155,34 @@ class FeatureGroupApi:
                 data=feature_group_copy.json(),
             ),
         )
+
+    def commit(self, feature_group_instance, feature_group_commit_instance):
+        """
+        Save feature group commit metadata.
+        # Arguments
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        feature_group_commit_instance: FeatureGroupCommit, required
+            metadata object of feature group commit.
+        # Returns
+            `FeatureGroupCommit`.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "commits",
+        ]
+        headers = {"content-type": "application/json"}
+        return feature_group_commit_instance.update_from_response_json(
+            _client._send_request(
+                "POST",
+                path_params,
+                headers=headers,
+                data=feature_group_commit_instance.json(),
+            ),
+        )
