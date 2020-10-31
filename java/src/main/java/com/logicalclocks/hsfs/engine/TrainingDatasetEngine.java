@@ -66,7 +66,7 @@ public class TrainingDatasetEngine {
         if (feature.isPresent()) {
           feature.get().setLabel(true);
         } else {
-          throw new FeatureStoreException("The specified label `" + label + "` could not be found among the features: "
+          throw new FeatureStoreException("The specified label `" + l + "` could not be found among the features: "
             + trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName) + ".");
         }
       }
