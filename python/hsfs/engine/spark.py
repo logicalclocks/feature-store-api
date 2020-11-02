@@ -29,6 +29,7 @@ except ModuleNotFoundError:
 from hsfs import feature, training_dataset_feature
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import hudi_engine
 
 
 class Engine:
@@ -42,6 +43,7 @@ class Engine:
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
+        self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
 
         if not os.path.exists("/dbfs/"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
@@ -75,9 +77,26 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_temporary_table(self, query, storage_connector, alias):
+    def register_on_demand_temporary_table(self, query, storage_connector, alias):
         on_demand_dataset = self._jdbc(query, storage_connector)
         on_demand_dataset.createOrReplaceTempView(alias)
+
+    def register_hudi_temporary_table(
+        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+        hudi_engine_instance = hudi_engine.HudiEngine(
+            feature_store_id,
+            feature_store_name,
+            hudi_fg_alias.feature_group,
+            self._spark_context,
+            self._spark_session,
+        )
+        hudi_engine_instance.register_temporary_table(
+            hudi_fg_alias.alias,
+            hudi_fg_alias.left_feature_group_start_timestamp,
+            hudi_fg_alias.left_feature_group_end_timestamp,
+            read_options,
+        )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
@@ -125,9 +144,10 @@ class Engine:
     def save_dataframe(
         self,
         table_name,
-        partition_columns,
+        feature_group,
         dataframe,
         save_mode,
+        operation,
         storage,
         offline_write_options,
         online_write_options,
@@ -135,9 +155,10 @@ class Engine:
         if storage.lower() == "offline":
             self._save_offline_dataframe(
                 table_name,
-                partition_columns,
+                feature_group,
                 dataframe,
                 save_mode,
+                operation,
                 offline_write_options,
             )
         elif storage.lower() == "online":
@@ -147,7 +168,6 @@ class Engine:
         elif storage.lower() == "all":
             self._save_offline_dataframe(
                 table_name,
-                partition_columns,
                 dataframe,
                 save_mode,
                 offline_write_options,
@@ -159,13 +179,33 @@ class Engine:
             raise FeatureStoreException("Storage not supported")
 
     def _save_offline_dataframe(
-        self, table_name, partition_columns, dataframe, save_mode, write_options
+        self,
+        table_name,
+        feature_group,
+        dataframe,
+        save_mode,
+        operation,
+        write_options,
     ):
-        dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
-            **write_options
-        ).partitionBy(partition_columns if partition_columns else []).saveAsTable(
-            table_name
-        )
+        if feature_group.time_travel_format == "HUDI":
+            hudi_engine_instance = hudi_engine.HudiEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                self._spark_session,
+                self._spark_context,
+            )
+            hudi_engine_instance.save_hudi_fg(
+                dataframe, save_mode, operation, write_options
+            )
+        else:
+            dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
+                **write_options
+            ).partitionBy(
+                feature_group.partition_key if feature_group.partition_key else []
+            ).saveAsTable(
+                table_name
+            )
 
     def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
         dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
@@ -200,8 +240,10 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf, relevant_columns, correlations, histograms
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf, relevant_columns, correlations, histograms
+            )
         )
 
     def write_options(self, data_format, provided_options):

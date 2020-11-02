@@ -71,7 +71,7 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
 1. Currently we are using our own version of `keras-autodoc`
 
     ```bash
-    pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags
+    pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
     ```
 
 2. Install HSFS with `docs` extras:
@@ -129,3 +129,6 @@ Some extra content here.
 ```
 
 Finally, run the `auto_doc.py` script, as decribed above, to update the documentation.
+
+For information about Markdown syntax and possible Admonitions/Highlighting etc. see
+the [Material for Mkdocs themes reference documentation](https://squidfunk.github.io/mkdocs-material/reference/abbreviations/).

@@ -123,11 +123,27 @@ class FeatureGroupApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def update_statistics_config(self, feature_group_instance):
-        """Update the statistics configuration of a feature group.
+    def update_metadata(
+        self, feature_group_instance, feature_group_copy, query_parameter
+    ):
+        """Update the metadata of a feature group.
 
-        :param feature_group_instance: metadata object of feature group
-        :type feature_group_instance: FeatureGroup
+        This only updates description and schema/features. The
+        `feature_group_copy` is the metadata object sent to the backend, while
+        `feature_group_instance` is the user object, which is only updated
+        after a successful REST call.
+
+        # Arguments
+            feature_group_instance: FeatureGroup. User metadata object of the
+                feature group.
+            feature_group_copy: FeatureGroup. Metadata object of the feature
+                group with the information to be updated.
+            query_parameter: str. Query parameter that will be set to true to
+                control which information is updated. E.g. "updateMetadata" or
+                "updateStatsSettings".
+
+        # Returns
+            FeatureGroup. The updated feature group metadata object.
         """
         _client = client.get_instance()
         path_params = [
@@ -139,13 +155,44 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         headers = {"content-type": "application/json"}
-        query_params = {"updateStatsSettings": True}
+        query_params = {query_parameter: True}
         return feature_group_instance.update_from_response_json(
             _client._send_request(
                 "PUT",
                 path_params,
                 query_params,
                 headers=headers,
-                data=feature_group_instance.json(),
+                data=feature_group_copy.json(),
+            ),
+        )
+
+    def commit(self, feature_group_instance, feature_group_commit_instance):
+        """
+        Save feature group commit metadata.
+        # Arguments
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        feature_group_commit_instance: FeatureGroupCommit, required
+            metadata object of feature group commit.
+        # Returns
+            `FeatureGroupCommit`.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "commits",
+        ]
+        headers = {"content-type": "application/json"}
+        return feature_group_commit_instance.update_from_response_json(
+            _client._send_request(
+                "POST",
+                path_params,
+                headers=headers,
+                data=feature_group_commit_instance.json(),
             ),
         )

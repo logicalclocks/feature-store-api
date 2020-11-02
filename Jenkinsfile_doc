@@ -7,7 +7,7 @@ pipeline {
             agent {
                 docker {
                     label "local"
-                    image "docker.hops.works/hopsworks_twine:0.0.2"
+                    image "docker.hops.works/hopsworks_twine:0.0.3"
                 }
             }
 
@@ -26,8 +26,8 @@ pipeline {
             }
 
             steps {
-                sh "rm -r /opt/docs/*" 
-                sh "cp -r site/* /opt/docs/" 
+                sh "rm -r /opt/docs/*"
+                sh "cp -r site/* /opt/docs/"
             }
         }
     }

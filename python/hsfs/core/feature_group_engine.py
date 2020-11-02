@@ -14,11 +14,16 @@
 #
 
 from hsfs import engine
+<<<<<<< HEAD
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     feature_group_base_engine,
 )
+=======
+from hsfs import feature_group as fg
+from hsfs.core import feature_group_api, storage_connector_api, tags_api, hudi_engine
+>>>>>>> upstream/master
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -67,16 +72,25 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         engine.get_instance().save_dataframe(
             table_name,
-            feature_group.partition_key,
+            feature_group,
             feature_dataframe,
             self.APPEND,
+            hudi_engine.HudiEngine.HUDI_BULK_INSERT
+            if feature_group.time_travel_format == "HUDI"
+            else None,
             storage,
             offline_write_options,
             online_write_options,
         )
 
     def insert(
-        self, feature_group, feature_dataframe, overwrite, storage, write_options
+        self,
+        feature_group,
+        feature_dataframe,
+        overwrite,
+        operation,
+        storage,
+        write_options,
     ):
         offline_write_options = write_options
         online_write_options = write_options
@@ -95,17 +109,37 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         engine.get_instance().save_dataframe(
             self._get_table_name(feature_group),
-            feature_group.partition_key,
+            feature_group,
             feature_dataframe,
             self.APPEND,
+            operation,
             storage,
             offline_write_options,
             online_write_options,
         )
 
+<<<<<<< HEAD
+=======
+    def delete(self, feature_group):
+        self._feature_group_api.delete(feature_group)
+
+    @staticmethod
+    def commit_delete(feature_group, delete_df, write_options):
+        hudi_engine_instance = hudi_engine.HudiEngine(
+            feature_group.feature_store_id,
+            feature_group.feature_store_name,
+            feature_group,
+            engine.get_instance()._spark_context,
+            engine.get_instance()._spark_session,
+        )
+        return hudi_engine_instance.delete_record(delete_df, write_options)
+
+>>>>>>> upstream/master
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_statistics_config(feature_group)
+        self._feature_group_api.update_statistics_config(
+            feature_group, feature_group, "updateStatsSettings"
+        )
 
     def _get_table_name(self, feature_group):
         return (
@@ -126,4 +160,34 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             online_conn = None
         return engine.get_instance().sql(
             query, feature_store_name, online_conn, dataframe_type
+        )
+
+    def append_features(self, feature_group, new_features):
+        """Appends features to a feature group."""
+        # perform changes on copy in case the update fails, so we don't leave
+        # the user object in corrupted state
+        copy_feature_group = fg.FeatureGroup(
+            None,
+            None,
+            None,
+            None,
+            id=feature_group.id,
+            features=feature_group.features + new_features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_description(self, feature_group, description):
+        """Updates the description of a feature group."""
+        copy_feature_group = fg.FeatureGroup(
+            None,
+            None,
+            description,
+            None,
+            id=feature_group.id,
+            features=feature_group.features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
         )

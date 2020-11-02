@@ -26,6 +26,7 @@ setup(
         "PyMySQL",
         "pyjks",
         "sqlalchemy",
+        "mock",
     ],
     extras_require={
         "dev": [

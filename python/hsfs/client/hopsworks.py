@@ -20,11 +20,12 @@ import textwrap
 import base64
 
 from pathlib import Path
+from hsfs import util
 from hsfs.client import base, auth
 
 try:
     import jks
-except:
+except ModuleNotFoundError:
     pass
 
 
@@ -35,11 +36,9 @@ class Client(base.Client):
     PROJECT_NAME = "HOPSWORKS_PROJECT_NAME"
     HADOOP_USER_NAME = "HADOOP_USER_NAME"
     MATERIAL_DIRECTORY = "MATERIAL_DIRECTORY"
-    CRYPTO_MATERIAL_PASSWORD = "material_passwd"
     HDFS_USER = "HDFS_USER"
     T_CERTIFICATE = "t_certificate"
     K_CERTIFICATE = "k_certificate"
-    PASSWORD_SUFFIX = "__cert.key"
     TRUSTSTORE_SUFFIX = "__tstore.key"
     KEYSTORE_SUFFIX = "__kstore.key"
     PEM_CA_CHAIN = "ca_chain.pem"
@@ -67,8 +66,7 @@ class Client(base.Client):
         return os.environ[self.REST_ENDPOINT]
 
     def _get_trust_store_path(self):
-        """Convert truststore from jks to pem and return the location 
-        """
+        """Convert truststore from jks to pem and return the location"""
         ca_chain_path = Path(self.PEM_CA_CHAIN)
         if not ca_chain_path.exists():
             self._write_ca_chain(ca_chain_path)
@@ -78,7 +76,7 @@ class Client(base.Client):
         """
         Converts JKS trustore file into PEM to be compatible with Python libraries
         """
-        keystore_pw = self._get_cert_pw()
+        keystore_pw = util.get_cert_pw()
         keystore_ca_cert = self._convert_jks_to_pem(
             self._get_jks_key_store_path(), keystore_pw
         )
@@ -132,28 +130,12 @@ class Client(base.Client):
         pem_str = pem_str + "-----END {}-----".format(pem_type) + "\n"
         return pem_str
 
-    def _get_cert_pw(self):
-        """
-        Get keystore password from local container
-
-        Returns:
-            Certificate password
-        """
-        pwd_path = Path(self.CRYPTO_MATERIAL_PASSWORD)
-        if not pwd_path.exists():
-            username = os.environ[self.HADOOP_USER_NAME]
-            material_directory = Path(os.environ[self.MATERIAL_DIRECTORY])
-            pwd_path = material_directory.joinpath(username + self.PASSWORD_SUFFIX)
-
-        with pwd_path.open() as f:
-            return f.read()
-
     def _get_jks_trust_store_path(self):
         """
         Get truststore location
 
         Returns:
-             truststore location 
+             truststore location
         """
         t_certificate = Path(self.T_CERTIFICATE)
         if t_certificate.exists():
@@ -168,7 +150,7 @@ class Client(base.Client):
         Get keystore location
 
         Returns:
-             keystore location 
+             keystore location
         """
         k_certificate = Path(self.K_CERTIFICATE)
         if k_certificate.exists():

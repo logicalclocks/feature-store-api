@@ -123,6 +123,10 @@ public class FeatureStore {
     return storageConnectorApi.getByNameAndType(this, name, type);
   }
 
+  public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
+    return storageConnectorApi.getOnlineStorageConnector(this);
+  }
+
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
         .featureStore(this);

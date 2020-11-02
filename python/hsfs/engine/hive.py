@@ -52,7 +52,7 @@ class Engine:
     def save_dataframe(
         self,
         table_name,
-        partition_columns,
+        feature_group,
         dataframe,
         save_mode,
         storage,
