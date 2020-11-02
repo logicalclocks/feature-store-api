@@ -136,6 +136,9 @@ class FeatureStore:
     def get_storage_connector(self, name, connector_type):
         return self._storage_connector_api.get(name, connector_type)
 
+    def get_online_storage_connector(self):
+        return self._storage_connector_api.get_online_connector()
+
     def sql(self, query, dataframe_type="default", storage="offline"):
         return self._feature_group_engine.sql(
             query, self._name, dataframe_type, storage.lower()

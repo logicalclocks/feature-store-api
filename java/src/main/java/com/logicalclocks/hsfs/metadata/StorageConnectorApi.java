@@ -33,6 +33,7 @@ public class StorageConnectorApi {
   private static final String CONNECTOR_PATH = "/storageconnectors";
   private static final String CONNECTOR_TYPE_PATH = CONNECTOR_PATH + "{/connType}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
+  private static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
@@ -63,7 +64,7 @@ public class StorageConnectorApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + ONLINE_CONNECTOR_PATH;
+        + CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStore.getProjectId())
@@ -71,7 +72,9 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
+    StorageConnector[] storageConnectors =  hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector[].class);
+    return Arrays.stream(storageConnectors).filter(s -> s.getName().contains(ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX))
+            .findFirst()
+            .orElseThrow(() -> new FeatureStoreException("Could not find online storage connector"));
   }
-
 }
