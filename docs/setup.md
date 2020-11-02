@@ -17,3 +17,7 @@ Connecting to the Feature Store from SageMaker requires setting up a Feature Sto
 ## Python (Local or KubeFlow)
 
 Connecting to the Feature Store from any Python environment, such as your local environment or KubeFlow, requires setting up a Feature Store API Key and installing the HSFS Python client library. The [Python integration guide](integrations/python.md) explains step by step how to connect to the Feature Store from any Python environment.
+
+## Spark Cluster
+
+Connecting to the Feature Store from an external Spark cluster, such as Cloudera, requires configuring it with the Hopsworks client jars and configuration. The [Spark integration guide](integrations/spark.md) explains step by step how to connect to the Feature Store from an external Spark cluster.
