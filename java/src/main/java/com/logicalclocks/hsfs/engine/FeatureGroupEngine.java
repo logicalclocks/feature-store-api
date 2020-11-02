@@ -16,7 +16,6 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -180,18 +179,5 @@ public class FeatureGroupEngine {
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
-  }
-
-  public void updateDescription(FeatureGroup featureGroup, String description)
-      throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withDescription(description), "updateMetadata");
-    featureGroup.setDescription(apiFG.getDescription());
-  }
-
-  public void appendFeatures(FeatureGroup featureGroup, List<Feature> features)
-      throws FeatureStoreException, IOException {
-    features.addAll(featureGroup.getFeatures());
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withFeatures(features), "updateMetadata");
-    featureGroup.setFeatures(apiFG.getFeatures());
   }
 }

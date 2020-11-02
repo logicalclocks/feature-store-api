@@ -28,7 +28,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import lombok.With;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -36,39 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroup extends FeatureGroupBase {
-
-  @Getter @Setter
-  private Integer id;
-
-  @Getter @Setter
-  private String name;
-
-  @Getter @Setter
-  private Integer version;
-
-  @Getter @Setter @With
-  private String description;
-
-  @Getter @Setter
-  private FeatureStore featureStore;
-
-  @Getter @Setter @With
-  private List<Feature> features;
-
-  @Getter @Setter
-  private Date created;
-
-  @Getter
-  private String creator;
->>>>>>> upstream/master
 
   @Getter @Setter
   private Storage defaultStorage;
@@ -119,7 +91,6 @@ public class FeatureGroup extends FeatureGroupBase {
                       TimeTravelFormat timeTravelFormat, Storage defaultStorage, List<Feature> features,
                       Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
                       List<String> statisticColumns) {
-
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -328,43 +299,6 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupEngine.updateStatisticsConfig(this);
-  }
-
-  /**
-   * Update the description of the feature group.
-   *
-   * @param description
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void updateDescription(String description) throws FeatureStoreException, IOException {
-    featureGroupEngine.updateDescription(this, description);
-  }
-
-  /**
-   * Append features to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException {
-    featureGroupEngine.appendFeatures(this, new ArrayList<>(features));
-  }
-
-  /**
-   * Append a single feature to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void appendFeatures(Feature features) throws FeatureStoreException, IOException {
-    List<Feature> featureList = new ArrayList<>();
-    featureList.add(features);
-    featureGroupEngine.appendFeatures(this, featureList);
   }
 
   /**

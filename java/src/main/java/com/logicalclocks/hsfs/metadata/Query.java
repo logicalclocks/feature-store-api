@@ -165,7 +165,8 @@ public class Query {
     switch (storage) {
       case OFFLINE:
         registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-        if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+        if (leftFeatureGroup instanceof FeatureGroup
+            && ((FeatureGroup)leftFeatureGroup).getTimeTravelFormat() == TimeTravelFormat.HUDI) {
           registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
         }
         return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));

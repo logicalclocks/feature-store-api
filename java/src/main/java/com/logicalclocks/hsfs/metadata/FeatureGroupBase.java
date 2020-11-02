@@ -22,15 +22,18 @@ import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureGroupBase {
+@NoArgsConstructor
+public class FeatureGroupBase {
 
   @Getter @Setter
   protected Integer id;
@@ -58,12 +61,13 @@ public abstract class FeatureGroupBase {
 
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
 
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
-    return new Query(this, features);
+  public FeatureGroupBase(FeatureStore featureStore, Integer id) {
+    this.featureStore = featureStore;
+    this.id = id;
   }
 
-  public Query selectAll() throws FeatureStoreException, IOException {
-    return new Query(this, getFeatures());
+  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+    return new Query(this, features);
   }
 
   public Query select(List<String> features) throws FeatureStoreException, IOException {
@@ -71,6 +75,10 @@ public abstract class FeatureGroupBase {
     // For the query building each feature need only the name set.
     List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
     return selectFeatures(featureObjList);
+  }
+
+  public Query selectAll() throws FeatureStoreException, IOException {
+    return new Query(this, getFeatures());
   }
 
   public void delete() throws FeatureStoreException, IOException {
@@ -134,5 +142,42 @@ public abstract class FeatureGroupBase {
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.deleteTag(this, name);
+  }
+
+  /**
+   * Update the description of the feature group.
+   *
+   * @param description
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateDescription(String description) throws FeatureStoreException, IOException {
+    featureGroupBaseEngine.updateDescription(this, description);
+  }
+
+  /**
+   * Append features to the schema of the feature group.
+   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
+   *
+   * @param features
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+    featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features));
+  }
+
+  /**
+   * Append a single feature to the schema of the feature group.
+   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
+   *
+   * @param features
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException {
+    List<Feature> featureList = new ArrayList<>();
+    featureList.add(features);
+    featureGroupBaseEngine.appendFeatures(this, featureList);
   }
 }

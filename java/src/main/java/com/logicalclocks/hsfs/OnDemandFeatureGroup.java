@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -29,6 +30,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.util.List;
 
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OnDemandFeatureGroup extends FeatureGroupBase {
 

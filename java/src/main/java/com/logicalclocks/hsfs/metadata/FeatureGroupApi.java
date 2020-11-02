@@ -159,7 +159,7 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-  public FeatureGroup updateMetadata(FeatureGroup featureGroup, String queryParameter)
+  public FeatureGroup updateMetadata(FeatureGroupBase featureGroup, String queryParameter)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH

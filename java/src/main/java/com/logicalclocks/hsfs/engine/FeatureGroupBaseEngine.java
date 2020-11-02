@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
- *
+ * Copyright (c) 2020 Logical Clocks AB *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,12 +16,15 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class FeatureGroupBaseEngine {
@@ -46,5 +48,22 @@ public class FeatureGroupBaseEngine {
   public void deleteTag(FeatureGroupBase featureGroupBase, String name)
       throws FeatureStoreException, IOException {
     tagsApi.deleteTag(featureGroupBase, name);
+  }
+
+  public void updateDescription(FeatureGroupBase featureGroup, String description)
+      throws FeatureStoreException, IOException {
+    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
+    fgBaseSend.setDescription(description);
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    featureGroup.setDescription(apiFG.getDescription());
+  }
+
+  public void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features)
+      throws FeatureStoreException, IOException {
+    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
+    features.addAll(featureGroup.getFeatures());
+    fgBaseSend.setFeatures(features);
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    featureGroup.setFeatures(apiFG.getFeatures());
   }
 }
