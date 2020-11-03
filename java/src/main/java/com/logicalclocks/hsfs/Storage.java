@@ -18,6 +18,5 @@ package com.logicalclocks.hsfs;
 
 public enum Storage {
   OFFLINE,
-  ONLINE,
-  ALL
+  ONLINE
 }
