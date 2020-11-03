@@ -240,29 +240,52 @@ public class FeatureGroup {
   }
 
   public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException {
-    insert(featureData, null, false);
+    if (this.timeTravelFormat == TimeTravelFormat.HUDI)  {
+      insert(featureData, null, false, HudiOperationType.UPSERT, null);
+    } else {
+      insert(featureData, null, false);
+    }
   }
 
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
-    insert(featureData, storage, false, null, null);
+    if (this.timeTravelFormat == TimeTravelFormat.HUDI)  {
+      insert(featureData, storage, false, HudiOperationType.UPSERT, null);
+    } else {
+      insert(featureData, storage, false, null, null);
+    }
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
-    insert(featureData, null, overwrite);
+    if (this.timeTravelFormat == TimeTravelFormat.HUDI)  {
+      insert(featureData, null, overwrite,
+          overwrite ? HudiOperationType.BULK_INSERT : HudiOperationType.UPSERT, null);
+    } else {
+      insert(featureData, null, overwrite);
+    }
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException {
-    insert(featureData, storage, overwrite, null,  null);
+    if (this.timeTravelFormat == TimeTravelFormat.HUDI)  {
+      insert(featureData, storage, overwrite,
+          overwrite ? HudiOperationType.BULK_INSERT : HudiOperationType.UPSERT, null);
+    } else {
+      insert(featureData, storage, overwrite, null,  null);
+    }
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    insert(featureData, null, overwrite, null, writeOptions);
+    if (this.timeTravelFormat == TimeTravelFormat.HUDI)  {
+      insert(featureData, null, overwrite,
+          overwrite ? HudiOperationType.BULK_INSERT : HudiOperationType.UPSERT, writeOptions);
+    } else {
+      insert(featureData, null, overwrite, null, writeOptions);
+    }
   }
 
   /**
-   * Commit insert or upsert to time travel enabled Feature group.
+   * insert function with HUDI "insert" or "upsert" ops for HUDI time travel enabled Feature group.
    *
    * @param featureData dataframe to be committed.
    * @param operation commit operation type, INSERT or UPSERT.
@@ -333,8 +356,23 @@ public class FeatureGroup {
     featureGroupEngine.commitDelete(this, featureData, writeOptions);
   }
 
-  public FeatureGroupCommit[] commitDetails(Integer limit) throws IOException, FeatureStoreException {
+  /**
+   * Return commit details.
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<String, Map<String,String>>  commitDetails(Integer limit) throws IOException, FeatureStoreException {
     return featureGroupEngine.commitDetails(this, limit);
+  }
+
+  /**
+   * Return commit details.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<String, Map<String,String>>  commitDetails() throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetails(this, null);
   }
 
   /**

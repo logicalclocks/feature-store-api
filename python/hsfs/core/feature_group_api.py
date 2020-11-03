@@ -16,6 +16,7 @@
 
 from hsfs import client
 from hsfs import feature_group
+from hsfs import feature_group_commit
 
 
 class FeatureGroupApi:
@@ -185,4 +186,31 @@ class FeatureGroupApi:
                 headers=headers,
                 data=feature_group_commit_instance.json(),
             ),
+        )
+
+    def commit_details(self, feature_group_instance, limit):
+        """
+        Get feature group commit metadata.
+        # Arguments
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        limit: number of commits to retrieve
+        # Returns
+            `FeatureGroupCommit`.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "commits",
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {"sort_by": "committed_on:desc", "limit": limit}
+
+        return feature_group_commit.FeatureGroupCommit.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers),
         )

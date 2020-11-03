@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -185,9 +186,20 @@ public class FeatureGroupEngine {
     featureGroup.setHistograms(apiFG.getHistograms());
   }
 
-  public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroup, Integer limit)
+  public Map<String, Map<String,String>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
-    return featureGroupApi.commitDetails(featureGroup, limit);
+    List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);
+    Map<String, Map<String,String>> commitDetails = new HashMap<String, Map<String,String>>();
+    for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
+      commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
+          put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
+          put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
+          put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
+          put("rowsDeleted", featureGroupCommit.getRowsDeleted().toString());
+        }}
+      );
+    }
+    return commitDetails;
   }
 
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,

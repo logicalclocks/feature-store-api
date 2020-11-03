@@ -207,7 +207,7 @@ public class HudiEngine {
   }
 
   @SneakyThrows
-  private String timeStampToHudiFormat(Long commitedOnTimeStamp) {
+  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
     Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
     return dateFormat.format(commitedOnDate);
   }
