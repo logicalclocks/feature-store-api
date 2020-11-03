@@ -136,20 +136,17 @@ class FeatureStore:
     def get_storage_connector(self, name, connector_type):
         return self._storage_connector_api.get(name, connector_type)
 
+    def sql(self, query, dataframe_type="default", online=False):
+        return self._feature_group_engine.sql(query, self._name, dataframe_type, online)
+
     def get_online_storage_connector(self):
         return self._storage_connector_api.get_online_connector()
 
-    def sql(self, query, dataframe_type="default", storage="offline"):
-        return self._feature_group_engine.sql(
-            query, self._name, dataframe_type, storage.lower()
-        )
-
     def create_feature_group(
         self,
-        name,
+        name: str,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        default_storage: Optional[str] = "offline",
         online_enabled: Optional[bool] = False,
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
@@ -173,11 +170,10 @@ class FeatureStore:
             description: A string describing the contents of the feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            default_storage: Define where the data of this feature group should be saved
-                if not specified otherwise, defaults to `"offline"`-storage.
             online_enabled: Define whether the feature group should be made available
                 also in the online feature store for low latency access, defaults to
                 `False`.
+            time_travel_format: Format used for time travel, defaults to `"HUDI"`.
             partition_key: A list of feature names to be used as partition key when
                 writing the feature data to the offline storage, defaults to empty list
                 `[]`.
@@ -203,7 +199,6 @@ class FeatureStore:
             description=description,
             online_enabled=online_enabled,
             time_travel_format=time_travel_format,
-            default_storage=default_storage,
             partition_key=partition_key,
             primary_key=primary_key,
             featurestore_id=self._id,

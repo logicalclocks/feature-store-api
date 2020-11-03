@@ -54,7 +54,6 @@ class FeatureGroup:
         online_enabled=False,
         time_travel_format=HUDI,
         hudi_enabled=False,
-        default_storage="offline",
         statistics_config=None,
     ):
         self._feature_store_id = featurestore_id
@@ -73,7 +72,6 @@ class FeatureGroup:
         self._jobs = jobs
         self._online_enabled = online_enabled
         self._time_travel_format = time_travel_format
-        self._default_storage = default_storage
         self._hudi_enabled = hudi_enabled
 
         if id is not None:
@@ -107,12 +105,20 @@ class FeatureGroup:
     def read(
         self,
         wallclock_time: Optional[str] = None,
-        storage: Optional[str] = None,
+        online: Optional[bool] = False,
         dataframe_type: Optional[str] = "default",
         read_options: Optional[dict] = {},
     ):
         """
         Read the feature group into a dataframe.
+
+        Reads the feature group by default from the offline storage as Spark DataFrame
+        on Hopsworks and Databricks, and as Pandas dataframe on AWS Sagemaker and pure
+        Python environments.
+
+        Set `online` to `True` to read from the online storage, or change
+        `dataframe_type` to read as a different format.
+
         !!! example "Read feature group as of latest state:"
             ```python
             fs = connection.get_feature_store();
@@ -126,18 +132,25 @@ class FeatureGroup:
             fg.read("2020-10-20 07:34:11")
             ```
         # Arguments
-            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss". If Specified will retrieve
-                 feature group as of specific point in time. If not specified will return as of most recent time.
-                 Defaults to `None`.
-            storage: Storage type.
-            dataframe_type: Type of dataframe.
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+                If Specified will retrieve feature group as of specific point in time.
+                If not specified will return as of most recent time. Defaults to `None`.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             read_options: Additional read options as key/value pairs, defaults to `{}`.
+
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
+            `pyspark.DataFrame`. A Spark DataFrame.
+            `pandas.DataFrame`. A Pandas DataFrame.
+            `numpy.ndarray`. A two-dimensional Numpy array.
+            `list`. A two-dimensional Python list.
+
         # Raises
             `RestAPIError`.
         """
-
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
@@ -149,14 +162,14 @@ class FeatureGroup:
                 self.select_all()
                 .as_of(wallclock_time)
                 .read(
-                    storage if storage else self._default_storage,
+                    online,
                     dataframe_type,
                     read_options,
                 )
             )
         else:
             return self.select_all().read(
-                storage if storage else self._default_storage,
+                online,
                 dataframe_type,
                 read_options,
             )
@@ -171,7 +184,7 @@ class FeatureGroup:
 
         This function only works on feature group's with `HUDI` time travel format.
 
-        !!! example "Reading feature group commits incrementally between specified points in time:"
+        !!! example "Reading commits incrementally between specified points in time:"
             ```python
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
@@ -179,12 +192,15 @@ class FeatureGroup:
             ```
 
         # Arguments
-            start_wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
-            end_wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+            start_wallclock_time: Date string in the format of "YYYYMMDD" or
+                "YYYYMMDDhhmmss".
+            end_wallclock_time: Date string in the format of "YYYYMMDD" or
+                "YYYYMMDDhhmmss".
             read_options: User provided read options. Defaults to `{}`.
 
         # Returns
-            `DataFrame`. The spark dataframe containing the incremental changes of feature data.
+            `DataFrame`. The spark dataframe containing the incremental changes of
+            feature data.
 
         # Raises
             `RestAPIError`.
@@ -193,15 +209,16 @@ class FeatureGroup:
         return (
             self.select_all()
             .pull_changes(start_wallclock_time, end_wallclock_time)
-            .read(self._default_storage, "default", read_options)
+            .read(False, "default", read_options)
         )
 
-    def show(self, n: int, storage: Optional[str] = None):
+    def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
 
         # Arguments
-            n: Number of rows to show.
-            storage: Storage type.
+            n: int. Number of rows to show.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -209,15 +226,34 @@ class FeatureGroup:
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n, storage if storage else self._default_storage)
+        return self.select_all().show(n, online)
 
     def select_all(self):
-        """Select all features in the feature group and return a query object."""
+        """Select all features in the feature group and return a query object.
+
+        The query can be used to construct joins of feature groups or create a
+        training dataset immediately.
+
+        # Returns
+            `Query`. A query object with all features of the feature group.
+        """
         return query.Query(
             self._feature_store_name, self._feature_store_id, self, self._features
         )
 
     def select(self, features=[]):
+        """Select a subset of features of the feature group and return a query object.
+
+        The query can be used to construct joins of feature groups or create a training
+        dataset with a subset of features of the feature group.
+
+        # Arguments
+            features: list, optional. A list of `Feature` objects or feature names as
+                strings to be selected, defaults to [].
+
+        # Returns
+            `Query`: A query object with the selected features of the feature group.
+        """
         return query.Query(
             self._feature_store_name, self._feature_store_id, self, features
         )
@@ -225,7 +261,6 @@ class FeatureGroup:
     def save(
         self,
         features: Union[
-            query.Query,
             pd.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
@@ -234,31 +269,33 @@ class FeatureGroup:
         ],
         write_options: Optional[Dict[Any, Any]] = {},
     ):
+        """Persist the metadata and materialize the feature group to the feature store.
 
-        """Materialize features data to storage.
+        Calling `save` creates the metadata for the feature group in the feature store
+        and writes the specified `features` dataframe as feature group to the
+        online/offline feature store as specified.
 
-        This method materializes the features data in to storage.
+        By default, this writes the feature group to the offline storage, and if
+        `online_enabled` for the feature group, also to the online feature store.
+
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        or a two-dimensional Numpy array or a two-dimensional Python nested list.
+
         # Arguments
-            features: Feature data to be materialized.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
+            write_options: Additional write options for Spark as
+                key-value pairs, defaults to `{}`.
 
         # Returns
-            `FeatureGroup`: The updated feature group metadata object.
+            `FeatureGroup`. Returns the persisted `FeatureGroup` metadata object.
 
         # Raises
-            `RestAPIError`: Unable to create feature group.
+            `RestAPIError`. Unable to create feature group.
         """
-
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
-        self._feature_group_engine.save(
-            self,
-            feature_dataframe,
-            self._default_storage,
-            write_options,
-        )
+        self._feature_group_engine.save(self, feature_dataframe, write_options)
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
@@ -273,7 +310,6 @@ class FeatureGroup:
     def insert(
         self,
         features: Union[
-            query.Query,
             pd.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
@@ -285,34 +321,46 @@ class FeatureGroup:
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Insert additional feature data into the feature group.
+        """Insert data from a dataframe into the feature group.
 
-        This method appends data to the feature group either from a Feature Store
-        `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
-        lists or Numpy ndarrays. The schemas must match for this operation.
+        Incrementally insert data to a feature group or overwrite all data contained
+        in the feature group. By default, the data is inserted into the offline storage
+        as well as the online storage if the feature group is `online_enabled=True`. To
+        insert only into the online storage, set `storage="online"`, or oppositely
+        `storage="offline"`.
 
-        If feature group's time travel format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        or a two-dimensional Numpy array or a two-dimensional Python nested list.
 
-        !!! example "Upsert new feature data into the feature group with time travel format `HUDI`:"
-        ```python
-        fs = connection.get_feature_store();
-        fg = fs.get_feature_group("example_feature_group", 1)
-        upsert_df = ...
-        fg.insert(upsert_df, operation="upsert")
-        ```
+        If statistics are enabled, statistics are recomputed for the entire feature
+        group.
+
+        If feature group's time travel format is `HUDI` then `operation` argument can be
+        either `insert` or `upsert`.
+
+        !!! example "Upsert new feature data with time travel format `HUDI`:"
+            ```python
+            fs = conn.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            upsert_df = ...
+            fg.insert(upsert_df, operation="upsert")
+            ```
 
         # Arguments
-            features: Feature data to be materialized.
-            overwrite: Whether to overwrite the entire data in the feature group.
-            operation: Apache Hudi operation type `"insert"` or `"upsert"`. Defaults to `None`.
-            storage: Storage type. Defaults to `None`.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            overwrite: Drop all data in the feature group before
+                inserting new data. This does not affect metadata, defaults to False.
+            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
+                Defaults to `None`.
+            storage: Overwrite default behaviour, write to offline
+                storage only with `"offline"` or online only with `"online"`, defaults
+                to `None`.
+            write_options: Additional write options for Spark as
+                key-value pairs, defaults to `{}`.
 
         # Returns
-            `FeatureGroup`: The updated feature group metadata object.
+            `FeatureGroup`. Updated feature group metadata object.
         """
-
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         self._feature_group_engine.insert(
@@ -320,7 +368,7 @@ class FeatureGroup:
             feature_dataframe,
             overwrite,
             operation,
-            storage if storage else self._default_storage,
+            storage.lower() if storage is not None else None,
             write_options,
         )
 
@@ -344,7 +392,8 @@ class FeatureGroup:
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Drops records in the provided DataFrame and commits it as update to this Feature group.
+        """Drops records in the provided DataFrame and commits it as update to this
+        Feature group.
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
@@ -370,14 +419,14 @@ class FeatureGroup:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
-    def update_description(self, description):
+    def update_description(self, description: str):
         """Update the description of the feature gorup.
 
         # Arguments
             description: str. New description string.
 
         # Returns
-            FeatureGroup. The updated feature group object.
+            `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
         return self
@@ -386,25 +435,25 @@ class FeatureGroup:
         """Recompute the statistics for the feature group and save them to the
         feature store.
 
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+
         # Returns
             `Statistics`. The statistics metadata object.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
-            if self._default_storage.lower() in ["all", "offline"]:
-                return self._statistics_engine.compute_statistics(
-                    self, self.read(storage="offline")
-                )
-            else:
-                warnings.warn(
-                    (
-                        "The default storage of feature group `{}`, with version `{}`, is `{}`. "
-                        "Statistics are only computed for default storage `offline` and `all`."
-                    ).format(self._name, self._version, self._default_storage),
-                    util.StorageWarning,
-                )
+            return self._statistics_engine.compute_statistics(self, self.read())
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
 
     def append_features(self, features):
         """Append features to the schema of the feature group.
@@ -425,7 +474,7 @@ class FeatureGroup:
         elif isinstance(features, list):
             for feat in features:
                 if isinstance(feat, feature.Feature):
-                    new_features.append(features)
+                    new_features.append(feat)
                 else:
                     raise TypeError(
                         "The argument `features` has to be of type `Feature` or "
@@ -509,7 +558,6 @@ class FeatureGroup:
             "description": self._description,
             "onlineEnabled": self._online_enabled,
             "timeTravelFormat": self._time_travel_format,
-            "defaultStorage": self._default_storage.upper(),
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",

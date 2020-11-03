@@ -42,15 +42,10 @@ class Query:
             feature_store_id
         )
 
-    def read(
-        self,
-        storage="offline",
-        dataframe_type="default",
-        read_options={},
-    ):
+    def read(self, online=False, dataframe_type="default", read_options={}):
         query = self._query_constructor_api.construct_query(self)
 
-        if storage.lower() == "online":
+        if online:
             sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
@@ -69,10 +64,10 @@ class Query:
             sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
-    def show(self, n, storage="offline"):
+    def show(self, n, online=False):
         query = self._query_constructor_api.construct_query(self)
 
-        if storage.lower() == "online":
+        if online:
             sql_query = query["queryOnline"]
             online_conn = self._storage_connector_api.get_online_connector()
         else:
@@ -112,9 +107,9 @@ class Query:
             "joins": self._joins,
         }
 
-    def to_string(self, storage="offline"):
+    def to_string(self, online=False):
         return self._query_constructor_api.construct_query(self)[
-            "query" if storage == "offline" else "queryOnline"
+            "queryOnline" if online else "query"
         ]
 
     def __str__(self):
