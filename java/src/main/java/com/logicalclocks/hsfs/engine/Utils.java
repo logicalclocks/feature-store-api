@@ -48,8 +48,11 @@ public class Utils {
     List<Feature> features = new ArrayList<>();
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
-      features.add(new Feature(structField.name(), structField.dataType().catalogString(),
-          structField.dataType().catalogString(), false, false, null));
+      Feature f = new Feature(structField.name(), structField.dataType().catalogString(), false, false);
+      if (structField.metadata().contains("description")) {
+        f.setDescription(structField.metadata().getString("description"));
+      }
+      features.add(f);
     }
 
     return features;

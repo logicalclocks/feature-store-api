@@ -63,6 +63,21 @@ public class Feature {
     this.defaultValue = defaultValue;
   }
 
+  public Feature(String name, String type, Boolean primary, Boolean partition)
+      throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new FeatureStoreException("Name is required when creating a feature");
+    }
+    this.name = name;
+
+    if (Strings.isNullOrEmpty(type)) {
+      throw new FeatureStoreException("Type is required when creating a feature");
+    }
+    this.type = type;
+    this.primary = primary;
+    this.partition = partition;
+  }
+
   @Builder
   public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue)
       throws FeatureStoreException {
