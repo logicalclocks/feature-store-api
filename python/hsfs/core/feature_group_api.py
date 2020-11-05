@@ -209,7 +209,7 @@ class FeatureGroupApi:
             "commits",
         ]
         headers = {"content-type": "application/json"}
-        query_params = {"sort_by": "committed_on:desc", "limit": limit}
+        query_params = {"sort_by": "committed_on:desc", "offset": 0, "limit": limit}
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers),
