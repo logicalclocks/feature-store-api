@@ -381,6 +381,10 @@ class FeatureGroup:
         # Arguments
             limit: Number of commits to retrieve. Defaults to `None`.
 
+        # Returns
+            `Dict[str, Dict[str, str]]`. Dictionary object of commit metadata timeline, where Key is commit id and value
+            is `Dict[str, str]` with key value pairs of date committed on, number of rows updated, inserted and deleted.
+
         # Raises
             `RestAPIError`.
         """
