@@ -150,7 +150,7 @@ class FeatureGroup:
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -204,7 +204,7 @@ class FeatureGroup:
             feature data.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError`.  No data is available for feature group with this commit date.
         """
 
         return (
