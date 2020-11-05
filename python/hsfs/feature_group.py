@@ -379,7 +379,7 @@ class FeatureGroup:
         """Retrieves commit timeline for this feature group.
 
         # Arguments
-            limit: Number of commits to retrieve. Defaults to None.
+            limit: Number of commits to retrieve. Defaults to `None`.
 
         # Raises
             `RestAPIError`.
