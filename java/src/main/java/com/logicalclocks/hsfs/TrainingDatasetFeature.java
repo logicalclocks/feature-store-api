@@ -37,6 +37,9 @@ public class TrainingDatasetFeature {
   @Getter @Setter
   private Integer index;
 
+  @Getter @Setter
+  private Boolean label = false;
+
   @Builder
   public TrainingDatasetFeature(String name, String type) {
     this.name = name;
@@ -47,5 +50,12 @@ public class TrainingDatasetFeature {
     this.name = name;
     this.type = type;
     this.index = index;
+  }
+
+  public TrainingDatasetFeature(String name, String type, Integer index, Boolean label) {
+    this.name = name;
+    this.type = type;
+    this.index = index;
+    this.label = label;
   }
 }
