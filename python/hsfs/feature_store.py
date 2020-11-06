@@ -16,9 +16,15 @@
 
 import warnings
 import humps
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict
 
-from hsfs import training_dataset, feature_group, util, training_dataset_feature
+from hsfs import (
+    training_dataset,
+    feature_group,
+    util,
+    storage_connector,
+    training_dataset_feature,
+)
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
@@ -163,10 +169,10 @@ class FeatureStore:
             DataFrame.
 
         # Arguments
-            name: Name of the feature group to get.
+            name: Name of the feature group to create.
             version: Version of the feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
-                verison in the feature store.
+                version in the feature store.
             description: A string describing the contents of the feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -209,16 +215,79 @@ class FeatureStore:
 
     def create_training_dataset(
         self,
-        name,
-        version=None,
-        description="",
-        data_format="tfrecords",
-        storage_connector=None,
-        splits={},
-        location="",
-        seed=None,
-        statistics_config=None,
+        name: str,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        data_format: Optional[str] = "tfrecords",
+        storage_connector: Optional[storage_connector.StorageConnector] = None,
+        splits: Optional[Dict[str, float]] = {},
+        location: Optional[str] = "",
+        seed: Optional[int] = None,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        label: Optional[List[str]] = [],
     ):
+        """Create a training dataset metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata or feature data in the
+            feature store on its own. To materialize the training dataset and save
+            feature data along the metadata in the feature store, call the `save()`
+            method with a `DataFrame` or `Query`.
+
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
+
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
+
+            Currently not supported petastorm, hdf5 and npy file formats.
+
+
+        # Arguments
+            name: Name of the training dataset to create.
+            version: Version of the training dataset to retrieve, defaults to `None` and
+                will create the training dataset with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            data_format: The data format used to save the training dataset,
+                defaults to `"tfrecords"`-format.
+            storage_connector: Storage connector defining the sink location for the
+                training dataset, defaults to `None`, and materializes training dataset
+                on HopsFS.
+            splits: A dictionary defining training dataset splits to be created. Keys in
+                the dictionary define the name of the split as `str`, values represent
+                percentage of samples in the split as `float`. Currently, only random
+                splits are supported. Defaults to empty dict`{}`, creating only a single
+                training dataset without splits.
+            location: Path to complement the sink storage connector with, e.g if the
+                storage connector points to an S3 bucket, this path can be used to
+                define a sub-directory inside the bucket to place the training dataset.
+                Defaults to `""`, saving the training dataset at the root defined by the
+                storage connector.
+            seed: Optionally, define a seed to create the random splits with, in order
+                to guarantee reproducability, defaults to `None`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            label: A list of feature names constituting the prediction label/feature of
+                the training dataset. When replaying a `Query` during model inference,
+                the label features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
+
+        # Returns:
+            `TrainingDataset`: The training dataset metadata object.
+        """
         return training_dataset.TrainingDataset(
             name=name,
             version=version,
@@ -230,4 +299,5 @@ class FeatureStore:
             splits=splits,
             seed=seed,
             statistics_config=statistics_config,
+            label=label,
         )

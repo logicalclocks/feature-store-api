@@ -74,8 +74,8 @@ class TrainingDatasetEngine:
             path,
         )
 
-    def query(self, training_dataset, online):
-        return self._training_dataset_api.get_query(training_dataset)[
+    def query(self, training_dataset, online, with_label):
+        return self._training_dataset_api.get_query(training_dataset, with_label)[
             "queryOnline" if online else "query"
         ]
 

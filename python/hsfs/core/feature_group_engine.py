@@ -69,7 +69,9 @@ class FeatureGroupEngine:
             feature_group,
             feature_dataframe,
             self.APPEND,
-            hudi_engine.HudiEngine.HUDI_BULK_INSERT if feature_group.time_travel_format == "HUDI" else None,
+            hudi_engine.HudiEngine.HUDI_BULK_INSERT
+            if feature_group.time_travel_format == "HUDI"
+            else None,
             feature_group.online_enabled,
             None,
             offline_write_options,
@@ -134,7 +136,7 @@ class FeatureGroupEngine:
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_statistics_config(
+        self._feature_group_api.update_metadata(
             feature_group, feature_group, "updateStatsSettings"
         )
 

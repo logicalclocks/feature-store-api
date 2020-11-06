@@ -18,19 +18,19 @@ import humps
 
 
 class TrainingDatasetFeature:
-    def __init__(
-        self, name, type, index=None, featuregroup=None,
-    ):
+    def __init__(self, name, type, index=None, featuregroup=None, label=False):
         self._name = name
         self._type = type
         self._index = index
         self._featuregroup = featuregroup
+        self._label = label
 
     def to_dict(self):
         return {
             "name": self._name,
             "type": self._type,
             "index": self._index,
+            "label": self._label,
         }
 
     @classmethod
@@ -40,12 +40,31 @@ class TrainingDatasetFeature:
 
     @property
     def name(self):
+        """Name of the feature."""
         return self._name
 
     @property
     def type(self):
+        """Data type of the feature in the feature store.
+
+        !!! danger "Not a Python type"
+            This type property is not to be confused with Python types.
+            The type property represents the actual data type of the feature in
+            the feature store.
+        """
         return self._type
 
     @property
     def index(self):
+        """Index of the feature in the training dataset, required to restore the correct
+        order of features."""
         return self._index
+
+    @property
+    def label(self):
+        """Indicator if the feature is part of the prediction label."""
+        return self._label
+
+    @label.setter
+    def label(self, label):
+        self._label = label

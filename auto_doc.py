@@ -88,6 +88,13 @@ def generate(dest_dir):
         project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
         template_dir="./docs/templates",
         titles_size="###",
+        extra_aliases={
+            "hsfs.core.query.Query": "hsfs.Query",
+            "hsfs.storage_connector.StorageConnector": "hsfs.StorageConnector",
+            "hsfs.statistics_config.StatisticsConfig": "hsfs.StatisticsConfig",
+            "hsfs.training_dataset_feature.TrainingDatasetFeature": "hsfs.TrainingDatasetFeature",
+            "pandas.core.frame.DataFrame": "pandas.DataFrame",
+        },
     )
     shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "CONTRIBUTING.md")
     shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")

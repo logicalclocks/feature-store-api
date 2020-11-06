@@ -55,7 +55,7 @@ class TrainingDatasetApi:
             _client._send_request("GET", path_params, query_params)[0],
         )
 
-    def get_query(self, training_dataset_instance):
+    def get_query(self, training_dataset_instance, with_label):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -66,4 +66,5 @@ class TrainingDatasetApi:
             training_dataset_instance.id,
             "query",
         ]
-        return _client._send_request("GET", path_params)
+        query_params = {"withLabel": with_label}
+        return _client._send_request("GET", path_params, query_params)
