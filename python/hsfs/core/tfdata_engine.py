@@ -49,6 +49,7 @@ class TFDataEngine:
         "short": tf.int16,
         "int": tf.int32,
         "long": tf.int64,
+        "boolean": tf.int64,
         "float": tf.float32,
         "double": tf.float64,
     }
@@ -421,7 +422,7 @@ class TFDataEngine:
         for file in all_list:
             # remove empty file if any
             if filter_empty:
-                _file_size = hdfs.hdfs("default", 0).get_path_info(file)["size"]
+                _file_size = hdfs.path.getsize(file)
                 if _file_size == 0:
                     include_file = False
                 else:
