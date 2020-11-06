@@ -49,7 +49,6 @@ class TFDataEngine:
         "short": tf.int16,
         "int": tf.int32,
         "long": tf.int64,
-        "boolean": tf.int64,
         "float": tf.float32,
         "double": tf.float64,
     }
@@ -471,14 +470,22 @@ class TFDataEngine:
         try:
             tf_type = TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS[input_type]
         except KeyError:
-            raise ValueError("Unknown type of value, please report to hsfs maintainers")
+            raise ValueError(
+                "Type "
+                + input_type
+                + " is not allowed here. allowed types are '"
+                + "', '".join(
+                    [key for key in TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS.keys()]
+                )
+                + "'. please set process=False and preprocess dataset accordingly"
+            )
         return tf_type
 
     @staticmethod
     def _convert2float32(input):
         if input.dtype == tf.string:
             raise ValueError(
-                "tf.string feature is not allowed here. please provide process=False and preprocess "
+                "tf.string feature is not allowed here. please set process=False and preprocess "
                 "dataset accordingly"
             )
         elif input.dtype in TFDataEngine.SUPPORTED_TFDTYPES:
