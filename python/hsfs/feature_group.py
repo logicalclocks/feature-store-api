@@ -30,7 +30,6 @@ class FeatureGroup:
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
-    HUDI = "HUDI"
 
     def __init__(
         self,
@@ -52,7 +51,7 @@ class FeatureGroup:
         feat_hist_enabled=None,
         statistic_columns=None,
         online_enabled=False,
-        time_travel_format=HUDI,
+        time_travel_format=None,
         hudi_enabled=False,
         statistics_config=None,
     ):
@@ -71,7 +70,9 @@ class FeatureGroup:
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
-        self._time_travel_format = time_travel_format
+        self._time_travel_format = (
+            time_travel_format.upper() if time_travel_format is not None else None
+        )
         self._hudi_enabled = hudi_enabled
 
         if id is not None:
