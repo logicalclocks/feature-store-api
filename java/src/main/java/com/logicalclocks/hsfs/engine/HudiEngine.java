@@ -168,7 +168,7 @@ public class HudiEngine {
     }
 
     // table name
-    String tableName = utils.getTableName(featureGroup);
+    String tableName = featureGroup.getName() + "_" + featureGroup.getVersion();
     hudiArgs.put(HUDI_TABLE_NAME, tableName);
     hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
 
