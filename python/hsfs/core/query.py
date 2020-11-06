@@ -68,10 +68,10 @@ class Query:
         query = self._query_constructor_api.construct_query(self)
 
         if online:
-            sql_query = query["queryOnline"]
+            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            sql_query = query["query"]
+            sql_query = query.query
             online_conn = None
 
         return engine.get_instance().show(
