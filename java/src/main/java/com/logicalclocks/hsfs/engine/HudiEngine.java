@@ -67,6 +67,8 @@ public class HudiEngine {
       "hoodie.datasource.hive_sync.partition_extractor_class";
   private static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
       "org.apache.hudi.hive.MultiPartKeysValueExtractor";
+  private static final String HIVE_AUTO_CREATE_DATABASE_OPT_KEY = "hoodie.datasource.hive_sync.auto_create_database";
+  private static final String HIVE_AUTO_CREATE_DATABASE_OPT_VAL = "false";
 
   private static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
   private static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
@@ -178,6 +180,7 @@ public class HudiEngine {
     String jdbcUrl = utils.getHiveMetastoreConnector(featureGroup);
     hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, jdbcUrl);
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
+    hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
 
     hudiArgs.put(HUDI_TABLE_OPERATION,operation.getValue());
 
