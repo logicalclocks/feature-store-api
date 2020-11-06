@@ -532,9 +532,9 @@ class TrainingDataset:
     @property
     def query(self):
         """Query to generate this training dataset from online feature store."""
-        return self._training_dataset_engine.query(self, True)
+        return self._training_dataset_engine.query(self, True, True)
 
-    def get_query(self, online: bool = True):
+    def get_query(self, online: bool = True, with_label: bool = False):
         """Returns the query used to generate this training dataset
 
         # Arguments
@@ -542,7 +542,7 @@ class TrainingDataset:
                 for offline storage, defaults to `True` - for online storage.
             with_label: Indicator whether the query should contain features which were
                 marked as prediction label/feature when the training dataset was
-                created, defaults to `"False"`.
+                created, defaults to `False`.
 
         # Returns
             `str`. Query string for the chosen storage used to generate this training
