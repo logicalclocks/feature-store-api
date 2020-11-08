@@ -66,7 +66,7 @@ fg.save(dataframe)
 
 Upsert new data in to the feature group with `time_travel_format="HUDI"`".
 ```python
-fg.insert(upsert_df, operation)
+fg.insert(upsert_df)
 ```
 
 "Reading feature group as of specific point in time".

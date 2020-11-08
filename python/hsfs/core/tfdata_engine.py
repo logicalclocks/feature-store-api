@@ -477,7 +477,8 @@ class TFDataEngine:
                 + "', '".join(
                     [key for key in TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS.keys()]
                 )
-                + "'. please set process=False and preprocess dataset accordingly"
+                + "'. Please refer to `record_defaults` in "
+                + "https://www.tensorflow.org/api_docs/python/tf/data/experimental/CsvDataset"
             )
         return tf_type
 
