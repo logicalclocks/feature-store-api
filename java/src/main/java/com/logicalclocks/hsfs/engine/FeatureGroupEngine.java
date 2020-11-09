@@ -189,7 +189,7 @@ public class FeatureGroupEngine {
   public Map<String, Map<String,String>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
     List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);
-    if (featureGroupCommits == null){
+    if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
     Map<String, Map<String,String>> commitDetails = new HashMap<String, Map<String,String>>();
