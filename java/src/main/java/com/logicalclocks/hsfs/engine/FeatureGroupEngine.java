@@ -200,7 +200,7 @@ public class FeatureGroupEngine {
             }}
         );
       }
-    } catch(NullPointerException e) {
+    } catch (NullPointerException e) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
     return commitDetails;
