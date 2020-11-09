@@ -54,7 +54,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         hudi_enabled=False,
         statistics_config=None,
     ):
-        feature_group_base.FeatureGroupBase.__init__(featurestore_id)
+        feature_group_base.FeatureGroupBase.__init__(self, featurestore_id)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name

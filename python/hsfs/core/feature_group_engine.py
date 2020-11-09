@@ -24,7 +24,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     APPEND = "append"
 
     def __init__(self, feature_store_id):
-        feature_group_base_engine.FeatureGroupBaseEngine.__init__(feature_store_id)
+        feature_group_base_engine.FeatureGroupBaseEngine.__init__(
+            self, feature_store_id
+        )
 
     def save(self, feature_group, feature_dataframe, write_options):
 

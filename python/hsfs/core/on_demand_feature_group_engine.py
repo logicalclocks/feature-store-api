@@ -19,7 +19,9 @@ from hsfs.core import feature_group_base_engine
 
 class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def __init__(self, feature_store_id):
-        feature_group_base_engine.FeatureGroupBaseEngine.__init__(feature_store_id)
+        feature_group_base_engine.FeatureGroupBaseEngine.__init__(
+            self, feature_store_id
+        )
 
     def save(self, feature_group):
         if len(feature_group.features) == 0:
