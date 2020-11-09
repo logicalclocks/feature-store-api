@@ -15,12 +15,7 @@
 
 from hsfs import engine
 from hsfs import feature_group as fg
-from hsfs.core import (
-    feature_group_api,
-    storage_connector_api,
-    feature_group_base_engine,
-    hudi_engine,
-)
+from hsfs.core import feature_group_base_engine, hudi_engine
 from hsfs.client import exceptions
 
 

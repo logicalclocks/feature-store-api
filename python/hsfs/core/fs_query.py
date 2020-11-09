@@ -40,7 +40,7 @@ class FsQuery:
                 )
                 for fg in on_demand_feature_groups
             ]
-        else: 
+        else:
             self._on_demand_fg_aliases = []
 
         if hudi_cached_feature_groups is not None:
@@ -48,7 +48,7 @@ class FsQuery:
                 hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
                 for fg in hudi_cached_feature_groups
             ]
-        else: 
+        else:
             self._hudi_cached_feature_groups = []
 
     @classmethod
