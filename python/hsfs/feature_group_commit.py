@@ -31,6 +31,7 @@ class FeatureGroupCommit:
         committime=None,
         type=None,
         items=None,
+        count=None,
         href=None,
     ):
         self._commitid = commitid
@@ -42,7 +43,7 @@ class FeatureGroupCommit:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if len(json_decamelized["items"]) >= 1:
+        if json_decamelized["count"] >= 1:
             return [cls(**commit_dto) for commit_dto in json_decamelized["items"]]
         return cls(**json_decamelized)
 
