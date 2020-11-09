@@ -57,7 +57,7 @@ class Query:
 
             # Register on hudi feature groups as temporary tables
             self._register_hudi_tables(
-                query.hudi_cached_featuregroups,
+                query.hudi_cached_feature_groups,
                 self._feature_store_id,
                 self._feature_store_name,
                 read_options,

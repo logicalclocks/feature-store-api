@@ -40,12 +40,16 @@ class FsQuery:
                 )
                 for fg in on_demand_feature_groups
             ]
+        else: 
+            self._on_demand_fg_aliases = []
 
         if hudi_cached_feature_groups is not None:
-            self._hudi_cached_featuregroups = [
+            self._hudi_cached_feature_groups = [
                 hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
                 for fg in hudi_cached_feature_groups
             ]
+        else: 
+            self._hudi_cached_feature_groups = []
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -65,5 +69,5 @@ class FsQuery:
         return self._on_demand_fg_aliases
 
     @property
-    def hudi_cached_featuregroups(self):
-        return self._hudi_cached_featuregroups
+    def hudi_cached_feature_groups(self):
+        return self._hudi_cached_feature_groups
