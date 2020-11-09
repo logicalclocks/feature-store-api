@@ -29,7 +29,7 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             on_demand_dataset = engine.get_instance().sql(
                 feature_group.query, None, feature_group.storage_connector, "default"
             )
-            feature_group._features = engine.get_instance().parse_schema(
+            feature_group._features = engine.get_instance().parse_schema_feature_group(
                 on_demand_dataset
             )
 
