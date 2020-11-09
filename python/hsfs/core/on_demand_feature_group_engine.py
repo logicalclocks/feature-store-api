@@ -23,12 +23,7 @@ from hsfs.core import (
 
 class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def __init__(self, feature_store_id):
-        super().__init__(feature_store_id)
-
-        self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
+        feature_group_base_engine.FeatureGroupBaseEngine.__init__(feature_store_id)
 
     def save(self, feature_group):
         if len(feature_group.features) == 0:

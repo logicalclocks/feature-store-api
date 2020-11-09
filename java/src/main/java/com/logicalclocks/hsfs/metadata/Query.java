@@ -27,7 +27,6 @@ import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
-import com.logicalclocks.hsfs.TimeTravelFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -166,10 +165,8 @@ public class Query {
       return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
     } else {
       registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-      if (leftFeatureGroup instanceof FeatureGroup
-          && ((FeatureGroup)leftFeatureGroup).getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-        registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
-      }
+      registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
     }

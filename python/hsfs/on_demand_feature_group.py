@@ -45,7 +45,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         statistic_columns=None,
         statistics_config=None,
     ):
-        super().__init__(featurestore_id)
+        feature_group_base.FeatureGroupBase.__init__(featurestore_id)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -74,7 +74,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         else:
             self._features = features
 
-        if storage_connector is not None and type(storage_connector) is dict:
+        if storage_connector is not None and isinstance(storage_connector, dict):
             self._storage_connector = sc.StorageConnector.from_response_json(
                 storage_connector
             )

@@ -56,13 +56,12 @@ class Query:
             self._register_on_demand(query.on_demand_fg_aliases)
 
             # Register on hudi feature groups as temporary tables
-            if self._left_feature_group.time_travel_format == "HUDI":
-                self._register_hudi_tables(
-                    query.hudi_cached_featuregroups,
-                    self._feature_store_id,
-                    self._feature_store_name,
-                    read_options,
-                )
+            self._register_hudi_tables(
+                query.hudi_cached_featuregroups,
+                self._feature_store_id,
+                self._feature_store_name,
+                read_options,
+            )
 
         return engine.get_instance().sql(
             sql_query, self._feature_store_name, online_conn, dataframe_type
