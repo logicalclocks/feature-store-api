@@ -68,10 +68,10 @@ class Query:
         query = self._query_constructor_api.construct_query(self)
 
         if online:
-            sql_query = query["queryOnline"]
+            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            sql_query = query["query"]
+            sql_query = query.query
             online_conn = None
 
         return engine.get_instance().show(
@@ -108,9 +108,8 @@ class Query:
         }
 
     def to_string(self, online=False):
-        return self._query_constructor_api.construct_query(self)[
-            "queryOnline" if online else "query"
-        ]
+        fs_query_instance = self._query_constructor_api.construct_query(self)
+        return fs_query_instance.query_online if online else fs_query_instance.query
 
     def __str__(self):
         return self._query_constructor_api.construct_query(self)

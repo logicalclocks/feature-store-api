@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -41,7 +42,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsSettings,"
       + "updateMetadata}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
-      + "/commits{?limit}";
+      + "/commits{?sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -174,7 +175,7 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public FeatureGroupCommit[] commitDetails(FeatureGroup featureGroupBase, Integer limit)
+  public List<FeatureGroupCommit> commitDetails(FeatureGroup featureGroupBase, Integer limit)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -185,10 +186,13 @@ public class FeatureGroupApi {
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
+        .set("sort_by","committed_on:desc")
+        .set("offset", 0)
         .set("limit", limit)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit[].class);
+    FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
+    return featureGroupCommit.getItems();
   }
 }

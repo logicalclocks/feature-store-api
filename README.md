@@ -66,7 +66,12 @@ fg.save(dataframe)
 
 Upsert new data in to the feature group with `time_travel_format="HUDI"`".
 ```python
-fg.insert(upsert_df, operation="upsert")
+fg.insert(upsert_df)
+```
+
+Retrieve commit timeline metdata of the feature group with `time_travel_format="HUDI"`".
+```python
+fg.commit_details()
 ```
 
 "Reading feature group as of specific point in time".

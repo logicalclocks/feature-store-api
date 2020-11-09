@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.metadata.RestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +28,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroupCommit {
+public class FeatureGroupCommit  extends RestDto<FeatureGroupCommit> {
   @Getter @Setter
   private Long commitID;
   @Getter @Setter

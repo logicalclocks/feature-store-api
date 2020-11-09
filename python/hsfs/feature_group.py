@@ -150,7 +150,7 @@ class FeatureGroup:
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -204,7 +204,7 @@ class FeatureGroup:
             feature data.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError`.  No data is available for feature group with this commit date.
         """
 
         return (
@@ -318,7 +318,7 @@ class FeatureGroup:
             List[list],
         ],
         overwrite: Optional[bool] = False,
-        operation: Optional[str] = None,
+        operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
@@ -344,7 +344,7 @@ class FeatureGroup:
             fs = conn.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
             upsert_df = ...
-            fg.insert(upsert_df, operation="upsert")
+            fg.insert(upsert_df)
             ```
 
         # Arguments
@@ -352,7 +352,7 @@ class FeatureGroup:
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
-                Defaults to `None`.
+                Defaults to `"upsert"`.
             storage: Overwrite default behaviour, write to offline
                 storage only with `"offline"` or online only with `"online"`, defaults
                 to `None`.
@@ -375,6 +375,21 @@ class FeatureGroup:
 
         self.compute_statistics()
 
+    def commit_details(self, limit: Optional[int] = None):
+        """Retrieves commit timeline for this feature group.
+
+        # Arguments
+            limit: Number of commits to retrieve. Defaults to `None`.
+
+        # Returns
+            `Dict[str, Dict[str, str]]`. Dictionary object of commit metadata timeline, where Key is commit id and value
+            is `Dict[str, str]` with key value pairs of date committed on, number of rows updated, inserted and deleted.
+
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_group_engine.commit_details(self, limit)
+
     def delete(self):
         """Drop the entire feature group along with its feature data.
 
@@ -393,7 +408,7 @@ class FeatureGroup:
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Drops records in the provided DataFrame and commits it as update to this
+        """Drops records present in the provided DataFrame and commits it as update to this
         Feature group.
 
         # Arguments

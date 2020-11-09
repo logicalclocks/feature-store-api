@@ -421,7 +421,7 @@ class TFDataEngine:
         for file in all_list:
             # remove empty file if any
             if filter_empty:
-                _file_size = hdfs.hdfs("default", 0).get_path_info(file)["size"]
+                _file_size = hdfs.path.getsize(file)
                 if _file_size == 0:
                     include_file = False
                 else:
@@ -470,14 +470,23 @@ class TFDataEngine:
         try:
             tf_type = TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS[input_type]
         except KeyError:
-            raise ValueError("Unknown type of value, please report to hsfs maintainers")
+            raise ValueError(
+                "Type "
+                + input_type
+                + " is not allowed here. allowed types are '"
+                + "', '".join(
+                    [key for key in TFDataEngine.SPARK_TO_TFDTYPES_MAPPINGS.keys()]
+                )
+                + "'. Please refer to `record_defaults` in "
+                + "https://www.tensorflow.org/api_docs/python/tf/data/experimental/CsvDataset"
+            )
         return tf_type
 
     @staticmethod
     def _convert2float32(input):
         if input.dtype == tf.string:
             raise ValueError(
-                "tf.string feature is not allowed here. please provide process=False and preprocess "
+                "tf.string feature is not allowed here. please set process=False and preprocess "
                 "dataset accordingly"
             )
         elif input.dtype in TFDataEngine.SUPPORTED_TFDTYPES:

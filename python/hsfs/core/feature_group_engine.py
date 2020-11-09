@@ -113,7 +113,7 @@ class FeatureGroupEngine:
             feature_group,
             feature_dataframe,
             self.APPEND,
-            operation,
+            "bulk_insert" if overwrite else operation,
             feature_group.online_enabled,
             storage,
             offline_write_options,
@@ -122,6 +122,29 @@ class FeatureGroupEngine:
 
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
+
+    def commit_details(self, feature_group, limit):
+        hudi_engine_instance = hudi_engine.HudiEngine(
+            feature_group.feature_store_id,
+            feature_group.feature_store_name,
+            feature_group,
+            engine.get_instance()._spark_context,
+            engine.get_instance()._spark_session,
+        )
+        feature_group_commits = self._feature_group_api.commit_details(
+            feature_group, limit
+        )
+        commit_details = {}
+        for feature_group_commit in feature_group_commits:
+            commit_details[feature_group_commit.commitid] = {
+                "committedOn": hudi_engine_instance._timestamp_to_hudiformat(
+                    feature_group_commit.commitid
+                ),
+                "rowsUpdated": feature_group_commit.rows_updated,
+                "rowsInserted": feature_group_commit.rows_inserted,
+                "rowsDeleted": feature_group_commit.rows_deleted,
+            }
+        return commit_details
 
     @staticmethod
     def commit_delete(feature_group, delete_df, write_options):

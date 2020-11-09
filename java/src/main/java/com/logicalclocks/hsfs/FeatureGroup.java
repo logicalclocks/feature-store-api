@@ -266,21 +266,6 @@ public class FeatureGroup {
    *
    * @param featureData dataframe to be committed.
    * @param operation commit operation type, INSERT or UPSERT.
-   * @param writeOptions user provided write options.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void insert(Dataset<Row> featureData, HudiOperationType operation, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-
-    insert(featureData, null, false, operation, writeOptions);
-  }
-
-  /**
-   * Commit insert or upsert to time travel enabled Feature group.
-   *
-   * @param featureData dataframe to be committed.
-   * @param operation commit operation type, INSERT or UPSERT.
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -294,13 +279,20 @@ public class FeatureGroup {
       throws FeatureStoreException, IOException {
 
     // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == TimeTravelFormat.NONE && operation != null) {
+    if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
       throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
     }
 
+    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+      if (overwrite) {
+        operation = HudiOperationType.BULK_INSERT;
+      } else {
+        operation = HudiOperationType.UPSERT;
+      }
+    }
+
     featureGroupEngine.saveDataframe(this, featureData, storage,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation,
-            writeOptions);
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
 
     computeStatistics();
   }
@@ -333,7 +325,22 @@ public class FeatureGroup {
     featureGroupEngine.commitDelete(this, featureData, writeOptions);
   }
 
-  public FeatureGroupCommit[] commitDetails(Integer limit) throws IOException, FeatureStoreException {
+  /**
+   * Return commit details.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<String, Map<String,String>>  commitDetails() throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetails(this, null);
+  }
+
+  /**
+   * Return commit details.
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<String, Map<String,String>>  commitDetails(Integer limit) throws IOException, FeatureStoreException {
     return featureGroupEngine.commitDetails(this, limit);
   }
 
