@@ -79,7 +79,7 @@ class StorageConnectorApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
-            "storageconnectors"
+            "storageconnectors",
         ]
 
         result = [
@@ -92,5 +92,3 @@ class StorageConnectorApi:
             return storage_connector.StorageConnector.from_response_json(result[0])
         else:
             raise Exception("Could not find online storage connector")
-
-

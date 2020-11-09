@@ -74,9 +74,9 @@ class TrainingDatasetEngine:
             path,
         )
 
-    def query(self, training_dataset, storage):
-        return self._training_dataset_api.get_query(training_dataset)[
-            "queryOnline" if storage.lower() == "online" else "query"
+    def query(self, training_dataset, online, with_label):
+        return self._training_dataset_api.get_query(training_dataset, with_label)[
+            "queryOnline" if online else "query"
         ]
 
     def _write(self, training_dataset, dataset, write_options, save_mode):

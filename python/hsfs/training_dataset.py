@@ -14,10 +14,13 @@
 #   limitations under the License.
 #
 
-import humps
 import json
 import warnings
-from typing import Optional
+from typing import Optional, Union, Any, Dict, List, TypeVar
+
+import humps
+import pandas as pd
+import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
@@ -30,6 +33,7 @@ from hsfs.core import (
     tfdata_engine,
     statistics_engine,
 )
+from hsfs.client import exceptions
 
 
 class TrainingDataset:
@@ -62,6 +66,7 @@ class TrainingDataset:
         training_dataset_type=None,
         from_query=None,
         querydto=None,
+        label=None,
     ):
         self._id = id
         self._name = name
@@ -96,6 +101,7 @@ class TrainingDataset:
             self.storage_connector = storage_connector
             self.splits = splits
             self.statistics_config = statistics_config
+            self._label = label
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -109,19 +115,52 @@ class TrainingDataset:
             self._splits = splits
             self._training_dataset_type = training_dataset_type
             self.statistics_config = None
+            self._label = [feat.name for feat in self._features if feat.label]
 
-    def save(self, features, write_options={}):
-        # TODO: Decide if we want to have potentially dangerous defaults like {}
+    def save(
+        self,
+        features: Union[
+            query.Query,
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Materialize the training dataset to storage.
+
+        This method materializes the training dataset either from a Feature Store
+        `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
+        lists or Numpy ndarrays.
+
+        # Arguments
+            features: Feature data to be materialized.
+            write_options: Additional write options as key/value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `TrainingDataset`: The updated training dataset metadata object, the
+                previous `TrainingDataset` object on which you call `save` is also
+                updated.
+
+        # Raises
+            `RestAPIError`: Unable to create training dataset metadata.
+        """
         if isinstance(features, query.Query):
-            feature_dataframe = features.read("offline")
+            feature_dataframe = features.read()
             self._querydto = features
         else:
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features
             )
-            self._features = engine.get_instance().parse_schema_training_dataset(
-                feature_dataframe
-            )
+
+        self._features = engine.get_instance().parse_schema_training_dataset(
+            feature_dataframe
+        )
+
+        self._set_label_features()
 
         user_version = self._version
         user_stats_config = self._statistics_config
@@ -139,7 +178,41 @@ class TrainingDataset:
             )
         return self
 
-    def insert(self, features, overwrite, write_options={}):
+    def insert(
+        self,
+        features: Union[
+            query.Query,
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        overwrite: bool,
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Insert additional feature data into the training dataset.
+
+        This method appends data to the training dataset either from a Feature Store
+        `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
+        lists or Numpy ndarrays. The schemas must match for this operation.
+
+        This can also be used to overwrite all data in an existing training dataset.
+
+        # Arguments
+            features: Feature data to be materialized.
+            overwrite: Whether to overwrite the entire data in the training dataset.
+            write_options: Additional write options as key/value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `TrainingDataset`: The updated training dataset metadata object, the
+                previous `TrainingDataset` object on which you call `save` is also
+                updated.
+
+        # Raises
+            `RestAPIError`: Unable to create training dataset metadata.
+        """
         if isinstance(features, query.Query):
             feature_dataframe = features.read()
         else:
@@ -153,6 +226,18 @@ class TrainingDataset:
         self.compute_statistics()
 
     def read(self, split=None, read_options={}):
+        """Read the training dataset into a dataframe.
+
+        It is also possible to read only a specific split.
+
+        # Arguments
+            split: Name of the split to read, defaults to `None`, reading the entire
+                training dataset.
+            read_options: Additional read options as key/value pairs, defaults to `{}`.
+        # Returns
+            `DataFrame`: The spark dataframe containing the feature data of the
+                training dataset.
+        """
         return self._training_dataset_engine.read(self, split, read_options)
 
     def compute_statistics(self):
@@ -196,7 +281,16 @@ class TrainingDataset:
             cycle_length=cycle_length,
         )
 
-    def show(self, n, split=None):
+    def show(self, n: int, split: str = None):
+        """Show the first `n` rows of the training dataset.
+
+        You can specify a split from which to retrieve the rows.
+
+        # Arguments
+            n: Number of rows to show.
+            split: Name of the split to show, defaults to `None`, showing the first rows
+                when taking all splits together.
+        """
         self.read(split).show(n)
 
     def add_tag(self, name: str, value: str = None):
@@ -438,15 +532,47 @@ class TrainingDataset:
     @property
     def query(self):
         """Query to generate this training dataset from online feature store."""
-        return self._training_dataset_engine.query(self, "online")
+        return self._training_dataset_engine.query(self, True, True)
 
-    def get_query(self, storage: str = "online"):
+    def get_query(self, online: bool = True, with_label: bool = False):
         """Returns the query used to generate this training dataset
 
         # Arguments
-            storage: The storage for which to return the query, defaults to `"online"`.
+            online: boolean, optional. Return the query for the online storage, else
+                for offline storage, defaults to `True` - for online storage.
+            with_label: Indicator whether the query should contain features which were
+                marked as prediction label/feature when the training dataset was
+                created, defaults to `False`.
 
         # Returns
-            `str`. Query used to generate this training dataset.
+            `str`. Query string for the chosen storage used to generate this training
+                dataset.
         """
-        return self._training_dataset_engine.query(self, storage)
+        return self._training_dataset_engine.query(self, online, with_label)
+
+    @property
+    def label(self):
+        """The label/prediction feature of the training dataset.
+
+        Can be a composite of multiple features.
+        """
+        return self._label
+
+    @label.setter
+    def label(self, label):
+        self._label = label
+
+    def _set_label_features(self):
+        for f_name in self._label:
+            found = False
+            for f in self._features:
+                if f_name == f.name:
+                    f.label = True
+                    found = True
+                    break
+            if not found:
+                raise exceptions.FeatureStoreException(
+                    "The specified label `{}` could not be found among the features: {}.".format(
+                        f_name, [feat.name for feat in self._features]
+                    )
+                )

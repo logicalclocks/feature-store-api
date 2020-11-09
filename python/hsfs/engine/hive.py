@@ -55,6 +55,7 @@ class Engine:
         feature_group,
         dataframe,
         save_mode,
+        online_enabled,
         storage,
         offline_write_options,
         online_write_options,

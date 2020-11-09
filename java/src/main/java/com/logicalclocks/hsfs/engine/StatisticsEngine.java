@@ -55,7 +55,11 @@ public class StatisticsEngine {
   }
 
   private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
-                                       Boolean correlations) {
+                                       Boolean correlations) throws FeatureStoreException {
+    if (dataFrame.isEmpty()) {
+      throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
+        + "possible cause might be that you inserted only data to the online storage of a feature group.");
+    }
     String commitTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
     return new Statistics(commitTime, content);

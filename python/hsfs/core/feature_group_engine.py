@@ -14,16 +14,14 @@
 #
 
 from hsfs import engine
-<<<<<<< HEAD
+from hsfs import feature_group as fg
 from hsfs.core import (
     feature_group_api,
     storage_connector_api,
     feature_group_base_engine,
+    hudi_engine,
 )
-=======
-from hsfs import feature_group as fg
-from hsfs.core import feature_group_api, storage_connector_api, tags_api, hudi_engine
->>>>>>> upstream/master
+from hsfs.client import exceptions
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -38,7 +36,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_store_id
         )
 
-    def save(self, feature_group, feature_dataframe, storage, write_options):
+    def save(self, feature_group, feature_dataframe, write_options):
 
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
@@ -61,7 +59,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         table_name = self._get_table_name(feature_group)
 
-        if storage.lower() == "online" or storage.lower() == "all":
+        if feature_group.online_enabled:
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -78,7 +76,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
             if feature_group.time_travel_format == "HUDI"
             else None,
-            storage,
+            feature_group.online_enabled,
+            None,
             offline_write_options,
             online_write_options,
         )
@@ -95,7 +94,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         offline_write_options = write_options
         online_write_options = write_options
 
-        if storage.lower() == "online" or storage.lower() == "all":
+        if not feature_group.online_enabled and storage == "online":
+            raise exceptions.FeatureStoreException(
+                "Online storage is not enabled for this feature group."
+            )
+        elif (
+            feature_group.online_enabled and storage != "offline"
+        ) or storage == "online":
             # Add JDBC connection configuration in case of online feature group
             online_conn = self._storage_connector_api.get_online_connector()
 
@@ -104,7 +109,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
             online_write_options = {**jdbc_options, **online_write_options}
 
-        if (storage.lower() == "offline" or storage.lower() == "all") and overwrite:
+        if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
         engine.get_instance().save_dataframe(
@@ -113,13 +118,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_dataframe,
             self.APPEND,
             operation,
+            feature_group.online_enabled,
             storage,
             offline_write_options,
             online_write_options,
         )
 
-<<<<<<< HEAD
-=======
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
 
@@ -134,10 +138,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         return hudi_engine_instance.delete_record(delete_df, write_options)
 
->>>>>>> upstream/master
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_statistics_config(
+        self._feature_group_api.update_metadata(
             feature_group, feature_group, "updateStatsSettings"
         )
 
@@ -153,8 +156,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def _get_online_table_name(self, feature_group):
         return feature_group.name + "_" + str(feature_group.version)
 
-    def sql(self, query, feature_store_name, dataframe_type, storage):
-        if storage.lower() == "online":
+    def sql(self, query, feature_store_name, dataframe_type, online):
+        if online:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             online_conn = None

@@ -51,13 +51,12 @@ public class FeatureGroupEngine {
    * @param dataset
    * @param primaryKeys
    * @param partitionKeys
-   * @param storage
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, Storage storage, Map<String, String> writeOptions)
+                               List<String> partitionKeys, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatures() != null) {
@@ -103,7 +102,7 @@ public class FeatureGroupEngine {
     featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, storage,  SaveMode.Append,
+    saveDataframe(featureGroup, dataset, null,  SaveMode.Append,
             featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
                     ? HudiOperationType.BULK_INSERT : null, writeOptions);
   }
@@ -111,23 +110,18 @@ public class FeatureGroupEngine {
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
-    if (storage == null) {
-      throw new FeatureStoreException("Storage not supported");
-    }
-
-    switch (storage) {
-      case OFFLINE:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
-        break;
-      case ONLINE:
-        saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-        break;
-      case ALL:
-        saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
-        saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-        break;
-      default:
-        throw new FeatureStoreException("Storage: " +  storage + " not recognized");
+    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
+        + "write to the offline storage.");
+    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+    } else if (storage == Storage.ONLINE) {
+      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
+    } else if (featureGroup.getOnlineEnabled() && storage == null) {
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
+    } else {
+      throw new FeatureStoreException("Error writing to offline and online feature store.");
     }
   }
 

@@ -43,9 +43,6 @@ import java.util.Map;
 public class FeatureGroup extends FeatureGroupBase {
 
   @Getter @Setter
-  private Storage defaultStorage;
-
-  @Getter @Setter
   private Boolean onlineEnabled;
 
   @Getter @Setter
@@ -88,9 +85,8 @@ public class FeatureGroup extends FeatureGroupBase {
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
-                      TimeTravelFormat timeTravelFormat, Storage defaultStorage, List<Feature> features,
-                      Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
-                      List<String> statisticColumns) {
+                      TimeTravelFormat timeTravelFormat, List<Feature> features, Boolean statisticsEnabled,
+                      Boolean histograms, Boolean correlations, List<String> statisticColumns) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -99,7 +95,6 @@ public class FeatureGroup extends FeatureGroupBase {
     this.partitionKeys = partitionKeys;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
-    this.defaultStorage = defaultStorage != null ? defaultStorage : Storage.OFFLINE;
     this.features = features;
     this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
     this.histograms = histograms;
@@ -111,15 +106,19 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(this.defaultStorage, null);
+    return read(false, null);
+  }
+
+  public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
+    return selectAll().read(online);
   }
 
   public Dataset<Row> read(Map<String,String> readOptions) throws FeatureStoreException, IOException {
-    return read(this.defaultStorage, null);
+    return read(false, null);
   }
 
-  public Dataset<Row> read(Storage storage, Map<String,String> readOptions) throws FeatureStoreException, IOException {
-    return selectAll().read(storage, readOptions);
+  public Dataset<Row> read(boolean online, Map<String,String> readOptions) throws FeatureStoreException, IOException {
+    return selectAll().read(online, readOptions);
   }
 
   /**
@@ -131,7 +130,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
-    return selectAll().asOf(wallclockTime).read(this.defaultStorage, null);
+    return selectAll().asOf(wallclockTime).read(false, null);
   }
 
   /**
@@ -145,7 +144,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> read(String wallclockTime, Map<String,String> readOptions)
       throws FeatureStoreException, IOException {
-    return selectAll().asOf(wallclockTime).read(this.defaultStorage, readOptions);
+    return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
 
   /**
@@ -159,7 +158,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(this.defaultStorage, null);
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
   /**
@@ -173,16 +172,16 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String,String> readOptions)
       throws FeatureStoreException, IOException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(this.defaultStorage, readOptions);
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
 
   public void show(int numRows) throws FeatureStoreException, IOException {
-    show(numRows, defaultStorage);
+    show(numRows, false);
   }
 
-  public void show(int numRows, Storage storage) throws FeatureStoreException, IOException {
-    read(storage, null).show(numRows);
+  public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
+    read(online).show(numRows);
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
@@ -191,19 +190,22 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, defaultStorage, writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
     if (statisticsEnabled) {
       statisticsEngine.computeStatistics(this, featureData);
     }
   }
 
-  public void insert(Dataset<Row> featureData, Storage storage)
-      throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException {
+    insert(featureData, null, false);
+  }
+
+  public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
     insert(featureData, storage, false, null, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
-    insert(featureData, overwrite, null);
+    insert(featureData, null, overwrite);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
@@ -213,7 +215,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    insert(featureData, defaultStorage, overwrite, null, writeOptions);
+    insert(featureData, null, overwrite, null, writeOptions);
   }
 
   /**
@@ -228,7 +230,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public void insert(Dataset<Row> featureData, HudiOperationType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    insert(featureData, defaultStorage, false, operation, writeOptions);
+    insert(featureData, null, false, operation, writeOptions);
   }
 
   /**
@@ -241,8 +243,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException {
-
-    insert(featureData, defaultStorage, false, operation, null);
+    insert(featureData, null, false, operation, null);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
@@ -310,12 +311,10 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsEnabled) {
-      if (defaultStorage == Storage.ALL || defaultStorage == Storage.OFFLINE) {
-        return statisticsEngine.computeStatistics(this, read(Storage.OFFLINE, null));
-      } else {
-        LOGGER.info("StorageWarning: The default storage of feature group `" + name + "`, with version `" + version
-            + "`, is `" + defaultStorage + "`. Statistics are only computed for default storage `offline and `all`.");
-      }
+      return statisticsEngine.computeStatistics(this, read());
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
     }
     return null;
   }

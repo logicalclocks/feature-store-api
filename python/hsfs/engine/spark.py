@@ -148,11 +148,12 @@ class Engine:
         dataframe,
         save_mode,
         operation,
+        online_enabled,
         storage,
         offline_write_options,
         online_write_options,
     ):
-        if storage.lower() == "offline":
+        if storage == "offline" or not online_enabled:
             self._save_offline_dataframe(
                 table_name,
                 feature_group,
@@ -161,31 +162,29 @@ class Engine:
                 operation,
                 offline_write_options,
             )
-        elif storage.lower() == "online":
+        elif storage == "online":
             self._save_online_dataframe(
                 table_name, dataframe, save_mode, online_write_options
             )
-        elif storage.lower() == "all":
+        elif online_enabled and storage is None:
             self._save_offline_dataframe(
                 table_name,
+                feature_group,
                 dataframe,
                 save_mode,
+                operation,
                 offline_write_options,
             )
             self._save_online_dataframe(
                 table_name, dataframe, save_mode, online_write_options
             )
         else:
-            raise FeatureStoreException("Storage not supported")
+            raise FeatureStoreException(
+                "Error writing to offline and online feature store."
+            )
 
     def _save_offline_dataframe(
-        self,
-        table_name,
-        feature_group,
-        dataframe,
-        save_mode,
-        operation,
-        write_options,
+        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -240,10 +239,8 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return (
-            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms
-            )
+        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf, relevant_columns, correlations, histograms
         )
 
     def write_options(self, data_format, provided_options):

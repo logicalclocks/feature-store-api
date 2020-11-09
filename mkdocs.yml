@@ -16,6 +16,7 @@ nav:
     - Databricks: integrations/databricks.md
     - AWS Sagemaker: integrations/sagemaker.md
     - Python: integrations/python.md
+    - Spark: integrations/spark.md
   - Guides:
     - Overview: overview.md
     - Project/Connection: generated/project.md

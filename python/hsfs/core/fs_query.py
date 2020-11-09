@@ -39,6 +39,7 @@ class FsQuery:
                     fg
                 )
                 for fg in on_demand_feature_groups
+            ]
 
         if hudi_cached_feature_groups is not None:
             self._hudi_cached_featuregroups = [

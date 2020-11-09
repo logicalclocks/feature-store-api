@@ -43,7 +43,6 @@ public class MainClass {
         .primaryKeys(Arrays.asList("house_id", "date"))
         .partitionKeys(Arrays.asList("country"))
         .onlineEnabled(true)
-        .defaultStorage(Storage.OFFLINE)
         .build();
 
     FeatureGroup attendance = fs.getFeatureGroup("attendances_features", 1);

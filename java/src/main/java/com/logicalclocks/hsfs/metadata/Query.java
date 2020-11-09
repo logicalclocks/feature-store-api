@@ -149,42 +149,38 @@ public class Query {
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return read(Storage.OFFLINE, null);
+    return read(false, null);
   }
 
-  public Dataset<Row> read(Storage storage, Map<String,String> readOptions)
-          throws FeatureStoreException, IOException {
-    if (storage == null) {
-      throw new FeatureStoreException("Storage not supported");
-    }
+  public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
+    return read(online, null);
+  }
 
-    FsQuery fsQuery =
-        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
-    LOGGER.info("Executing query: " + fsQuery.getStorageQuery(storage));
+  public Dataset<Row> read(boolean online, Map<String,String> readOptions) throws FeatureStoreException, IOException {
+    FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
 
-    switch (storage) {
-      case OFFLINE:
-        registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-        if (leftFeatureGroup instanceof FeatureGroup
-            && ((FeatureGroup)leftFeatureGroup).getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-          registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
-        }
-        return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
-      case ONLINE:
-        StorageConnector onlineConnector
-            = storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-        return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
-      default:
-        throw new FeatureStoreException("Storage not supported");
+    if (online) {
+      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
+      StorageConnector onlineConnector =
+          storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
+      return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
+    } else {
+      registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
+      if (leftFeatureGroup instanceof FeatureGroup
+          && ((FeatureGroup)leftFeatureGroup).getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+        registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+      }
+      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
+      return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
     }
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
-    show(Storage.OFFLINE, numRows);
+    show(false, numRows);
   }
 
-  public void show(Storage storage, int numRows) throws FeatureStoreException, IOException {
-    read(storage, null).show(numRows);
+  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
+    read(online).show(numRows);
   }
 
   public String toString() {

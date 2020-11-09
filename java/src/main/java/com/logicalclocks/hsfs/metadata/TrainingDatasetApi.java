@@ -34,7 +34,7 @@ public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
-  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query";
+  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
@@ -84,7 +84,7 @@ public class TrainingDatasetApi {
     return hopsworksClient.handleRequest(postRequest, TrainingDataset.class);
   }
 
-  public FsQuery getQuery(TrainingDataset trainingDataset)
+  public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -95,6 +95,7 @@ public class TrainingDatasetApi {
         .set("projectId", trainingDataset.getFeatureStore().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
+        .set("withLabel", withLabel)
         .expand();
 
     HttpGet getRequest = new HttpGet(uri);
