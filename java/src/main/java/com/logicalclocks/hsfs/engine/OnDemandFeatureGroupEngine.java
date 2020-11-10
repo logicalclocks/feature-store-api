@@ -32,7 +32,7 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   public void saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
       throws FeatureStoreException, IOException {
-    if (onDemandFeatureGroup.getFeatures() != null) {
+    if (onDemandFeatureGroup.getFeatures() == null) {
       Dataset<Row> onDemandDataset = SparkEngine.getInstance()
           .jdbc(onDemandFeatureGroup.getStorageConnector(), onDemandFeatureGroup.getQuery());
       onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
