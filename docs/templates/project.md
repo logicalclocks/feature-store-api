@@ -71,7 +71,7 @@ The [handle](#get_feature_store) can then be used to retrieve a reference to the
         fs = conn.get_feature_store()
         ```
 
-=== "Java/Scala"
+=== "Scala"
 
     !!! example "Connecting from Hopsworks"
         ```scala
@@ -84,7 +84,7 @@ The [handle](#get_feature_store) can then be used to retrieve a reference to the
         TBD
 
     !!! example "Connecting from AWS SageMaker"
-        The Java/Scala client version of `hsfs` is not supported on AWS SageMaker,
+        The Scala client version of `hsfs` is not supported on AWS SageMaker,
         please use the Python client.
 
 ## Sharing a Feature Store
