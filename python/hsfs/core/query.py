@@ -85,7 +85,7 @@ class Query:
                 query.hudi_cached_feature_groups,
                 self._feature_store_id,
                 self._feature_store_name,
-                read_options,
+                {},
             )
 
         return engine.get_instance().show(
