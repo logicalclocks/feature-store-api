@@ -51,6 +51,7 @@ By default `connection.get_feature_store()` returns the feature store of the pro
 
     ``` scala
     import com.logicalclocks.hsfs._
+    import scala.collection.JavaConverters._
 
     // Create a connection
     val connection = HopsworksConnection.builder().build();
@@ -114,7 +115,7 @@ Create a feature group named `store_fg`. The store is the primary key uniquely i
         .name("store_fg")
         .description("Store related features")
         .version(1)
-        .primaryKeys(Seq("store"))
+        .primaryKeys(Seq("store").asJava)
         .statisticsEnabled(True)
         .histograms(True)
         .correlations(True)
@@ -161,7 +162,7 @@ Using the Feature Store object, you can retrieve handles to the entities, such a
     val exogenousDf = exogenousFgMeta.read()
 
     // Select a subset of features and read into dataframe
-    val exogenousDfSubset = exogenousFgMeta.select(Seq("store", "fuel_price", "is_holiday")).read()
+    val exogenousDfSubset = exogenousFgMeta.select(Seq("store", "fuel_price", "is_holiday").asJava).read()
     ```
 
 #### Joining
@@ -236,9 +237,9 @@ You can either create a training dataset from a `Query` object or directly from 
     val exogenousFg = fs.getFeatureGroup("exogenous_fg")
     val salesFg = fs.getFeatureGroup("sales_fg")
 
-    query = salesFg.selectAll() \
-        .join(storeFg.selectAll()) \
-        .join(exogenousFg.select(["fuel_price", "unemployment", "cpi"]))
+    query = (salesFg.selectAll()
+        .join(storeFg.selectAll())
+        .join(exogenousFg.select(Seq("fuel_price", "unemployment", "cpi").asJava)))
 
     val td = (fs.createTrainingDataset()
                           .name("sales_model")
