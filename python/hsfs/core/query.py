@@ -75,9 +75,18 @@ class Query:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             sql_query = query.query
+            online_conn = None
+
             # Register on demand feature groups as temporary tables
             self._register_on_demand(query.on_demand_fg_aliases)
-            online_conn = None
+
+            # Register on hudi feature groups as temporary tables
+            self._register_hudi_tables(
+                query.hudi_cached_feature_groups,
+                self._feature_store_id,
+                self._feature_store_name,
+                read_options,
+            )
 
         return engine.get_instance().show(
             sql_query, self._feature_store_name, n, online_conn
@@ -113,8 +122,8 @@ class Query:
         }
 
     def to_string(self, online=False):
-        query = self._query_constructor_api.construct_query(self)
-        return query.query_online if query else query.query
+        fs_query_instance = self._query_constructor_api.construct_query(self)
+        return fs_query_instance.query_online if online else fs_query_instance.query
 
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
