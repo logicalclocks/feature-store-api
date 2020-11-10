@@ -45,7 +45,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         statistic_columns=None,
         statistics_config=None,
     ):
-        feature_group_base.FeatureGroupBase.__init__(self, featurestore_id)
+        super().__init__(featurestore_id)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name

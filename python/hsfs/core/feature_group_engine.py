@@ -23,11 +23,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     OVERWRITE = "overwrite"
     APPEND = "append"
 
-    def __init__(self, feature_store_id):
-        feature_group_base_engine.FeatureGroupBaseEngine.__init__(
-            self, feature_store_id
-        )
-
     def save(self, feature_group, feature_dataframe, write_options):
 
         if len(feature_group.features) == 0:
