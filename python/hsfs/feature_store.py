@@ -21,10 +21,10 @@ from typing import Optional, Union, List, Dict
 from hsfs import (
     training_dataset,
     feature_group,
+    feature,
     on_demand_feature_group,
     util,
     storage_connector,
-    training_dataset_feature,
 )
 from hsfs.core import (
     feature_group_api,
@@ -114,7 +114,26 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
-    def get_on_demand_feature_group(self, name, version=None):
+    def get_on_demand_feature_group(self, name: str, version: int =None):
+        """Get a on-demand feature group entity from the feature store.
+
+        Getting a on-demand feature group from the Feature Store means getting its 
+        metadata handle so you can subsequently read the data into a Spark or 
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the on-demand feature group to get.
+            version: Version of the on-demand feature group to retrieve, 
+                defaults to `None` and will return the `version=1`.
+
+        # Returns
+            `OnDemandFeatureGroup`: The on-demand feature group metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+
         if version is None:
             warnings.warn(
                 "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
@@ -173,7 +192,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
-        features: Optional[List[training_dataset_feature.TrainingDatasetFeature]] = [],
+        features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
         """Create a feature group metadata object.
@@ -230,8 +249,39 @@ class FeatureStore:
         )
 
     def create_on_demand_feature_group(
-        self, name, query, storage_connector, version=None, description="", features=[],
+        self,
+        name: str,
+        query: str,
+        storage_connector: storage_connector.StorageConnector,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        features: Optional[List[feature.Feature]] = [],
     ):
+        """Create a on-demand feature group metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata or feature data in the
+            feature store on its own. To persist the feature group and save feature data
+            along the metadata in the feature store, call the `save()` method.
+
+        # Arguments
+            name: Name of the on-demand feature group to create.
+            query: A string containing a SQL query valid for the target data source.
+                the query will be used to pull data from the data sources when the 
+                feature group is used.
+            storage_connector: the storage connector to use to establish connectivity 
+                with the data source.
+            version: Version of the on-demand feature group to retrieve, defaults to `None` and
+                will create the feature group with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the on-demand feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            features: Optionally, define the schema of the on-demand feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame resulting by executing the provided query
+                against the data source.
+        """
         return on_demand_feature_group.OnDemandFeatureGroup(
             name=name,
             query=query,
