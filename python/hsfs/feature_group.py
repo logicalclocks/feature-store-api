@@ -222,36 +222,6 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         )
         return self.select_all().show(n, online)
 
-    def select_all(self):
-        """Select all features in the feature group and return a query object.
-
-        The query can be used to construct joins of feature groups or create a
-        training dataset immediately.
-
-        # Returns
-            `Query`. A query object with all features of the feature group.
-        """
-        return query.Query(
-            self._feature_store_name, self._feature_store_id, self, self._features
-        )
-
-    def select(self, features=[]):
-        """Select a subset of features of the feature group and return a query object.
-
-        The query can be used to construct joins of feature groups or create a training
-        dataset with a subset of features of the feature group.
-
-        # Arguments
-            features: list, optional. A list of `Feature` objects or feature names as
-                strings to be selected, defaults to [].
-
-        # Returns
-            `Query`: A query object with the selected features of the feature group.
-        """
-        return query.Query(
-            self._feature_store_name, self._feature_store_id, self, features
-        )
-
     def save(
         self,
         features: Union[
@@ -383,19 +353,6 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         """
         return self._feature_group_engine.commit_details(self, limit)
 
-    def delete(self):
-        """Drop the entire feature group along with its feature data.
-
-        !!! danger "Potentially dangerous operation"
-            This operation drops all metadata associated with **this version** of the
-            feature group **and** all the feature data in offline and online storage
-            associated with it.
-
-        # Raises
-            `RestAPIError`.
-        """
-        self._feature_group_engine.delete(self)
-
     def commit_delete_record(
         self,
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
@@ -498,51 +455,6 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             )
         self._feature_group_engine.append_features(self, new_features)
         return self
-
-    def add_tag(self, name: str, value: str = None):
-        """Attach a name/value tag to a feature group.
-
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
-
-        # Arguments
-            name: Name of the tag to be added.
-            value: Value of the tag to be added, defaults to `None`.
-
-        # Raises
-            `RestAPIError`.
-        """
-        self._feature_group_engine.add_tag(self, name, value)
-
-    def delete_tag(self, name: str):
-        """Delete a tag from a feature group.
-
-        Tag names are unique identifiers.
-
-        # Arguments
-            name: Name of the tag to be removed.
-
-        # Raises
-            `RestAPIError`.
-        """
-        self._feature_group_engine.delete_tag(self, name)
-
-    def get_tag(self, name: str = None):
-        """Get the tags of a feature group.
-
-        Tag names are unique identifiers. Returns all tags if no tag name is
-        specified.
-
-        # Arguments
-            name: Name of the tag to get, defaults to `None`.
-
-        # Returns
-            `list[Tag]`. List of tags as name/value pairs.
-
-        # Raises
-            `RestAPIError`.
-        """
-        return self._feature_group_engine.get_tags(self, name)
 
     @classmethod
     def from_response_json(cls, json_dict):
