@@ -47,10 +47,11 @@ By default `connection.get_feature_store()` returns the feature store of the pro
     fs = connection.get_feature_store()
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ``` scala
     import com.logicalclocks.hsfs._
+    import scala.collection.JavaConverters._
 
     // Create a connection
     val connection = HopsworksConnection.builder().build();
@@ -68,7 +69,7 @@ You can inspect the Feature Store's meta data by accessing its attributes:
     print(fs.description)
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     println(fs.getName)
@@ -107,14 +108,14 @@ Create a feature group named `store_fg`. The store is the primary key uniquely i
         statistics_config={"enabled": True, "histograms": True, "correlations": True})
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     val storeFgMeta = (fs.createFeatureGroup()
         .name("store_fg")
         .description("Store related features")
         .version(1)
-        .primaryKeys(Seq("store"))
+        .primaryKeys(Seq("store").asJava)
         .statisticsEnabled(True)
         .histograms(True)
         .correlations(True)
@@ -129,7 +130,7 @@ Up to this point we have just created the metadata object representing the featu
     store_fg_meta.save(store_dataframe)
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     storeFgMeta.save(store_dataframe)
@@ -152,7 +153,7 @@ Using the Feature Store object, you can retrieve handles to the entities, such a
     exogenous_df_subset = exogenous_fg_meta.select(["store", "fuel_price", "is_holiday"]).read()
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     val exogenousFgMeta= fs.getFeatureGroup("exogenous_fg", 1)
@@ -161,7 +162,7 @@ Using the Feature Store object, you can retrieve handles to the entities, such a
     val exogenousDf = exogenousFgMeta.read()
 
     // Select a subset of features and read into dataframe
-    val exogenousDfSubset = exogenousFgMeta.select(Seq("store", "fuel_price", "is_holiday")).read()
+    val exogenousDfSubset = exogenousFgMeta.select(Seq("store", "fuel_price", "is_holiday").asJava).read()
     ```
 
 #### Joining
@@ -186,7 +187,7 @@ In the example below, `sales_fg` has `store`, `dept` and `date` as composite pri
     query.show(5)
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     val exogenousFg = fs.getFeatureGroup("exogenous_fg")
@@ -229,16 +230,16 @@ You can either create a training dataset from a `Query` object or directly from 
     td.save(query)
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     val storeFg = fs.getFeatureGroup("store_fg")
     val exogenousFg = fs.getFeatureGroup("exogenous_fg")
     val salesFg = fs.getFeatureGroup("sales_fg")
 
-    query = salesFg.selectAll() \
-        .join(storeFg.selectAll()) \
-        .join(exogenousFg.select(["fuel_price", "unemployment", "cpi"]))
+    query = (salesFg.selectAll()
+        .join(storeFg.selectAll())
+        .join(exogenousFg.select(Seq("fuel_price", "unemployment", "cpi").asJava)))
 
     val td = (fs.createTrainingDataset()
                           .name("sales_model")
@@ -263,7 +264,7 @@ If you want to use a previously created training dataset to train a machine lear
     df = td.read(split="train")
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     ```scala
     val td = fs.getTrainingDataset("sales_model")
@@ -282,6 +283,6 @@ Either you read the data into a DataFrame again, or you use the provided utility
     train_input = train_input_feeder.tf_record_dataset()
     ```
 
-=== "Java/Scala"
+=== "Scala"
 
     This functionality is only available in the Python API.
