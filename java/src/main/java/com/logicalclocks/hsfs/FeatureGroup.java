@@ -21,14 +21,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
-import com.logicalclocks.hsfs.metadata.Query;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import lombok.With;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -36,38 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroup {
-  @Getter @Setter
-  private Integer id;
-
-  @Getter @Setter
-  private String name;
-
-  @Getter @Setter
-  private Integer version;
-
-  @Getter @Setter @With
-  private String description;
-
-  @Getter @Setter
-  private FeatureStore featureStore;
-
-  @Getter @Setter @With
-  private List<Feature> features;
-
-  @Getter @Setter
-  private Date created;
-
-  @Getter
-  private String creator;
+public class FeatureGroup extends FeatureGroupBase {
 
   @Getter @Setter
   private Boolean onlineEnabled;
@@ -114,7 +87,6 @@ public class FeatureGroup {
                       List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
                       TimeTravelFormat timeTravelFormat, List<Feature> features, Boolean statisticsEnabled,
                       Boolean histograms, Boolean correlations, List<String> statisticColumns) {
-
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -131,21 +103,6 @@ public class FeatureGroup {
   }
 
   public FeatureGroup() {
-  }
-
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
-    return new Query(this, features);
-  }
-
-  public Query selectAll() throws FeatureStoreException, IOException {
-    return new Query(this, getFeatures());
-  }
-
-  public Query select(List<String> features) throws FeatureStoreException, IOException {
-    // Create a feature object for each string feature given by the user.
-    // For the query building each feature need only the name set.
-    List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
-    return selectFeatures(featureObjList);
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
@@ -297,10 +254,6 @@ public class FeatureGroup {
     computeStatistics();
   }
 
-  public void delete() throws FeatureStoreException, IOException {
-    featureGroupEngine.delete(this);
-  }
-
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException {
 
@@ -357,43 +310,6 @@ public class FeatureGroup {
   }
 
   /**
-   * Update the description of the feature group.
-   *
-   * @param description
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void updateDescription(String description) throws FeatureStoreException, IOException {
-    featureGroupEngine.updateDescription(this, description);
-  }
-
-  /**
-   * Append features to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException {
-    featureGroupEngine.appendFeatures(this, new ArrayList<>(features));
-  }
-
-  /**
-   * Append a single feature to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void appendFeatures(Feature features) throws FeatureStoreException, IOException {
-    List<Feature> featureList = new ArrayList<>();
-    featureList.add(features);
-    featureGroupEngine.appendFeatures(this, featureList);
-  }
-
-  /**
    * Recompute the statistics for the feature group and save them to the feature store.
    *
    * @return statistics object of computed statistics
@@ -433,64 +349,5 @@ public class FeatureGroup {
   @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
-  }
-
-  /**
-   * Add a tag without value to the feature group.
-   *
-   * @param name name of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name) throws FeatureStoreException, IOException {
-    addTag(name, null);
-  }
-
-  /**
-   * Add name/value tag to the feature group.
-   *
-   * @param name name of the tag
-   * @param value value of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name, String value) throws FeatureStoreException, IOException {
-    featureGroupEngine.addTag(this, name, value);
-  }
-
-  /**
-   * Get all tags of the feature group.
-   *
-   * @return map of all tags from name to value
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public Map<String, String> getTag() throws FeatureStoreException, IOException {
-    return getTag(null);
-  }
-
-  /**
-   * Get a single tag value of the feature group.
-   *
-   * @param name name of tha tag
-   * @return string value of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
-    return featureGroupEngine.getTag(this, name);
-  }
-
-  /**
-   * Delete a tag of the feature group.
-   *
-   * @param name name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void deleteTag(String name) throws FeatureStoreException, IOException {
-    featureGroupEngine.deleteTag(this, name);
   }
 }

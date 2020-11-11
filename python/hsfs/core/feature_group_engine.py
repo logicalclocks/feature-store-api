@@ -1,6 +1,5 @@
 #
 #   Copyright 2020 Logical Clocks AB
-#
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
@@ -16,21 +15,13 @@
 
 from hsfs import engine
 from hsfs import feature_group as fg
-from hsfs.core import feature_group_api, storage_connector_api, tags_api, hudi_engine
+from hsfs.core import feature_group_base_engine, hudi_engine
 from hsfs.client import exceptions
 
 
-class FeatureGroupEngine:
+class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     OVERWRITE = "overwrite"
     APPEND = "append"
-    ENTITY_TYPE = "featuregroups"
-
-    def __init__(self, feature_store_id):
-        self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
-        self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
 
     def save(self, feature_group, feature_dataframe, write_options):
 
@@ -174,18 +165,6 @@ class FeatureGroupEngine:
 
     def _get_online_table_name(self, feature_group):
         return feature_group.name + "_" + str(feature_group.version)
-
-    def add_tag(self, feature_group, name, value):
-        """Attach a name/value tag to a feature group."""
-        self._tags_api.add(feature_group, name, value)
-
-    def delete_tag(self, feature_group, name):
-        """Remove a tag from a feature group."""
-        self._tags_api.delete(feature_group, name)
-
-    def get_tags(self, feature_group, name):
-        """Get tag with a certain name or all tags for a feature group."""
-        return [tag.to_dict() for tag in self._tags_api.get(feature_group, name)]
 
     def sql(self, query, feature_store_name, dataframe_type, online):
         if online:

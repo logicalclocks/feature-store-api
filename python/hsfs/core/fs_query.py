@@ -15,7 +15,7 @@
 #
 
 import humps
-from hsfs.core import hudi_feature_group_alias
+from hsfs.core import hudi_feature_group_alias, on_demand_feature_group_alias
 
 
 class FsQuery:
@@ -23,6 +23,7 @@ class FsQuery:
         self,
         query,
         query_online,
+        on_demand_feature_groups,
         hudi_cached_feature_groups,
         href=None,
         expand=None,
@@ -32,11 +33,23 @@ class FsQuery:
         self._query = query
         self._query_online = query_online
 
+        if on_demand_feature_groups is not None:
+            self._on_demand_fg_aliases = [
+                on_demand_feature_group_alias.OnDemandFeatureGroupAlias.from_response_json(
+                    fg
+                )
+                for fg in on_demand_feature_groups
+            ]
+        else:
+            self._on_demand_fg_aliases = []
+
         if hudi_cached_feature_groups is not None:
-            self._hudi_cached_featuregroups = [
+            self._hudi_cached_feature_groups = [
                 hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
                 for fg in hudi_cached_feature_groups
             ]
+        else:
+            self._hudi_cached_feature_groups = []
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -52,5 +65,9 @@ class FsQuery:
         return self._query_online
 
     @property
-    def hudi_cached_featuregroups(self):
-        return self._hudi_cached_featuregroups
+    def on_demand_fg_aliases(self):
+        return self._on_demand_fg_aliases
+
+    @property
+    def hudi_cached_feature_groups(self):
+        return self._hudi_cached_feature_groups

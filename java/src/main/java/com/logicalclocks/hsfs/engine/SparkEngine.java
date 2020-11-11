@@ -86,6 +86,12 @@ public class SparkEngine {
         .load();
   }
 
+  public void registerOnDemandTemporaryTable(String query, StorageConnector storageConnector, String alias)
+      throws FeatureStoreException {
+    Dataset<Row> queryDataset = jdbc(storageConnector, query);
+    queryDataset.createOrReplaceTempView(alias);
+  }
+
   public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
                                          Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
     hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,

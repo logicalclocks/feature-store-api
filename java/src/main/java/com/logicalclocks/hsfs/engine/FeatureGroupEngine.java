@@ -16,8 +16,6 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -27,7 +25,6 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -43,7 +40,6 @@ public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
   private HudiEngine hudiEngine = new HudiEngine();
   private Utils utils = new Utils();
 
@@ -64,7 +60,7 @@ public class FeatureGroupEngine {
                                List<String> partitionKeys, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    if (featureGroup.getFeatureStore() != null) {
+    if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
     }
 
@@ -164,22 +160,6 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  public void delete(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    featureGroupApi.delete(featureGroup);
-  }
-
-  public void addTag(FeatureGroup featureGroup, String name, String value) throws FeatureStoreException, IOException {
-    tagsApi.add(featureGroup, name, value);
-  }
-
-  public Map<String, String> getTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return tagsApi.get(featureGroup, name);
-  }
-
-  public void deleteTag(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureGroup, name);
-  }
-
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
     featureGroup.setCorrelations(apiFG.getCorrelations());
@@ -208,18 +188,5 @@ public class FeatureGroupEngine {
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
-  }
-
-  public void updateDescription(FeatureGroup featureGroup, String description)
-      throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withDescription(description), "updateMetadata");
-    featureGroup.setDescription(apiFG.getDescription());
-  }
-
-  public void appendFeatures(FeatureGroup featureGroup, List<Feature> features)
-      throws FeatureStoreException, IOException {
-    features.addAll(featureGroup.getFeatures());
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup.withFeatures(features), "updateMetadata");
-    featureGroup.setFeatures(apiFG.getFeatures());
   }
 }

@@ -80,8 +80,7 @@ class HudiEngine:
             self._feature_store_id
         )
         self._connstr = self._storage_connector_api.get(
-            self._feature_store_name,
-            storage_connector.StorageConnector.JDBC,
+            self._feature_store_name, storage_connector.StorageConnector.JDBC,
         ).connection_string
 
     def save_hudi_fg(self, dataset, save_mode, operation, write_options):

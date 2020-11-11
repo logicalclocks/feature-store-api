@@ -69,7 +69,7 @@ public class FeatureStore {
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return featureGroupApi.get(this, name, version);
+    return featureGroupApi.getFeatureGroup(this, name, version);
   }
 
   /**
@@ -84,6 +84,34 @@ public class FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  /**
+   * Get a on-demand feature group object from the feature store.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @return OnDemandFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public OnDemandFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getOnDemandFeatureGroup(this, name, version);
+  }
+
+  /**
+   * Get a on-demand feature group object with default version `1` from the feature store.
+   *
+   * @param name the name of the feature group
+   * @return OnDemandFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public OnDemandFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getOnDemandFeatureGroup(name, DEFAULT_VERSION);
   }
 
   public Dataset<Row> sql(String query) {
@@ -101,6 +129,11 @@ public class FeatureStore {
 
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
+        .featureStore(this);
+  }
+
+  public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
+    return OnDemandFeatureGroup.builder()
         .featureStore(this);
   }
 

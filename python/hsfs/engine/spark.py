@@ -49,11 +49,11 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             self._setup_pydoop()
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
-        if not online_conn:
+    def sql(self, sql_query, feature_store, connector, dataframe_type):
+        if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = self._sql_online(sql_query, online_conn)
+            result_df = self._jdbc(sql_query, connector)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -63,8 +63,8 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def _sql_online(self, sql_query, online_conn):
-        options = online_conn.spark_options()
+    def _jdbc(self, sql_query, connector):
+        options = connector.spark_options()
         options["query"] = sql_query
 
         return (
@@ -76,6 +76,10 @@ class Engine:
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
+
+    def register_on_demand_temporary_table(self, query, storage_connector, alias):
+        on_demand_dataset = self._jdbc(query, storage_connector)
+        on_demand_dataset.createOrReplaceTempView(alias)
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
@@ -180,13 +184,7 @@ class Engine:
             )
 
     def _save_offline_dataframe(
-        self,
-        table_name,
-        feature_group,
-        dataframe,
-        save_mode,
-        operation,
-        write_options,
+        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -241,10 +239,8 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return (
-            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms
-            )
+        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf, relevant_columns, correlations, histograms
         )
 
     def write_options(self, data_format, provided_options):

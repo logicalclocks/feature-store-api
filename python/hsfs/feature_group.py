@@ -21,14 +21,13 @@ import pandas as pd
 import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
-from hsfs.core import query, feature_group_engine, statistics_engine
 from hsfs import util, engine, feature
+from hsfs.core import query, feature_group_engine, statistics_engine, feature_group_base
 from hsfs.statistics_config import StatisticsConfig
 
 
-class FeatureGroup:
+class FeatureGroup(feature_group_base.FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
-    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -55,6 +54,8 @@ class FeatureGroup:
         hudi_enabled=False,
         statistics_config=None,
     ):
+        super().__init__(featurestore_id)
+
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
@@ -162,18 +163,10 @@ class FeatureGroup:
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(
-                    online,
-                    dataframe_type,
-                    read_options,
-                )
+                .read(online, dataframe_type, read_options,)
             )
         else:
-            return self.select_all().read(
-                online,
-                dataframe_type,
-                read_options,
-            )
+            return self.select_all().read(online, dataframe_type, read_options,)
 
     def read_changes(
         self,

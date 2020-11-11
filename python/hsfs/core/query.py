@@ -51,14 +51,17 @@ class Query:
         else:
             sql_query = query.query
             online_conn = None
+
+            # Register on demand feature groups as temporary tables
+            self._register_on_demand(query.on_demand_fg_aliases)
+
             # Register on hudi feature groups as temporary tables
-            if self._left_feature_group.time_travel_format == "HUDI":
-                self._register_hudi_tables(
-                    query.hudi_cached_featuregroups,
-                    self._feature_store_id,
-                    self._feature_store_name,
-                    read_options,
-                )
+            self._register_hudi_tables(
+                query.hudi_cached_feature_groups,
+                self._feature_store_id,
+                self._feature_store_name,
+                read_options,
+            )
 
         return engine.get_instance().sql(
             sql_query, self._feature_store_name, online_conn, dataframe_type
@@ -73,6 +76,17 @@ class Query:
         else:
             sql_query = query.query
             online_conn = None
+
+            # Register on demand feature groups as temporary tables
+            self._register_on_demand(query.on_demand_fg_aliases)
+
+            # Register on hudi feature groups as temporary tables
+            self._register_hudi_tables(
+                query.hudi_cached_feature_groups,
+                self._feature_store_id,
+                self._feature_store_name,
+                {},
+            )
 
         return engine.get_instance().show(
             sql_query, self._feature_store_name, n, online_conn
@@ -114,6 +128,17 @@ class Query:
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
 
+    def _register_on_demand(self, on_demand_fg_aliases):
+        if on_demand_fg_aliases is None:
+            return
+
+        for on_demand_fg_alias in on_demand_fg_aliases:
+            engine.get_instance().register_on_demand_temporary_table(
+                on_demand_fg_alias.on_demand_feature_group.query,
+                on_demand_fg_alias.on_demand_feature_group.storage_connector,
+                on_demand_fg_alias.alias,
+            )
+
     @property
     def left_featuregroup_start_time(self):
         return self._left_featuregroup_start_time
@@ -130,9 +155,8 @@ class Query:
     def left_featuregroup_end_time(self, left_featuregroup_start_time):
         self._left_featuregroup_end_time = left_featuregroup_start_time
 
-    @staticmethod
     def _register_hudi_tables(
-        hudi_feature_groups, feature_store_id, feature_store_name, read_options
+        self, hudi_feature_groups, feature_store_id, feature_store_name, read_options
     ):
         for hudi_fg in hudi_feature_groups:
             engine.get_instance().register_hudi_temporary_table(

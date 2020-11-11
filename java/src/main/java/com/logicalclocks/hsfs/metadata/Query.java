@@ -21,11 +21,12 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FsQuery;
 import com.logicalclocks.hsfs.JoinType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
-import com.logicalclocks.hsfs.TimeTravelFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -44,7 +45,7 @@ public class Query {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Getter @Setter
-  private FeatureGroup leftFeatureGroup;
+  private FeatureGroupBase leftFeatureGroup;
   @Getter @Setter
   private List<Feature> leftFeatures;
   @Getter @Setter
@@ -58,7 +59,7 @@ public class Query {
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
 
-  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
 
@@ -163,9 +164,9 @@ public class Query {
           storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
       return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
     } else {
-      if (leftFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-        registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
-      }
+      registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
+      registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
     }
@@ -190,6 +191,21 @@ public class Query {
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
+    }
+  }
+
+  private void registerOnDemandFeatureGroups(List<OnDemandFeatureGroupAlias> onDemandFeatureGroups)
+      throws FeatureStoreException {
+    if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
+      return;
+    }
+
+    for (OnDemandFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroups) {
+      String alias = onDemandFeatureGroupAlias.getAlias();
+      OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
+
+      SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup.getQuery(),
+          onDemandFeatureGroup.getStorageConnector(), alias);
     }
   }
 

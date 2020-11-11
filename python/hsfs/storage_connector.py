@@ -22,7 +22,8 @@ class StorageConnector:
     S3 = "S3"
     JDBC = "JDBC"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
-    S3_DTO = ""
+    JDBC_DTO = "featurestoreJdbcConnectorDTO"
+    S3_DTO = "featurestoreS3ConnectorDTO"
 
     def __init__(
         self,
@@ -62,6 +63,11 @@ class StorageConnector:
         json_decamelized = humps.decamelize(json_dict)
         _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
+
+    def to_dict(self):
+        # Currently we use this method only when creating on demand feature groups.
+        # The backend needs only the id.
+        return {"id": self._id}
 
     @property
     def id(self):
