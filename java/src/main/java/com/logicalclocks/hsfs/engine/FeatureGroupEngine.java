@@ -60,7 +60,7 @@ public class FeatureGroupEngine {
                                List<String> partitionKeys, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    if (featureGroup.getFeatures() != null) {
+    if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
     }
 
