@@ -19,6 +19,11 @@ PAGES = {
             "hsfs.feature_store.FeatureStore", exclude=["from_response_json"]
         ),
     },
+    "feature.md": {
+        "feature": ["hsfs.feature.Feature"],
+        "feature_properties": keras_autodoc.get_properties("hsfs.feature.Feature"),
+        "feature_methods": keras_autodoc.get_methods("hsfs.feature.Feature"),
+    },
     "feature_group.md": {
         "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
         "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],

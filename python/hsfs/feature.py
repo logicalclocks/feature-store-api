@@ -18,6 +18,11 @@ import humps
 
 
 class Feature:
+    """Metadata object representing a feature in the Feature Store.
+
+    [extended_summary]
+    """
+
     def __init__(
         self,
         name,
