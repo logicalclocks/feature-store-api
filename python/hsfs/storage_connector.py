@@ -65,37 +65,48 @@ class StorageConnector:
 
     @property
     def id(self):
+        """Id of the storage connector uniquely identifying it in the Feature store."""
         return self._id
 
     @property
     def connector_type(self):
+        """Type of the connector. S3, JDBC or HOPSFS."""
         return self._storage_connector_type
 
     @property
     def access_key(self):
+        """Access key for S3 buckets."""
         return self._access_key
 
     @property
     def secret_key(self):
+        """Secret key for S3 buckets."""
         return self._secret_key
 
     @property
     def server_encryption_algorithm(self):
+        """Encryption algorithm if server-side S3 bucket encryption is enabled."""
         return self._server_encryption_algorithm
 
     @property
     def server_encryption_key(self):
+        """Encryption key if server-side S3 bucket encryption is enabled."""
         return self._server_encryption_key
 
     @property
     def connection_string(self):
+        """JDBC connection string."""
         return self._connection_string
 
     @property
     def arguments(self):
+        """Additional JDBC arguments."""
         return self._arguments
 
     def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional
+        arguments.
+        """
         args = [arg.split("=") for arg in self._arguments.split(",")]
 
         return {

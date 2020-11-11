@@ -18,9 +18,10 @@ import humps
 
 
 class Feature:
-    """Metadata object representing a feature in the Feature Store.
+    """Metadata object representing a feature in a feature group in the Feature Store.
 
-    [extended_summary]
+    See [Training Dataset Feature](generated/training_dataset_feature.md) for the
+    feature representation of training dataset schemas.
     """
 
     def __init__(
@@ -36,7 +37,6 @@ class Feature:
         self._name = name
         self._type = type
         self._description = description
-        # TODO: imo should be managed by the backend
         self._primary = primary or False
         self._partition = partition or False
         self._online_type = online_type

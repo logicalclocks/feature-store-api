@@ -139,13 +139,47 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_storage_connector(self, name, connector_type):
+    def get_storage_connector(self, name: str, connector_type: str):
+        """Get a previously created storage connector from the feature store.
+
+        Storage connectors encapsulate all information needed for the execution engine
+        to read and write to specific storage. This storage can be S3, a JDBC compliant
+        database or the distributed filesystem HOPSFS.
+
+        If you want to connect to the online feature store, see the
+        `get_online_storage_connector` method to get the JDBC connector for the Online
+        Feature Store.
+
+        !!! example "Getting a Storage Connector"
+            ```python
+
+            sc = fs.get_storage_connector("demo_fs_meb10000_Training_Datasets", "HOPSFS")
+
+            td = fs.create_training_dataset(..., storage_connector=sc, ...)
+            ```
+
+        # Arguments
+            name: Name of the storage connector to retrieve.
+            connector_type: Type of the storage connector, e.g. `"JDBC"`, `"HOPSFS"`
+                or `"S3"`.
+
+        # Returns
+            `StorageConnector`. Storage connector object.
+        """
         return self._storage_connector_api.get(name, connector_type)
 
     def sql(self, query, dataframe_type="default", online=False):
         return self._feature_group_engine.sql(query, self._name, dataframe_type, online)
 
     def get_online_storage_connector(self):
+        """Get the storage connector for the Online Feature Store of the respective
+        project's feature store.
+
+        The returned storage connector depends on the project that you are connected to.
+
+        # Returns
+            `StorageConnector`. JDBC storage connector to the Online Feature Store.
+        """
         return self._storage_connector_api.get_online_connector()
 
     def create_feature_group(
@@ -198,6 +232,9 @@ class FeatureStore:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+
+        # Returns
+            `FeatureGroup`. The feature group metadata object.
         """
         return feature_group.FeatureGroup(
             name=name,

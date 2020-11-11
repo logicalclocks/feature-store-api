@@ -22,7 +22,9 @@ PAGES = {
     "feature.md": {
         "feature": ["hsfs.feature.Feature"],
         "feature_properties": keras_autodoc.get_properties("hsfs.feature.Feature"),
-        "feature_methods": keras_autodoc.get_methods("hsfs.feature.Feature"),
+        "feature_methods": keras_autodoc.get_methods(
+            "hsfs.feature.Feature", exclude=["from_response_json", "to_dict"]
+        ),
     },
     "feature_group.md": {
         "fg_create": ["hsfs.feature_store.FeatureStore.create_feature_group"],
@@ -58,6 +60,18 @@ PAGES = {
         "tf_record_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_record_dataset"],
         "tf_csv_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_csv_dataset"],
     },
+    "storage_connector.md": {
+        "sc_get": [
+            "hsfs.feature_store.FeatureStore.get_storage_connector",
+            "hsfs.feature_store.FeatureStore.get_online_storage_connector",
+        ],
+        "sc_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.StorageConnector", exclude=["from_response_json"]
+        ),
+        "sc_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.StorageConnector"
+        ),
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(
@@ -82,6 +96,23 @@ PAGES = {
         ),
         "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
     },
+    "api/feature_api.md": {
+        "feature": ["hsfs.feature.Feature"],
+        "feature_properties": keras_autodoc.get_properties("hsfs.feature.Feature"),
+        "feature_methods": keras_autodoc.get_methods("hsfs.feature.Feature"),
+    },
+    "api/storage_connector_api.md": {
+        "sc_get": [
+            "hsfs.feature_store.FeatureStore.get_storage_connector",
+            "hsfs.feature_store.FeatureStore.get_online_storage_connector",
+        ],
+        "sc_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.StorageConnector"
+        ),
+        "sc_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.StorageConnector"
+        ),
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
@@ -100,6 +131,7 @@ def generate(dest_dir):
             "hsfs.training_dataset_feature.TrainingDatasetFeature": "hsfs.TrainingDatasetFeature",
             "pandas.core.frame.DataFrame": "pandas.DataFrame",
         },
+        max_signature_line_length=100,
     )
     shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "CONTRIBUTING.md")
     shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")
