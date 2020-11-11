@@ -114,7 +114,7 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
-    def get_on_demand_feature_group(self, name: str, version: int =None):
+    def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
         Getting a on-demand feature group from the Feature Store means getting its 
