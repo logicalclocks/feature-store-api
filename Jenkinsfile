@@ -12,6 +12,8 @@ pipeline {
             }
             steps {
                 dir("python") {
+                    sh "rm -f LICENSE README.md"
+                    sh "cp -f ../LICENSE ../README.md ./"
                     sh "python3 ./setup.py sdist"
                     sh "twine upload -u $PYPI_USR -p $PYPI_PSW --skip-existing dist/*"
                 }
