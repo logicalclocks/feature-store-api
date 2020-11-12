@@ -16,8 +16,18 @@
 
 package com.logicalclocks.hsfs;
 
-public enum TimeTravelFormat {
-    NONE,
-    HUDI,
-    DELTA
+public enum ActionType {
+  BULK_INSERT("bulk_insert"),
+  INSERT("insert"),
+  UPSERT("upsert");
+
+  private final String value;
+
+  private ActionType(String value) {
+    this.value = value;
+  }
+
+  public String getValue() {
+    return value;
+  }
 }

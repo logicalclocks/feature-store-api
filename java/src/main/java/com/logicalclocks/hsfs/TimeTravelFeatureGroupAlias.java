@@ -16,18 +16,24 @@
 
 package com.logicalclocks.hsfs;
 
-public enum HudiOperationType {
-  BULK_INSERT("bulk_insert"),
-  INSERT("insert"),
-  UPSERT("upsert");
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-  private final String value;
+@AllArgsConstructor
+@NoArgsConstructor
+public class TimeTravelFeatureGroupAlias {
 
-  private HudiOperationType(String value) {
-    this.value = value;
-  }
+  @Getter @Setter
+  private String alias;
 
-  public String getValue() {
-    return value;
-  }
+  @Getter @Setter
+  private FeatureGroup featureGroup;
+
+  @Getter @Setter
+  private Long leftFeatureGroupStartTimestamp;
+
+  @Getter @Setter
+  private Long leftFeatureGroupEndTimestamp;
 }

@@ -18,7 +18,8 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
+import com.logicalclocks.hsfs.commit.DeltaLakeUpdate;
+import com.logicalclocks.hsfs.commit.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
@@ -44,6 +45,7 @@ public class FeatureGroupApi {
       + "updateMetadata}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
       + "/commits{?sort_by,offset,limit}";
+  public static final String DELTA_MERGE_CONTIDTION_PATH = FeatureGroupApi.FEATURE_GROUP_COMMIT_PATH + "{/query_type}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -226,5 +228,29 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
+  }
+
+  public DeltaLakeUpdate constructDeltaLakeUpdate(FeatureGroup featureGroup, DeltaLakeUpdate deltaLakeMetaData)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + DELTA_MERGE_CONTIDTION_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("query_type", "delta_update")
+        .expand();
+
+    String deltaLakeMetaDataJson = hopsworksClient.getObjectMapper().writeValueAsString(deltaLakeMetaData);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(new StringEntity(deltaLakeMetaDataJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info("Sending DeltaLakeUpdate request: " + deltaLakeMetaDataJson);
+    return hopsworksClient.handleRequest(postRequest, DeltaLakeUpdate.class);
   }
 }

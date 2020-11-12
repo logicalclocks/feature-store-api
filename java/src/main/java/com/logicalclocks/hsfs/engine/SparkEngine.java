@@ -22,7 +22,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.ActionType;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
@@ -60,17 +60,21 @@ public class SparkEngine {
 
   private Utils utils = new Utils();
   private HudiEngine hudiEngine = new HudiEngine();
+  private DeltaEngine deltaEngine = new DeltaEngine();
 
   private SparkEngine() {
-    sparkSession = SparkSession.builder()
-        .enableHiveSupport()
-        .getOrCreate();
+    sparkSession = SparkSession.builder().getOrCreate();
+
+    // TODO (davit): enable hive support if not delta lake engine
+    // sparkSession = SparkSession.builder()
+    //     .enableHiveSupport()
+    //     .getOrCreate();
 
     // Configure the Spark context to allow dynamic partitions
-    sparkSession.conf().set("hive.exec.dynamic.partition", "true");
-    sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
-    // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
-    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+    // sparkSession.conf().set("hive.exec.dynamic.partition", "true");
+    // sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
+    // // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
+    // sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
   public Dataset<Row> sql(String query) {
@@ -92,10 +96,18 @@ public class SparkEngine {
     queryDataset.createOrReplaceTempView(alias);
   }
 
-  public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
-                                         Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
-    hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,
-        leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
+  public void registerTimeTravelTmpTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
+                                         Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions)
+      throws FeatureStoreException {
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,
+          leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
+    } else if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.DELTA) {
+      deltaEngine.registerTemporaryTable(sparkSession,  featureGroup, alias, leftFeaturegroupEndTimestamp,
+          readOptions);
+    } else {
+      throw new FeatureStoreException("Not valid time travel format");
+    }
   }
 
   public void configureConnector(StorageConnector storageConnector) {
@@ -307,11 +319,12 @@ public class SparkEngine {
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
+                                    SaveMode saveMode, ActionType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
-
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       hudiEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
+    } else if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.DELTA) {
+      deltaEngine.saveDeltaLakeFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }

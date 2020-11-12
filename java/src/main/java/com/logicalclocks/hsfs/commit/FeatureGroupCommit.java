@@ -14,26 +14,35 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.commit;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.metadata.RestDto;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class HudiFeatureGroupAlias {
-
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class FeatureGroupCommit  extends RestDto<FeatureGroupCommit> {
   @Getter @Setter
-  private String alias;
-
+  private Long commitID;
   @Getter @Setter
-  private FeatureGroup featureGroup;
-
+  private Long readCommitID;
   @Getter @Setter
-  private Long leftFeatureGroupStartTimestamp;
-
+  private String actionType;
   @Getter @Setter
-  private Long leftFeatureGroupEndTimestamp;
+  private String commitDateString;
+  @Getter @Setter
+  private Long deltaCommitVersion;
+  @Getter @Setter
+  private Long rowsInserted;
+  @Getter @Setter
+  private Long rowsUpdated;
+  @Getter @Setter
+  private Long rowsDeleted;
 }

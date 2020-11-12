@@ -38,7 +38,7 @@ public class FsQuery {
   private List<OnDemandFeatureGroupAlias> onDemandFeatureGroups;
 
   @Getter @Setter
-  private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
+  private List<TimeTravelFeatureGroupAlias> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
     query = query.replace("\n", " ");

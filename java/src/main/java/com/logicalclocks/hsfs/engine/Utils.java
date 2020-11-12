@@ -22,8 +22,8 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
-import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -36,14 +36,19 @@ import scala.collection.Seq;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 public class Utils {
 
   StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -121,5 +126,11 @@ public class Utils {
     String pw = FileUtils.readFileToString(new File("material_passwd"));
     return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
         + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
+  }
+
+  @SneakyThrows
+  public String timeStampToCommitFormat(Long commitedOnTimeStamp) {
+    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
+    return dateFormat.format(commitedOnDate);
   }
 }

@@ -226,12 +226,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void insert(Dataset<Row> featureData, HudiOperationType operation)
+  public void insert(Dataset<Row> featureData, ActionType operation)
       throws FeatureStoreException, IOException {
     insert(featureData, null, false, operation, null);
   }
 
-  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, ActionType operation,
                      Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
@@ -240,11 +240,11 @@ public class FeatureGroup extends FeatureGroupBase {
       throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
     }
 
-    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+    if (operation == null && this.timeTravelFormat != TimeTravelFormat.NONE) {
       if (overwrite) {
-        operation = HudiOperationType.BULK_INSERT;
+        operation = ActionType.BULK_INSERT;
       } else {
-        operation = HudiOperationType.UPSERT;
+        operation = ActionType.UPSERT;
       }
     }
 

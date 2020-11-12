@@ -17,9 +17,9 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
+import com.logicalclocks.hsfs.commit.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.ActionType;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -32,14 +32,9 @@ import org.apache.spark.sql.SaveMode;
 
 import org.apache.hadoop.fs.FileSystem;
 
-import lombok.SneakyThrows;
-
 import scala.collection.Seq;
 
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,12 +76,11 @@ public class HudiEngine {
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
 
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
-                                   Dataset<Row> dataset, SaveMode saveMode, HudiOperationType operation,
+                                   Dataset<Row> dataset, SaveMode saveMode, ActionType operation,
                                    Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
 
@@ -106,7 +100,7 @@ public class HudiEngine {
   public FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> deleteDF,
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
 
-    Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
+    Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, ActionType.UPSERT, writeOptions);
     hudiArgs.put(PAYLOAD_CLASS_OPT_KEY, PAYLOAD_CLASS_OPT_VAL);
 
     deleteDF.write().format(HUDI_SPARK_FORMAT)
@@ -144,7 +138,7 @@ public class HudiEngine {
     return fgCommitMetadata;
   }
 
-  private Map<String, String> setupHudiWriteOpts(FeatureGroup featureGroup, HudiOperationType operation,
+  private Map<String, String> setupHudiWriteOpts(FeatureGroup featureGroup, ActionType operation,
                                                  Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
@@ -196,12 +190,12 @@ public class HudiEngine {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
     if (startTimestamp != null) {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(startTimestamp));
     } else {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(0L));
     }
 
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(endTimestamp));
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
@@ -209,11 +203,5 @@ public class HudiEngine {
       hudiArgs.putAll(readOptions);
     }
     return hudiArgs;
-  }
-
-  @SneakyThrows
-  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    return dateFormat.format(commitedOnDate);
   }
 }
