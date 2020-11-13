@@ -109,3 +109,21 @@ class Feature:
     @default_value.setter
     def default_value(self, default_value):
         self._default_value = default_value
+
+    def __lt__(self, other):
+        pass
+
+    def __le__(self, other):
+        pass
+
+    def __eq__(self, other):
+        pass
+
+    def __ne__(self, other):
+        pass
+
+    def __ge__(self, other):
+        pass
+
+    def __gt__(self, other):
+        pass
