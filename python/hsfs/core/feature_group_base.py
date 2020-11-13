@@ -14,13 +14,14 @@
 #   limitations under the License.
 #
 
-from hsfs.core import query, feature_group_base_engine
+from hsfs.core import feature_group_base_engine
+from hsfs.constructor import query
 
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
-            featurestore_id
+        self._feature_group_base_engine = (
+            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
 
     def delete(self):

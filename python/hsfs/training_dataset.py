@@ -26,13 +26,13 @@ from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector
 from hsfs.core import (
-    query,
     training_dataset_api,
     storage_connector_api,
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
 )
+from hsfs.constructor import query
 from hsfs.client import exceptions
 
 

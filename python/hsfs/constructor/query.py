@@ -17,7 +17,8 @@
 import json
 
 from hsfs import util, engine
-from hsfs.core import join, query_constructor_api, storage_connector_api
+from hsfs.core import query_constructor_api, storage_connector_api
+from hsfs.constructor import join
 
 
 class Query:

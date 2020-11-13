@@ -22,7 +22,7 @@ import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature
-from hsfs.core import query, feature_group_engine, statistics_engine, feature_group_base
+from hsfs.core import feature_group_engine, statistics_engine, feature_group_base
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -163,10 +163,18 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(online, dataframe_type, read_options,)
+                .read(
+                    online,
+                    dataframe_type,
+                    read_options,
+                )
             )
         else:
-            return self.select_all().read(online, dataframe_type, read_options,)
+            return self.select_all().read(
+                online,
+                dataframe_type,
+                read_options,
+            )
 
     def read_changes(
         self,
