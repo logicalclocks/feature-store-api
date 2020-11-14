@@ -195,11 +195,13 @@ public class HudiEngine {
                                                 Map<String, String> readOptions) {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
-    String hudiCommitStartTime = timeStampToHudiFormat(startTimestamp);
-    String hudiCommitEndTime = timeStampToHudiFormat(endTimestamp);
+    if (startTimestamp != null) {
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
+    } else {
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
+    }
 
-    hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, hudiCommitStartTime);
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, hudiCommitEndTime);
+    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
