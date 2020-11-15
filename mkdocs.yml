@@ -35,6 +35,7 @@ nav:
     - Storage Connector: generated/api/storage_connector_api.md
     - Feature: generated/api/feature_api.md
   - Contributing: CONTRIBUTING.md
+  - Hopsworks.ai: https://hopsworks.readthedocs.io/en/stable/getting_started/hopsworksai/hopsworksai.html
 
 theme:
   name: material
