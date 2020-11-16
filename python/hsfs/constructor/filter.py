@@ -1,0 +1,77 @@
+#
+#   Copyright 2020 Logical Clocks AB
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+import json
+
+from hsfs import util
+
+
+class Filter:
+    GE = "GE"
+    GT = "GT"
+    NE = "NE"
+    EQ = "EQ"
+    LE = "LE"
+    LT = "LT"
+    AND = "AND"
+    OR = "OR"
+
+    def __init__(self, feature, condition, value, logic=None, right_filter=None):
+        self._feature = feature
+        self._condition = condition
+        self._value = value
+        self._logic = logic
+        self._right_filter = right_filter
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "feature": self._feature,
+            "condition": self._condition,
+            "value": self._value,
+            "rightFilter": self._right_filter,
+            "logic": self._logic,
+        }
+
+    def __and__(self, other):
+        self._right_filter = other
+        self._logic = self.AND
+        return self
+
+    def __or__(self, other):
+        self._right_filter = other
+        self._logic = self.OR
+        return self
+
+    # not supported in first iteration
+    def __invert__(
+        self,
+    ):
+        raise NotImplementedError
+
+    def __repr__(self):
+        return "Filter({}, {}, {}, {}, {})".format(
+            self._feature,
+            self._condition,
+            self._value,
+            self._right_filter.__repr__() if self._right_filter is not None else None,
+            self._logic,
+        )
+
+    def __str__(self):
+        return self.to_dict()
