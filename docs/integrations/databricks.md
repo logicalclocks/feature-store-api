@@ -42,7 +42,7 @@ To configure a cluster, click on the `Configure` button. By default the cluster 
 
 During the cluster configuration the following steps will be taken:
 
-- Upload to DBFS an archive containing the necessary Jars for HSFS and HopsFS to be able to read and write from the Hopsworks Feature Store
+- Upload an archive to DBFS containing the necessary Jars for HSFS and HopsFS to be able to read and write from the Hopsworks Feature Store
 - Add an initScript to configure the Jars when the cluster is started
 - Install `hsfs` python library 
 - Configure the necessary Spark properties to authenticate and communicate with the Feature Store
