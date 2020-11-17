@@ -25,7 +25,7 @@ Users can register a new Databricks instance by navigating to the `Integrations`
 The instance address should be in the format `[UUID].cloud.databricks.com` (or `adb-[UUID].19.azuredatabricks.net` for Databricks on Azure), essentially the same web 
 address used to reach the Databricks instance from the browser.
 
-The API Key will be stored in the Hopsworks secret store for the user and will be available only for that user.  If multiple users need to configure Databricks clusters, each has to generate an API Key and register an instance. The Databricks instance registration does not have a project scope, meaning that once register, the user can configure clusters for all projects they are part of.
+The API Key will be stored in the Hopsworks secret store for the user and will be available only for that user.  If multiple users need to configure Databricks clusters, each has to generate an API Key and register an instance. The Databricks instance registration does not have a project scope, meaning that once registered, the user can configure clusters for all projects they are part of.
 
 ## Databricks Cluster
 
