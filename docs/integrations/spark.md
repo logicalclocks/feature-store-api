@@ -18,14 +18,14 @@ In the Feature Store UI, select the *integration* tab and then select the *Spark
 Download the certificates from the same *Spark* tab in the Feature Store UI. Hopsworks uses X.509 certificates for authentication and authorization. If you are interested in the Hopsworks security model, you can read more about it in this [blog post](https://www.logicalclocks.com/blog/how-we-secure-your-data-with-hopsworks).
 The certificates are composed of three different components: the `keyStore.jks` containing the private key and the certificate for your project user, the `trustStore.jks` containing the certificates for the Hopsworks certificates authority, and a password to unlock the private key in the `keyStore.jks`. The password is displayed in a pop-up when downloading the certificate and should be saved in a file named `material_passwd`.
 
-!!! warning 
-    When you copy-paste the password to the `material_passwd` file, pay attention to not introduce additional empty spaces or new lines.  
+!!! warning
+    When you copy-paste the password to the `material_passwd` file, pay attention to not introduce additional empty spaces or new lines.
 
 The three files (`keyStore.jks`, `trustStore.jks` and `material_passwd`) should be attached as resources to your Spark application as well.
 
 ## Configure your Spark cluster
 
-Add the following configuration to the Spark application: 
+Add the following configuration to the Spark application:
 
 ```
 spark.hadoop.fs.hopsfs.impl                         io.hops.hopsfs.client.HopsFileSystem
@@ -33,14 +33,14 @@ spark.hadoop.hops.ipc.server.ssl.enabled            true
 spark.hadoop.hops.ssl.hostname.verifier             ALLOW_ALL
 spark.hadoop.hops.rpc.socket.factory.class.default  io.hop.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
 spark.hadoop.client.rpc.ssl.enabled.protocol        TLSv1.2
-spark.hadoop.hops.ssl.keystores.passwd.name         material_passwd 
+spark.hadoop.hops.ssl.keystores.passwd.name         material_passwd
 spark.hadoop.hops.ssl.keystore.name                 keyStore.jks
 spark.hadoop.hops.ssl.truststore.name               trustStore.jks
 ```
 
 ## PySpark
 
-To use PySpark, install the HSFS Python library which can be found on [PyPi](https://pypi.org/project/hsfs/). 
+To use PySpark, install the HSFS Python library which can be found on [PyPi](https://pypi.org/project/hsfs/).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
@@ -53,7 +53,7 @@ To use PySpark, install the HSFS Python library which can be found on [PyPi](htt
     </figure>
 </p>
 
-## Generating an API Key 
+## Generating an API Key
 
 In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *Api keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
 
@@ -93,4 +93,4 @@ fs = conn.get_feature_store()           # Get the project's default feature stor
 
 ## Next Steps
 
-For more information about how to connect, see the [Connection](../concepts/project.md) guide. Or continue with the Data Source guide to import your own data to the Feature Store.
+For more information about how to connect, see the [Connection](../generated/project.md) guide. Or continue with the Data Source guide to import your own data to the Feature Store.
