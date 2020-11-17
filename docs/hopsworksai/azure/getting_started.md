@@ -339,7 +339,7 @@ Select the *Instance type* (7) and *Local storage* size (8) for the *worker node
 Enter the name of the *storage account* (9) you created above in *Azure Storage account name* and name the container in which the data wil be stored in *Azure Container name* (10).
 
 !!! note
-    You can choose to use a container already existing in you *storage account* by using the name of this container, but you need to fist make sure that this container is empty.
+    You can choose to use a container already existing in your *storage account* by using the name of this container, but you need to first make sure that this container is empty.
 
 Press *Next* (11):
 
