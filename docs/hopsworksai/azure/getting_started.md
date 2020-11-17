@@ -272,7 +272,7 @@ Click on *Create*, name your storage account, select the Location you want to us
 ### Step 2.3: Give the Managed Identity access to the storage
 
 Proceed to the Storage Account you just created and click on *Access Control (IAM)* (1). Click on *Add* (2), then click on *Add role assignment* (3).
-In *Role* select *Storage Blob Data Owner* (4). In *Assign access to* select *User assigned managed identity* (5). Select the identity you created in step 2.1 (6).
+In *Role* select *Storage Blob Data Contributor* (4). In *Assign access to* select *User assigned managed identity* (5). Select the identity you created in step 2.1 (6).
 Click on *Save* (7).
 
 <p align="center">

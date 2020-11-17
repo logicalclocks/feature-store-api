@@ -4,7 +4,7 @@ Hopsworks.ai requires a set of permissions to be able to manage resources in the
 By default, these permissions are set to easily allow a wide range of different configurations and allow
 us to automate as many steps as possible. While we ensure to never access resources we shouldn’t,
 we do understand that this might not be enough for your organization or security policy.
-This guide explains how to lock down AWS permissions following the IT security policy principal of least privilege allowing
+This guide explains how to lock down AWS permissions following the IT security policy principle of least privilege allowing
 Hopsworks.ai to only access resources in a specific VPC.
 
 ## Step 1: Create a VPC
@@ -29,7 +29,7 @@ Take note of the ARN of the role you just created.
 ## Step 3: Set permissions of the cross-account role
 
 During the account setup for Hopsworks.ai, you were asked to create and provide a cross-account role.
-If you don’t remember which role you used then you can find it Settings/Account Settings in Hopsworks.ai.
+If you don’t remember which role you used then you can find it in Settings/Account Settings in Hopsworks.ai.
 Edit this role in the AWS Management Console and overwrite the existing inline policy with the following policy.
 
 Note that you have to replace `[INSTANCE_PROFILE_NAME]` and `[VPC_ID]` for multiple occurrences in the given policy.

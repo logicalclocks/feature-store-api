@@ -15,7 +15,9 @@ nav:
     - Getting Started:
       - AWS: hopsworksai/aws/getting_started.md
       - Azure: hopsworksai/azure/getting_started.md
-    - Limiting AWS Permissions: hopsworksai/aws/restrictive_permissions.md
+    - Limiting Permissions: 
+      - AWS: hopsworksai/aws/restrictive_permissions.md
+      - Azure: hopsworksai/azure/restrictive_permissions.md
     # - Databricks Quickstart:
     #  - AWS: hopsworksai/aws/databricks_quickstart.md
     #  - Azure: hopsworksai/azure/databricks_quickstart.md
