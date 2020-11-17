@@ -109,7 +109,10 @@ You can change it here if required. Proceed to the JSON tab:
   </figure>
 </p>
 
-Select *Edit* and replace the *actions* part of the JSON with the one from Hopsworks.ai Azure account configuration workflow:
+Select *Edit* and replace the *actions* part of the JSON with the one from Hopsworks.ai Azure account configuration workflow.
+
+!!! note
+    If the access rights provided by Hopsworks.ai Azure account configuration workflow are too permissive, you can go to [Limiting Azure permissions](./restrictive_permissions.md) for more details on how to reduce the permissions.
 
 <p align="center">
   <figure>
@@ -284,14 +287,40 @@ Click on *Save* (7).
   </figure>
 </p>
 
-## Step 3: Deploying a Hopsworks cluster
+## Step 3: Adding a ssh key to your resource group
+
+When deploying clusters, Hopsworks.ai installs a ssh key on the cluster's instances so that you can access them if necessary. For this purpose you need to add a ssh key to your resource group.
+
+Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/add-to-resource-group.png">
+      <img src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
+    </a>
+    <figcaption>Add to resource group</figcaption>
+  </figure>
+</p>
+
+Search for *SSH Key* and click on it. Click on Create. Then, name your key pair and choose between *Generate a new key pair* and *Upload existing public key*. Click on *Review + create*. Finally click on *Create*.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/create-ssh-key.png">
+      <img src="../../../assets/images/hopsworksai/azure/create-ssh-key.png" alt="Create a SSH key">
+    </a>
+    <figcaption>Add to resource group</figcaption>
+  </figure>
+</p>
+
+## Step 4: Deploying a Hopsworks cluster
 
 In Hopsworks.ai, select *Create cluster*:
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/create_instance.png">
-      <img src="../../../assets/images/hopsworksai/create_instance.png" alt="Create a Hopsworks cluster">
+    <a  href="../../../assets/images/hopsworksai/create-instance.png">
+      <img src="../../../assets/images/hopsworksai/create-instance.png" alt="Create a Hopsworks cluster">
     </a>
     <figcaption>Create a Hopsworks cluster</figcaption>
   </figure>
@@ -422,7 +451,7 @@ As soon as the cluster has started, you will be able to log in to your new Hopsw
   </figure>
 </p>
 
-## Step 3: Outside Access to the Feature Store
+## Step 5: Outside Access to the Feature Store
 
 By default, only the Hopsworks REST API (and UI) is accessible by clients on external networks, like the Internet.
 To integrate with external platforms and access APIs for services such as the Feature Store, you have to open the service's ports.
