@@ -36,7 +36,8 @@ setup(
         "docs": [
             "mkdocs",
             "mkdocs-material",
-            "keras-autodoc"]
+            "keras-autodoc",
+            "markdown-include"]
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",

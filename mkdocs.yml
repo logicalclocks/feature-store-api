@@ -11,6 +11,16 @@ edit_uri: ""
 nav:
   - Introduction: index.md
   - Quickstart: quickstart.md
+  - Hopsworks.ai:
+    - Getting Started:
+      - AWS: hopsworksai/aws/getting_started.md
+      - Azure: hopsworksai/azure/getting_started.md
+    - Limiting AWS Permissions: hopsworksai/aws/restrictive_permissions.md
+    # - Databricks Quickstart:
+    #  - AWS: hopsworksai/aws/databricks_quickstart.md
+    #  - Azure: hopsworksai/azure/databricks_quickstart.md
+    # - SageMaker Quickstart: hopsworksai/aws/sagemaker_quickstart.md
+    - Integration with AWS EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
   - Integrations:
     - Overview: setup.md
     - Databricks: integrations/databricks.md
@@ -35,7 +45,6 @@ nav:
     - Storage Connector: generated/api/storage_connector_api.md
     - Feature: generated/api/feature_api.md
   - Contributing: CONTRIBUTING.md
-  - Hopsworks.ai: https://hopsworks.readthedocs.io/en/stable/getting_started/hopsworksai/hopsworksai.html
 
 theme:
   name: material
@@ -75,10 +84,16 @@ markdown_extensions:
     - pymdownx.arithmatex
     - pymdownx.superfences
     - pymdownx.details
+    - pymdownx.caret
+    - pymdownx.mark
+    - pymdownx.tilde
+    - pymdownx.critic
     - toc:
         permalink: "#"
     - pymdownx.tasklist:
         custom_checkbox: true
+    - markdown_include.include:
+        base_path: docs
 
 google_analytics:
     - UA-85730257-4

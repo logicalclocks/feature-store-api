@@ -48,19 +48,19 @@ Entities within the Feature Store are organized hierarchically. On the most gran
 
 ### Feature Groups
 
-[**Feature Groups**](concepts/feature_group.md) are entities that contain both metadata about the grouped features, as well as information of the jobs used to ingest the data contained in a feature group and also the actual location of the data (HopsFS or externally, such as S3). Typically, feature groups represent a logical set of features coming from the same data source sharing a common primary key. Feature groups also contain the schema and type information of the features, for the user to know how to interpret the data.
+[**Feature Groups**](generated/feature_group.md) are entities that contain both metadata about the grouped features, as well as information of the jobs used to ingest the data contained in a feature group and also the actual location of the data (HopsFS or externally, such as S3). Typically, feature groups represent a logical set of features coming from the same data source sharing a common primary key. Feature groups also contain the schema and type information of the features, for the user to know how to interpret the data.
 
-Feature groups can also be used to compute [Statistics](concepts/statistics.md) over features, or to define [Data Validation Rules](concepts/data_validation.md) using the statistics and schema information.
+Feature groups can also be used to compute [Statistics](generated/statistics.md) over features, or to define [Data Validation Rules](generated/data_validation.md) using the statistics and schema information.
 
 In order to enable [online serving](overview.md#offline-vs-offline-feature-store) for features of a feature group, the feature group needs to be made available as an online feature group.
 
 ### Training Datasets
 
-In order to be able to train machine learning models efficiently, the feature data needs to be materialized as a [**Training Dataset**](concepts/training_dataset.md) in the file format most suitable for the ML framework used. For example, when training models with TensorFlow the ideal file format is TensorFlow's **tfrecord** format.
+In order to be able to train machine learning models efficiently, the feature data needs to be materialized as a [**Training Dataset**](generated/training_dataset.md) in the file format most suitable for the ML framework used. For example, when training models with TensorFlow the ideal file format is TensorFlow's **tfrecord** format.
 
 Training datasets can be created with features from any number of feature groups, as long as the feature groups can be joined in a meaningful way.
 
-Users are able to compute [Statistics](concepts/statistics.md) also for training datasets, which will make it easy to understand a dataset's characteristics also in the future.
+Users are able to compute [Statistics](generated/statistics.md) also for training datasets, which will make it easy to understand a dataset's characteristics also in the future.
 
 The Hopsworks Feature Store has support for writing training datasets either to the distributed file system of Hopsworks - HopsFS - or to external storage such as S3.
 
