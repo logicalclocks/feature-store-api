@@ -23,6 +23,7 @@ nav:
     #  - Azure: hopsworksai/azure/databricks_quickstart.md
     # - SageMaker Quickstart: hopsworksai/aws/sagemaker_quickstart.md
     - Integration with AWS EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
+    - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Integrations:
     - Overview: setup.md
     - Databricks: integrations/databricks.md
