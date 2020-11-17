@@ -20,7 +20,7 @@ Users can get a valid Databricks API Key by following the [Databricks Documentat
 
 ## Register a new Databricks Instance
 
-Users can register a new Databricks instance by navigating the the `Integrations` tab of a project Feature Store. Registering a Databricks instance requires adding a the instance address and the API Key.
+Users can register a new Databricks instance by navigating to the `Integrations` tab of a project Feature Store. Registering a Databricks instance requires adding the instance address and the API Key.
 
 The instance address should be in the format `[UUID].cloud.databricks.com` (or `adb-[UUID].19.azuredatabricks.net` for Databricks on Azure), essentially the same web 
 address used to reach the Databricks instance from the browser.
