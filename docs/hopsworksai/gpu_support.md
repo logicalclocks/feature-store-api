@@ -17,7 +17,7 @@ When selecting the [workers' instance type](aws/cluster_creation.md#step-2-setti
 </p>
 
 ## Adding GPU equipped workers to an existing cluster.
-When [adding workers]() to a cluster, you can select an instance type equipped with GPUs. The workers will then be added to the cluster and Hopsworks will automatically detect the new GPU resource.
+When [adding workers](adding_removing_workers.md#adding-workers) to a cluster, you can select an instance type equipped with GPUs. The workers will then be added to the cluster and Hopsworks will automatically detect the new GPU resource.
 
 <p align="center">
   <figure>
