@@ -215,28 +215,27 @@ Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and clic
 ## Step 2: Creating and configuring a storage
 
 The Hopsworks clusters deployed by hopsworks.ai store their data in an S3 bucket in your AWS account.
-To enable this you need to create an S3 bucket and an instance profile to give the Hopsworks cluster nodes access to the bucket.
+To enable this you need to create an S3 bucket and an instance profile to give cluster nodes access to the bucket.
 
-### Step 2.1: Creating a S3 bucket
+### Step 2.1: Creating an S3 bucket
 Proceed to the [S3 Management Console](https://s3.console.aws.amazon.com/s3/home) and click on *Create bucket*:
-create-s3-bucket-1
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/create-s3-bucket-1.png">
-      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-1.png" alt="Create a S3 bucket">
+      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-1.png" alt="Create an S3 bucket">
     </a>
-    <figcaption>Create a S3 bucket</figcaption>
+    <figcaption>Create an S3 bucket</figcaption>
   </figure>
 </p>
 
-Name your bucket and select the in which you want to run your Hopsworks cluster. Click on *Create bucket* at the bottom of the page.
+Name your bucket and select the region where your Hopsworks cluster will run. Click on *Create bucket* at the bottom of the page.
 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/create-s3-bucket-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-2.png" alt="Create a S3 bucket">
+      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-2.png" alt="Create an S3 bucket">
     </a>
-    <figcaption>Create a S3 bucket</figcaption>
+    <figcaption>Create an S3 bucket</figcaption>
   </figure>
 </p>
 
@@ -365,7 +364,7 @@ Review all information and select *Create*:
   </figure>
 </p>
 
-The cluster will start. This might take a few minutes:
+The cluster will start. This will take a few minutes:
 
 <p align="center">
   <figure>
@@ -376,7 +375,7 @@ The cluster will start. This might take a few minutes:
   </figure>
 </p>
 
-As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also able to stop, restart, or terminate the cluster.
+As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also be able to stop, restart, or terminate the cluster.
 
 
 <p align="center">
