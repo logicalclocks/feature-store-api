@@ -12,12 +12,18 @@ Hopsworks.ai to only access resources in a specific VPC.
 To restrict Hopsworks.ai from accessing resources outside of a specific VPC, you need to create a new VPC
 connected to an Internet Gateway. This can be achieved in the AWS Management Console following this guide:
 [Create the VPC](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html#getting-started-create-vpc).
-The option VPC with a Single Public Subnet from the Launch VPC Wizard should work out of the box.
+The option VPC with a `Single Public Subnet` from the Launch VPC Wizard should work out of the box.
 Alternatively, an existing VPC such as the default VPC can be used and Hopsworks.ai will be restricted to this VPC.
 Note the VPC ID of the VPC you want to use for the following steps.
 
 !!! note
-    The VPC and its Network ACLs need to be configured so that at least port 80 is reachable from the internet or creating Hopsworks instances will fail when creating SSL certificates. DNS hostnames need to be enabled as well.
+    Make sure you enable `DNS hostnames` for your VPC
+
+After you have created the VPC either [Create a Security Group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#CreatingSecurityGroups) or use VPC's default.
+
+!!! note
+    The [Security Group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#AddRemoveRules) and/or [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#Rules)
+    need to be configured so that at least port `80` is reachable from the internet otherwise creating Hopsworks instances will fail when creating SSL certificates.
 
 ## Step 2: Create an instance profile
 
