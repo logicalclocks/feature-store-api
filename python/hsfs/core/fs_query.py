@@ -22,9 +22,9 @@ class FsQuery:
     def __init__(
         self,
         query,
-        query_online,
         on_demand_feature_groups,
         hudi_cached_feature_groups,
+        query_online=None,
         href=None,
         expand=None,
         items=None,
