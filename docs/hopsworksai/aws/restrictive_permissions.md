@@ -11,7 +11,7 @@ Hopsworks.ai to only access resources in a specific VPC.
 
 To restrict Hopsworks.ai from accessing resources outside of a specific VPC, you need to create a new VPC
 connected to an Internet Gateway. This can be achieved in the AWS Management Console following this guide:
-[Create the VPC](https://docs.aws.amazon.com/vpc/latest/userguide/getting-started-ipv4.html#getting-started-create-vpc).
+[Create the VPC](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html#getting-started-create-vpc).
 The option VPC with a Single Public Subnet from the Launch VPC Wizard should work out of the box.
 Alternatively, an existing VPC such as the default VPC can be used and Hopsworks.ai will be restricted to this VPC.
 Note the VPC ID of the VPC you want to use for the following steps.

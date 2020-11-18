@@ -58,8 +58,7 @@ Select the *SSH key* that you want to use to access cluster instances. For more 
 
 ### Step 4 select the User assigned managed identity:
 
-In order to let the cluster instances access to the Azure storage we need to attach a *User assigned managed identity* to the virtual machines. In this step you choose which identity to use. This identity need to have access right to the *storage account* you selected in [Step 2](#setp-2-setting-the-general-information)
-Select the *User assigned managed identity* that you created above:
+In order to let the cluster instances access to the Azure storage we need to attach a *User assigned managed identity* to the virtual machines. In this step you choose which identity to use. This identity need to have access right to the *storage account* you selected in [Step 2](#setp-2-setting-the-general-information). For more information about how to create this identity and give it access to the storage account refer to [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage):
 
 <p align="center">
   <figure>
@@ -133,7 +132,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
     <a  href="../../../assets/images/hopsworksai/azure/add-tags.png">
       <img src="../../../assets/images/hopsworksai/azure/add-tags.png" alt="Add tags">
     </a>
-    <figcaption>Choose user management type</figcaption>
+    <figcaption>Add tags</figcaption>
   </figure>
 </p>
 
@@ -160,7 +159,7 @@ The cluster will start. This will take a few minutes:
   </figure>
 </p>
 
-As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also able to stop, restart, or terminate the cluster.
+As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also be able to stop, restart, or terminate the cluster.
 
 <p align="center">
   <figure>

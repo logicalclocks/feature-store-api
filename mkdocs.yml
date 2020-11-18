@@ -19,6 +19,7 @@ nav:
       - AWS: hopsworksai/aws/restrictive_permissions.md
       - Azure: hopsworksai/azure/restrictive_permissions.md
     - Cluster creation:
+      - AWS: hopsworksai/aws/cluster_creation.md
       - Azure: hopsworksai/azure/cluster_creation.md
     # - Databricks Quickstart:
     #  - AWS: hopsworksai/aws/databricks_quickstart.md
