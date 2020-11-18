@@ -19,7 +19,7 @@ Organization membership can be edited by clicking **Members** on the left of Hop
   </figure>
 </p>
 
-To add a new member to your organization add the user's email and click **Add** The invited user will
+To add a new member to your organization add the user's email and click **Add**. The invited user will
 receive an email with the invitation.
 
 An invited user **must accept** the invitation to be part of the organization. An invitation will show up in
