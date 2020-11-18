@@ -3,9 +3,9 @@ In Hopsworks.ai users can be grouped into *organizations* to access the same res
 When a new user registers with Hopsworks.ai a new organization is created. This user later on can
 invite other registered users to their organization so they can share access to the same clusters.
 
-Configuration is also shared among users of the same organization. So if user Alice has configured
-her account with her credentials, Bob doesn't have to. Credits and cluster usage are also grouped to
-ease reporting.
+Cloud Accounts configuration is also shared among users of the same organization. So if user Alice has configured
+her account with her credentials, all member of her *organization* will automatically deploy clusters in her cloud
+account. Credits and cluster usage are also grouped to ease reporting.
 
 ## Adding members to an organization
 Organization membership can be edited by clicking **Members** on the left of Hopsworks.ai Dashboard page.
@@ -19,10 +19,8 @@ Organization membership can be edited by clicking **Members** on the left of Hop
   </figure>
 </p>
 
-To add a new member to your organization add the user's email and click **Add**
-
-!!! note
-     The invited user must have already been registered in Hopsworks.ai
+To add a new member to your organization add the user's email and click **Add** The invited user will
+receive an email with the invitation.
 
 An invited user **must accept** the invitation to be part of the organization. An invitation will show up in
 the invited member's Dashboard. In this example Alice has invited Bob to her organization, but Bob hasn't accepted
