@@ -14,7 +14,7 @@ In Hopsworks.ai, select *Create cluster*:
   </figure>
 </p>
 
-### Setp 2 setting the General information
+### Step 2 setting the General information
 
 Select the *Region* in which you want your cluster to run (1), name your cluster (2).
 
