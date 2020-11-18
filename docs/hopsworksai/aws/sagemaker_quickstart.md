@@ -28,7 +28,6 @@ Select the region of your SageMaker instance as region and create the cluster.
     :align: center
     :figclass: align-center
 
-.. include:: ../../../getting_started/hopsworksai/guides/s3_permissions.rst
 
 By default, only the Hopsworks UI is exposed (made available to clients on external networks, like the Internet)
 by your Hopsworks cluster. To reach the Feature Store from SageMaker, you have

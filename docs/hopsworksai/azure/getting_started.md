@@ -440,7 +440,7 @@ The cluster will start. This will take a few minutes:
   </figure>
 </p>
 
-As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also able to stop, restart or terminate the cluster.
+As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also be able to stop, restart or terminate the cluster.
 
 <p align="center">
   <figure>

@@ -1,13 +1,13 @@
 # Getting started with Hopsworks.ai (AWS)
 
 Hopsworks.ai is our managed platform for running Hopsworks and the Feature Store
-in the cloud. It integrates seamlessly with third party platforms such as Databricks,
+in the cloud. It integrates seamlessly with third-party platforms such as Databricks,
 SageMaker and KubeFlow. This guide shows how to set up Hopsworks.ai with your organization's AWS account.
 
 ## Step 1: Connecting your AWS account
 
 Hopsworks.ai deploys Hopsworks clusters to your AWS account. To enable this you have to
-give us permission to do so. This can be either achieved by using AWS cross-account roles or
+permit us to do so. This can be either achieved by using AWS cross-account roles or
 AWS access keys. We strongly recommend the usage of cross-account roles whenever possible due
 to security reasons.
 
@@ -110,7 +110,7 @@ Copy the *Role ARN* from the summary of your cross-account role:
   </figure>
 </p>
 
-Paste the *Role ARN* into Hopsworks.ai and select *Configure*:
+Paste the *Role ARN* into Hopsworks.ai and click on *Finish*:
 
 <p align="center">
   <figure>
@@ -201,7 +201,7 @@ Copy the *Access Key ID* and the *Secret Access Key*:
   </figure>
 </p>
 
-Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and select *Configure*:
+Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and click on *Finish*:
 
 <p align="center">
   <figure>
@@ -212,7 +212,87 @@ Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and sele
   </figure>
 </p>
 
-## Step 2: Deploying a Hopsworks cluster
+## Step 2: Creating and configuring a storage
+
+The Hopsworks clusters deployed by hopsworks.ai store their data in an S3 bucket in your AWS account.
+To enable this you need to create an S3 bucket and an instance profile to give cluster nodes access to the bucket.
+
+### Step 2.1: Creating an S3 bucket
+Proceed to the [S3 Management Console](https://s3.console.aws.amazon.com/s3/home) and click on *Create bucket*:
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/create-s3-bucket-1.png">
+      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-1.png" alt="Create an S3 bucket">
+    </a>
+    <figcaption>Create an S3 bucket</figcaption>
+  </figure>
+</p>
+
+Name your bucket and select the region where your Hopsworks cluster will run. Click on *Create bucket* at the bottom of the page.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/create-s3-bucket-2.png">
+      <img src="../../../assets/images/hopsworksai/aws/create-s3-bucket-2.png" alt="Create an S3 bucket">
+    </a>
+    <figcaption>Create an S3 bucket</figcaption>
+  </figure>
+</p>
+
+### Step 2.2: Creating an instance profile and giving it access to the bucket
+
+Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: [Guide](https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html)
+
+When creating the policy, paste the following in the JSON tab.
+{!hopsworksai/aws/s3_permissions.md!}
+
+## Step 3: Create an SSH key
+When deploying clusters, Hopsworks.ai installs an ssh key on the cluster's instances so that you can access them if necessary. For this purpose, you need to add an ssh key to your AWS EC2 environment. This can be done in two ways: [creating a new key pair](#step-31-create-a-new-key-pair) or [importing an existing key pair](#step-32-import-a-key-pair).
+
+### Step 3.1: Create a new key pair
+
+Proceed to [Key pairs in the EC2 console](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#KeyPairs) and click on *Create key pair*
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/create-key-pair.png">
+      <img src="../../../assets/images/hopsworksai/aws/create-key-pair.png" alt="Create a key pair">
+    </a>
+    <figcaption>Create a key pair</figcaption>
+  </figure>
+</p>
+
+Name your key, select the file format you prefer and click on *Create key pair*.
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/create-key-pair-2.png">
+      <img src="../../../assets/images/hopsworksai/aws/create-key-pair-2.png" alt="Create a key pair">
+    </a>
+    <figcaption>Create a key pair</figcaption>
+  </figure>
+</p>
+
+### Step 3.2: Import a key pair
+Proceed to [Key pairs in the EC2 console](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#KeyPairs), click on *Action* and click on *Import key pair*
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/import-key-pair.png">
+      <img src="../../../assets/images/hopsworksai/aws/import-key-pair.png" alt="Import a key pair">
+    </a>
+    <figcaption>Import a key pair</figcaption>
+  </figure>
+</p>
+
+Name your key pair, upload your public key and click on *Import key pair*.
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/import-key-pair-2.png">
+      <img src="../../../assets/images/hopsworksai/aws/import-key-pair-2.png" alt="Import a key pair">
+    </a>
+    <figcaption>Import a key pair</figcaption>
+  </figure>
+</p>
+
+## Step 4: Deploying a Hopsworks cluster
 
 In Hopsworks.ai, select *Create cluster*:
 
@@ -225,15 +305,66 @@ In Hopsworks.ai, select *Create cluster*:
   </figure>
 </p>
 
-Configure the cluster by selecting the location, instance type and optionally the VPC,
-subnet and security group. Select *Deploy*.
+Select the *Region* in which you want your cluster to run (1), name your cluster (2).
 
-!!! note "SSH key configuration"
-    We recommend that you always configure a SSH key under advanced options to ensure you can troubleshoot the cluster if necessary.
+Select the *Instance type* (3) and *Local storage* (4) size for the cluster *Head node*.
 
-{!hopsworksai/aws/s3_permissions.md!}
+Select the number of workers you want to start the cluster with (5).
+Select the *Instance type* (6) and *Local storage* size (7) for the *worker nodes*.
 
-The cluster will start. This might take a couple of minutes:
+!!! note
+    It is possible to add or remove workers once the cluster is running.
+
+Enter the name of the *S3 bucket* (8) you created above in *S3 bucket*.
+
+!!! note
+    The S3 bucket you are using must be empty.
+
+Press *Next* (9):
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/create-instance-general.png">
+      <img src="../../../assets/images/hopsworksai/aws/create-instance-general.png" alt="Create a Hopsworks cluster, general Information">
+    </a>
+    <figcaption>Create a Hopsworks cluster, general information</figcaption>
+  </figure>
+</p>
+
+Select the *SSH key* that you want to use to access cluster instances:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/connect-aws-ssh.png">
+      <img src="../../../assets/images/hopsworksai/aws/connect-aws-ssh.png" alt="Choose SSH key">
+    </a>
+    <figcaption>Choose SSH key</figcaption>
+  </figure>
+</p>
+
+Select the *Instance Profile* that you created above and click on *Review and Submit*:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/connect-aws-profile.png">
+      <img src="../../../assets/images/hopsworksai/aws/connect-aws-profile.png" alt="Choose the instance profile">
+    </a>
+    <figcaption>Choose the instance profile</figcaption>
+  </figure>
+</p>
+
+Review all information and select *Create*:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/connect-aws-review.png">
+      <img src="../../../assets/images/hopsworksai/aws/connect-aws-review.png" alt="Review cluster information">
+    </a>
+    <figcaption>Review cluster information</figcaption>
+  </figure>
+</p>
+
+The cluster will start. This will take a few minutes:
 
 <p align="center">
   <figure>
@@ -244,8 +375,8 @@ The cluster will start. This might take a couple of minutes:
   </figure>
 </p>
 
-As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username
-and password provided. You will also able to stop or terminate the cluster.
+As soon as the cluster has started, you will be able to log in to your new Hopsworks cluster with the username and password provided. You will also be able to stop, restart, or terminate the cluster.
+
 
 <p align="center">
   <figure>
@@ -256,12 +387,12 @@ and password provided. You will also able to stop or terminate the cluster.
   </figure>
 </p>
 
-## Step 3: Outside Access to the Feature Store
+## Step 5: Outside Access to the Feature Store
 
 By default, only the Hopsworks UI is made available to clients on external networks, like the Internet.
 To integrate with external platforms and access APIs for services such as the Feature Store, you have to open the service's ports.
 
-Open ports by going to *Services* tab, selecting a service and pressing *Update*. This will update the *Security Group* attached to the Hopsworks cluster to allow incoming traffic on the relevant ports.
+Open ports by going to the *Services* tab, selecting a service, and pressing *Update*. This will update the *Security Group* attached to the Hopsworks cluster to allow incoming traffic on the relevant ports.
 
 <p align="center">
   <figure>
@@ -272,7 +403,7 @@ Open ports by going to *Services* tab, selecting a service and pressing *Update*
   </figure>
 </p>
 
-## Step 4: Next steps
+## Step 6: Next steps
 
 Check out our other guides for how to get started with Hopsworks and the Feature Store:
 
