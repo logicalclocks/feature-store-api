@@ -294,7 +294,7 @@ First, navigate to [AWS management console](https://console.aws.amazon.com/iam/h
 
 ## Step 6: Create a Hopsworks cluster with EKS and ECR support
 
-In Hopsworks.ai, select *Create cluster*. Choose the region of your EKS cluster, then click Next:
+In Hopsworks.ai, select *Create cluster*. Choose the region of your EKS cluster and fill in the name of your S3 bucket, then click Next:
 
 <p align="center">
   <figure>
@@ -316,14 +316,25 @@ Choose your preferred SSH key to use with the cluster, then click Next:
   </figure>
 </p>
 
-Choose *Enabled* to enable the use Amazon EKS and ECR:
+Choose the instance profile role that you have created in Step 2, then click Next:
 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png" alt="Choose Enabled">
+      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png" alt="Choose instance profile role">
     </a>
-    <figcaption>Choose *Enabled*</figcaption>
+    <figcaption>Choose instance profile role</figcaption>
+  </figure>
+</p>
+
+Choose **Enabled** to enable the use of Amazon EKS and ECR:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png">
+      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Choose Enabled">
+    </a>
+    <figcaption>Choose Enabled</figcaption>
   </figure>
 </p>
 
@@ -331,24 +342,12 @@ Add your EKS cluster name and update your AWS account id if you want to use anot
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Add EKS cluster name">
+    <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png">
+      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png" alt="Add EKS cluster name">
     </a>
     <figcaption>Add EKS cluster name</figcaption>
   </figure>
 </p>
-
-Choose the instance profile role that you have created in Step 2, then click Next:
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png" alt="Choose instance profile role">
-    </a>
-    <figcaption>Choose instance profile role</figcaption>
-  </figure>
-</p>
-
 
 Choose the VPC of your EKS cluster, then click Next:
 
@@ -386,4 +385,4 @@ Choose the security group that you have updated in Step 4, then click Next:
   </figure>
 </p>
 
-Click Review and create, then Create. Once the cluster is created, Hopsworks will use EKS to launch Python jobs, Jupyter servers, and ML model servings.
+Click *Review and submit*, then Create. Once the cluster is created, Hopsworks will use EKS to launch Python jobs, Jupyter servers, and ML model servings.
