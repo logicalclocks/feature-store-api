@@ -92,7 +92,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type)
+        return self.select_all().read(dataframe_type=dataframe_type)
 
     def show(self, n):
         """Show the first n rows of the feature group."""
