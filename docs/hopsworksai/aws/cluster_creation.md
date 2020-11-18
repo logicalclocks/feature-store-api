@@ -58,7 +58,7 @@ Select the *SSH key* that you want to use to access cluster instances. For more 
 
 ### Step 4 select the Instance Profile:
 
-To let the cluster instances access the S3 bucket we need to attach an *instance profile* to the virtual machines. In this step, you choose which profile to use. This profile needs to have access right to the *S3 bucket* you selected in [Step 2](#setp-2-setting-the-general-information). For more details on how to create the instance profile and give it access to the S3 bucket refer to [Creating an instance profile and giving it access to the bucket](getting_started.md#step-22-creating-an-instance-profile-and-giving-it-access-to-the-bucket)
+To let the cluster instances access the S3 bucket we need to attach an *instance profile* to the virtual machines. In this step, you choose which profile to use. This profile needs to have access right to the *S3 bucket* you selected in [Step 2](#step-2-setting-the-general-information). For more details on how to create the instance profile and give it access to the S3 bucket refer to [Creating an instance profile and giving it access to the bucket](getting_started.md#step-22-creating-an-instance-profile-and-giving-it-access-to-the-bucket)
 
 <p align="center">
   <figure>
