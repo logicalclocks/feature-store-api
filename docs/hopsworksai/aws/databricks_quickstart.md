@@ -30,7 +30,6 @@ As region, choose the region you use for Databricks:
     :align: center
     :figclass: align-center
 
-{!hopsworksai/aws/s3_permissions.md!}
 
 Select the VPC with a name starting with *databricks-*:
 
