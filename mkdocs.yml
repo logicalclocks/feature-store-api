@@ -21,6 +21,7 @@ nav:
     - Cluster creation:
       - AWS: hopsworksai/aws/cluster_creation.md
       - Azure: hopsworksai/azure/cluster_creation.md
+    - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     # - Databricks Quickstart:
     #  - AWS: hopsworksai/aws/databricks_quickstart.md
     #  - Azure: hopsworksai/azure/databricks_quickstart.md
