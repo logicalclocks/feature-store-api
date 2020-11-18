@@ -1,7 +1,7 @@
-#Adding and removing workers
+# Adding and removing workers
 Once you have started a hopsworks cluster you can add and remove workers from the cluster to accommodate your workload.
 
-##Adding workers
+## Adding workers
 If the computation you are running is using all the resources of your Hopsworks cluster you can add workers to your cluster.
 To add workers to a cluster, go to the *Details* tab of this cluster and click on *Add workers*.
 
@@ -38,7 +38,7 @@ Review your request and click *Add*.
 
 Hopsworks.ai will start the new workers and you will be able to use them in your cluster as soon as they have finished starting.
 
-##Removing workers
+## Removing workers
 
 If the load on your Hopsworks cluster is low, you can decide to remove worker nodes from your cluster.
 
@@ -63,8 +63,8 @@ For each of the types of instances existing in your cluster select the number of
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/remove-workers-config.png">
-      <img src="../../../assets/images/hopsworksai/remove-workers-config.png" alt="Remove workers config">
+    <a  href="../../../assets/images/hopsworksai/remove-worker-config.png">
+      <img src="../../../assets/images/hopsworksai/remove-worker-config.png" alt="Remove workers config">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>
