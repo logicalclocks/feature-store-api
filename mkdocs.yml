@@ -57,6 +57,7 @@ nav:
     - Storage Connector: generated/api/storage_connector_api.md
     - Feature: generated/api/feature_api.md
   - Contributing: CONTRIBUTING.md
+  - Support: https://community.hopsworks.ai/
 
 theme:
   name: material
