@@ -22,7 +22,36 @@ The [handle](#get_feature_store) can then be used to retrieve a reference to the
         ```
 
     !!! example "Connecting from Databricks"
-        TBD
+        In order to connect from Databricks, follow the [integration guide](../integrations/databricks/configuration.md).
+
+        You can then simply connect by using your chosen way of retrieving the API Key:
+
+        ```python
+        import hsfs
+        conn = hsfs.connection(
+            host="ec2-13-53-124-128.eu-north-1.compute.amazonaws.com",
+            project="demo_fs_admin000",
+            hostname_verification=False,
+            secrets_store="secretsmanager"
+            )
+        fs = conn.get_feature_store()
+        ```
+
+        Alternatively you can pass the API Key as a file or directly:
+
+        !!! note "Azure"
+            Use this method when working with Hopsworks on Azure.
+
+        ```python
+        import hsfs
+        conn = hsfs.connection(
+            host="ec2-13-53-124-128.eu-north-1.compute.amazonaws.com",
+            project="demo_fs_admin000",
+            hostname_verification=False,
+            api_key_file="featurestore.key"
+            )
+        fs = conn.get_feature_store()
+        ```
 
     !!! example "Connecting from AWS SageMaker"
         In order to connect from SageMaker, follow the [integration guide](../integrations/sagemaker.md) to setup the API Key.

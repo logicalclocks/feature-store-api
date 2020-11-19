@@ -15,7 +15,7 @@ nav:
     - Getting Started:
       - AWS: hopsworksai/aws/getting_started.md
       - Azure: hopsworksai/azure/getting_started.md
-    - Limiting Permissions: 
+    - Limiting Permissions:
       - AWS: hopsworksai/aws/restrictive_permissions.md
       - Azure: hopsworksai/azure/restrictive_permissions.md
     - Cluster creation:
@@ -32,7 +32,10 @@ nav:
     - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Integrations:
     - Overview: setup.md
-    - Databricks: integrations/databricks.md
+    - Databricks:
+      - Networking: integrations/databricks/networking.md
+      - Hopsworks API Key: integrations/databricks/api_key.md
+      - Configuration: integrations/databricks/configuration.md
     - AWS Sagemaker: integrations/sagemaker.md
     - Python: integrations/python.md
     - Spark: integrations/spark.md
