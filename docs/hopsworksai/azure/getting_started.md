@@ -64,12 +64,14 @@ At this point, you might get the following error message.
 This means that your Azure user does not have sufficient permissions to add the service principal.
 In this case, please ask your Azure administrator to add it for you or give you the required permissions.
 
-```bash
-$ az ad sp create --id d4abcc44-2c40-40bd-9bba-986df591c28f
-```
+!!! error
 
-!!! note
+    ```bash
+    az ad sp create --id d4abcc44-2c40-40bd-9bba-986df591c28f
+    ```
+
     When using this permission, the backing application of the service principal being created must in the local tenant.
+
 
 ### Step 1.2: Creating a custom role for Hopsworks.ai
 

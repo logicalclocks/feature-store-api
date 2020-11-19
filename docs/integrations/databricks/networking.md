@@ -206,11 +206,11 @@ Wait for the peering to show up as *Connected*. There should now be bi-direction
   </figure>
 </p>
 
-### Step 2: Configuring the Security Group
+### Step 2: Configuring the Network Security Group
 
-The Feature Store *Security Group* needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
+The *Network Security Group* of the Feature Store on Azure needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
 
-Ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable from the Databricks Security Group.
+Ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable from the Databricks cluster *Network Security Group*.
 
 !!! note "Hopsworks.ai"
     If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../hopsworksai/azure/getting_started/#step-5-outside-access-to-the-feature-store).

@@ -47,6 +47,27 @@ class Connection:
         conn = hsfs.connection()
         ```
 
+    !!! hint "Save API Key as File"
+        To get started quickly, without saving the Hopsworks API in a secret storage,
+        you can simply create a file with the previously created Hopsworks API Key and
+        place it on the environment from which you wish to connect to the Hopsworks
+        Feature Store.
+
+        You can then connect by simply passing the path to the key file when
+        instantiating a connection:
+
+        ```python hl_lines="6"
+            import hsfs
+            conn = hsfs.connection(
+                'my_instance',                      # DNS of your Feature Store instance
+                443,                                # Port to reach your Hopsworks instance, defaults to 443
+                'my_project',                       # Name of your Hopsworks Feature Store project
+                api_key_file='featurestore.key',    # The file containing the API key generated above
+                hostname_verification=True)         # Disable for self-signed certificates
+            )
+            fs = conn.get_feature_store()           # Get the project's default feature store
+        ```
+
     Clients in external clusters need to connect to the Hopsworks Feature Store using an
     API key. The API key is generated inside the Hopsworks platform, and requires at
     least the "project" and "featurestore" scopes to be able to access a feature store.
