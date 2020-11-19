@@ -234,7 +234,7 @@ class Connection:
         Databricks cluster to a Hopsworks Feature Store instance. It returns a
         `Connection` object and will print instructions on how to finalize the setup
         of the Databricks cluster.
-        See also the [Databricks integration guide](../integrations/databricks.md).
+        See also the [Databricks integration guide](../integrations/databricks/configuration.md).
         """
         connection = cls(
             host,

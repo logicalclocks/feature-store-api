@@ -8,7 +8,7 @@ If you are using Spark or Python within Hopsworks, there is no further configura
 
 ## Databricks
 
-Connecting to the Feature Store from Databricks requires setting up a Feature Store API Key for Databricks and installing one of the HSFS client libraries on your Databricks cluster. The [Databricks integration guide](integrations/databricks.md) explains step by step how to connect to the Feature Store from Databricks.
+Connecting to the Feature Store from Databricks requires setting up a Feature Store API Key for Databricks and installing one of the HSFS client libraries on your Databricks cluster. The [Databricks integration guide](integrations/databricks/configuration.md) explains step by step how to connect to the Feature Store from Databricks.
 
 ## AWS Sagemaker
 
