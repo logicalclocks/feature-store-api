@@ -32,11 +32,20 @@ Users can register a new Databricks instance by navigating to the `Integrations`
 
 The instance address should be in the format `[UUID].cloud.databricks.com` (or `adb-[UUID].19.azuredatabricks.net` for Databricks on Azure), essentially the same web address used to reach the Databricks instance from the browser.
 
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/databricks/databricks-integration.png">
+      <img src="../../../assets/images/databricks/databricks-integration.png" alt="Register a Databricks Instance along with a Databricks API Key">
+    </a>
+    <figcaption>Register a Databricks Instance along with a Databricks API Key</figcaption>
+  </figure>
+</p>
+
 The API Key will be stored in the Hopsworks secret store for the user and will be available only for that user.  If multiple users need to configure Databricks clusters, each has to generate an API Key and register an instance. The Databricks instance registration does not have a project scope, meaning that once registered, the user can configure clusters for all projects they are part of.
 
 ## Databricks Cluster
 
-A cluster needs to exists before users can configure it using the Hopsworks UI. The cluster can be in any state prior to the configuration.
+A cluster needs to exist before users can configure it using the Hopsworks UI. The cluster can be in any state prior to the configuration.
 
 !!! warning "Runtime limitation"
 
@@ -46,6 +55,15 @@ A cluster needs to exists before users can configure it using the Hopsworks UI. 
 
 Clusters are configured for a project user, which, in Hopsworks terms, means a user operating within the scope of a project.
 To configure a cluster, click on the `Configure` button. By default the cluster will be configured for the user making the request. If the user doesn't have `Can Manage` privilege on the cluster, they can ask a project `Data Owner` to configure it for them. Hopsworks `Data Owners` are allowed to configure clusters for other project users, as long as they have the required Databricks privileges.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/databricks/databricks-integration-cluster.png">
+      <img src="../../../assets/images/databricks/databricks-integration-cluster.png" alt="Configure a Databricks Cluster from Hopsworks">
+    </a>
+    <figcaption>Configure a Databricks Cluster from Hopsworks</figcaption>
+  </figure>
+</p>
 
 During the cluster configuration the following steps will be taken:
 
