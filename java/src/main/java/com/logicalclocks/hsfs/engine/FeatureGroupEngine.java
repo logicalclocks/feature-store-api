@@ -17,9 +17,9 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
+import com.logicalclocks.hsfs.commit.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.ActionType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
@@ -86,30 +86,32 @@ public class FeatureGroupEngine {
           }));
     }
 
-    // Send Hopsworks the request to create a new feature group
-    FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+    if (featureGroup.getTimeTravelFormat() != TimeTravelFormat.DELTA) {
+      // Send Hopsworks the request to create a new feature group
+      FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
-    if (featureGroup.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-          + "`, incremented version to `" + apiFG.getVersion() + "`.");
+      if (featureGroup.getVersion() == null) {
+        LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+            + "`, incremented version to `" + apiFG.getVersion() + "`.");
+      }
+
+      // Update the original object - Hopsworks returns the incremented version
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setVersion(apiFG.getVersion());
+      featureGroup.setLocation(apiFG.getLocation());
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setCorrelations(apiFG.getCorrelations());
+      featureGroup.setHistograms(apiFG.getHistograms());
     }
-
-    // Update the original object - Hopsworks returns the incremented version
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setVersion(apiFG.getVersion());
-    featureGroup.setLocation(apiFG.getLocation());
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setCorrelations(apiFG.getCorrelations());
-    featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, null,  SaveMode.Append,
-            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-                    ? HudiOperationType.BULK_INSERT : null, writeOptions);
+            featureGroup.getTimeTravelFormat() != TimeTravelFormat.NONE
+                    ? ActionType.BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
+                            SaveMode saveMode, ActionType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
@@ -136,9 +138,19 @@ public class FeatureGroupEngine {
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                    HudiOperationType operation, Map<String, String> writeOptions)
+                                    ActionType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
+    // TODO: decide what to do with deltas atomic overwrite for exmaple:
+    //  df.write
+    //  .format("delta")
+    //  .mode("overwrite")
+    //  .option("replaceWhere", "date >= '2017-01-01' AND date <= '2017-01-31'")
+    //  .save("/delta/events")
+    //  OR:
+    //   df.write.format("delta").mode("overwrite").saveAsTable("events")
+    //  Unlike the file APIs in Apache Spark, Delta Lake remembers and enforces the schema of a table.
+    //  This means that by default overwrites do not replace the schema of an existing table.
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
@@ -175,7 +187,7 @@ public class FeatureGroupEngine {
     Map<String, Map<String,String>> commitDetails = new HashMap<String, Map<String,String>>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
       commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
-            put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
+            put("committedOn", utils.timeStampToCommitFormat(featureGroupCommit.getCommitID()));
             put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
             put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
             put("rowsDeleted", featureGroupCommit.getRowsDeleted().toString());

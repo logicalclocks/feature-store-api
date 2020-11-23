@@ -26,7 +26,7 @@ import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.TimeTravelFeatureGroupAlias;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -165,7 +165,7 @@ public class Query {
       return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
     } else {
       registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-      registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+      registerTimeTravelFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
 
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
@@ -209,15 +209,15 @@ public class Query {
     }
   }
 
-  private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> hudiFeatureGroups,
-                                         Map<String, String> readOptions)  {
-    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiFeatureGroups) {
-      String alias = hudiFeatureGroupAlias.getAlias();
-      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+  private void registerTimeTravelFeatureGroups(List<TimeTravelFeatureGroupAlias> hudiFeatureGroups,
+                                               Map<String, String> readOptions) throws FeatureStoreException {
+    for (TimeTravelFeatureGroupAlias timeTravelFeatureGroupAlias : hudiFeatureGroups) {
+      String alias = timeTravelFeatureGroupAlias.getAlias();
+      FeatureGroup featureGroup = timeTravelFeatureGroupAlias.getFeatureGroup();
 
-      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
-          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
+      SparkEngine.getInstance().registerTimeTravelTmpTable(featureGroup, alias,
+          timeTravelFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+          timeTravelFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
           readOptions);
     }
   }
