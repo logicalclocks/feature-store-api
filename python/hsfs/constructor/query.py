@@ -18,7 +18,7 @@ import json
 
 from hsfs import util, engine
 from hsfs.core import query_constructor_api, storage_connector_api
-from hsfs.constructor import join
+from hsfs.constructor import join, filter
 
 
 class Query:
@@ -38,6 +38,7 @@ class Query:
         self._left_featuregroup_start_time = left_featuregroup_start_time
         self._left_featuregroup_end_time = left_featuregroup_end_time
         self._joins = []
+        self._filter = None
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
@@ -110,6 +111,15 @@ class Query:
         self.left_featuregroup_end_time = wallclock_end_time
         return self
 
+    def filter(self, f):
+        if not isinstance(f, filter.Filter):
+            raise TypeError("Expected type `Filter`, got `{}`".format(type(f)))
+        if self._filter is None:
+            self._filter = f
+        else:
+            self._filter.__and__(f)
+        return self
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -120,6 +130,7 @@ class Query:
             "leftFeatureGroupStartTime": self._left_featuregroup_start_time,
             "leftFeatureGroupEndTime": self._left_featuregroup_end_time,
             "joins": self._joins,
+            "filter": self._filter,
         }
 
     def to_string(self, online=False):

@@ -29,7 +29,7 @@ from hsfs.core import (
     on_demand_feature_group_engine,
 )
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.constructor import query
+from hsfs.constructor import query, filter
 
 
 class FeatureGroupBase:
@@ -169,6 +169,15 @@ class FeatureGroup(FeatureGroupBase):
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in features
         ]
+
+        # TODO move into function anc remember to call it always when features are set
+        # set features as attributes
+        for f in self._features:
+            if hasattr(self, f.name):
+                raise ValueError("Feature name is reserved: {}".format(f.name))
+            else:
+                setattr(self, f.name, f)
+
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
@@ -446,6 +455,23 @@ class FeatureGroup(FeatureGroupBase):
         )
 
         self.compute_statistics()
+
+    def filter(self, f: filter.Filter):
+        """Apply filter to the feature group.
+
+        Selects all features and returns the resulting `Query` with the applied filter.
+
+        ```python
+        fg.filter(Feature("weekly_sales") > 1000)
+        ```
+
+        # Arguments
+            f: Filter object.
+
+        # Returns
+            `Query`. The query object with the applied filter.
+        """
+        return self.select_all().filter(f)
 
     def commit_details(self, limit: Optional[int] = None):
         """Retrieves commit timeline for this feature group.

@@ -15,6 +15,10 @@
 #
 
 import humps
+import json
+
+from hsfs import util
+from hsfs.constructor import filter
 
 
 class Feature:
@@ -33,6 +37,8 @@ class Feature:
         partition=None,
         online_type=None,
         default_value=None,
+        feature_group_name=None,
+        feature_group=None,
     ):
         self._name = name
         self._type = type
@@ -41,6 +47,10 @@ class Feature:
         self._partition = partition or False
         self._online_type = online_type
         self._default_value = default_value
+        if feature_group is not None:
+            self._feature_group_name = feature_group.name
+        else:
+            self._feature_group_name = feature_group_name
 
     def to_dict(self):
         return {
@@ -51,7 +61,11 @@ class Feature:
             "primary": self._primary,
             "onlineType": self._online_type,
             "defaultValue": self._default_value,
+            "featureGroupName": self._feature_group_name,
         }
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -111,19 +125,25 @@ class Feature:
         self._default_value = default_value
 
     def __lt__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.LT, other)
 
     def __le__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.LE, other)
 
     def __eq__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.EQ, other)
 
     def __ne__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.NE, other)
 
     def __ge__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.GE, other)
 
     def __gt__(self, other):
-        pass
+        return filter.Filter(self, filter.Filter.GT, other)
+
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return f"Feature({self._name!r}, {self._type!r}, {self._description!r}, {self._primary}, {self._partition}, {self._online_type!r}, {self._default_value!r}, {self._feature_group_name!r})"

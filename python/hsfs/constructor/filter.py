@@ -20,12 +20,12 @@ from hsfs import util
 
 
 class Filter:
-    GE = "GE"
-    GT = "GT"
-    NE = "NE"
-    EQ = "EQ"
-    LE = "LE"
-    LT = "LT"
+    GE = "GREATER_THAN_OR_EQUAL"
+    GT = "GREATER_THAN"
+    NE = "NOT_EQUALS"
+    EQ = "EQUALS"
+    LE = "LESS_THAN_OR_EQUAL"
+    LT = "LESS_THAN"
     AND = "AND"
     OR = "OR"
 
@@ -43,26 +43,31 @@ class Filter:
         return {
             "feature": self._feature,
             "condition": self._condition,
-            "value": self._value,
+            "value": str(self._value),
             "rightFilter": self._right_filter,
             "logic": self._logic,
         }
 
     def __and__(self, other):
-        self._right_filter = other
-        self._logic = self.AND
+        if not isinstance(other, Filter):
+            raise TypeError(
+                "Operator `&` expected type `Filter`, got `{}`".format(type(other))
+            )
+        if self._right_filter is None:
+            self._right_filter = other
+            self._logic = self.AND
+        else:
+            self._right_filter.__and__(other)
         return self
 
     def __or__(self, other):
+        if not isinstance(other, Filter):
+            raise TypeError(
+                "Operator `|` expected type `Filter`, got `{}`".format(type(other))
+            )
         self._right_filter = other
         self._logic = self.OR
         return self
-
-    # not supported in first iteration
-    def __invert__(
-        self,
-    ):
-        raise NotImplementedError
 
     def __repr__(self):
         return "Filter({}, {}, {}, {}, {})".format(
