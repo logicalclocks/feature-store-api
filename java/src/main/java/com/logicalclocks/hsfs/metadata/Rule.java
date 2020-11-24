@@ -23,9 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Arrays;
-import java.util.Objects;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,73 +37,6 @@ public class Rule extends RestDto<Rule> {
   private ValueType valueType;
   @Getter @Setter
   private String description;
-  @Getter @Setter
-  private String feature;
-  private RuleConfiguration ruleConfiguration;
-
-  public ConstraintGroupLevel getLevel() {
-    return ruleConfiguration != null ? ruleConfiguration.getLevel() : null;
-  }
-
-  public void setLevel(ConstraintGroupLevel level) {
-    if (ruleConfiguration == null) {
-      ruleConfiguration = RuleConfiguration.builder().level(level).build();
-    } else {
-      ruleConfiguration.setLevel(level);
-    }
-  }
-
-  public Double getMax() {
-    return ruleConfiguration != null ? ruleConfiguration.getMax() : null;
-  }
-
-  public void setMax(Double max) {
-    if (ruleConfiguration == null) {
-      ruleConfiguration = RuleConfiguration.builder().max(max).build();
-    } else {
-      ruleConfiguration.setMax(max);
-    }
-  }
-
-  public Double getMin() {
-    return ruleConfiguration != null ? ruleConfiguration.getMin() : null;
-  }
-
-  public void setMin(Double min) {
-    if (ruleConfiguration == null) {
-      ruleConfiguration = RuleConfiguration.builder().min(min).build();
-    } else {
-      ruleConfiguration.setMin(min);
-    }
-  }
-
-  public String getPattern() {
-    return ruleConfiguration != null ? ruleConfiguration.getPattern() : null;
-  }
-
-  public void setPattern(String pattern) {
-    if (ruleConfiguration == null) {
-      ruleConfiguration = RuleConfiguration.builder().pattern(pattern).build();
-    } else {
-      ruleConfiguration.setPattern(pattern);
-    }
-  }
-
-  public String[] getLegalValues() {
-    return ruleConfiguration != null ? ruleConfiguration.getLegalValues() : null;
-  }
-
-  public void setLegalValues(String[] legalValues) {
-    if (ruleConfiguration == null) {
-      ruleConfiguration = RuleConfiguration.builder().legalValues(legalValues).build();
-    } else {
-      ruleConfiguration.setLegalValues(legalValues);
-    }
-  }
-
-  protected RuleConfiguration getRuleConfiguration() {
-    return ruleConfiguration;
-  }
 
   public enum ConstraintGroupLevel {
     Warning,
@@ -138,30 +68,7 @@ public class Rule extends RestDto<Rule> {
       + ", predicate=" + predicate
       + ", valueType=" + valueType
       + ", description='" + description + '\''
-      + ", feature='" + feature + '\''
-      + ", level=" + getLevel()
-      + ", min=" + getMin()
-      + ", max=" + getMax()
-      + ", pattern=" + getPattern()
-      + ", legalValues=" + Arrays.toString(getLegalValues())
       + '}';
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Rule rule = (Rule) o;
-    return name == rule.name
-      && Objects.equals(feature, rule.feature);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(name, feature);
-  }
 }

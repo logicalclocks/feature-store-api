@@ -26,7 +26,7 @@ public class FeatureGroupValidationsApi {
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String RESULTS_PATH = ENTITY_ID_PATH + "/validations{/validation_time}{?filter_by,offset,limit}";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RuleApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExpectationsApi.class);
 
   private final EntityEndpointType entityType;
 

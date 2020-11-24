@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.Rule;
-import com.logicalclocks.hsfs.metadata.RuleDefinitionsApi;
+import com.logicalclocks.hsfs.metadata.FeatureStoreRulesApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
@@ -50,7 +50,7 @@ public class FeatureStore {
   private FeatureGroupApi featureGroupApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
-  private RuleDefinitionsApi ruleDefinitionsApi;
+  private FeatureStoreRulesApi featureStoreRulesApi;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -60,7 +60,7 @@ public class FeatureStore {
     featureGroupApi = new FeatureGroupApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
-    ruleDefinitionsApi = new RuleDefinitionsApi();
+    featureStoreRulesApi = new FeatureStoreRulesApi();
   }
 
   /**
@@ -175,16 +175,16 @@ public class FeatureStore {
     return getTrainingDataset(name, DEFAULT_VERSION);
   }
 
-  public List<Rule> getRule() throws FeatureStoreException, IOException {
-    return ruleDefinitionsApi.get();
+  public List<Rule> getRules() throws FeatureStoreException, IOException {
+    return featureStoreRulesApi.get();
   }
 
-  public List<Rule> getRule(Rule.Name name) throws FeatureStoreException, IOException {
-    return ruleDefinitionsApi.get(name);
+  public List<Rule> getRules(Rule.Name name) throws FeatureStoreException, IOException {
+    return featureStoreRulesApi.get(name);
   }
 
   public Rule getRule(Rule.Name name, Rule.Predicate predicate) throws FeatureStoreException, IOException {
-    return ruleDefinitionsApi.get(name, predicate);
+    return featureStoreRulesApi.get(name, predicate);
   }
 
   @Override

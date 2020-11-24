@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -25,6 +29,12 @@ public class FeatureGroupValidation extends RestDto<FeatureGroupValidation> {
   private String validationPath;
   @Getter @Setter
   private DataValidationResult.Status status;
+
+  public String getCommitTimeAsDateTimeFormat() {
+    Instant instant = Instant.ofEpochSecond(commitTime);
+    return LocalDateTime.ofInstant(instant, ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+  }
+
 
 
   @Override

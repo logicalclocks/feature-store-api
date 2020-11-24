@@ -24,10 +24,11 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
+import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
 import com.logicalclocks.hsfs.metadata.Rule;
-import com.logicalclocks.hsfs.metadata.RuleApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -45,7 +46,7 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private HudiEngine hudiEngine = new HudiEngine();
-  private RuleApi ruleApi = new RuleApi(EntityEndpointType.FEATURE_GROUP);
+  private ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
   private FeatureGroupValidationsApi validationResultsApi =
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
@@ -198,17 +199,18 @@ public class FeatureGroupEngine {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 
-  public void attachRule(FeatureGroup featureGroup, Rule rule) throws FeatureStoreException, IOException {
-    ruleApi.put(featureGroup, rule);
+  public void createExpectation(FeatureGroup featureGroup, Expectation expectation)
+      throws FeatureStoreException, IOException {
+    expectationsApi.put(featureGroup, expectation);
   }
 
-  public List<Rule> getRules(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return ruleApi.get(featureGroup);
+  public List<Expectation> getExpectations(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return expectationsApi.get(featureGroup);
   }
 
-  public Rule getRule(FeatureGroup featureGroup, Rule.Name name, Rule.Predicate predicate,
+  public Expectation getExpectation(FeatureGroup featureGroup, Rule.Name name, Rule.Predicate predicate,
       String feature) throws FeatureStoreException, IOException {
-    return ruleApi.get(featureGroup, name, predicate, feature);
+    return expectationsApi.get(featureGroup, name, predicate, feature);
   }
 
 }

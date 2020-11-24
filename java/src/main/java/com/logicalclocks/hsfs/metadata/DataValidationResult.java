@@ -21,19 +21,24 @@ public class DataValidationResult {
   @Getter @Setter
   private String value;
   @Getter @Setter
-  private Rule rule;
-
+  private Expectation expectation;
 
   public enum Status {
-    SUCCESS("Success"),
-    FAILURE("Failure"),
-    WARNING("Warning"),
-    EMPTY("Empty");
+    NONE("Empty",0),
+    SUCCESS("Success",1),
+    WARNING("Warning",2),
+    FAILURE("Failure",3);
 
     private final String name;
+    private final int severity;
 
-    Status(String name) {
+    Status(String name, int severity) {
       this.name = name;
+      this.severity = severity;
+    }
+
+    public int getSeverity() {
+      return severity;
     }
 
     public static Status fromString(String name) {
@@ -46,7 +51,7 @@ public class DataValidationResult {
       } else if (status == com.amazon.deequ.constraints.ConstraintStatus.Success()) {
         return SUCCESS;
       } else {
-        return EMPTY;
+        return NONE;
       }
     }
 
@@ -66,7 +71,7 @@ public class DataValidationResult {
       + "status=" + status
       + ", message='" + message + '\''
       + ", value='" + value + '\''
-      + ", rule=" + rule
+      + ", expectation=" + expectation
       + '}';
   }
 }

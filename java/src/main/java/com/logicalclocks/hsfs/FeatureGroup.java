@@ -22,8 +22,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.DataValidationEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
+import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidationType;
 import com.logicalclocks.hsfs.metadata.Rule;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
@@ -63,7 +65,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter @Setter
   @JsonProperty("validationEnabled")
-  private Boolean validationEnabled;
+  private FeatureGroupValidationType validationType;
 
   @Getter @Setter
   @JsonProperty("featHistEnabled")
@@ -84,9 +86,9 @@ public class FeatureGroup extends FeatureGroupBase {
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
-  private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
-  private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
-  private DataValidationEngine dataValidationEngine = new DataValidationEngine(EntityEndpointType.FEATURE_GROUP);
+  private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+  private final DataValidationEngine dataValidationEngine = new DataValidationEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -94,7 +96,8 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
                       TimeTravelFormat timeTravelFormat, List<Feature> features, Boolean statisticsEnabled,
-                      Boolean histograms, Boolean correlations, List<String> statisticColumns) {
+                      FeatureGroupValidationType validationType, Boolean histograms, Boolean correlations,
+                      List<String> statisticColumns) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -105,6 +108,7 @@ public class FeatureGroup extends FeatureGroupBase {
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
     this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
+    this.validationType = validationType != null ? validationType : FeatureGroupValidationType.NONE;
     this.histograms = histograms;
     this.correlations = correlations;
     this.statisticColumns = statisticColumns;
@@ -198,6 +202,9 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+    if (validationType != FeatureGroupValidationType.NONE) {
+      validate(featureData);
+    }
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
     if (statisticsEnabled) {
       statisticsEngine.computeStatistics(this, featureData);
@@ -359,28 +366,59 @@ public class FeatureGroup extends FeatureGroupBase {
     return statisticsEngine.get(this, commitTime);
   }
 
-  public void attachRule(Rule rule) throws FeatureStoreException, IOException {
-    featureGroupEngine.attachRule(this, rule);
+  public void createExpectation(Expectation expectation) throws FeatureStoreException, IOException {
+    featureGroupEngine.createExpectation(this, expectation);
   }
 
-  public Rule getRule(Rule.Name name, Rule.Predicate predicate, String feature)
+  public void createExpectations(List<Expectation> expectations) throws FeatureStoreException, IOException {
+    for (Expectation expectation :  expectations) {
+      featureGroupEngine.createExpectation(this, expectation);
+    }
+  }
+
+  public Expectation getExpectation(Rule.Name name, Rule.Predicate predicate, String feature)
       throws FeatureStoreException, IOException {
-    return featureGroupEngine.getRule(this, name, predicate, feature);
+    return featureGroupEngine.getExpectation(this, name, predicate, feature);
   }
 
-  public List<Rule> getRule() throws FeatureStoreException, IOException {
-    return featureGroupEngine.getRules(this);
+  public List<Expectation> getExpectations() throws FeatureStoreException, IOException {
+    return featureGroupEngine.getExpectations(this);
   }
 
   public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
+    // Run data validation for entire feature group
+    return validate(this.read());
+  }
+
+  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
     // Fetch all rules
-    FeatureGroupValidation featureGroupValidation = dataValidationEngine.runVerification(this.read(), getRule());
+    FeatureGroupValidation featureGroupValidation = dataValidationEngine.runVerification(data, getExpectations());
+    if (featureGroupValidation.getStatus().getSeverity() >= validationType.getSeverity()) {
+      return dataValidationEngine.sendResults(this, featureGroupValidation);
+    } else {
+      throw new FeatureStoreException(
+        "Failed feature group validation. Checks: " + featureGroupValidation.getValidations());
+    }
+  }
+
+  //  public FeatureGroupValidation validate(String commitDateTime) throws FeatureStoreException, IOException {
+  //    //Convert to timestamp
+  //    String pattern = "yyyyMMddHHmmss";
+  //    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+  //    LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(commitDateTime));
+  //    return validate(localDateTime.toEpochSecond(ZoneOffset.UTC));
+  //  }
+
+  public FeatureGroupValidation validate(String validationTime) throws FeatureStoreException, IOException {
+    // Fetch all rules
+    FeatureGroupValidation featureGroupValidation =
+        dataValidationEngine.runVerification(this.read(validationTime), getExpectations());
     return dataValidationEngine.sendResults(this, featureGroupValidation);
   }
 
   public FeatureGroupValidation runValidation() throws FeatureStoreException, IOException {
     // Fetch all rules
-    return dataValidationEngine.runVerification(this.read(), getRule());
+    return dataValidationEngine.runVerification(this.read(), getExpectations());
   }
 
   public FeatureGroupValidation sendResults(FeatureGroupValidation featureGroupValidation)

@@ -17,10 +17,24 @@
 package com.logicalclocks.hsfs;
 
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+
 public class MainClass {
 
 
   public static void main(String[] args) throws Exception {
+    Instant instant = Instant.ofEpochSecond(1605259949L);
+    String datetime =
+        LocalDateTime.ofInstant(instant, ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    System.out.println(datetime);
+
+    String pattern = "yyyyMMddHHmmss";
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+    LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(datetime));
+    System.out.println(localDateTime.toEpochSecond(ZoneOffset.UTC));
 
 
   }

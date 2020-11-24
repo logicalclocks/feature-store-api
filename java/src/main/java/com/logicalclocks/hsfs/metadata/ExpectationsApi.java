@@ -36,76 +36,78 @@ import java.util.List;
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
-public class RuleApi {
+public class ExpectationsApi {
 
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String RULES_PATH =
-      ENTITY_ID_PATH + "/rules{/name}{/predicate}{/feature}{?engine,filter_by,sort_by,offset,limit}";
+  public static final String EXPECTATIONS_PATH =
+      ENTITY_ID_PATH + "/expectations{/name}{/predicate}{/feature}{?engine,filter_by,sort_by,offset,limit,expand}";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RuleApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExpectationsApi.class);
 
   private EntityEndpointType entityType;
 
-  public RuleApi(@NonNull EntityEndpointType entityType) {
+  public ExpectationsApi(@NonNull EntityEndpointType entityType) {
     this.entityType = entityType;
   }
 
-  public Rule put(FeatureGroup featureGroup, Rule rule) throws FeatureStoreException, IOException {
+  public Expectation put(FeatureGroup featureGroup, Expectation expectation) throws FeatureStoreException, IOException {
     return put(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), rule);
+      featureGroup.getId(), expectation);
   }
 
-  private Rule put(Integer projectId, Integer featurestoreId, Integer entityId, Rule rule)
+  private Expectation put(Integer projectId, Integer featurestoreId, Integer entityId, Expectation expectation)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + RULES_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + EXPECTATIONS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
-        .set("name", rule.getName())
-        .set("predicate", rule.getPredicate())
-        .set("feature", rule.getFeature())
+        .set("name", expectation.getRule().getName())
+        .set("predicate", expectation.getRule().getPredicate())
+        .set("feature", expectation.getFeature())
         .expand();
 
-    String ruleConfigurationJson = hopsworksClient.getObjectMapper().writeValueAsString(rule.getRuleConfiguration());
+    String expectationStr = hopsworksClient.getObjectMapper().writeValueAsString(expectation);
     HttpPut putRequest = new HttpPut(uri);
     putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    putRequest.setEntity(new StringEntity(ruleConfigurationJson));
+    putRequest.setEntity(new StringEntity(expectationStr));
 
-    LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(ruleConfigurationJson);
+    LOGGER.info("Sending metadata request2: " + uri);
+    LOGGER.info(expectationStr);
 
-    return hopsworksClient.handleRequest(putRequest, Rule.class);
+    return hopsworksClient.handleRequest(putRequest, Expectation.class);
   }
 
-  public List<Rule> get(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public List<Expectation> get(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
       featureGroup.getId(), null, null, null, null);
   }
 
-  public Rule get(FeatureGroup featureGroup, Rule.Name name, Rule.Predicate predicate,
+  public Expectation get(FeatureGroup featureGroup, Rule.Name name, Rule.Predicate predicate,
       String feature) throws FeatureStoreException, IOException {
-    List<Rule> rules = get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+    List<Expectation> expectations =
+        get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), name, predicate, feature, null);
-    return !rules.isEmpty() ? rules.get(0) : null;
+    return !expectations.isEmpty() ? expectations.get(0) : null;
   }
 
-  private List<Rule> get(Integer projectId, Integer featurestoreId, Integer entityId, Rule.Name name,
+  private List<Expectation> get(Integer projectId, Integer featurestoreId, Integer entityId, Rule.Name name,
       Rule.Predicate predicate, String feature, DataValidationEngine.Engine engine)
       throws FeatureStoreException, IOException {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
-        + RULES_PATH;
+        + EXPECTATIONS_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
-        .set("entityId", entityId);
+        .set("entityId", entityId)
+        .set("expand","rules");
 
     if (name != null) {
       uriTemplate.set("name", name);
@@ -122,20 +124,19 @@ public class RuleApi {
     }
 
     String uri = uriTemplate.expand();
-
     LOGGER.info("Sending metadata request: " + uri);
     HttpGet getRequest = new HttpGet(uri);
     HopsworksClient hopsworksClient = getInstance();
-    Rule ruleDto = hopsworksClient.handleRequest(getRequest, Rule.class);
-    List<Rule> rules;
-    if (ruleDto.getCount() == null) {
-      rules = new ArrayList<>();
-      rules.add(ruleDto);
+    Expectation dto = hopsworksClient.handleRequest(getRequest, Expectation.class);
+    List<Expectation> expectations;
+    if (dto.getCount() == null) {
+      expectations = new ArrayList<>();
+      expectations.add(dto);
     } else {
-      rules = ruleDto.getItems();
+      expectations = dto.getItems();
     }
-    LOGGER.info("Received rules: " + rules);
-    return rules;
+    LOGGER.info("Received expectations: " + expectations);
+    return expectations;
   }
 
 }

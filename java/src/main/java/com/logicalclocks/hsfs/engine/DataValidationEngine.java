@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.DataValidationResult;
+import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
 import com.logicalclocks.hsfs.metadata.Rule;
@@ -53,28 +54,28 @@ public class DataValidationEngine implements DataValidationIntf {
   }
 
   @Override
-  public FeatureGroupValidation runVerification(Dataset<Row> data, List<Rule> rules) {
+  public FeatureGroupValidation runVerification(Dataset<Row> data, List<Expectation> expectations) {
     List<ConstraintGroup> constraintGroups = new ArrayList<>();
     Map<Rule.ConstraintGroupLevel, List<Constraint>> constraintGroupLevels = new HashMap<>();
     // Check if there is another rule with same name and same feature and same min or max
-    for (Rule rule : rules) {
+    for (Expectation expectation : expectations) {
       // If constraint with same name and predicate exists, then
       Constraint constraint =
-          new Constraint(rule.getName().name(), Option.apply(rule.getName().name()),
+          new Constraint(expectation.getRule().getName().name(), Option.apply(expectation.getRule().getName().name()),
           Option.apply(
-            JavaConverters.asScalaIteratorConverter(Collections.singletonList(rule.getFeature()).iterator()).asScala()
-              .toSeq()),
-          Option.apply(rule.getMin()),
-          Option.apply(rule.getMax()),
+            JavaConverters.asScalaIteratorConverter(Collections.singletonList(expectation.getFeature()).iterator())
+              .asScala().toSeq()),
+          Option.apply(expectation.getMin()),
+          Option.apply(expectation.getMax()),
           Option.apply(null),
-          Option.apply(rule.getPattern()),
-          Option.apply(rule.getValueType().name()),
-          Option.apply(rule.getLegalValues()));
+          Option.apply(expectation.getPattern()),
+          Option.apply(expectation.getRule().getValueType().name()),
+          Option.apply(expectation.getLegalValues()));
 
-      if (!constraintGroupLevels.containsKey(rule.getLevel())) {
-        constraintGroupLevels.put(rule.getLevel(), new ArrayList<>());
+      if (!constraintGroupLevels.containsKey(expectation.getLevel())) {
+        constraintGroupLevels.put(expectation.getLevel(), new ArrayList<>());
       }
-      constraintGroupLevels.get(rule.getLevel()).add(constraint);
+      constraintGroupLevels.get(expectation.getLevel()).add(constraint);
     }
     if (!constraintGroupLevels.isEmpty()) {
       for (Rule.ConstraintGroupLevel level : constraintGroupLevels.keySet()) {
@@ -97,13 +98,14 @@ public class DataValidationEngine implements DataValidationIntf {
         String[] constraintInfo = constraintResult.constraint().toString().split("\\W+");
         Rule.Name ruleName = getRuleNameFromDeequ(constraintInfo[1]);
         // Find rule from list of rules that Deequ used for validation
-        Rule rule =
-            rules.stream().filter(x -> x.getName() == ruleName && x.getFeature().equals(constraintInfo[2]))
+        Expectation expectation =
+            expectations.stream()
+            .filter(x -> x.getRule().getName() == ruleName && x.getFeature().equals(constraintInfo[2]))
             .findFirst().get();
 
         dataValidationResults.add(DataValidationResult.builder()
             .status(DataValidationResult.Status.fromDeequStatus(constraintResult.status()))
-            .rule(rule)
+            .expectation(expectation)
             .message(!constraintResult.message().isEmpty() ?  constraintResult.message().get() : "Success")
             .value(String.valueOf(constraintResult.metric().get().value().get()))
             .build());

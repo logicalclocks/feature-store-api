@@ -13,12 +13,12 @@ import java.util.List;
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.API_PATH;
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
-public class RuleDefinitionsApi {
+public class FeatureStoreRulesApi {
 
   public static final String RULE_DEFINITIONS_PATH = API_PATH
       + "/rules{/name}{/predicate}{?filter_by,sort_by,offset,limit}";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RuleApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExpectationsApi.class);
 
 
   public List<Rule> get() throws FeatureStoreException, IOException {
