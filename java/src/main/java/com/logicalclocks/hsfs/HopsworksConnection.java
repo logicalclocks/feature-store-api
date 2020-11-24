@@ -73,7 +73,7 @@ public class HopsworksConnection implements Closeable {
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,
                              String certPath, String apiKeyFilePath, String apiKeyValue)
-          throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException {
     this.host = host;
     this.port = port;
     this.project = project;

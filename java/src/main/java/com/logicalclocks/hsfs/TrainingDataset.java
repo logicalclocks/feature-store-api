@@ -38,64 +38,82 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class TrainingDataset {
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer id;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer version;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String description;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private DataFormat dataFormat;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<TrainingDatasetFeature> features;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private FeatureStore featureStore;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer storageConnectorId;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private StorageConnector storageConnector;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String location;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long seed;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Split> splits;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private Boolean statisticsEnabled = true;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private Boolean histograms;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private Boolean correlations;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonIgnore
   private List<String> statisticColumns;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("queryDTO")
   private Query queryInt;
 
@@ -161,7 +179,7 @@ public class TrainingDataset {
   /**
    * Create the training dataset based on the content of the feature store query.
    *
-   * @param query the query to save as training dataset
+   * @param query        the query to save as training dataset
    * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
@@ -174,7 +192,7 @@ public class TrainingDataset {
   /**
    * Create the training dataset based on the content of the dataset.
    *
-   * @param dataset the dataset to save as training dataset
+   * @param dataset      the dataset to save as training dataset
    * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
@@ -190,7 +208,7 @@ public class TrainingDataset {
   /**
    * Insert the content of the feature store query in the training dataset.
    *
-   * @param query the query to write as training dataset
+   * @param query     the query to write as training dataset
    * @param overwrite true to overwrite the current content of the training dataset
    * @throws FeatureStoreException
    * @throws IOException
@@ -202,7 +220,7 @@ public class TrainingDataset {
   /**
    * Insert the content of the dataset in the training dataset.
    *
-   * @param dataset the dataset to write as training dataset
+   * @param dataset   the dataset to write as training dataset
    * @param overwrite true to overwrite the current content of the training dataset
    * @throws FeatureStoreException
    * @throws IOException
@@ -214,8 +232,8 @@ public class TrainingDataset {
   /**
    * Insert the content of the feature store query in the training dataset.
    *
-   * @param query the query to execute to generate the training dataset
-   * @param overwrite true to overwrite the current content of the training dataset
+   * @param query        the query to execute to generate the training dataset
+   * @param overwrite    true to overwrite the current content of the training dataset
    * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
@@ -230,8 +248,8 @@ public class TrainingDataset {
   /**
    * Insert the content of the dataset in the training dataset.
    *
-   * @param dataset the spark dataframe to write as training dataset
-   * @param overwrite true to overwrite the current content of the training dataset
+   * @param dataset      the spark dataframe to write as training dataset
+   * @param overwrite    true to overwrite the current content of the training dataset
    * @param writeOptions options to pass to the Spark write operation
    * @throws FeatureStoreException
    * @throws IOException
@@ -276,7 +294,7 @@ public class TrainingDataset {
   /**
    * Read a single split from the training dataset.
    *
-   * @param split the split name
+   * @param split       the split name
    * @param readOptions options to pass to the Spark read operation
    * @return
    */
@@ -346,7 +364,7 @@ public class TrainingDataset {
   /**
    * Add name/value tag to the training dataset.
    *
-   * @param name name of the tag
+   * @param name  name of the tag
    * @param value value of the tag
    * @throws FeatureStoreException
    * @throws IOException
@@ -392,7 +410,7 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public String getQuery() throws FeatureStoreException, IOException  {
+  public String getQuery() throws FeatureStoreException, IOException {
     return getQuery(Storage.ONLINE, false);
   }
 
@@ -414,6 +432,6 @@ public class TrainingDataset {
   @JsonIgnore
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
-      Collectors.toList());
+        Collectors.toList());
   }
 }

@@ -17,6 +17,6 @@
 package com.logicalclocks.hsfs;
 
 public enum TimeTravelFormat {
-    NONE,
-    HUDI
+  NONE,
+  HUDI
 }

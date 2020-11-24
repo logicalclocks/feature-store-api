@@ -35,22 +35,28 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class FeatureGroupBase {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected Integer id;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected FeatureStore featureStore;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected Integer version;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected String description;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected List<Feature> features;
 
   @Getter
@@ -73,7 +79,7 @@ public class FeatureGroupBase {
   public Query select(List<String> features) throws FeatureStoreException, IOException {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
-    List<Feature> featureObjList  = features.stream().map(Feature::new).collect(Collectors.toList());
+    List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
@@ -99,7 +105,7 @@ public class FeatureGroupBase {
   /**
    * Add name/value tag to the feature group.
    *
-   * @param name name of the tag
+   * @param name  name of the tag
    * @param value value of the tag
    * @throws FeatureStoreException
    * @throws IOException

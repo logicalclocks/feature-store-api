@@ -34,13 +34,16 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OnDemandFeatureGroup extends FeatureGroupBase {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private StorageConnector storageConnector;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String query;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String type = "onDemandFeaturegroupDTO";
 
   private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();

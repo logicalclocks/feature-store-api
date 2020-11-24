@@ -24,9 +24,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Split {
-  @Getter @Setter
+  @Getter
+  @Setter
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Float percentage;
 }

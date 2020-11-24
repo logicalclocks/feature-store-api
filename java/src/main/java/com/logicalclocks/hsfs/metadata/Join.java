@@ -25,17 +25,22 @@ import java.util.List;
 
 public class Join {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Query query;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Feature> on;
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Feature> leftOn;
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Feature> rightOn;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private JoinType joinType;
 
   public Join(Query query, JoinType joinType) {

@@ -25,19 +25,24 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrainingDatasetFeature {
-  @Getter @Setter
+  @Getter
+  @Setter
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String type;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private FeatureGroup featureGroup;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer index;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean label = false;
 
   @Builder

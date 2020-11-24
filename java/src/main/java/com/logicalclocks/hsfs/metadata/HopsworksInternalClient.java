@@ -78,9 +78,9 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
     connectionPool.setDefaultMaxPerRoute(10);
 
     httpClient = HttpClients.custom()
-          .setConnectionManager(connectionPool)
-          .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
-          .build();
+        .setConnectionManager(connectionPool)
+        .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
+        .build();
 
     refreshJwt();
   }

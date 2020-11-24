@@ -25,15 +25,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class HudiFeatureGroupAlias {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String alias;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private FeatureGroup featureGroup;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long leftFeatureGroupStartTimestamp;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long leftFeatureGroupEndTimestamp;
 }

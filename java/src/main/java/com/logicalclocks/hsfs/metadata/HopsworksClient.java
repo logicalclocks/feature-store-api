@@ -104,11 +104,14 @@ public class HopsworksClient {
   @AllArgsConstructor
   @NoArgsConstructor
   private static class HopsworksErrorClass {
-    @Getter @Setter
+    @Getter
+    @Setter
     private Integer errorCode;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String usrMsg;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String devMsg;
 
     @Override

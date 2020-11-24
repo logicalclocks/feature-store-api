@@ -27,25 +27,32 @@ import org.apache.parquet.Strings;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Feature {
-  @Getter @Setter
+  @Getter
+  @Setter
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String type;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String onlineType;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String description;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean primary;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean partition;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String defaultValue;
 
   public Feature(@NonNull String name) {

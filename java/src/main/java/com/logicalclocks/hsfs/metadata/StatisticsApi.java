@@ -50,13 +50,13 @@ public class StatisticsApi {
 
   public Statistics post(FeatureGroup featureGroup, Statistics statistics) throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), statistics);
+        featureGroup.getId(), statistics);
   }
 
   public Statistics post(TrainingDataset trainingDataset, Statistics statistics)
       throws FeatureStoreException, IOException {
     return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-      trainingDataset.getId(), statistics);
+        trainingDataset.getId(), statistics);
   }
 
   private Statistics post(Integer projectId, Integer featurestoreId, Integer entityId, Statistics statistics)
@@ -84,12 +84,12 @@ public class StatisticsApi {
 
   public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException, IOException {
     return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), commitTime);
+        featureGroup.getId(), commitTime);
   }
 
   public Statistics get(TrainingDataset trainingDataset, String commitTime) throws FeatureStoreException, IOException {
     return get(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-      trainingDataset.getId(), commitTime);
+        trainingDataset.getId(), commitTime);
   }
 
   private Statistics get(Integer projectId, Integer featurestoreId, Integer entityId, String commitTime)
@@ -121,12 +121,12 @@ public class StatisticsApi {
 
   public Statistics getLast(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     return getLast(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId());
+        featureGroup.getId());
   }
 
   public Statistics getLast(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     return getLast(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-      trainingDataset.getId());
+        trainingDataset.getId());
   }
 
   private Statistics getLast(Integer projectId, Integer featurestoreId, Integer entityId)

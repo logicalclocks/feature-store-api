@@ -28,15 +28,20 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroupCommit  extends RestDto<FeatureGroupCommit> {
-  @Getter @Setter
+public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
+  @Getter
+  @Setter
   private Long commitID;
-  @Getter @Setter
+  @Getter
+  @Setter
   private String commitDateString;
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long rowsInserted;
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long rowsUpdated;
-  @Getter @Setter
+  @Getter
+  @Setter
   private Long rowsDeleted;
 }

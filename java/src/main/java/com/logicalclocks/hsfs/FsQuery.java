@@ -28,21 +28,25 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FsQuery {
-  @Getter @Setter
+  @Getter
+  @Setter
   private String query;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String queryOnline;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<OnDemandFeatureGroupAlias> onDemandFeatureGroups;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
     query = query.replace("\n", " ");
-    queryOnline =  queryOnline.replace("\n", " ");
+    queryOnline = queryOnline.replace("\n", " ");
   }
 
   public String getStorageQuery(Storage storage) throws FeatureStoreException {

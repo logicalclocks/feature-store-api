@@ -34,34 +34,44 @@ import java.util.stream.Collectors;
 @ToString
 public class StorageConnector {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer id;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String accessKey;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String secretKey;
-  
-  @Getter @Setter
+
+  @Getter
+  @Setter
   private String serverEncryptionAlgorithm;
-  
-  @Getter @Setter
+
+  @Getter
+  @Setter
   private String serverEncryptionKey;
-  
-  @Getter @Setter
+
+  @Getter
+  @Setter
   private String bucket;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String connectionString;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String arguments;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private StorageConnectorType storageConnectorType;
 
   public Map<String, String> getSparkOptions() throws FeatureStoreException {
