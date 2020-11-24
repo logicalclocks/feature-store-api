@@ -141,7 +141,7 @@ public class FeatureGroupEngine {
                                     ActionType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
-    // TODO: decide what to do with deltas atomic overwrite for exmaple:
+    // TODO: decide what to do with deltas atomic overwrite for example:
     //  df.write
     //  .format("delta")
     //  .mode("overwrite")
