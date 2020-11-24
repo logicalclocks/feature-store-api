@@ -67,7 +67,7 @@ public class TrainingDatasetEngine {
           feature.get().setLabel(true);
         } else {
           throw new FeatureStoreException("The specified label `" + l + "` could not be found among the features: "
-            + trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName) + ".");
+              + trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName) + ".");
         }
       }
     }

@@ -103,9 +103,9 @@ public class FeatureGroupEngine {
     featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, null,  SaveMode.Append,
-            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-                    ? HudiOperationType.BULK_INSERT : null, writeOptions);
+    saveDataframe(featureGroup, dataset, null, SaveMode.Append,
+        featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+            ? HudiOperationType.BULK_INSERT : null, writeOptions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
@@ -113,7 +113,7 @@ public class FeatureGroupEngine {
       throws IOException, FeatureStoreException {
     if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
-        + "write to the offline storage.");
+          + "write to the offline storage.");
     } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
       saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
     } else if (storage == Storage.ONLINE) {
@@ -166,13 +166,13 @@ public class FeatureGroupEngine {
     featureGroup.setHistograms(apiFG.getHistograms());
   }
 
-  public Map<String, Map<String,String>> commitDetails(FeatureGroup featureGroup, Integer limit)
+  public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
     List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);
     if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
-    Map<String, Map<String,String>> commitDetails = new HashMap<String, Map<String,String>>();
+    Map<String, Map<String, String>> commitDetails = new HashMap<String, Map<String, String>>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
       commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
             put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));

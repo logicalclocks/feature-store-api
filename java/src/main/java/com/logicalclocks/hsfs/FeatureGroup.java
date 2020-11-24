@@ -42,31 +42,39 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroup extends FeatureGroupBase {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean onlineEnabled;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String type = "cachedFeaturegroupDTO";
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   protected String location;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("descStatsEnabled")
   private Boolean statisticsEnabled;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("featHistEnabled")
   private Boolean histograms;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("featCorrEnabled")
   private Boolean correlations;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<String> statisticColumns;
 
   @JsonIgnore
@@ -113,11 +121,11 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().read(online);
   }
 
-  public Dataset<Row> read(Map<String,String> readOptions) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
-  public Dataset<Row> read(boolean online, Map<String,String> readOptions) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
 
@@ -142,7 +150,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Dataset<Row> read(String wallclockTime, Map<String,String> readOptions)
+  public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
@@ -151,7 +159,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads changes that occurred between specified points in time.
    *
    * @param wallclockStartTime start date.
-   * @param wallclockEndTime end date.
+   * @param wallclockEndTime   end date.
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
@@ -165,12 +173,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads changes that occurred between specified points in time.
    *
    * @param wallclockStartTime start date.
-   * @param wallclockEndTime end date.
+   * @param wallclockEndTime   end date.
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String,String> readOptions)
+  public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
@@ -210,7 +218,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException {
-    insert(featureData, storage, overwrite, null,  null);
+    insert(featureData, storage, overwrite, null, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
@@ -222,7 +230,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * Commit insert or upsert to time travel enabled Feature group.
    *
    * @param featureData dataframe to be committed.
-   * @param operation commit operation type, INSERT or UPSERT.
+   * @param operation   commit operation type, INSERT or UPSERT.
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -280,20 +288,22 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Return commit details.
+   *
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<String, Map<String,String>>  commitDetails() throws IOException, FeatureStoreException {
+  public Map<String, Map<String, String>> commitDetails() throws IOException, FeatureStoreException {
     return featureGroupEngine.commitDetails(this, null);
   }
 
   /**
    * Return commit details.
+   *
    * @param limit number of commits to return.
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<String, Map<String,String>>  commitDetails(Integer limit) throws IOException, FeatureStoreException {
+  public Map<String, Map<String, String>> commitDetails(Integer limit) throws IOException, FeatureStoreException {
     return featureGroupEngine.commitDetails(this, limit);
   }
 

@@ -33,15 +33,18 @@ import java.io.IOException;
 
 public class FeatureStore {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("featurestoreId")
   private Integer id;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   @JsonProperty("featurestoreName")
   private String name;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer projectId;
 
   private FeatureGroupApi featureGroupApi;
@@ -61,7 +64,7 @@ public class FeatureStore {
   /**
    * Get a feature group object from the feature store.
    *
-   * @param name the name of the feature group
+   * @param name    the name of the feature group
    * @param version the version of the feature group
    * @return FeatureGroup
    * @throws FeatureStoreException
@@ -89,7 +92,7 @@ public class FeatureStore {
   /**
    * Get a on-demand feature group object from the feature store.
    *
-   * @param name the name of the feature group
+   * @param name    the name of the feature group
    * @param version the version of the feature group
    * @return OnDemandFeatureGroup
    * @throws FeatureStoreException
@@ -141,11 +144,11 @@ public class FeatureStore {
     return TrainingDataset.builder()
         .featureStore(this);
   }
-  
+
   /**
    * Get a training dataset object from the selected feature store.
    *
-   * @param name name of the training dataset
+   * @param name    name of the training dataset
    * @param version version to get
    * @return TrainingDataset
    * @throws FeatureStoreException

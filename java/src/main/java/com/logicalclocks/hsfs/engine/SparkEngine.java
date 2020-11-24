@@ -94,7 +94,7 @@ public class SparkEngine {
 
   public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
                                          Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
-    hudiEngine.registerTemporaryTable(sparkSession,  featureGroup, alias,
+    hudiEngine.registerTemporaryTable(sparkSession, featureGroup, alias,
         leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
   }
 
@@ -136,7 +136,7 @@ public class SparkEngine {
    * @param saveMode
    */
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                     Map<String, String> writeOptions, SaveMode saveMode) {
+                    Map<String, String> writeOptions, SaveMode saveMode) {
 
     if (trainingDataset.getStorageConnector() != null) {
       SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
@@ -223,6 +223,7 @@ public class SparkEngine {
 
   /**
    * Write multiple training dataset splits and name them.
+   *
    * @param datasets
    * @param dataFormat
    * @param writeOptions
@@ -245,7 +246,7 @@ public class SparkEngine {
    * @param dataFormat
    * @param writeOptions
    * @param saveMode
-   * @param path it should be the full path
+   * @param path         it should be the full path
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
@@ -277,8 +278,8 @@ public class SparkEngine {
    * @throws FeatureStoreException
    */
   public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
-                                               FeatureGroup featureGroup,
-                                               StorageConnector storageConnector) throws FeatureStoreException {
+                                              FeatureGroup featureGroup,
+                                              StorageConnector storageConnector) throws FeatureStoreException {
     Map<String, String> writeOptions = storageConnector.getSparkOptions();
     writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
 
@@ -311,22 +312,22 @@ public class SparkEngine {
       throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
+      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions);
     } else {
-      writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
+      writeSparkDataset(featureGroup, dataset, saveMode, writeOptions);
     }
   }
 
   private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                 SaveMode saveMode,  Map<String, String> writeOptions) {
+                                 SaveMode saveMode, Map<String, String> writeOptions) {
     dataset
-            .write()
-            .format(Constants.HIVE_FORMAT)
-            .mode(saveMode)
-            // write options cannot be null
-            .options(writeOptions == null ? new HashMap<>() : writeOptions)
-            .partitionBy(utils.getPartitionColumns(featureGroup))
-            .saveAsTable(utils.getTableName(featureGroup));
+        .write()
+        .format(Constants.HIVE_FORMAT)
+        .mode(saveMode)
+        // write options cannot be null
+        .options(writeOptions == null ? new HashMap<>() : writeOptions)
+        .partitionBy(utils.getPartitionColumns(featureGroup))
+        .saveAsTable(utils.getTableName(featureGroup));
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {

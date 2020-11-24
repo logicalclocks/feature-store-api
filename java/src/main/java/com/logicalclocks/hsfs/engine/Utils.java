@@ -78,7 +78,7 @@ public class Utils {
         .map(f -> new StructField(f.getName(),
             // What should we do about the nullables
             new CatalystSqlParser(null).parseDataType(f.getType()), true, Metadata.empty())
-    ).toArray(StructField[]::new));
+        ).toArray(StructField[]::new));
 
     if (!dataset.schema().equals(tdStructType)) {
       throw new FeatureStoreException("The Dataframe schema: " + dataset.schema()

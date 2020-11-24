@@ -25,9 +25,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class OnDemandFeatureGroupAlias {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private OnDemandFeatureGroup onDemandFeatureGroup;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String alias;
 }

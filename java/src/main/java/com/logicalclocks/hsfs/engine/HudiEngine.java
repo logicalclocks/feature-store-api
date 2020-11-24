@@ -74,10 +74,10 @@ public class HudiEngine {
   private static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   private static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
   private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
-  private static final String HUDI_END_INSTANTTIME_OPT_KEY  = "hoodie.datasource.read.end.instanttime";
+  private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
-  private static final String PAYLOAD_CLASS_OPT_VAL =  "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
+  private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -122,7 +122,7 @@ public class HudiEngine {
   }
 
   public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
-                                     Long startTimestamp, Long  endTimestamp, Map<String, String> readOptions) {
+                                     Long startTimestamp, Long endTimestamp, Map<String, String> readOptions) {
     Map<String, String> hudiArgs = setupHudiReadOpts(startTimestamp, endTimestamp, readOptions);
     sparkSession.read()
         .format(HUDI_SPARK_FORMAT)
@@ -137,7 +137,7 @@ public class HudiEngine {
 
     fgCommitMetadata.setCommitDateString(commitTimeline.lastInstant().get().getTimestamp());
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
-    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn,HoodieCommitMetadata.class);
+    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn, HoodieCommitMetadata.class);
     fgCommitMetadata.setRowsUpdated(commitMetadata.fetchTotalUpdateRecordsWritten());
     fgCommitMetadata.setRowsInserted(commitMetadata.fetchTotalInsertRecordsWritten());
     fgCommitMetadata.setRowsDeleted(commitMetadata.getTotalRecordsDeleted());
@@ -182,7 +182,7 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
 
-    hudiArgs.put(HUDI_TABLE_OPERATION,operation.getValue());
+    hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {

@@ -218,7 +218,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
-        .set("sort_by","committed_on:desc")
+        .set("sort_by", "committed_on:desc")
         .set("offset", 0)
         .set("limit", limit)
         .expand();

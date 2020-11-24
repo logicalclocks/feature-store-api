@@ -72,9 +72,9 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    StorageConnector[] storageConnectors =  hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector[].class);
+    StorageConnector[] storageConnectors = hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector[].class);
     return Arrays.stream(storageConnectors).filter(s -> s.getName().contains(ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX))
-            .findFirst()
-            .orElseThrow(() -> new FeatureStoreException("Could not find online storage connector"));
+        .findFirst()
+        .orElseThrow(() -> new FeatureStoreException("Could not find online storage connector"));
   }
 }

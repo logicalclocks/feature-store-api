@@ -23,11 +23,14 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Project {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer projectId;
-  @Getter @Setter
+  @Getter
+  @Setter
   private String projectName;
-  @Getter @Setter
+  @Getter
+  @Setter
   private String owner;
 
   public Project(Integer projectId) {

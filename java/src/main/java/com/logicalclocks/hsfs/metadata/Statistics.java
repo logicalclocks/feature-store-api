@@ -27,9 +27,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Statistics extends RestDto<Statistics> {
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String commitTime;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String content;
 }

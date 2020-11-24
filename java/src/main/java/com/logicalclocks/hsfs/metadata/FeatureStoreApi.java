@@ -28,8 +28,8 @@ import java.io.IOException;
 public class FeatureStoreApi {
 
   public static final String FEATURE_STORE_SERVICE_PATH = "/featurestores";
-  public static final String FEATURE_STORE_PATH =  FEATURE_STORE_SERVICE_PATH + "{/fsId}";
-  public static final String FEATURE_STORE_NAME_PATH =  FEATURE_STORE_SERVICE_PATH + "{/fsName}";
+  public static final String FEATURE_STORE_PATH = FEATURE_STORE_SERVICE_PATH + "{/fsId}";
+  public static final String FEATURE_STORE_NAME_PATH = FEATURE_STORE_SERVICE_PATH + "{/fsName}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreApi.class);
 

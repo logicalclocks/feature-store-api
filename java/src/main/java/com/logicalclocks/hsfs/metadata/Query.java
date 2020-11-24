@@ -44,16 +44,21 @@ public class Query {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private FeatureGroupBase leftFeatureGroup;
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Feature> leftFeatures;
-  @Getter @Setter
+  @Getter
+  @Setter
   private String leftFeatureGroupStartTime;
-  @Getter @Setter
+  @Getter
+  @Setter
   private String leftFeatureGroupEndTime;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private List<Join> joins = new ArrayList<>();
 
   private QueryConstructorApi queryConstructorApi;
@@ -136,7 +141,7 @@ public class Query {
    * Reads changes that occurred between specified points in time.
    *
    * @param wallclockStartTime start date.
-   * @param wallclockEndTime end date.
+   * @param wallclockEndTime   end date.
    * @return Query
    * @throws FeatureStoreException
    * @throws IOException
@@ -155,7 +160,7 @@ public class Query {
     return read(online, null);
   }
 
-  public Dataset<Row> read(boolean online, Map<String,String> readOptions) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
 
     if (online) {
@@ -210,7 +215,7 @@ public class Query {
   }
 
   private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> hudiFeatureGroups,
-                                         Map<String, String> readOptions)  {
+                                         Map<String, String> readOptions) {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiFeatureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
