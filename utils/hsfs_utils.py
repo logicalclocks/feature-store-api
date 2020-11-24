@@ -21,18 +21,32 @@ def get_feature_store_handle(feature_store: str = "") -> hsfs.feature_store:
     return connection.get_feature_store(feature_store)
 
 
-def create_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
-    feature_store = job_conf.pop("feature_store")
-    fs = get_feature_store_handle(feature_store)
-
+def get_fg_spark_df(job_conf: Dict[Any, Any]) -> Any:
     data_path = job_conf.pop("data_path")
     data_format = job_conf.pop("data_format")
     data_options = job_conf.pop("data_options")
 
-    df = spark.read.format(data_format).options(data_options).load(data_path)
+    return spark.read.format(data_format).options(data_options).load(data_path)
+
+
+def create_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    df = get_fg_spark_df(job_conf)
 
     fg = fs.create_feature_group(**job_conf)
     fg.save(df)
+
+
+def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    df = get_fg_spark_df(job_conf)
+    fg = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
+
+    fg.insert(df)
 
 
 def create_td(job_conf: Dict[Any, Any]) -> None:
@@ -79,6 +93,8 @@ if __name__ == "__main__":
 
     if args.op == "create_fg":
         create_fg(spark, job_conf)
+    elif args.op == "insert_fg":
+        insert_fg(spark, job_conf)
     elif args.op == "create_td":
         create_td(job_conf)
     elif args.op == "compute_stats":
