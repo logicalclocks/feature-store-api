@@ -12,7 +12,7 @@ import scala.Enumeration;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DataValidationResult {
+public class ExpectationResult {
 
   @Getter @Setter
   private Status status;
@@ -24,7 +24,7 @@ public class DataValidationResult {
   private Expectation expectation;
 
   public enum Status {
-    NONE("Empty",0),
+    NONE("None",0),
     SUCCESS("Success",1),
     WARNING("Warning",2),
     FAILURE("Failure",3);

@@ -18,7 +18,7 @@ public class FeatureGroupValidations {
   @Getter @Setter
   private String validationTime;
   @Getter @Setter
-  private List<DataValidationResult> validations;
+  private List<ExpectationResult> validations;
 
   @Override
   public String toString() {

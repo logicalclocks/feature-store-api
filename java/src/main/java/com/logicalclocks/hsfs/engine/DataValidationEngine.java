@@ -22,8 +22,8 @@ import com.amazon.deequ.constraints.ConstraintResult;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.metadata.DataValidationResult;
 import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationResult;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
 import com.logicalclocks.hsfs.metadata.Rule;
@@ -89,7 +89,7 @@ public class DataValidationEngine implements DataValidationIntf {
     Map<Check, CheckResult> deequResults = DeequEngine.runVerificationDeequ(data,
         JavaConverters.asScalaIteratorConverter(constraintGroups.iterator()).asScala().toSeq());
 
-    List<DataValidationResult> dataValidationResults = new ArrayList<>();
+    List<ExpectationResult> expectationResults = new ArrayList<>();
 
     for (Check check : deequResults.keySet()) {
       List<ConstraintResult> constraintResultsList =
@@ -103,15 +103,16 @@ public class DataValidationEngine implements DataValidationIntf {
             .filter(x -> x.getRule().getName() == ruleName && x.getFeature().equals(constraintInfo[2]))
             .findFirst().get();
 
-        dataValidationResults.add(DataValidationResult.builder()
-            .status(DataValidationResult.Status.fromDeequStatus(constraintResult.status()))
+        expectationResults.add(ExpectationResult.builder()
+            .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status()))
             .expectation(expectation)
             .message(!constraintResult.message().isEmpty() ?  constraintResult.message().get() : "Success")
             .value(String.valueOf(constraintResult.metric().get().value().get()))
             .build());
       }
     }
-    return FeatureGroupValidation.builder().validationTime(validationTime).validations(dataValidationResults).build();
+    return FeatureGroupValidation.builder().validationTime(validationTime).results(expectationResults)
+        .status(getValidationResultStatus(expectationResults)).build();
   }
 
   public FeatureGroupValidation sendResults(FeatureGroup featureGroup, FeatureGroupValidation results)
@@ -127,6 +128,45 @@ public class DataValidationEngine implements DataValidationIntf {
   public FeatureGroupValidation getValidation(FeatureGroup featureGroup, String validationTime)
       throws FeatureStoreException, IOException {
     return featureGroupValidationsApi.get(featureGroup, validationTime);
+  }
+
+  private ExpectationResult.Status getValidationResultStatus(final List<ExpectationResult> results) {
+    int success = 0;
+    int warning = 0;
+    int error = 0;
+    Rule.ConstraintGroupLevel level = Rule.ConstraintGroupLevel.Warning;
+    for (ExpectationResult result : results) {
+      if (result.getExpectation().getLevel().equals(Rule.ConstraintGroupLevel.Error)) {
+        level = Rule.ConstraintGroupLevel.Error;
+      }
+      switch (result.getStatus()) {
+        case SUCCESS:
+          success++;
+          break;
+        case WARNING:
+          warning++;
+          break;
+        case FAILURE:
+          error++;
+          break;
+        default:
+      }
+    }
+    if (success != 0 && warning == 0 && error == 0) {
+      return ExpectationResult.Status.SUCCESS;
+    }
+    if (level.equals(Rule.ConstraintGroupLevel.Warning)) {
+      if (warning > 0 && error == 0) {
+        return ExpectationResult.Status.WARNING;
+      }
+      if (warning >= 0 && error > 0) {
+        return ExpectationResult.Status.FAILURE;
+      }
+    }
+    if (level.equals(Rule.ConstraintGroupLevel.Error)) {
+      return ExpectationResult.Status.FAILURE;
+    }
+    return ExpectationResult.Status.NONE;
   }
 
   private Rule.Name getRuleNameFromDeequ(String deequName) {

@@ -65,7 +65,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter @Setter
   @JsonProperty("validationEnabled")
-  private FeatureGroupValidationType validationType;
+  private FeatureGroupValidationType validationType = FeatureGroupValidationType.NONE;
 
   @Getter @Setter
   @JsonProperty("featHistEnabled")
@@ -392,12 +392,13 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
     // Fetch all rules
-    FeatureGroupValidation featureGroupValidation = dataValidationEngine.runVerification(data, getExpectations());
-    if (featureGroupValidation.getStatus().getSeverity() >= validationType.getSeverity()) {
+    FeatureGroupValidation
+        featureGroupValidation = dataValidationEngine.runVerification(data, getExpectations());
+    if (validationType.getSeverity() >= featureGroupValidation.getStatus().getSeverity()) {
       return dataValidationEngine.sendResults(this, featureGroupValidation);
     } else {
       throw new FeatureStoreException(
-        "Failed feature group validation. Checks: " + featureGroupValidation.getValidations());
+        "Failed feature group validation. Checks: " + featureGroupValidation.getResults());
     }
   }
 
@@ -431,7 +432,8 @@ public class FeatureGroup extends FeatureGroupBase {
     return dataValidationEngine.getValidations(this);
   }
 
-  public FeatureGroupValidation getValidation(String validationTime) throws FeatureStoreException, IOException {
+  public FeatureGroupValidation getValidation(String validationTime)
+      throws FeatureStoreException, IOException {
     return dataValidationEngine.getValidation(this, validationTime);
   }
 

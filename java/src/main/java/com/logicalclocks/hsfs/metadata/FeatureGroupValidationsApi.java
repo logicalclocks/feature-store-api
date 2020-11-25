@@ -1,7 +1,6 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -78,7 +77,8 @@ public class FeatureGroupValidationsApi {
   }
 
 
-  public FeatureGroupValidation put(FeatureGroup featureGroup, FeatureGroupValidation featureGroupValidation)
+  public FeatureGroupValidation put(FeatureGroup featureGroup,
+      FeatureGroupValidation featureGroupValidation)
       throws FeatureStoreException, IOException {
     return put(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
       featureGroup.getId(), featureGroupValidation);
@@ -99,7 +99,7 @@ public class FeatureGroupValidationsApi {
         .expand();
 
     FeatureGroupValidations validations =
-        FeatureGroupValidations.builder().validations(featureGroupValidation.getValidations())
+        FeatureGroupValidations.builder().validations(featureGroupValidation.getResults())
         .validationTime(featureGroupValidation.getValidationTime()).build();
     String results = hopsworksClient.getObjectMapper().writeValueAsString(validations);
     HttpPut putRequest = new HttpPut(uri);
@@ -112,23 +112,4 @@ public class FeatureGroupValidationsApi {
     return hopsworksClient.handleRequest(putRequest, FeatureGroupValidation.class);
   }
 
-  public String put2(FeatureGroup featureGroup, FeatureGroupValidation featureGroupValidation)
-      throws FeatureStoreException, IOException {
-    return put2(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), featureGroupValidation);
-  }
-
-  private String put2(Integer projectId, Integer featurestoreId, Integer entityId,
-      FeatureGroupValidation featureGroupValidation)
-      throws FeatureStoreException, IOException {
-
-    HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + RESULTS_PATH;
-
-    FeatureGroupValidations validations =
-        FeatureGroupValidations.builder().validations(featureGroupValidation.getValidations())
-        .validationTime(featureGroupValidation.getValidationTime()).build();
-    return hopsworksClient.getObjectMapper().configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
-        .writeValueAsString(validations);
-  }
 }

@@ -24,11 +24,11 @@ public class FeatureGroupValidation extends RestDto<FeatureGroupValidation> {
   @Getter @Setter
   private Long commitTime;
   @Getter @Setter
-  private List<DataValidationResult> validations;
+  private List<ExpectationResult> results;
   @Getter @Setter
   private String validationPath;
   @Getter @Setter
-  private DataValidationResult.Status status;
+  private ExpectationResult.Status status;
 
   public String getCommitTimeAsDateTimeFormat() {
     Instant instant = Instant.ofEpochSecond(commitTime);
@@ -39,9 +39,9 @@ public class FeatureGroupValidation extends RestDto<FeatureGroupValidation> {
 
   @Override
   public String toString() {
-    return "DataValidationResults{"
+    return "FeatureGroupValidation{"
       + "validationTime=" + validationTime
-      + ", results='" + validations + '\''
+      + ", results='" + results + '\''
       + ", path='" + validationPath + '\''
       + ", status='" + status + '\''
       + '}';
