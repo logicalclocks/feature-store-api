@@ -1,9 +1,6 @@
 # GPU support
 Hopsworks can harness the power of GPUs to speed up machine learning processes. You can take advantage of this feature in Hopsworks.ai by adding GPU equipped workers to your cluster. This can be done in two way: creating a cluster with GPU equipped workers or adding GPU equipped workers to an existing cluster.
 
-!!! warning
-    This feature is not supported yet in Azure but will be added shortly.
-
 ## Creating a cluster with GPU equipped workers
 When selecting the [workers' instance type](aws/cluster_creation.md#step-2-setting-the-general-information) during the cluster creation, you can select an instance type equipped with GPUs. The cluster will then be created and Hopsworks will automatically detect the GPU resource.
 
