@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.ActionType;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
+import lombok.SneakyThrows;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
@@ -35,6 +36,9 @@ import org.apache.hadoop.fs.FileSystem;
 import scala.collection.Seq;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,6 +77,8 @@ public class HudiEngine {
 
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL =  "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
+
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -190,12 +196,12 @@ public class HudiEngine {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
     if (startTimestamp != null) {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(startTimestamp));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToCommitFormat(startTimestamp));
     } else {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(0L));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToCommitFormat(0L));
     }
 
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToCommitFormat(endTimestamp));
+    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToCommitFormat(endTimestamp));
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
@@ -203,5 +209,11 @@ public class HudiEngine {
       hudiArgs.putAll(readOptions);
     }
     return hudiArgs;
+  }
+
+  @SneakyThrows
+  public String timeStampToCommitFormat(Long commitedOnTimeStamp) {
+    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
+    return dateFormat.format(commitedOnDate);
   }
 }

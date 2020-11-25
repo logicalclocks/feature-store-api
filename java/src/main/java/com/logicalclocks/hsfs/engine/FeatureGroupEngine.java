@@ -41,6 +41,7 @@ public class FeatureGroupEngine {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private HudiEngine hudiEngine = new HudiEngine();
+  private DeltaEngine deltaEngine = new DeltaEngine();
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -187,7 +188,9 @@ public class FeatureGroupEngine {
     Map<String, Map<String,String>> commitDetails = new HashMap<String, Map<String,String>>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
       commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
-            put("committedOn", utils.timeStampToCommitFormat(featureGroupCommit.getCommitID()));
+            put("committedOn", featureGroup.getTimeTravelFormat() == TimeTravelFormat.DELTA
+                ? deltaEngine.timeStampToCommitFormat(featureGroupCommit.getCommitID())
+                : hudiEngine.timeStampToCommitFormat(featureGroupCommit.getCommitID()));
             put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
             put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
             put("rowsDeleted", featureGroupCommit.getRowsDeleted().toString());

@@ -26,6 +26,7 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import io.delta.tables.DeltaMergeBuilder;
 import io.delta.tables.DeltaTable;
 
+import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -36,12 +37,16 @@ import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DeltaEngine {
 
   private static final String DELTA_SPARK_FORMAT = "delta";
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+
   private static final Logger LOGGER = LoggerFactory.getLogger(DeltaEngine.class);
 
   private Utils utils = new Utils();
@@ -118,18 +123,16 @@ public class DeltaEngine {
 
   public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
                                      Long timestampAsOf, Map<String, String> userReadOptions) {
-
     Map<String, String> readOptions = new HashMap<>();
     readOptions.put("timestampAsOf", new Timestamp(timestampAsOf).toString());
     if (userReadOptions != null) {
       readOptions.putAll(userReadOptions);
     }
     sparkSession.read()
-        .format("delta")
+        .format(DELTA_SPARK_FORMAT)
         .options(readOptions)
         .load(featureGroup.getLocation())
         .createOrReplaceTempView(alias);
-
   }
 
   public FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, FeatureGroup featureGroup) {
@@ -152,5 +155,11 @@ public class DeltaEngine {
     }
 
     return fgCommitMetadata;
+  }
+
+  @SneakyThrows
+  public String timeStampToCommitFormat(Long commitedOnTimeStamp) {
+    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
+    return dateFormat.format(commitedOnDate);
   }
 }

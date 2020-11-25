@@ -165,7 +165,7 @@ public class Query {
       return SparkEngine.getInstance().jdbc(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
     } else {
       registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-      registerTimeTravelFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+      registerTimeTravelFeatureGroups(fsQuery.getTimeTravelFeatureGroups(), readOptions);
 
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
@@ -209,9 +209,9 @@ public class Query {
     }
   }
 
-  private void registerTimeTravelFeatureGroups(List<TimeTravelFeatureGroupAlias> hudiFeatureGroups,
+  private void registerTimeTravelFeatureGroups(List<TimeTravelFeatureGroupAlias> timeTravelFeatureGroups,
                                                Map<String, String> readOptions) throws FeatureStoreException {
-    for (TimeTravelFeatureGroupAlias timeTravelFeatureGroupAlias : hudiFeatureGroups) {
+    for (TimeTravelFeatureGroupAlias timeTravelFeatureGroupAlias : timeTravelFeatureGroups) {
       String alias = timeTravelFeatureGroupAlias.getAlias();
       FeatureGroup featureGroup = timeTravelFeatureGroupAlias.getFeatureGroup();
 
