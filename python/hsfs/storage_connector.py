@@ -46,7 +46,7 @@ class StorageConnector:
         database_endpoint=None,
         database_name=None,
         database_port=None,
-        database_username=None,
+        database_user_name=None,
         database_password=None,
         session_token=None,
         iam_role=None,
@@ -69,7 +69,7 @@ class StorageConnector:
         self._database_endpoint = database_endpoint
         self._database_name = database_name
         self._database_port = database_port
-        self._database_username = database_username
+        self._database_user_name = database_user_name
         self._database_password = database_password
         self._session_token = session_token
         self._iam_role = iam_role
@@ -138,9 +138,9 @@ class StorageConnector:
         return self._database_port
 
     @property
-    def database_username(self):
+    def database_user_name(self):
         """Database username for redshift cluster."""
-        return self._database_username
+        return self._database_user_name
 
     @property
     def database_password(self):
