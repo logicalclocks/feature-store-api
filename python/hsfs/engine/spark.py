@@ -184,7 +184,13 @@ class Engine:
             )
 
     def _save_offline_dataframe(
-        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
+        self,
+        table_name,
+        feature_group,
+        dataframe,
+        save_mode,
+        operation,
+        write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -239,8 +245,10 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf, relevant_columns, correlations, histograms
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf, relevant_columns, correlations, histograms
+            )
         )
 
     def write_options(self, data_format, provided_options):
@@ -346,6 +354,11 @@ class Engine:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.server-side-encryption-key",
                 storage_connector.server_encryption_key,
+            )
+        if storage_connector.session_token:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.session.token",
+                storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1)
 

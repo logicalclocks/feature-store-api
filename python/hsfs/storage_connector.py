@@ -21,9 +21,11 @@ class StorageConnector:
     HOPSFS = "HOPSFS"
     S3 = "S3"
     JDBC = "JDBC"
+    REDSHIFT = "REDSHIFT"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
+    REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
 
     def __init__(
         self,
@@ -40,6 +42,13 @@ class StorageConnector:
         server_encryption_algorithm=None,
         server_encryption_key=None,
         bucket=None,
+        cluster_identifier=None,
+        database_endpoint=None,
+        database_name=None,
+        database_port=None,
+        database_username=None,
+        database_password=None,
+        session_token=None,
         connection_string=None,
         arguments=None,
     ):
@@ -55,6 +64,13 @@ class StorageConnector:
         self._server_encryption_algorithm = server_encryption_algorithm
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
+        self._cluster_identifier = cluster_identifier
+        self._database_endpoint = database_endpoint
+        self._database_name = database_name
+        self._database_port = database_port
+        self._database_username = database_username
+        self._database_password = database_password
+        self._session_token = session_token
         self._connection_string = connection_string
         self._arguments = arguments
 
@@ -98,6 +114,41 @@ class StorageConnector:
     def server_encryption_key(self):
         """Encryption key if server-side S3 bucket encryption is enabled."""
         return self._server_encryption_key
+
+    @property
+    def cluster_identifier(self):
+        """Cluster identifier for redshift cluster."""
+        return self._cluster_identifier
+
+    @property
+    def database_endpoint(self):
+        """Database endpoint for redshift cluster."""
+        return self._database_endpointb
+
+    @property
+    def database_name(self):
+        """Database name for redshift cluster."""
+        return self._database_name
+
+    @property
+    def database_port(self):
+        """Database port for redshift cluster."""
+        return self._database_port
+
+    @property
+    def database_username(self):
+        """Database username for redshift cluster."""
+        return self._database_username
+
+    @property
+    def database_password(self):
+        """Database password for redshift cluster."""
+        return self._database_password
+
+    @property
+    def session_token(self):
+        """Session token for redshift cluster."""
+        return self._session_token
 
     @property
     def connection_string(self):
