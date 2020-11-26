@@ -357,6 +357,10 @@ class Engine:
             )
         if storage_connector.session_token:
             self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.aws.credentials.provider",
+                "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
+            )
+            self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
