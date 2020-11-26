@@ -49,6 +49,7 @@ class StorageConnector:
         database_username=None,
         database_password=None,
         session_token=None,
+        iam_role=None,
         connection_string=None,
         arguments=None,
     ):
@@ -71,6 +72,7 @@ class StorageConnector:
         self._database_username = database_username
         self._database_password = database_password
         self._session_token = session_token
+        self._iam_role = iam_role
         self._connection_string = connection_string
         self._arguments = arguments
 
@@ -149,6 +151,11 @@ class StorageConnector:
     def session_token(self):
         """Session token."""
         return self._session_token
+
+    @property
+    def iam_role(self):
+        """IAM role."""
+        return self._iam_role
 
     @property
     def connection_string(self):
