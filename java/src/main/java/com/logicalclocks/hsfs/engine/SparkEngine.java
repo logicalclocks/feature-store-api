@@ -26,8 +26,8 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
-import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
@@ -112,9 +112,16 @@ public class SparkEngine {
   }
 
   private void configureS3Connector(StorageConnector storageConnector) {
-    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
-      sparkSession.conf().set("fs.s3a.access.key", storageConnector.getAccessKey());
-      sparkSession.conf().set("fs.s3a.secret.key", storageConnector.getSecretKey());
+    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())
+        && Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+      sparkSession.conf().set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
+      sparkSession.conf().set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+      sparkSession.conf().set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
+      sparkSession.conf().set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
+      sparkSession.conf().set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
+      sparkSession.conf().set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
       sparkSession.conf().set(

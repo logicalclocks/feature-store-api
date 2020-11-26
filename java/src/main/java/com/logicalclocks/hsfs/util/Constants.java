@@ -39,4 +39,11 @@ public class Constants {
 
   public static final String S3_SCHEME = "s3://";
   public static final String S3_SPARK_SCHEME = "s3a://";
+
+  public static final String S3_ACCESS_KEY_ENV = "fs.s3a.access.key";
+  public static final String S3_SECRET_KEY_ENV = "fs.s3a.secret.key";
+  public static final String S3_SESSION_KEY_ENV = "fs.s3a.session.token";
+  public static final String S3_CREDENTIAL_PROVIDER_ENV = "fs.s3a.aws.credentials.provider";
+  public static final String S3_TEMPORARY_CREDENTIAL_PROVIDER =
+      "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
 }

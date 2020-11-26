@@ -47,7 +47,7 @@ public class StorageConnector {
   @Getter
   @Setter
   private String secretKey;
-
+  
   @Getter
   @Setter
   private String serverEncryptionAlgorithm;
@@ -60,8 +60,28 @@ public class StorageConnector {
   @Setter
   private String bucket;
 
-  @Getter
-  @Setter
+  @Getter @Setter
+  private String clusterIdentifier;
+
+  @Getter @Setter
+  private String databaseEndpoint;
+
+  @Getter @Setter
+  private String databaseName;
+
+  @Getter @Setter
+  private Integer databasePort;
+
+  @Getter @Setter
+  private String databaseUserName;
+
+  @Getter @Setter
+  private String databasePassword;
+
+  @Getter @Setter
+  private String sessionToken;
+
+  @Getter @Setter
   private String connectionString;
 
   @Getter
