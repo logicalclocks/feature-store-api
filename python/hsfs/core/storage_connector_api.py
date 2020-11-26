@@ -41,7 +41,7 @@ class StorageConnectorApi:
             self._feature_store_id,
             "storageconnectors",
             connector_type,
-            "/by-name/",
+            "by-name",
             name,
         ]
         query_params = {"assumeRole": True}

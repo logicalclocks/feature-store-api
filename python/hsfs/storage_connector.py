@@ -97,12 +97,12 @@ class StorageConnector:
 
     @property
     def access_key(self):
-        """Access key for S3 buckets."""
+        """Access key."""
         return self._access_key
 
     @property
     def secret_key(self):
-        """Secret key for S3 buckets."""
+        """Secret key."""
         return self._secret_key
 
     @property
@@ -147,7 +147,7 @@ class StorageConnector:
 
     @property
     def session_token(self):
-        """Session token for redshift cluster."""
+        """Session token."""
         return self._session_token
 
     @property
