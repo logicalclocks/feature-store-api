@@ -64,6 +64,9 @@ public class StorageConnector {
   private String clusterIdentifier;
 
   @Getter @Setter
+  private String databaseDriver;
+
+  @Getter @Setter
   private String databaseEndpoint;
 
   @Getter @Setter
@@ -71,6 +74,9 @@ public class StorageConnector {
 
   @Getter @Setter
   private Integer databasePort;
+
+  @Getter @Setter
+  private String tableName;
 
   @Getter @Setter
   private String databaseUserName;

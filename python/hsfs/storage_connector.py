@@ -43,9 +43,11 @@ class StorageConnector:
         server_encryption_key=None,
         bucket=None,
         cluster_identifier=None,
+        database_driver=None,
         database_endpoint=None,
         database_name=None,
         database_port=None,
+        table_name=None,
         database_user_name=None,
         database_password=None,
         session_token=None,
@@ -66,9 +68,11 @@ class StorageConnector:
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
         self._cluster_identifier = cluster_identifier
+        self._database_driver = database_driver
         self._database_endpoint = database_endpoint
         self._database_name = database_name
         self._database_port = database_port
+        self._table_name = table_name
         self._database_user_name = database_user_name
         self._database_password = database_password
         self._session_token = session_token
@@ -123,9 +127,14 @@ class StorageConnector:
         return self._cluster_identifier
 
     @property
+    def database_driver(self):
+        """Database endpoint for redshift cluster."""
+        return self._database_driver
+
+    @property
     def database_endpoint(self):
         """Database endpoint for redshift cluster."""
-        return self._database_endpointb
+        return self._database_endpoint
 
     @property
     def database_name(self):
@@ -136,6 +145,11 @@ class StorageConnector:
     def database_port(self):
         """Database port for redshift cluster."""
         return self._database_port
+
+    @property
+    def table_name(self):
+        """Table name for redshift cluster."""
+        return self._table_name
 
     @property
     def database_user_name(self):
