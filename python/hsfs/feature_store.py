@@ -117,13 +117,13 @@ class FeatureStore:
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
-        Getting a on-demand feature group from the Feature Store means getting its 
-        metadata handle so you can subsequently read the data into a Spark or 
+        Getting a on-demand feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
         Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
         # Arguments
             name: Name of the on-demand feature group to get.
-            version: Version of the on-demand feature group to retrieve, 
+            version: Version of the on-demand feature group to retrieve,
                 defaults to `None` and will return the `version=1`.
 
         # Returns
@@ -304,9 +304,9 @@ class FeatureStore:
         # Arguments
             name: Name of the on-demand feature group to create.
             query: A string containing a SQL query valid for the target data source.
-                the query will be used to pull data from the data sources when the 
+                the query will be used to pull data from the data sources when the
                 feature group is used.
-            storage_connector: the storage connector to use to establish connectivity 
+            storage_connector: the storage connector to use to establish connectivity
                 with the data source.
             version: Version of the on-demand feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
@@ -418,3 +418,53 @@ class FeatureStore:
             statistics_config=statistics_config,
             label=label,
         )
+
+    @property
+    def id(self):
+        """Id of the feature store."""
+        return self._id
+
+    @property
+    def name(self):
+        """Name of the feature store."""
+        return self._name
+
+    @property
+    def project_name(self):
+        """Name of the project in which the feature store is located."""
+        return self._project_name
+
+    @property
+    def project_id(self):
+        """Id of the project in which the feature store is located."""
+        return self._project_id
+
+    @property
+    def description(self):
+        """Description of the feature store."""
+        return self._description
+
+    @property
+    def online_featurestore_name(self):
+        """Name of the online feature store database."""
+        return self._online_feature_store_name
+
+    @property
+    def mysql_server_endpoint(self):
+        """MySQL server endpoint for the online feature store."""
+        return self._mysql_server_endpoint
+
+    @property
+    def online_enabled(self):
+        """Indicator whether online feature store is enabled."""
+        return self._online_enabled
+
+    @property
+    def hive_endpoint(self):
+        """Hive endpoint for the offline feature store."""
+        return self._hive_endpoint
+
+    @property
+    def offline_featurestore_name(self):
+        """Name of the offline feature store database."""
+        return self._offline_feature_store_name
