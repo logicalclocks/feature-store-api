@@ -32,11 +32,11 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
     ```python hl_lines="6"
         import hsfs
         conn = hsfs.connection(
-            'my_instance',                      # DNS of your Feature Store instance
-            443,                                # Port to reach your Hopsworks instance, defaults to 443
-            'my_project',                       # Name of your Hopsworks Feature Store project
-            api_key_file='featurestore.key',    # The file containing the API key generated above
-            hostname_verification=True)         # Disable for self-signed certificates
+            host='my_instance',                 # DNS of your Feature Store instance
+            port=443,                           # Port to reach your Hopsworks instance, defaults to 443
+            project='my_project',               # Name of your Hopsworks Feature Store project
+            api_key_value='apikey',             # The API key to authenticate with Hopsworks
+            hostname_verification=True          # Disable for self-signed certificates
         )
         fs = conn.get_feature_store()           # Get the project's default feature store
     ```

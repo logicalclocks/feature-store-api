@@ -31,12 +31,17 @@ Add the following configuration to the Spark application:
 spark.hadoop.fs.hopsfs.impl                         io.hops.hopsfs.client.HopsFileSystem
 spark.hadoop.hops.ipc.server.ssl.enabled            true
 spark.hadoop.hops.ssl.hostname.verifier             ALLOW_ALL
-spark.hadoop.hops.rpc.socket.factory.class.default  io.hop.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+spark.hadoop.hops.rpc.socket.factory.class.default  io.hop.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"
 spark.hadoop.client.rpc.ssl.enabled.protocol        TLSv1.2
 spark.hadoop.hops.ssl.keystores.passwd.name         material_passwd
 spark.hadoop.hops.ssl.keystore.name                 keyStore.jks
 spark.hadoop.hops.ssl.truststore.name               trustStore.jks
+
+spark.sql.hive.metastore.jars                       [Path to the Hopsworks Hive Jars]
+spark.hadoop.hive.metastore.uris                    thrift://[metastore_ip]:[metastore_port]
 ```
+
+`spark.sql.hive.metastore.jars` should point to the path with the Hive Jars which can be found in the *clients.tar.gz*.
 
 ## PySpark
 
@@ -76,16 +81,16 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 
 ## Connecting to the Feature Store
 
-You are now ready to connect to the Hopsworks Feature Store from SageMaker:
+You are now ready to connect to the Hopsworks Feature Store from Spark:
 
 ```python
 import hsfs
 conn = hsfs.connection(
-    'my_instance',                      # DNS of your Feature Store instance
-    443,                                # Port to reach your Hopsworks instance, defaults to 443
-    'my_project',                       # Name of your Hopsworks Feature Store project
-    api_key_file='featurestore.key',    # The file containing the API key generated above
-    hostname_verification=True)         # Disable for self-signed certificates
+    host='my_instance',                 # DNS of your Feature Store instance
+    port=443,                           # Port to reach your Hopsworks instance, defaults to 443
+    project='my_project',               # Name of your Hopsworks Feature Store project
+    api_key_value='api_key',            # The API key to authenticate with the feature store 
+    hostname_verification=True          # Disable for self-signed certificates
 )
 fs = conn.get_feature_store()           # Get the project's default feature store
 ```
