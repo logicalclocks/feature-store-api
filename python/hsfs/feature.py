@@ -37,7 +37,7 @@ class Feature:
         partition=None,
         online_type=None,
         default_value=None,
-        feature_group_name=None,
+        feature_group_id=None,
         feature_group=None,
     ):
         self._name = name
@@ -48,9 +48,9 @@ class Feature:
         self._online_type = online_type
         self._default_value = default_value
         if feature_group is not None:
-            self._feature_group_name = feature_group.name
+            self._feature_group_id = feature_group.id
         else:
-            self._feature_group_name = feature_group_name
+            self._feature_group_id = feature_group_id
 
     def to_dict(self):
         return {
@@ -61,7 +61,7 @@ class Feature:
             "primary": self._primary,
             "onlineType": self._online_type,
             "defaultValue": self._default_value,
-            "featureGroupName": self._feature_group_name,
+            "featureGroupId": self._feature_group_id,
         }
 
     def json(self):
@@ -146,4 +146,4 @@ class Feature:
         return self.json()
 
     def __repr__(self):
-        return f"Feature({self._name!r}, {self._type!r}, {self._description!r}, {self._primary}, {self._partition}, {self._online_type!r}, {self._default_value!r}, {self._feature_group_name!r})"
+        return f"Feature({self._name!r}, {self._type!r}, {self._description!r}, {self._primary}, {self._partition}, {self._online_type!r}, {self._default_value!r}, {self._feature_group_id!r})"

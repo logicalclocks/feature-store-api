@@ -70,13 +70,7 @@ class Filter:
         return self
 
     def __repr__(self):
-        return "Filter({}, {}, {}, {}, {})".format(
-            self._feature,
-            self._condition,
-            self._value,
-            self._right_filter.__repr__() if self._right_filter is not None else None,
-            self._logic,
-        )
+        return f"Filter({self._feature!r}, {self._condition!r}, {self._value!r}, {self._right_filter!r}, {self._logic!r})"
 
     def __str__(self):
-        return self.to_dict()
+        return self.json()
