@@ -45,6 +45,10 @@ def parse_features(feature_names):
         return []
 
 
+def feature_group_name(feature_group):
+    return feature_group.name + "_" + str(feature_group.version)
+
+
 def get_cert_pw():
     """
     Get keystore password from local container

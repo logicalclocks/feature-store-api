@@ -19,12 +19,18 @@ import pandas as pd
 from pyhive import hive
 from sqlalchemy import create_engine
 
+from hsfs import feature
+from hsfs.core import feature_group_api, dataset_api, job_api
+
 
 class Engine:
     def __init__(self, host, cert_folder, project, cert_key):
         self._host = host
         self._cert_folder = os.path.join(cert_folder, host, project)
         self._cert_key = cert_key
+
+        self._dataset_api = dataset_api.DatasetApi()
+        self._job_api = job_api.JobApi() 
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
@@ -49,24 +55,50 @@ class Engine:
     def register_temporary_table(self, query, storage_connector, alias):
         raise NotImplementedError
 
+    def profile_df(self, dataframe, relevant_columns, correlations, histograms):
+        raise NotImplementedError
+
+    def set_job_group(self, group_id, description):
+        pass
+
+    def convert_to_default_dataframe(self, dataframe):
+        if isinstance(dataframe, pd.DataFrame):
+            return dataframe
+
+        raise TypeError(
+            "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
+            + "The provided dataframe has type: {}".format(type(dataframe))
+        )
+
+    def parse_schema_feature_group(self, dataframe):
+        return [
+            feature.Feature(feat_name, feat_type)
+            for feat_name, feat_type in dataframe.dtypes.items()
+        ]
+
     def save_dataframe(
         self,
         table_name,
         feature_group,
         dataframe,
         save_mode,
+        operation,
         online_enabled,
         storage,
         offline_write_options,
         online_write_options,
     ):
-        raise NotImplementedError
+        # Setup job for ingestion
+        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
+        ingestion_job = fg_api.ingestion(feature_group)
 
-    def profile_df(self, dataframe, relevant_columns, correlations, histograms):
-        raise NotImplementedError
+        # Upload dataframe into Hopsworks
+        self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-    def set_job_group(self, group_id, description):
-        pass
+        # Configure ingestion job
+        
+
+    def _create_ingestion_job(self, feature)
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(
