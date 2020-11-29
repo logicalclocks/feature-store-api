@@ -16,6 +16,8 @@
 
 
 import os
+import importlib.util
+
 from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
@@ -36,10 +38,10 @@ class Connection:
     store but also any feature store which has been shared with the project you connect
     to.
 
-    This class provides convenience classmethods accesible from the `hsfs`-module:
+    This class provides convenience classmethods accessible from the `hsfs`-module:
 
     !!! example "Connection factory"
-        For convenience, `hsfs` provides a factory method, accesible from the top level
+        For convenience, `hsfs` provides a factory method, accessible from the top level
         module, so you don't have to import the `Connection` class manually:
 
         ```python
@@ -89,7 +91,7 @@ class Connection:
         trust_store_path: Path on the file system containing the Hopsworks certificates,
             defaults to `None`.
         cert_folder: The directory to store retrieved HopsFS certificates, defaults to
-            `"hops"`.
+            `"hops"`. Only required when running without a Spark environment.
         api_key_file: Path to a file containing the API Key, if provided,
             `secrets_store` will be ignored, defaults to `None`.
         api_key_value: API Key as string, if provided, `secrets_store` will be ignored`,
@@ -167,8 +169,8 @@ class Connection:
         self._connected = True
         try:
             if client.base.Client.REST_ENDPOINT not in os.environ:
-                if os.path.exists("/dbfs/"):
-                    # databricks
+                if importlib.util.find_spec("pyspark"):
+                    # databricks, emr, external spark clusters 
                     client.init(
                         "external",
                         self._host,
@@ -177,13 +179,11 @@ class Connection:
                         self._region_name,
                         self._secrets_store,
                         self._hostname_verification,
-                        os.path.join("/dbfs", self._trust_store_path)
+                        self._trust_store_path
                         if self._trust_store_path is not None
                         else None,
-                        os.path.join("/dbfs", self._cert_folder),
-                        os.path.join("/dbfs", self._api_key_file)
-                        if self._api_key_file is not None
-                        else None,
+                        None,
+                        self._api_key_file,
                         self._api_key_value,
                     )
                     engine.init("spark")
