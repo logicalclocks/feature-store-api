@@ -179,7 +179,7 @@ class Connection:
                         self._region_name,
                         self._secrets_store,
                         self._hostname_verification,
-                        self._trust_store_path
+                        self._trust_store_path,
                         None,
                         self._api_key_file,
                         self._api_key_value,
