@@ -17,7 +17,6 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.Project;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -156,11 +155,5 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
       // Internal exception, try one more time
       return httpClient.execute(httpHost, request, authHandler);
     }
-  }
-
-  @Override
-  public String downloadCredentials(Project project, String certPath) {
-    // In Hopsworks internal client credentials are already setup.
-    return null;
   }
 }
