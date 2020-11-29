@@ -170,7 +170,7 @@ class Connection:
         try:
             if client.base.Client.REST_ENDPOINT not in os.environ:
                 if importlib.util.find_spec("pyspark"):
-                    # databricks, emr, external spark clusters 
+                    # databricks, emr, external spark clusters
                     client.init(
                         "external",
                         self._host,

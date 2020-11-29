@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-import os
+import importlib.util
 
 import pandas as pd
 import numpy as np
@@ -45,7 +45,7 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
         self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
 
-        if not os.path.exists("/dbfs/"):
+        if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             self._setup_pydoop()
 
