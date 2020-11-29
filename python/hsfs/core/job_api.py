@@ -14,18 +14,21 @@
 #   limitations under the License.
 #
 
-import time
-
-from hsfs import client, util
+from hsfs import client
+from hsfs.core import job
 
 
 class JobApi:
-
-    # TODO(Fabio): pass spark application configuration
     def create(self, name, job_conf):
         _client = client.get_instance()
-
         path_params = ["project", _client._project_id, "jobs", name]
 
-    def _generate_job_name(self, prefix, feature_group):
-        return "_".join([prefix, util.feature_group_name(feature_group), time.time()])
+        return job.Job.from_response_json(
+            _client._send_request("PUT", path_params, data=job_conf.json())
+        )
+
+    def launch(self, name):
+        _client = client.get_instance()
+        path_params = ["project", _client._project_id, "jobs", name, "executions"]
+
+        _client._send_request("POST", path_params)

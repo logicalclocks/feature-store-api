@@ -15,12 +15,13 @@
 #
 
 import os
+import time
 import pandas as pd
 from pyhive import hive
 from sqlalchemy import create_engine
 
-from hsfs import feature
-from hsfs.core import feature_group_api, dataset_api, job_api
+from hsfs import feature, util
+from hsfs.core import feature_group_api, dataset_api, job_api, job_configuration
 
 
 class Engine:
@@ -30,7 +31,7 @@ class Engine:
         self._cert_key = cert_key
 
         self._dataset_api = dataset_api.DatasetApi()
-        self._job_api = job_api.JobApi() 
+        self._job_api = job_api.JobApi()
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
@@ -96,9 +97,18 @@ class Engine:
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
         # Configure ingestion job
-        
+        job_conf = job_configuration.JobConfiguration(
+            app_path=ingestion_job.job_path, default_args=ingestion_job.job_conf_path
+        )
 
-    def _create_ingestion_job(self, feature)
+        job = self._job_api.create(
+            self._generate_job_name("ingestion", feature_group), job_conf
+        )
+
+        self._job_api.launch(job.name)
+
+    def _generate_job_name(self, prefix, feature_group):
+        return "_".join([prefix, util.feature_group_name(feature_group), time.time()])
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

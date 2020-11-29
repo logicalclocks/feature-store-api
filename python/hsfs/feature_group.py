@@ -22,7 +22,7 @@ import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature
-from hsfs.core import query, feature_group_engine, statistics_engine, feature_group_base
+from hsfs.core import feature_group_engine, statistics_engine, feature_group_base
 from hsfs.statistics_config import StatisticsConfig
 
 

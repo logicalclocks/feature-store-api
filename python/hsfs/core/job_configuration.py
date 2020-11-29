@@ -14,6 +14,10 @@
 #   limitations under the License.
 #
 
+import json
+
+from hsfs import util
+
 
 class JobConfiguration:
 
@@ -25,7 +29,6 @@ class JobConfiguration:
         default_args,
         am_memory=1024,
         am_cores=1,
-        main_class=JobConfiguration.PYSPARK_MAIN_CLASS,
         executor_memory=2048,
         executor_cores=2,
         executor_instances=1,
@@ -37,7 +40,6 @@ class JobConfiguration:
         self._app_path = app_path
         self._am_memory = am_memory
         self._am_cores = am_cores
-        self._main_class = main_class
         self._executor_memory = executor_memory
         self._executor_cores = executor_cores
         self._executor_instances = executor_instances
@@ -45,5 +47,20 @@ class JobConfiguration:
         self._dynamic_min_executors = dynamic_max_executors
         self._dynamic_max_executors = dynamic_max_executors
 
-    def to_dict():
-        return {}
+    def to_dict(self):
+        return {
+            "defaultArgs": self._default_args,
+            "appPath": self._app_path,
+            "amMemory": self._am_memory,
+            "amCores": self._am_cores,
+            "mainClass": JobConfiguration.PYSPARK_MAIN_CLASS,
+            "spark.executor.memory": self._executor_memory,
+            "spark.executor.cores": self._executor_cores,
+            "spark.executor.instances": self._executor_instances,
+            "spark.dynamicAllocation.enabled": self._dynamic_allocation,
+            "spark.dynamicAllocation.minExecutors": self._dynamic_min_executors,
+            "spark.dynamicAllocation.maxExecutors": self._dynamic_max_executors,
+        }
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)

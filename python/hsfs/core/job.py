@@ -15,7 +15,6 @@
 #
 
 import humps
-import json
 
 
 class Job:
@@ -34,10 +33,7 @@ class Job:
         items=None,
         count=None,
     ):
-        self._id = id
         self._name = name
-        self._config = config
-        self._job_type = job_type
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -45,5 +41,5 @@ class Job:
         return cls(**json_decamelized)
 
     @property
-    def id(self):
-        return self._id
+    def name(self):
+        return self.name
