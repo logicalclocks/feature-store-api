@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -190,7 +191,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions, null);
     if (statisticsEnabled) {
       statisticsEngine.computeStatistics(this, featureData);
     }
@@ -201,21 +202,31 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
-    insert(featureData, storage, false, null, null);
+    insert(featureData, storage, false, null, null, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
     insert(featureData, null, overwrite);
   }
 
+  public void insert(Dataset<Row> featureData, Map<String, Object> writeOptions)
+      throws IOException, FeatureStoreException {
+    if (this.getTimeTravelFormat() != TimeTravelFormat.DELTA) {
+      insert(featureData, null, false, null, new HashMap<String, String>((Map) writeOptions),
+          null);
+    } else {
+      insert(featureData, null, false, null, null, writeOptions);
+    }
+  }
+
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException {
-    insert(featureData, storage, overwrite, null,  null);
+    insert(featureData, storage, overwrite, null,  null, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    insert(featureData, null, overwrite, null, writeOptions);
+    insert(featureData, null, overwrite, null, writeOptions, null);
   }
 
   /**
@@ -228,11 +239,12 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public void insert(Dataset<Row> featureData, ActionType operation)
       throws FeatureStoreException, IOException {
-    insert(featureData, null, false, operation, null);
+    insert(featureData, null, false, operation, null, null);
   }
 
+
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, ActionType operation,
-                     Map<String, String> writeOptions)
+                     Map<String, String> writeOptions, Map<String, Object> deltaCustomExpressions)
       throws FeatureStoreException, IOException {
 
     // operation is only valid for time travel enabled feature group
@@ -249,7 +261,7 @@ public class FeatureGroup extends FeatureGroupBase {
     }
 
     featureGroupEngine.saveDataframe(this, featureData, storage,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions, deltaCustomExpressions);
 
     computeStatistics();
   }

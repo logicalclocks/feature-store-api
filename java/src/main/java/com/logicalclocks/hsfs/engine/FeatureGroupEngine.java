@@ -58,7 +58,8 @@ public class FeatureGroupEngine {
    * @throws IOException
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, Map<String, String> writeOptions)
+                               List<String> partitionKeys, Map<String, String> writeOptions,
+                               Map<String, Object> deltaCustomExpressions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatures() == null) {
@@ -87,42 +88,41 @@ public class FeatureGroupEngine {
           }));
     }
 
-    if (featureGroup.getTimeTravelFormat() != TimeTravelFormat.DELTA) {
-      // Send Hopsworks the request to create a new feature group
-      FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+    // Send Hopsworks the request to create a new feature group
+    FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
-      if (featureGroup.getVersion() == null) {
-        LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-            + "`, incremented version to `" + apiFG.getVersion() + "`.");
-      }
-
-      // Update the original object - Hopsworks returns the incremented version
-      featureGroup.setId(apiFG.getId());
-      featureGroup.setVersion(apiFG.getVersion());
-      featureGroup.setLocation(apiFG.getLocation());
-      featureGroup.setId(apiFG.getId());
-      featureGroup.setCorrelations(apiFG.getCorrelations());
-      featureGroup.setHistograms(apiFG.getHistograms());
+    if (featureGroup.getVersion() == null) {
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
     }
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, null,  SaveMode.Append,
             featureGroup.getTimeTravelFormat() != TimeTravelFormat.NONE
-                    ? ActionType.BULK_INSERT : null, writeOptions);
+                    ? ActionType.BULK_INSERT : null, writeOptions, deltaCustomExpressions);
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, ActionType operation, Map<String, String> writeOptions)
+                            SaveMode saveMode, ActionType operation, Map<String, String> writeOptions,
+                            Map<String, Object> deltaCustomExpressions)
       throws IOException, FeatureStoreException {
     if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
         + "write to the offline storage.");
     } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, deltaCustomExpressions);
     } else if (storage == Storage.ONLINE) {
       saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, deltaCustomExpressions);
       saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
@@ -139,7 +139,8 @@ public class FeatureGroupEngine {
    * @param writeOptions
    */
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                    ActionType operation, Map<String, String> writeOptions)
+                                    ActionType operation, Map<String, String> writeOptions,
+                                    Map<String, Object> deltaCustomExpressions)
       throws FeatureStoreException, IOException {
 
     // TODO: decide what to do with deltas atomic overwrite for example:
@@ -161,7 +162,8 @@ public class FeatureGroupEngine {
       saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions,
+        deltaCustomExpressions);
   }
 
   private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,

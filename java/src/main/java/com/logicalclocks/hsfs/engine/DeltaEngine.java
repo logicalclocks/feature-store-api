@@ -24,6 +24,8 @@ import com.logicalclocks.hsfs.ActionType;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
 import io.delta.tables.DeltaMergeBuilder;
+import io.delta.tables.DeltaMergeMatchedActionBuilder;
+import io.delta.tables.DeltaMergeNotMatchedActionBuilder;
 import io.delta.tables.DeltaTable;
 
 import lombok.SneakyThrows;
@@ -55,7 +57,12 @@ public class DeltaEngine {
 
   public void saveDeltaLakeFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
                                         SaveMode saveMode, ActionType operation,
-                                        Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+                                        Map<String, String> writeOptions, Map<String, Object> deltaCustomExpressions)
+      throws FeatureStoreException, IOException {
+
+    if (deltaCustomExpressions == null) {
+      deltaCustomExpressions = new HashMap<>();
+    }
 
     if (operation == ActionType.BULK_INSERT) {
       dataset.write()
@@ -64,52 +71,64 @@ public class DeltaEngine {
           // write options cannot be null
           .options(writeOptions == null ? new HashMap<>() : writeOptions)
           .mode(saveMode)
-          .saveAsTable(utils.getTableName(featureGroup));
+          .save(featureGroup.getLocation());
+    } else if (operation == ActionType.INSERT) {
+      dataset.write()
+          .format(DELTA_SPARK_FORMAT)
+          // write options cannot be null
+          .options(writeOptions == null ? new HashMap<>() : writeOptions)
+          .mode(SaveMode.Append)
+          .save(featureGroup.getLocation());
+    } else if (operation == ActionType.UPSERT) {
 
-      //dataset.write().format(DELTA_SPARK_FORMAT).saveAsTable(utils.getTableName(featureGroup));
-      FeatureGroup apiFG = featureGroupApi.save(featureGroup);
-      if (featureGroup.getVersion() == null) {
-        LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-                + "`, incremented version to `" + apiFG.getVersion() + "`.");
-      }
-
-      // Update the original object - Hopsworks returns the incremented version
-      featureGroup.setId(apiFG.getId());
-      featureGroup.setVersion(apiFG.getVersion());
-      featureGroup.setLocation(apiFG.getLocation());
-      featureGroup.setId(apiFG.getId());
-      featureGroup.setCorrelations(apiFG.getCorrelations());
-      featureGroup.setHistograms(apiFG.getHistograms());
-
-    } else {
       DeltaLakeUpdate deltaLakeMetaData = new DeltaLakeUpdate();
-      String newDataAlias = utils.getFgName(featureGroup) + "_newData";
+      String newDataAlias = utils.getFgName(featureGroup) + "_update";
       deltaLakeMetaData.setExistingAlias(utils.getFgName(featureGroup));
       deltaLakeMetaData.setNewDataAlias(newDataAlias);
 
       DeltaLakeUpdate updatedDeltaLakeMetaData = featureGroupApi.constructDeltaLakeUpdate(featureGroup,
-          deltaLakeMetaData);
-      DeltaMergeBuilder deltaMergeBuilder = DeltaTable.forPath(sparkSession, featureGroup.getLocation())
-          .as(utils.getFgName(featureGroup))
-          .merge(
-              dataset.as(newDataAlias),
-              updatedDeltaLakeMetaData.getMergeCondQuery());
+            deltaLakeMetaData);
 
-      if (operation == ActionType.UPSERT) {
-        deltaMergeBuilder
-            .whenMatched()
-            .updateAll()
-            .whenNotMatched()
-            .insertAll()
-            .execute();
-      } else if (operation == ActionType.INSERT) {
-        deltaMergeBuilder
-            .execute();
+      DeltaMergeBuilder deltaMergeBuilder = DeltaTable.forPath(sparkSession, featureGroup.getLocation())
+            .as(utils.getFgName(featureGroup))
+            .merge(
+                dataset.as(newDataAlias),
+                deltaCustomExpressions.containsKey("mergeExp")
+                    ? deltaCustomExpressions.get("mergeExp").toString()
+                    : updatedDeltaLakeMetaData.getMergeCondQuery());
+
+      DeltaMergeMatchedActionBuilder deltaMergeMatchedActionBuilder;
+      if (writeOptions.containsKey("whenMatchedExp")) {
+        deltaMergeMatchedActionBuilder = deltaMergeBuilder.whenMatched(
+            deltaCustomExpressions.get("whenMatchedExp").toString());
+      } else {
+        deltaMergeMatchedActionBuilder = deltaMergeBuilder.whenMatched();
       }
 
-      // TODO (davit): decide if we want to add more types of delta updates
-      // https://docs.delta.io/latest/delta-update.html#language-java
-      // https://docs.delta.io/0.7.0/delta-update.html#upsert-into-a-table-using-merge
+      if (deltaCustomExpressions.containsKey("updateExp")) {
+        deltaMergeBuilder = deltaMergeMatchedActionBuilder.updateExpr(
+            (Map<String, String>) deltaCustomExpressions.get("updateExp"));
+      } else {
+        deltaMergeBuilder = deltaMergeMatchedActionBuilder.updateAll();
+      }
+
+      DeltaMergeNotMatchedActionBuilder deltaMergeNotMatchedActionBuilder;
+      if (writeOptions.containsKey("whenMatchedExp")) {
+        deltaMergeNotMatchedActionBuilder = deltaMergeBuilder.whenNotMatched(
+            deltaCustomExpressions.get("whenMatchedExp").toString());
+      } else {
+        deltaMergeNotMatchedActionBuilder = deltaMergeBuilder.whenNotMatched();
+      }
+
+
+      if (deltaCustomExpressions.containsKey("insertExp")) {
+        deltaMergeBuilder = deltaMergeNotMatchedActionBuilder.insertExpr(
+            (Map<String, String>) deltaCustomExpressions.get("insertExp"));
+      } else {
+        deltaMergeBuilder = deltaMergeNotMatchedActionBuilder.insertAll();
+      }
+
+      deltaMergeBuilder.execute();
     }
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup);

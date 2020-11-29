@@ -319,12 +319,14 @@ public class SparkEngine {
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, ActionType operation, Map<String, String> writeOptions)
+                                    SaveMode saveMode, ActionType operation, Map<String, String> writeOptions,
+                                    Map<String, Object> deltaCustomExpressions)
       throws IOException, FeatureStoreException {
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       hudiEngine.saveHudiFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
     } else if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.DELTA) {
-      deltaEngine.saveDeltaLakeFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions);
+      deltaEngine.saveDeltaLakeFeatureGroup(sparkSession,featureGroup, dataset, saveMode, operation, writeOptions,
+          deltaCustomExpressions);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode,  writeOptions);
     }
