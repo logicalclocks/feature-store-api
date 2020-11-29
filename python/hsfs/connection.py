@@ -180,8 +180,6 @@ class Connection:
                         self._secrets_store,
                         self._hostname_verification,
                         self._trust_store_path
-                        if self._trust_store_path is not None
-                        else None,
                         None,
                         self._api_key_file,
                         self._api_key_value,
