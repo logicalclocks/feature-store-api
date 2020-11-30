@@ -85,10 +85,9 @@ public class HopsworksConnection implements Closeable {
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
-    HopsworksClient hopsworksClient = HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
+    HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
         hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
     projectObj = getProject();
-    hopsworksClient.downloadCredentials(projectObj, certPath);
   }
 
   /**

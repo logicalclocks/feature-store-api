@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.SecretStore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -151,9 +150,5 @@ public class HopsworksClient {
 
   public <T> T handleRequest(HttpRequest request) throws IOException, FeatureStoreException {
     return hopsworksHttpClient.handleRequest(request, null);
-  }
-
-  public void downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {
-    certPwd = hopsworksHttpClient.downloadCredentials(project, certPath);
   }
 }
