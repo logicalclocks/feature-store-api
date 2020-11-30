@@ -80,7 +80,6 @@ public class DeltaEngine {
           .mode(SaveMode.Append)
           .save(featureGroup.getLocation());
     } else if (operation == ActionType.UPSERT) {
-
       DeltaLakeUpdate deltaLakeMetaData = new DeltaLakeUpdate();
       String newDataAlias = utils.getFgName(featureGroup) + "_update";
       deltaLakeMetaData.setExistingAlias(utils.getFgName(featureGroup));
