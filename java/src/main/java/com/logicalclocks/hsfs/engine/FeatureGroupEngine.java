@@ -88,21 +88,23 @@ public class FeatureGroupEngine {
           }));
     }
 
-    // Send Hopsworks the request to create a new feature group
-    FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+    if (featureGroup.getTimeTravelFormat() != TimeTravelFormat.DELTA) {
+      // Send Hopsworks the request to create a new feature group
+      FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
-    if (featureGroup.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-          + "`, incremented version to `" + apiFG.getVersion() + "`.");
+      if (featureGroup.getVersion() == null) {
+        LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+            + "`, incremented version to `" + apiFG.getVersion() + "`.");
+      }
+
+      // Update the original object - Hopsworks returns the incremented version
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setVersion(apiFG.getVersion());
+      featureGroup.setLocation(apiFG.getLocation());
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setCorrelations(apiFG.getCorrelations());
+      featureGroup.setHistograms(apiFG.getHistograms());
     }
-
-    // Update the original object - Hopsworks returns the incremented version
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setVersion(apiFG.getVersion());
-    featureGroup.setLocation(apiFG.getLocation());
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setCorrelations(apiFG.getCorrelations());
-    featureGroup.setHistograms(apiFG.getHistograms());
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, null,  SaveMode.Append,

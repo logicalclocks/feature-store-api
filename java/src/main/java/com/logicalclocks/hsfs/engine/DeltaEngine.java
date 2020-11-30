@@ -71,7 +71,23 @@ public class DeltaEngine {
           // write options cannot be null
           .options(writeOptions == null ? new HashMap<>() : writeOptions)
           .mode(saveMode)
-          .save(featureGroup.getLocation());
+          .save("hdfs:///apps/hive/warehouse/feltafs_featurestore.db/" + utils.getTableName(featureGroup));
+
+      //dataset.write().format(DELTA_SPARK_FORMAT).saveAsTable(utils.getTableName(featureGroup));
+      FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+      if (featureGroup.getVersion() == null) {
+        LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+            + "`, incremented version to `" + apiFG.getVersion() + "`.");
+      }
+
+      // Update the original object - Hopsworks returns the incremented version
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setVersion(apiFG.getVersion());
+      featureGroup.setLocation(apiFG.getLocation());
+      featureGroup.setId(apiFG.getId());
+      featureGroup.setCorrelations(apiFG.getCorrelations());
+      featureGroup.setHistograms(apiFG.getHistograms());
+
     } else if (operation == ActionType.INSERT) {
       dataset.write()
           .format(DELTA_SPARK_FORMAT)
