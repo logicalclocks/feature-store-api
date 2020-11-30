@@ -56,12 +56,16 @@ public class DeltaEngine {
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
 
   public void saveDeltaLakeFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> dataset,
-                                        SaveMode saveMode, ActionType operation,
-                                        Map<String, String> writeOptions, Map<String, Object> deltaCustomExpressions)
+                                        SaveMode saveMode, ActionType operation, Map<String, String> writeOptions,
+                                        Map<String, Object> deltaCustomExpressions)
       throws FeatureStoreException, IOException {
 
     if (deltaCustomExpressions == null) {
       deltaCustomExpressions = new HashMap<>();
+    }
+
+    if (writeOptions == null) {
+      writeOptions = new HashMap<>();
     }
 
     if (operation == ActionType.BULK_INSERT) {
@@ -69,11 +73,10 @@ public class DeltaEngine {
           .format(DELTA_SPARK_FORMAT)
           .partitionBy(utils.getPartitionColumns(featureGroup))
           // write options cannot be null
-          .options(writeOptions == null ? new HashMap<>() : writeOptions)
+          .options(writeOptions)
           .mode(saveMode)
-          .save("hdfs:///apps/hive/warehouse/feltafs_featurestore.db/" + utils.getTableName(featureGroup));
+          .saveAsTable(utils.getTableName(featureGroup));
 
-      //dataset.write().format(DELTA_SPARK_FORMAT).saveAsTable(utils.getTableName(featureGroup));
       FeatureGroup apiFG = featureGroupApi.save(featureGroup);
       if (featureGroup.getVersion() == null) {
         LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
@@ -194,6 +197,6 @@ public class DeltaEngine {
   @SneakyThrows
   public String timeStampToCommitFormat(Long commitedOnTimeStamp) {
     Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    return dateFormat.format(commitedOnDate);
+    return commitedOnDate.toString();
   }
 }

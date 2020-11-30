@@ -63,18 +63,16 @@ public class SparkEngine {
   private DeltaEngine deltaEngine = new DeltaEngine();
 
   private SparkEngine() {
-    sparkSession = SparkSession.builder().getOrCreate();
 
-    // TODO (davit): enable hive support if not delta lake engine
-    // sparkSession = SparkSession.builder()
-    //     .enableHiveSupport()
-    //     .getOrCreate();
+    sparkSession = SparkSession.builder()
+        .enableHiveSupport()
+        .getOrCreate();
 
     // Configure the Spark context to allow dynamic partitions
-    // sparkSession.conf().set("hive.exec.dynamic.partition", "true");
-    // sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
-    // // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
-    // sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+    sparkSession.conf().set("hive.exec.dynamic.partition", "true");
+    sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
+    // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
+    sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
   public Dataset<Row> sql(String query) {
