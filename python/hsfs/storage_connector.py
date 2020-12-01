@@ -49,11 +49,14 @@ class StorageConnector:
         database_port=None,
         table_name=None,
         database_user_name=None,
+        auto_create=None,
         database_password=None,
+        database_group=None,
         session_token=None,
         iam_role=None,
         connection_string=None,
         arguments=None,
+        expiration=None,
     ):
         self._id = id
         self._name = name
@@ -74,11 +77,14 @@ class StorageConnector:
         self._database_port = database_port
         self._table_name = table_name
         self._database_user_name = database_user_name
+        self._auto_create = auto_create
         self._database_password = database_password
+        self._database_group = database_group
         self._session_token = session_token
         self._iam_role = iam_role
         self._connection_string = connection_string
         self._arguments = arguments
+        self._expiration = expiration
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -157,6 +163,16 @@ class StorageConnector:
         return self._database_user_name
 
     @property
+    def auto_create(self):
+        """Database username for redshift cluster."""
+        return self._auto_create
+
+    @property
+    def database_group(self):
+        """Database username for redshift cluster."""
+        return self._database_group
+
+    @property
     def database_password(self):
         """Database password for redshift cluster."""
         return self._database_password
@@ -170,6 +186,11 @@ class StorageConnector:
     def iam_role(self):
         """IAM role."""
         return self._iam_role
+
+    @property
+    def expiration(self):
+        """Cluster temporary credential expiration time."""
+        return self._expiration
 
     @property
     def connection_string(self):

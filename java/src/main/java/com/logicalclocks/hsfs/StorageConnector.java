@@ -24,6 +24,9 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -80,6 +83,15 @@ public class StorageConnector {
 
   @Getter @Setter
   private String databaseUserName;
+
+  @Getter @Setter
+  private Boolean autoCreate;
+
+  @Getter @Setter
+  private String databaseGroup;
+
+  @Getter @Setter
+  private Date expiration;
 
   @Getter @Setter
   private String databasePassword;
