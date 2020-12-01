@@ -137,6 +137,17 @@ If you want to learn more about how this policy works check out:
             "ec2:vpc": "arn:aws:ec2:*:*:vpc/[VPC_ID]"
           }
         }
+      },
+      {
+        "Sid": "PermissionSimulator",
+        "Effect": "Allow",
+        "Action": [
+          "iam:SimulatePrincipalPolicy"
+        ],
+        "Resource": [
+           "arn:aws:iam::*:instance-profile/[INSTANCE_PROFILE_NAME]",
+           "arn:aws:iam::*:role/[INSTANCE_PROFILE_NAME]"
+        ]
       }
     ]
   }
