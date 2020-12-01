@@ -21,14 +21,12 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 </p>
 
 !!! info
-    You are only ably to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
+    You are only able to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
 
-## Quickstart API Key File
+## Quickstart API Key Argument
 
-!!! hint "Save API Key as File"
-    To get started quickly, without saving the Hopsworks API in a secret storage, you can simply create a file with the previously created Hopsworks API Key and place it on the environment from which you wish to connect to the Hopsworks Feature Store. That is either save it on the Databricks File System (DBFS) or in your Databricks workspace.
-
-    You can then connect by simply passing the path to the key file when instantiating a connection:
+!!! hint "API Key as Argument"
+    To get started quickly, without saving the Hopsworks API in a secret storage, you can simply supply it as an argument when instantiating a connection:
     ```python hl_lines="6"
         import hsfs
         conn = hsfs.connection(

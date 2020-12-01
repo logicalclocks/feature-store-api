@@ -34,6 +34,9 @@ Identify your Databricks VPC by searching for VPCs containing Databricks in thei
 
 Follow the guide [VPC Peering](https://docs.databricks.com/administration-guide/cloud-configurations/aws/vpc-peering.html) to set up VPC peering between the Feature Store cluster and Databricks. Get your Feature Store *VPC ID* and *CIDR* by searching for thr Feature Store VPC in the AWS Management Console:
 
+!!! info "Hopsworks.ai"
+    On **Hopsworks.ai**, the VPC is shown in the cluster details.
+
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/aws/hopsworks_vpc.png">
@@ -48,7 +51,7 @@ Follow the guide [VPC Peering](https://docs.databricks.com/administration-guide/
 The Feature Store *Security Group* needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store).
 
 Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable
 from the Databricks Security Group:
