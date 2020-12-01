@@ -462,7 +462,21 @@ class FeatureGroup(FeatureGroupBase):
         Selects all features and returns the resulting `Query` with the applied filter.
 
         ```python
+        from hsfs.feature import Feature
+
         fg.filter(Feature("weekly_sales") > 1000)
+        ```
+
+        If you are planning to join the filtered feature group later on with another
+        feature group, make sure to select the filtered feature explicitly from the
+        respective feature group:
+        ```python
+        fg.filter(fg.feature1 == 1).show(10)
+        ```
+
+        Composite filters require parenthesis:
+        ```python
+        fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
         ```
 
         # Arguments
