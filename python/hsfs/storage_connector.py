@@ -114,9 +114,7 @@ class StorageConnector:
         arguments.
         """
         args = [arg.split("=") for arg in self._arguments.split(",")]
+        options = {a[0]: a[1] for a in args}
+        options["url"] = self._connection_string
 
-        return {
-            "url": self._connection_string,
-            "user": [arg[1] for arg in args if arg[0] == "user"][0],
-            "password": [arg[1] for arg in args if arg[0] == "password"][0],
-        }
+        return options
