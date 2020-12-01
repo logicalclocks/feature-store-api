@@ -24,8 +24,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -74,23 +72,12 @@ public class StorageConnector {
   @Setter
   private StorageConnectorType storageConnectorType;
 
-  public Map<String, String> getSparkOptions() throws FeatureStoreException {
-    List<String[]> args = Arrays.stream(arguments.split(","))
+  public Map<String, String> getSparkOptions() {
+    Map<String, String> options = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
-        .collect(Collectors.toList());
+        .collect(Collectors.toMap(a -> a[0], a -> a[1]));
 
-    String user = args.stream().filter(arg -> arg[0].equalsIgnoreCase(Constants.JDBC_USER))
-        .findFirst()
-        .orElseThrow(() -> new FeatureStoreException("No user provided for storage connector"))[1];
-
-    String password = args.stream().filter(arg -> arg[0].equalsIgnoreCase(Constants.JDBC_PWD))
-        .findFirst()
-        .orElseThrow(() -> new FeatureStoreException("No password provided for storage connector"))[1];
-
-    Map<String, String> options = new HashMap<>();
     options.put(Constants.JDBC_URL, connectionString);
-    options.put(Constants.JDBC_USER, user);
-    options.put(Constants.JDBC_PWD, password);
     return options;
   }
 }
