@@ -44,7 +44,7 @@ class StorageConnectorApi:
             "by-name",
             name,
         ]
-        query_params = {"assumeRole": True}
+        query_params = {"temporaryCredentials": True}
         return storage_connector.StorageConnector.from_response_json(
             _client._send_request("GET", path_params, query_params=query_params)
         )
@@ -60,8 +60,9 @@ class StorageConnectorApi:
             connector_type,
             connector_id,
         ]
+        query_params = {"temporaryCredentials": True}
         return storage_connector.StorageConnector.from_response_json(
-            _client._send_request("GET", path_params)
+            _client._send_request("GET", path_params, query_params=query_params)
         )
 
     def get_online_connector(self):

@@ -31,7 +31,8 @@ import java.util.Arrays;
 public class StorageConnectorApi {
 
   private static final String CONNECTOR_PATH = "/storageconnectors";
-  private static final String CONNECTOR_TYPE_PATH = CONNECTOR_PATH + "{/connType}/by-name{/name}{?assumeRole}";
+  private static final String CONNECTOR_TYPE_PATH =
+    CONNECTOR_PATH + "{/connType}/by-name{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
   private static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
 
@@ -49,7 +50,7 @@ public class StorageConnectorApi {
         .set("fsId", featureStore.getId())
         .set("connType", type)
         .set("name", name)
-        .set("assumeRole", true)
+        .set("temporaryCredentials", true)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
