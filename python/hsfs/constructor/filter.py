@@ -65,8 +65,11 @@ class Filter:
             raise TypeError(
                 "Operator `|` expected type `Filter`, got `{}`".format(type(other))
             )
-        self._right_filter = other
-        self._logic = self.OR
+        if self._right_filter is None:
+            self._right_filter = other
+            self._logic = self.OR
+        else:
+            self._right_filter.__or__(other)
         return self
 
     def __repr__(self):
