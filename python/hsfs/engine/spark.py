@@ -65,7 +65,8 @@ class Engine:
 
     def _jdbc(self, sql_query, connector):
         options = connector.spark_options()
-        options["query"] = sql_query
+        if sql_query:
+            options["query"] = sql_query
 
         return (
             self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()

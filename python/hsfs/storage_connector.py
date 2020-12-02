@@ -104,7 +104,7 @@ class StorageConnector:
 
     @property
     def connector_type(self):
-        """Type of the connector. S3, JDBC or HOPSFS."""
+        """Type of the connector. S3, JDBC, REDSHIFT or HOPSFS."""
         return self._storage_connector_type
 
     @property
@@ -206,8 +206,47 @@ class StorageConnector:
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
+<<<<<<< HEAD
         args = [arg.split("=") for arg in self._arguments.split(",")]
         options = {a[0]: a[1] for a in args}
         options["url"] = self._connection_string
 
         return options
+=======
+
+        if self._storage_connector_type == "JDBC":
+            args = [arg.split("=") for arg in self._arguments.split(",")]
+
+            return {
+                "url": self._connection_string,
+                "user": [arg[1] for arg in args if arg[0] == "user"][0],
+                "password": [arg[1] for arg in args if arg[0] == "password"][0],
+            }
+        elif self._storage_connector_type == "REDSHIFT":
+            connstr = (
+                "jdbc:redshift://"
+                + self._cluster_identifier
+                + "."
+                + self._database_endpoint
+                + ":"
+                + self._database_port
+                + "/"
+                + self._database_name
+            )
+            if self._arguments is not None:
+                connstr = connstr + "&" + self._arguments
+            props = {
+                "url": connstr,
+                "driver": self._database_driver,
+                "user": self._database_user_name,
+                "password": self._database_password,
+            }
+            if self._table_name is not None:
+                props["dbtable"] = self._table_name
+            return props
+        else:
+            raise Exception(
+                "Spark options are not supported for connector "
+                + self._storage_connector_type
+            )
+>>>>>>> add redshift options to spark

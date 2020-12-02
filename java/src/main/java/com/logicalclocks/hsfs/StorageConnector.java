@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.parquet.Strings;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -109,13 +110,39 @@ public class StorageConnector {
   @Getter
   @Setter
   private StorageConnectorType storageConnectorType;
+  
+  public Map<String, String> getSparkOptions() throws FeatureStoreException {
+    if (StorageConnectorType.JDBC.equals(storageConnectorType)) {
+      return getJdbcOptions();
+    } else if (StorageConnectorType.REDSHIFT.equals(storageConnectorType)) {
+      return getRedshiftOptions();
+    }
+    throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
+  }
 
-  public Map<String, String> getSparkOptions() {
-    Map<String, String> options = Arrays.stream(arguments.split(","))
+  private Map<String, String> getJdbcOptions() throws FeatureStoreException {
+    List<String[]> args = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
         .collect(Collectors.toMap(a -> a[0], a -> a[1]));
 
     options.put(Constants.JDBC_URL, connectionString);
+    return options;
+  }
+
+  private Map<String, String> getRedshiftOptions() {
+    String constr =
+        "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
+    if (!Strings.isNullOrEmpty(arguments)) {
+      constr += "&" + arguments;
+    }
+    Map<String, String> options = new HashMap<>();
+    options.put(Constants.JDBC_DRIVER, databaseDriver);
+    options.put(Constants.JDBC_URL, constr);
+    options.put(Constants.JDBC_USER, databaseUserName);
+    options.put(Constants.JDBC_PWD, databasePassword);
+    if (!Strings.isNullOrEmpty(tableName)) {
+      options.put(Constants.JDBC_TABLE, tableName);
+    }
     return options;
   }
 }

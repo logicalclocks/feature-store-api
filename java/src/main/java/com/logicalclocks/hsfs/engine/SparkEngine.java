@@ -79,7 +79,9 @@ public class SparkEngine {
 
   public Dataset<Row> jdbc(StorageConnector storageConnector, String query) throws FeatureStoreException {
     Map<String, String> readOptions = storageConnector.getSparkOptions();
-    readOptions.put("query", query);
+    if (!Strings.isNullOrEmpty(query)) {
+      readOptions.put("query", query);
+    }
     return sparkSession.read()
         .format(Constants.JDBC_FORMAT)
         .options(readOptions)
