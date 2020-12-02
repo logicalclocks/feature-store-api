@@ -133,7 +133,7 @@ public class StorageConnector {
     String constr =
         "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
     if (!Strings.isNullOrEmpty(arguments)) {
-      constr += "&" + arguments;
+      constr += "?" + arguments;
     }
     Map<String, String> options = new HashMap<>();
     options.put(Constants.JDBC_DRIVER, databaseDriver);

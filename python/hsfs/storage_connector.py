@@ -229,12 +229,12 @@ class StorageConnector:
                 + "."
                 + self._database_endpoint
                 + ":"
-                + self._database_port
+                + str(self._database_port)
                 + "/"
                 + self._database_name
             )
             if self._arguments is not None:
-                connstr = connstr + "&" + self._arguments
+                connstr = connstr + "?" + self._arguments
             props = {
                 "url": connstr,
                 "driver": self._database_driver,
