@@ -206,14 +206,6 @@ class StorageConnector:
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-<<<<<<< HEAD
-        args = [arg.split("=") for arg in self._arguments.split(",")]
-        options = {a[0]: a[1] for a in args}
-        options["url"] = self._connection_string
-
-        return options
-=======
-
         if self._storage_connector_type == "JDBC":
             args = [arg.split("=") for arg in self._arguments.split(",")]
 
@@ -249,4 +241,3 @@ class StorageConnector:
                 "Spark options are not supported for connector "
                 + self._storage_connector_type
             )
->>>>>>> add redshift options to spark
