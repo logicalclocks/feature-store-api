@@ -1,13 +1,13 @@
-# Hopsworks API Key
+# Hopsworks API key
 
-In order for the Databricks cluster to be able to communicate with the Hopsworks Feature Store, the clients running on Databricks need to be able to access a Hopsworks API Key.
+In order for the Databricks cluster to be able to communicate with the Hopsworks Feature Store, the clients running on Databricks need to be able to access a Hopsworks API key.
 
-## Generating an API Key
+## Generate an API key
 
-In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *Api keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
+In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *API keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
 
 !!! success "Scopes"
-    The created API-Key should at least have the following scopes:
+    The API key should contain at least the following scopes:
 
     1. featurestore
     2. project
@@ -15,20 +15,18 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/api-key.png" alt="Generating an API Key on Hopsworks">
-    <figcaption>API-Keys can be generated in the User Settings on Hopsworks</figcaption>
+    <img src="../../../assets/images/api-key.png" alt="Generating an API key on Hopsworks">
+    <figcaption>API keys can be created in the User Settings on Hopsworks</figcaption>
   </figure>
 </p>
 
 !!! info
-    You are only ably to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
+    You are only able to retrieve the API key once. If you forget to copy it to your clipboard, delete it and create a new one.
 
-## Quickstart API Key File
+## Quickstart API key Argument
 
-!!! hint "Save API Key as File"
-    To get started quickly, without saving the Hopsworks API in a secret storage, you can simply create a file with the previously created Hopsworks API Key and place it on the environment from which you wish to connect to the Hopsworks Feature Store. That is either save it on the Databricks File System (DBFS) or in your Databricks workspace.
-
-    You can then connect by simply passing the path to the key file when instantiating a connection:
+!!! hint "API key as Argument"
+    To get started quickly, without saving the Hopsworks API in a secret storage, you can simply supply it as an argument when instantiating a connection:
     ```python hl_lines="6"
         import hsfs
         conn = hsfs.connection(
@@ -41,13 +39,13 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
         fs = conn.get_feature_store()           # Get the project's default feature store
     ```
 
-## Storing the API Key
+## Store the API key
 
 ### AWS
 
 #### Option 1: Using the AWS Systems Manager Parameter Store
 
-**Storing the API Key in the AWS Systems Manager Parameter Store**
+**Store the API key in the AWS Systems Manager Parameter Store**
 
 In the AWS Management Console, ensure that your active region is the region you use for Databricks.
 Go to the *AWS Systems Manager* choose *Parameter Store* and select *Create Parameter*.
@@ -56,13 +54,13 @@ As name enter `/hopsworks/role/[MY_DATABRICKS_ROLE]/type/api-key` replacing `[MY
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/aws/databricks_parameter_store.png">
-      <img src="../../../assets/images/databricks/aws/databricks_parameter_store.png" alt="Storing the Feature Store API Key in the Parameter Store">
+      <img src="../../../assets/images/databricks/aws/databricks_parameter_store.png" alt="Storing the Feature Store API key in the Parameter Store">
     </a>
-    <figcaption>Storing the Feature Store API Key in the Parameter Store</figcaption>
+    <figcaption>Storing the Feature Store API key in the Parameter Store</figcaption>
   </figure>
 </p>
 
-**Granting access to the secret to the Databricks notebook role**
+**Grant access to the secret to the Databricks notebook role**
 
 In the AWS Management Console, go to *IAM*, select *Roles* and then the role that is used when creating Databricks clusters.
 Select *Add inline policy*. Choose *Systems Manager* as service, expand the *Read* access level and check *GetParameter*.
@@ -81,7 +79,7 @@ Click on *Review*, give the policy a name und click on *Create policy*.
 
 #### Option 2: Using the AWS Secrets Manager
 
-**Storing the API Key in the AWS Secrets Manager**
+**Store the API key in the AWS Secrets Manager**
 
 In the AWS management console ensure that your active region is the region you use for Databricks.
 Go to the *AWS Secrets Manager* and select *Store new secret*. Select *Other type of secrets* and add *api-key*
@@ -90,9 +88,9 @@ as the key and paste the API key created in the previous step as the value. Clic
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/aws/databricks_secrets_manager_step_1.png">
-      <img src="../../../assets/images/databricks/aws/databricks_secrets_manager_step_1.png" alt="Storing a Feature Store API Key in the Secrets Manager Step 1">
+      <img src="../../../assets/images/databricks/aws/databricks_secrets_manager_step_1.png" alt="Storing a Feature Store API key in the Secrets Manager Step 1">
     </a>
-    <figcaption>Storing a Feature Store API Key in the Secrets Manager Step 1</figcaption>
+    <figcaption>Storing a Feature Store API key in the Secrets Manager Step 1</figcaption>
   </figure>
 </p>
 
@@ -103,13 +101,13 @@ Then click on the secret in the secrets list and take note of the *Secret ARN*.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/aws/databricks_secrets_manager_step_2.png">
-      <img src="../../../assets/images/databricks/aws/databricks_secrets_manager_step_2.png" alt="Storing a Feature Store API Key in the Secrets Manager Step 2">
+      <img src="../../../assets/images/databricks/aws/databricks_secrets_manager_step_2.png" alt="Storing a Feature Store API key in the Secrets Manager Step 2">
     </a>
-    <figcaption>Storing a Feature Store API Key in the Secrets Manager Step 2</figcaption>
+    <figcaption>Storing a Feature Store API key in the Secrets Manager Step 2</figcaption>
   </figure>
 </p>
 
-**Granting access to the secret to the Databricks notebook role**
+**Grant access to the secret to the Databricks notebook role**
 
 In the AWS Management Console, go to *IAM*, select *Roles* and then the role that is used when creating Databricks clusters.
 Select *Add inline policy*. Choose *Secrets Manager* as service, expand the *Read* access level and check *GetSecretValue*.
@@ -127,7 +125,7 @@ Click on *Review*, give the policy a name und click on *Create policy*.
 
 ### Azure
 
-On Azure we currently do not support storing the API Key in a secret storage. Instead just store the API Key in a file in your Databricks workspace so you can access it when connecting to the Feature Store.
+On Azure we currently do not support storing the API key in a secret storage. Instead just store the API key in a file in your Databricks workspace so you can access it when connecting to the Feature Store.
 
 ## Next Steps
 

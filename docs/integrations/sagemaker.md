@@ -1,13 +1,13 @@
 # AWS SageMaker Integration
 
-Connecting to the Feature Store from SageMaker requires setting up a Feature Store API Key for SageMaker and installing the **HSFS** on SageMaker. This guide explains step by step how to connect to the Feature Store from SageMaker.
+Connecting to the Feature Store from SageMaker requires setting up a Feature Store API key for SageMaker and installing the **HSFS** on SageMaker. This guide explains step by step how to connect to the Feature Store from SageMaker.
 
-## Generating an API Key
+## Generate an API key
 
-In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *Api keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
+In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *API keys*. Give the key a name and select the job, featurestore and project scopes before creating the key. Copy the key into your clipboard for the next step.
 
 !!! success "Scopes"
-    The created API-Key should at least have the following scopes:
+    The API key should contain at least the following scopes:
 
     1. featurestore
     2. project
@@ -15,38 +15,55 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 
 <p align="center">
   <figure>
-    <img src="../../assets/images/api-key.png" alt="Generating an API Key on Hopsworks">
-    <figcaption>API-Keys can be generated in the User Settings on Hopsworks</figcaption>
+    <img src="../../assets/images/api-key.png" alt="Generate an API key on Hopsworks">
+    <figcaption>API keys can be created in the User Settings on Hopsworks</figcaption>
   </figure>
 </p>
 
 !!! info
-    You are only ably to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
+    You are only ably to retrieve the API key once. If you miss to copy it to your clipboard, delete it again and create a new one.
 
-## Storing the API Key on AWS
+## Quickstart API key Argument
 
-The API Key now needs to be stored on AWS, so it can be retrieved from within SageMaker notebooks.
+!!! hint "API key as Argument"
+    To get started quickly, without saving the Hopsworks API in a secret storage, you can simply supply it as an argument when instantiating a connection:
+    ```python hl_lines="6"
+        import hsfs
+        conn = hsfs.connection(
+            host='my_instance',                 # DNS of your Feature Store instance
+            port=443,                           # Port to reach your Hopsworks instance, defaults to 443
+            project='my_project',               # Name of your Hopsworks Feature Store project
+            api_key_value='apikey',             # The API key to authenticate with Hopsworks
+            hostname_verification=True          # Disable for self-signed certificates
+        )
+        fs = conn.get_feature_store()           # Get the project's default feature store
+    ```
 
-### Identifying your SageMaker role
 
-You need to know the IAM role used by your SageMaker instance to set up the API Key for it. You can find it in the overview of your SageMaker notebook instance of the AWS Management Console.
+## Store the API key on AWS
+
+The API key now needs to be stored on AWS, so it can be retrieved from within SageMaker notebooks.
+
+### Identify your SageMaker role
+
+You need to know the IAM role used by your SageMaker instance to set up the API key for it. You can find it in the overview of your SageMaker notebook instance of the AWS Management Console.
 
 In this example, the name of the role is **AmazonSageMaker-ExecutionRole-20190511T072435**.
 
 <p align="center">
   <figure>
-    <img src="../../assets/images/sagemaker-role.png" alt="Identifying your SageMaker Role">
+    <img src="../../assets/images/sagemaker-role.png" alt="Identify your SageMaker Role">
     <figcaption>The role is attached to your SageMaker notebook instance</figcaption>
   </figure>
 </p>
 
-### Storing the API Key
+### Store the API key
 
-You have two options to make your API Key accesible from SageMaker:
+You have two options to make your API key accessible from SageMaker:
 
 #### Option 1: Using the AWS Systems Manager Parameter Store
 
-##### Storing the API Key in the AWS Systems Manager Parameter Store
+##### Store the API key in the AWS Systems Manager Parameter Store
 
 1. In the AWS Management Console, ensure that your active region is the region you use for SageMaker.
 2. Go to the AWS Systems Manager choose *Parameter Store* in the left navigation bar and select *Create Parameter*.
@@ -56,11 +73,11 @@ You have two options to make your API Key accesible from SageMaker:
 <p align="center">
   <figure>
     <img src="../../assets/images/parameter-store.png" alt="AWS Systems Manager Parameter Store">
-    <figcaption>Storing the API Key in the AWS Systems Manager Parameter Store</figcaption>
+    <figcaption>Store the API key in the AWS Systems Manager Parameter Store</figcaption>
   </figure>
 </p>
 
-##### Granting access to the Parameter Store from the SageMaker notebook role
+##### Grant access to the Parameter Store from the SageMaker notebook role
 
 1. In the AWS Management Console, go to *IAM*, select *Roles* and then the role that is used when creating SageMaker notebook instances.
 2. Select *Add inline policy*.
@@ -72,13 +89,13 @@ You have two options to make your API Key accesible from SageMaker:
 <p align="center">
   <figure>
     <img src="../../assets/images/parameter-store-policy.png" alt="AWS Systems Manager Parameter Store Get Parameter Policy">
-    <figcaption>Granting access to the Parameter Store from the SageMaker notebook role</figcaption>
+    <figcaption>Grant access to the Parameter Store from the SageMaker notebook role</figcaption>
   </figure>
 </p>
 
 #### Option 2: Using the AWS Secrets Manager
 
-##### Storing the API Key in the AWS Secrets Manager
+##### Store the API key in the AWS Secrets Manager
 
 1. In the AWS Management Console, ensure that your active region is the region you use for SageMaker.
 2. Go to the *AWS Secrets Manager* and select *Store new secret*.
@@ -88,7 +105,7 @@ You have two options to make your API Key accesible from SageMaker:
 <p align="center">
   <figure>
     <img src="../../assets/images/secrets-manager-1.png" alt="AWS Systems Manager">
-    <figcaption>Storing the API Key in the AWS Secrets Manager</figcaption>
+    <figcaption>Store the API key in the AWS Secrets Manager</figcaption>
   </figure>
 </p>
 
@@ -99,11 +116,11 @@ You have two options to make your API Key accesible from SageMaker:
 <p align="center">
   <figure>
     <img src="../../assets/images/secrets-manager-2.png" alt="AWS Systems Manager">
-    <figcaption>Storing the API Key in the AWS Secrets Manager</figcaption>
+    <figcaption>Store the API key in the AWS Secrets Manager</figcaption>
   </figure>
 </p>
 
-##### Granting access to the SecretsManager to the SageMaker notebook role
+##### Grant access to the SecretsManager to the SageMaker notebook role
 
 1. In the AWS Management Console, go to *IAM*, select *Roles* and then the role that is used when creating SageMaker notebook instances.
 2. Select *Add inline policy*.
@@ -115,11 +132,11 @@ You have two options to make your API Key accesible from SageMaker:
 <p align="center">
   <figure>
     <img src="../../assets/images/secrets-manager-policy.png" alt="AWS Systems Manager GetSecretValue policy">
-    <figcaption>Granting access to the SecretsManager to the SageMaker notebook role</figcaption>
+    <figcaption>Grant access to the SecretsManager to the SageMaker notebook role</figcaption>
   </figure>
 </p>
 
-## Installing **HSFS**
+## Install **HSFS**
 
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed. One way of achieving this is by opening a Python notebook in SageMaker and installing the `HSFS` with a magic command and pip:
 
@@ -140,7 +157,7 @@ To be able to access the Hopsworks Feature Store, the `HSFS` Python library need
 
 Note that the library will not be persistent. For information around how to permanently install a library to SageMaker, see [Install External Libraries and Kernels](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-add-external.html) in Notebook Instances.
 
-## Connecting to the Feature Store
+## Connect to the Feature Store
 
 You are now ready to connect to the Hopsworks Feature Store from SageMaker:
 

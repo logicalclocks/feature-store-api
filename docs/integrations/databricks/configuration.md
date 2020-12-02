@@ -11,37 +11,37 @@ In order to be able to configure a Databricks cluster to use the Feature Store o
 
 If you haven't done so already, follow the networking guides for either [AWS](networking.md#aws) or [Azure](networking.md#azure) for instructions on how to configure networking properly between Databricks' VPC (or Virtual Network on Azure) and the Hopsworks.ai VPC/VNet.
 
-### Hopsworks API Key
+### Hopsworks API key
 
-In order for the Feature Store API to be able to communicate with the user's Hopsworks instance, the client library (HSFS) needs to have access to a previously generated API Key from Hopsworks. For ways to setup and store the Hopsworks API Key, please refer to the [API Key guide for Databricks](api_key.md).
+In order for the Feature Store API to be able to communicate with the user's Hopsworks instance, the client library (HSFS) needs to have access to a previously generated API key from Hopsworks. For ways to setup and store the Hopsworks API key, please refer to the [API key guide for Databricks](api_key.md).
 
-## Databricks API Key
+## Databricks API key
 
 Hopsworks uses the Databricks REST APIs to communicate with the Databricks instance and configure clusters on behalf of users.
-To achieve that, the first step is to register an instance and a valid API Key in Hopsworks.
+To achieve that, the first step is to register an instance and a valid API key in Hopsworks.
 
-Users can get a valid Databricks API Key by following the [Databricks Documentation](https://docs.databricks.com/dev-tools/api/latest/authentication.html#generate-a-personal-access-token)
+Users can get a valid Databricks API key by following the [Databricks Documentation](https://docs.databricks.com/dev-tools/api/latest/authentication.html#generate-a-personal-access-token)
 
 !!! warning "Cluster access control"
 
-    If users have enabled [Databricks Cluster access control](https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-access-control), it is important that the users running the cluster configuration (i.e. the user generating the API Key) has `Can Manage` privileges on the cluster they are trying to configure.
+    If users have enabled [Databricks Cluster access control](https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-access-control), it is important that the users running the cluster configuration (i.e. the user generating the API key) has `Can Manage` privileges on the cluster they are trying to configure.
 
 ## Register a new Databricks Instance
 
-Users can register a new Databricks instance by navigating to the `Integrations` tab of a project Feature Store. Registering a Databricks instance requires adding the instance address and the API Key.
+Users can register a new Databricks instance by navigating to the `Integrations` tab of a project Feature Store. Registering a Databricks instance requires adding the instance address and the API key.
 
 The instance address should be in the format `[UUID].cloud.databricks.com` (or `adb-[UUID].19.azuredatabricks.net` for Databricks on Azure), essentially the same web address used to reach the Databricks instance from the browser.
 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/databricks-integration.png">
-      <img src="../../../assets/images/databricks/databricks-integration.png" alt="Register a Databricks Instance along with a Databricks API Key">
+      <img src="../../../assets/images/databricks/databricks-integration.png" alt="Register a Databricks Instance along with a Databricks API key">
     </a>
-    <figcaption>Register a Databricks Instance along with a Databricks API Key</figcaption>
+    <figcaption>Register a Databricks Instance along with a Databricks API key</figcaption>
   </figure>
 </p>
 
-The API Key will be stored in the Hopsworks secret store for the user and will be available only for that user.  If multiple users need to configure Databricks clusters, each has to generate an API Key and register an instance. The Databricks instance registration does not have a project scope, meaning that once registered, the user can configure clusters for all projects they are part of.
+The API key will be stored in the Hopsworks secret store for the user and will be available only for that user.  If multiple users need to configure Databricks clusters, each has to generate an API key and register an instance. The Databricks instance registration does not have a project scope, meaning that once registered, the user can configure clusters for all projects they are part of.
 
 ## Databricks Cluster
 
@@ -79,8 +79,8 @@ When a cluster is configured for a specific project user, all the operations wit
 At the end of the configuration, Hopsworks will start the cluster.
 Once the cluster is running users can establish a connection to the Hopsworks Feature Store from Databricks:
 
-!!! note "API Key on Azure"
-    Please note, for Azure it is necessary to store the Hopsworks API Key locally on the cluster as a file. As we currently do not support storing the API Key on an Azure Secret Management Service as we do for AWS. Consult the [API Key guide for Azure](api_key.md#azure), for more information.
+!!! note "API key on Azure"
+    Please note, for Azure it is necessary to store the Hopsworks API key locally on the cluster as a file. As we currently do not support storing the API key on an Azure Secret Management Service as we do for AWS. Consult the [API key guide for Azure](api_key.md#azure), for more information.
 
 === "AWS"
 
