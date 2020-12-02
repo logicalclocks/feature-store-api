@@ -39,7 +39,7 @@ nav:
     - AWS Sagemaker: integrations/sagemaker.md
     - EMR:
       - Networking: integrations/emr/networking.md
-      - Configuring EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
+      - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
     - Python: integrations/python.md
     - Spark: integrations/spark.md
   - Guides:
