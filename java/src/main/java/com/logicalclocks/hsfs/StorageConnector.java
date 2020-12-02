@@ -51,7 +51,7 @@ public class StorageConnector {
   @Getter
   @Setter
   private String secretKey;
-  
+
   @Getter
   @Setter
   private String serverEncryptionAlgorithm;
@@ -64,43 +64,56 @@ public class StorageConnector {
   @Setter
   private String bucket;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String clusterIdentifier;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databaseDriver;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databaseEndpoint;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databaseName;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Integer databasePort;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String tableName;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databaseUserName;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Boolean autoCreate;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databaseGroup;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private Date expiration;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String databasePassword;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String sessionToken;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private String connectionString;
 
   @Getter
@@ -110,7 +123,7 @@ public class StorageConnector {
   @Getter
   @Setter
   private StorageConnectorType storageConnectorType;
-  
+
   public Map<String, String> getSparkOptions() throws FeatureStoreException {
     if (StorageConnectorType.JDBC.equals(storageConnectorType)) {
       return getJdbcOptions();
