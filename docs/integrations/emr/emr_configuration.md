@@ -213,3 +213,14 @@ Your EMR cluster will now be able to access your Hopsworks Feature Store.
 
 If you use Python, then install the [HSFS library](https://pypi.org/project/hsfs/). The Scala version of the library has already been installed to your EMR cluster.
 Use the [Connection API](../../../generated/api/connection_api/) to connect to the Hopsworks Feature Store.
+
+!!! attention "Matching Hopsworks version"
+    The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
+
+
+<p align="center">
+    <figure>
+        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
+        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
+    </figure>
+</p>
