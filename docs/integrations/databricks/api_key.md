@@ -39,7 +39,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
         fs = conn.get_feature_store()           # Get the project's default feature store
     ```
 
-## Storing the API key
+## Store the API key
 
 ### AWS
 
