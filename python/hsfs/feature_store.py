@@ -51,6 +51,9 @@ class FeatureStore:
         offline_featurestore_name,
         hive_endpoint,
         online_enabled,
+        num_feature_groups=None,
+        num_training_datasets=None,
+        num_storage_connectors=None,
         online_featurestore_name=None,
         mysql_server_endpoint=None,
         online_featurestore_size=None,
@@ -69,6 +72,9 @@ class FeatureStore:
         self._hive_endpoint = hive_endpoint
         self._mysql_server_endpoint = mysql_server_endpoint
         self._online_enabled = online_enabled
+        self._num_feature_groups = num_feature_groups
+        self._num_training_datasets = num_training_datasets
+        self._num_storage_connectors = num_storage_connectors
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
