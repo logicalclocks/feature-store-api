@@ -170,14 +170,6 @@ class FeatureGroup(FeatureGroupBase):
             for feat in features
         ]
 
-        # TODO move into function anc remember to call it always when features are set
-        # set features as attributes
-        for f in self._features:
-            if hasattr(self, f.name):
-                raise ValueError("Feature name is reserved: {}".format(f.name))
-            else:
-                setattr(self, f.name, f)
-
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
@@ -200,11 +192,24 @@ class FeatureGroup(FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
+
+            for f in self._features:
+                if hasattr(self, f.name):
+                    delattr(self, f.name)
+
         else:
             # initialized by user
             self.statistics_config = statistics_config
             self._primary_key = primary_key
             self._partition_key = partition_key
+
+        # TODO move into function anc remember to call it always when features are set
+        # set features as attributes
+        for f in self._features:
+            if hasattr(self, f.name):
+                raise ValueError("Feature name is reserved: {}".format(f.name))
+            else:
+                setattr(self, f.name, f)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
