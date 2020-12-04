@@ -27,7 +27,6 @@ import org.apache.parquet.Strings;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -134,10 +133,9 @@ public class StorageConnector {
   }
 
   private Map<String, String> getJdbcOptions() throws FeatureStoreException {
-    List<String[]> args = Arrays.stream(arguments.split(","))
+    Map<String, String> options = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
         .collect(Collectors.toMap(a -> a[0], a -> a[1]));
-
     options.put(Constants.JDBC_URL, connectionString);
     return options;
   }

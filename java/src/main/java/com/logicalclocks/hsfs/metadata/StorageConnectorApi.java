@@ -32,7 +32,7 @@ public class StorageConnectorApi {
 
   private static final String CONNECTOR_PATH = "/storageconnectors";
   private static final String CONNECTOR_TYPE_PATH =
-      CONNECTOR_PATH + "{/connType}/by-name{/name}{?temporaryCredentials}";
+      CONNECTOR_PATH + "{/connType}{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
   private static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
 

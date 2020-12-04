@@ -41,7 +41,6 @@ class StorageConnectorApi:
             self._feature_store_id,
             "storageconnectors",
             connector_type,
-            "by-name",
             name,
         ]
         query_params = {"temporaryCredentials": True}
