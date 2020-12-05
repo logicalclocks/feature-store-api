@@ -61,7 +61,6 @@ class TrainingDataset:
         jobs=None,
         inode_id=None,
         storage_connector_name=None,
-        storage_connector_id=None,
         storage_connector_type=None,
         training_dataset_type=None,
         from_query=None,
@@ -105,8 +104,8 @@ class TrainingDataset:
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
-            self._storage_connector = self._storage_connector_api.get_by_id(
-                storage_connector_id, storage_connector_type
+            self._storage_connector = self._storage_connector_api.get(
+                storage_connector_name, storage_connector_type
             )
             self._features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)

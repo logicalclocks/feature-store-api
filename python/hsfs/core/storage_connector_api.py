@@ -41,35 +41,11 @@ class StorageConnectorApi:
             self._feature_store_id,
             "storageconnectors",
             connector_type,
+            name,
         ]
-        result = [
-            conn
-            for conn in _client._send_request("GET", path_params)
-            if conn["name"] == name
-        ]
-
-        if len(result) == 1:
-            return storage_connector.StorageConnector.from_response_json(result[0])
-        else:
-            raise Exception(
-                "Could not find the storage connector `{}` with type `{}`.".format(
-                    name, connector_type
-                )
-            )
-
-    def get_by_id(self, connector_id, connector_type):
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            "storageconnectors",
-            connector_type,
-            connector_id,
-        ]
+        query_params = {"temporaryCredentials": True}
         return storage_connector.StorageConnector.from_response_json(
-            _client._send_request("GET", path_params)
+            _client._send_request("GET", path_params, query_params=query_params)
         )
 
     def get_online_connector(self):

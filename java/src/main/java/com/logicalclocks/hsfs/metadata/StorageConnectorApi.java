@@ -31,7 +31,8 @@ import java.util.Arrays;
 public class StorageConnectorApi {
 
   private static final String CONNECTOR_PATH = "/storageconnectors";
-  private static final String CONNECTOR_TYPE_PATH = CONNECTOR_PATH + "{/connType}";
+  private static final String CONNECTOR_TYPE_PATH =
+      CONNECTOR_PATH + "{/connType}{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
   private static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
 
@@ -48,15 +49,12 @@ public class StorageConnectorApi {
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
         .set("connType", type)
+        .set("name", name)
+        .set("temporaryCredentials", true)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    StorageConnector[] storageConnectors = hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector[].class);
-
-    return Arrays.stream(storageConnectors).filter(s -> s.getName().equals(name))
-        .findFirst()
-        .orElseThrow(() ->
-            new FeatureStoreException("Could not find storage connector " + name + " with type " + type));
+    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
   }
 
   public StorageConnector getOnlineStorageConnector(FeatureStore featureStore)

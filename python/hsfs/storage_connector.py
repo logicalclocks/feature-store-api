@@ -21,9 +21,11 @@ class StorageConnector:
     HOPSFS = "HOPSFS"
     S3 = "S3"
     JDBC = "JDBC"
+    REDSHIFT = "REDSHIFT"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
+    REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
 
     def __init__(
         self,
@@ -40,8 +42,21 @@ class StorageConnector:
         server_encryption_algorithm=None,
         server_encryption_key=None,
         bucket=None,
+        cluster_identifier=None,
+        database_driver=None,
+        database_endpoint=None,
+        database_name=None,
+        database_port=None,
+        table_name=None,
+        database_user_name=None,
+        auto_create=None,
+        database_password=None,
+        database_group=None,
+        session_token=None,
+        iam_role=None,
         connection_string=None,
         arguments=None,
+        expiration=None,
     ):
         self._id = id
         self._name = name
@@ -55,8 +70,21 @@ class StorageConnector:
         self._server_encryption_algorithm = server_encryption_algorithm
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
+        self._cluster_identifier = cluster_identifier
+        self._database_driver = database_driver
+        self._database_endpoint = database_endpoint
+        self._database_name = database_name
+        self._database_port = database_port
+        self._table_name = table_name
+        self._database_user_name = database_user_name
+        self._auto_create = auto_create
+        self._database_password = database_password
+        self._database_group = database_group
+        self._session_token = session_token
+        self._iam_role = iam_role
         self._connection_string = connection_string
         self._arguments = arguments
+        self._expiration = expiration
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -76,17 +104,17 @@ class StorageConnector:
 
     @property
     def connector_type(self):
-        """Type of the connector. S3, JDBC or HOPSFS."""
+        """Type of the connector. S3, JDBC, REDSHIFT or HOPSFS."""
         return self._storage_connector_type
 
     @property
     def access_key(self):
-        """Access key for S3 buckets."""
+        """Access key."""
         return self._access_key
 
     @property
     def secret_key(self):
-        """Secret key for S3 buckets."""
+        """Secret key."""
         return self._secret_key
 
     @property
@@ -98,6 +126,71 @@ class StorageConnector:
     def server_encryption_key(self):
         """Encryption key if server-side S3 bucket encryption is enabled."""
         return self._server_encryption_key
+
+    @property
+    def cluster_identifier(self):
+        """Cluster identifier for redshift cluster."""
+        return self._cluster_identifier
+
+    @property
+    def database_driver(self):
+        """Database endpoint for redshift cluster."""
+        return self._database_driver
+
+    @property
+    def database_endpoint(self):
+        """Database endpoint for redshift cluster."""
+        return self._database_endpoint
+
+    @property
+    def database_name(self):
+        """Database name for redshift cluster."""
+        return self._database_name
+
+    @property
+    def database_port(self):
+        """Database port for redshift cluster."""
+        return self._database_port
+
+    @property
+    def table_name(self):
+        """Table name for redshift cluster."""
+        return self._table_name
+
+    @property
+    def database_user_name(self):
+        """Database username for redshift cluster."""
+        return self._database_user_name
+
+    @property
+    def auto_create(self):
+        """Database username for redshift cluster."""
+        return self._auto_create
+
+    @property
+    def database_group(self):
+        """Database username for redshift cluster."""
+        return self._database_group
+
+    @property
+    def database_password(self):
+        """Database password for redshift cluster."""
+        return self._database_password
+
+    @property
+    def session_token(self):
+        """Session token."""
+        return self._session_token
+
+    @property
+    def iam_role(self):
+        """IAM role."""
+        return self._iam_role
+
+    @property
+    def expiration(self):
+        """Cluster temporary credential expiration time."""
+        return self._expiration
 
     @property
     def connection_string(self):
@@ -113,8 +206,38 @@ class StorageConnector:
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        args = [arg.split("=") for arg in self._arguments.split(",")]
-        options = {a[0]: a[1] for a in args}
-        options["url"] = self._connection_string
+        if self._storage_connector_type == "JDBC":
+            args = [arg.split("=") for arg in self._arguments.split(",")]
 
-        return options
+            return {
+                "url": self._connection_string,
+                "user": [arg[1] for arg in args if arg[0] == "user"][0],
+                "password": [arg[1] for arg in args if arg[0] == "password"][0],
+            }
+        elif self._storage_connector_type == "REDSHIFT":
+            connstr = (
+                "jdbc:redshift://"
+                + self._cluster_identifier
+                + "."
+                + self._database_endpoint
+                + ":"
+                + str(self._database_port)
+                + "/"
+                + self._database_name
+            )
+            if self._arguments is not None:
+                connstr = connstr + "?" + self._arguments
+            props = {
+                "url": connstr,
+                "driver": self._database_driver,
+                "user": self._database_user_name,
+                "password": self._database_password,
+            }
+            if self._table_name is not None:
+                props["dbtable"] = self._table_name
+            return props
+        else:
+            raise Exception(
+                "Spark options are not supported for connector "
+                + self._storage_connector_type
+            )
