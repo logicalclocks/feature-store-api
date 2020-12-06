@@ -85,6 +85,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 statistic_columns,
             )
         else:
+            self.statistics_config = statistics_config
             self._features = features
 
         if storage_connector is not None and isinstance(storage_connector, dict):
@@ -92,7 +93,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 storage_connector
             )
         else:
-            self.statistics_config = statistics_config
             self._storage_connector = storage_connector
 
     def save(self):

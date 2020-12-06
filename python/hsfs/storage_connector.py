@@ -193,6 +193,11 @@ class StorageConnector:
         return self._expiration
 
     @property
+    def bucket(self):
+        """Return the bucket for S3 connectors."""
+        return self._bucket
+
+    @property
     def connection_string(self):
         """JDBC connection string."""
         return self._connection_string
@@ -201,6 +206,17 @@ class StorageConnector:
     def arguments(self):
         """Additional JDBC arguments."""
         return self._arguments
+
+    @property
+    def path(self):
+        """If the connector refers to a path (e.g. S3) - return the path of the connector
+        """
+        if self._storage_connector_type == "S3":
+            return "s3://" + self._bucket
+        else:
+            raise Exception(
+                "Path is  not supported for connector " + self._storage_connector_type
+            )
 
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
