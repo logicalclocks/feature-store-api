@@ -23,13 +23,11 @@ class StorageConnectorApi:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-    def get(self, name, connector_type):
+    def get(self, name):
         """Get storage connector with name and type.
 
         :param name: name of the storage connector
         :type name: str
-        :param connector_type: connector type
-        :type connector_type: str
         :return: the storage connector
         :rtype: StorageConnector
         """
@@ -40,7 +38,6 @@ class StorageConnectorApi:
             "featurestores",
             self._feature_store_id,
             "storageconnectors",
-            connector_type,
             name,
         ]
         query_params = {"temporaryCredentials": True}
