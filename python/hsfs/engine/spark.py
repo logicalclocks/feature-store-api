@@ -84,10 +84,12 @@ class Engine:
             or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
         ):
             # This is a JDBC on demand featuregroup
-            on_demand_dataset = self._jdbc(query, storage_connector)
+            on_demand_dataset = self._jdbc(
+                on_demand_fg.query, on_demand_fg.storage_connector
+            )
         else:
             on_demand_dataset = self.read(
-                storage_connector,
+                on_demand_fg.storage_connector,
                 on_demand_fg.data_format,
                 on_demand_fg.read_options,
                 on_demand_fg.path,

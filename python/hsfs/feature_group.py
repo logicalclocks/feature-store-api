@@ -22,7 +22,7 @@ import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature
-from hsfs.core import query, feature_group_engine, statistics_engine, feature_group_base
+from hsfs.core import feature_group_engine, statistics_engine, feature_group_base
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -583,50 +583,3 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
-
-    @property
-    def statistics_config(self):
-        """Statistics configuration object defining the settings for statistics
-        computation of the feature group."""
-        return self._statistics_config
-
-    @statistics_config.setter
-    def statistics_config(self, statistics_config):
-        if isinstance(statistics_config, StatisticsConfig):
-            self._statistics_config = statistics_config
-        elif isinstance(statistics_config, dict):
-            self._statistics_config = StatisticsConfig(**statistics_config)
-        elif isinstance(statistics_config, bool):
-            self._statistics_config = StatisticsConfig(statistics_config)
-        elif statistics_config is None:
-            self._statistics_config = StatisticsConfig()
-        else:
-            raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
-                    type(statistics_config)
-                )
-            )
-
-    @property
-    def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
-
-    def get_statistics(self, commit_time: str = None):
-        """Returns the statistics for this feature group at a specific time.
-
-        If `commit_time` is `None`, the most recent statistics are returned.
-
-        # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
-
-        # Returns
-            `Statistics`. Statistics object.
-
-        # Raises
-            `RestAPIError`.
-        """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)

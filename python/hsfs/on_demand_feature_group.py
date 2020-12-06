@@ -19,6 +19,7 @@ import json
 
 from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import on_demand_feature_group_engine, feature_group_base
+from hsfs.statistics_config import StatisticsConfig
 
 
 class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
@@ -77,6 +78,12 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             self._features = [
                 feature.Feature.from_response_json(feat) for feat in features
             ]
+            self.statistics_config = StatisticsConfig(
+                desc_stats_enabled,
+                feat_corr_enabled,
+                feat_hist_enabled,
+                statistic_columns,
+            )
         else:
             self._features = features
 
@@ -85,6 +92,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
                 storage_connector
             )
         else:
+            self.statistics_config = statistics_config
             self._storage_connector = storage_connector
 
     def save(self):
@@ -138,8 +146,13 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
+            "readOptions": self._read_options,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
+            "descStatsEnabled": self._statistics_config.enabled,
+            "featHistEnabled": self._statistics_config.histograms,
+            "featCorrEnabled": self._statistics_config.correlations,
+            "statisticColumns": self._statistics_config.columns,
         }
 
     @property
@@ -173,6 +186,10 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     @property
     def path(self):
         return self._path
+
+    @property
+    def read_options(self):
+        return self._read_options
 
     @property
     def storage_connector(self):

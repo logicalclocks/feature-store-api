@@ -302,6 +302,7 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
         """Create a on-demand feature group metadata object.
 
@@ -319,7 +320,7 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the on-demand feature group
-            read_options: Options to pass to the Spark reader when reading data for an on-demand 
+            read_options: Options to pass to the Spark reader when reading data for an on-demand
                 feature group
             storage_connector: the storage connector to use to establish connectivity
                 with the data source.
@@ -333,6 +334,16 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this on-demand feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+
+        # Returns
+            `OnDemandFeatureGroup`. The on-demand feature group metadata object.
         """
         return on_demand_feature_group.OnDemandFeatureGroup(
             name=name,
@@ -346,6 +357,7 @@ class FeatureStore:
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
+            statistics_config=statistics_config,
         )
 
     def create_training_dataset(
