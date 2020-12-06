@@ -112,49 +112,49 @@ class FeatureGroupBase:
         """
         return self._feature_group_base_engine.get_tags(self, name)
 
-    @property
-    def statistics_config(self):
-        """Statistics configuration object defining the settings for statistics
-        computation of the feature group."""
-        return self._statistics_config
+    # @property
+    # def statistics_config(self):
+    #     """Statistics configuration object defining the settings for statistics
+    #     computation of the feature group."""
+    #     return self._statistics_config
 
-    @statistics_config.setter
-    def statistics_config(self, statistics_config):
-        if isinstance(statistics_config, StatisticsConfig):
-            self._statistics_config = statistics_config
-        elif isinstance(statistics_config, dict):
-            self._statistics_config = StatisticsConfig(**statistics_config)
-        elif isinstance(statistics_config, bool):
-            self._statistics_config = StatisticsConfig(statistics_config)
-        elif statistics_config is None:
-            self._statistics_config = StatisticsConfig()
-        else:
-            raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
-                    type(statistics_config)
-                )
-            )
+    # @statistics_config.setter
+    # def statistics_config(self, statistics_config):
+    #     if isinstance(statistics_config, StatisticsConfig):
+    #         self._statistics_config = statistics_config
+    #     elif isinstance(statistics_config, dict):
+    #         self._statistics_config = StatisticsConfig(**statistics_config)
+    #     elif isinstance(statistics_config, bool):
+    #         self._statistics_config = StatisticsConfig(statistics_config)
+    #     elif statistics_config is None:
+    #         self._statistics_config = StatisticsConfig()
+    #     else:
+    #         raise TypeError(
+    #             "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+    #                 type(statistics_config)
+    #             )
+    #         )
 
-    @property
-    def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
+    # @property
+    # def statistics(self):
+    #     """Get the latest computed statistics for the feature group."""
+    #     return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time: str = None):
-        """Returns the statistics for this feature group at a specific time.
+    # def get_statistics(self, commit_time: str = None):
+    #     """Returns the statistics for this feature group at a specific time.
 
-        If `commit_time` is `None`, the most recent statistics are returned.
+    #     If `commit_time` is `None`, the most recent statistics are returned.
 
-        # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+    #     # Arguments
+    #         commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
 
-        # Returns
-            `Statistics`. Statistics object.
+    #     # Returns
+    #         `Statistics`. Statistics object.
 
-        # Raises
-            `RestAPIError`.
-        """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
+    #     # Raises
+    #         `RestAPIError`.
+    #     """
+    #     if commit_time is None:
+    #         return self.statistics
+    #     else:
+    #         return self._statistics_engine.get(self, commit_time)
