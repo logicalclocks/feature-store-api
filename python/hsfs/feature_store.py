@@ -292,11 +292,10 @@ class FeatureStore:
     def create_on_demand_feature_group(
         self,
         name: str,
-        query: Optional[str],
-        data_format: Optional[str],
-        path: Optional[str],
-        read_options: Optional[Dict[str, str]],
         storage_connector: storage_connector.StorageConnector,
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = "",
         version: Optional[int] = None,
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
@@ -318,8 +317,6 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the on-demand feature group
-            read_options: Options to pass to the Spark reader when reading data for an on-demand
-                feature group
             storage_connector: the storage connector to use to establish connectivity
                 with the data source.
             version: Version of the on-demand feature group to retrieve, defaults to `None` and
@@ -348,7 +345,6 @@ class FeatureStore:
             query=query,
             data_format=data_format,
             path=path,
-            read_options=read_options,
             storage_connector=storage_connector,
             version=version,
             description=description,
