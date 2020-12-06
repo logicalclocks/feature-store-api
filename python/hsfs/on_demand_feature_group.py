@@ -19,10 +19,11 @@ import json
 
 from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import on_demand_feature_group_engine, feature_group_base
+from hsfs.core.feature_group_base import FeatureGroupBase
 # from hsfs.statistics_config import StatisticsConfig
 
 
-class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
+class OnDemandFeatureGroup(FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
 
     def __init__(
