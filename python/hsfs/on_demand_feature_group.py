@@ -20,8 +20,7 @@ import json
 from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import on_demand_feature_group_engine, feature_group_base
 from hsfs.core.feature_group_base import FeatureGroupBase
-
-# from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics_config import StatisticsConfig
 
 
 class OnDemandFeatureGroup(FeatureGroupBase):
