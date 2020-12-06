@@ -26,8 +26,11 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
 
     def __init__(
         self,
-        query,
         storage_connector,
+        query=None,
+        data_format=None,
+        read_options={},
+        path=None,
         name=None,
         version=None,
         description=None,
@@ -55,6 +58,9 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
+        self._data_format = data_format
+        self._path = path
+        self._read_options = read_options
         self._id = id
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
@@ -130,6 +136,8 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "query": self._query,
+            "dataFormat": self._data_format,
+            "path": self._path,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
         }
@@ -157,6 +165,14 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     @property
     def query(self):
         return self._query
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def storage_connector(self):
