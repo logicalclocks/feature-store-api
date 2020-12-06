@@ -91,7 +91,7 @@ class Engine:
             on_demand_dataset = self.read(
                 on_demand_fg.storage_connector,
                 on_demand_fg.data_format,
-                on_demand_fg.read_options,
+                {},
                 on_demand_fg.path,
             )
 
