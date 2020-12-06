@@ -92,7 +92,7 @@ class Engine:
                 on_demand_fg.storage_connector,
                 on_demand_fg.data_format,
                 {},
-                on_demand_fg.path,
+                on_demand_fg.storage_connector.path + on_demand_fg.path,
             )
 
         on_demand_dataset.createOrReplaceTempView(alias)
