@@ -15,7 +15,7 @@
 #
 
 from hsfs.core import query, feature_group_base_engine
-from hsfs.statistics_config import StatisticsConfig
+#from hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureGroupBase:
