@@ -112,12 +112,17 @@ class Query:
         return self
 
     def filter(self, f):
-        if not isinstance(f, filter.Filter):
-            raise TypeError("Expected type `Filter`, got `{}`".format(type(f)))
         if self._filter is None:
-            self._filter = f
-        else:
-            self._filter.__and__(f)
+            if isinstance(f, filter.Filter):
+                self._filter = filter.Logic.Single(left_f=f)
+            elif isinstance(f, filter.Logic):
+                self._filter = f
+            else:
+                raise TypeError(
+                    "Expected type `Filter` or `Logic`, got `{}`".format(type(f))
+                )
+        elif self._filter is not None:
+            self._filter = self._filter & f
         return self
 
     def json(self):
