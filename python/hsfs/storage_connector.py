@@ -110,77 +110,167 @@ class StorageConnector:
     @property
     def access_key(self):
         """Access key."""
-        return self._access_key
+        if self._storage_connector_type == "S3":
+            return self._access_key
+        else:
+            raise Exception(
+                "Access key is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def secret_key(self):
         """Secret key."""
-        return self._secret_key
+        if self._storage_connector_type == "S3":
+            return self._secret_key
+        else:
+            raise Exception(
+                "Secret key is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def server_encryption_algorithm(self):
         """Encryption algorithm if server-side S3 bucket encryption is enabled."""
-        return self._server_encryption_algorithm
+        if self._storage_connector_type == "S3":
+            return self._server_encryption_algorithm
+        else:
+            raise Exception(
+                "Encryption algorithm is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def server_encryption_key(self):
         """Encryption key if server-side S3 bucket encryption is enabled."""
-        return self._server_encryption_key
+        if self._storage_connector_type == "S3":
+            return self._server_encryption_key
+        else:
+            raise Exception(
+                "Encryption key is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def cluster_identifier(self):
         """Cluster identifier for redshift cluster."""
-        return self._cluster_identifier
+        if self._storage_connector_type == "REDSHIFT":
+            return self._cluster_identifier
+        else:
+            raise Exception(
+                "Cluster identifier is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_driver(self):
         """Database endpoint for redshift cluster."""
-        return self._database_driver
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_driver
+        else:
+            raise Exception(
+                "Database driver is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_endpoint(self):
         """Database endpoint for redshift cluster."""
-        return self._database_endpoint
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_endpoint
+        else:
+            raise Exception(
+                "Database endpoint is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_name(self):
         """Database name for redshift cluster."""
-        return self._database_name
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_name
+        else:
+            raise Exception(
+                "Database name is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_port(self):
         """Database port for redshift cluster."""
-        return self._database_port
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_port
+        else:
+            raise Exception(
+                "Database port is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def table_name(self):
         """Table name for redshift cluster."""
-        return self._table_name
+        if self._storage_connector_type == "REDSHIFT":
+            return self._table_name
+        else:
+            raise Exception(
+                "Table name is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_user_name(self):
         """Database username for redshift cluster."""
-        return self._database_user_name
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_user_name
+        else:
+            raise Exception(
+                "Database username is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def auto_create(self):
         """Database username for redshift cluster."""
-        return self._auto_create
+        if self._storage_connector_type == "REDSHIFT":
+            return self._auto_create
+        else:
+            raise Exception(
+                "Auto create is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_group(self):
         """Database username for redshift cluster."""
-        return self._database_group
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_group
+        else:
+            raise Exception(
+                "Database group is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def database_password(self):
         """Database password for redshift cluster."""
-        return self._database_password
+        if self._storage_connector_type == "REDSHIFT":
+            return self._database_password
+        else:
+            raise Exception(
+                "Database password is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def session_token(self):
         """Session token."""
-        return self._session_token
+        if self._storage_connector_type == "S3":
+            return self._session_token
+        else:
+            raise Exception(
+                "Session token is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def iam_role(self):
@@ -190,22 +280,48 @@ class StorageConnector:
     @property
     def expiration(self):
         """Cluster temporary credential expiration time."""
-        return self._expiration
+        if (
+            self._storage_connector_type == "S3"
+            or self._storage_connector_type == "REDSHIFT"
+        ):
+            return self._expiration
+        else:
+            raise Exception(
+                "Expiration is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def bucket(self):
         """Return the bucket for S3 connectors."""
-        return self._bucket
+        if self._storage_connector_type == "S3":
+            return self._bucket
+        else:
+            raise Exception(
+                "Bucket is not supported for connector " + self._storage_connector_type
+            )
 
     @property
     def connection_string(self):
         """JDBC connection string."""
-        return self._connection_string
+        if self._storage_connector_type == "JDBC":
+            return self._connection_string
+        else:
+            raise Exception(
+                "Connection string is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def arguments(self):
         """Additional JDBC arguments."""
-        return self._arguments
+        if self._storage_connector_type == "JDBC":
+            return self._arguments
+        else:
+            raise Exception(
+                "Arguments is not supported for connector "
+                + self._storage_connector_type
+            )
 
     @property
     def path(self):
@@ -215,7 +331,7 @@ class StorageConnector:
             return "s3://" + self._bucket
         else:
             raise Exception(
-                "Path is  not supported for connector " + self._storage_connector_type
+                "Path is not supported for connector " + self._storage_connector_type
             )
 
     def spark_options(self):
