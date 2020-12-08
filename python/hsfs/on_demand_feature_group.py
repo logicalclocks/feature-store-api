@@ -24,6 +24,7 @@ from hsfs.statistics_config import StatisticsConfig
 
 class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
 
     def __init__(
         self,
