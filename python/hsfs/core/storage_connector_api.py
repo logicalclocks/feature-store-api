@@ -80,15 +80,9 @@ class StorageConnectorApi:
             "featurestores",
             self._feature_store_id,
             "storageconnectors",
+            "onlinefeaturestore",
         ]
 
-        result = [
-            conn
-            for conn in _client._send_request("GET", path_params)
-            if self.CONST_ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX in conn["name"]
-        ]
-
-        if len(result) > 0:
-            return storage_connector.StorageConnector.from_response_json(result[0])
-        else:
-            raise Exception("Could not find online storage connector")
+        return storage_connector.StorageConnector.from_response_json(
+            _client._send_request("GET", path_params)
+        )
