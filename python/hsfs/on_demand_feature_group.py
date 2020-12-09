@@ -120,6 +120,13 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         )
         return self.select_all().show(n)
 
+    def commit(self):
+        """When using on-demand feature groups, register new commits"""
+        if self._data_format != "DELTA":
+            raise Exception(
+                "Commit operations available only for Delta On-Demand feature groups"
+            )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

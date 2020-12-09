@@ -325,6 +325,16 @@ class Engine:
             for feat in dataframe.schema
         }
 
+    def get_last_delta_commit(self, on_dmd_feature_group):
+        from delta.tables import *
+
+        delta_table = DeltaTable.forPath(
+            self._spark_session,
+            on_dmd_feature_group.storage_connector.path + on_dmd_feature_group.path,
+        )
+        return 
+        
+
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)
         insert_schema = dataframe.schema
