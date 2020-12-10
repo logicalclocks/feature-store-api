@@ -73,10 +73,6 @@ public class TrainingDataset {
 
   @Getter
   @Setter
-  private Integer storageConnectorId;
-
-  @Getter
-  @Setter
   @JsonIgnore
   private StorageConnector storageConnector;
 
@@ -137,7 +133,6 @@ public class TrainingDataset {
     this.storageConnector = storageConnector;
 
     if (storageConnector != null) {
-      this.storageConnectorId = storageConnector.getId();
       if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
         // Default it's already HOPSFS_TRAINING_DATASET
         this.trainingDatasetType = TrainingDatasetType.EXTERNAL_TRAINING_DATASET;

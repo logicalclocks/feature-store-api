@@ -21,8 +21,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.StorageConnectorType;
-import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Dataset;
@@ -116,7 +114,7 @@ public class Utils {
 
   public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
     StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
-        featureGroup.getFeatureStore().getName(), StorageConnectorType.JDBC);
+        featureGroup.getFeatureStore().getName());
     String connStr = storageConnector.getConnectionString();
     String pw = FileUtils.readFileToString(new File("material_passwd"));
     return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw

@@ -20,7 +20,6 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.StorageConnectorType;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,7 @@ public class StorageConnectorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
-  public StorageConnector getByNameAndType(FeatureStore featureStore, String name, StorageConnectorType type)
+  public StorageConnector getByNameAndType(FeatureStore featureStore, String name)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -48,7 +47,6 @@ public class StorageConnectorApi {
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
-        .set("connType", type)
         .set("name", name)
         .set("temporaryCredentials", true)
         .expand();
