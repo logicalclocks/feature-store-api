@@ -20,6 +20,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.FilterLogic;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -185,5 +188,29 @@ public class FeatureGroupBase {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
     featureGroupBaseEngine.appendFeatures(this, featureList);
+  }
+
+  /**
+   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
+   *
+   * @param filter
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query filter(Filter filter) throws FeatureStoreException, IOException {
+    return this.selectAll().filter(filter);
+  }
+
+  /**
+   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
+   *
+   * @param filter
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query filter(FilterLogic filter) throws FeatureStoreException, IOException {
+    return this.selectAll().filter(filter);
   }
 }

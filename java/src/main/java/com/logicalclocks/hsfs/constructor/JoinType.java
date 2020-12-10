@@ -14,30 +14,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.constructor;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@AllArgsConstructor
-@NoArgsConstructor
-public class HudiFeatureGroupAlias {
-
-  @Getter
-  @Setter
-  private String alias;
-
-  @Getter
-  @Setter
-  private FeatureGroup featureGroup;
-
-  @Getter
-  @Setter
-  private Long leftFeatureGroupStartTimestamp;
-
-  @Getter
-  @Setter
-  private Long leftFeatureGroupEndTimestamp;
+public enum JoinType {
+  INNER,
+  FULL,
+  CROSS,
+  LEFT,
+  RIGHT,
+  LEFT_SEMI_JOIN,
+  COMMA;
 }
