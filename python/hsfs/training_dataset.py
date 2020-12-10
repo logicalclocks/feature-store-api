@@ -62,6 +62,7 @@ class TrainingDataset:
         inode_id=None,
         storage_connector_name=None,
         storage_connector_type=None,
+        storage_connector_id=None,
         training_dataset_type=None,
         from_query=None,
         querydto=None,
