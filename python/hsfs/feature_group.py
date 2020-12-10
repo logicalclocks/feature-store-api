@@ -81,6 +81,37 @@ class FeatureGroupBase:
             self._feature_store_name, self._feature_store_id, self, features
         )
 
+    def filter(self, f: Union[filter.Filter, filter.Logic]):
+        """Apply filter to the feature group.
+
+        Selects all features and returns the resulting `Query` with the applied filter.
+
+        ```python
+        from hsfs.feature import Feature
+
+        fg.filter(Feature("weekly_sales") > 1000)
+        ```
+
+        If you are planning to join the filtered feature group later on with another
+        feature group, make sure to select the filtered feature explicitly from the
+        respective feature group:
+        ```python
+        fg.filter(fg.feature1 == 1).show(10)
+        ```
+
+        Composite filters require parenthesis:
+        ```python
+        fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
+        ```
+
+        # Arguments
+            f: Filter object.
+
+        # Returns
+            `Query`. The query object with the applied filter.
+        """
+        return self.select_all().filter(f)
+
     def add_tag(self, name: str, value: str = None):
         """Attach a name/value tag to a feature group.
 
@@ -125,6 +156,13 @@ class FeatureGroupBase:
             `RestAPIError`.
         """
         return self._feature_group_base_engine.get_tags(self, name)
+
+    def _set_feature_attributes(self, features: List[feature.Feature]):
+        for f in features:
+            if hasattr(self, f.name):
+                raise ValueError("Feature name is reserved: {}".format(f.name))
+            else:
+                setattr(self, f.name, f)
 
 
 class FeatureGroup(FeatureGroupBase):
@@ -203,13 +241,8 @@ class FeatureGroup(FeatureGroupBase):
             self._primary_key = primary_key
             self._partition_key = partition_key
 
-        # TODO move into function anc remember to call it always when features are set
         # set features as attributes
-        for f in self._features:
-            if hasattr(self, f.name):
-                raise ValueError("Feature name is reserved: {}".format(f.name))
-            else:
-                setattr(self, f.name, f)
+        self._set_feature_attributes(self._features)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -460,37 +493,6 @@ class FeatureGroup(FeatureGroupBase):
         )
 
         self.compute_statistics()
-
-    def filter(self, f: filter.Filter):
-        """Apply filter to the feature group.
-
-        Selects all features and returns the resulting `Query` with the applied filter.
-
-        ```python
-        from hsfs.feature import Feature
-
-        fg.filter(Feature("weekly_sales") > 1000)
-        ```
-
-        If you are planning to join the filtered feature group later on with another
-        feature group, make sure to select the filtered feature explicitly from the
-        respective feature group:
-        ```python
-        fg.filter(fg.feature1 == 1).show(10)
-        ```
-
-        Composite filters require parenthesis:
-        ```python
-        fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
-        ```
-
-        # Arguments
-            f: Filter object.
-
-        # Returns
-            `Query`. The query object with the applied filter.
-        """
-        return self.select_all().filter(f)
 
     def commit_details(self, limit: Optional[int] = None):
         """Retrieves commit timeline for this feature group.
@@ -836,6 +838,12 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             self._features = [
                 feature.Feature.from_response_json(feat) for feat in features
             ]
+
+            # remove old feature attributes, creates problems otherwise when updating
+            # the object in place
+            for f in self._features:
+                if hasattr(self, f.name):
+                    delattr(self, f.name)
         else:
             self._features = features
 
@@ -845,6 +853,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
+
+        self._set_feature_attributes(self._features)
 
     def save(self):
         self._feature_group_engine.save(self)
