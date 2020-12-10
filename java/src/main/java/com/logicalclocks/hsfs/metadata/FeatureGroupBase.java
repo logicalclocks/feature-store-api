@@ -213,4 +213,19 @@ public class FeatureGroupBase {
   public Query filter(FilterLogic filter) throws FeatureStoreException, IOException {
     return this.selectAll().filter(filter);
   }
+
+  /**
+   * Retrieve a feature of the feature group by name.
+   *
+   * @param name
+   * @return Feature
+   * @throws FeatureStoreException
+   */
+  @JsonIgnore
+  public Feature getFeature(String name) throws FeatureStoreException {
+    return features.stream().filter(f -> f.getName().equalsIgnoreCase(name))
+        .findFirst()
+        .orElseThrow(() -> new FeatureStoreException("Feature with name `" + name
+            + "` not found in feature group `" + this.name + "`."));
+  }
 }
