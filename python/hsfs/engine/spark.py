@@ -78,25 +78,9 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        if (
-            on_demand_fg.storage_connector.connector_type == "JDBC"
-            or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
-        ):
-            # This is a JDBC on demand featuregroup
-            on_demand_dataset = self._jdbc(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        else:
-            on_demand_dataset = self.read(
-                on_demand_fg.storage_connector,
-                on_demand_fg.data_format,
-                {},
-                on_demand_fg.storage_connector.path + on_demand_fg.path,
-            )
-
+    def register_on_demand_temporary_table(self, query, storage_connector, alias):
+        on_demand_dataset = self._jdbc(query, storage_connector)
         on_demand_dataset.createOrReplaceTempView(alias)
-        return on_demand_dataset
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
@@ -201,7 +185,13 @@ class Engine:
             )
 
     def _save_offline_dataframe(
-        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
+        self,
+        table_name,
+        feature_group,
+        dataframe,
+        save_mode,
+        operation,
+        write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -248,7 +238,6 @@ class Engine:
 
         if storage_connector.connector_type == StorageConnector.S3:
             path = self._setup_s3(storage_connector, path)
-
         return (
             self._spark_session.read.format(data_format)
             .options(**read_options)
@@ -257,8 +246,10 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf, relevant_columns, correlations, histograms
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf, relevant_columns, correlations, histograms
+            )
         )
 
     def write_options(self, data_format, provided_options):
@@ -325,16 +316,6 @@ class Engine:
             for feat in dataframe.schema
         }
 
-    def get_last_delta_commit(self, on_dmd_feature_group):
-        from delta.tables import *
-
-        delta_table = DeltaTable.forPath(
-            self._spark_session,
-            on_dmd_feature_group.storage_connector.path + on_dmd_feature_group.path,
-        )
-        return 
-        
-
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)
         insert_schema = dataframe.schema
@@ -381,7 +362,8 @@ class Engine:
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token", storage_connector.session_token,
+                "fs.s3a.session.token",
+                storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1)
 

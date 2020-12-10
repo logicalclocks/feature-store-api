@@ -19,19 +19,15 @@ import json
 
 from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import on_demand_feature_group_engine, feature_group_base
-from hsfs.statistics_config import StatisticsConfig
 
 
 class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
-    ENTITY_TYPE = "featuregroups"
 
     def __init__(
         self,
+        query,
         storage_connector,
-        query=None,
-        data_format=None,
-        path=None,
         name=None,
         version=None,
         description=None,
@@ -59,8 +55,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
-        self._data_format = data_format
-        self._path = path
         self._id = id
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
@@ -77,14 +71,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             self._features = [
                 feature.Feature.from_response_json(feat) for feat in features
             ]
-            self.statistics_config = StatisticsConfig(
-                desc_stats_enabled,
-                feat_corr_enabled,
-                feat_hist_enabled,
-                statistic_columns,
-            )
         else:
-            self.statistics_config = statistics_config
             self._features = features
 
         if storage_connector is not None and isinstance(storage_connector, dict):
@@ -96,9 +83,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
 
     def save(self):
         self._feature_group_engine.save(self)
-
-        if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read())
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
@@ -119,13 +103,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             ),
         )
         return self.select_all().show(n)
-
-    def commit(self):
-        """When using on-demand feature groups, register new commits"""
-        if self._data_format != "DELTA":
-            raise Exception(
-                "Commit operations available only for Delta On-Demand feature groups"
-            )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -153,14 +130,8 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "query": self._query,
-            "dataFormat": self._data_format,
-            "path": self._path,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
-            "descStatsEnabled": self._statistics_config.enabled,
-            "featHistEnabled": self._statistics_config.histograms,
-            "featCorrEnabled": self._statistics_config.correlations,
-            "statisticColumns": self._statistics_config.columns,
         }
 
     @property
@@ -186,14 +157,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     @property
     def query(self):
         return self._query
-
-    @property
-    def data_format(self):
-        return self._data_format
-
-    @property
-    def path(self):
-        return self._path
 
     @property
     def storage_connector(self):

@@ -22,7 +22,7 @@ import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature
-from hsfs.core import query, feature_group_engine, feature_group_base
+from hsfs.core import query, feature_group_engine, statistics_engine, feature_group_base
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -98,6 +98,10 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
+        )
+
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
         )
 
     def read(
@@ -366,6 +370,57 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def update_statistics_config(self):
+        """Update the statistics configuration of the feature group.
+
+        Change the `statistics_config` object and persist the changes by calling
+        this method.
+
+        # Returns
+            `FeatureGroup`. The updated metadata object of the feature group.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_engine.update_statistics_config(self)
+        return self
+
+    def update_description(self, description: str):
+        """Update the description of the feature gorup.
+
+        # Arguments
+            description: str. New description string.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_description(self, description)
+        return self
+
+    def compute_statistics(self):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+
+        # Returns
+            `Statistics`. The statistics metadata object.
+
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            return self._statistics_engine.compute_statistics(self, self.read())
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
+
     def append_features(self, features):
         """Append features to the schema of the feature group.
 
@@ -528,3 +583,50 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
+
+    @property
+    def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the feature group."""
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the feature group."""
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time: str = None):
+        """Returns the statistics for this feature group at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        # Arguments
+            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `RestAPIError`.
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)
