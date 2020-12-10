@@ -23,7 +23,7 @@ import numpy as np
 try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature
