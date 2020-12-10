@@ -32,8 +32,8 @@ class TagsApi:
     def add(self, metadata_instance, name, value):
         """Attach a name/value tag to a training dataset or feature group.
 
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
+        A tag consists of a name/value pair. Tag names are unique identifiers.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
 
         :param metadata_instance: metadata object of the instance to add the
             tag for
@@ -54,8 +54,7 @@ class TagsApi:
             "tags",
             name,
         ]
-        query_params = {"value": value} if value else None
-        _client._send_request("PUT", path_params, query_params=query_params)
+        _client._send_request("PUT", path_params, data=value)
 
     def delete(self, metadata_instance, name):
         """Delete a tag from a training dataset or feature group.

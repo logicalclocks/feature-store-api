@@ -266,11 +266,11 @@ class TrainingDataset:
         """
         self.read(split).show(n)
 
-    def add_tag(self, name: str, value: str = None):
+    def add_tag(self, name: str, value: str):
         """Attach a name/value tag to a training dataset.
 
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
+         A tag consists of a name/value pair. Tag names are unique identifiers.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
