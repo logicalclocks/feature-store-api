@@ -82,6 +82,11 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
+        eninge: Which engine to use, `"spark"` or `"hive"`. Defaults to `None`, which
+            initializes the engine to Spark if the environment provides Spark, for
+            example on Hopsworks and Databricks, or falls back on Hive if Spark is not
+            available, e.g. on local Python environments or AWS SageMaker. This option
+            allows you to override this behaviour.
         region_name: The name of the AWS region in which the required secrets are
             stored, defaults to `"default"`.
         secrets_store: The secrets storage to be used, either `"secretsmanager"`,
@@ -108,6 +113,7 @@ class Connection:
         host: str = None,
         port: int = HOPSWORKS_PORT_DEFAULT,
         project: str = None,
+        engine: str = None,
         region_name: str = AWS_DEFAULT_REGION,
         secrets_store: str = SECRETS_STORE_DEFAULT,
         hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
@@ -119,6 +125,7 @@ class Connection:
         self._host = host
         self._port = port
         self._project = project
+        self._engine = engine
         self._region_name = region_name
         self._secrets_store = secrets_store
         self._hostname_verification = hostname_verification
@@ -168,48 +175,40 @@ class Connection:
         """
         self._connected = True
         try:
+            # init client
             if client.base.Client.REST_ENDPOINT not in os.environ:
-                if importlib.util.find_spec("pyspark"):
-                    # databricks, emr, external spark clusters
-                    client.init(
-                        "external",
-                        self._host,
-                        self._port,
-                        self._project,
-                        self._region_name,
-                        self._secrets_store,
-                        self._hostname_verification,
-                        self._trust_store_path,
-                        None,
-                        self._api_key_file,
-                        self._api_key_value,
-                    )
-                    engine.init("spark")
-                else:
-                    # aws
-                    client.init(
-                        "external",
-                        self._host,
-                        self._port,
-                        self._project,
-                        self._region_name,
-                        self._secrets_store,
-                        self._hostname_verification,
-                        self._trust_store_path,
-                        self._cert_folder,
-                        self._api_key_file,
-                        self._api_key_value,
-                    )
-                    engine.init(
-                        "hive",
-                        self._host,
-                        self._cert_folder,
-                        self._project,
-                        client.get_instance()._cert_key,
-                    )
+                client.init(
+                    "external",
+                    self._host,
+                    self._port,
+                    self._project,
+                    self._region_name,
+                    self._secrets_store,
+                    self._hostname_verification,
+                    self._trust_store_path,
+                    self._cert_folder,
+                    self._api_key_file,
+                    self._api_key_value,
+                )
             else:
                 client.init("hopsworks")
+
+            # init engine
+            if self._engine.lower() == "spark" or (
+                self._engine is None and importlib.util.find_spec("pyspark")
+            ):
                 engine.init("spark")
+            elif self._engine.lower() == "hive" or (
+                self._engine is None and not importlib.util.find_spec("pyspark")
+            ):
+                engine.init(
+                    "hive",
+                    self._host,
+                    self._cert_folder,
+                    self._project,
+                    client.get_instance()._cert_key,
+                )
+
             self._feature_store_api = feature_store_api.FeatureStoreApi()
             self._project_api = project_api.ProjectApi()
             self._hosts_api = hosts_api.HostsApi()
