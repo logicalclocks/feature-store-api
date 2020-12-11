@@ -118,20 +118,12 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.LESS_THAN, value);
   }
 
-  public Filter lt(Integer value) {
-    return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
-  }
-
   public Filter lt(Float value) {
     return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
   }
 
   public Filter le(String value) {
     return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value);
-  }
-
-  public Filter le(Integer value) {
-    return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value.toString());
   }
 
   public Filter le(Float value) {
@@ -142,20 +134,12 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.EQUALS, value);
   }
 
-  public Filter eq(Integer value) {
-    return new Filter(this, SqlFilterCondition.EQUALS, value.toString());
-  }
-
   public Filter eq(Float value) {
     return new Filter(this, SqlFilterCondition.EQUALS, value.toString());
   }
 
   public Filter ne(String value) {
     return new Filter(this, SqlFilterCondition.NOT_EQUALS, value);
-  }
-
-  public Filter ne(Integer value) {
-    return new Filter(this, SqlFilterCondition.NOT_EQUALS, value.toString());
   }
 
   public Filter ne(Float value) {
@@ -166,20 +150,12 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.GREATER_THAN, value);
   }
 
-  public Filter gt(Integer value) {
-    return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toString());
-  }
-
   public Filter gt(Float value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toString());
   }
 
   public Filter ge(String value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value);
-  }
-
-  public Filter ge(Integer value) {
-    return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
   }
 
   public Filter ge(Float value) {
