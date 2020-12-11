@@ -30,6 +30,7 @@ from hsfs.core import (
 )
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:
@@ -157,12 +158,57 @@ class FeatureGroupBase:
         """
         return self._feature_group_base_engine.get_tags(self, name)
 
-    def _set_feature_attributes(self, features: List[feature.Feature]):
-        for f in features:
-            if hasattr(self, f.name):
-                raise ValueError("Feature name is reserved: {}".format(f.name))
-            else:
-                setattr(self, f.name, f)
+    def get_feature(self, name: str):
+        """Retrieve a `Feature` object from the schema of the feature group.
+
+        There are several ways to access features of a feature group:
+
+        ```python
+        fg.feature1
+        fg["feature1"]
+        fg.get_feature("feature1")
+        ```
+
+        !!! note
+            Attribute access to features works only for non-reserved names. For example
+            features named `id` or `name` will not be accessible via `fg.name`, instead
+            this will return the name of the feature group itself. Fall back on using
+            the `get_feature` method.
+
+        Args:
+            name (str): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise FeatureStoreException(
+                f"'FeatureGroup' object has no feature called '{name}'."
+            )
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise AttributeError(
+                f"'FeatureGroup' object has no attribute '{name}'. "
+                "If you are trying to access a feature, fall back on "
+                "using the `get_feature` method."
+            )
+
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Expected type `str`, got `{type(name)}`. "
+                "Features are accessible by name."
+            )
+        feature = [f for f in self._features if f.name == name]
+        if len(feature) == 1:
+            return feature[0]
+        else:
+            raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")
 
 
 class FeatureGroup(FeatureGroupBase):
@@ -231,18 +277,11 @@ class FeatureGroup(FeatureGroupBase):
                 feat.name for feat in self._features if feat.partition is True
             ]
 
-            for f in self._features:
-                if hasattr(self, f.name):
-                    delattr(self, f.name)
-
         else:
             # initialized by user
             self.statistics_config = statistics_config
             self._primary_key = primary_key
             self._partition_key = partition_key
-
-        # set features as attributes
-        self._set_feature_attributes(self._features)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -853,8 +892,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-
-        self._set_feature_attributes(self._features)
 
     def save(self):
         self._feature_group_engine.save(self)
