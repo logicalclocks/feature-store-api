@@ -40,7 +40,9 @@ class DatasetApi:
             query_params["flowCurrentChunkSize"] = len(chunk)
             query_params["flowChunkNumber"] = chunk_number
 
-            self._upload_request(query_params, path, chunk)
+            self._upload_request(
+                query_params, path, util.feature_group_name(feature_group), chunk
+            )
 
             chunk_number += 1
 
@@ -52,6 +54,7 @@ class DatasetApi:
             "flowTotalSize": size,
             "flowIdentifier": util.feature_group_name(feature_group),
             "flowFilename": util.feature_group_name(feature_group),
+            "flowRelativePath": util.feature_group_name(feature_group),
             "flowTotalChunks": num_chunks,
         }
 

@@ -23,12 +23,15 @@ class JobApi:
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", name]
 
+        headers = {"content-type": "application/json"}
         return job.Job.from_response_json(
-            _client._send_request("PUT", path_params, data=job_conf.json())
+            _client._send_request(
+                "PUT", path_params, headers=headers, data=job_conf.json()
+            )
         )
 
     def launch(self, name):
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", name, "executions"]
 
-        _client._send_request("POST", path_params)
+        _client._send_request("POST", path_params, head)

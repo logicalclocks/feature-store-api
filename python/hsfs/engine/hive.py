@@ -17,6 +17,7 @@
 import os
 import time
 import pandas as pd
+import numpy as np
 from pyhive import hive
 from sqlalchemy import create_engine
 
@@ -73,9 +74,29 @@ class Engine:
 
     def parse_schema_feature_group(self, dataframe):
         return [
-            feature.Feature(feat_name, feat_type)
+            feature.Feature(feat_name, self._convert_pandas_type(feat_type))
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
+
+    def _convert_pandas_type(self, dtype):
+        # This is a simple type conversion between pandas type and pyspark types.
+        # In PySpark they use PyArrow to do the schema conversion, but this python layer
+        # should be as thin as possible. Adding PyArrow will make the library less flexible.
+        # If the conversion fails, users can always fall back and provide their own types
+
+        if dtype == np.dtype("O"):
+            # This is an object, fall back to string
+            return "string"
+        elif dtype == np.dtype("int32"):
+            return "int"
+        elif dtype == np.dtype("int64"):
+            return "bigint"
+        elif dtype == np.dtype("float32"):
+            return "float"
+        elif dtype == np.dtype("float64"):
+            return "double"
+
+        return "string"
 
     def save_dataframe(
         self,
@@ -108,7 +129,9 @@ class Engine:
         self._job_api.launch(job.name)
 
     def _generate_job_name(self, prefix, feature_group):
-        return "_".join([prefix, util.feature_group_name(feature_group), time.time()])
+        return "_".join(
+            [prefix, util.feature_group_name(feature_group), str(time.time())]
+        )
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

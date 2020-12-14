@@ -225,13 +225,12 @@ class FeatureGroupApi:
             _client._send_request("GET", path_params, query_params, headers=headers),
         )
 
-    def ingestion(self, feature_group_instance, options):
+    def ingestion(self, feature_group_instance):
         """
         Setup Job for dataframe ingestion
         # Arguments
         feature_group_instance: FeatureGroup, required
             metadata object of feature group.
-        options: write options to pass to save_dataframe
         """
 
         _client = client.get_instance()
