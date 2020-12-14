@@ -32,6 +32,10 @@ Follow this guide to create a role to be used by EC2 with no permissions attache
 [Creating a Role for an AWS Service (Console)](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html).
 Take note of the ARN of the role you just created.
 
+For the suggested permissions check [our guide here](../getting_started/#step-2-creating-instance-profile). **Required** permissions are
+only those which give access to the **S3 bucket**. If you select only the required permissions, then enabling `Collect logs to CloudWatch` feature
+will not have any effect.
+
 ## Step 3: Set permissions of the cross-account role
 
 During the account setup for Hopsworks.ai, you were asked to create and provide a cross-account role.
