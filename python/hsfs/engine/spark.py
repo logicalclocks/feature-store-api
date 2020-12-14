@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-import os
+import importlib.util
 
 import pandas as pd
 import numpy as np
@@ -23,7 +23,7 @@ import numpy as np
 try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature
@@ -45,7 +45,7 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
         self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
 
-        if not os.path.exists("/dbfs/"):
+        if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             self._setup_pydoop()
 
@@ -65,7 +65,8 @@ class Engine:
 
     def _jdbc(self, sql_query, connector):
         options = connector.spark_options()
-        options["query"] = sql_query
+        if sql_query:
+            options["query"] = sql_query
 
         return (
             self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
@@ -184,7 +185,13 @@ class Engine:
             )
 
     def _save_offline_dataframe(
-        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
+        self,
+        table_name,
+        feature_group,
+        dataframe,
+        save_mode,
+        operation,
+        write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -239,8 +246,10 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf, relevant_columns, correlations, histograms
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf, relevant_columns, correlations, histograms
+            )
         )
 
     def write_options(self, data_format, provided_options):
@@ -346,6 +355,15 @@ class Engine:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.server-side-encryption-key",
                 storage_connector.server_encryption_key,
+            )
+        if storage_connector.session_token:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.aws.credentials.provider",
+                "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
+            )
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.s3a.session.token",
+                storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1)
 

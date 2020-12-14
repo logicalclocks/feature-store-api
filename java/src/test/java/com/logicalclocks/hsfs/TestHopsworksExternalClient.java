@@ -16,7 +16,6 @@
 package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.metadata.Credentials;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import io.specto.hoverfly.junit.core.SimulationSource;
 import io.specto.hoverfly.junit.dsl.HttpBodyConverter;
@@ -53,21 +52,6 @@ public class TestHopsworksExternalClient {
         .willReturn(success().body(HttpBodyConverter.json(credentials)))
     ));
 
-  // @Test
-  // public void testReadAPIKey() throws IOException, FeatureStoreException {
-  //   CloseableHttpClient httpClient = HttpClients.createSystem();
-  //   try {
-  //     HopsworksConnection hc = HopsworksConnection.builder().host("35.241.253.100").hostnameVerification(false)
-  //             .project("demo_featurestore_admin000")
-  //             .apiKeyValue("ovVQksgJezSckjyK.ftO2YywCI6gZp4btlvWRnSDjSgyAQgCTRAoQTTSXBxPRMo0Dq029eAf3HVq3I6JO").build();
-  //     System.out.println("Connected");
-  //     FeatureStore fs = hc.getFeatureStore();
-  //     Assert.assertTrue(fs != null);
-  //   } catch (Exception e) {
-  // 	// Do not assert an error as this unit test method needs an external cluster
-  //   }
-  // }
-
   @Test
   public void testReadAPIKeyFromFile() throws IOException, FeatureStoreException {
     Path apiFilePath = Paths.get(System.getProperty("java.io.tmpdir"), "test.api");
@@ -78,20 +62,5 @@ public class TestHopsworksExternalClient {
         httpClient, httpHost);
     String apiKey = hopsworksExternalClient.readApiKey(null, null, apiFilePath.toString());
     Assert.assertEquals("hello", apiKey);
-  }
-
-  @Test
-  public void testDownloadCredential() throws Exception {
-    Project project = new Project(1);
-
-    CloseableHttpClient httpClient = HttpClients.createSystem();
-    HttpHost httpHost = new HttpHost("test");
-
-    HopsworksExternalClient hopsworksExternalClient = new HopsworksExternalClient(
-        httpClient, httpHost);
-
-    HopsworksClient.setInstance(new HopsworksClient(hopsworksExternalClient));
-    String password = hopsworksExternalClient.downloadCredentials(project, System.getProperty("java.io.tmpdir"));
-    Assert.assertEquals(certPwd, password);
   }
 }

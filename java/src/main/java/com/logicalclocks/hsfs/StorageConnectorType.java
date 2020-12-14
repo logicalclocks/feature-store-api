@@ -19,5 +19,6 @@ package com.logicalclocks.hsfs;
 public enum StorageConnectorType {
   HOPSFS,
   S3,
-  JDBC
+  JDBC,
+  REDSHIFT
 }

@@ -18,10 +18,8 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.SecretStore;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.net.util.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -242,18 +240,5 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       // Internal exception, try one more time
       return httpClient.execute(httpHost, request, authHandler);
     }
-  }
-
-  @Override
-  public String downloadCredentials(Project project, String certPath) throws IOException, FeatureStoreException {
-    LOGGER.info("Fetching certificates for the project");
-    ProjectApi projectApi = new ProjectApi();
-    Credentials credentials = projectApi.downloadCredentials(project);
-
-    FileUtils.writeByteArrayToFile(Paths.get(certPath, "keyStore.jks").toFile(),
-        Base64.decodeBase64(credentials.getkStore()));
-    FileUtils.writeByteArrayToFile(Paths.get(certPath, "trustStore.jks").toFile(),
-        Base64.decodeBase64(credentials.gettStore()));
-    return credentials.getPassword();
   }
 }
