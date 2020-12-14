@@ -236,7 +236,6 @@ class FeatureGroup(FeatureGroupBase):
         statistic_columns=None,
         online_enabled=False,
         time_travel_format=None,
-        hudi_enabled=False,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -260,7 +259,6 @@ class FeatureGroup(FeatureGroupBase):
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
-        self._hudi_enabled = hudi_enabled
 
         if id is not None:
             # initialized by backend
