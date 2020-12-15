@@ -114,51 +114,27 @@ public class Feature {
     this.defaultValue = defaultValue;
   }
 
-  public Filter lt(String value) {
-    return new Filter(this, SqlFilterCondition.LESS_THAN, value);
-  }
-
-  public Filter lt(Float value) {
+  public Filter lt(Object value) {
     return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
   }
 
-  public Filter le(String value) {
-    return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value);
-  }
-
-  public Filter le(Float value) {
+  public Filter le(Object value) {
     return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value.toString());
   }
 
-  public Filter eq(String value) {
-    return new Filter(this, SqlFilterCondition.EQUALS, value);
-  }
-
-  public Filter eq(Float value) {
+  public Filter eq(Object value) {
     return new Filter(this, SqlFilterCondition.EQUALS, value.toString());
   }
 
-  public Filter ne(String value) {
-    return new Filter(this, SqlFilterCondition.NOT_EQUALS, value);
-  }
-
-  public Filter ne(Float value) {
+  public Filter ne(Object value) {
     return new Filter(this, SqlFilterCondition.NOT_EQUALS, value.toString());
   }
 
-  public Filter gt(String value) {
-    return new Filter(this, SqlFilterCondition.GREATER_THAN, value);
-  }
-
-  public Filter gt(Float value) {
+  public Filter gt(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toString());
   }
 
-  public Filter ge(String value) {
-    return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value);
-  }
-
-  public Filter ge(Float value) {
+  public Filter ge(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
   }
 }
