@@ -180,7 +180,7 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_storage_connector(self, name: str, connector_type: str):
+    def get_storage_connector(self, name: str):
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -194,20 +194,18 @@ class FeatureStore:
         !!! example "Getting a Storage Connector"
             ```python
 
-            sc = fs.get_storage_connector("demo_fs_meb10000_Training_Datasets", "HOPSFS")
+            sc = fs.get_storage_connector("demo_fs_meb10000_Training_Datasets")
 
             td = fs.create_training_dataset(..., storage_connector=sc, ...)
             ```
 
         # Arguments
             name: Name of the storage connector to retrieve.
-            connector_type: Type of the storage connector, e.g. `"JDBC"`, `"HOPSFS"`
-                or `"S3"`.
 
         # Returns
             `StorageConnector`. Storage connector object.
         """
-        return self._storage_connector_api.get(name, connector_type)
+        return self._storage_connector_api.get(name)
 
     def sql(self, query, dataframe_type="default", online=False):
         return self._feature_group_engine.sql(query, self._name, dataframe_type, online)

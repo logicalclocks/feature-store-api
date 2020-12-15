@@ -28,7 +28,6 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.core import (
     query,
     training_dataset_api,
-    storage_connector_api,
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
@@ -60,9 +59,6 @@ class TrainingDataset:
         id=None,
         jobs=None,
         inode_id=None,
-        storage_connector_name=None,
-        storage_connector_type=None,
-        storage_connector_id=None,
         training_dataset_type=None,
         from_query=None,
         querydto=None,
@@ -86,10 +82,6 @@ class TrainingDataset:
             featurestore_id
         )
 
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            featurestore_id
-        )
-
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -105,9 +97,10 @@ class TrainingDataset:
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
-            self._storage_connector = self._storage_connector_api.get(
-                storage_connector_name, storage_connector_type
+            self._storage_connector = StorageConnector.from_response_json(
+                storage_connector
             )
+
             self._features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
                 for feat in features
