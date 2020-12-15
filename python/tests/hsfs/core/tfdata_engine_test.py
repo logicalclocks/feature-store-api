@@ -16,7 +16,7 @@
 
 try:
     import tensorflow as tf
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 from hsfs.core.tfdata_engine import TFDataEngine

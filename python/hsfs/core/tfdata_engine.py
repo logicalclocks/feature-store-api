@@ -21,17 +21,17 @@ from typing import Optional
 
 try:
     import tensorflow as tf
-except ModuleNotFoundError:
+except ImportError:
     tf = mock.Mock()
 
 try:
     from pydoop import hdfs
-except ModuleNotFoundError:
+except ImportError:
     hdfs = mock.Mock()
 
 try:
     import boto3
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 

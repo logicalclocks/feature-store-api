@@ -25,7 +25,7 @@ from hsfs.client import base, auth
 
 try:
     import jks
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
