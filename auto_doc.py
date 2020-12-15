@@ -72,6 +72,12 @@ PAGES = {
             "hsfs.storage_connector.StorageConnector"
         ),
     },
+    "query_vs_dataframe.md": {
+        "query_methods": keras_autodoc.get_methods("hsfs.constructor.query.Query"),
+        "query_properties": keras_autodoc.get_properties(
+            "hsfs.constructor.query.Query"
+        ),
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(

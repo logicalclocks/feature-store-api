@@ -24,7 +24,7 @@ from hsfs.constructor import filter
 class Feature:
     """Metadata object representing a feature in a feature group in the Feature Store.
 
-    See [Training Dataset Feature](training_dataset_feature.md) for the
+    See Training Dataset Feature for the
     feature representation of training dataset schemas.
     """
 

@@ -15,6 +15,7 @@
 #
 
 import json
+from typing import Optional, List, Union
 
 from hsfs import util, engine
 from hsfs.core import query_constructor_api, storage_connector_api
@@ -44,7 +45,26 @@ class Query:
             feature_store_id
         )
 
-    def read(self, online=False, dataframe_type="default", read_options={}):
+    def read(
+        self,
+        online: Optional[bool] = False,
+        dataframe_type: Optional[str] = "default",
+        read_options: Optional[dict] = {},
+    ):
+        """Read the specified query into a DataFrame.
+
+        It is possible to specify the storage (online/offline) to read from and the
+        type of the output DataFrame (Spark, Pandas, Numpy, Python Lists).
+
+        # Arguments
+            online: Read from online storage. Defaults to `False`.
+            dataframe_type: DataFrame type to return. Defaults to `"default"`.
+            read_options: Optional dictionary with read options for Spark.
+                Defaults to `{}`.
+
+        # Returns
+            `DataFrame`: DataFrame depending on the chosen type.
+        """
         query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -69,7 +89,13 @@ class Query:
             sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
-    def show(self, n, online=False):
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first N rows of the Query.
+
+        # Arguments
+            n: Number of rows to show.
+            online: Show from online storage. Defaults to `False`.
+        """
         query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -94,7 +120,34 @@ class Query:
             sql_query, self._feature_store_name, n, online_conn
         )
 
-    def join(self, sub_query, on=[], left_on=[], right_on=[], join_type="inner"):
+    def join(
+        self,
+        sub_query: "Query",
+        on: Optional[List[str]] = [],
+        left_on: Optional[List[str]] = [],
+        right_on: Optional[List[str]] = [],
+        join_type: Optional[str] = "inner",
+    ):
+        """Join Query with another Query.
+
+        If no join keys are specified, Hopsworks will use the maximal matching subset of
+        the primary keys of the feature groups you are joining.
+        Joins of one level are supported, no neted joins.
+
+        # Arguments
+            sub_query: Right-hand side query to join.
+            on: List of feature names to join on if they are available in both
+                feature groups. Defaults to `[]`.
+            left_on: List of feature names to join on from the left feature group of the
+                join. Defaults to `[]`.
+            right_on: List of feature names to join on from the right feature group of
+                the join. Defaults to `[]`.
+            join_type: Type of join to perform, can be `"inner"`, `"outer"`, `"left"` or
+                `"right"`. Defaults to "inner".
+
+        # Returns
+            `Query`: A new Query object representing the join.
+        """
         self._joins.append(
             join.Join(sub_query, on, left_on, right_on, join_type.upper())
         )
@@ -111,7 +164,35 @@ class Query:
         self.left_featuregroup_end_time = wallclock_end_time
         return self
 
-    def filter(self, f):
+    def filter(self, f: Union[filter.Filter, filter.Logic]):
+        """Apply filter to the feature group.
+
+        Selects all features and returns the resulting `Query` with the applied filter.
+
+        ```python
+        from hsfs.feature import Feature
+
+        query.filter(Feature("weekly_sales") > 1000)
+        ```
+
+        If you are planning to join the filtered feature group later on with another
+        feature group, make sure to select the filtered feature explicitly from the
+        respective feature group:
+        ```python
+        query.filter(fg.feature1 == 1).show(10)
+        ```
+
+        Composite filters require parenthesis:
+        ```python
+        query.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
+        ```
+
+        # Arguments
+            f: Filter object.
+
+        # Returns
+            `Query`. The query object with the applied filter.
+        """
         if self._filter is None:
             if isinstance(f, filter.Filter):
                 self._filter = filter.Logic.Single(left_f=f)

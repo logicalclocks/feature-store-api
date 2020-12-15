@@ -50,9 +50,9 @@ nav:
     - Storage Connector: generated/storage_connector.md
     - Feature: generated/feature.md
     - Training Dataset: generated/training_dataset.md
-    - Dataframe vs. Query: guides/programming_interface.md
-    - Statistics: guides/statistics.md
-    - Data Validation: guides/data_validation.md
+    - Dataframe vs. Query: generated/query_vs_dataframe.md
+    # - Statistics: guides/statistics.md
+    # - Data Validation: guides/data_validation.md
   - API Reference:
     - Connection: generated/api/connection_api.md
     - FeatureStore: generated/api/feature_store_api.md
