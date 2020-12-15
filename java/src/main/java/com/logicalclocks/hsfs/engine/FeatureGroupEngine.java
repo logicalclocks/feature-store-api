@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
 
@@ -57,7 +59,7 @@ public class FeatureGroupEngine {
    * @throws IOException
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, Map<String, String> writeOptions)
+                               List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatures() == null) {
@@ -86,6 +88,15 @@ public class FeatureGroupEngine {
           }));
     }
 
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
+
     // Send Hopsworks the request to create a new feature group
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
@@ -101,6 +112,19 @@ public class FeatureGroupEngine {
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+      String hudiPrecombineFeatureName = apiFG.getFeatures().stream()
+          .filter(Feature::getHudiPrecombineKey)
+          .map(Feature::getName)
+          .collect(Collectors.toList()).get(0);
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineFeatureName)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, null, SaveMode.Append,

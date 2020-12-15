@@ -85,6 +85,10 @@ public class FeatureGroup extends FeatureGroupBase {
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
+  @JsonIgnore
+  // This is only used in the client. In the server they are aggregated in the `features` field
+  private String hudiPrecombineKey;
+
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
 
@@ -92,15 +96,17 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                      List<String> primaryKeys, List<String> partitionKeys, boolean onlineEnabled,
-                      TimeTravelFormat timeTravelFormat, List<Feature> features, Boolean statisticsEnabled,
-                      Boolean histograms, Boolean correlations, List<String> statisticColumns) {
+                      List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
+                      boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
+                      Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
+                      List<String> statisticColumns) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
     this.description = description;
     this.primaryKeys = primaryKeys;
     this.partitionKeys = partitionKeys;
+    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI ? hudiPrecombineKey : null;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
@@ -198,7 +204,8 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, writeOptions);
+    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+        writeOptions);
     if (statisticsEnabled) {
       statisticsEngine.computeStatistics(this, featureData);
     }
@@ -224,6 +231,11 @@ public class FeatureGroup extends FeatureGroupBase {
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     insert(featureData, null, overwrite, null, writeOptions);
+  }
+
+  public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    insert(featureData, null, false, null, writeOptions);
   }
 
   /**

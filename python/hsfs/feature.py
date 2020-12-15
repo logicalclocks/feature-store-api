@@ -35,6 +35,7 @@ class Feature:
         description=None,
         primary=None,
         partition=None,
+        hudi_precombine_key=None,
         online_type=None,
         default_value=None,
         feature_group_id=None,
@@ -45,6 +46,7 @@ class Feature:
         self._description = description
         self._primary = primary or False
         self._partition = partition or False
+        self._hudi_precombine_key = hudi_precombine_key or False
         self._online_type = online_type
         self._default_value = default_value
         if feature_group is not None:
@@ -58,6 +60,7 @@ class Feature:
             "type": self._type,
             "description": self._description,
             "partition": self._partition,
+            "hudiPrecombineKey": self._hudi_precombine_key,
             "primary": self._primary,
             "onlineType": self._online_type,
             "defaultValue": self._default_value,
@@ -122,6 +125,15 @@ class Feature:
     @partition.setter
     def partition(self, partition):
         self._partition = partition
+
+    @property
+    def hudi_precombine_key(self):
+        """Whether the feature is part of the hudi precombine key of the feature group."""
+        return self._hudi_precombine_key
+
+    @hudi_precombine_key.setter
+    def hudi_precombine_key(self, hudi_precombine_key):
+        self._hudi_precombine_key = hudi_precombine_key
 
     @property
     def default_value(self):

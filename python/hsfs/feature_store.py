@@ -229,6 +229,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
+        hudi_precombine_key: Optional[List[str]] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
@@ -282,6 +283,7 @@ class FeatureStore:
             time_travel_format=time_travel_format,
             partition_key=partition_key,
             primary_key=primary_key,
+            hudi_precombine_key=hudi_precombine_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
