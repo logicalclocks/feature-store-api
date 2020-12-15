@@ -35,7 +35,7 @@ public class StorageConnectorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
-  public StorageConnector getByNameAndType(FeatureStore featureStore, String name)
+  public StorageConnector getByName(FeatureStore featureStore, String name)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
