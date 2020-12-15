@@ -113,7 +113,7 @@ public class Utils {
   }
 
   public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getByNameAndType(featureGroup.getFeatureStore(),
+    StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
         featureGroup.getFeatureStore().getName());
     String connStr = storageConnector.getConnectionString();
     String pw = FileUtils.readFileToString(new File("material_passwd"));
