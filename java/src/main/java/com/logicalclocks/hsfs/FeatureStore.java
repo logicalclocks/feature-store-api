@@ -122,7 +122,7 @@ public class FeatureStore {
   }
 
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByNameAndType(this, name);
+    return storageConnectorApi.getByName(this, name);
   }
 
   public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
