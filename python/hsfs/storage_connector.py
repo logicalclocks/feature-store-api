@@ -280,10 +280,7 @@ class StorageConnector:
     @property
     def expiration(self):
         """Cluster temporary credential expiration time."""
-        if (
-            self._storage_connector_type == "S3"
-            or self._storage_connector_type == "REDSHIFT"
-        ):
+        if self._storage_connector_type in ["S3", "REDSHIFT"]:
             return self._expiration
         else:
             raise Exception(
