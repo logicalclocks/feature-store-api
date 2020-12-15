@@ -194,11 +194,11 @@ class Connection:
                 client.init("hopsworks")
 
             # init engine
-            if self._engine.lower() == "spark" or (
+            if (self._engine is not None and self._engine.lower() == "spark") or (
                 self._engine is None and importlib.util.find_spec("pyspark")
             ):
                 engine.init("spark")
-            elif self._engine.lower() == "hive" or (
+            elif (self._engine is not None and self._engine.lower() == "hive") or (
                 self._engine is None and not importlib.util.find_spec("pyspark")
             ):
                 engine.init(
