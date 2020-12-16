@@ -68,6 +68,8 @@ class Client(base.Client):
         project_info = self._get_project_info(self._project_name)
         self._project_id = str(project_info["projectId"])
 
+        self._cert_key = None
+
         if engine == "hive":
             # On external Spark clients (Databricks, Spark Cluster),
             # certificates need to be provided before the Spark application starts.
