@@ -168,7 +168,7 @@ conn = hsfs.connection(
     443,                                # Port to reach your Hopsworks instance, defaults to 443
     'my_project',                       # Name of your Hopsworks Feature Store project
     secrets_store='secretsmanager',     # Either parameterstore or secretsmanager
-    hostname_verification=True)         # Disable for self-signed certificates
+    hostname_verification=True          # Disable for self-signed certificates
 )
 fs = conn.get_feature_store()           # Get the project's default feature store
 ```
