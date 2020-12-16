@@ -82,7 +82,7 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        eninge: Which engine to use, `"spark"` or `"hive"`. Defaults to `None`, which
+        engine: Which engine to use, `"spark"` or `"hive"`. Defaults to `None`, which
             initializes the engine to Spark if the environment provides Spark, for
             example on Hopsworks and Databricks, or falls back on Hive if Spark is not
             available, e.g. on local Python environments or AWS SageMaker. This option
@@ -175,6 +175,21 @@ class Connection:
         """
         self._connected = True
         try:
+            # determine engine, needed to init client
+            if (self._engine is not None and self._engine.lower() == "spark") or (
+                self._engine is None and importlib.util.find_spec("pyspark")
+            ):
+                self._engine = "spark"
+            elif (self._engine is not None and self._engine.lower() == "hive") or (
+                self._engine is None and not importlib.util.find_spec("pyspark")
+            ):
+                self._engine = "hive"
+            else:
+                raise ConnectionError(
+                    "Engine you are trying to initialize is unknown. "
+                    "Supported engines are `'spark'` and `'hive'`."
+                )
+
             # init client
             if client.base.Client.REST_ENDPOINT not in os.environ:
                 client.init(
@@ -182,6 +197,7 @@ class Connection:
                     self._host,
                     self._port,
                     self._project,
+                    self._engine,
                     self._region_name,
                     self._secrets_store,
                     self._hostname_verification,
@@ -194,20 +210,13 @@ class Connection:
                 client.init("hopsworks")
 
             # init engine
-            if (self._engine is not None and self._engine.lower() == "spark") or (
-                self._engine is None and importlib.util.find_spec("pyspark")
-            ):
-                engine.init("spark")
-            elif (self._engine is not None and self._engine.lower() == "hive") or (
-                self._engine is None and not importlib.util.find_spec("pyspark")
-            ):
-                engine.init(
-                    "hive",
-                    self._host,
-                    self._cert_folder,
-                    self._project,
-                    client.get_instance()._cert_key,
-                )
+            engine.init(
+                self._engine,
+                self._host,
+                self._cert_folder,
+                self._project,
+                client.get_instance()._cert_key,
+            )
 
             self._feature_store_api = feature_store_api.FeatureStoreApi()
             self._project_api = project_api.ProjectApi()
