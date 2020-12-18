@@ -60,6 +60,10 @@ conn = hsfs.connection(
 fs = conn.get_feature_store()           # Get the project's default feature store
 ```
 
+!!! note "Engine"
+
+    `HSFS` uses either Apache Spark or Apache Hive as an execution engine to perform queries against the feature store. The `engine` option of the connection let's you overwrite the default behaviour by setting it to `"hive"` or `"spark"`. By default, `HSFS` will try to use Spark as engine if PySpark is available. So if you have PySpark installed in your local Python environment, but you have not configured Spark, you will have to set `engine='hive'`. Please refer to the [Spark integration guide](spark.md) to configure your local Spark cluster to be able to connect to the Hopsworks Feature Store.
+
 !!! info "Ports"
 
     If you have trouble to connect, please ensure that your Feature Store can receive incoming traffic from your Python environment on ports 443, 9083 and 9085.

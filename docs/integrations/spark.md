@@ -89,12 +89,15 @@ conn = hsfs.connection(
     host='my_instance',                 # DNS of your Feature Store instance
     port=443,                           # Port to reach your Hopsworks instance, defaults to 443
     project='my_project',               # Name of your Hopsworks Feature Store project
-    api_key_value='api_key',            # The API key to authenticate with the feature store 
+    api_key_value='api_key',            # The API key to authenticate with the feature store
     hostname_verification=True          # Disable for self-signed certificates
 )
 fs = conn.get_feature_store()           # Get the project's default feature store
 ```
 
+!!! note "Engine"
+
+    `HSFS` uses either Apache Spark or Apache Hive as an execution engine to perform queries against the feature store. The `engine` option of the connection let's you overwrite the default behaviour by setting it to `"hive"` or `"spark"`. By default, `HSFS` will try to use Spark as engine if PySpark is available, hence, no further action should be required if you setup Spark correctly as described above.
 
 ## Next Steps
 
