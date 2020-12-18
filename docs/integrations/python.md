@@ -30,8 +30,12 @@ Create a file called `featurestore.key` in your designated Python environment an
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed in the environment from which you want to connect to the Feature Store. You can install the library through pip. We recommend using a Python environment manager such as *virtualenv* or *conda*.
 
 ```
-pip install hsfs~=[HOPSWORKS_VERSION]
+pip install hsfs[hive]~=[HOPSWORKS_VERSION]
 ```
+
+!!! attention "Hive Dependencies"
+
+    By default, `HSFS` assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on a local Python evnironment, if you are planning to use a regular Python Kernel **without Spark/EMR**, make sure to install the **"hive"** extra dependencies (`hsfs[hive]`).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.

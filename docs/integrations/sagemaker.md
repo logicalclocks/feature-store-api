@@ -141,8 +141,12 @@ You have two options to make your API key accessible from SageMaker:
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed. One way of achieving this is by opening a Python notebook in SageMaker and installing the `HSFS` with a magic command and pip:
 
 ```
-!pip install hsfs~=[HOPSWORKS_VERSION]
+!pip install hsfs[hive]~=[HOPSWORKS_VERSION]
 ```
+
+!!! attention "Hive Dependencies"
+
+    By default, `HSFS` assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on AWS SageMaker, if you are planning to use a regular Python Kernel **without Spark/EMR**, make sure to install the **"hive"** extra dependencies (`hsfs[hive]`).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
