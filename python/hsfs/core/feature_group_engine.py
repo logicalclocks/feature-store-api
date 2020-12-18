@@ -49,7 +49,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set
         if (
             feature_group.hudi_precombine_key is None
-            and feature_group.time_travel_format.upper() == "HUDI"
+            and feature_group.time_travel_format == "HUDI"
         ):
             for feat in self.features:
                 if feat.hudi_precombine_key:
