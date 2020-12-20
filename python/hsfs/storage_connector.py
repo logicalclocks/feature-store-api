@@ -110,7 +110,7 @@ class StorageConnector:
     @property
     def access_key(self):
         """Access key."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._access_key
         else:
             raise Exception(
@@ -121,7 +121,7 @@ class StorageConnector:
     @property
     def secret_key(self):
         """Secret key."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._secret_key
         else:
             raise Exception(
@@ -132,7 +132,7 @@ class StorageConnector:
     @property
     def server_encryption_algorithm(self):
         """Encryption algorithm if server-side S3 bucket encryption is enabled."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._server_encryption_algorithm
         else:
             raise Exception(
@@ -143,7 +143,7 @@ class StorageConnector:
     @property
     def server_encryption_key(self):
         """Encryption key if server-side S3 bucket encryption is enabled."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._server_encryption_key
         else:
             raise Exception(
@@ -154,7 +154,7 @@ class StorageConnector:
     @property
     def cluster_identifier(self):
         """Cluster identifier for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._cluster_identifier
         else:
             raise Exception(
@@ -165,7 +165,7 @@ class StorageConnector:
     @property
     def database_driver(self):
         """Database endpoint for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_driver
         else:
             raise Exception(
@@ -176,7 +176,7 @@ class StorageConnector:
     @property
     def database_endpoint(self):
         """Database endpoint for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_endpoint
         else:
             raise Exception(
@@ -187,7 +187,7 @@ class StorageConnector:
     @property
     def database_name(self):
         """Database name for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_name
         else:
             raise Exception(
@@ -198,7 +198,7 @@ class StorageConnector:
     @property
     def database_port(self):
         """Database port for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_port
         else:
             raise Exception(
@@ -209,7 +209,7 @@ class StorageConnector:
     @property
     def table_name(self):
         """Table name for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._table_name
         else:
             raise Exception(
@@ -220,7 +220,7 @@ class StorageConnector:
     @property
     def database_user_name(self):
         """Database username for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_user_name
         else:
             raise Exception(
@@ -231,7 +231,7 @@ class StorageConnector:
     @property
     def auto_create(self):
         """Database username for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._auto_create
         else:
             raise Exception(
@@ -242,7 +242,7 @@ class StorageConnector:
     @property
     def database_group(self):
         """Database username for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_group
         else:
             raise Exception(
@@ -253,7 +253,7 @@ class StorageConnector:
     @property
     def database_password(self):
         """Database password for redshift cluster."""
-        if self._storage_connector_type == "REDSHIFT":
+        if self._storage_connector_type.upper() == "REDSHIFT":
             return self._database_password
         else:
             raise Exception(
@@ -264,7 +264,7 @@ class StorageConnector:
     @property
     def session_token(self):
         """Session token."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._session_token
         else:
             raise Exception(
@@ -280,10 +280,7 @@ class StorageConnector:
     @property
     def expiration(self):
         """Cluster temporary credential expiration time."""
-        if (
-            self._storage_connector_type == "S3"
-            or self._storage_connector_type == "REDSHIFT"
-        ):
+        if self._storage_connector_type.upper() in ["S3", "REDSHIFT"]:
             return self._expiration
         else:
             raise Exception(
@@ -294,7 +291,7 @@ class StorageConnector:
     @property
     def bucket(self):
         """Return the bucket for S3 connectors."""
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return self._bucket
         else:
             raise Exception(
@@ -304,7 +301,7 @@ class StorageConnector:
     @property
     def connection_string(self):
         """JDBC connection string."""
-        if self._storage_connector_type == "JDBC":
+        if self._storage_connector_type.upper() == "JDBC":
             return self._connection_string
         else:
             raise Exception(
@@ -315,7 +312,7 @@ class StorageConnector:
     @property
     def arguments(self):
         """Additional JDBC arguments."""
-        if self._storage_connector_type == "JDBC":
+        if self._storage_connector_type.upper() == "JDBC":
             return self._arguments
         else:
             raise Exception(
@@ -327,7 +324,7 @@ class StorageConnector:
     def path(self):
         """If the connector refers to a path (e.g. S3) - return the path of the connector
         """
-        if self._storage_connector_type == "S3":
+        if self._storage_connector_type.upper() == "S3":
             return "s3://" + self._bucket
         else:
             raise Exception(
@@ -338,7 +335,7 @@ class StorageConnector:
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        if self._storage_connector_type == "JDBC":
+        if self._storage_connector_type.upper() == "JDBC":
             args = [arg.split("=") for arg in self._arguments.split(",")]
 
             return {
@@ -346,7 +343,7 @@ class StorageConnector:
                 "user": [arg[1] for arg in args if arg[0] == "user"][0],
                 "password": [arg[1] for arg in args if arg[0] == "password"][0],
             }
-        elif self._storage_connector_type == "REDSHIFT":
+        elif self._storage_connector_type.upper() == "REDSHIFT":
             connstr = (
                 "jdbc:redshift://"
                 + self._cluster_identifier

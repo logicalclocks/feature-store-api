@@ -14,7 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark, hive
+from hsfs.engine import spark
+from hsfs.client import exceptions
 
 _engine = None
 
@@ -25,6 +26,14 @@ def init(engine_type, host=None, cert_folder=None, project=None, cert_key=None):
         if engine_type == "spark":
             _engine = spark.Engine()
         elif engine_type == "hive":
+            try:
+                from hsfs.engine import hive
+            except ImportError:
+                raise exceptions.FeatureStoreException(
+                    "Trying to instantiate Hive as engine, but 'hive' extras are "
+                    "missing in HSFS installation. Install with `pip install "
+                    "hsfs[hive]`."
+                )
             _engine = hive.Engine(host, cert_folder, project, cert_key)
 
 

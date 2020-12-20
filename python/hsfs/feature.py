@@ -69,7 +69,7 @@ class Feature:
 
     @property
     def type(self):
-        """Data type of the feature in the feature store.
+        """Data type of the feature in the offline feature store.
 
         !!! danger "Not a Python type"
             This type property is not to be confused with Python types.
@@ -81,6 +81,15 @@ class Feature:
     @type.setter
     def type(self, type):
         self._type = type
+
+    @property
+    def online_type(self):
+        """Data type of the feature in the online feature store."""
+        return self._online_type
+
+    @online_type.setter
+    def online_type(self, online_type):
+        self._online_type = online_type
 
     @property
     def primary(self):

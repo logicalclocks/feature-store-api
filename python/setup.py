@@ -22,10 +22,7 @@ setup(
         "boto3",
         "pandas",
         "numpy",
-        "pyhopshive[thrift]",
-        "PyMySQL",
         "pyjks",
-        "sqlalchemy",
         "mock",
     ],
     extras_require={
@@ -37,7 +34,8 @@ setup(
             "mkdocs",
             "mkdocs-material",
             "keras-autodoc",
-            "markdown-include"]
+            "markdown-include"],
+        "hive": ["pyhopshive[thrift]", "sqlalchemy", "PyMySQL"],
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",

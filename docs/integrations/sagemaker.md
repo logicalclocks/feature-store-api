@@ -141,8 +141,12 @@ You have two options to make your API key accessible from SageMaker:
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed. One way of achieving this is by opening a Python notebook in SageMaker and installing the `HSFS` with a magic command and pip:
 
 ```
-!pip install hsfs~=[HOPSWORKS_VERSION]
+!pip install hsfs[hive]~=[HOPSWORKS_VERSION]
 ```
+
+!!! attention "Hive Dependencies"
+
+    By default, `HSFS` assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on AWS SageMaker, if you are planning to use a regular Python Kernel **without Spark/EMR**, make sure to install the **"hive"** extra dependencies (`hsfs[hive]`).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
@@ -168,10 +172,16 @@ conn = hsfs.connection(
     443,                                # Port to reach your Hopsworks instance, defaults to 443
     'my_project',                       # Name of your Hopsworks Feature Store project
     secrets_store='secretsmanager',     # Either parameterstore or secretsmanager
-    hostname_verification=True)         # Disable for self-signed certificates
+    hostname_verification=True,         # Disable for self-signed certificates
+    engine='hive'                       # Choose Hive as engine if you haven't set up AWS EMR
 )
 fs = conn.get_feature_store()           # Get the project's default feature store
 ```
+
+!!! note "Engine"
+
+    `HSFS` uses either Apache Spark or Apache Hive as an execution engine to perform queries against the feature store. Most AWS SageMaker Kernels have PySpark installed but are not connected to AWS EMR by default, hence, the `engine` option of the connection let's you overwrite the default behaviour. By default, `HSFS` will try to use Spark as engine if PySpark is available, however, if Spark/EMR is not configured, you will have to set the engine manually to `"hive"`. Please refer to the [EMR integration guide](emr/emr_configuration.md) to setup EMR with the Hopsworks Feature Store.
+
 
 !!! info "Ports"
 

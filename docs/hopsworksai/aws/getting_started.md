@@ -212,12 +212,20 @@ Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and clic
   </figure>
 </p>
 
-## Step 2: Creating and configuring a storage
+## Step 2: Creating Instance profile
+
+Hopsworks cluster nodes need access to certain resources such as S3 bucket and CloudWatch.
+
+Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: [Guide](https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html)
+
+When creating the policy, paste the following in the JSON tab.
+{!hopsworksai/aws/instance_profile_permissions.md!}
+
+## Step 3: Creating storage
 
 The Hopsworks clusters deployed by hopsworks.ai store their data in an S3 bucket in your AWS account.
 To enable this you need to create an S3 bucket and an instance profile to give cluster nodes access to the bucket.
 
-### Step 2.1: Creating an S3 bucket
 Proceed to the [S3 Management Console](https://s3.console.aws.amazon.com/s3/home) and click on *Create bucket*:
 <p align="center">
   <figure>
@@ -239,17 +247,10 @@ Name your bucket and select the region where your Hopsworks cluster will run. Cl
   </figure>
 </p>
 
-### Step 2.2: Creating an instance profile and giving it access to the bucket
-
-Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: [Guide](https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html)
-
-When creating the policy, paste the following in the JSON tab.
-{!hopsworksai/aws/s3_permissions.md!}
-
-## Step 3: Create an SSH key
+## Step 4: Create an SSH key
 When deploying clusters, Hopsworks.ai installs an ssh key on the cluster's instances so that you can access them if necessary. For this purpose, you need to add an ssh key to your AWS EC2 environment. This can be done in two ways: [creating a new key pair](#step-31-create-a-new-key-pair) or [importing an existing key pair](#step-32-import-a-key-pair).
 
-### Step 3.1: Create a new key pair
+### Step 4.1: Create a new key pair
 
 Proceed to [Key pairs in the EC2 console](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#KeyPairs) and click on *Create key pair*
 <p align="center">
@@ -271,7 +272,7 @@ Name your key, select the file format you prefer and click on *Create key pair*.
   </figure>
 </p>
 
-### Step 3.2: Import a key pair
+### Step 4.2: Import a key pair
 Proceed to [Key pairs in the EC2 console](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#KeyPairs), click on *Action* and click on *Import key pair*
 <p align="center">
   <figure>
@@ -292,7 +293,7 @@ Name your key pair, upload your public key and click on *Import key pair*.
   </figure>
 </p>
 
-## Step 4: Deploying a Hopsworks cluster
+## Step 5: Deploying a Hopsworks cluster
 
 In Hopsworks.ai, select *Create cluster*:
 
@@ -387,7 +388,7 @@ As soon as the cluster has started, you will be able to log in to your new Hopsw
   </figure>
 </p>
 
-## Step 5: Outside Access to the Feature Store
+## Step 6: Outside Access to the Feature Store
 
 By default, only the Hopsworks UI is made available to clients on external networks, like the Internet.
 To integrate with external platforms and access APIs for services such as the Feature Store, you have to open the service's ports.
@@ -403,7 +404,7 @@ Open ports by going to the *Services* tab, selecting a service, and pressing *Up
   </figure>
 </p>
 
-## Step 6: Next steps
+## Step 7: Next steps
 
 Check out our other guides for how to get started with Hopsworks and the Feature Store:
 
