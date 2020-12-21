@@ -18,7 +18,7 @@ from hsfs.core import feature_group_base_engine
 
 
 class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
-    def save(self, feature_group):
+    def save(self, feature_group, options):
         if len(feature_group.features) == 0:
             # If the user didn't specify the schema, parse it from the query
             on_demand_dataset = engine.get_instance().register_on_demand_temporary_table(

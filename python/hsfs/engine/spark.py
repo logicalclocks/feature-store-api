@@ -15,6 +15,7 @@
 #
 
 import importlib.util
+import os
 
 import pandas as pd
 import numpy as np
@@ -78,7 +79,7 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
+    def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
         if (
             on_demand_fg.storage_connector.connector_type == "JDBC"
             or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
@@ -91,8 +92,8 @@ class Engine:
             on_demand_dataset = self.read(
                 on_demand_fg.storage_connector,
                 on_demand_fg.data_format,
-                {},
-                on_demand_fg.storage_connector.path + on_demand_fg.path,
+                on_demand_fg.options,
+                os.path.join(on_demand_fg.storage_connector.path, on_demand_fg.path),
             )
 
         on_demand_dataset.createOrReplaceTempView(alias)

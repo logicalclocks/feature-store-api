@@ -32,6 +32,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         query=None,
         data_format=None,
         path=None,
+        options={},
         name=None,
         version=None,
         description=None,
@@ -61,6 +62,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._query = query
         self._data_format = data_format
         self._path = path
+        self._options = options
         self._id = id
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
@@ -120,13 +122,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         )
         return self.select_all().show(n)
 
-    def commit(self):
-        """When using on-demand feature groups, register new commits"""
-        if self._data_format != "DELTA":
-            raise Exception(
-                "Commit operations available only for Delta On-Demand feature groups"
-            )
-
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -155,6 +150,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
+            "options": self._options,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "descStatsEnabled": self._statistics_config.enabled,
@@ -194,6 +190,10 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
     @property
     def path(self):
         return self._path
+
+    @property
+    def options(self):
+        return self._options
 
     @property
     def storage_connector(self):
