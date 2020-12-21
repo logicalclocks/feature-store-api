@@ -20,7 +20,7 @@ from hsfs.client import exceptions
 _engine = None
 
 
-def init(engine_type, host=None, cert_folder=None, project=None, cert_key=None):
+def init(engine_type):
     global _engine
     if not _engine:
         if engine_type == "spark":
@@ -34,7 +34,7 @@ def init(engine_type, host=None, cert_folder=None, project=None, cert_key=None):
                     "missing in HSFS installation. Install with `pip install "
                     "hsfs[hive]`."
                 )
-            _engine = hive.Engine(host, cert_folder, project, cert_key)
+            _engine = hive.Engine()
 
 
 def get_instance():
