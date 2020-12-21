@@ -39,8 +39,8 @@ class Client(base.Client):
     HDFS_USER = "HDFS_USER"
     T_CERTIFICATE = "t_certificate"
     K_CERTIFICATE = "k_certificate"
-    TRUSTSTORE_SUFFIX = "__tstore.key"
-    KEYSTORE_SUFFIX = "__kstore.key"
+    TRUSTSTORE_SUFFIX = "__tstore.jks"
+    KEYSTORE_SUFFIX = "__kstore.jks"
     PEM_CA_CHAIN = "ca_chain.pem"
 
     def __init__(self):
