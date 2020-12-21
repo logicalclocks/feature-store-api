@@ -31,7 +31,12 @@ window.addEventListener("DOMContentLoaded", function() {
     }).version;
 
     var select = makeSelect(versions.map(function(i) {
-      return {text: i.title + " [" + i.aliases[0] + "]", value: i.version};
+      if (i.aliases.length > 0) {
+        var aliasString = " [" + i.aliases.join(", ") + "]";
+      } else {
+        var aliasString = "";
+      }
+      return {text: i.title + aliasString, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
       window.location.href = ABS_BASE_URL + "/../" + this.value;
