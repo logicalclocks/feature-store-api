@@ -14,17 +14,16 @@
 #   limitations under the License.
 #
 
-import os
 import pandas as pd
 from pyhive import hive
 from sqlalchemy import create_engine
 
+from hsfs import client
+
 
 class Engine:
-    def __init__(self, host, cert_folder, project, cert_key):
-        self._host = host
-        self._cert_folder = os.path.join(cert_folder, host, project)
-        self._cert_key = cert_key
+    def __init__(self):
+        pass
 
     def sql(self, sql_query, feature_store, online_conn, dataframe_type):
         if not online_conn:
@@ -70,14 +69,14 @@ class Engine:
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(
-            host=self._host,
+            host=client.get_instance()._host,
             port=9085,
             # database needs to be set every time, 'default' doesn't work in pyhive
             database=feature_store,
             auth="CERTIFICATES",
-            truststore=os.path.join(self._cert_folder, "trustStore.jks"),
-            keystore=os.path.join(self._cert_folder, "keyStore.jks"),
-            keystore_password=self._cert_key,
+            truststore=client.get_instance()._get_jks_trust_store_path(),
+            keystore=client.get_instance()._get_jks_key_store_path(),
+            keystore_password=client.get_instance()._cert_key,
         )
 
     def _create_mysql_connection(self, online_conn):

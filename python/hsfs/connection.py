@@ -189,13 +189,7 @@ class Connection:
                 client.init("hopsworks")
 
             # init engine
-            engine.init(
-                self._engine,
-                self._host,
-                self._cert_folder,
-                self._project,
-                client.get_instance()._cert_key,
-            )
+            engine.init(self._engine)
 
             self._feature_store_api = feature_store_api.FeatureStoreApi()
             self._project_api = project_api.ProjectApi()
