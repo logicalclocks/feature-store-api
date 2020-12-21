@@ -150,7 +150,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
-            "options": self._options,
+            "options": json.dumps(self._options),
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "descStatsEnabled": self._statistics_config.enabled,
