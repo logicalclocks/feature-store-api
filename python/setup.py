@@ -31,8 +31,9 @@ setup(
             "flake8",
             "black"],
         "docs": [
-            "mkdocs",
-            "mkdocs-material",
+            "mkdocs==1.1.2",
+            "mkdocs-material==6.2.2",
+            "mike==0.5.5",
             "keras-autodoc",
             "markdown-include"],
         "hive": ["pyhopshive[thrift]", "sqlalchemy", "PyMySQL"],
