@@ -15,7 +15,7 @@
 #
 
 import humps
-from hsfs.core import hudi_feature_group_alias, on_demand_feature_group_alias
+from hsfs.constructor import hudi_feature_group_alias, on_demand_feature_group_alias
 
 
 class FsQuery:

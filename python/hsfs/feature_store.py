@@ -22,7 +22,6 @@ from hsfs import (
     training_dataset,
     feature_group,
     feature,
-    on_demand_feature_group,
     util,
     storage_connector,
 )
@@ -323,7 +322,7 @@ class FeatureStore:
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
         """
-        return on_demand_feature_group.OnDemandFeatureGroup(
+        return feature_group.OnDemandFeatureGroup(
             name=name,
             query=query,
             storage_connector=storage_connector,
