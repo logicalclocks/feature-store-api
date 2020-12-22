@@ -84,7 +84,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
                 feat_hist_enabled,
                 statistic_columns,
             )
-            self._options = {   }
+            self._options = {option["name"]: option["value"] for option in options}
         else:
             self.statistics_config = statistics_config
             self._features = features
