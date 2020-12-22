@@ -62,7 +62,6 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
         self._query = query
         self._data_format = data_format
         self._path = path
-        self._options = options
         self._id = id
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
@@ -85,9 +84,11 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
                 feat_hist_enabled,
                 statistic_columns,
             )
+            self._options = {   }
         else:
             self.statistics_config = statistics_config
             self._features = features
+            self._options = options
 
         if storage_connector is not None and isinstance(storage_connector, dict):
             self._storage_connector = sc.StorageConnector.from_response_json(
@@ -150,7 +151,7 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
-            "options": [{"key": k, "value": v} for k, v in self._options.items()],
+            "options": [{"name": k, "value": v} for k, v in self._options.items()],
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "descStatsEnabled": self._statistics_config.enabled,
