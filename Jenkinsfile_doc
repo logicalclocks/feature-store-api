@@ -7,13 +7,13 @@ pipeline {
             agent {
                 docker {
                     label "local"
-                    image "docker.hops.works/hopsworks_twine:0.0.3"
+                    image "docker.hops.works/hopsworks_twine:0.0.4"
                 }
             }
 
             steps {
                 dir("python") {
-                    sh "pip3 install -e .[dev,docs]"
+                    sh "pip3 install -e .[dev,docs,hive]"
                 }
                 sh "python3 auto_doc.py"
                 sh "mkdocs build"
