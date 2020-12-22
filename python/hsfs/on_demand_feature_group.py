@@ -75,16 +75,23 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
 
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
-            self._features = [
-                feature.Feature.from_response_json(feat) for feat in features
-            ]
+            self._features = (
+                [feature.Feature.from_response_json(feat) for feat in features]
+                if features
+                else None
+            )
+
             self.statistics_config = StatisticsConfig(
                 desc_stats_enabled,
                 feat_corr_enabled,
                 feat_hist_enabled,
                 statistic_columns,
             )
-            self._options = {option["name"]: option["value"] for option in options}
+            self._options = (
+                {option["name"]: option["value"] for option in options}
+                if options
+                else None
+            )
         else:
             self.statistics_config = statistics_config
             self._features = features

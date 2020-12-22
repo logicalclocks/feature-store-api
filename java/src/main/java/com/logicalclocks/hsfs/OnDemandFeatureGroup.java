@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +30,8 @@ import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,19 +45,40 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   @Setter
   private String query;
 
+
+  @Getter
+  @Setter
+  private OnDemandDataFormat dataFormat;
+
+  @Getter
+  @Setter
+  private String path;
+
+  @Getter
+  @Setter
+  private List<OnDemandOptions> options;
+
   @Getter
   @Setter
   private String type = "onDemandFeaturegroupDTO";
+
 
   private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();
 
   @Builder
   public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
+                              OnDemandDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<Feature> features) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
     this.query = query;
+    this.dataFormat = dataFormat;
+    this.path = path;
+    this.options = options != null ? options.entrySet().stream()
+        .map(e -> new OnDemandOptions(e.getKey(), e.getValue()))
+        .collect(Collectors.toList())
+        : null;
     this.description = description;
     this.storageConnector = storageConnector;
     this.features = features;
