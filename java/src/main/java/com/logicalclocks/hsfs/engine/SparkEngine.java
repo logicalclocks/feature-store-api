@@ -103,7 +103,7 @@ public class SparkEngine {
         dataset = read(onDemandFeatureGroup.getStorageConnector(),
             onDemandFeatureGroup.getDataFormat().toString(),
             getOnDemandOptions(onDemandFeatureGroup),
-            onDemandFeatureGroup.getStorageConnector().getPath() + onDemandFeatureGroup.getPath());
+            onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
     }
     dataset.createOrReplaceTempView(alias);
     return dataset;
@@ -111,7 +111,7 @@ public class SparkEngine {
 
   private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {
     if (onDemandFeatureGroup.getOptions() == null) {
-      return null;
+      return new HashMap<>();
     }
 
     return onDemandFeatureGroup.getOptions().stream()
