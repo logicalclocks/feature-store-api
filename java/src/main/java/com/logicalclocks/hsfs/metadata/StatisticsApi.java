@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
@@ -48,7 +47,8 @@ public class StatisticsApi {
     this.entityType = entityType;
   }
 
-  public Statistics post(FeatureGroup featureGroup, Statistics statistics) throws FeatureStoreException, IOException {
+  public Statistics post(FeatureGroupBase featureGroup, Statistics statistics)
+      throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), statistics);
   }
@@ -82,7 +82,7 @@ public class StatisticsApi {
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
 
-  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException, IOException {
+  public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
     return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), commitTime);
   }
@@ -119,7 +119,7 @@ public class StatisticsApi {
     return null;
   }
 
-  public Statistics getLast(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public Statistics getLast(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     return getLast(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId());
   }

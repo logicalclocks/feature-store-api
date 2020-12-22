@@ -156,4 +156,14 @@ public class StorageConnector {
     }
     return options;
   }
+
+  public String getPath() throws FeatureStoreException {
+    switch (storageConnectorType) {
+      case S3:
+        return "s3://" + bucket;
+      default:
+        throw new FeatureStoreException(
+            "Path method not supported for storage connector type: " + storageConnectorType);
+    }
+  }
 }

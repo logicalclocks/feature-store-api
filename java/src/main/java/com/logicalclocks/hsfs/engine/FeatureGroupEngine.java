@@ -160,12 +160,6 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
-    featureGroup.setCorrelations(apiFG.getCorrelations());
-    featureGroup.setHistograms(apiFG.getHistograms());
-  }
-
   public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException {
     List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);

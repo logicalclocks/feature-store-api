@@ -45,7 +45,6 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   @Setter
   private String query;
 
-
   @Getter
   @Setter
   private OnDemandDataFormat dataFormat;
@@ -89,8 +88,13 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
   public void save() throws FeatureStoreException, IOException {
     onDemandFeatureGroupEngine.saveFeatureGroup(this);
+
+    if (statisticsEnabled) {
+      statisticsEngine.computeStatistics(this, read());
+    }
   }
 
+  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return selectAll().read();
   }

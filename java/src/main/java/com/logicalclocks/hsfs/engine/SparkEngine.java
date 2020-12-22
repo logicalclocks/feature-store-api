@@ -23,11 +23,13 @@ import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
@@ -77,7 +79,7 @@ public class SparkEngine {
     return sparkSession.sql(query);
   }
 
-  public Dataset<Row> jdbc(StorageConnector storageConnector, String query) throws FeatureStoreException {
+  public Dataset<Row> jdbc(String query, StorageConnector storageConnector) throws FeatureStoreException {
     Map<String, String> readOptions = storageConnector.getSparkOptions();
     if (!Strings.isNullOrEmpty(query)) {
       readOptions.put("query", query);
@@ -88,10 +90,32 @@ public class SparkEngine {
         .load();
   }
 
-  public void registerOnDemandTemporaryTable(String query, StorageConnector storageConnector, String alias)
+  public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException {
-    Dataset<Row> queryDataset = jdbc(storageConnector, query);
-    queryDataset.createOrReplaceTempView(alias);
+    Dataset<Row> dataset;
+
+    switch (onDemandFeatureGroup.getStorageConnector().getStorageConnectorType()) {
+      case REDSHIFT:
+      case JDBC:
+        dataset = jdbc(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
+        break;
+      default:
+        dataset = read(onDemandFeatureGroup.getStorageConnector(),
+            onDemandFeatureGroup.getDataFormat().toString(),
+            getOnDemandOptions(onDemandFeatureGroup),
+            onDemandFeatureGroup.getStorageConnector().getPath() + onDemandFeatureGroup.getPath());
+    }
+    dataset.createOrReplaceTempView(alias);
+    return dataset;
+  }
+
+  private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {
+    if (onDemandFeatureGroup.getOptions() == null) {
+      return null;
+    }
+
+    return onDemandFeatureGroup.getOptions().stream()
+        .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
   public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
@@ -267,10 +291,19 @@ public class SparkEngine {
         .save(SparkEngine.sparkPath(path));
   }
 
-  public Dataset<Row> read(DataFormat dataFormat, Map<String, String> readOptions, String path) {
+  // Here dataFormat is string as this method is used both with OnDemand Feature Groups as well as with
+  // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
+  // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
+  public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
+                           Map<String, String> readOptions, String path) {
+
+    if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
+      configureS3Connector(storageConnector);
+    }
+
     return SparkEngine.getInstance().getSparkSession()
         .read()
-        .format(dataFormat.toString())
+        .format(dataFormat)
         .options(readOptions)
         .load(SparkEngine.sparkPath(path));
   }

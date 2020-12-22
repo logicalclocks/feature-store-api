@@ -17,9 +17,9 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.StatisticsApi;
 import org.apache.spark.sql.Dataset;
@@ -48,7 +48,7 @@ public class StatisticsEngine {
         trainingDataset.getHistograms(), trainingDataset.getCorrelations()));
   }
 
-  public Statistics computeStatistics(FeatureGroup featureGroup, Dataset<Row> dataFrame)
+  public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame)
       throws FeatureStoreException, IOException {
     return statisticsApi.post(featureGroup, computeStatistics(dataFrame, featureGroup.getStatisticColumns(),
         featureGroup.getHistograms(), featureGroup.getCorrelations()));
@@ -65,7 +65,7 @@ public class StatisticsEngine {
     return new Statistics(commitTime, content);
   }
 
-  public Statistics get(FeatureGroup featureGroup, String commitTime) throws FeatureStoreException, IOException {
+  public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
     return statisticsApi.get(featureGroup, commitTime);
   }
 
@@ -73,7 +73,7 @@ public class StatisticsEngine {
     return statisticsApi.get(trainingDataset, commitTime);
   }
 
-  public Statistics getLast(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public Statistics getLast(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     return statisticsApi.getLast(featureGroup);
   }
 
