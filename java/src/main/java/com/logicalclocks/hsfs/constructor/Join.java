@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs.metadata;
+package com.logicalclocks.hsfs.constructor;
 
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.JoinType;
 import lombok.Getter;
 import lombok.Setter;
 

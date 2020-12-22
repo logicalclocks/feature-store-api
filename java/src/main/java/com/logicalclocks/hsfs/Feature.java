@@ -16,6 +16,8 @@
 
 package com.logicalclocks.hsfs;
 
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.SqlFilterCondition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -55,8 +57,17 @@ public class Feature {
   @Setter
   private String defaultValue;
 
+  @Getter
+  @Setter
+  private Integer featureGroupId;
+
   public Feature(@NonNull String name) {
     this.name = name;
+  }
+
+  public Feature(@NonNull String name, @NonNull FeatureGroup featureGroup) {
+    this.name = name;
+    this.featureGroupId = featureGroup.getId();
   }
 
   public Feature(@NonNull String name, @NonNull String type) {
@@ -101,5 +112,29 @@ public class Feature {
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+  }
+
+  public Filter lt(Object value) {
+    return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
+  }
+
+  public Filter le(Object value) {
+    return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value.toString());
+  }
+
+  public Filter eq(Object value) {
+    return new Filter(this, SqlFilterCondition.EQUALS, value.toString());
+  }
+
+  public Filter ne(Object value) {
+    return new Filter(this, SqlFilterCondition.NOT_EQUALS, value.toString());
+  }
+
+  public Filter gt(Object value) {
+    return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toString());
+  }
+
+  public Filter ge(Object value) {
+    return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
   }
 }

@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Storage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
