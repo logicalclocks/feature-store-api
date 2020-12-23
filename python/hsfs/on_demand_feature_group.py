@@ -158,7 +158,9 @@ class OnDemandFeatureGroup(feature_group_base.FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
-            "options": [{"name": k, "value": v} for k, v in self._options.items()],
+            "options": [{"name": k, "value": v} for k, v in self._options.items()]
+            if self._options
+            else None,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "descStatsEnabled": self._statistics_config.enabled,
