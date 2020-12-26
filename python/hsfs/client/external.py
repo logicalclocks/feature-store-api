@@ -34,6 +34,7 @@ class Client(base.Client):
         host,
         port,
         project,
+        engine,
         region_name,
         secrets_store,
         hostname_verification,
@@ -67,7 +68,10 @@ class Client(base.Client):
         project_info = self._get_project_info(self._project_name)
         self._project_id = str(project_info["projectId"])
 
-        if cert_folder:
+        self._cert_key = None
+        self._cert_folder_base = None
+
+        if engine == "hive":
             # On external Spark clients (Databricks, Spark Cluster),
             # certificates need to be provided before the Spark application starts.
             self._cert_folder_base = cert_folder
@@ -77,11 +81,11 @@ class Client(base.Client):
             credentials = self._get_credentials(self._project_id)
             self._write_b64_cert_to_bytes(
                 str(credentials["kStore"]),
-                path=os.path.join(self._cert_folder, "keyStore.jks"),
+                path=self._get_jks_key_store_path(),
             )
             self._write_b64_cert_to_bytes(
                 str(credentials["tStore"]),
-                path=os.path.join(self._cert_folder, "trustStore.jks"),
+                path=self._get_jks_trust_store_path(),
             )
 
             self._cert_key = str(credentials["password"])
@@ -96,8 +100,8 @@ class Client(base.Client):
             return
 
         # Clean up only on AWS
-        self._cleanup_file(os.path.join(self._cert_folder, "keyStore.jks"))
-        self._cleanup_file(os.path.join(self._cert_folder, "trustStore.jks"))
+        self._cleanup_file(self._get_jks_key_store_path())
+        self._cleanup_file(self._get_jks_trust_store_path())
         self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
 
         try:
@@ -110,6 +114,12 @@ class Client(base.Client):
         except OSError:
             pass
         self._connected = False
+
+    def _get_jks_trust_store_path(self):
+        return os.path.join(self._cert_folder, "trustStore.jks")
+
+    def _get_jks_key_store_path(self):
+        return os.path.join(self._cert_folder, "keyStore.jks")
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.

@@ -121,9 +121,8 @@ public class FeatureStore {
     return SparkEngine.getInstance().sql(query);
   }
 
-  public StorageConnector getStorageConnector(String name, StorageConnectorType type)
-      throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByNameAndType(this, name, type);
+  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name);
   }
 
   public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {

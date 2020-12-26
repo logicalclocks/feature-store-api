@@ -17,7 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.metadata.Query;
+import com.logicalclocks.hsfs.constructor.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

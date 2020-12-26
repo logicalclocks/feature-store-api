@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.FsQuery;
+import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.TrainingDataset;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;

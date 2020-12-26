@@ -91,7 +91,7 @@ Once the cluster is running users can establish a connection to the Hopsworks Fe
         443,                                # Port to reach your Hopsworks instance, defaults to 443
         'my_project',                       # Name of your Hopsworks Feature Store project
         secrets_store='secretsmanager',     # Either parameterstore or secretsmanager
-        hostname_verification=True)         # Disable for self-signed certificates
+        hostname_verification=True         # Disable for self-signed certificates
     )
     fs = conn.get_feature_store()           # Get the project's default feature store
     ```
@@ -104,8 +104,8 @@ Once the cluster is running users can establish a connection to the Hopsworks Fe
         'my_instance',                      # DNS of your Feature Store instance
         443,                                # Port to reach your Hopsworks instance, defaults to 443
         'my_project',                       # Name of your Hopsworks Feature Store project
-        api_key_file="featurestore.key"     # For Azure, store the API key locally
-        hostname_verification=True)         # Disable for self-signed certificates
+        api_key_file="featurestore.key",    # For Azure, store the API key locally
+        hostname_verification=True          # Disable for self-signed certificates
     )
     fs = conn.get_feature_store()           # Get the project's default feature store
     ```

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
-import com.logicalclocks.hsfs.metadata.Query;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -70,10 +70,6 @@ public class TrainingDataset {
   @Setter
   @JsonIgnore
   private FeatureStore featureStore;
-
-  @Getter
-  @Setter
-  private Integer storageConnectorId;
 
   @Getter
   @Setter
@@ -137,7 +133,6 @@ public class TrainingDataset {
     this.storageConnector = storageConnector;
 
     if (storageConnector != null) {
-      this.storageConnectorId = storageConnector.getId();
       if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
         // Default it's already HOPSFS_TRAINING_DATASET
         this.trainingDatasetType = TrainingDatasetType.EXTERNAL_TRAINING_DATASET;

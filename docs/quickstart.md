@@ -23,7 +23,7 @@ The Hopsworks feature feature store library is called `hsfs` (**H**opswork**s** 
 The library is Apache V2 licensed and available [here](https://github.com/logicalclocks/feature-store-api). The library is currently available for Python and JVM languages such as Scala and Java.
 If you want to connect to the Feature Store from outside Hopsworks, see our [integration guides](setup.md).
 
-The library is build around metadata-objects, representing entities within the Feature Store. You can modify metadata by changing it in the metadata-objects and subsequently persisting it to the Feature Store. In fact, the Feature Store itself is also represented by an object. Furthermore, these objects have methods to save data along with the entities in the feature store. This data can be materialized from [Spark or Pandas DataFrames, or the `HSFS`-**Query** abstraction](generated/programming_interface.md).
+The library is build around metadata-objects, representing entities within the Feature Store. You can modify metadata by changing it in the metadata-objects and subsequently persisting it to the Feature Store. In fact, the Feature Store itself is also represented by an object. Furthermore, these objects have methods to save data along with the entities in the feature store. This data can be materialized from [Spark or Pandas DataFrames, or the `HSFS`-**Query** abstraction](generated/query_vs_dataframe.md).
 
 ### Guide Notebooks
 

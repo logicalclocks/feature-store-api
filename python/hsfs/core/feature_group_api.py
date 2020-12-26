@@ -15,7 +15,7 @@
 #
 
 from hsfs import client
-from hsfs import feature_group, feature_group_commit, on_demand_feature_group
+from hsfs import feature_group, feature_group_commit
 from hsfs.core import ingestion_job
 
 
@@ -80,9 +80,7 @@ class FeatureGroupApi:
         if fg_type == self.CACHED:
             return feature_group.FeatureGroup.from_response_json(fg_json)
         else:
-            return on_demand_feature_group.OnDemandFeatureGroup.from_response_json(
-                fg_json
-            )
+            return feature_group.OnDemandFeatureGroup.from_response_json(fg_json)
 
     def delete_content(self, feature_group_instance):
         """Delete the content of a feature group.

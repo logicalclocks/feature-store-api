@@ -13,18 +13,3 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
-from hsfs import client
-from hsfs.constructor import fs_query
-
-
-class QueryConstructorApi:
-    def construct_query(self, query):
-        _client = client.get_instance()
-        path_params = ["project", _client._project_id, "featurestores", "query"]
-        headers = {"content-type": "application/json"}
-        return fs_query.FsQuery.from_response_json(
-            _client._send_request(
-                "PUT", path_params, headers=headers, data=query.json()
-            )
-        )
