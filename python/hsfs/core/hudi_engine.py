@@ -17,7 +17,7 @@
 
 from datetime import datetime
 
-from hsfs import feature_group_commit, storage_connector, util
+from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api, storage_connector_api
 
 
@@ -80,7 +80,7 @@ class HudiEngine:
             self._feature_store_id
         )
         self._connstr = self._storage_connector_api.get(
-            self._feature_store_name, storage_connector.StorageConnector.JDBC,
+            self._feature_store_name
         ).connection_string
 
     def save_hudi_fg(self, dataset, save_mode, operation, write_options):

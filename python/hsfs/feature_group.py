@@ -21,12 +21,247 @@ import pandas as pd
 import numpy as np
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
-from hsfs import util, engine, feature
-from hsfs.core import query, feature_group_engine, feature_group_base
+from hsfs import util, engine, feature, storage_connector as sc
+from hsfs.core import (
+    feature_group_engine,
+    statistics_engine,
+    feature_group_base_engine,
+    on_demand_feature_group_engine,
+)
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.constructor import query, filter
+from hsfs.client.exceptions import FeatureStoreException
 
 
-class FeatureGroup(feature_group_base.FeatureGroupBase):
+class FeatureGroupBase:
+    def __init__(self, featurestore_id):
+        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            featurestore_id
+        )
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
+    def delete(self):
+        """Drop the entire feature group along with its feature data.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            feature group **and** all the feature data in offline and online storage
+            associated with it.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_engine.delete(self)
+
+    def select_all(self):
+        """Select all features in the feature group and return a query object.
+
+        The query can be used to construct joins of feature groups or create a
+        training dataset immediately.
+
+        # Returns
+            `Query`. A query object with all features of the feature group.
+        """
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, self._features
+        )
+
+    def select(self, features=[]):
+        """Select a subset of features of the feature group and return a query object.
+
+        The query can be used to construct joins of feature groups or create a training
+        dataset with a subset of features of the feature group.
+
+        # Arguments
+            features: list, optional. A list of `Feature` objects or feature names as
+                strings to be selected, defaults to [].
+
+        # Returns
+            `Query`: A query object with the selected features of the feature group.
+        """
+        return query.Query(
+            self._feature_store_name, self._feature_store_id, self, features
+        )
+
+    def filter(self, f: Union[filter.Filter, filter.Logic]):
+        """Apply filter to the feature group.
+
+        Selects all features and returns the resulting `Query` with the applied filter.
+
+        ```python
+        from hsfs.feature import Feature
+
+        fg.filter(Feature("weekly_sales") > 1000)
+        ```
+
+        If you are planning to join the filtered feature group later on with another
+        feature group, make sure to select the filtered feature explicitly from the
+        respective feature group:
+        ```python
+        fg.filter(fg.feature1 == 1).show(10)
+        ```
+
+        Composite filters require parenthesis:
+        ```python
+        fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
+        ```
+
+        # Arguments
+            f: Filter object.
+
+        # Returns
+            `Query`. The query object with the applied filter.
+        """
+        return self.select_all().filter(f)
+
+    def add_tag(self, name: str, value: str = None):
+        """Attach a name/value tag to a feature group.
+
+        A tag can consist of a name only or a name/value pair. Tag names are
+        unique identifiers.
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added, defaults to `None`.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_base_engine.add_tag(self, name, value)
+
+    def delete_tag(self, name: str):
+        """Delete a tag from a feature group.
+
+        Tag names are unique identifiers.
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_base_engine.delete_tag(self, name)
+
+    def get_tag(self, name: str = None):
+        """Get the tags of a feature group.
+
+        Tag names are unique identifiers. Returns all tags if no tag name is
+        specified.
+
+        # Arguments
+            name: Name of the tag to get, defaults to `None`.
+
+        # Returns
+            `list[Tag]`. List of tags as name/value pairs.
+
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_group_base_engine.get_tags(self, name)
+
+    def get_feature(self, name: str):
+        """Retrieve a `Feature` object from the schema of the feature group.
+
+        There are several ways to access features of a feature group:
+
+        ```python
+        fg.feature1
+        fg["feature1"]
+        fg.get_feature("feature1")
+        ```
+
+        !!! note
+            Attribute access to features works only for non-reserved names. For example
+            features named `id` or `name` will not be accessible via `fg.name`, instead
+            this will return the name of the feature group itself. Fall back on using
+            the `get_feature` method.
+
+        Args:
+            name (str): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise FeatureStoreException(
+                f"'FeatureGroup' object has no feature called '{name}'."
+            )
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise AttributeError(
+                f"'FeatureGroup' object has no attribute '{name}'. "
+                "If you are trying to access a feature, fall back on "
+                "using the `get_feature` method."
+            )
+
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Expected type `str`, got `{type(name)}`. "
+                "Features are accessible by name."
+            )
+        feature = [f for f in self._features if f.name == name]
+        if len(feature) == 1:
+            return feature[0]
+        else:
+            raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")
+
+    @property
+    def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the feature group."""
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the feature group."""
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time: str = None):
+        """Returns the statistics for this feature group at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        # Arguments
+            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `RestAPIError`.
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)
+
+
+class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
@@ -68,6 +303,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in features
         ]
+
         self._location = location
         self._jobs = jobs
         self._online_enabled = online_enabled
@@ -90,6 +326,7 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
+
         else:
             # initialized by user
             self.statistics_config = statistics_config
@@ -528,3 +765,211 @@ class FeatureGroup(feature_group_base.FeatureGroupBase):
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
+
+
+class OnDemandFeatureGroup(FeatureGroupBase):
+    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
+
+    def __init__(
+        self,
+        storage_connector,
+        query=None,
+        data_format=None,
+        path=None,
+        options={},
+        name=None,
+        version=None,
+        description=None,
+        featurestore_id=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        id=None,
+        features=None,
+        jobs=None,
+        desc_stats_enabled=None,
+        feat_corr_enabled=None,
+        feat_hist_enabled=None,
+        cluster_analysis_enabled=None,
+        statistic_columns=None,
+        statistics_config=None,
+    ):
+        super().__init__(featurestore_id)
+
+        self._feature_store_id = featurestore_id
+        self._feature_store_name = featurestore_name
+        self._description = description
+        self._created = created
+        self._creator = creator
+        self._version = version
+        self._name = name
+        self._query = query
+        self._data_format = data_format
+        self._path = path
+        self._id = id
+        self._jobs = jobs
+        self._desc_stats_enabled = desc_stats_enabled
+        self._feat_corr_enabled = feat_corr_enabled
+        self._feat_hist_enabled = feat_hist_enabled
+        self._statistic_columns = statistic_columns
+
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
+            featurestore_id
+        )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = (
+                [feature.Feature.from_response_json(feat) for feat in features]
+                if features
+                else None
+            )
+
+            self.statistics_config = StatisticsConfig(
+                desc_stats_enabled,
+                feat_corr_enabled,
+                feat_hist_enabled,
+                statistic_columns,
+            )
+            self._options = (
+                {option["name"]: option["value"] for option in options}
+                if options
+                else None
+            )
+        else:
+            self.statistics_config = statistics_config
+            self._features = features
+            self._options = options
+
+        if storage_connector is not None and isinstance(storage_connector, dict):
+            self._storage_connector = sc.StorageConnector.from_response_json(
+                storage_connector
+            )
+        else:
+            self._storage_connector = storage_connector
+
+    def save(self):
+        self._feature_group_engine.save(self)
+
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read())
+
+    def read(self, dataframe_type="default"):
+        """Get the feature group as a DataFrame."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().read(dataframe_type=dataframe_type)
+
+    def show(self, n):
+        """Show the first n rows of the feature group."""
+        engine.get_instance().set_job_group(
+            "Fetching Feature group",
+            "Getting feature group: {} from the featurestore {}".format(
+                self._name, self._feature_store_name
+            ),
+        )
+        return self.select_all().show(n)
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
+        return cls(**json_decamelized)
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "query": self._query,
+            "dataFormat": self._data_format,
+            "path": self._path,
+            "options": [{"name": k, "value": v} for k, v in self._options.items()]
+            if self._options
+            else None,
+            "storageConnector": self._storage_connector.to_dict(),
+            "type": "onDemandFeaturegroupDTO",
+            "descStatsEnabled": self._statistics_config.enabled,
+            "featHistEnabled": self._statistics_config.histograms,
+            "featCorrEnabled": self._statistics_config.correlations,
+            "statisticColumns": self._statistics_config.columns,
+        }
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def features(self):
+        return self._features
+
+    @property
+    def query(self):
+        return self._query
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def options(self):
+        return self._options
+
+    @property
+    def storage_connector(self):
+        return self._storage_connector
+
+    @property
+    def creator(self):
+        return self._creator
+
+    @property
+    def created(self):
+        return self._created
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @description.setter
+    def description(self, new_description):
+        self._description = new_description
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features

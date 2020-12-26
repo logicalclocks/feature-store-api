@@ -14,19 +14,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs.metadata;
+package com.logicalclocks.hsfs.constructor;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.FsQuery;
-import com.logicalclocks.hsfs.JoinType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
-import com.logicalclocks.hsfs.OnDemandFeatureGroupAlias;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -56,10 +55,12 @@ public class Query {
   @Getter
   @Setter
   private String leftFeatureGroupEndTime;
-
   @Getter
   @Setter
   private List<Join> joins = new ArrayList<>();
+  @Getter
+  @Setter
+  private FilterLogic filter;
 
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
@@ -224,5 +225,23 @@ public class Query {
           hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
           readOptions);
     }
+  }
+
+  public Query filter(Filter filter) {
+    if (this.filter == null) {
+      this.filter = new FilterLogic(filter);
+    } else {
+      this.filter = this.filter.and(filter);
+    }
+    return this;
+  }
+
+  public Query filter(FilterLogic filter) {
+    if (this.filter == null) {
+      this.filter = filter;
+    } else {
+      this.filter = this.filter.and(filter);
+    }
+    return this;
   }
 }

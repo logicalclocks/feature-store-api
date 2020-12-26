@@ -39,14 +39,16 @@ class Client(base.Client):
     HDFS_USER = "HDFS_USER"
     T_CERTIFICATE = "t_certificate"
     K_CERTIFICATE = "k_certificate"
-    TRUSTSTORE_SUFFIX = "__tstore.key"
-    KEYSTORE_SUFFIX = "__kstore.key"
+    TRUSTSTORE_SUFFIX = "__tstore.jks"
+    KEYSTORE_SUFFIX = "__kstore.jks"
     PEM_CA_CHAIN = "ca_chain.pem"
 
     def __init__(self):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
         self._host, self._port = self._get_host_port_pair()
+
+        self._cert_key = util.get_cert_pw()
         trust_store_path = self._get_trust_store_path()
         hostname_verification = (
             os.environ[self.REQUESTS_VERIFY]
@@ -77,7 +79,7 @@ class Client(base.Client):
         """
         Converts JKS trustore file into PEM to be compatible with Python libraries
         """
-        keystore_pw = util.get_cert_pw()
+        keystore_pw = self._cert_key
         keystore_ca_cert = self._convert_jks_to_pem(
             self._get_jks_key_store_path(), keystore_pw
         )

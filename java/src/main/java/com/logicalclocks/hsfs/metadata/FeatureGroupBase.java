@@ -22,6 +22,9 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.FilterLogic;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import lombok.Getter;
@@ -273,5 +276,44 @@ public class FeatureGroupBase {
   @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
+  }
+
+  /**
+   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
+   *
+   * @param filter
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query filter(Filter filter) throws FeatureStoreException, IOException {
+    return this.selectAll().filter(filter);
+  }
+
+  /**
+   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
+   *
+   * @param filter
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Query filter(FilterLogic filter) throws FeatureStoreException, IOException {
+    return this.selectAll().filter(filter);
+  }
+
+  /**
+   * Retrieve a feature of the feature group by name.
+   *
+   * @param name
+   * @return Feature
+   * @throws FeatureStoreException
+   */
+  @JsonIgnore
+  public Feature getFeature(String name) throws FeatureStoreException {
+    return features.stream().filter(f -> f.getName().equalsIgnoreCase(name))
+        .findFirst()
+        .orElseThrow(() -> new FeatureStoreException("Feature with name `" + name
+            + "` not found in feature group `" + this.name + "`."));
   }
 }

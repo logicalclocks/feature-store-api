@@ -52,7 +52,7 @@ def get_cert_pw():
     Returns:
         Certificate password
     """
-    hadoop_user_name = "hadoop_user_name"
+    hadoop_user_name = "HADOOP_USER_NAME"
     crypto_material_password = "material_passwd"
     material_directory = "MATERIAL_DIRECTORY"
     password_suffix = "__cert.key"

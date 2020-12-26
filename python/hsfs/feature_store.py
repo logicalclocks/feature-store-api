@@ -22,7 +22,6 @@ from hsfs import (
     training_dataset,
     feature_group,
     feature,
-    on_demand_feature_group,
     util,
     storage_connector,
 )
@@ -341,7 +340,7 @@ class FeatureStore:
         # Returns
             `OnDemandFeatureGroup`. The on-demand feature group metadata object.
         """
-        return on_demand_feature_group.OnDemandFeatureGroup(
+        return feature_group.OnDemandFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
