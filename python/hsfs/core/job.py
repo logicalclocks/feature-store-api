@@ -42,4 +42,4 @@ class Job:
 
     @property
     def name(self):
-        return self.name
+        return self._name

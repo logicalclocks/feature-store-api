@@ -22,6 +22,8 @@ from hsfs import util
 class JobConfiguration:
 
     PYSPARK_MAIN_CLASS = "org.apache.spark.deploy.PythonRunner"
+    PYSPARK_JOB_TYPE = "PySpark"
+    DTO_TYPE = "sparkJobConfiguration"
 
     def __init__(
         self,
@@ -30,7 +32,7 @@ class JobConfiguration:
         am_memory=1024,
         am_cores=1,
         executor_memory=2048,
-        executor_cores=2,
+        executor_cores=1,
         executor_instances=1,
         dynamic_allocation=True,
         dynamic_min_executors=1,
@@ -54,12 +56,14 @@ class JobConfiguration:
             "amMemory": self._am_memory,
             "amCores": self._am_cores,
             "mainClass": JobConfiguration.PYSPARK_MAIN_CLASS,
+            "jobType": JobConfiguration.PYSPARK_JOB_TYPE,
             "spark.executor.memory": self._executor_memory,
             "spark.executor.cores": self._executor_cores,
             "spark.executor.instances": self._executor_instances,
             "spark.dynamicAllocation.enabled": self._dynamic_allocation,
             "spark.dynamicAllocation.minExecutors": self._dynamic_min_executors,
             "spark.dynamicAllocation.maxExecutors": self._dynamic_max_executors,
+            "type": JobConfiguration.DTO_TYPE,
         }
 
     def json(self):

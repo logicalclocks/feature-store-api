@@ -35,8 +35,8 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = (
-            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
+        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            featurestore_id
         )
 
     def delete(self):
@@ -350,18 +350,10 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(
-                    online,
-                    dataframe_type,
-                    read_options,
-                )
+                .read(online, dataframe_type, read_options,)
             )
         else:
-            return self.select_all().read(
-                online,
-                dataframe_type,
-                read_options,
-            )
+            return self.select_all().read(online, dataframe_type, read_options,)
 
     def read_changes(
         self,
@@ -455,7 +447,9 @@ class FeatureGroup(FeatureGroupBase):
 
         user_version = self._version
         self._feature_group_engine.save(self, feature_dataframe, write_options)
-        if self.statistics_config.enabled:
+        if self.statistics_config.enabled and engine.get_type() == "spark":
+            # Only compute statistics if the engine is Spark.
+            # For Hive engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -531,7 +525,10 @@ class FeatureGroup(FeatureGroupBase):
             write_options,
         )
 
-        self.compute_statistics()
+        if engine.get_type() == "spark":
+            # Only compute statistics if the engine is Spark,
+            # if Hive, the statistics are computed by the application doing the insert
+            self.compute_statistics()
 
     def commit_details(self, limit: Optional[int] = None):
         """Retrieves commit timeline for this feature group.
@@ -606,7 +603,9 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
-            return self._statistics_engine.compute_statistics(self, self.read())
+            # Don't read the dataframe here, otherwise in a Python environment
+            # we would be making a data query and then discarding the results
+            return self._statistics_engine.compute_statistics(self)
         else:
             warnings.warn(
                 (
@@ -868,8 +867,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
+            featurestore_id
         )
 
         if self._id:

@@ -14,7 +14,8 @@
 #   limitations under the License.
 #
 
-import time
+import datetime
+import json
 
 import pandas as pd
 import numpy as np
@@ -27,9 +28,10 @@ from hsfs.core import feature_group_api, dataset_api, job_api, job_configuration
 
 
 class Engine:
-    def __init__(self):
-        pass
 
+    APP_OP_INSERT_FG = "insert_fg"
+
+    def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
 
@@ -83,6 +85,7 @@ class Engine:
         # should be as thin as possible. Adding PyArrow will make the library less flexible.
         # If the conversion fails, users can always fall back and provide their own types
 
+        # TODO(Fabio): consider arrays
         if dtype == np.dtype("O"):
             # This is an object, fall back to string
             return "string"
@@ -109,28 +112,56 @@ class Engine:
         offline_write_options,
         online_write_options,
     ):
+        # App configuration
+        app_options = self._get_app_options(offline_write_options)
+
         # Setup job for ingestion
         fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
-        ingestion_job = fg_api.ingestion(feature_group)
+        ingestion_job = fg_api.ingestion(feature_group, json.dumps(app_options))
 
         # Upload dataframe into Hopsworks
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-        # Configure ingestion job
-        job_conf = job_configuration.JobConfiguration(
-            app_path=ingestion_job.job_path, default_args=ingestion_job.job_conf_path
-        )
+        # Configure Hopsworks ingestion job
+        # Users can pass Spark configurations to the save/insert method
+        # Property name should match the value in the JobConfiguration.__init__
+        spark_options = offline_write_options.pop("spark", {})
+        spark_options["app_path"] = ingestion_job.job_path
+        spark_options["default_args"] = ingestion_job.job_args
+        hopsworks_job_conf = job_configuration.JobConfiguration(**spark_options)
 
         job = self._job_api.create(
-            self._generate_job_name("ingestion", feature_group), job_conf
+            self._generate_job_name("ingestion", feature_group), hopsworks_job_conf
         )
 
         self._job_api.launch(job.name)
 
+    def profile(self, metadata_instance):
+        pass
+
     def _generate_job_name(self, prefix, feature_group):
         return "_".join(
-            [prefix, util.feature_group_name(feature_group), str(time.time())]
+            [
+                prefix,
+                util.feature_group_name(feature_group),
+                datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+            ]
         )
+
+    def _get_app_options(self, write_options={}):
+        """
+        Generate the options that should be passed to the application doing the ingestion.
+        Options should be data format, data options to read the input dataframe and 
+        insert options to be passed to the insert method 
+        """
+        # TODO(Fabio): consider the write options
+        return {
+            "dataFormat": "CSV",
+            "dataOptions": [
+                {"name": "header", "value": "true"},
+                {"name": "inferSchema", "value": "true"},
+            ],
+        }
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

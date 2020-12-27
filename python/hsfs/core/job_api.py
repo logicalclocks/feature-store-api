@@ -34,4 +34,4 @@ class JobApi:
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", name, "executions"]
 
-        _client._send_request("POST", path_params, head)
+        _client._send_request("POST", path_params)

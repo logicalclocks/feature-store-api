@@ -26,7 +26,7 @@ def get_fg_spark_df(job_conf: Dict[Any, Any]) -> Any:
     data_format = job_conf.pop("data_format")
     data_options = job_conf.pop("data_options")
 
-    return spark.read.format(data_format).options(data_options).load(data_path)
+    return spark.read.format(data_format).options(**data_options).load(data_path)
 
 def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
     feature_store = job_conf.pop("feature_store")
@@ -62,23 +62,26 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
 
 
 if __name__ == "__main__":
+    # Setup spark first so it fails faster in case of args errors
+    # Otherwise the resource manager will wait until the spark application master
+    # registers, which never happens.
+    spark = setup_spark()
+
     parser = argparse.ArgumentParser(description="HSFS Job Utils")
     parser.add_argument(
-        "op",
+        "-op",
         type=str,
-        choices=["create_fg", "create_td", "compute_stats"],
+        choices=["insert_fg", "create_td", "compute_stats"],
         help="Operation type",
     )
     parser.add_argument(
-        "path",
+        "-path",
         type=str,
         help="Location on HopsFS of the JSON containing the full configuration",
     )
 
     args = parser.parse_args()
     job_conf = read_job_conf(args.path)
-
-    spark = setup_spark()
 
     if args.op == "insert_fg":
         insert_fg(spark, job_conf)

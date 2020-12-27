@@ -223,7 +223,7 @@ class FeatureGroupApi:
             _client._send_request("GET", path_params, query_params, headers=headers),
         )
 
-    def ingestion(self, feature_group_instance):
+    def ingestion(self, feature_group_instance, app_options):
         """
         Setup Job for dataframe ingestion
         # Arguments
@@ -242,6 +242,9 @@ class FeatureGroupApi:
             "ingestion",
         ]
 
+        headers = {"content-type": "application/json"}
         return ingestion_job.IngestionJob.from_response_json(
-            _client._send_request("POST", path_params),
+            _client._send_request(
+                "POST", path_params, headers=headers, data=app_options
+            ),
         )

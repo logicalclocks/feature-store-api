@@ -22,7 +22,7 @@ class IngestionJob:
         self,
         data_path,
         job_path,
-        job_conf_path,
+        job_args,
         href=None,
         expand=None,
         items=None,
@@ -31,7 +31,7 @@ class IngestionJob:
     ):
         self._data_path = data_path
         self._job_path = job_path
-        self._job_conf_path = job_conf_path
+        self._job_args = job_args
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -47,5 +47,5 @@ class IngestionJob:
         return self._job_path
 
     @property
-    def job_conf_path(self):
-        return self._job_conf_path
+    def job_args(self):
+        return self._job_args
