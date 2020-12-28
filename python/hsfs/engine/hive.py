@@ -14,17 +14,21 @@
 #   limitations under the License.
 #
 
-import datetime
-import json
-
 import pandas as pd
 import numpy as np
 
 from pyhive import hive
 from sqlalchemy import create_engine
+from urllib.parse import urlparse
 
 from hsfs import client, feature, util
-from hsfs.core import feature_group_api, dataset_api, job_api, job_configuration
+from hsfs.core import (
+    feature_group_api,
+    dataset_api,
+    job_api,
+    job_configuration,
+    ingestion_job_conf,
+)
 
 
 class Engine:
@@ -116,52 +120,55 @@ class Engine:
         app_options = self._get_app_options(offline_write_options)
 
         # Setup job for ingestion
+        # Configure Hopsworks ingestion job
+        print("Configuring ingestion job...")
         fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
-        ingestion_job = fg_api.ingestion(feature_group, json.dumps(app_options))
+        ingestion_job = fg_api.ingestion(feature_group, app_options)
 
         # Upload dataframe into Hopsworks
+        print("Uploading Pandas dataframe...")
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-        # Configure Hopsworks ingestion job
-        # Users can pass Spark configurations to the save/insert method
-        # Property name should match the value in the JobConfiguration.__init__
-        spark_options = offline_write_options.pop("spark", {})
-        spark_options["app_path"] = ingestion_job.job_path
-        spark_options["default_args"] = ingestion_job.job_args
-        hopsworks_job_conf = job_configuration.JobConfiguration(**spark_options)
-
-        job = self._job_api.create(
-            self._generate_job_name("ingestion", feature_group), hopsworks_job_conf
+        # Launch job
+        print("Launching ingestion job...")
+        self._job_api.launch(ingestion_job.job.name)
+        print(
+            "Ingestion Job started successfully, you can follow the progress at {}".format(
+                self._get_job_url(ingestion_job.job.href)
+            )
         )
 
-        self._job_api.launch(job.name)
+    def _get_job_url(self, href: str):
+        """Use the endpoint returned by the API to construct the UI url for jobs 
 
-    def profile(self, metadata_instance):
-        pass
-
-    def _generate_job_name(self, prefix, feature_group):
-        return "_".join(
-            [
-                prefix,
-                util.feature_group_name(feature_group),
-                datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
-            ]
+        Args:
+            href (str): the endpoint returned by the API 
+        """
+        url_splits = urlparse(href)
+        project_id = url_splits.path.split("/")[4]
+        ui_url = url_splits._replace(
+            path="hopsworks/#!/project/{}/jobs".format(project_id)
         )
+        return ui_url.geturl()
 
     def _get_app_options(self, write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
         Options should be data format, data options to read the input dataframe and 
         insert options to be passed to the insert method 
+        
+        Users can pass Spark configurations to the save/insert method
+        Property name should match the value in the JobConfiguration.__init__
         """
         # TODO(Fabio): consider the write options
-        return {
-            "dataFormat": "CSV",
-            "dataOptions": [
+        return ingestion_job_conf.IngestionJob(
+            data_format="CSV",
+            data_options=[
                 {"name": "header", "value": "true"},
                 {"name": "inferSchema", "value": "true"},
             ],
-        }
+            spark_job_configuration=write_options.pop("spark", None),
+        )
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

@@ -245,6 +245,6 @@ class FeatureGroupApi:
         headers = {"content-type": "application/json"}
         return ingestion_job.IngestionJob.from_response_json(
             _client._send_request(
-                "POST", path_params, headers=headers, data=app_options
+                "POST", path_params, headers=headers, data=app_options.json()
             ),
         )

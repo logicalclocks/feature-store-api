@@ -34,6 +34,7 @@ class Job:
         count=None,
     ):
         self._name = name
+        self._href = href
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -43,3 +44,7 @@ class Job:
     @property
     def name(self):
         return self._name
+
+    @property
+    def href(self):
+        return self._href

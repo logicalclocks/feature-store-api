@@ -15,23 +15,15 @@
 #
 
 import humps
+from hsfs.core.job import Job
 
 
 class IngestionJob:
     def __init__(
-        self,
-        data_path,
-        job_path,
-        job_args,
-        href=None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
+        self, data_path, job, href=None, expand=None, items=None, count=None, type=None,
     ):
         self._data_path = data_path
-        self._job_path = job_path
-        self._job_args = job_args
+        self._job = Job.from_response_json(job)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -43,9 +35,5 @@ class IngestionJob:
         return self._data_path
 
     @property
-    def job_path(self):
-        return self._job_path
-
-    @property
-    def job_args(self):
-        return self._job_args
+    def job(self):
+        return self._job
