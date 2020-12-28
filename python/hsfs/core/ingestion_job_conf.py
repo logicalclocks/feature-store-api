@@ -45,7 +45,7 @@ class IngestionJob:
         return self._spark_job_configuration
 
     @spark_job_configuration.setter
-    def spark_job_configuration(spark_job_configuration):
+    def spark_job_configuration(self, spark_job_configuration):
         self._spark_job_configuration = spark_job_configuration
 
     def json(self):

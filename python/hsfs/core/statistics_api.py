@@ -15,6 +15,7 @@
 #
 
 from hsfs import client, statistics
+from hsfs.core import job
 
 
 class StatisticsApi:
@@ -88,3 +89,17 @@ class StatisticsApi:
         return statistics.Statistics.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
+
+    def compute(self, metadata_instance):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            self._entity_type,
+            metadata_instance.id,
+            "statistics",
+            "compute",
+        ]
+        return job.Job.from_response_json(_client._send_request("POST", path_params))

@@ -21,13 +21,13 @@ from pyhive import hive
 from sqlalchemy import create_engine
 from urllib.parse import urlparse
 
-from hsfs import client, feature, util
+from hsfs import client, feature
 from hsfs.core import (
     feature_group_api,
     dataset_api,
     job_api,
-    job_configuration,
     ingestion_job_conf,
+    statistics_api,
 )
 
 
@@ -59,11 +59,25 @@ class Engine:
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default").head(n)
 
-    def register_temporary_table(self, query, storage_connector, alias):
+    def register_on_demand_temporary_table(self, query, storage_connector, alias):
         raise NotImplementedError
 
-    def profile_df(self, dataframe, relevant_columns, correlations, histograms):
-        raise NotImplementedError
+    def register_hudi_temporary_table(
+        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+        # No op to avoid query failure
+        pass
+
+    def profile(self, metadata_instance):
+        stat_api = statistics_api.StatisticsApi(
+            metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
+        )
+        job = stat_api.compute(metadata_instance)
+        print(
+            "Statistics Job started successfully, you can follow the progress at {}".format(
+                self._get_job_url(job.href)
+            )
+        )
 
     def set_job_group(self, group_id, description):
         pass
@@ -139,10 +153,10 @@ class Engine:
         )
 
     def _get_job_url(self, href: str):
-        """Use the endpoint returned by the API to construct the UI url for jobs 
+        """Use the endpoint returned by the API to construct the UI url for jobs
 
         Args:
-            href (str): the endpoint returned by the API 
+            href (str): the endpoint returned by the API
         """
         url_splits = urlparse(href)
         project_id = url_splits.path.split("/")[4]
@@ -154,9 +168,9 @@ class Engine:
     def _get_app_options(self, write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
-        Options should be data format, data options to read the input dataframe and 
-        insert options to be passed to the insert method 
-        
+        Options should be data format, data options to read the input dataframe and
+        insert options to be passed to the insert method
+
         Users can pass Spark configurations to the save/insert method
         Property name should match the value in the JobConfiguration.__init__
         """
