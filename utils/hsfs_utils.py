@@ -55,15 +55,8 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
     # Extract the query object
     query = hsfs.Query.from_response_json(job_conf.pop("query"))
 
-    storage_connector = None
-    if "storage_connector" in job_conf:
-        storage_connector_json = job_conf.pop("storage_connector")
-        storage_connector = fs.get_storage_connector(
-            storage_connector_json["name"], storage_connector_json["type"]
-        )
-
-    td = fs.create_training_dataset(**job_conf, storage_connector=storage_connector)
-    td.save(query)
+    td = fs.get_training_dataset(name=job_conf["name"], version=job_conf["version"])
+    td.insert(query)
 
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:
