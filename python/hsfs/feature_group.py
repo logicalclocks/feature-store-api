@@ -65,7 +65,7 @@ class FeatureGroupBase:
             self._feature_store_name, self._feature_store_id, self, self._features
         )
 
-    def select(self, features=[]):
+    def select(self, features: List[Union[str, feature.Feature]] = []):
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a training
@@ -81,6 +81,33 @@ class FeatureGroupBase:
         return query.Query(
             self._feature_store_name, self._feature_store_id, self, features
         )
+
+    def select_except(self, features: List[Union[str, feature.Feature]] = []):
+        """Select all features of the feature group except a few and return a query
+        object.
+
+        The query can be used to construct joins of feature groups or create a training
+        dataset with a subset of features of the feature group.
+
+        # Arguments
+            features: list, optional. A list of `Feature` objects or feature names as
+                strings to be selected, defaults to [], selecting all features.
+
+        # Returns
+            `Query`: A query object with the selected features of the feature group.
+        """
+        if features:
+            except_features = [
+                f.name if isinstance(f, feature.Feature) else f for f in features
+            ]
+            return query.Query(
+                self._feature_store_name,
+                self._feature_store_id,
+                self,
+                [f for f in self._features if f.name not in except_features],
+            )
+        else:
+            return self.select_all()
 
     def filter(self, f: Union[filter.Filter, filter.Logic]):
         """Apply filter to the feature group.
