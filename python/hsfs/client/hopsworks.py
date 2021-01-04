@@ -62,7 +62,6 @@ class Client(base.Client):
         self._session = requests.session()
 
         self._connected = True
-        self._cert_key = None
 
     def _get_hopsworks_rest_endpoint(self):
         """Get the hopsworks REST endpoint for making requests to the REST API."""
