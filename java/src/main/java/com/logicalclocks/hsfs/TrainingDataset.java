@@ -401,6 +401,11 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
+  public String getJdbcPreparedStatement() throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getJdbcPreparedStatement(this);
+  }
+
+  @JsonIgnore
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());

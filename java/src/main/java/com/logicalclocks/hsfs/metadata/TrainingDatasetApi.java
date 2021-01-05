@@ -37,7 +37,7 @@ public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
-  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}";
+  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel,prepStatement}";
   public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata}";
 
@@ -101,6 +101,27 @@ public class TrainingDatasetApi {
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .set("withLabel", withLabel)
+        .expand();
+
+    HttpGet getRequest = new HttpGet(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+
+    return hopsworksClient.handleRequest(getRequest, FsQuery.class);
+  }
+
+  public FsQuery getJdbcPreparedStatement(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_QUERY_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("tdId", trainingDataset.getId())
+        .set("withLabel", false)
+        .set("prepStatement", true)
         .expand();
 
     HttpGet getRequest = new HttpGet(uri);

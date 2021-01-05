@@ -155,4 +155,9 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
   }
+
+  public String getJdbcPreparedStatement(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    return trainingDatasetApi.getJdbcPreparedStatement(trainingDataset).getStorageQuery(Storage.ONLINE);
+  }
 }
