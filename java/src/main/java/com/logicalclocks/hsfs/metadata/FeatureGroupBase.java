@@ -75,19 +75,29 @@ public class FeatureGroupBase {
     this.id = id;
   }
 
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+  public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  public Query select(List<String> features) throws FeatureStoreException, IOException {
+  public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
-  public Query selectAll() throws FeatureStoreException, IOException {
+  public Query selectAll() {
     return new Query(this, getFeatures());
+  }
+
+  public Query selectExceptFeatures(List<Feature> features) {
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
+  }
+
+  public Query selectExcept(List<String> features) {
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }
 
   public void delete() throws FeatureStoreException, IOException {
