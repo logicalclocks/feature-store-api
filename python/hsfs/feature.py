@@ -46,7 +46,7 @@ class Feature:
         self._description = description
         self._primary = primary or False
         self._partition = partition or False
-        self._hudi_precombine_key = hudi_precombine_key
+        self._hudi_precombine_key = hudi_precombine_key or False
         self._online_type = online_type
         self._default_value = default_value
         if feature_group is not None:
