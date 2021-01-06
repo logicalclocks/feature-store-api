@@ -52,6 +52,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
             jdbc_options = online_conn.spark_options()
             jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
+            jdbc_options["driver"] = "com.mysql.cj.jdbc.Driver"
 
             online_write_options = {**jdbc_options, **online_write_options}
 
@@ -93,6 +94,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
             jdbc_options = online_conn.spark_options()
             jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
+            jdbc_options["driver"] = "com.mysql.cj.jdbc.Driver"
 
             online_write_options = {**jdbc_options, **online_write_options}
 

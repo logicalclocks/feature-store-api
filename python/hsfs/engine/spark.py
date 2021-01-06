@@ -67,6 +67,9 @@ class Engine:
         options = connector.spark_options()
         options["query"] = sql_query
 
+        if "driver" not in options:
+            options["driver"] = "com.mysql.cj.jdbc.Driver"
+
         return (
             self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
         )
