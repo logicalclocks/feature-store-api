@@ -40,20 +40,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.partition = True
             if (
                 feature_group.hudi_precombine_key is not None
-                and feat.name in feature_group.hudi_precombine_key
+                and feat.name == feature_group.hudi_precombine_key
             ):
                 feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
-
-        # if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set
-        if (
-            feature_group.hudi_precombine_key is None
-            and feature_group.time_travel_format == "HUDI"
-        ):
-            for feat in self.features:
-                if feat.hudi_precombine_key:
-                    feature_group.hudi_precombine_key = feat.name
 
         offline_write_options = write_options
         online_write_options = write_options

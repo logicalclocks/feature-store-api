@@ -275,10 +275,15 @@ class FeatureGroup(FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
-
-            self._hudi_precombine_key = [
-                feat.name for feat in self._features if feat.hudi_precombine_key is True
-            ]
+            if time_travel_format.upper() == "HUDI":
+                # hudi precombine key is always a single feature
+                self._hudi_precombine_key = [
+                    feat.name
+                    for feat in self._features
+                    if feat.hudi_precombine_key is True
+                ][0]
+            else:
+                self._hudi_precombine_key = None
         else:
             # initialized by user
             self.statistics_config = statistics_config
