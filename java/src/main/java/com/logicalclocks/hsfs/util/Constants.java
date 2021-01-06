@@ -34,6 +34,8 @@ public class Constants {
   public static final String JDBC_PWD = "password";
   public static final String JDBC_URL = "url";
   public static final String JDBC_TABLE = "dbtable";
+  public static final String DRIVER = "driver";
+  public static final String DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 
   public static final String TF_CONNECTOR_RECORD_TYPE = "recordType";
 

@@ -80,6 +80,11 @@ public class SparkEngine {
   public Dataset<Row> jdbc(StorageConnector storageConnector, String query) throws FeatureStoreException {
     Map<String, String> readOptions = storageConnector.getSparkOptions();
     readOptions.put("query", query);
+
+    if (!readOptions.containsKey(Constants.DRIVER) && storageConnector.getName().contains("onlinefeaturestore")) {
+      readOptions.put(Constants.DRIVER, Constants.DRIVER_CLASS);
+    }
+
     return sparkSession.read()
         .format(Constants.JDBC_FORMAT)
         .options(readOptions)
@@ -281,6 +286,7 @@ public class SparkEngine {
                                                StorageConnector storageConnector) throws FeatureStoreException {
     Map<String, String> writeOptions = storageConnector.getSparkOptions();
     writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
+    writeOptions.put(Constants.DRIVER, Constants.DRIVER_CLASS);
 
     // add user provided configuration
     if (providedWriteOptions != null) {

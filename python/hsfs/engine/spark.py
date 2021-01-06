@@ -67,7 +67,7 @@ class Engine:
         options = connector.spark_options()
         options["query"] = sql_query
 
-        if "driver" not in options:
+        if "driver" not in options and "onlinefeaturestore" in connector.name:
             options["driver"] = "com.mysql.cj.jdbc.Driver"
 
         return (
