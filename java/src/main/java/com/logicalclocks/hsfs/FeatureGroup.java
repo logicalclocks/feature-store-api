@@ -215,6 +215,11 @@ public class FeatureGroup extends FeatureGroupBase {
     insert(featureData, null, false);
   }
 
+  public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    insert(featureData, null, false, null, writeOptions);
+  }
+
   public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
     insert(featureData, storage, false, null, null);
   }
@@ -231,11 +236,6 @@ public class FeatureGroup extends FeatureGroupBase {
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     insert(featureData, null, overwrite, null, writeOptions);
-  }
-
-  public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    insert(featureData, null, false, null, writeOptions);
   }
 
   /**

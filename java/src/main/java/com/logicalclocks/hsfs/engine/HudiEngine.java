@@ -42,9 +42,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class HudiEngine {
 
@@ -177,10 +175,9 @@ public class HudiEngine {
       hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
     }
 
-    List<Feature> precombineKey = featureGroup.getFeatures().stream().filter(Feature::getHudiPrecombineKey)
-        .collect(Collectors.toList());
-
-    hudiArgs.put(HUDI_PRECOMBINE_FIELD, precombineKey.get(0).getName());
+    String precombineKey = featureGroup.getFeatures().stream().filter(Feature::getHudiPrecombineKey).findFirst()
+        .orElseThrow(() -> new FeatureStoreException("Can't find hudi precombine key")).getName();
+    hudiArgs.put(HUDI_PRECOMBINE_FIELD, precombineKey);
 
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");

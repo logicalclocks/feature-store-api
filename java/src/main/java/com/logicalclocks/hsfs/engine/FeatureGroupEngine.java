@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
 
@@ -115,15 +114,8 @@ public class FeatureGroupEngine {
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
-      String hudiPrecombineFeatureName = apiFG.getFeatures().stream()
-          .filter(Feature::getHudiPrecombineKey)
-          .map(Feature::getName)
-          .collect(Collectors.toList()).get(0);
-      featureGroup.getFeatures().forEach(f -> {
-        if (f.getName().equals(hudiPrecombineFeatureName)) {
-          f.setHudiPrecombineKey(true);
-        }
-      });
+      List<Feature> features = apiFG.getFeatures();
+      featureGroup.setFeatures(features);
     }
 
     // Write the dataframe
