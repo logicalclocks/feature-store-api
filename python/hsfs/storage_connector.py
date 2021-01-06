@@ -75,6 +75,11 @@ class StorageConnector:
         return self._id
 
     @property
+    def name(self):
+        """The name of the storage connector"""
+        return self._name
+
+    @property
     def connector_type(self):
         """Type of the connector. S3, JDBC or HOPSFS."""
         return self._storage_connector_type
