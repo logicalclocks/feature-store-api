@@ -47,8 +47,8 @@ public class FsQuery {
   private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
-    query = query.replace("\n", " ");
-    queryOnline = queryOnline.replace("\n", " ");
+    query = query != null ? query.replace("\n", " ") : null;
+    queryOnline = queryOnline != null ? queryOnline.replace("\n", " ") : null;
   }
 
   public String getStorageQuery(Storage storage) throws FeatureStoreException {

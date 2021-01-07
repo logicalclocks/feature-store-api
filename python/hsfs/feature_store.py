@@ -297,11 +297,15 @@ class FeatureStore:
     def create_on_demand_feature_group(
         self,
         name: str,
-        query: str,
         storage_connector: storage_connector.StorageConnector,
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = "",
+        options: Optional[Dict[str, str]] = {},
         version: Optional[int] = None,
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
         """Create a on-demand feature group metadata object.
 
@@ -315,6 +319,10 @@ class FeatureStore:
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
+            data_format: If the on-demand feature groups refers to a directory with data,
+                the data format to use when reading it
+            path: The location within the scope of the storage connector, from where to read
+                the data for the on-demand feature group
             storage_connector: the storage connector to use to establish connectivity
                 with the data source.
             version: Version of the on-demand feature group to retrieve, defaults to `None` and
@@ -327,16 +335,30 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this on-demand feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+
+        # Returns
+            `OnDemandFeatureGroup`. The on-demand feature group metadata object.
         """
         return feature_group.OnDemandFeatureGroup(
             name=name,
             query=query,
+            data_format=data_format,
+            path=path,
+            options=options,
             storage_connector=storage_connector,
             version=version,
             description=description,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
+            statistics_config=statistics_config,
         )
 
     def create_training_dataset(

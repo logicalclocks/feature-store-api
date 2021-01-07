@@ -35,8 +35,11 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = (
-            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
+        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            featurestore_id
+        )
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
         )
 
     def delete(self):
@@ -237,6 +240,53 @@ class FeatureGroupBase:
         else:
             raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")
 
+    @property
+    def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the feature group."""
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the feature group."""
+        return self._statistics_engine.get_last(self)
+
+    def get_statistics(self, commit_time: str = None):
+        """Returns the statistics for this feature group at a specific time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+
+        # Arguments
+            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `RestAPIError`.
+        """
+        if commit_time is None:
+            return self.statistics
+        else:
+            return self._statistics_engine.get(self, commit_time)
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -324,10 +374,6 @@ class FeatureGroup(FeatureGroupBase):
             featurestore_id
         )
 
-        self._statistics_engine = statistics_engine.StatisticsEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
-
     def read(
         self,
         wallclock_time: Optional[str] = None,
@@ -387,18 +433,10 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(
-                    online,
-                    dataframe_type,
-                    read_options,
-                )
+                .read(online, dataframe_type, read_options,)
             )
         else:
-            return self.select_all().read(
-                online,
-                dataframe_type,
-                read_options,
-            )
+            return self.select_all().read(online, dataframe_type, read_options,)
 
     def read_changes(
         self,
@@ -602,57 +640,6 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def update_statistics_config(self):
-        """Update the statistics configuration of the feature group.
-
-        Change the `statistics_config` object and persist the changes by calling
-        this method.
-
-        # Returns
-            `FeatureGroup`. The updated metadata object of the feature group.
-
-        # Raises
-            `RestAPIError`.
-        """
-        self._feature_group_engine.update_statistics_config(self)
-        return self
-
-    def update_description(self, description: str):
-        """Update the description of the feature gorup.
-
-        # Arguments
-            description: str. New description string.
-
-        # Returns
-            `FeatureGroup`. The updated feature group object.
-        """
-        self._feature_group_engine.update_description(self, description)
-        return self
-
-    def compute_statistics(self):
-        """Recompute the statistics for the feature group and save them to the
-        feature store.
-
-        Statistics are only computed for data in the offline storage of the feature
-        group.
-
-        # Returns
-            `Statistics`. The statistics metadata object.
-
-        # Raises
-            `RestAPIError`. Unable to persist the statistics.
-        """
-        if self.statistics_config.enabled:
-            return self._statistics_engine.compute_statistics(self, self.read())
-        else:
-            warnings.warn(
-                (
-                    "The statistics are not enabled of feature group `{}`, with version"
-                    " `{}`. No statistics computed."
-                ).format(self._name, self._version),
-                util.StorageWarning,
-            )
-
     def append_features(self, features):
         """Append features to the schema of the feature group.
 
@@ -825,61 +812,18 @@ class FeatureGroup(FeatureGroupBase):
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
 
-    @property
-    def statistics_config(self):
-        """Statistics configuration object defining the settings for statistics
-        computation of the feature group."""
-        return self._statistics_config
-
-    @statistics_config.setter
-    def statistics_config(self, statistics_config):
-        if isinstance(statistics_config, StatisticsConfig):
-            self._statistics_config = statistics_config
-        elif isinstance(statistics_config, dict):
-            self._statistics_config = StatisticsConfig(**statistics_config)
-        elif isinstance(statistics_config, bool):
-            self._statistics_config = StatisticsConfig(statistics_config)
-        elif statistics_config is None:
-            self._statistics_config = StatisticsConfig()
-        else:
-            raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
-                    type(statistics_config)
-                )
-            )
-
-    @property
-    def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
-
-    def get_statistics(self, commit_time: str = None):
-        """Returns the statistics for this feature group at a specific time.
-
-        If `commit_time` is `None`, the most recent statistics are returned.
-
-        # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
-
-        # Returns
-            `Statistics`. Statistics object.
-
-        # Raises
-            `RestAPIError`.
-        """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
-
 
 class OnDemandFeatureGroup(FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
 
     def __init__(
         self,
-        query,
         storage_connector,
+        query=None,
+        data_format=None,
+        path=None,
+        options={},
         name=None,
         version=None,
         description=None,
@@ -907,6 +851,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
+        self._data_format = data_format
+        self._path = path
         self._id = id
         self._jobs = jobs
         self._desc_stats_enabled = desc_stats_enabled
@@ -914,23 +860,33 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
+            featurestore_id
         )
 
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
-            self._features = [
-                feature.Feature.from_response_json(feat) for feat in features
-            ]
+            self._features = (
+                [feature.Feature.from_response_json(feat) for feat in features]
+                if features
+                else None
+            )
 
-            # remove old feature attributes, creates problems otherwise when updating
-            # the object in place
-            for f in self._features:
-                if hasattr(self, f.name):
-                    delattr(self, f.name)
+            self.statistics_config = StatisticsConfig(
+                desc_stats_enabled,
+                feat_corr_enabled,
+                feat_hist_enabled,
+                statistic_columns,
+            )
+            self._options = (
+                {option["name"]: option["value"] for option in options}
+                if options
+                else None
+            )
         else:
+            self.statistics_config = statistics_config
             self._features = features
+            self._options = options
 
         if storage_connector is not None and isinstance(storage_connector, dict):
             self._storage_connector = sc.StorageConnector.from_response_json(
@@ -941,6 +897,9 @@ class OnDemandFeatureGroup(FeatureGroupBase):
 
     def save(self):
         self._feature_group_engine.save(self)
+
+        if self.statistics_config.enabled:
+            self._statistics_engine.compute_statistics(self, self.read())
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
@@ -988,8 +947,17 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "query": self._query,
+            "dataFormat": self._data_format,
+            "path": self._path,
+            "options": [{"name": k, "value": v} for k, v in self._options.items()]
+            if self._options
+            else None,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
+            "descStatsEnabled": self._statistics_config.enabled,
+            "featHistEnabled": self._statistics_config.histograms,
+            "featCorrEnabled": self._statistics_config.correlations,
+            "statisticColumns": self._statistics_config.columns,
         }
 
     @property
@@ -1015,6 +983,18 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @property
     def query(self):
         return self._query
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def options(self):
+        return self._options
 
     @property
     def storage_connector(self):

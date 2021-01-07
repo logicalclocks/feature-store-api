@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -123,6 +124,7 @@ public class StorageConnector {
   @Setter
   private StorageConnectorType storageConnectorType;
 
+  @JsonIgnore
   public Map<String, String> getSparkOptions() throws FeatureStoreException {
     if (StorageConnectorType.JDBC.equals(storageConnectorType)) {
       return getJdbcOptions();
@@ -132,6 +134,7 @@ public class StorageConnector {
     throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
   }
 
+  @JsonIgnore
   private Map<String, String> getJdbcOptions() throws FeatureStoreException {
     Map<String, String> options = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
@@ -140,6 +143,7 @@ public class StorageConnector {
     return options;
   }
 
+  @JsonIgnore
   private Map<String, String> getRedshiftOptions() {
     String constr =
         "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
@@ -155,5 +159,16 @@ public class StorageConnector {
       options.put(Constants.JDBC_TABLE, tableName);
     }
     return options;
+  }
+
+  @JsonIgnore
+  public String getPath(String subPath) throws FeatureStoreException {
+    switch (storageConnectorType) {
+      case S3:
+        return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+      default:
+        throw new FeatureStoreException(
+            "Path method not supported for storage connector type: " + storageConnectorType);
+    }
   }
 }

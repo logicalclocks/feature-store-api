@@ -66,4 +66,10 @@ public class FeatureGroupBaseEngine {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
     featureGroup.setFeatures(apiFG.getFeatures());
   }
+
+  public void updateStatisticsConfig(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
+    featureGroup.setCorrelations(apiFG.getCorrelations());
+    featureGroup.setHistograms(apiFG.getHistograms());
+  }
 }
