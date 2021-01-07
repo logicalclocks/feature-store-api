@@ -229,6 +229,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
+        hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
     ):
@@ -260,6 +261,10 @@ class FeatureStore:
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the first column of the DataFrame will
                 be used as primary key.
+            hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
+                feature group. Defaults to `None`. If feature group has time travel format
+                `"HUDI"` and hudi precombine key was not specified then the first primary key of
+                the feature group will be used as hudi precombine key.
             features: Optionally, define the schema of the feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame provided in the `save` method.
@@ -282,6 +287,7 @@ class FeatureStore:
             time_travel_format=time_travel_format,
             partition_key=partition_key,
             primary_key=primary_key,
+            hudi_precombine_key=hudi_precombine_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,

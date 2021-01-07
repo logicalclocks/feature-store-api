@@ -55,6 +55,10 @@ public class Feature {
 
   @Getter
   @Setter
+  private Boolean hudiPrecombineKey = false;
+
+  @Getter
+  @Setter
   private String defaultValue;
 
   @Getter

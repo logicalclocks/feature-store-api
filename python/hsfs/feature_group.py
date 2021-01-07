@@ -250,6 +250,7 @@ class FeatureGroup(FeatureGroupBase):
         description="",
         partition_key=None,
         primary_key=None,
+        hudi_precombine_key=None,
         featurestore_name=None,
         created=None,
         creator=None,
@@ -263,7 +264,6 @@ class FeatureGroup(FeatureGroupBase):
         statistic_columns=None,
         online_enabled=False,
         time_travel_format=None,
-        hudi_enabled=False,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -287,7 +287,6 @@ class FeatureGroup(FeatureGroupBase):
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
-        self._hudi_enabled = hudi_enabled
 
         if id is not None:
             # initialized by backend
@@ -303,12 +302,23 @@ class FeatureGroup(FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
-
+            if time_travel_format.upper() == "HUDI":
+                # hudi precombine key is always a single feature
+                self._hudi_precombine_key = [
+                    feat.name
+                    for feat in self._features
+                    if feat.hudi_precombine_key is True
+                ][0]
+            else:
+                self._hudi_precombine_key = None
         else:
             # initialized by user
             self.statistics_config = statistics_config
             self._primary_key = primary_key
             self._partition_key = partition_key
+            self._hudi_precombine_key = (
+                hudi_precombine_key if time_travel_format.upper() == "HUDI" else None
+            )
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -760,6 +770,11 @@ class FeatureGroup(FeatureGroupBase):
         return self._partition_key
 
     @property
+    def hudi_precombine_key(self):
+        """Feature name that is the hudi precombine key."""
+        return self._hudi_precombine_key
+
+    @property
     def feature_store_id(self):
         return self._feature_store_id
 
@@ -801,6 +816,10 @@ class FeatureGroup(FeatureGroupBase):
     @partition_key.setter
     def partition_key(self, new_partition_key):
         self._partition_key = new_partition_key
+
+    @hudi_precombine_key.setter
+    def hudi_precombine_key(self, hudi_precombine_key):
+        self._hudi_precombine_key = hudi_precombine_key
 
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):
