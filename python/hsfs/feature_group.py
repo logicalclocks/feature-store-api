@@ -35,8 +35,8 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
-            featurestore_id
+        self._feature_group_base_engine = (
+            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -352,7 +352,7 @@ class FeatureGroup(FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
-            if time_travel_format.upper() == "HUDI":
+            if time_travel_format is not None and time_travel_format.upper() == "HUDI":
                 # hudi precombine key is always a single feature
                 self._hudi_precombine_key = [
                     feat.name
@@ -367,7 +367,10 @@ class FeatureGroup(FeatureGroupBase):
             self._primary_key = primary_key
             self._partition_key = partition_key
             self._hudi_precombine_key = (
-                hudi_precombine_key if time_travel_format.upper() == "HUDI" else None
+                hudi_precombine_key
+                if time_travel_format is not None
+                and time_travel_format.upper() == "HUDI"
+                else None
             )
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
@@ -433,10 +436,18 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(online, dataframe_type, read_options,)
+                .read(
+                    online,
+                    dataframe_type,
+                    read_options,
+                )
             )
         else:
-            return self.select_all().read(online, dataframe_type, read_options,)
+            return self.select_all().read(
+                online,
+                dataframe_type,
+                read_options,
+            )
 
     def read_changes(
         self,
@@ -860,8 +871,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
-            featurestore_id
+        self._feature_group_engine = (
+            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
