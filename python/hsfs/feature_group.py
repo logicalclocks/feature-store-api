@@ -352,7 +352,7 @@ class FeatureGroup(FeatureGroupBase):
             self._partition_key = [
                 feat.name for feat in self._features if feat.partition is True
             ]
-            if time_travel_format.upper() == "HUDI":
+            if time_travel_format is not None and time_travel_format.upper() == "HUDI":
                 # hudi precombine key is always a single feature
                 self._hudi_precombine_key = [
                     feat.name
