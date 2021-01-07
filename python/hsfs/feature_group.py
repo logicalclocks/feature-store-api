@@ -35,8 +35,8 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
-            featurestore_id
+        self._feature_group_base_engine = (
+            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -433,10 +433,18 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(online, dataframe_type, read_options,)
+                .read(
+                    online,
+                    dataframe_type,
+                    read_options,
+                )
             )
         else:
-            return self.select_all().read(online, dataframe_type, read_options,)
+            return self.select_all().read(
+                online,
+                dataframe_type,
+                read_options,
+            )
 
     def read_changes(
         self,
@@ -639,6 +647,27 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
+
+    def compute_statistics(self):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+        # Returns
+            `Statistics`. The statistics metadata object.
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            return self._statistics_engine.compute_statistics(self, self.read())
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
 
     def append_features(self, features):
         """Append features to the schema of the feature group.
@@ -860,8 +889,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feat_hist_enabled = feat_hist_enabled
         self._statistic_columns = statistic_columns
 
-        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
-            featurestore_id
+        self._feature_group_engine = (
+            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
