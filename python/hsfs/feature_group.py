@@ -218,6 +218,27 @@ class FeatureGroupBase:
                 f"'FeatureGroup' object has no feature called '{name}'."
             )
 
+    def compute_statistics(self):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+        # Returns
+            `Statistics`. The statistics metadata object.
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            return self._statistics_engine.compute_statistics(self, self.read())
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -647,27 +668,6 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
-
-    def compute_statistics(self):
-        """Recompute the statistics for the feature group and save them to the
-        feature store.
-        Statistics are only computed for data in the offline storage of the feature
-        group.
-        # Returns
-            `Statistics`. The statistics metadata object.
-        # Raises
-            `RestAPIError`. Unable to persist the statistics.
-        """
-        if self.statistics_config.enabled:
-            return self._statistics_engine.compute_statistics(self, self.read())
-        else:
-            warnings.warn(
-                (
-                    "The statistics are not enabled of feature group `{}`, with version"
-                    " `{}`. No statistics computed."
-                ).format(self._name, self._version),
-                util.StorageWarning,
-            )
 
     def append_features(self, features):
         """Append features to the schema of the feature group.
