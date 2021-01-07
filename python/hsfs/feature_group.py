@@ -756,6 +756,27 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def compute_statistics(self):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+        # Returns
+            `Statistics`. The statistics metadata object.
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            return self._statistics_engine.compute_statistics(self, self.read())
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
+
     # def update_validation_type(self, validation_type: str):
     #     """Update the data validation type of the feature group.
     #
