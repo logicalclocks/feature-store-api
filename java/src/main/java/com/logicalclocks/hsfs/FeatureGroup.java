@@ -231,7 +231,7 @@ public class FeatureGroup extends FeatureGroupBase {
         writeOptions);
     if (statisticsEnabled) {
       String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-          ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommitedOn")
+          ? featureGroupEngine.commitDetails(this, 1).get(0).get("committedOn")
           : null;
       statisticsEngine.computeStatistics(this, featureData, commitTime);
     }
@@ -298,7 +298,7 @@ public class FeatureGroup extends FeatureGroupBase {
         overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
 
     String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-        ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommitedOn")
+        ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommittedOn")
         : null;
     computeStatistics(commitTime);
   }
