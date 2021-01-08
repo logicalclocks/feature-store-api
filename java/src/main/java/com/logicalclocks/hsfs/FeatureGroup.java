@@ -229,8 +229,11 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, featureData);
+    if (statisticsEnabled) {
+      String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
+          ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommitedOn")
+          : null;
+      statisticsEngine.computeStatistics(this, featureData, commitTime);
     }
   }
 
@@ -294,7 +297,10 @@ public class FeatureGroup extends FeatureGroupBase {
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
 
-    computeStatistics();
+    String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
+        ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommitedOn")
+        : null;
+    computeStatistics(commitTime);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)
