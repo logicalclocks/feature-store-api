@@ -230,8 +230,9 @@ public class FeatureGroup extends FeatureGroupBase {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
     if (statisticsEnabled) {
+      Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
       String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-          ? featureGroupEngine.commitDetails(this, 1).get(0).get("committedOn")
+          ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("CommittedOn")
           : null;
       statisticsEngine.computeStatistics(this, featureData, commitTime);
     }
@@ -297,8 +298,9 @@ public class FeatureGroup extends FeatureGroupBase {
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
 
+    Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
     String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-        ? featureGroupEngine.commitDetails(this, 1).get(0).get("CommittedOn")
+        ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("CommittedOn")
         : null;
     computeStatistics(commitTime);
   }
