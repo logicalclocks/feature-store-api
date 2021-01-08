@@ -232,7 +232,7 @@ public class FeatureGroup extends FeatureGroupBase {
     if (statisticsEnabled) {
       Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
       String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-          ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("CommittedOn")
+          ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("committedOn")
           : null;
       statisticsEngine.computeStatistics(this, featureData, commitTime);
     }
@@ -300,7 +300,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
     Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
     String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-        ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("CommittedOn")
+        ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("committedOn")
         : null;
     computeStatistics(commitTime);
   }
