@@ -135,7 +135,7 @@ public class StorageConnector {
   }
 
   @JsonIgnore
-  private Map<String, String> getJdbcOptions() throws FeatureStoreException {
+  private Map<String, String> getJdbcOptions() {
     Map<String, String> options = Arrays.stream(arguments.split(","))
         .map(arg -> arg.split("="))
         .collect(Collectors.toMap(a -> a[0], a -> a[1]));

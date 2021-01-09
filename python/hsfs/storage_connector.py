@@ -322,8 +322,7 @@ class StorageConnector:
 
     @property
     def path(self):
-        """If the connector refers to a path (e.g. S3) - return the path of the connector
-        """
+        """If the connector refers to a path (e.g. S3) - return the path of the connector"""
         if self._storage_connector_type.upper() == "S3":
             return "s3://" + self._bucket
         else:
@@ -338,11 +337,10 @@ class StorageConnector:
         if self._storage_connector_type.upper() == "JDBC":
             args = [arg.split("=") for arg in self._arguments.split(",")]
 
-            return {
-                "url": self._connection_string,
-                "user": [arg[1] for arg in args if arg[0] == "user"][0],
-                "password": [arg[1] for arg in args if arg[0] == "password"][0],
-            }
+            options = {a[0]: a[1] for a in args}
+            options["url"] = self._connection_string
+
+            return options
         elif self._storage_connector_type.upper() == "REDSHIFT":
             connstr = (
                 "jdbc:redshift://"
