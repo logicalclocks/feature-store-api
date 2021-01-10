@@ -28,6 +28,8 @@ from hsfs.core import (
     job_api,
     ingestion_job_conf,
     statistics_api,
+    training_dataset_api,
+    training_dataset_job_conf,
 )
 
 
@@ -175,7 +177,7 @@ class Engine:
         Property name should match the value in the JobConfiguration.__init__
         """
         # TODO(Fabio): consider the write options
-        return ingestion_job_conf.IngestionJob(
+        return ingestion_job_conf.IngestionJobConf(
             data_format="CSV",
             data_options=[
                 {"name": "header", "value": "true"},
@@ -183,6 +185,24 @@ class Engine:
             ],
             spark_job_configuration=write_options.pop("spark", None),
         )
+
+    def write_training_dataset(
+        self, training_dataset, features, user_write_options, save_mode
+    ):
+        if not isinstance(features, query.Query):
+            raise "Currently only query based training datasets are supported by the Python engine"
+
+        # As for creating a feature group, users have the possibility of passing
+        # a spark_job_configuration object as part of the user_write_options with the key "spark"
+        td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
+            query=features,
+            spark_job_configuration=user_write_options.pop("spark", None),
+        )
+
+        td_api = training_dataset_api.TrainingDatasetApi(
+            training_dataset.feature_store_id
+        )
+        td_api.compute(training_dataset, td_app_conf)
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

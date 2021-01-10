@@ -223,12 +223,13 @@ class FeatureGroupApi:
             _client._send_request("GET", path_params, query_params, headers=headers),
         )
 
-    def ingestion(self, feature_group_instance, app_options):
+    def ingestion(self, feature_group_instance, ingestion_conf):
         """
-        Setup Job for dataframe ingestion
-        # Arguments
+        Setup a Hopsworks job for dataframe ingestion
+        Args:
         feature_group_instance: FeatureGroup, required
             metadata object of feature group.
+        ingestion_conf: the configuration for the ingestion job application
         """
 
         _client = client.get_instance()
@@ -245,6 +246,6 @@ class FeatureGroupApi:
         headers = {"content-type": "application/json"}
         return ingestion_job.IngestionJob.from_response_json(
             _client._send_request(
-                "POST", path_params, headers=headers, data=app_options.json()
+                "POST", path_params, headers=headers, data=ingestion_conf.json()
             ),
         )

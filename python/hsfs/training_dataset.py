@@ -72,6 +72,7 @@ class TrainingDataset:
         self._location = location
         self._from_query = from_query
         self._querydto = querydto
+        self._feature_store_id = featurestore_id
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -539,3 +540,7 @@ class TrainingDataset:
     @label.setter
     def label(self, label):
         self._label = label
+
+    @property
+    def feature_store_id(self):
+        return self._feature_store_id

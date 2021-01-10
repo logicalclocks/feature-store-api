@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Logical Clocks AB
+#   Copyright 2021 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -18,27 +18,18 @@ import json
 from hsfs import util
 
 
-class IngestionJobConf:
-    def __init__(self, data_format, data_options, spark_job_configuration):
-        self._data_format = data_format
-        self._data_options = data_options
+class TrainingDatsetJobConf:
+    def __init__(self, query, spark_job_configuration):
+        self._query = query
         self._spark_job_configuration = spark_job_configuration
 
     @property
-    def data_format(self):
-        return self._data_format
+    def query(self):
+        return self._query
 
-    @data_format.setter
-    def data_format(self, data_format):
-        self._data_format = data_format
-
-    @property
-    def data_options(self):
-        return self._data_options
-
-    @data_options.setter
-    def data_options(self, data_options):
-        self._data_options = data_options
+    @query.setter
+    def query(self, query):
+        self._query = query
 
     @property
     def spark_job_configuration(self):
@@ -53,7 +44,6 @@ class IngestionJobConf:
 
     def to_dict(self):
         return {
-            "dataFormat": self._data_format,
-            "dataOptions": self._data_options,
+            "query": self._query,
             "sparkJobConfiguration": self._spark_job_configuration,
         }
