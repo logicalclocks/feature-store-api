@@ -225,15 +225,15 @@ class Query:
     @classmethod
     def _hopsworks_json(cls, json_dict: str):
         """
-        This method is used by the Hopsworks helper job. 
+        This method is used by the Hopsworks helper job.
         It does not fully deserialize the message as the usecase is to
-        send it straight back to Hopsworks to read the content of the query 
+        send it straight back to Hopsworks to read the content of the query
 
         Args:
-            json_dict (str): a json string containing a query object 
+            json_dict (str): a json string containing a query object
 
         Returns:
-            A partially deserialize query object 
+            A partially deserialize query object
         """
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
@@ -251,7 +251,8 @@ class Query:
 
         for on_demand_fg_alias in on_demand_fg_aliases:
             engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group, on_demand_fg_alias.alias,
+                on_demand_fg_alias.on_demand_feature_group,
+                on_demand_fg_alias.alias,
             )
 
     @property

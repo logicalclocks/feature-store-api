@@ -14,8 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
+from hsfs import engine, training_dataset_feature
 from hsfs.core import training_dataset_api, tags_api
+from hsfs.constructor import query
 
 
 class TrainingDatasetEngine:
@@ -29,14 +30,30 @@ class TrainingDatasetEngine:
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
 
-    def save(self, training_dataset, feature_dataframe, user_write_options):
+    def save(self, training_dataset, features, user_write_options):
+        if isinstance(features, query.Query):
+            training_dataset._querydto = features
+            training_dataset._features = [
+                training_dataset_feature.TrainingDatasetFeature(
+                    name=label_name, label=True
+                )
+                for label_name in training_dataset.label
+            ]
+        else:
+            features = engine.get_instance().convert_to_default_dataframe(features)
+            training_dataset._features = (
+                engine.get_instance().parse_schema_training_dataset(features)
+            )
+            for label_name in training_dataset.label:
+                for feature in training_dataset._features:
+                    if feature.name == label_name:
+                        feature.label = True
+
         self._training_dataset_api.post(training_dataset)
 
-        write_options = engine.get_instance().write_options(
-            training_dataset.data_format, user_write_options
+        engine.get_instance().write_training_dataset(
+            training_dataset, features, user_write_options, self.OVERWRITE
         )
-
-        self._write(training_dataset, feature_dataframe, write_options, self.OVERWRITE)
 
     def insert(
         self, training_dataset, feature_dataframe, user_write_options, overwrite
@@ -78,70 +95,6 @@ class TrainingDatasetEngine:
         return self._training_dataset_api.get_query(training_dataset, with_label)[
             "queryOnline" if online else "query"
         ]
-
-    def _write(self, training_dataset, dataset, write_options, save_mode):
-        if len(training_dataset.splits) == 0:
-            path = training_dataset.location + "/" + training_dataset.name
-            self._write_single(
-                dataset,
-                training_dataset.storage_connector,
-                training_dataset.data_format,
-                write_options,
-                save_mode,
-                path,
-            )
-        else:
-            split_names = sorted([*training_dataset.splits])
-            split_weights = [training_dataset.splits[i] for i in split_names]
-            self._write_splits(
-                dataset.randomSplit(split_weights, training_dataset.seed),
-                training_dataset.storage_connector,
-                training_dataset.data_format,
-                write_options,
-                save_mode,
-                training_dataset.location,
-                split_names,
-            )
-
-    def _write_splits(
-        self,
-        feature_dataframe_list,
-        storage_connector,
-        data_format,
-        write_options,
-        save_mode,
-        path,
-        split_names,
-    ):
-        for i in range(len(feature_dataframe_list)):
-            split_path = path + "/" + str(split_names[i])
-            self._write_single(
-                feature_dataframe_list[i],
-                storage_connector,
-                data_format,
-                write_options,
-                save_mode,
-                split_path,
-            )
-
-    def _write_single(
-        self,
-        feature_dataframe,
-        storage_connector,
-        data_format,
-        write_options,
-        save_mode,
-        path,
-    ):
-        # TODO: currently not supported petastorm, hdf5 and npy file formats
-        engine.get_instance().write(
-            feature_dataframe,
-            storage_connector,
-            data_format,
-            save_mode,
-            write_options,
-            path,
-        )
 
     def add_tag(self, training_dataset, name, value):
         """Attach a name/value tag to a training dataset."""

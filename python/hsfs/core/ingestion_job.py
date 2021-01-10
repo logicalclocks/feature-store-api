@@ -20,7 +20,14 @@ from hsfs.core.job import Job
 
 class IngestionJob:
     def __init__(
-        self, data_path, job, href=None, expand=None, items=None, count=None, type=None,
+        self,
+        data_path,
+        job,
+        href=None,
+        expand=None,
+        items=None,
+        count=None,
+        type=None,
     ):
         self._data_path = data_path
         self._job = Job.from_response_json(job)

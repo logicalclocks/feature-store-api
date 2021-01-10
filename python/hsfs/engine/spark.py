@@ -31,6 +31,7 @@ from hsfs import feature, training_dataset_feature
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
+from hsfs.constructor import query
 
 
 class Engine:
@@ -202,7 +203,13 @@ class Engine:
             )
 
     def _save_offline_dataframe(
-        self, table_name, feature_group, dataframe, save_mode, operation, write_options,
+        self,
+        table_name,
+        feature_group,
+        dataframe,
+        save_mode,
+        operation,
+        write_options,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -229,17 +236,80 @@ class Engine:
             **write_options
         ).save()
 
-    def write(
-        self, dataframe, storage_connector, data_format, write_mode, write_options, path
+    def write_training_dataset(
+        self, training_dataset, features, user_write_options, save_mode
     ):
+        if isinstance(features, query.Query):
+            dataset = features.read()
+        else:
+            dataset = features
+
+        write_options = self.write_options(
+            training_dataset.data_format, user_write_options
+        )
+
+        if len(training_dataset.splits) == 0:
+            path = training_dataset.location + "/" + training_dataset.name
+            self._write_training_dataset_single(
+                dataset,
+                training_dataset.storage_connector,
+                training_dataset.data_format,
+                write_options,
+                save_mode,
+                path,
+            )
+        else:
+            split_names = sorted([*training_dataset.splits])
+            split_weights = [training_dataset.splits[i] for i in split_names]
+            self._write_training_dataset_splits(
+                dataset.randomSplit(split_weights, training_dataset.seed),
+                training_dataset.storage_connector,
+                training_dataset.data_format,
+                write_options,
+                save_mode,
+                training_dataset.location,
+                split_names,
+            )
+
+    def _write_training_dataset_splits(
+        self,
+        feature_dataframe_list,
+        storage_connector,
+        data_format,
+        write_options,
+        save_mode,
+        path,
+        split_names,
+    ):
+        for i in range(len(feature_dataframe_list)):
+            split_path = path + "/" + str(split_names[i])
+            self._write_single(
+                feature_dataframe_list[i],
+                storage_connector,
+                data_format,
+                write_options,
+                save_mode,
+                split_path,
+            )
+
+    def _write_training_dataset_single(
+        self,
+        feature_dataframe,
+        storage_connector,
+        data_format,
+        write_options,
+        save_mode,
+        path,
+    ):
+        # TODO: currently not supported petastorm, hdf5 and npy file formats
         if data_format.lower() == "tsv":
             data_format = "csv"
 
         if storage_connector.connector_type == StorageConnector.S3:
             path = self._setup_s3(storage_connector, path)
 
-        dataframe.write.format(data_format).options(**write_options).mode(
-            write_mode
+        feature_dataframe.write.format(data_format).options(**write_options).mode(
+            save_mode
         ).save(path)
 
     def read(self, storage_connector, data_format, read_options, path):
@@ -258,8 +328,10 @@ class Engine:
 
     def profile(self, dataframe, relevant_columns, correlations, histograms):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf, relevant_columns, correlations, histograms
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf, relevant_columns, correlations, histograms
+            )
         )
 
     def write_options(self, data_format, provided_options):
@@ -372,7 +444,8 @@ class Engine:
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token", storage_connector.session_token,
+                "fs.s3a.session.token",
+                storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1)
 

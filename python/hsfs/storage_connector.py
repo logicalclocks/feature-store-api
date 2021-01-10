@@ -322,8 +322,7 @@ class StorageConnector:
 
     @property
     def path(self):
-        """If the connector refers to a path (e.g. S3) - return the path of the connector
-        """
+        """If the connector refers to a path (e.g. S3) - return the path of the connector"""
         if self._storage_connector_type.upper() == "S3":
             return "s3://" + self._bucket
         else:
