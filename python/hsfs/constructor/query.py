@@ -251,9 +251,7 @@ class Query:
 
         for on_demand_fg_alias in on_demand_fg_aliases:
             engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group.query,
-                on_demand_fg_alias.on_demand_feature_group.storage_connector,
-                on_demand_fg_alias.alias,
+                on_demand_fg_alias.on_demand_feature_group, on_demand_fg_alias.alias,
             )
 
     @property

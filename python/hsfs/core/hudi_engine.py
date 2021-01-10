@@ -42,6 +42,9 @@ class HudiEngine:
     DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL = (
         "org.apache.hudi.hive.MultiPartKeysValueExtractor"
     )
+    HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL = (
+        "org.apache.hudi.hive.NonPartitionedExtractor"
+    )
     HUDI_COPY_ON_WRITE = "COPY_ON_WRITE"
     HUDI_BULK_INSERT = "bulk_insert"
     HUDI_INSERT = "insert"
@@ -71,9 +74,21 @@ class HudiEngine:
         self._table_name = util.feature_group_name(feature_group)
 
         self._primary_key = ",".join(feature_group.primary_key)
-        self._partition_key = ",".join(feature_group.partition_key)
-        self._partition_path = ":SIMPLE,".join(feature_group.partition_key) + ":SIMPLE"
-        self._pre_combine_key = feature_group.primary_key[0]
+        self._partition_key = (
+            ",".join(feature_group.partition_key)
+            if len(feature_group.partition_key) >= 1
+            else ""
+        )
+        self._partition_path = (
+            ":SIMPLE,".join(feature_group.partition_key) + ":SIMPLE"
+            if len(feature_group.partition_key) >= 1
+            else ""
+        )
+        self._pre_combine_key = (
+            feature_group.hudi_precombine_key
+            if feature_group.hudi_precombine_key
+            else feature_group.primary_key[0]
+        )
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
@@ -108,7 +123,6 @@ class HudiEngine:
 
     def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
-
         dataset.write.format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
             save_mode
         ).save(self._base_path)
@@ -123,11 +137,15 @@ class HudiEngine:
         _jdbc_url = self._get_conn_str()
         hudi_options = {
             self.HUDI_KEY_GENERATOR_OPT_KEY: self.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL,
-            self.HUDI_PRECOMBINE_FIELD: self._pre_combine_key,
+            self.HUDI_PRECOMBINE_FIELD: self._pre_combine_key[0]
+            if isinstance(self._pre_combine_key, list)
+            else self._pre_combine_key,
             self.HUDI_RECORD_KEY: self._primary_key,
             self.HUDI_PARTITION_FIELD: self._partition_path,
             self.HUDI_TABLE_NAME: self._table_name,
-            self.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY: self.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL,
+            self.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY: self.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL
+            if len(self._partition_key) >= 1
+            else self.HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL,
             self.HUDI_HIVE_SYNC_ENABLE: "true",
             self.HUDI_HIVE_SYNC_TABLE: self._table_name,
             self.HUDI_HIVE_SYNC_JDBC_URL: _jdbc_url,

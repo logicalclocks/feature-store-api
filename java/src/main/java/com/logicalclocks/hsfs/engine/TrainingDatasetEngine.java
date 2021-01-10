@@ -128,7 +128,8 @@ public class TrainingDatasetEngine {
 
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
-    return SparkEngine.getInstance().read(trainingDataset.getDataFormat(), readOptions, path);
+    return SparkEngine.getInstance()
+        .read(trainingDataset.getStorageConnector(), trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
   public void addTag(TrainingDataset trainingDataset, String name, String value)

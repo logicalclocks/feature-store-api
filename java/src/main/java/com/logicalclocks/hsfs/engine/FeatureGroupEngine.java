@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -57,7 +58,7 @@ public class FeatureGroupEngine {
    * @throws IOException
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, Map<String, String> writeOptions)
+                               List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatures() == null) {
@@ -86,6 +87,15 @@ public class FeatureGroupEngine {
           }));
     }
 
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
+
     // Send Hopsworks the request to create a new feature group
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
@@ -101,6 +111,12 @@ public class FeatureGroupEngine {
     featureGroup.setId(apiFG.getId());
     featureGroup.setCorrelations(apiFG.getCorrelations());
     featureGroup.setHistograms(apiFG.getHistograms());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+      List<Feature> features = apiFG.getFeatures();
+      featureGroup.setFeatures(features);
+    }
 
     // Write the dataframe
     saveDataframe(featureGroup, dataset, null, SaveMode.Append,
@@ -158,12 +174,6 @@ public class FeatureGroupEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
-  }
-
-  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsSettings");
-    featureGroup.setCorrelations(apiFG.getCorrelations());
-    featureGroup.setHistograms(apiFG.getHistograms());
   }
 
   public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)

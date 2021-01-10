@@ -17,6 +17,8 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -24,9 +26,14 @@ import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,30 +75,67 @@ public class FeatureGroupBase {
   @Getter
   protected String creator;
 
+  @Getter
+  @Setter
+  @JsonProperty("descStatsEnabled")
+  protected Boolean statisticsEnabled;
+
+  @Getter
+  @Setter
+  @JsonProperty("featHistEnabled")
+  protected Boolean histograms;
+
+  @Getter
+  @Setter
+  @JsonProperty("featCorrEnabled")
+  protected Boolean correlations;
+
+  @Getter
+  @Setter
+  protected List<String> statisticColumns;
+
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
   public FeatureGroupBase(FeatureStore featureStore, Integer id) {
     this.featureStore = featureStore;
     this.id = id;
   }
 
-  public Query selectFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+  public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  public Query select(List<String> features) throws FeatureStoreException, IOException {
+  public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
-  public Query selectAll() throws FeatureStoreException, IOException {
+  public Query selectAll() {
     return new Query(this, getFeatures());
+  }
+
+  public Query selectExceptFeatures(List<Feature> features) {
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
+  }
+
+  public Query selectExcept(List<String> features) {
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.delete(this);
+  }
+
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/OnDeamandFeatureGroup classes
+    return null;
   }
 
   /**
@@ -188,6 +232,60 @@ public class FeatureGroupBase {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
     featureGroupBaseEngine.appendFeatures(this, featureList);
+  }
+
+  /**
+   * Update the statistics configuration of the feature group.
+   * Change the `statisticsEnabled`, `histograms`, `correlations` or `statisticColumns` attributes and persist
+   * the changes by calling this method.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateStatisticsConfig() throws FeatureStoreException, IOException {
+    featureGroupBaseEngine.updateStatisticsConfig(this);
+  }
+
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsEnabled) {
+      return statisticsEngine.computeStatistics(this, read());
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
+    return null;
+  }
+
+  /**
+   * Get the last statistics commit for the feature group.
+   *
+   * @return statistics object of latest commit
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    return statisticsEngine.getLast(this);
+  }
+
+  /**
+   * Get the statistics of a specific commit time for the feature group.
+   *
+   * @param commitTime commit time in the format "YYYYMMDDhhmmss"
+   * @return statistics object for the commit time
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
+    return statisticsEngine.get(this, commitTime);
   }
 
   /**

@@ -38,6 +38,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.primary = True
             if feat.name in feature_group.partition_key:
                 feat.partition = True
+            if (
+                feature_group.hudi_precombine_key is not None
+                and feat.name == feature_group.hudi_precombine_key
+            ):
+                feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
 

@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -67,6 +68,8 @@ public class HudiEngine {
       "hoodie.datasource.hive_sync.partition_extractor_class";
   private static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
       "org.apache.hudi.hive.MultiPartKeysValueExtractor";
+  private static final String HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
+      "org.apache.hudi.hive.NonPartitionedExtractor";
   private static final String HIVE_AUTO_CREATE_DATABASE_OPT_KEY = "hoodie.datasource.hive_sync.auto_create_database";
   private static final String HIVE_AUTO_CREATE_DATABASE_OPT_VAL = "false";
 
@@ -155,24 +158,26 @@ public class HudiEngine {
 
     // primary keys
     Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
-    if (primaryColumns.isEmpty()) {
-      throw new FeatureStoreException("For time travel enabled feature groups You must provide at least 1 primary key");
-    }
     hudiArgs.put(HUDI_RECORD_KEY, primaryColumns.mkString(","));
+
+    // table name
+    String tableName = utils.getFgName(featureGroup);
+    hudiArgs.put(HUDI_TABLE_NAME, tableName);
 
     // partition keys
     Seq<String> partitionColumns = utils.getPartitionColumns(featureGroup);
     if (!partitionColumns.isEmpty()) {
       hudiArgs.put(HUDI_PARTITION_FIELD, partitionColumns.mkString(":SIMPLE,") + ":SIMPLE");
-      // For precombine key take 1st primary key
-      hudiArgs.put(HUDI_PRECOMBINE_FIELD, primaryColumns.head());
       hudiArgs.put(HUDI_HIVE_SYNC_PARTITION_FIELDS, partitionColumns.mkString(","));
+      hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
+    } else {
+      hudiArgs.put(HUDI_PARTITION_FIELD, "");
+      hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
     }
 
-    // table name
-    String tableName = utils.getFgName(featureGroup);
-    hudiArgs.put(HUDI_TABLE_NAME, tableName);
-    hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
+    String precombineKey = featureGroup.getFeatures().stream().filter(Feature::getHudiPrecombineKey).findFirst()
+        .orElseThrow(() -> new FeatureStoreException("Can't find hudi precombine key")).getName();
+    hudiArgs.put(HUDI_PRECOMBINE_FIELD, precombineKey);
 
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");
