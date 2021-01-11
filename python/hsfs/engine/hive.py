@@ -31,6 +31,7 @@ from hsfs.core import (
     training_dataset_api,
     training_dataset_job_conf,
 )
+from hsfs.constructor import query
 
 
 class Engine:
