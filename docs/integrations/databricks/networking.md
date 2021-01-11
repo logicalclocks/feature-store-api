@@ -216,7 +216,7 @@ The *Network Security Group* of the Feature Store on Azure needs to be configure
 Ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable from the Databricks cluster *Network Security Group*.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../hopsworksai/azure/getting_started/#step-5-outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../../hopsworksai/azure/getting_started/#step-5-outside-access-to-the-feature-store).
 
 ## Next Steps
 
