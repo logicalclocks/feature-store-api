@@ -33,8 +33,12 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -100,6 +104,16 @@ public class TrainingDataset {
   @Setter
   @JsonIgnore
   private List<String> label;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -401,13 +415,18 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public String getJdbcPreparedStatement() throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getJdbcPreparedStatement(this);
-  }
-
-  @JsonIgnore
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());
+  }
+
+  @JsonIgnore
+  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    trainingDatasetEngine.initPreparedStatement(this);
+  }
+
+  @JsonIgnore
+  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException {
+    return trainingDatasetEngine.getServingVector(this, entry);
   }
 }

@@ -109,7 +109,7 @@ public class TrainingDatasetApi {
     return hopsworksClient.handleRequest(getRequest, FsQuery.class);
   }
 
-  public FsQuery getJdbcPreparedStatement(TrainingDataset trainingDataset)
+  public FsQuery getServingPreparedStatement(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
