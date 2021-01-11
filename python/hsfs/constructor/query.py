@@ -26,10 +26,10 @@ from hsfs.constructor import join, filter
 class Query:
     def __init__(
         self,
-        feature_store_name,
-        feature_store_id,
         left_feature_group,
         left_features,
+        feature_store_name=None,
+        feature_store_id=None,
         left_feature_group_start_time=None,
         left_feature_group_end_time=None,
         joins=[],
@@ -214,6 +214,8 @@ class Query:
 
     def to_dict(self):
         return {
+            "featureStoreName": self._feature_store_name,
+            "featureStoreId": self._feature_store_id,
             "leftFeatureGroup": self._left_feature_group,
             "leftFeatures": self._left_features,
             "leftFeatureGroupStartTime": self._left_feature_group_start_time,
@@ -223,7 +225,7 @@ class Query:
         }
 
     @classmethod
-    def _hopsworks_json(cls, json_dict: str):
+    def _hopsworks_json(cls, json_dict):
         """
         This method is used by the Hopsworks helper job.
         It does not fully deserialize the message as the usecase is to

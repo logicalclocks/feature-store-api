@@ -65,7 +65,10 @@ class FeatureGroupBase:
             `Query`. A query object with all features of the feature group.
         """
         return query.Query(
-            self._feature_store_name, self._feature_store_id, self, self._features
+            left_feature_group=self,
+            left_features=self._features,
+            feature_store_name=self._feature_store_name,
+            feature_store_id=self._feature_store_id,
         )
 
     def select(self, features: List[Union[str, feature.Feature]] = []):
@@ -82,7 +85,10 @@ class FeatureGroupBase:
             `Query`: A query object with the selected features of the feature group.
         """
         return query.Query(
-            self._feature_store_name, self._feature_store_id, self, features
+            left_feature_group=self,
+            left_features=features,
+            feature_store_name=self._feature_store_name,
+            feature_store_id=self._feature_store_id,
         )
 
     def select_except(self, features: List[Union[str, feature.Feature]] = []):
@@ -104,10 +110,12 @@ class FeatureGroupBase:
                 f.name if isinstance(f, feature.Feature) else f for f in features
             ]
             return query.Query(
-                self._feature_store_name,
-                self._feature_store_id,
-                self,
-                [f for f in self._features if f.name not in except_features],
+                left_feature_group=self,
+                left_features=[
+                    f for f in self._features if f.name not in except_features
+                ],
+                feature_store_name=self._feature_store_name,
+                feature_store_id=self._feature_store_id,
             )
         else:
             return self.select_all()

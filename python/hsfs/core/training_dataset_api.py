@@ -91,5 +91,7 @@ class TrainingDatasetApi:
         ]
         headers = {"content-type": "application/json"}
         return job.Job.from_response_json(
-            _client._send_request("POST", path_params, data=td_app_conf.json())
+            _client._send_request(
+                "POST", path_params, headers=headers, data=td_app_conf.json()
+            )
         )

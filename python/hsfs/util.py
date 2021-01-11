@@ -34,6 +34,8 @@ def validate_feature(ft):
         return ft
     elif isinstance(ft, str):
         return feature.Feature(ft)
+    elif isinstance(ft, dict):
+        return feature.Feature(**ft)
 
 
 def parse_features(feature_names):
