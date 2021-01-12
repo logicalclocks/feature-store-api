@@ -337,11 +337,10 @@ class StorageConnector:
         if self._storage_connector_type.upper() == "JDBC":
             args = [arg.split("=") for arg in self._arguments.split(",")]
 
-            return {
-                "url": self._connection_string,
-                "user": [arg[1] for arg in args if arg[0] == "user"][0],
-                "password": [arg[1] for arg in args if arg[0] == "password"][0],
-            }
+            options = {a[0]: a[1] for a in args}
+            options["url"] = self._connection_string
+
+            return options
         elif self._storage_connector_type.upper() == "REDSHIFT":
             connstr = (
                 "jdbc:redshift://"
