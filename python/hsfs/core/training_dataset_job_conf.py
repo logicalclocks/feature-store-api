@@ -19,9 +19,10 @@ from hsfs import util
 
 
 class TrainingDatsetJobConf:
-    def __init__(self, query, overwrite, spark_job_configuration):
+    def __init__(self, query, overwrite, write_options, spark_job_configuration):
         self._query = query
         self._overwrite = overwrite
+        self._write_options = write_options
         self._spark_job_configuration = spark_job_configuration
 
     @property
@@ -41,6 +42,14 @@ class TrainingDatsetJobConf:
         self._overwrite = overwrite
 
     @property
+    def write_options(self):
+        return self._write_options
+
+    @write_options.setter
+    def write_options(self, write_options):
+        self._write_options = write_options
+
+    @property
     def spark_job_configuration(self):
         return self._spark_job_configuration
 
@@ -55,5 +64,10 @@ class TrainingDatsetJobConf:
         return {
             "query": self._query,
             "overwrite": self._overwrite,
+            "writeOptions": [
+                {"name": k, "value": v} for k, v in self._write_options.items()
+            ]
+            if self._write_options
+            else None,
             "sparkJobConfiguration": self._spark_job_configuration,
         }

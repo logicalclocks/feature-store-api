@@ -168,7 +168,7 @@ class Engine:
         )
         return ui_url.geturl()
 
-    def _get_app_options(self, write_options={}):
+    def _get_app_options(self, user_write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
         Options should be data format, data options to read the input dataframe and
@@ -177,14 +177,15 @@ class Engine:
         Users can pass Spark configurations to the save/insert method
         Property name should match the value in the JobConfiguration.__init__
         """
-        # TODO(Fabio): consider the write options
+        spark_job_configuration = user_write_options.pop("spark", None)
         return ingestion_job_conf.IngestionJobConf(
             data_format="CSV",
             data_options=[
                 {"name": "header", "value": "true"},
                 {"name": "inferSchema", "value": "true"},
             ],
-            spark_job_configuration=write_options.pop("spark", None),
+            write_options=user_write_options,
+            spark_job_configuration=spark_job_configuration,
         )
 
     def write_training_dataset(
@@ -195,16 +196,23 @@ class Engine:
 
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
+        spark_job_configuration = user_write_options.pop("spark", None)
         td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
             query=features,
-            overwrite=save_mode == "overwrite",
-            spark_job_configuration=user_write_options.pop("spark", None),
+            overwrite=(save_mode == "overwrite"),
+            write_options=user_write_options,
+            spark_job_configuration=spark_job_configuration,
         )
 
         td_api = training_dataset_api.TrainingDatasetApi(
             training_dataset.feature_store_id
         )
-        td_api.compute(training_dataset, td_app_conf)
+        td_job = td_api.compute(training_dataset, td_app_conf)
+        print(
+            "Training dataset job started successfully, you can follow the progress at {}".format(
+                self._get_job_url(td_job.href)
+            )
+        )
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(

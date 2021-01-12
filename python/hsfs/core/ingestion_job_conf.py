@@ -19,9 +19,12 @@ from hsfs import util
 
 
 class IngestionJobConf:
-    def __init__(self, data_format, data_options, spark_job_configuration):
+    def __init__(
+        self, data_format, data_options, write_options, spark_job_configuration
+    ):
         self._data_format = data_format
         self._data_options = data_options
+        self._write_options = write_options
         self._spark_job_configuration = spark_job_configuration
 
     @property
@@ -41,6 +44,14 @@ class IngestionJobConf:
         self._data_options = data_options
 
     @property
+    def write_options(self):
+        return self._write_options
+
+    @write_options.setter
+    def write_options(self, write_options):
+        self._write_options = write_options
+
+    @property
     def spark_job_configuration(self):
         return self._spark_job_configuration
 
@@ -55,5 +66,10 @@ class IngestionJobConf:
         return {
             "dataFormat": self._data_format,
             "dataOptions": self._data_options,
+            "writeOptions": [
+                {"name": k, "value": v} for k, v in self._write_options.items()
+            ]
+            if self._write_options
+            else None,
             "sparkJobConfiguration": self._spark_job_configuration,
         }
