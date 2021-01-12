@@ -2,6 +2,7 @@ import argparse
 import json
 import hsfs
 
+from hsfs.constructor import query
 from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
@@ -53,10 +54,10 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
     fs = get_feature_store_handle(feature_store)
 
     # Extract the query object
-    query = hsfs.Query.from_response_json(job_conf.pop("query"))
+    q = query.Query._hopsworks_json(job_conf.pop("query"))
 
     td = fs.get_training_dataset(name=job_conf["name"], version=job_conf["version"])
-    td.insert(query)
+    td.insert(q, False)
 
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:

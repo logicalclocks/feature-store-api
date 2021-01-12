@@ -63,14 +63,10 @@ class TrainingDatasetEngine:
             feature_dataframe, training_dataset.schema
         )
 
-        write_options = engine.get_instance().write_options(
-            training_dataset.data_format, user_write_options
-        )
-
-        self._write(
+        engine.get_instance().write_training_dataset(
             training_dataset,
             feature_dataframe,
-            write_options,
+            user_write_options,
             self.OVERWRITE if overwrite else self.APPEND,
         )
 
