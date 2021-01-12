@@ -283,7 +283,7 @@ class Engine:
     ):
         for i in range(len(feature_dataframe_list)):
             split_path = path + "/" + str(split_names[i])
-            self._write_single(
+            self._write_training_dataset_single(
                 feature_dataframe_list[i],
                 storage_connector,
                 data_format,
