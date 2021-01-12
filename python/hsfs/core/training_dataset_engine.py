@@ -55,17 +55,21 @@ class TrainingDatasetEngine:
             training_dataset, features, user_write_options, self.OVERWRITE
         )
 
-    def insert(
-        self, training_dataset, feature_dataframe, user_write_options, overwrite
-    ):
+    def insert(self, training_dataset, features, user_write_options, overwrite):
         # validate matching schema
-        engine.get_instance().training_dataset_schema_match(
-            feature_dataframe, training_dataset.schema
-        )
+        if engine.get_type() == "spark":
+            if isinstance(features, query.Query):
+                dataframe = features.read()
+            else:
+                dataframe = features
+
+            engine.get_instance().training_dataset_schema_match(
+                dataframe, training_dataset.schema
+            )
 
         engine.get_instance().write_training_dataset(
             training_dataset,
-            feature_dataframe,
+            features,
             user_write_options,
             self.OVERWRITE if overwrite else self.APPEND,
         )

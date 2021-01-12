@@ -192,15 +192,7 @@ class TrainingDataset:
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        if isinstance(features, query.Query):
-            feature_dataframe = features.read()
-        else:
-            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
-                features
-            )
-        self._training_dataset_engine.insert(
-            self, feature_dataframe, write_options, overwrite
-        )
+        self._training_dataset_engine.insert(self, features, write_options, overwrite)
 
         self.compute_statistics()
 
@@ -223,7 +215,7 @@ class TrainingDataset:
         """Recompute the statistics for the training dataset and save them to the
         feature store.
         """
-        if self.statistics_config.enabled:
+        if self.statistics_config.enabled and engine.get_type() == "spark":
             return self._statistics_engine.compute_statistics(self, self.read())
 
     def tf_data(
