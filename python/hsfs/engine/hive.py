@@ -197,6 +197,7 @@ class Engine:
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
             query=features,
+            overwrite=save_mode == "overwrite",
             spark_job_configuration=user_write_options.pop("spark", None),
         )
 

@@ -19,8 +19,9 @@ from hsfs import util
 
 
 class TrainingDatsetJobConf:
-    def __init__(self, query, spark_job_configuration):
+    def __init__(self, query, overwrite, spark_job_configuration):
         self._query = query
+        self._overwrite = overwrite
         self._spark_job_configuration = spark_job_configuration
 
     @property
@@ -30,6 +31,14 @@ class TrainingDatsetJobConf:
     @query.setter
     def query(self, query):
         self._query = query
+
+    @property
+    def overwrite(self):
+        return self._overwrite
+
+    @overwrite.setter
+    def overwrite(self, overwrite):
+        self._overwrite = overwrite
 
     @property
     def spark_job_configuration(self):
@@ -45,5 +54,6 @@ class TrainingDatsetJobConf:
     def to_dict(self):
         return {
             "query": self._query,
+            "overwrite": self._overwrite,
             "sparkJobConfiguration": self._spark_job_configuration,
         }
