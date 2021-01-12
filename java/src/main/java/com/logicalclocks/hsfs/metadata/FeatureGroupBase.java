@@ -77,22 +77,7 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
-  @JsonProperty("descStatsEnabled")
-  protected Boolean statisticsEnabled;
-
-  @Getter
-  @Setter
-  @JsonProperty("featHistEnabled")
-  protected Boolean histograms;
-
-  @Getter
-  @Setter
-  @JsonProperty("featCorrEnabled")
-  protected Boolean correlations;
-
-  @Getter
-  @Setter
-  protected List<String> statisticColumns;
+  private StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);

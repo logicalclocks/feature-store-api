@@ -30,6 +30,7 @@ import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.List;
@@ -90,23 +91,7 @@ public class TrainingDataset {
 
   @Getter
   @Setter
-  @JsonIgnore
-  private Boolean statisticsEnabled = true;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private Boolean histograms;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private Boolean correlations;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private List<String> statisticColumns;
+  private StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   @Getter
   @Setter
@@ -123,8 +108,7 @@ public class TrainingDataset {
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
                          StorageConnector storageConnector, String location, List<Split> splits, Long seed,
-                         FeatureStore featureStore, Boolean statisticsEnabled, Boolean histograms,
-                         Boolean correlations, List<String> statisticColumns, List<String> label) {
+                         FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -142,10 +126,7 @@ public class TrainingDataset {
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;
-    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.statisticColumns = statisticColumns;
+    this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.label = label;
   }
 
@@ -195,7 +176,7 @@ public class TrainingDataset {
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.save(this, dataset, writeOptions, label);
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, dataset);
     }
   }
@@ -314,7 +295,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       return statisticsEngine.computeStatistics(this, read());
     }
     return null;

@@ -75,8 +75,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
-                      Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
-                      List<String> statisticColumns) {
+                      StatisticsConfig statisticsConfig) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -87,10 +86,7 @@ public class FeatureGroup extends FeatureGroupBase {
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
-    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.statisticColumns = statisticColumns;
+    this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
   }
 
   public FeatureGroup() {
@@ -183,7 +179,7 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData);
     }
   }

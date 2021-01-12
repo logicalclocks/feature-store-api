@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.constructor.FsQuery;
@@ -24,17 +25,22 @@ import com.logicalclocks.hsfs.TrainingDataset;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
+
 public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
   private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}";
+  public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/fgId}{?updateStatsConfig,"
+      + "updateMetadata}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
@@ -102,5 +108,30 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
 
     return hopsworksClient.handleRequest(getRequest, FsQuery.class);
+  }
+
+  public TrainingDataset updateMetadata(TrainingDataset trainingDataset, String queryParameter)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_DATASET_ID_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("fgId", trainingDataset.getId())
+        .set(queryParameter, true)
+        .expand();
+
+    String trainingDatasetJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingDataset);
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    putRequest.setEntity(new StringEntity(trainingDatasetJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(trainingDatasetJson);
+
+    return hopsworksClient.handleRequest(putRequest, TrainingDataset.class);
   }
 }

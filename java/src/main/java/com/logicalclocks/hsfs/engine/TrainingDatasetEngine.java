@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TrainingDataset;
@@ -149,5 +150,11 @@ public class TrainingDatasetEngine {
   public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel)
       throws FeatureStoreException, IOException {
     return trainingDatasetApi.getQuery(trainingDataset, withLabel).getStorageQuery(storage);
+  }
+
+  public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    TrainingDataset apiTD = trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
+    trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
+    trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
   }
 }
