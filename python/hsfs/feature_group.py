@@ -884,11 +884,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         jobs=None,
-        desc_stats_enabled=None,
-        feat_corr_enabled=None,
-        feat_hist_enabled=None,
-        cluster_analysis_enabled=None,
-        statistic_columns=None,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -918,7 +913,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 else None
             )
             self._statistics_config = StatisticsConfig.from_response_json(
-                **statistics_config
+                statistics_config
             )
 
             self._options = (

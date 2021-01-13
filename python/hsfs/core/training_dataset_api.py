@@ -97,7 +97,7 @@ class TrainingDatasetApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
-            "featuregroups",
+            "trainingdatasets",
             training_dataset_instance.id,
         ]
         headers = {"content-type": "application/json"}
