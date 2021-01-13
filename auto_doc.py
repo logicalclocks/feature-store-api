@@ -102,6 +102,17 @@ PAGES = {
         ),
         "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
     },
+    "api/training_dataset_api.md": {
+        "td": ["hsfs.training_dataset.TrainingDataset"],
+        "td_create": ["hsfs.feature_store.FeatureStore.create_training_dataset"],
+        "td_get": ["hsfs.feature_store.FeatureStore.get_training_dataset"],
+        "td_properties": keras_autodoc.get_properties(
+            "hsfs.training_dataset.TrainingDataset"
+        ),
+        "td_methods": keras_autodoc.get_methods(
+            "hsfs.training_dataset.TrainingDataset"
+        ),
+    },
     "api/feature_api.md": {
         "feature": ["hsfs.feature.Feature"],
         "feature_properties": keras_autodoc.get_properties("hsfs.feature.Feature"),
