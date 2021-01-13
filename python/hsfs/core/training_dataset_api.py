@@ -68,3 +68,46 @@ class TrainingDatasetApi:
         ]
         query_params = {"withLabel": with_label}
         return _client._send_request("GET", path_params, query_params)
+
+    def update_metadata(
+        self, training_dataset_instance, training_dataset_copy, query_parameter
+    ):
+        """Update the metadata of a training dataset.
+
+        This only updates description and schema/features. The
+        `training_dataset_copy` is the metadata object sent to the backend, while
+        `training_dataset_instance` is the user object, which is only updated
+        after a successful REST call.
+
+        # Arguments
+            training_dataset_instance: FeatureGroup. User metadata object of the
+                training dataset.
+            training_dataset_copy: FeatureGroup. Metadata object of the training
+                dataset with the information to be updated.
+            query_parameter: str. Query parameter that will be set to true to
+                control which information is updated. E.g. "updateMetadata" or
+                "updateStatsConfig".
+
+        # Returns
+            FeatureGroup. The updated feature group metadata object.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            training_dataset_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {query_parameter: True}
+        return training_dataset_instance.update_from_response_json(
+            _client._send_request(
+                "PUT",
+                path_params,
+                query_params,
+                headers=headers,
+                data=training_dataset_copy.json(),
+            ),
+        )

@@ -107,7 +107,9 @@ class TrainingDataset:
             ]
             self._splits = splits
             self._training_dataset_type = training_dataset_type
-            self.statistics_config = None
+            self.statistics_config = StatisticsConfig.from_response_json(
+                **statistics_config
+            )
             self._label = [feat.name for feat in self._features if feat.label]
 
     def save(
@@ -320,6 +322,21 @@ class TrainingDataset:
             `List[Tag]`. List of tags as name/value pairs.
         """
         return self._training_dataset_engine.get_tags(self, name)
+
+    def update_statistics_config(self):
+        """Update the statistics configuration of the training dataset.
+
+        Change the `statistics_config` object and persist the changes by calling
+        this method.
+
+        # Returns
+            `TrainingDataset`. The updated metadata object of the training dataset.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._training_dataset_engine.update_statistics_config(self)
+        return self
 
     @classmethod
     def from_response_json(cls, json_dict):

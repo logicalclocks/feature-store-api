@@ -154,3 +154,9 @@ class TrainingDatasetEngine:
     def get_tags(self, training_dataset, name):
         """Get tag with a certain name or all tags for a training dataset."""
         return [tag.to_dict() for tag in self._tags_api.get(training_dataset, name)]
+
+    def update_statistics_config(self, training_dataset):
+        """Update the statistics configuration of a feature group."""
+        self._training_dataset_api.update_metadata(
+            training_dataset, training_dataset, "updateStatsConfig"
+        )
