@@ -91,3 +91,9 @@ class StatisticsConfig:
     @columns.setter
     def columns(self, columns):
         self._columns = columns
+
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms}, {self._columns})"
