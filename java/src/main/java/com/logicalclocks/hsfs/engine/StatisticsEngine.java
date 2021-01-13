@@ -44,14 +44,17 @@ public class StatisticsEngine {
 
   public Statistics computeStatistics(TrainingDataset trainingDataset, Dataset<Row> dataFrame)
       throws FeatureStoreException, IOException {
-    return statisticsApi.post(trainingDataset, computeStatistics(dataFrame, trainingDataset.getStatisticColumns(),
-        trainingDataset.getHistograms(), trainingDataset.getCorrelations()));
+    return statisticsApi.post(trainingDataset, computeStatistics(dataFrame,
+        trainingDataset.getStatisticsConfig().getColumns(),
+        trainingDataset.getStatisticsConfig().getHistograms(),
+        trainingDataset.getStatisticsConfig().getCorrelations()));
   }
 
   public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame)
       throws FeatureStoreException, IOException {
-    return statisticsApi.post(featureGroup, computeStatistics(dataFrame, featureGroup.getStatisticColumns(),
-        featureGroup.getHistograms(), featureGroup.getCorrelations()));
+    return statisticsApi.post(featureGroup, computeStatistics(dataFrame,
+        featureGroup.getStatisticsConfig().getColumns(),
+        featureGroup.getStatisticsConfig().getHistograms(), featureGroup.getStatisticsConfig().getCorrelations()));
   }
 
   private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
