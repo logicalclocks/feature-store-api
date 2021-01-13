@@ -14,16 +14,41 @@
 #   limitations under the License.
 #
 
+import json
+import humps
+
+from hsfs import util
+
 
 class StatisticsConfig:
     def __init__(
-        self, enabled=True, correlations=None, histograms=None, columns=None,
+        self,
+        enabled=True,
+        correlations=None,
+        histograms=None,
+        columns=None,
     ):
         self._enabled = enabled
         # use setters for input validation
         self.correlations = correlations
         self.histograms = histograms
         self._columns = columns
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(**json_decamelized)
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "enabled": self._enabled,
+            "correlations": self._correlations,
+            "histograms": self._histograms,
+            "columns": self._columns,
+        }
 
     @property
     def enabled(self):
