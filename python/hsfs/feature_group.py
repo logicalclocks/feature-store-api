@@ -399,7 +399,9 @@ class FeatureGroup(FeatureGroupBase):
                 ][0]
             else:
                 self._hudi_precombine_key = None
-            self._statistics_config = StatisticsConfig(**statistics_config)
+            self._statistics_config = StatisticsConfig.from_response_json(
+                statistics_config
+            )
 
         else:
             # initialized by user

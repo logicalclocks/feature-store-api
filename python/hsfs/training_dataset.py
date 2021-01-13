@@ -108,7 +108,7 @@ class TrainingDataset:
             self._splits = splits
             self._training_dataset_type = training_dataset_type
             self.statistics_config = StatisticsConfig.from_response_json(
-                **statistics_config
+                statistics_config
             )
             self._label = [feat.name for feat in self._features if feat.label]
 
