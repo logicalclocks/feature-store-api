@@ -43,7 +43,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata,validationType}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
-      + "/commits{?sort_by,offset,limit}";
+      + "/commits{?wallclockTime,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -212,7 +212,7 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public List<FeatureGroupCommit> commitDetails(FeatureGroup featureGroupBase, Integer limit)
+  public List<FeatureGroupCommit> getCommitDetails(FeatureGroup featureGroupBase, String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -223,6 +223,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
+        .set("wallclockTime", wallclockTime) //!= null ? wallclockTime: "00000000000000"
         .set("sort_by", "committed_on:desc")
         .set("offset", 0)
         .set("limit", limit)

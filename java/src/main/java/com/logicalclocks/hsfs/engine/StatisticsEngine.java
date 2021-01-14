@@ -51,23 +51,21 @@ public class StatisticsEngine {
         null));
   }
 
-  public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, String commitTime)
+  public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
       throws FeatureStoreException, IOException {
     return statisticsApi.post(featureGroup, computeStatistics(dataFrame, featureGroup.getStatisticColumns(),
-        featureGroup.getHistograms(), featureGroup.getCorrelations(), commitTime));
+        featureGroup.getHistograms(), featureGroup.getCorrelations(), commitId));
   }
 
   private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
-                                       Boolean correlations, String commitTime) throws FeatureStoreException {
+                                       Boolean correlations, Long commitId) throws FeatureStoreException {
     if (dataFrame.isEmpty()) {
       throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
     }
-    if (commitTime == null) {
-      commitTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    }
+    String commitTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
-    return new Statistics(commitTime, content);
+    return new Statistics(commitTime, commitId, content);
   }
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {

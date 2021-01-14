@@ -33,5 +33,9 @@ public class Statistics extends RestDto<Statistics> {
 
   @Getter
   @Setter
+  private Long commitId;
+
+  @Getter
+  @Setter
   private String content;
 }

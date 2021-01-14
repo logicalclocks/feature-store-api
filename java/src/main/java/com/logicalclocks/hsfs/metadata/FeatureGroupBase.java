@@ -238,16 +238,6 @@ public class FeatureGroupBase {
     return null;
   }
 
-  public Statistics computeStatistics(String commitTime) throws FeatureStoreException, IOException {
-    if (statisticsEnabled) {
-      return statisticsEngine.computeStatistics(this, read(), commitTime);
-    } else {
-      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
-          + version + "`. No statistics computed.");
-    }
-    return null;
-  }
-
   /**
    * Get the last statistics commit for the feature group.
    *

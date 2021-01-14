@@ -187,15 +187,15 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
-      throws IOException, FeatureStoreException {
-    List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);
+  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
+                                                           Integer limit) throws FeatureStoreException, IOException {
+    List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.getCommitDetails(featureGroup, wallclockTime, limit);
     if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
-    Map<String, Map<String, String>> commitDetails = new HashMap<String, Map<String, String>>();
+    Map<Long, Map<String, String>> commitDetails = new HashMap<>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
-      commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
+      commitDetails.put(featureGroupCommit.getCommitID(), new HashMap<String, String>() {{
             put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
             put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
             put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
@@ -204,6 +204,16 @@ public class FeatureGroupEngine {
       );
     }
     return commitDetails;
+  }
+
+  public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
+      throws IOException, FeatureStoreException {
+    return getCommitDetails(featureGroup, null, limit);
+  }
+
+  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup, String wallclockTime)
+      throws IOException, FeatureStoreException {
+    return getCommitDetails(featureGroup, wallclockTime, 0);
   }
 
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,

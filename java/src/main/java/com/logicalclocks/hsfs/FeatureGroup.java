@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
+import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -230,11 +231,7 @@ public class FeatureGroup extends FeatureGroupBase {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
     if (statisticsEnabled) {
-      Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
-      String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-          ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("committedOn")
-          : null;
-      statisticsEngine.computeStatistics(this, featureData, commitTime);
+      statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
 
@@ -298,11 +295,7 @@ public class FeatureGroup extends FeatureGroupBase {
     featureGroupEngine.saveDataframe(this, featureData, storage,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
 
-    Map<String, Map<String, String>> lastestCommitMetaData = featureGroupEngine.commitDetails(this, 1);
-    String commitTime = this.timeTravelFormat == TimeTravelFormat.HUDI
-        ? lastestCommitMetaData.get(lastestCommitMetaData.keySet().toArray()[0]).get("committedOn")
-        : null;
-    computeStatistics(commitTime);
+    computeStatistics();
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)
@@ -426,4 +419,26 @@ public class FeatureGroup extends FeatureGroupBase {
       new ImmutablePair<>(type, time));
   }
 
+
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @param wallclockTime number of commits to return.
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException {
+    if (statisticsEnabled) {
+      Map<Long, Map<String, String>> latestCommitMetaData =
+          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime);
+      Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
+      Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
+      return statisticsEngine.computeStatistics(this, featureData, commitId);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
+    return null;
+  }
 }
