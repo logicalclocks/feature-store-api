@@ -230,7 +230,7 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException {
     featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
@@ -429,7 +429,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException {
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
           featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);

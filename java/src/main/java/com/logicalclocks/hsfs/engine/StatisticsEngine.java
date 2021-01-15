@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class StatisticsEngine {
@@ -53,8 +53,10 @@ public class StatisticsEngine {
 
   public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
       throws FeatureStoreException, IOException {
-    return statisticsApi.post(featureGroup, computeStatistics(dataFrame, featureGroup.getStatisticColumns(),
-        featureGroup.getHistograms(), featureGroup.getCorrelations(), commitId));
+    return statisticsApi.post(featureGroup, computeStatistics(dataFrame,
+        featureGroup.getStatisticsConfig().getColumns(),
+        featureGroup.getStatisticsConfig().getHistograms(),
+        featureGroup.getStatisticsConfig().getCorrelations(), commitId));
   }
 
   private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
@@ -63,7 +65,7 @@ public class StatisticsEngine {
       throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
     }
-    String commitTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
     return new Statistics(commitTime, commitId, content);
   }

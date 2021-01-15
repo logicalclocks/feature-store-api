@@ -229,7 +229,7 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       return statisticsEngine.computeStatistics(this, read(), null);
     } else {
       LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
