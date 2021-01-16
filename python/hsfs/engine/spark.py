@@ -456,7 +456,7 @@ class Engine:
         return path.replace("s3", "s3a", 1)
 
     def _setup_adls(self, storage_connector, path):
-        for k, v in storage_connector.spark_options():
+        for k, v in storage_connector.spark_options().items():
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
 
         return path
