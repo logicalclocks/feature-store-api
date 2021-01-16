@@ -22,7 +22,7 @@ class StorageConnector:
     S3 = "S3"
     JDBC = "JDBC"
     REDSHIFT = "REDSHIFT"
-    ADL = "ADL"
+    ADLS = "ADLS"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
