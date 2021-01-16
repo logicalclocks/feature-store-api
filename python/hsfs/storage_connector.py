@@ -33,9 +33,9 @@ class StorageConnector:
         self,
         id,
         name,
-        description,
         featurestore_id,
         storage_connector_type,
+        description=None,
         # members specific to type of connector
         hopsfs_path=None,
         dataset_name=None,
