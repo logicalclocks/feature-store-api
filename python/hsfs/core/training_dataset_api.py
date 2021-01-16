@@ -15,6 +15,7 @@
 #
 
 from hsfs import client, training_dataset
+from hsfs.core import job
 
 
 class TrainingDatasetApi:
@@ -68,3 +69,29 @@ class TrainingDatasetApi:
         ]
         query_params = {"withLabel": with_label}
         return _client._send_request("GET", path_params, query_params)
+
+    def compute(self, training_dataset_instance, td_app_conf):
+        """
+        Setup a Hopsworks job to compute the query and write the training dataset
+
+        Args:
+            training_dataset_instance (training_dataset): the metadata instance of the training dataset
+            app_options ([type]): the configuration for the training dataset job application
+        """
+
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "trainingdatasets",
+            training_dataset_instance.id,
+            "compute",
+        ]
+        headers = {"content-type": "application/json"}
+        return job.Job.from_response_json(
+            _client._send_request(
+                "POST", path_params, headers=headers, data=td_app_conf.json()
+            )
+        )

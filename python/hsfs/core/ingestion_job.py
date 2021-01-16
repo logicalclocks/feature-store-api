@@ -15,18 +15,22 @@
 #
 
 import humps
+from hsfs.core.job import Job
 
-from hsfs import feature_group
 
-
-class OnDemandFeatureGroupAlias:
-    def __init__(self, on_demand_feature_group, alias):
-        self._on_demand_feature_group = (
-            feature_group.OnDemandFeatureGroup.from_response_json(
-                on_demand_feature_group
-            )
-        )
-        self._alias = alias
+class IngestionJob:
+    def __init__(
+        self,
+        data_path,
+        job,
+        href=None,
+        expand=None,
+        items=None,
+        count=None,
+        type=None,
+    ):
+        self._data_path = data_path
+        self._job = Job.from_response_json(job)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -34,9 +38,9 @@ class OnDemandFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
-    def on_demand_feature_group(self):
-        return self._on_demand_feature_group
+    def data_path(self):
+        return self._data_path
 
     @property
-    def alias(self):
-        return self._alias
+    def job(self):
+        return self._job

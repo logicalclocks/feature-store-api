@@ -16,17 +16,25 @@
 
 import humps
 
-from hsfs import feature_group
 
-
-class OnDemandFeatureGroupAlias:
-    def __init__(self, on_demand_feature_group, alias):
-        self._on_demand_feature_group = (
-            feature_group.OnDemandFeatureGroup.from_response_json(
-                on_demand_feature_group
-            )
-        )
-        self._alias = alias
+class Job:
+    def __init__(
+        self,
+        id,
+        name,
+        creation_time,
+        config,
+        job_type,
+        creator,
+        executions=None,
+        type=None,
+        href=None,
+        expand=None,
+        items=None,
+        count=None,
+    ):
+        self._name = name
+        self._href = href
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -34,9 +42,9 @@ class OnDemandFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
-    def on_demand_feature_group(self):
-        return self._on_demand_feature_group
+    def name(self):
+        return self._name
 
     @property
-    def alias(self):
-        return self._alias
+    def href(self):
+        return self._href

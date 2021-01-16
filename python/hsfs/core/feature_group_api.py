@@ -16,6 +16,7 @@
 
 from hsfs import client
 from hsfs import feature_group, feature_group_commit
+from hsfs.core import ingestion_job
 
 
 class FeatureGroupApi:
@@ -220,4 +221,31 @@ class FeatureGroupApi:
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers),
+        )
+
+    def ingestion(self, feature_group_instance, ingestion_conf):
+        """
+        Setup a Hopsworks job for dataframe ingestion
+        Args:
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        ingestion_conf: the configuration for the ingestion job application
+        """
+
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "ingestion",
+        ]
+
+        headers = {"content-type": "application/json"}
+        return ingestion_job.IngestionJob.from_response_json(
+            _client._send_request(
+                "POST", path_params, headers=headers, data=ingestion_conf.json()
+            ),
         )
