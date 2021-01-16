@@ -356,7 +356,7 @@ class StorageConnector:
     @property
     def directory_id(self):
         """Directory ID of the ADLS storage connector"""
-        if self._storage_connector_type.upper() == "ADLS":
+        if self._storage_connector_type.upper() == self.ADLS:
             self._directory_id
         else:
             raise Exception(
@@ -367,7 +367,7 @@ class StorageConnector:
     @property
     def application_id(self):
         """Application ID of the ADLS storage connector"""
-        if self._storage_connector_type.upper() == "ADLS":
+        if self._storage_connector_type.upper() == self.ADLS:
             self._application_id
         else:
             raise Exception(
@@ -378,7 +378,7 @@ class StorageConnector:
     @property
     def account_name(self):
         """Account name of the ADLS storage connector"""
-        if self._storage_connector_type.upper() == "ADLS":
+        if self._storage_connector_type.upper() == self.ADLS:
             self._account_name
         else:
             raise Exception(
@@ -389,7 +389,7 @@ class StorageConnector:
     @property
     def container_name(self):
         """Container name of the ADLS storage connector"""
-        if self._storage_connector_type.upper() == "ADLS":
+        if self._storage_connector_type.upper() == self.ADLS:
             self._container_name
         else:
             raise Exception(
@@ -400,7 +400,7 @@ class StorageConnector:
     @property
     def service_credential(self):
         """Service credential of the ADLS storage connector"""
-        if self._storage_connector_type.upper() == "ADLS":
+        if self._storage_connector_type.upper() == self.ADLS:
             self._service_credential
         else:
             raise Exception(
@@ -441,7 +441,7 @@ class StorageConnector:
             if self._table_name is not None:
                 props["dbtable"] = self._table_name
             return props
-        elif self._storage_connector_type.upper() == "ADL":
+        elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
         else:
             raise Exception(

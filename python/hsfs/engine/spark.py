@@ -421,7 +421,7 @@ class Engine:
         if storage_connector.connector_type == StorageConnector.S3:
             return self._setup_s3(storage_connector, path)
         elif storage_connector.connector_type == StorageConnector.ADLS:
-            return self._setup_adl(storage_connector, path)
+            return self._setup_adls(storage_connector, path)
         else:
             return path
 
@@ -455,8 +455,8 @@ class Engine:
             )
         return path.replace("s3", "s3a", 1)
 
-    def _setup_adl(self, storage_connector, path):
-        for k, v in storage_connector.spark_options:
+    def _setup_adls(self, storage_connector, path):
+        for k, v in storage_connector.spark_options():
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
 
         return path
