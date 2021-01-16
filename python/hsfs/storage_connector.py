@@ -27,7 +27,7 @@ class StorageConnector:
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
     REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
-    ADL_DTO = "featurestoreADLConnectorDTO"
+    ADLS_DTO = "featurestoreADLSConnectorDTO"
 
     def __init__(
         self,

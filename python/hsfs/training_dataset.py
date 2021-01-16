@@ -336,7 +336,7 @@ class TrainingDataset:
             "version": self._version,
             "description": self._description,
             "dataFormat": self._data_format,
-            "storageConnectorId": self._storage_connector.id,
+            "storageConnector": self._storage_connector,
             "location": self._location,
             "trainingDatasetType": self._training_dataset_type,
             "features": self._features,
