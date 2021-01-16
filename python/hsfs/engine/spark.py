@@ -305,8 +305,7 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        if storage_connector.connector_type == StorageConnector.S3:
-            path = self._setup_s3(storage_connector, path)
+        path = self._setup_storage_connector(storage_connector, path)
 
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
@@ -317,8 +316,7 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        if storage_connector.connector_type == StorageConnector.S3:
-            path = self._setup_s3(storage_connector, path)
+        path = self._setup_storage_connector(storage_connector, path)
 
         return (
             self._spark_session.read.format(data_format)
@@ -419,6 +417,14 @@ class Engine:
 
             i += 1
 
+    def _setup_storage_connector(self, storage_connector, path=None):
+        if storage_connector.connector_type == StorageConnector.S3:
+            return self._setup_s3(storage_connector, path)
+        elif storage_connector.connector_type == StorageConnector.ADL:
+            return self._setup_adl(storage_connector, path)
+        else:
+            return path
+
     def _setup_s3(self, storage_connector, path):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
@@ -448,6 +454,12 @@ class Engine:
                 storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1)
+
+    def _setup_adl(self, storage_connector, path):
+        for k, v in storage_connector.spark_options:
+            self._spark_context._jsc.hadoopConfiguration().set(k, v)
+
+        return path
 
     def _setup_pydoop(self):
         # Import Pydoop only here, so it doesn't trigger if the execution environment

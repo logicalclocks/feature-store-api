@@ -22,10 +22,12 @@ class StorageConnector:
     S3 = "S3"
     JDBC = "JDBC"
     REDSHIFT = "REDSHIFT"
+    ADL = "ADL"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
     REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
+    ADL_DTO = "featurestoreADLConnectorDTO"
 
     def __init__(
         self,
@@ -57,19 +59,30 @@ class StorageConnector:
         connection_string=None,
         arguments=None,
         expiration=None,
+        directory_id=None,
+        application_id=None,
+        account_name=None,
+        service_credential=None,
+        spark_options=None,
     ):
         self._id = id
         self._name = name
         self._description = description
         self._feature_store_id = featurestore_id
         self._storage_connector_type = storage_connector_type
+
+        # HopsFS
         self._hopsfs_path = hopsfs_path
         self._dataset_name = dataset_name
+
+        # S3
         self._access_key = access_key
         self._secret_key = secret_key
         self._server_encryption_algorithm = server_encryption_algorithm
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
+
+        # Redshift
         self._cluster_identifier = cluster_identifier
         self._database_driver = database_driver
         self._database_endpoint = database_endpoint
@@ -85,6 +98,14 @@ class StorageConnector:
         self._connection_string = connection_string
         self._arguments = arguments
         self._expiration = expiration
+
+        # ADL
+        self._directory_id = directory_id
+        self._application_id = application_id
+        self._account_name = account_name
+        self._service_credential = service_credential
+
+        self._spark_options = {opt["name"]: opt["value"] for opt in spark_options}
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -363,6 +384,8 @@ class StorageConnector:
             if self._table_name is not None:
                 props["dbtable"] = self._table_name
             return props
+        elif self._storage_connector_type.upper() == "ADL":
+            return self._spark_options
         else:
             raise Exception(
                 "Spark options are not supported for connector "
