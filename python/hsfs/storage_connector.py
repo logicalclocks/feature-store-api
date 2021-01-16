@@ -61,8 +61,9 @@ class StorageConnector:
         expiration=None,
         directory_id=None,
         application_id=None,
-        account_name=None,
         service_credential=None,
+        account_name=None,
+        container_name=None,
         spark_options=None,
     ):
         self._id = id
@@ -104,6 +105,7 @@ class StorageConnector:
         self._application_id = application_id
         self._account_name = account_name
         self._service_credential = service_credential
+        self._container_name = container_name
 
         self._spark_options = {opt["name"]: opt["value"] for opt in spark_options}
 
@@ -349,6 +351,61 @@ class StorageConnector:
         else:
             raise Exception(
                 "Path is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def directory_id(self):
+        """Directory ID of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == "ADLS":
+            self._directory_id
+        else:
+            raise Exception(
+                "Directory ID is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def application_id(self):
+        """Application ID of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == "ADLS":
+            self._application_id
+        else:
+            raise Exception(
+                "Application ID is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def account_name(self):
+        """Account name of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == "ADLS":
+            self._account_name
+        else:
+            raise Exception(
+                "Account name is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def container_name(self):
+        """Container name of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == "ADLS":
+            self._container_name
+        else:
+            raise Exception(
+                "Container name is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def service_credential(self):
+        """Service credential of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == "ADLS":
+            self._service_credential
+        else:
+            raise Exception(
+                "Service Credential is not supported for connector "
+                + self._storage_connector_type
             )
 
     def spark_options(self):
