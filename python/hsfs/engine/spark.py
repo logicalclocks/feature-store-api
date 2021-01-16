@@ -420,7 +420,7 @@ class Engine:
     def _setup_storage_connector(self, storage_connector, path=None):
         if storage_connector.connector_type == StorageConnector.S3:
             return self._setup_s3(storage_connector, path)
-        elif storage_connector.connector_type == StorageConnector.ADL:
+        elif storage_connector.connector_type == StorageConnector.ADLS:
             return self._setup_adl(storage_connector, path)
         else:
             return path
