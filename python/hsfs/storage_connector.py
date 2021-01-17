@@ -59,6 +59,7 @@ class StorageConnector:
         connection_string=None,
         arguments=None,
         expiration=None,
+        generation=None,
         directory_id=None,
         application_id=None,
         service_credential=None,
@@ -101,6 +102,7 @@ class StorageConnector:
         self._expiration = expiration
 
         # ADL
+        self._generation = generation
         self._directory_id = directory_id
         self._application_id = application_id
         self._account_name = account_name
@@ -351,6 +353,17 @@ class StorageConnector:
         else:
             raise Exception(
                 "Path is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def generation(self):
+        """Generation of the ADLS storage connector"""
+        if self._storage_connector_type.upper() == self.ADLS:
+            self._generation
+        else:
+            raise Exception(
+                "Generation is not supported for connector "
+                + self._storage_connector_type
             )
 
     @property
