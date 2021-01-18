@@ -51,7 +51,7 @@ nav:
     - Feature: generated/feature.md
     - Training Dataset: generated/training_dataset.md
     - Query vs. Dataframe: generated/query_vs_dataframe.md
-    # - Statistics: guides/statistics.md
+    - Statistics: generated/statistics.md
     # - Data Validation: guides/data_validation.md
   - API Reference:
     - Connection: generated/api/connection_api.md
@@ -60,6 +60,7 @@ nav:
     - TrainingDataset: generated/api/training_dataset_api.md
     - Storage Connector: generated/api/storage_connector_api.md
     - Feature: generated/api/feature_api.md
+    - StatisticsConfig: generated/api/statistics_config_api.md
   - Contributing: CONTRIBUTING.md
   - Support: https://community.hopsworks.ai/
 

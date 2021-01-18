@@ -52,6 +52,7 @@ class StatisticsConfig:
 
     @property
     def enabled(self):
+        """Enable statistics, by default this computes only descriptive statistics."""
         return self._enabled
 
     @enabled.setter
@@ -60,6 +61,8 @@ class StatisticsConfig:
 
     @property
     def correlations(self):
+        """Enable correlations as an additional statistic to be computed for each
+        feature pair."""
         return self._correlations
 
     @correlations.setter
@@ -68,6 +71,8 @@ class StatisticsConfig:
 
     @property
     def histograms(self):
+        """Enable histograms as an additional statistic to be computed for each
+        feature."""
         return self._histograms
 
     @histograms.setter
@@ -76,6 +81,7 @@ class StatisticsConfig:
 
     @property
     def columns(self):
+        """Specify a subset of columns to compute statistics for."""
         return self._columns
 
     @columns.setter
