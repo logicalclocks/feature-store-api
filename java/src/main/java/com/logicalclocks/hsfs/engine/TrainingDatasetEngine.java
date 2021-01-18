@@ -114,10 +114,6 @@ public class TrainingDatasetEngine {
   }
 
   public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions) {
-    if (trainingDataset.getStorageConnector() != null) {
-      SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
-    }
-
     String path = "";
     if (com.google.common.base.Strings.isNullOrEmpty(split)) {
       // ** glob means "all sub directories"

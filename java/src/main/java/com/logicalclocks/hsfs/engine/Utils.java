@@ -19,8 +19,10 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TrainingDatasetType;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Dataset;
@@ -81,6 +83,16 @@ public class Utils {
     if (!dataset.schema().equals(tdStructType)) {
       throw new FeatureStoreException("The Dataframe schema: " + dataset.schema()
           + " does not match the training dataset schema: " + tdStructType);
+    }
+  }
+
+  public TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {
+    if (storageConnector == null) {
+      return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
+    } else if (storageConnector.getStorageConnectorType() == StorageConnectorType.HOPSFS) {
+      return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
+    } else {
+      return TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
     }
   }
 

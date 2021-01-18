@@ -26,10 +26,10 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
@@ -80,7 +80,7 @@ public class SparkEngine {
   }
 
   public Dataset<Row> jdbc(String query, StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> readOptions = storageConnector.getSparkOptions();
+    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
     if (!Strings.isNullOrEmpty(query)) {
       readOptions.put("query", query);
     }
@@ -124,42 +124,6 @@ public class SparkEngine {
         leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
   }
 
-  public void configureConnector(StorageConnector storageConnector) {
-    if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
-      configureS3Connector(storageConnector);
-    }
-  }
-
-  public static String sparkPath(String path) {
-    if (path.startsWith(Constants.S3_SCHEME)) {
-      return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
-    }
-    return path;
-  }
-
-  private void configureS3Connector(StorageConnector storageConnector) {
-    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())
-        && Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
-      sparkSession.conf().set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
-      sparkSession.conf().set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
-    }
-    if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
-      sparkSession.conf().set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
-      sparkSession.conf().set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
-      sparkSession.conf().set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
-      sparkSession.conf().set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
-    }
-    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
-      sparkSession.conf().set(
-          "fs.s3a.server-side-encryption-algorithm",
-          storageConnector.getServerEncryptionAlgorithm()
-      );
-    }
-    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
-      sparkSession.conf().set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
-    }
-  }
-
   /**
    * Setup Spark to write the data on the File System.
    *
@@ -171,9 +135,8 @@ public class SparkEngine {
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                     Map<String, String> writeOptions, SaveMode saveMode) {
 
-    if (trainingDataset.getStorageConnector() != null) {
-      SparkEngine.getInstance().configureConnector(trainingDataset.getStorageConnector());
-    }
+    setupConnectorHadoopConf(trainingDataset.getStorageConnector());
+
     if (trainingDataset.getSplits() == null) {
       // Write a single dataset
 
@@ -296,10 +259,7 @@ public class SparkEngine {
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
                            Map<String, String> readOptions, String path) {
-
-    if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
-      configureS3Connector(storageConnector);
-    }
+    setupConnectorHadoopConf(storageConnector);
 
     return SparkEngine.getInstance().getSparkSession()
         .read()
@@ -322,7 +282,7 @@ public class SparkEngine {
   public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
                                               FeatureGroup featureGroup,
                                               StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> writeOptions = storageConnector.getSparkOptions();
+    Map<String, String> writeOptions = storageConnector.getSparkOptionsInt();
     writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
 
     // add user provided configuration
@@ -399,5 +359,66 @@ public class SparkEngine {
 
   public String profile(Dataset<Row> df) {
     return profile(df, null, true, true);
+  }
+
+  public void setupConnectorHadoopConf(StorageConnector storageConnector) {
+    if (storageConnector == null) {
+      return;
+    }
+
+    switch (storageConnector.getStorageConnectorType()) {
+      case S3:
+        setupS3ConnectorHadoopConf(storageConnector);
+        break;
+      case ADLS:
+        setupAdlsConnectorHadoopConf(storageConnector);
+        break;
+      default:
+        // No-OP
+        break;
+    }
+  }
+
+  public static String sparkPath(String path) {
+    if (path.startsWith(Constants.S3_SCHEME)) {
+      return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
+    }
+    return path;
+  }
+
+  private void setupS3ConnectorHadoopConf(StorageConnector storageConnector) {
+    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())
+        && Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
+      sparkSession.sparkContext().hadoopConfiguration().set(
+          "fs.s3a.server-side-encryption-algorithm",
+          storageConnector.getServerEncryptionAlgorithm()
+      );
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
+    }
+  }
+
+  private void setupAdlsConnectorHadoopConf(StorageConnector storageConnector) {
+    for (Option confOption : storageConnector.getSparkOptions()) {
+      sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
+    }
   }
 }
