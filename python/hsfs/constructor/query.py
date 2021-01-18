@@ -15,6 +15,7 @@
 #
 
 import json
+import humps
 from typing import Optional, List, Union
 
 from hsfs import util, engine
@@ -25,21 +26,23 @@ from hsfs.constructor import join, filter
 class Query:
     def __init__(
         self,
-        feature_store_name,
-        feature_store_id,
         left_feature_group,
         left_features,
-        left_featuregroup_start_time=None,
-        left_featuregroup_end_time=None,
+        feature_store_name=None,
+        feature_store_id=None,
+        left_feature_group_start_time=None,
+        left_feature_group_end_time=None,
+        joins=[],
+        filter=None,
     ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
-        self._left_featuregroup_start_time = left_featuregroup_start_time
-        self._left_featuregroup_end_time = left_featuregroup_end_time
-        self._joins = []
-        self._filter = None
+        self._left_feature_group_start_time = left_feature_group_start_time
+        self._left_feature_group_end_time = left_feature_group_end_time
+        self._joins = joins
+        self._filter = filter
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
@@ -155,13 +158,13 @@ class Query:
 
     def as_of(self, wallclock_time):
         for join in self._joins:
-            join.query.left_featuregroup_end_time = wallclock_time
-        self.left_featuregroup_end_time = wallclock_time
+            join.query.left_feature_group_end_time = wallclock_time
+        self.left_feature_group_end_time = wallclock_time
         return self
 
     def pull_changes(self, wallclock_start_time, wallclock_end_time):
-        self.left_featuregroup_start_time = wallclock_start_time
-        self.left_featuregroup_end_time = wallclock_end_time
+        self.left_feature_group_start_time = wallclock_start_time
+        self.left_feature_group_end_time = wallclock_end_time
         return self
 
     def filter(self, f: Union[filter.Filter, filter.Logic]):
@@ -211,13 +214,31 @@ class Query:
 
     def to_dict(self):
         return {
+            "featureStoreName": self._feature_store_name,
+            "featureStoreId": self._feature_store_id,
             "leftFeatureGroup": self._left_feature_group,
             "leftFeatures": self._left_features,
-            "leftFeatureGroupStartTime": self._left_featuregroup_start_time,
-            "leftFeatureGroupEndTime": self._left_featuregroup_end_time,
+            "leftFeatureGroupStartTime": self._left_feature_group_start_time,
+            "leftFeatureGroupEndTime": self._left_feature_group_end_time,
             "joins": self._joins,
             "filter": self._filter,
         }
+
+    @classmethod
+    def _hopsworks_json(cls, json_dict):
+        """
+        This method is used by the Hopsworks helper job.
+        It does not fully deserialize the message as the usecase is to
+        send it straight back to Hopsworks to read the content of the query
+
+        Args:
+            json_dict (str): a json string containing a query object
+
+        Returns:
+            A partially deserialize query object
+        """
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(**json_decamelized)
 
     def to_string(self, online=False):
         fs_query_instance = self._query_constructor_api.construct_query(self)
@@ -232,24 +253,25 @@ class Query:
 
         for on_demand_fg_alias in on_demand_fg_aliases:
             engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group, on_demand_fg_alias.alias,
+                on_demand_fg_alias.on_demand_feature_group,
+                on_demand_fg_alias.alias,
             )
 
     @property
-    def left_featuregroup_start_time(self):
-        return self._left_featuregroup_start_time
+    def left_feature_group_start_time(self):
+        return self._left_feature_group_start_time
 
     @property
-    def left_featuregroup_end_time(self):
-        return self._left_featuregroup_start_time
+    def left_feature_group_end_time(self):
+        return self._left_feature_group_start_time
 
-    @left_featuregroup_start_time.setter
-    def left_featuregroup_start_time(self, left_featuregroup_start_time):
-        self._left_featuregroup_start_time = left_featuregroup_start_time
+    @left_feature_group_start_time.setter
+    def left_feature_group_start_time(self, left_feature_group_start_time):
+        self._left_feature_group_start_time = left_feature_group_start_time
 
-    @left_featuregroup_end_time.setter
-    def left_featuregroup_end_time(self, left_featuregroup_start_time):
-        self._left_featuregroup_end_time = left_featuregroup_start_time
+    @left_feature_group_end_time.setter
+    def left_feature_group_end_time(self, left_feature_group_start_time):
+        self._left_feature_group_end_time = left_feature_group_start_time
 
     def _register_hudi_tables(
         self, hudi_feature_groups, feature_store_id, feature_store_name, read_options

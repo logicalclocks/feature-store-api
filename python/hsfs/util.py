@@ -34,6 +34,8 @@ def validate_feature(ft):
         return ft
     elif isinstance(ft, str):
         return feature.Feature(ft)
+    elif isinstance(ft, dict):
+        return feature.Feature(**ft)
 
 
 def parse_features(feature_names):
@@ -43,6 +45,10 @@ def parse_features(feature_names):
         return [validate_feature(feat) for feat in feature_names]
     else:
         return []
+
+
+def feature_group_name(feature_group):
+    return feature_group.name + "_" + str(feature_group.version)
 
 
 def get_cert_pw():

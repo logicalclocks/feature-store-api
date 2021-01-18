@@ -18,7 +18,7 @@ import humps
 
 
 class TrainingDatasetFeature:
-    def __init__(self, name, type, index=None, featuregroup=None, label=False):
+    def __init__(self, name, type=None, index=None, featuregroup=None, label=False):
         self._name = name
         self._type = type
         self._index = index

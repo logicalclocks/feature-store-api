@@ -32,7 +32,6 @@ from hsfs.core import (
     statistics_engine,
 )
 from hsfs.constructor import query
-from hsfs.client import exceptions
 
 
 class TrainingDataset:
@@ -73,6 +72,7 @@ class TrainingDataset:
         self._location = location
         self._from_query = from_query
         self._querydto = querydto
+        self._feature_store_id = featurestore_id
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -143,27 +143,13 @@ class TrainingDataset:
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        if isinstance(features, query.Query):
-            feature_dataframe = features.read()
-            self._querydto = features
-        else:
-            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
-                features
-            )
-
-        self._features = engine.get_instance().parse_schema_training_dataset(
-            feature_dataframe
-        )
-
-        self._set_label_features()
-
         user_version = self._version
         user_stats_config = self._statistics_config
-        self._training_dataset_engine.save(self, feature_dataframe, write_options)
+        self._training_dataset_engine.save(self, features, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
-        if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
+        if self.statistics_config.enabled and engine.get_type() == "spark":
+            self._statistics_engine.compute_statistics(self, self.read())
         if user_version is None:
             warnings.warn(
                 "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
@@ -208,15 +194,7 @@ class TrainingDataset:
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        if isinstance(features, query.Query):
-            feature_dataframe = features.read()
-        else:
-            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
-                features
-            )
-        self._training_dataset_engine.insert(
-            self, feature_dataframe, write_options, overwrite
-        )
+        self._training_dataset_engine.insert(self, features, write_options, overwrite)
 
         self.compute_statistics()
 
@@ -239,7 +217,7 @@ class TrainingDataset:
         """Recompute the statistics for the training dataset and save them to the
         feature store.
         """
-        if self.statistics_config.enabled:
+        if self.statistics_config.enabled and engine.get_type() == "spark":
             return self._statistics_engine.compute_statistics(self, self.read())
 
     def tf_data(
@@ -573,17 +551,6 @@ class TrainingDataset:
     def label(self, label):
         self._label = label
 
-    def _set_label_features(self):
-        for f_name in self._label:
-            found = False
-            for f in self._features:
-                if f_name == f.name:
-                    f.label = True
-                    found = True
-                    break
-            if not found:
-                raise exceptions.FeatureStoreException(
-                    "The specified label `{}` could not be found among the features: {}.".format(
-                        f_name, [feat.name for feat in self._features]
-                    )
-                )
+    @property
+    def feature_store_id(self):
+        return self._feature_store_id

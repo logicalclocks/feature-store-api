@@ -18,12 +18,15 @@ from hsfs.engine import spark
 from hsfs.client import exceptions
 
 _engine = None
+_engine_type = None
 
 
 def init(engine_type):
+    global _engine_type
     global _engine
     if not _engine:
         if engine_type == "spark":
+            _engine_type = "spark"
             _engine = spark.Engine()
         elif engine_type == "hive":
             try:
@@ -34,6 +37,7 @@ def init(engine_type):
                     "missing in HSFS installation. Install with `pip install "
                     "hsfs[hive]`."
                 )
+            _engine_type = "hive"
             _engine = hive.Engine()
 
 
@@ -41,6 +45,13 @@ def get_instance():
     global _engine
     if _engine:
         return _engine
+    raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
+
+
+def get_type():
+    global _engine_type
+    if _engine_type:
+        return _engine_type
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
 

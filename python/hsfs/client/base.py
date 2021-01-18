@@ -91,6 +91,7 @@ class Client(ABC):
         headers=None,
         data=None,
         stream=False,
+        files=None,
     ):
         """Send REST request to Hopsworks.
 
@@ -110,6 +111,8 @@ class Client(ABC):
         :type data: dict, optional
         :param stream: Set if response should be a stream, defaults to False
         :type stream: boolean, optional
+        :param files: dictionary for multipart encoding upload
+        :type files: dict, optional
         :raises RestAPIError: Raised when request wasn't correctly received, understood or accepted
         :return: Response json
         :rtype: dict
@@ -126,6 +129,7 @@ class Client(ABC):
             data=data,
             params=query_params,
             auth=self._auth,
+            files=files,
         )
 
         prepped = self._session.prepare_request(request)

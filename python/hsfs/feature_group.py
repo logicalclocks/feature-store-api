@@ -65,7 +65,10 @@ class FeatureGroupBase:
             `Query`. A query object with all features of the feature group.
         """
         return query.Query(
-            self._feature_store_name, self._feature_store_id, self, self._features
+            left_feature_group=self,
+            left_features=self._features,
+            feature_store_name=self._feature_store_name,
+            feature_store_id=self._feature_store_id,
         )
 
     def select(self, features: List[Union[str, feature.Feature]] = []):
@@ -82,7 +85,10 @@ class FeatureGroupBase:
             `Query`: A query object with the selected features of the feature group.
         """
         return query.Query(
-            self._feature_store_name, self._feature_store_id, self, features
+            left_feature_group=self,
+            left_features=features,
+            feature_store_name=self._feature_store_name,
+            feature_store_id=self._feature_store_id,
         )
 
     def select_except(self, features: List[Union[str, feature.Feature]] = []):
@@ -104,10 +110,12 @@ class FeatureGroupBase:
                 f.name if isinstance(f, feature.Feature) else f for f in features
             ]
             return query.Query(
-                self._feature_store_name,
-                self._feature_store_id,
-                self,
-                [f for f in self._features if f.name not in except_features],
+                left_feature_group=self,
+                left_features=[
+                    f for f in self._features if f.name not in except_features
+                ],
+                feature_store_name=self._feature_store_name,
+                feature_store_id=self._feature_store_id,
             )
         else:
             return self.select_all()
@@ -325,7 +333,10 @@ class FeatureGroupBase:
             `RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
-            return self._statistics_engine.compute_statistics(self, self.read())
+            # Don't read the dataframe here, to avoid triggering a read operation
+            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # to update the statistics.
+            return self._statistics_engine.compute_statistics(self)
         else:
             warnings.warn(
                 (
@@ -583,7 +594,9 @@ class FeatureGroup(FeatureGroupBase):
 
         user_version = self._version
         self._feature_group_engine.save(self, feature_dataframe, write_options)
-        if self.statistics_config.enabled:
+        if self.statistics_config.enabled and engine.get_type() == "spark":
+            # Only compute statistics if the engine is Spark.
+            # For Hive engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -659,7 +672,10 @@ class FeatureGroup(FeatureGroupBase):
             write_options,
         )
 
-        self.compute_statistics()
+        if engine.get_type() == "spark":
+            # Only compute statistics if the engine is Spark,
+            # if Hive, the statistics are computed by the application doing the insert
+            self.compute_statistics()
 
     def commit_details(self, limit: Optional[int] = None):
         """Retrieves commit timeline for this feature group.
