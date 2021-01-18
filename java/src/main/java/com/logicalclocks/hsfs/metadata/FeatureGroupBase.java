@@ -222,7 +222,7 @@ public class FeatureGroupBase {
 
   /**
    * Update the statistics configuration of the feature group.
-   * Change the `statisticsEnabled`, `histograms`, `correlations` or `statisticColumns` attributes and persist
+   * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
    * the changes by calling this method.
    *
    * @throws FeatureStoreException

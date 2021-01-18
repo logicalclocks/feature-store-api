@@ -301,6 +301,18 @@ public class TrainingDataset {
   }
 
   /**
+   * Update the statistics configuration of the training dataset.
+   * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
+   * the changes by calling this method.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateStatisticsConfig() throws FeatureStoreException, IOException {
+    trainingDatasetEngine.updateStatisticsConfig(this);
+  }
+
+  /**
    * Get the last statistics commit for the training dataset.
    *
    * @return statistics object of latest commit
