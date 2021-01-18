@@ -142,7 +142,11 @@ Navigate to your newly created role in [AWS management console](https://console.
                 "S3:GetObject",
                 "S3:DeleteObject",
                 "S3:AbortMultipartUpload",
-                "S3:ListBucketMultipartUploads"
+                "S3:ListBucketMultipartUploads",
+                "S3:PutLifecycleConfiguration",
+                "S3:GetLifecycleConfiguration",
+                "S3:PutBucketVersioning",
+                "S3:GetBucketVersioning"
             ],
             "Resource": [
                 "arn:aws:s3:::bucket.name/*",
@@ -153,7 +157,7 @@ Navigate to your newly created role in [AWS management console](https://console.
 }
 ```
 
-Do not forget to replace *bucket.name* with appropriate S3 bucket name.
+Replace *BUCKET_NAME* with the appropriate S3 bucket name. Non-enterprise users can remove the policies  *S3:PutLifecycleConfiguration*, *S3:GetLifecycleConfiguration*, *S3:PutBucketVersioning*, *S3:GetBucketVersioning* as these policies are needed for cluster backups and restore operations available only for the enterprise version. 
 
 ## Step 3: Allow your role to use your EKS cluster
 
