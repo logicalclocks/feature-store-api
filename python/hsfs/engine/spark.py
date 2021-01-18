@@ -419,13 +419,13 @@ class Engine:
 
     def _setup_storage_connector(self, storage_connector, path=None):
         if storage_connector.connector_type == StorageConnector.S3:
-            return self._setup_s3(storage_connector, path)
+            return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.connector_type == StorageConnector.ADLS:
-            return self._setup_adls(storage_connector, path)
+            return self._setup_adls_hadoop_conf(storage_connector, path)
         else:
             return path
 
-    def _setup_s3(self, storage_connector, path):
+    def _setup_s3_hadoop_conf(self, storage_connector, path):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.access.key", storage_connector.access_key
@@ -455,7 +455,7 @@ class Engine:
             )
         return path.replace("s3", "s3a", 1)
 
-    def _setup_adls(self, storage_connector, path):
+    def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
 
