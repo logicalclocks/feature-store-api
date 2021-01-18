@@ -24,9 +24,9 @@ class StatisticsConfig:
     def __init__(
         self,
         enabled=True,
-        correlations=None,
-        histograms=None,
-        columns=None,
+        correlations=False,
+        histograms=False,
+        columns=[],
     ):
         self._enabled = enabled
         # use setters for input validation
@@ -64,11 +64,6 @@ class StatisticsConfig:
 
     @correlations.setter
     def correlations(self, correlations):
-        if correlations and not self._enabled:
-            # do validation to fail fast, backend implements same logic
-            raise ValueError(
-                "Correlations can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
-            )
         self._correlations = correlations
 
     @property
@@ -77,11 +72,6 @@ class StatisticsConfig:
 
     @histograms.setter
     def histograms(self, histograms):
-        if histograms and not self._enabled:
-            # do validation to fail fast, backend implements same logic
-            raise ValueError(
-                "Histograms can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
-            )
         self._histograms = histograms
 
     @property
