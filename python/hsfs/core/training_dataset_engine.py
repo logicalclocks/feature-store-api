@@ -14,8 +14,11 @@
 #   limitations under the License.
 #
 
+import re
+from sqlalchemy import create_engine, sql
+
 from hsfs import engine, training_dataset_feature
-from hsfs.core import training_dataset_api, tags_api
+from hsfs.core import training_dataset_api, tags_api, storage_connector_api
 from hsfs.constructor import query
 
 
@@ -29,6 +32,9 @@ class TrainingDatasetEngine:
             feature_store_id
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            feature_store_id
+        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -117,3 +123,81 @@ class TrainingDatasetEngine:
         self._training_dataset_api.update_metadata(
             training_dataset, training_dataset, "updateStatsConfig"
         )
+
+    def get_serving_vector(self, training_dataset, entry):
+        """Get ... for a training dataset."""
+
+        serving_vector = []
+
+        if training_dataset.prepared_statements is None:
+            self._init_prepared_statement(training_dataset)
+
+        prepared_statements = training_dataset.prepared_statements
+
+        for prepared_statement_index in prepared_statements:
+            prepared_statement = prepared_statements[prepared_statement_index]
+            # TODO (davit) check if this returns anything before fetchall
+            result_proxy = training_dataset.prepared_statement_connection.execute(
+                prepared_statement, entry
+            ).fetchall()
+            for row in result_proxy:
+                result_dict = dict(row.items())
+            serving_vector += list(result_dict.values())
+
+        return serving_vector
+
+    def _init_prepared_statement(self, training_dataset):
+        online_conn = self._storage_connector_api.get_online_connector()
+        jdbc_connection = self._create_mysql_connection(online_conn)
+        prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
+            training_dataset
+        )
+
+        prepared_statements_dict = {}
+        for prepared_statement in prepared_statements:
+            query_online = str(prepared_statement.query_online).replace("\n", "")
+
+            # In java prepared statement `?` is used for prepared statement parametrization.
+            # In sqlalchemy `:feature_name` is used instead of `?`
+            pk_names = [
+                psp.name
+                for psp in sorted(
+                    prepared_statement.prepared_statement_parameters,
+                    key=lambda psp: psp.index,
+                )
+            ]
+            for pk_name in pk_names:
+                query_online = re.sub(
+                    r"^(.*?(\?.*?){0})\?",
+                    r"\1:" + pk_name,
+                    query_online,
+                )
+            query_online = sql.text(query_online)
+
+            prepared_statements_dict[
+                prepared_statement.prepared_statement_index
+            ] = query_online
+
+        training_dataset.prepared_statement_connection = jdbc_connection
+        training_dataset.prepared_statements = prepared_statements_dict
+
+    def _create_mysql_connection(self, online_conn):
+        # TODO: __init__() got an unexpected keyword argument 'useSSL' and  allowPublicKeyRetrieval=true
+        online_options = online_conn.spark_options()
+        # Here we are replacing the first part of the string returned by Hopsworks,
+        # jdbc:mysql:// with the sqlalchemy one + username and password
+        sql_alchemy_conn_str = (
+            online_options["url"]
+            .replace(
+                "jdbc:mysql://",
+                "mysql+pymysql://"
+                + online_options["user"]
+                + ":"
+                + online_options["password"]
+                + "@",
+            )
+            .replace("useSSL=false&", "")
+            .replace("?allowPublicKeyRetrieval=true", "")
+        )
+        sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
+        return sql_alchemy_engine.connect()

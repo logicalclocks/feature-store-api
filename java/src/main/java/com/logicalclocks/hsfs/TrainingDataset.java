@@ -33,9 +33,9 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -108,12 +108,17 @@ public class TrainingDataset {
   @Getter
   @Setter
   @JsonIgnore
-  private Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
+  private Connection preparedStatementConnection;
 
   @Getter
   @Setter
   @JsonIgnore
-  TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
+  private Map<Integer, Map<String, Integer>> preparedStatementParameters;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private TreeMap<Integer, PreparedStatement> preparedStatements;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -421,12 +426,8 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
-    trainingDatasetEngine.initPreparedStatement(this);
-  }
-
-  @JsonIgnore
-  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException {
+  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
+      IOException {
     return trainingDatasetEngine.getServingVector(this, entry);
   }
 }

@@ -46,10 +46,6 @@ public class FsQuery {
   @Setter
   private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
 
-  @Getter
-  @Setter
-  private List<ServingPreparedStatement> servingPreparedStatements;
-
   public void removeNewLines() {
     query = query != null ? query.replace("\n", " ") : null;
     queryOnline = queryOnline != null ? queryOnline.replace("\n", " ") : null;

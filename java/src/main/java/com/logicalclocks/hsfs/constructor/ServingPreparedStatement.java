@@ -16,19 +16,21 @@
 
 package com.logicalclocks.hsfs.constructor;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.metadata.RestDto;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServingPreparedStatement {
-  @Getter
-  @Setter
-  private Integer  featureGroupId;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ServingPreparedStatement extends RestDto<ServingPreparedStatement> {
   @Getter
   @Setter
   private Integer preparedStatementIndex;

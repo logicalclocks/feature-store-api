@@ -61,6 +61,8 @@ class TrainingDataset:
         from_query=None,
         querydto=None,
         label=None,
+        prepared_statement_connection=None,
+        prepared_statements=None,
     ):
         self._id = id
         self._name = name
@@ -72,6 +74,8 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
+        self._prepared_statement_connection = prepared_statement_connection
+        self._prepared_statements = prepared_statements
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -544,6 +548,16 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
+    def get_serving_vector(self, entry):
+        """Returns .... this training dataset
+
+        # Arguments
+            entry: ...
+        # Returns
+            `array`...
+        """
+        return self._training_dataset_engine.get_serving_vector(self, entry)
+
     @property
     def label(self):
         """The label/prediction feature of the training dataset.
@@ -559,3 +573,27 @@ class TrainingDataset:
     @property
     def feature_store_id(self):
         return self._feature_store_id
+
+    @property
+    def prepared_statement_connection(self):
+        """The ... of the training dataset.
+
+        ...
+        """
+        return self._prepared_statement_connection
+
+    @prepared_statement_connection.setter
+    def prepared_statement_connection(self, prepared_statement_connection):
+        self._prepared_statement_connection = prepared_statement_connection
+
+    @property
+    def prepared_statements(self):
+        """The ... of the training dataset.
+
+        ...
+        """
+        return self._prepared_statements
+
+    @prepared_statements.setter
+    def prepared_statements(self, prepared_statements):
+        self._prepared_statements = prepared_statements
