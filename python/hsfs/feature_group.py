@@ -424,7 +424,7 @@ class FeatureGroup(FeatureGroupBase):
                 and time_travel_format.upper() == "HUDI"
                 else None
             )
-            self._statistics_config = statistics_config
+            self.statistics_config = statistics_config
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
