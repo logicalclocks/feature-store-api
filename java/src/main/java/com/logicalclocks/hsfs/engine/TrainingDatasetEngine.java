@@ -150,4 +150,10 @@ public class TrainingDatasetEngine {
       throws FeatureStoreException, IOException {
     return trainingDatasetApi.getQuery(trainingDataset, withLabel).getStorageQuery(storage);
   }
+
+  public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    TrainingDataset apiTD = trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
+    trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
+    trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
+  }
 }

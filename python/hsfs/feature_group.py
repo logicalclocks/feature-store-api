@@ -226,6 +226,33 @@ class FeatureGroupBase:
                 f"'FeatureGroup' object has no feature called '{name}'."
             )
 
+    def update_statistics_config(self):
+        """Update the statistics configuration of the feature group.
+
+        Change the `statistics_config` object and persist the changes by calling
+        this method.
+
+        # Returns
+            `FeatureGroup`. The updated metadata object of the feature group.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._feature_group_engine.update_statistics_config(self)
+        return self
+
+    def update_description(self, description: str):
+        """Update the description of the feature gorup.
+
+        # Arguments
+            description: str. New description string.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_description(self, description)
+        return self
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -340,10 +367,6 @@ class FeatureGroup(FeatureGroupBase):
         features=None,
         location=None,
         jobs=None,
-        desc_stats_enabled=None,
-        feat_corr_enabled=None,
-        feat_hist_enabled=None,
-        statistic_columns=None,
         online_enabled=False,
         time_travel_format=None,
         statistics_config=None,
@@ -372,12 +395,6 @@ class FeatureGroup(FeatureGroupBase):
 
         if id is not None:
             # initialized by backend
-            self.statistics_config = StatisticsConfig(
-                desc_stats_enabled,
-                feat_corr_enabled,
-                feat_hist_enabled,
-                statistic_columns,
-            )
             self._primary_key = [
                 feat.name for feat in self._features if feat.primary is True
             ]
@@ -393,9 +410,12 @@ class FeatureGroup(FeatureGroupBase):
                 ][0]
             else:
                 self._hudi_precombine_key = None
+            self._statistics_config = StatisticsConfig.from_response_json(
+                statistics_config
+            )
+
         else:
             # initialized by user
-            self.statistics_config = statistics_config
             self._primary_key = primary_key
             self._partition_key = partition_key
             self._hudi_precombine_key = (
@@ -404,6 +424,7 @@ class FeatureGroup(FeatureGroupBase):
                 and time_travel_format.upper() == "HUDI"
                 else None
             )
+            self.statistics_config = statistics_config
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -749,10 +770,7 @@ class FeatureGroup(FeatureGroupBase):
             "features": self._features,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
-            "descStatsEnabled": self._statistics_config.enabled,
-            "featHistEnabled": self._statistics_config.histograms,
-            "featCorrEnabled": self._statistics_config.correlations,
-            "statisticColumns": self._statistics_config.columns,
+            "statisticsConfig": self._statistics_config,
         }
 
     @property
@@ -882,11 +900,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         jobs=None,
-        desc_stats_enabled=None,
-        feat_corr_enabled=None,
-        feat_hist_enabled=None,
-        cluster_analysis_enabled=None,
-        statistic_columns=None,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -903,10 +916,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
         self._jobs = jobs
-        self._desc_stats_enabled = desc_stats_enabled
-        self._feat_corr_enabled = feat_corr_enabled
-        self._feat_hist_enabled = feat_hist_enabled
-        self._statistic_columns = statistic_columns
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
@@ -919,13 +928,10 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 if features
                 else None
             )
-
-            self.statistics_config = StatisticsConfig(
-                desc_stats_enabled,
-                feat_corr_enabled,
-                feat_hist_enabled,
-                statistic_columns,
+            self._statistics_config = StatisticsConfig.from_response_json(
+                statistics_config
             )
+
             self._options = (
                 {option["name"]: option["value"] for option in options}
                 if options
@@ -1002,10 +1008,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             else None,
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
-            "descStatsEnabled": self._statistics_config.enabled,
-            "featHistEnabled": self._statistics_config.histograms,
-            "featCorrEnabled": self._statistics_config.correlations,
-            "statisticColumns": self._statistics_config.columns,
+            "statisticsConfig": self._statistics_config,
         }
 
     @property

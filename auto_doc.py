@@ -78,6 +78,12 @@ PAGES = {
             "hsfs.constructor.query.Query"
         ),
     },
+    "statistics.md": {
+        "statistics_config": ["hsfs.statistics_config.StatisticsConfig"],
+        "statistics_config_properties": keras_autodoc.get_properties(
+            "hsfs.statistics_config.StatisticsConfig"
+        ),
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(
@@ -128,6 +134,12 @@ PAGES = {
         ),
         "sc_properties": keras_autodoc.get_properties(
             "hsfs.storage_connector.StorageConnector"
+        ),
+    },
+    "api/statistics_config_api.md": {
+        "statistics_config": ["hsfs.statistics_config.StatisticsConfig"],
+        "statistics_config_properties": keras_autodoc.get_properties(
+            "hsfs.statistics_config.StatisticsConfig"
         ),
     },
 }

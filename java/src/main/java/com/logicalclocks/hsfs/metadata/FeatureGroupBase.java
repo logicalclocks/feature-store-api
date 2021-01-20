@@ -17,11 +17,12 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -77,22 +78,7 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
-  @JsonProperty("descStatsEnabled")
-  protected Boolean statisticsEnabled;
-
-  @Getter
-  @Setter
-  @JsonProperty("featHistEnabled")
-  protected Boolean histograms;
-
-  @Getter
-  @Setter
-  @JsonProperty("featCorrEnabled")
-  protected Boolean correlations;
-
-  @Getter
-  @Setter
-  protected List<String> statisticColumns;
+  protected StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -236,14 +222,14 @@ public class FeatureGroupBase {
 
   /**
    * Update the statistics configuration of the feature group.
-   * Change the `statisticsEnabled`, `histograms`, `correlations` or `statisticColumns` attributes and persist
+   * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
    * the changes by calling this method.
    *
    * @throws FeatureStoreException
    * @throws IOException
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateStatisticsConfig(this);
+    featureGroupBaseEngine.updateStatisticsConfig((FeatureGroup) this);
   }
 
   /**
@@ -254,7 +240,7 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       return statisticsEngine.computeStatistics(this, read());
     } else {
       LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"

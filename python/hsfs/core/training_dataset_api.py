@@ -73,7 +73,6 @@ class TrainingDatasetApi:
     def compute(self, training_dataset_instance, td_app_conf):
         """
         Setup a Hopsworks job to compute the query and write the training dataset
-
         Args:
             training_dataset_instance (training_dataset): the metadata instance of the training dataset
             app_options ([type]): the configuration for the training dataset job application
@@ -94,4 +93,47 @@ class TrainingDatasetApi:
             _client._send_request(
                 "POST", path_params, headers=headers, data=td_app_conf.json()
             )
+        )
+
+    def update_metadata(
+        self, training_dataset_instance, training_dataset_copy, query_parameter
+    ):
+        """Update the metadata of a training dataset.
+
+        This only updates description and schema/features. The
+        `training_dataset_copy` is the metadata object sent to the backend, while
+        `training_dataset_instance` is the user object, which is only updated
+        after a successful REST call.
+
+        # Arguments
+            training_dataset_instance: FeatureGroup. User metadata object of the
+                training dataset.
+            training_dataset_copy: FeatureGroup. Metadata object of the training
+                dataset with the information to be updated.
+            query_parameter: str. Query parameter that will be set to true to
+                control which information is updated. E.g. "updateMetadata" or
+                "updateStatsConfig".
+
+        # Returns
+            FeatureGroup. The updated feature group metadata object.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "trainingdatasets",
+            training_dataset_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {query_parameter: True}
+        return training_dataset_instance.update_from_response_json(
+            _client._send_request(
+                "PUT",
+                path_params,
+                query_params,
+                headers=headers,
+                data=training_dataset_copy.json(),
+            ),
         )

@@ -153,12 +153,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         return hudi_engine_instance.delete_record(delete_df, write_options)
 
-    def update_statistics_config(self, feature_group):
-        """Update the statistics configuration of a feature group."""
-        self._feature_group_api.update_metadata(
-            feature_group, feature_group, "updateStatsSettings"
-        )
-
     def _get_table_name(self, feature_group):
         return (
             feature_group.feature_store_name

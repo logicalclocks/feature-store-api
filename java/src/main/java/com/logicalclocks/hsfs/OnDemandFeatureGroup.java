@@ -68,8 +68,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               OnDemandDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<Feature> features,
-                              Boolean statisticsEnabled, Boolean histograms, Boolean correlations,
-                              List<String> statisticColumns) {
+                              StatisticsConfig statisticsConfig) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -83,10 +82,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
     this.description = description;
     this.storageConnector = storageConnector;
     this.features = features;
-    this.statisticsEnabled = statisticsEnabled != null ? statisticsEnabled : true;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.statisticColumns = statisticColumns;
+    this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
   }
 
   public OnDemandFeatureGroup() {
@@ -95,7 +91,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   public void save() throws FeatureStoreException, IOException {
     onDemandFeatureGroupEngine.saveFeatureGroup(this);
 
-    if (statisticsEnabled) {
+    if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, read());
     }
   }

@@ -14,14 +14,19 @@
 #   limitations under the License.
 #
 
+import json
+import humps
+
+from hsfs import util
+
 
 class StatisticsConfig:
     def __init__(
         self,
         enabled=True,
-        correlations=None,
-        histograms=None,
-        columns=None,
+        correlations=False,
+        histograms=False,
+        columns=[],
     ):
         self._enabled = enabled
         # use setters for input validation
@@ -29,8 +34,25 @@ class StatisticsConfig:
         self.histograms = histograms
         self._columns = columns
 
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(**json_decamelized)
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "enabled": self._enabled,
+            "correlations": self._correlations,
+            "histograms": self._histograms,
+            "columns": self._columns,
+        }
+
     @property
     def enabled(self):
+        """Enable statistics, by default this computes only descriptive statistics."""
         return self._enabled
 
     @enabled.setter
@@ -39,34 +61,35 @@ class StatisticsConfig:
 
     @property
     def correlations(self):
+        """Enable correlations as an additional statistic to be computed for each
+        feature pair."""
         return self._correlations
 
     @correlations.setter
     def correlations(self, correlations):
-        if correlations and not self._enabled:
-            # do validation to fail fast, backend implements same logic
-            raise ValueError(
-                "Correlations can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
-            )
         self._correlations = correlations
 
     @property
     def histograms(self):
+        """Enable histograms as an additional statistic to be computed for each
+        feature."""
         return self._histograms
 
     @histograms.setter
     def histograms(self, histograms):
-        if histograms and not self._enabled:
-            # do validation to fail fast, backend implements same logic
-            raise ValueError(
-                "Histograms can only be enabled with general statistics enabled. Set `enabled` in config to `True`."
-            )
         self._histograms = histograms
 
     @property
     def columns(self):
+        """Specify a subset of columns to compute statistics for."""
         return self._columns
 
     @columns.setter
     def columns(self, columns):
         self._columns = columns
+
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms}, {self._columns})"
