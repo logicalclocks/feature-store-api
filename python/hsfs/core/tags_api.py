@@ -54,7 +54,8 @@ class TagsApi:
             "tags",
             name,
         ]
-        _client._send_request("PUT", path_params, data=value)
+        headers = {"content-type": "application/json"}
+        _client._send_request("PUT", path_params, headers=headers, data=value)
 
     def delete(self, metadata_instance, name):
         """Delete a tag from a training dataset or feature group.
