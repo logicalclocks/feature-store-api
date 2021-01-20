@@ -387,22 +387,13 @@ public class SparkEngine {
   }
 
   private void setupS3ConnectorHadoopConf(StorageConnector storageConnector) {
-    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())
-        && Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+    if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
-      sparkSession.sparkContext().hadoopConfiguration()
-          .set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
     }
-    if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
-      sparkSession.sparkContext().hadoopConfiguration()
-          .set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
-      sparkSession.sparkContext().hadoopConfiguration()
-          .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
+    if (!Strings.isNullOrEmpty(storageConnector.getSecretKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_SECRET_KEY_ENV, storageConnector.getSecretKey());
-      sparkSession.sparkContext().hadoopConfiguration()
-          .set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
       sparkSession.sparkContext().hadoopConfiguration().set(
@@ -413,6 +404,12 @@ public class SparkEngine {
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
+    }
+    if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
+      sparkSession.sparkContext().hadoopConfiguration()
+          .set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
     }
   }
 
