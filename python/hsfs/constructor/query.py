@@ -32,7 +32,7 @@ class Query:
         feature_store_id=None,
         left_feature_group_start_time=None,
         left_feature_group_end_time=None,
-        joins=[],
+        joins=None,
         filter=None,
     ):
         self._feature_store_name = feature_store_name
@@ -41,7 +41,7 @@ class Query:
         self._left_features = util.parse_features(left_features)
         self._left_feature_group_start_time = left_feature_group_start_time
         self._left_feature_group_end_time = left_feature_group_end_time
-        self._joins = joins
+        self._joins = joins or []
         self._filter = filter
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
