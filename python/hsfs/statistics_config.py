@@ -32,7 +32,8 @@ class StatisticsConfig:
         # use setters for input validation
         self.correlations = correlations
         self.histograms = histograms
-        self._columns = columns
+        # overwrite default with new empty [] but keep the empty list default for documentation
+        self._columns = columns or []
 
     @classmethod
     def from_response_json(cls, json_dict):
