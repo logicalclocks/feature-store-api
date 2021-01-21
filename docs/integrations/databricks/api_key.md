@@ -21,7 +21,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 </p>
 
 !!! info
-    You are only able to retrieve the API key once. If you forget to copy it to your clipboard, delete it and create a new one.
+    You are only able to retrieve the API key once. If you did not manage to copy it to your clipboard, delete it and create a new one.
 
 ## Quickstart API key Argument
 

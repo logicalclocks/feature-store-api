@@ -77,7 +77,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 </p>
 
 !!! info
-    You are only ably to retrieve the API Key once. If you miss to copy it to your clipboard, delete it again and create a new one.
+    You are only ably to retrieve the API Key once. If you did not manage to copy it to your clipboard, delete it again and create a new one.
 
 ## Connecting to the Feature Store
 

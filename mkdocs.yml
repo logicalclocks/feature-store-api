@@ -37,9 +37,13 @@ nav:
       - Hopsworks API Key: integrations/databricks/api_key.md
       - Configuration: integrations/databricks/configuration.md
     - AWS Sagemaker: integrations/sagemaker.md
-    - EMR:
+    - AWS EMR:
       - Networking: integrations/emr/networking.md
       - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
+    - Azure HDInsight: integrations/hdinsight.md
+    - Azure Machine Learning:
+      - Designer: integrations/mlstudio_designer.md
+      - Notebooks: integrations/mlstudio_notebooks.md
     - Python: integrations/python.md
     - Spark: integrations/spark.md
   - Guides:

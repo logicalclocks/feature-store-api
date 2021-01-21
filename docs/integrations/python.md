@@ -23,7 +23,7 @@ Create a file called `featurestore.key` in your designated Python environment an
 </p>
 
 !!! info
-    You are only able to retrieve the API key once. If you forget to copy it to your clipboard, delete it and create a new one.
+    You are only able to retrieve the API key once. If you did not manage to copy it to your clipboard, delete it and create a new one.
 
 ## Install **HSFS**
 
@@ -70,7 +70,7 @@ fs = conn.get_feature_store()           # Get the project's default feature stor
 
 !!! info "Ports"
 
-    If you have trouble to connect, please ensure that your Feature Store can receive incoming traffic from your Python environment on ports 443, 9083 and 9085.
+    If you have trouble to connect, please ensure that your Feature Store can receive incoming traffic from your Python environment on ports 443, 9083 and 9085 (443,9083,9085).
 
     If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../hopsworksai/azure/getting_started/#step-5-outside-access-to-the-feature-store).
 

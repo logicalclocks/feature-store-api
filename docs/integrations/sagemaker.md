@@ -21,7 +21,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 </p>
 
 !!! info
-    You are only ably to retrieve the API key once. If you miss to copy it to your clipboard, delete it again and create a new one.
+    You are only ably to retrieve the API key once. If you did not manage to copy it to your clipboard, delete it again and create a new one.
 
 ## Quickstart API key Argument
 
@@ -185,8 +185,8 @@ fs = conn.get_feature_store()           # Get the project's default feature stor
 
 !!! info "Ports"
 
-    If you have trouble connecting, please ensure that the Security Group of your Hopsworks instance on AWS is configured to allow incoming traffic from your SageMaker instance on ports 443, 9083 and 9085. See [VPC Security Groups](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html) for more information. If your SageMaker instances are not in the same VPC as your Hopsworks instance and the Hopsworks instance is not accessible from the internet then you will need to configure [VPC Peering on AWS](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html).
+    If you have trouble connecting, please ensure that the Security Group of your Hopsworks instance on AWS is configured to allow incoming traffic from your SageMaker instance on ports 443, 9083 and 9085 (443,9083,9085). See [VPC Security Groups](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html) for more information. If your SageMaker instances are not in the same VPC as your Hopsworks instance and the Hopsworks instance is not accessible from the internet then you will need to configure [VPC Peering on AWS](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html).
 
 ## Next Steps
 
-For more information about how to connect, see the [Connection](../generated/project.md) guide. Or continue with the Data Source guide to import your own data to the Feature Store.
+For more information about how to use the Feature Store, see the [Quickstart Guide](../quickstart.md).
