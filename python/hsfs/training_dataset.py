@@ -266,7 +266,7 @@ class TrainingDataset:
         """
         self.read(split).show(n)
 
-    def add_tag(self, name: str, value: str):
+    def add_tag(self, name: str, value):
         """Attach a name/value tag to a training dataset.
 
          A tag consists of a name/value pair. Tag names are unique identifiers.
@@ -276,7 +276,8 @@ class TrainingDataset:
             name: Name of the tag to be added.
             value: Value of the tag to be added, defaults to `None`.
         """
-        self._training_dataset_engine.add_tag(self, name, value)
+        json_value = json.dumps(value)
+        self._training_dataset_engine.add_tag(self, name, json_value)
 
     def delete_tag(self, name: str):
         """Delete a tag from a training dataset.

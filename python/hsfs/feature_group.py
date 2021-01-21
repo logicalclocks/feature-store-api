@@ -151,7 +151,7 @@ class FeatureGroupBase:
         """
         return self.select_all().filter(f)
 
-    def add_tag(self, name: str, value: str):
+    def add_tag(self, name: str, value):
         """Attach a name/value tag to a feature group.
 
         A tag consists of a name/value pair. Tag names are unique identifiers.
@@ -164,7 +164,8 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
-        self._feature_group_base_engine.add_tag(self, name, value)
+        json_value = json.dumps(value)
+        self._feature_group_base_engine.add_tag(self, name, json_value)
 
     def delete_tag(self, name: str):
         """Delete a tag from a feature group.
