@@ -53,7 +53,7 @@ The Feature Store *Security Group* needs to be configured to allow traffic from 
 !!! note "Hopsworks.ai"
     If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](../../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store).
 
-Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable
+Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *3306*, *9083*, *9085*, *8020* and *30010* (443,3306,8020,30010,9083,9085) are reachable
 from the Databricks Security Group:
 
 <p align="center">

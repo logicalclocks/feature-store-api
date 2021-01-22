@@ -111,10 +111,7 @@ You can change it here if required. Proceed to the JSON tab:
   </figure>
 </p>
 
-Select *Edit* and replace the *actions* part of the JSON with the one from Hopsworks.ai Azure account configuration workflow.
-
-!!! note
-    If the access rights provided by Hopsworks.ai Azure account configuration workflow are too permissive, you can go to [Limiting Azure permissions](./restrictive_permissions.md) for more details on how to reduce the permissions.
+Select *Edit* and replace the *actions* part of the JSON with the one from Hopsworks.ai Azure account configuration workflow:
 
 <p align="center">
   <figure>
@@ -124,6 +121,9 @@ Select *Edit* and replace the *actions* part of the JSON with the one from Hopsw
     <figcaption>Hopsworks.ai permission list</figcaption>
   </figure>
 </p>
+
+!!! note
+    If the access rights provided by Hopsworks.ai Azure account configuration workflow are too permissive, you can go to [Limiting Azure permissions](./restrictive_permissions.md) for more details on how to limit the permissions.
 
 Press *Save*, proceed to *Review + create* and create the role:
 
@@ -469,7 +469,7 @@ Open ports by going to *Services* tab, selecting a service and pressing *Update*
   </figure>
 </p>
 
-## Step 4: Next steps
+## Step 6: Next steps
 
 Check out our other guides for how to get started with Hopsworks and the Feature Store:
 

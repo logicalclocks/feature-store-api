@@ -24,7 +24,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 </p>
 
 !!! info
-    You are only able to retrieve the API key once. If you forget to copy it to your clipboard, delete it and create a new one.
+    You are only able to retrieve the API key once. If you did not manage to copy it to your clipboard, delete it and create a new one.
 
 ### Store the API key in the AWS Secrets Manager
 
@@ -212,7 +212,7 @@ Your EMR cluster will now be able to access your Hopsworks Feature Store.
 ## Next Steps
 
 If you use Python, then install the [HSFS library](https://pypi.org/project/hsfs/). The Scala version of the library has already been installed to your EMR cluster.
-Use the [Connection API](../../../generated/api/connection_api/) to connect to the Hopsworks Feature Store.
+Use the [Connection API](../../../generated/api/connection_api/) to connect to the Hopsworks Feature Store. For more information about how to use the Feature Store, see the [Quickstart Guide](../../quickstart.md).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
