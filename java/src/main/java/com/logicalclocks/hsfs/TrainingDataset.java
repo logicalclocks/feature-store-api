@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
+import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -73,7 +74,6 @@ public class TrainingDataset {
 
   @Getter
   @Setter
-  @JsonIgnore
   private StorageConnector storageConnector;
 
   @Getter
@@ -103,6 +103,7 @@ public class TrainingDataset {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
+  private Utils utils = new Utils();
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
@@ -115,13 +116,7 @@ public class TrainingDataset {
     this.location = location;
     this.storageConnector = storageConnector;
 
-    if (storageConnector != null) {
-      if (storageConnector.getStorageConnectorType() == StorageConnectorType.S3) {
-        // Default it's already HOPSFS_TRAINING_DATASET
-        this.trainingDatasetType = TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
-      }
-    }
-
+    this.trainingDatasetType = utils.getTrainingDatasetType(storageConnector);
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;

@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import org.apache.parquet.Strings;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -122,16 +124,46 @@ public class StorageConnector {
 
   @Getter
   @Setter
+  private Integer generation;
+
+  @Getter
+  @Setter
+  private String directoryId;
+
+  @Getter
+  @Setter
+  private String applicationId;
+
+  @Getter
+  @Setter
+  private String serviceCredentials;
+
+  @Getter
+  @Setter
+  private String accountName;
+
+  @Getter
+  @Setter
+  private String containerName;
+
+  @Getter
+  @Setter
+  private List<Option> sparkOptions;
+
+  @Getter
+  @Setter
   private StorageConnectorType storageConnectorType;
 
   @JsonIgnore
-  public Map<String, String> getSparkOptions() throws FeatureStoreException {
-    if (StorageConnectorType.JDBC.equals(storageConnectorType)) {
-      return getJdbcOptions();
-    } else if (StorageConnectorType.REDSHIFT.equals(storageConnectorType)) {
-      return getRedshiftOptions();
+  public Map<String, String> getSparkOptionsInt() throws FeatureStoreException {
+    switch (storageConnectorType) {
+      case JDBC:
+        return getJdbcOptions();
+      case REDSHIFT:
+        return getRedshiftOptions();
+      default:
+        throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
     }
-    throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
   }
 
   @JsonIgnore

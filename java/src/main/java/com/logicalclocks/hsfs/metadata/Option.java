@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
-public enum StorageConnectorType {
-  HOPSFS,
-  S3,
-  JDBC,
-  REDSHIFT,
-  ADLS
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@NoArgsConstructor
+public class Option {
+  @Getter
+  @Setter
+  private String name;
+
+  @Getter
+  @Setter
+  private String value;
 }

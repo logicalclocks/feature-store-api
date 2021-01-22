@@ -330,12 +330,13 @@ class TrainingDataset:
         return self
 
     def _infer_training_dataset_type(self, connector_type):
-        if connector_type == StorageConnector.HOPSFS:
+        if connector_type == StorageConnector.HOPSFS or connector_type is None:
             return self.HOPSFS
-        elif connector_type == StorageConnector.S3:
+        elif (
+            connector_type == StorageConnector.S3
+            or connector_type == StorageConnector.ADLS
+        ):
             return self.EXTERNAL
-        elif connector_type is None:
-            return self.HOPSFS
         else:
             raise TypeError(
                 "Storage connectors of type {} are currently not supported for training datasets.".format(
@@ -352,7 +353,7 @@ class TrainingDataset:
             "version": self._version,
             "description": self._description,
             "dataFormat": self._data_format,
-            "storageConnectorId": self._storage_connector.id,
+            "storageConnector": self._storage_connector,
             "location": self._location,
             "trainingDatasetType": self._training_dataset_type,
             "features": self._features,
