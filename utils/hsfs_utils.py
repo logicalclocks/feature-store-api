@@ -59,7 +59,7 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
     td = fs.get_training_dataset(name=job_conf["name"], version=job_conf["version"])
     td.insert(
         q,
-        overwrite=job_conf.pop("overwrite", False) or {},
+        overwrite=job_conf.pop("overwrite", False) or False,
         write_options=job_conf.pop("write_options", {}) or {},
     )
 
