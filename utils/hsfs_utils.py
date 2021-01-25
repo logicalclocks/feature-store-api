@@ -45,7 +45,7 @@ def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
     df = get_fg_spark_df(job_conf)
     fg = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
 
-    fg.insert(df, write_options=job_conf.pop("write_options", {}))
+    fg.insert(df, write_options=job_conf.pop("write_options", {}) or {})
 
 
 def create_td(job_conf: Dict[Any, Any]) -> None:
@@ -59,8 +59,8 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
     td = fs.get_training_dataset(name=job_conf["name"], version=job_conf["version"])
     td.insert(
         q,
-        overwrite=job_conf.pop("overwrite", False),
-        write_options=job_conf.pop("write_options", {}),
+        overwrite=job_conf.pop("overwrite", False) or {},
+        write_options=job_conf.pop("write_options", {}) or {},
     )
 
 
