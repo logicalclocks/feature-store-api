@@ -125,7 +125,7 @@ class TrainingDatasetEngine:
         )
 
     def get_serving_vector(self, training_dataset, entry):
-        """Get ... for a training dataset."""
+        """Assembles serving vector from online feature store."""
 
         serving_vector = []
 
