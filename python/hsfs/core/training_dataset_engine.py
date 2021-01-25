@@ -182,7 +182,7 @@ class TrainingDatasetEngine:
 
         training_dataset.prepared_statement_connection = jdbc_connection
         training_dataset.prepared_statements = prepared_statements_dict
-        training_dataset.serving_vector_keys = serving_vector_keys
+        training_dataset.serving_keys = serving_vector_keys
 
     def _create_mysql_connection(self, online_conn):
         # TODO: __init__() got an unexpected keyword argument 'useSSL' and  allowPublicKeyRetrieval=true

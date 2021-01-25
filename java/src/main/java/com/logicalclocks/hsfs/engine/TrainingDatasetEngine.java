@@ -76,7 +76,7 @@ public class TrainingDatasetEngine {
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
     // save unique primary key names that will be used by user to retrieve serving vector
-    HashSet<String> servingVectorKeys = trainingDataset.getServingVectorKeys();
+    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
           jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
@@ -89,7 +89,7 @@ public class TrainingDatasetEngine {
     }
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
-    trainingDataset.setServingVectorKeys(servingVectorKeys);
+    trainingDataset.setServingKeys(servingVectorKeys);
   }
 
 

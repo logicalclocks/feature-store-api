@@ -124,7 +124,7 @@ public class TrainingDataset {
   @Getter
   @Setter
   @JsonIgnore
-  private HashSet<String> servingVectorKeys = new HashSet<>();
+  private HashSet<String> servingKeys = new HashSet<>();
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);

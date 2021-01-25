@@ -63,7 +63,7 @@ class TrainingDataset:
         label=None,
         prepared_statement_connection=None,
         prepared_statements=None,
-        serving_vector_keys=None,
+        serving_keys=None,
     ):
         self._id = id
         self._name = name
@@ -77,7 +77,7 @@ class TrainingDataset:
         self._feature_store_id = featurestore_id
         self._prepared_statement_connection = prepared_statement_connection
         self._prepared_statements = prepared_statements
-        self._serving_vector_keys = serving_vector_keys
+        self._serving_keys = serving_keys
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -599,10 +599,10 @@ class TrainingDataset:
         self._prepared_statements = prepared_statements
 
     @property
-    def serving_vector_keys(self):
+    def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
         return self._serving_vector_keys
 
-    @serving_vector_keys.setter
-    def serving_vector_keys(self, serving_vector_keys):
+    @serving_keys.setter
+    def serving_keys(self, serving_vector_keys):
         self._serving_vector_keys = serving_vector_keys
