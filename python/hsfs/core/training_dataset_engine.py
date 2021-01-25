@@ -158,7 +158,7 @@ class TrainingDatasetEngine:
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", "")
 
-            # In java prepared statement `?` is used for prepared statement parametrization.
+            # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
             pk_names = [
                 psp.name
@@ -167,10 +167,19 @@ class TrainingDatasetEngine:
                     key=lambda psp: psp.index,
                 )
             ]
+            # Now we have ordered pk_names, iterate over it and replace `?` with `:feature_name` one by one.
+            # Regex `"^(.*?)\?"` will identify 1st occurrence of `?` in the sql string and replace it with provided
+            # feature name, e.g. `:feature_name`:. As we iteratively update `query_online` we are always aiming to
+            # replace 1st occurrence of `?`. This approach can only work if primary key names are sorted properly.
+            # Regex `"^(.*?)\?"`:
+            # `^` - asserts position at start of a line
+            # `.*?` - matches any character (except for line terminators). `*?` Quantifier —  Matches between zero and
+            # unlimited times, expanding until 1st occurrence of `?` character.
+
             for pk_name in pk_names:
                 serving_vector_keys.add(pk_name)
                 query_online = re.sub(
-                    r"^(.*?(\?.*?){0})\?",
+                    r"^(.*?)\?",
                     r"\1:" + pk_name,
                     query_online,
                 )
