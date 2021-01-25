@@ -37,8 +37,7 @@ public class StatisticsApi {
 
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,"
-      + "sort_by,offset,limit}";
+  public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,sort_by,offset,limit}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsApi.class);
 
@@ -158,4 +157,5 @@ public class StatisticsApi {
     }
     return null;
   }
+
 }
