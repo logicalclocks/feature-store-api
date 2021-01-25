@@ -174,7 +174,7 @@ class TrainingDatasetEngine:
             # Regex `"^(.*?)\?"`:
             # `^` - asserts position at start of a line
             # `.*?` - matches any character (except for line terminators). `*?` Quantifier —  Matches between zero and
-            # unlimited times, expanding until 1st occurrence of `?` character.
+            # unlimited times, expanding until needed, i.e 1st occurrence of `\?` character.
             for pk_name in pk_names:
                 serving_vector_keys.add(pk_name)
                 query_online = re.sub(
