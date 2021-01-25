@@ -40,8 +40,6 @@ class PreparedStatementParameter:
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
-        _ = json_decamelized.pop("href")
         self.__init__(**json_decamelized)
         return self
 

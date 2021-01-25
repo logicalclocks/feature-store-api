@@ -63,6 +63,7 @@ class TrainingDataset:
         label=None,
         prepared_statement_connection=None,
         prepared_statements=None,
+        serving_vector_keys=None,
     ):
         self._id = id
         self._name = name
@@ -76,6 +77,7 @@ class TrainingDataset:
         self._feature_store_id = featurestore_id
         self._prepared_statement_connection = prepared_statement_connection
         self._prepared_statements = prepared_statements
+        self._serving_vector_keys = serving_vector_keys
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -548,13 +550,15 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
-    def get_serving_vector(self, entry):
-        """Returns .... this training dataset
+    def get_serving_vector(self, entry: Dict[str, Any]):
+        """Returns assembled serving vector from online feature store.
 
         # Arguments
-            entry: ...
+            entry: dictionary of training dataset feature group primary key names as keys and values provided by
+            serving application.
         # Returns
-            `array`...
+            `array` Array of features related to provided values, ordered according to positions of this features in
+            training dataset query.
         """
         return self._training_dataset_engine.get_serving_vector(self, entry)
 
@@ -576,10 +580,7 @@ class TrainingDataset:
 
     @property
     def prepared_statement_connection(self):
-        """The ... of the training dataset.
-
-        ...
-        """
+        """JDBC connection to online features store."""
         return self._prepared_statement_connection
 
     @prepared_statement_connection.setter
@@ -588,12 +589,20 @@ class TrainingDataset:
 
     @property
     def prepared_statements(self):
-        """The ... of the training dataset.
-
-        ...
+        """The dict object of prepared_statements as values and kes as indices of positions in the query for
+        selecting features from feature groups of the training dataset.
         """
         return self._prepared_statements
 
     @prepared_statements.setter
     def prepared_statements(self, prepared_statements):
         self._prepared_statements = prepared_statements
+
+    @property
+    def serving_vector_keys(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        return self._serving_vector_keys
+
+    @serving_vector_keys.setter
+    def serving_vector_keys(self, serving_vector_keys):
+        self._serving_vector_keys = serving_vector_keys

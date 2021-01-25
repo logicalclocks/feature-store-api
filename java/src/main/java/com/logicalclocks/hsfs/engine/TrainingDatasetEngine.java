@@ -40,6 +40,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,17 +75,21 @@ public class TrainingDatasetEngine {
     Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
-
+    // save unique primary key names that will be used by user to retrieve serving vector
+    HashSet<String> servingVectorKeys = trainingDataset.getServingVectorKeys();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
           jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
       HashMap<String, Integer> parameterIndices = new HashMap<>();
-      servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter ->
-          parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex()));
+      servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
+        servingVectorKeys.add(preparedStatementParameter.getName());
+        parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex());
+      });
       preparedStatementParameters.put(servingPreparedStatement.getPreparedStatementIndex(), parameterIndices);
     }
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
+    trainingDataset.setServingVectorKeys(servingVectorKeys);
   }
 
 

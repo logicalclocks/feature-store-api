@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -119,6 +120,11 @@ public class TrainingDataset {
   @Setter
   @JsonIgnore
   private TreeMap<Integer, PreparedStatement> preparedStatements;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private HashSet<String> servingVectorKeys = new HashSet<>();
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);

@@ -11,15 +11,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
 
 import humps
 import json
@@ -40,7 +31,6 @@ class ServingPreparedStatement:
         count=None,
         href=None,
     ):
-
         self._feature_group_id = feature_group_id
         self._prepared_statement_index = prepared_statement_index
         self._prepared_statement_parameters = [
@@ -54,14 +44,10 @@ class ServingPreparedStatement:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if json_decamelized["count"] >= 1:
-            return [cls(**pstm_dto) for pstm_dto in json_decamelized["items"]]
-        return cls(**json_decamelized)
+        return [cls(**pstm_dto) for pstm_dto in json_decamelized["items"]]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
-        _ = json_decamelized.pop("href")
         self.__init__(**json_decamelized)
         return self
 

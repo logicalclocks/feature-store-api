@@ -154,6 +154,7 @@ class TrainingDatasetEngine:
         )
 
         prepared_statements_dict = {}
+        serving_vector_keys = set()
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", "")
 
@@ -167,6 +168,7 @@ class TrainingDatasetEngine:
                 )
             ]
             for pk_name in pk_names:
+                serving_vector_keys.add(pk_name)
                 query_online = re.sub(
                     r"^(.*?(\?.*?){0})\?",
                     r"\1:" + pk_name,
@@ -180,6 +182,7 @@ class TrainingDatasetEngine:
 
         training_dataset.prepared_statement_connection = jdbc_connection
         training_dataset.prepared_statements = prepared_statements_dict
+        training_dataset.serving_vector_keys = serving_vector_keys
 
     def _create_mysql_connection(self, online_conn):
         # TODO: __init__() got an unexpected keyword argument 'useSSL' and  allowPublicKeyRetrieval=true
