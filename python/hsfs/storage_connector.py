@@ -109,7 +109,11 @@ class StorageConnector:
         self._service_credential = service_credential
         self._container_name = container_name
 
-        self._spark_options = {opt["name"]: opt["value"] for opt in spark_options}
+        self._spark_options = (
+            {opt["name"]: opt["value"] for opt in spark_options}
+            if spark_options
+            else {}
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
