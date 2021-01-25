@@ -434,7 +434,10 @@ class FeatureGroup(FeatureGroupBase):
             self._primary_key = primary_key
             self._partition_key = partition_key
             self._hudi_precombine_key = (
-                hudi_precombine_key if time_travel_format.upper() == "HUDI" else None
+                hudi_precombine_key
+                if time_travel_format is not None
+                and time_travel_format.upper() == "HUDI"
+                else None
             )
             self.statistics_config = statistics_config
 
