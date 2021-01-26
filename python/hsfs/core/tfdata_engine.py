@@ -413,18 +413,12 @@ class TFDataEngine:
         all_list = hdfs.ls(path, recursive=True)
 
         # Remove directories and spark '_SUCCESS'
-        include_file = True
         for file in all_list:
             # remove empty file if any
-            _file_size = hdfs.path.getsize(file)
-            if _file_size == 0:
-                include_file = False
-            else:
-                include_file = True
             if (
                 not hdfs.path.isdir(file)
                 and not file.endswith("_SUCCESS")
-                and include_file
+                and hdfs.path.getsize(file) >= 1
             ):
                 input_files.append(file)
 
