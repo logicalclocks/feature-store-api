@@ -65,7 +65,7 @@ public class TrainingDatasetEngine {
 
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.getSparkOptions();
+    Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
     Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
         jdbcOptions.get("password"));
     jdbcConnection.setAutoCommit(false);
@@ -206,25 +206,6 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
   }
 
-  public String getJdbcPreparedStatement(TrainingDataset trainingDataset)
-      throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getJdbcPreparedStatement(trainingDataset).getStorageQuery(Storage.ONLINE);
-  public void initPreparedStatement(TrainingDataset trainingDataset)
-      throws FeatureStoreException, IOException, SQLException {
-
-    List<ServingPreparedStatement> servingPreparedStatements =
-        trainingDatasetApi.getServingPreparedStatement(trainingDataset).getServingPreparedStatements();
-
-    StorageConnector storageConnector =
-        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.getSparkOptions();
-    Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
-        jdbcOptions.get("password"));
-
-    // map of prepared statement index and its corresponding parameter indices
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
-    // save map of fg index and its prepared statement
-    TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry) throws SQLException,
       FeatureStoreException, IOException {
 
