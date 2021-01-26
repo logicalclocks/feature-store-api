@@ -1,3 +1,4 @@
+#
 #  Copyright 2021. Logical Clocks AB
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -44,7 +45,10 @@ class ServingPreparedStatement:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        return [cls(**pstm_dto) for pstm_dto in json_decamelized["items"]]
+        if json_decamelized["count"] == 0:
+            return []
+        else:
+            return [cls(**pstm_dto) for pstm_dto in json_decamelized["items"]]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
