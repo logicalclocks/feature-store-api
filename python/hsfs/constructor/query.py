@@ -238,7 +238,9 @@ class Query:
             A partially deserialize query object
         """
         json_decamelized = humps.decamelize(json_dict)
-        return cls(**json_decamelized)
+        new = cls(**json_decamelized)
+        new._joins = humps.camelize(new._joins)
+        return new
 
     def to_string(self, online=False):
         fs_query_instance = self._query_constructor_api.construct_query(self)
