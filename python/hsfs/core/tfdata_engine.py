@@ -76,9 +76,7 @@ class TFDataEngine:
         self._training_dataset_format = self._training_dataset.data_format
 
         self._input_files = self._get_training_dataset_files(
-            self._training_dataset.location,
-            self._split,
-            filter_empty=True if self._training_dataset_format == "csv" else False,
+            self._training_dataset.location, self._split
         )
 
         if self._feature_names is None:
@@ -380,9 +378,7 @@ class TFDataEngine:
 
         return dataset, tfrecord_feature_description
 
-    def _get_training_dataset_files(
-        self, training_dataset_location, split, filter_empty=False
-    ):
+    def _get_training_dataset_files(self, training_dataset_location, split):
         """
         returns list of absolute path of training input files
         :param training_dataset_location: training_dataset_location
@@ -395,7 +391,7 @@ class TFDataEngine:
 
         if training_dataset_location.startswith("hopsfs"):
             input_files = self._get_hopsfs_dataset_files(
-                training_dataset_location, split, filter_empty
+                training_dataset_location, split
             )
         elif training_dataset_location.startswith("s3"):
             input_files = self._get_s3_dataset_files(training_dataset_location, split)
@@ -405,7 +401,7 @@ class TFDataEngine:
         return input_files
 
     @staticmethod
-    def _get_hopsfs_dataset_files(training_dataset_location, split, filter_empty):
+    def _get_hopsfs_dataset_files(training_dataset_location, split):
         path = training_dataset_location.replace("hopsfs", "hdfs")
         if split is None:
             path = hdfs.path.abspath(path)
@@ -420,12 +416,11 @@ class TFDataEngine:
         include_file = True
         for file in all_list:
             # remove empty file if any
-            if filter_empty:
-                _file_size = hdfs.path.getsize(file)
-                if _file_size == 0:
-                    include_file = False
-                else:
-                    include_file = True
+            _file_size = hdfs.path.getsize(file)
+            if _file_size == 0:
+                include_file = False
+            else:
+                include_file = True
             if (
                 not hdfs.path.isdir(file)
                 and not file.endswith("_SUCCESS")
