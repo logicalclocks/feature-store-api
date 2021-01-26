@@ -50,7 +50,7 @@ class StatisticsEngine:
                 else:
                     feature_dataframe = metadata_instance.read()
 
-            commit_time = datetime.datetime.now()
+            commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
             if len(feature_dataframe.head(1)) == 0:
                 raise exceptions.FeatureStoreException(
                     "There is no data in the entity that you are trying to compute "
