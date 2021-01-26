@@ -355,7 +355,8 @@ class FeatureGroupBase:
         """
         fg_commit_id = None
         if wallclock_time is not None:
-            # TODO (davit): check if its time travel enabled fg?
+            # Retrieve fg commit id related this wall clock time and recompute statistics. Backend will throw exception
+            # if its not time travel enabled feature group.
             fg_commit_id = [
                 commit_id
                 for commit_id in sorted(
