@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+import json
+
 from hsfs import client, tag
 
 
@@ -55,7 +57,8 @@ class TagsApi:
             name,
         ]
         headers = {"content-type": "application/json"}
-        _client._send_request("PUT", path_params, headers=headers, data=value)
+        json_value = json.dumps(value)
+        _client._send_request("PUT", path_params, headers=headers, data=json_value)
 
     def delete(self, metadata_instance, name):
         """Delete a tag from a training dataset or feature group.
@@ -91,8 +94,8 @@ class TagsApi:
         :type metadata_instance: TrainingDataset, FeatureGroup
         :param name: tag name
         :type name: str
-        :return: list of tags as name/value pairs
-        :rtype: list of dict
+        :return: dict of tag name/values
+        :rtype: dict
         """
         _client = client.get_instance()
         path_params = [
@@ -105,7 +108,12 @@ class TagsApi:
             "tags",
         ]
 
-        if name is None:
+        if name is not None:
             path_params.append(name)
 
-        return tag.Tag.from_response_json(_client._send_request("GET", path_params))
+        return {
+            tag._name: json.loads(tag._value)
+            for tag in tag.Tag.from_response_json(
+                _client._send_request("GET", path_params)
+            )
+        }

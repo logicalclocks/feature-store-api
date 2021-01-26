@@ -164,8 +164,8 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
-        json_value = json.dumps(value)
-        self._feature_group_base_engine.add_tag(self, name, json_value)
+
+        self._feature_group_base_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
         """Delete a tag from a feature group.
