@@ -27,17 +27,30 @@ class StatisticsEngine:
             feature_store_id, entity_type
         )
 
-    def compute_statistics(self, metadata_instance, feature_dataframe=None):
+    def compute_statistics(
+        self, metadata_instance, feature_dataframe=None, feature_group_commit_id=None
+    ):
         """Compute statistics for a dataframe and send the result json to Hopsworks."""
         if engine.get_type() == "spark":
+
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Hive engine
             # and calling compute_statistics
-            feature_dataframe = (
-                feature_dataframe if feature_dataframe else metadata_instance.read()
-            )
 
-            commit_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            # feature_dataframe = (
+            #     feature_dataframe if feature_dataframe else metadata_instance.read()
+            # )
+            if feature_dataframe is None:
+                if feature_group_commit_id is not None:
+                    feature_dataframe = (
+                        metadata_instance.select_all()
+                        .as_of(feature_group_commit_id.strftime("%Y%m%d%H%M%S"))
+                        .read(online=False, dataframe_type="default", read_options={})
+                    )
+                else:
+                    feature_dataframe = metadata_instance.read()
+
+            commit_time = datetime.datetime.now()
             if len(feature_dataframe.head(1)) == 0:
                 raise exceptions.FeatureStoreException(
                     "There is no data in the entity that you are trying to compute "
@@ -50,7 +63,9 @@ class StatisticsEngine:
                 metadata_instance.statistics_config.correlations,
                 metadata_instance.statistics_config.histograms,
             )
-            stats = statistics.Statistics(commit_str, content_str)
+            stats = statistics.Statistics(
+                commit_time, feature_group_commit_id, content_str
+            )
             self._statistics_api.post(metadata_instance, stats)
             return stats
 

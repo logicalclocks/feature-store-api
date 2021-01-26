@@ -130,7 +130,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
 
-    def commit_details(self, feature_group, limit):
+    def commit_details(self, feature_group, wallclock_time, limit):
         hudi_engine_instance = hudi_engine.HudiEngine(
             feature_group.feature_store_id,
             feature_group.feature_store_name,
@@ -139,7 +139,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             engine.get_instance()._spark_session,
         )
         feature_group_commits = self._feature_group_api.commit_details(
-            feature_group, limit
+            feature_group, wallclock_time, limit
         )
         commit_details = {}
         for feature_group_commit in feature_group_commits:

@@ -338,21 +338,39 @@ class FeatureGroupBase:
         else:
             return self._statistics_engine.get(self, commit_time)
 
-    def compute_statistics(self):
+    def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the
         feature store.
         Statistics are only computed for data in the offline storage of the feature
         group.
+        # Arguments
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+                Only valid if feature group is time travel enabled. If specified will recompute statistics on
+                feature group as of specific point in time. If not specified then will compute statistics
+                as of most recent time of this fg. Defaults to `None`.
         # Returns
             `Statistics`. The statistics metadata object.
         # Raises
             `RestAPIError`. Unable to persist the statistics.
         """
+        fg_commit_id = None
+        if wallclock_time is not None:
+            # TODO (davit): check if its time travel enabled fg?
+            fg_commit_id = [
+                commit_id
+                for commit_id in sorted(
+                    self._feature_group_engine.commit_details(
+                        self, wallclock_time, 0
+                    ).keys()
+                )
+            ][0]
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
             # for the Hive engine. The Hive engine is going to setup a Spark Job
             # to update the statistics.
-            return self._statistics_engine.compute_statistics(self)
+            return self._statistics_engine.compute_statistics(
+                self, fg_commit_id if fg_commit_id is not None else None
+            )
         else:
             warnings.warn(
                 (
@@ -711,11 +729,14 @@ class FeatureGroup(FeatureGroupBase):
             # if Hive, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
-    def commit_details(self, limit: Optional[int] = None):
+    def commit_details(
+        self, wallclock_time: Optional[str], limit: Optional[int] = None
+    ):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
 
         # Arguments
+            wallclock_time: Commit details as of specific point in time. Defaults to `None`.
             limit: Number of commits to retrieve. Defaults to `None`.
 
         # Returns
@@ -733,7 +754,7 @@ class FeatureGroup(FeatureGroupBase):
             raise FeatureStoreException(
                 "commit_details can only be used on time travel enabled feature groups"
             )
-        return self._feature_group_engine.commit_details(self, limit)
+        return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
     def commit_delete_record(
         self,
