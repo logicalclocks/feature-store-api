@@ -104,9 +104,13 @@ class TrainingDatasetEngine:
         """Remove a tag from a training dataset."""
         self._tags_api.delete(training_dataset, name)
 
-    def get_tags(self, training_dataset, name):
-        """Get tag with a certain name or all tags for a training dataset."""
-        return [tag.to_dict() for tag in self._tags_api.get(training_dataset, name)]
+    def get_tag(self, training_dataset, name):
+        """Get tag with a certain name for a training dataset."""
+        return self._tags_api.get(training_dataset, name)[name].to_dict()
+
+    def get_tags(self, training_dataset):
+        """Get all tags for a training dataset."""
+        return [tag.to_dict() for tag in self._tags_api.get(training_dataset)]
 
     def update_statistics_config(self, training_dataset):
         """Update the statistics configuration of a feature group."""

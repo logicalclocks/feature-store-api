@@ -81,7 +81,7 @@ class TagsApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def get(self, metadata_instance, name):
+    def get(self, metadata_instance, name: str = None):
         """Get the tags of a training dataset or feature group.
 
         Gets all tags if no tag name is specified.
@@ -105,7 +105,7 @@ class TagsApi:
             "tags",
         ]
 
-        if name:
+        if name is None:
             path_params.append(name)
 
         return tag.Tag.from_response_json(_client._send_request("GET", path_params))

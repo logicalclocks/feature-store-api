@@ -289,18 +289,23 @@ class TrainingDataset:
         """
         self._training_dataset_engine.delete_tag(self, name)
 
-    def get_tag(self, name=None):
-        """Get the tags of a training dataset.
-
-        Tag names are unique identifiers. Returns all tags if no tag name is
-        specified.
+    def get_tag(self, name):
+        """Get the tags of a training dataset. Tag names are unique identifiers.
 
         # Arguments
             name: Name of the tag to get, defaults to `None`.
         # Returns
             `List[Tag]`. List of tags as name/value pairs.
         """
-        return self._training_dataset_engine.get_tags(self, name)
+        return self._training_dataset_engine.get_tag(self, name)
+
+    def get_tags(self):
+        """Returns all tags attached to a training dataset.
+
+        # Returns
+            `List[Tag]`. List of tags as name/value pairs.
+        """
+        return self._training_dataset_engine.get_tags(self)
 
     def update_statistics_config(self):
         """Update the statistics configuration of the training dataset.

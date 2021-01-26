@@ -180,14 +180,24 @@ class FeatureGroupBase:
         """
         self._feature_group_base_engine.delete_tag(self, name)
 
-    def get_tag(self, name: str = None):
+    def get_tag(self, name: str):
         """Get the tags of a feature group.
 
-        Tag names are unique identifiers. Returns all tags if no tag name is
-        specified.
+        Tag names are unique identifiers.
 
         # Arguments
             name: Name of the tag to get, defaults to `None`.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_group_base_engine.get_tag(self, name)
+
+    def get_tags(self):
+        """Returns all tags attached to a feature group.
 
         # Returns
             `list[Tag]`. List of tags as name/value pairs.
@@ -195,7 +205,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
-        return self._feature_group_base_engine.get_tags(self, name)
+        return self._feature_group_base_engine.get_tags(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
