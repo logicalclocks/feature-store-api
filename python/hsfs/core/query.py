@@ -15,34 +15,54 @@
 #
 
 import json
+import humps
+from typing import Optional, List
 
 from hsfs import util, engine
-from hsfs.core import join, query_constructor_api, storage_connector_api
+from hsfs.core import query_constructor_api, storage_connector_api
+from hsfs.constructor import join
 
 
 class Query:
     def __init__(
         self,
-        feature_store_name,
-        feature_store_id,
         left_feature_group,
         left_features,
-        left_featuregroup_start_time=None,
-        left_featuregroup_end_time=None,
+        feature_store_name=None,
+        feature_store_id=None,
+        left_feature_group_start_time=None,
+        left_feature_group_end_time=None,
+        joins=[],
     ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
-        self._left_featuregroup_start_time = left_featuregroup_start_time
-        self._left_featuregroup_end_time = left_featuregroup_end_time
-        self._joins = []
+        self._left_feature_group_start_time = left_feature_group_start_time
+        self._left_feature_group_end_time = left_feature_group_end_time
+        self._joins = joins
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
 
-    def read(self, online=False, dataframe_type="default", read_options={}):
+    def read(
+        self,
+        online: Optional[bool] = False,
+        dataframe_type: Optional[str] = "default",
+        read_options: Optional[dict] = {},
+    ):
+        """Read the specified query into a DataFrame.
+        It is possible to specify the storage (online/offline) to read from and the
+        type of the output DataFrame (Spark, Pandas, Numpy, Python Lists).
+        # Arguments
+            online: Read from online storage. Defaults to `False`.
+            dataframe_type: DataFrame type to return. Defaults to `"default"`.
+            read_options: Optional dictionary with read options for Spark.
+                Defaults to `{}`.
+        # Returns
+            `DataFrame`: DataFrame depending on the chosen type.
+        """
         query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -67,7 +87,12 @@ class Query:
             sql_query, self._feature_store_name, online_conn, dataframe_type
         )
 
-    def show(self, n, online=False):
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first N rows of the Query.
+        # Arguments
+            n: Number of rows to show.
+            online: Show from online storage. Defaults to `False`.
+        """
         query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -92,7 +117,31 @@ class Query:
             sql_query, self._feature_store_name, n, online_conn
         )
 
-    def join(self, sub_query, on=[], left_on=[], right_on=[], join_type="inner"):
+    def join(
+        self,
+        sub_query: "Query",
+        on: Optional[List[str]] = [],
+        left_on: Optional[List[str]] = [],
+        right_on: Optional[List[str]] = [],
+        join_type: Optional[str] = "inner",
+    ):
+        """Join Query with another Query.
+        If no join keys are specified, Hopsworks will use the maximal matching subset of
+        the primary keys of the feature groups you are joining.
+        Joins of one level are supported, no neted joins.
+        # Arguments
+            sub_query: Right-hand side query to join.
+            on: List of feature names to join on if they are available in both
+                feature groups. Defaults to `[]`.
+            left_on: List of feature names to join on from the left feature group of the
+                join. Defaults to `[]`.
+            right_on: List of feature names to join on from the right feature group of
+                the join. Defaults to `[]`.
+            join_type: Type of join to perform, can be `"inner"`, `"outer"`, `"left"` or
+                `"right"`. Defaults to "inner".
+        # Returns
+            `Query`: A new Query object representing the join.
+        """
         self._joins.append(
             join.Join(sub_query, on, left_on, right_on, join_type.upper())
         )
@@ -100,13 +149,13 @@ class Query:
 
     def as_of(self, wallclock_time):
         for join in self._joins:
-            join.query.left_featuregroup_end_time = wallclock_time
-        self.left_featuregroup_end_time = wallclock_time
+            join.query.left_feature_group_end_time = wallclock_time
+        self.left_feature_group_end_time = wallclock_time
         return self
 
     def pull_changes(self, wallclock_start_time, wallclock_end_time):
-        self.left_featuregroup_start_time = wallclock_start_time
-        self.left_featuregroup_end_time = wallclock_end_time
+        self.left_feature_group_start_time = wallclock_start_time
+        self.left_feature_group_end_time = wallclock_end_time
         return self
 
     def json(self):
@@ -114,12 +163,28 @@ class Query:
 
     def to_dict(self):
         return {
+            "featureStoreName": self._feature_store_name,
+            "featureStoreId": self._feature_store_id,
             "leftFeatureGroup": self._left_feature_group,
             "leftFeatures": self._left_features,
-            "leftFeatureGroupStartTime": self._left_featuregroup_start_time,
-            "leftFeatureGroupEndTime": self._left_featuregroup_end_time,
+            "leftFeatureGroupStartTime": self._left_feature_group_start_time,
+            "leftFeatureGroupEndTime": self._left_feature_group_end_time,
             "joins": self._joins,
         }
+
+    @classmethod
+    def _hopsworks_json(cls, json_dict):
+        """
+        This method is used by the Hopsworks helper job.
+        It does not fully deserialize the message as the usecase is to
+        send it straight back to Hopsworks to read the content of the query
+        Args:
+            json_dict (str): a json string containing a query object
+        Returns:
+            A partially deserialize query object
+        """
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(**json_decamelized)
 
     def to_string(self, online=False):
         fs_query_instance = self._query_constructor_api.construct_query(self)
@@ -134,26 +199,25 @@ class Query:
 
         for on_demand_fg_alias in on_demand_fg_aliases:
             engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group.query,
-                on_demand_fg_alias.on_demand_feature_group.storage_connector,
+                on_demand_fg_alias.on_demand_feature_group,
                 on_demand_fg_alias.alias,
             )
 
     @property
-    def left_featuregroup_start_time(self):
-        return self._left_featuregroup_start_time
+    def left_feature_group_start_time(self):
+        return self._left_feature_group_start_time
 
     @property
-    def left_featuregroup_end_time(self):
-        return self._left_featuregroup_start_time
+    def left_feature_group_end_time(self):
+        return self._left_feature_group_start_time
 
-    @left_featuregroup_start_time.setter
-    def left_featuregroup_start_time(self, left_featuregroup_start_time):
-        self._left_featuregroup_start_time = left_featuregroup_start_time
+    @left_feature_group_start_time.setter
+    def left_feature_group_start_time(self, left_feature_group_start_time):
+        self._left_feature_group_start_time = left_feature_group_start_time
 
-    @left_featuregroup_end_time.setter
-    def left_featuregroup_end_time(self, left_featuregroup_start_time):
-        self._left_featuregroup_end_time = left_featuregroup_start_time
+    @left_feature_group_end_time.setter
+    def left_feature_group_end_time(self, left_feature_group_start_time):
+        self._left_feature_group_end_time = left_feature_group_start_time
 
     def _register_hudi_tables(
         self, hudi_feature_groups, feature_store_id, feature_store_name, read_options
