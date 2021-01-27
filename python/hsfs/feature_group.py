@@ -731,7 +731,7 @@ class FeatureGroup(FeatureGroupBase):
             self.compute_statistics()
 
     def commit_details(
-        self, wallclock_time: Optional[str], limit: Optional[int] = None
+        self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
     ):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
