@@ -361,7 +361,7 @@ class FeatureGroupBase:
                 commit_id
                 for commit_id in sorted(
                     self._feature_group_engine.commit_details(
-                        self, wallclock_time, 0
+                        self, wallclock_time, 1
                     ).keys()
                 )
             ][0]
