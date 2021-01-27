@@ -47,8 +47,6 @@ setup(
     download_url="https://github.com/logicalclocks/feature-store-api/releases/tag/"
     + __version__,
     packages=find_packages(),
-    long_description=read("README.md"),
-    long_description_content_type="text/markdown",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Topic :: Utilities",
