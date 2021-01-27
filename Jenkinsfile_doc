@@ -7,27 +7,33 @@ pipeline {
             agent {
                 docker {
                     label "local"
-                    image "docker.hops.works/hopsworks_twine:0.0.3"
+                    image "docker.hops.works/hopsworks_twine:0.0.4"
                 }
             }
-
+            environment {
+              TOKEN = credentials('token')
+            }
             steps {
+                dir("java") {
+                    sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\\[|Download\\w+:)' > ../version.log"
+                }
                 dir("python") {
                     sh "pip3 install -e .[dev,docs]"
                 }
                 sh "python3 auto_doc.py"
-                sh "mkdocs build"
-            }
-        }
-
-        stage("publish") {
-            agent {
-                node "local"
-            }
-
-            steps {
-                sh "rm -r /opt/docs/*"
-                sh "cp -r site/* /opt/docs/"
+                sh '''
+                  git config user.name jenkins
+                  git config user.email jenkins@hops.works
+                  export VERSION=\$(cat version.log) &&
+                  if [[ "$VERSION" == *SNAPSHOT ]]
+                  then
+                    export TAG="dev --update-aliases"
+                  else
+                    export TAG=
+                  fi
+                  echo "$token"
+                  mike deploy \$VERSION \$TAG --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
+                '''
             }
         }
     }
