@@ -601,8 +601,8 @@ class TrainingDataset:
     @property
     def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        return self._serving_vector_keys
+        return self._serving_keys
 
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
-        self._serving_vector_keys = serving_vector_keys
+        self._serving_keys = serving_vector_keys
