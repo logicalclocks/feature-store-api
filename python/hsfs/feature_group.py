@@ -355,15 +355,13 @@ class FeatureGroupBase:
         """
         fg_commit_id = None
         if wallclock_time is not None:
-            # Retrieve fg commit id related this wall clock time and recompute statistics. Backend will throw exception
-            # if its not time travel enabled feature group.
+            # Retrieve fg commit id related to this wall clock time and recompute statistics. Backend will throw
+            # exception if its not time travel enabled feature group.
             fg_commit_id = [
                 commit_id
-                for commit_id in sorted(
-                    self._feature_group_engine.commit_details(
-                        self, wallclock_time, 1
-                    ).keys()
-                )
+                for commit_id in self._feature_group_engine.commit_details(
+                    self, wallclock_time, 1
+                ).keys()
             ][0]
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation

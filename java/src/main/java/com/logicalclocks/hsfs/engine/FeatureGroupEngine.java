@@ -211,9 +211,10 @@ public class FeatureGroupEngine {
     return getCommitDetails(featureGroup, null, limit);
   }
 
-  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup, String wallclockTime)
+  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
+                                                                     String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException {
-    return getCommitDetails(featureGroup, wallclockTime, 0);
+    return getCommitDetails(featureGroup, wallclockTime, limit);
   }
 
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,

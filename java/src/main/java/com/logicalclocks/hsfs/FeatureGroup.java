@@ -355,6 +355,11 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetails(this, limit);
   }
 
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
+  }
+
   @JsonIgnore
   public Expectation getExpectation(String name) throws FeatureStoreException, IOException {
     return expectationsApi.get(this, name);
@@ -431,7 +436,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
-          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime);
+          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
       return statisticsEngine.computeStatistics(this, featureData, commitId);
