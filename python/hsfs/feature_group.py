@@ -370,7 +370,10 @@ class FeatureGroupBase:
             # for the Hive engine. The Hive engine is going to setup a Spark Job
             # to update the statistics.
             return self._statistics_engine.compute_statistics(
-                self, fg_commit_id if fg_commit_id is not None else None
+                self,
+                feature_group_commit_id=fg_commit_id
+                if fg_commit_id is not None
+                else None,
             )
         else:
             warnings.warn(
