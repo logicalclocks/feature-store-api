@@ -140,6 +140,7 @@ class TrainingDatasetEngine:
             result_proxy = training_dataset.prepared_statement_connection.execute(
                 prepared_statement, entry
             ).fetchall()
+            result_dict = {}
             for row in result_proxy:
                 result_dict = dict(row.items())
             serving_vector += list(result_dict.values())
