@@ -19,8 +19,7 @@ import humps
 from typing import Optional, List
 
 from hsfs import util, engine
-from hsfs.core import query_constructor_api, storage_connector_api
-from hsfs.constructor import join
+from hsfs.core import query_constructor_api, storage_connector_api, join
 
 
 class Query:
