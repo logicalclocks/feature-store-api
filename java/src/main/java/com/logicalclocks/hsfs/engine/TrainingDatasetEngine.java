@@ -228,8 +228,8 @@ public class TrainingDatasetEngine {
 
     // construct serving vector
     ArrayList<Object> servingVector = new ArrayList<>();
-    for (Integer PreparedStatementIndex : preparedStatements.keySet()) {
-      ResultSet results = preparedStatements.get(PreparedStatementIndex).executeQuery();
+    for (Integer preparedStatementIndex : preparedStatements.keySet()) {
+      ResultSet results = preparedStatements.get(preparedStatementIndex).executeQuery();
       // check if results contain any data at all and throw exception if not
       if (!results.isBeforeFirst()) {
         throw new FeatureStoreException("No data was retrieved from online feature store using input " + entry);
