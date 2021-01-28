@@ -25,11 +25,18 @@ import java.util.Map;
 
 public class TestTagsApi {
   @Test
-  public void testDoubleValue() throws IOException {
+  public void testDoubleValueRead() throws IOException {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, 4.2d);
     Assert.assertTrue(obj instanceof Double);
+  }
+
+  @Test
+  public void testDoubleValueWrite() throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper();
+//    objectMapper.writeValue(System.out, "test");
+    System.out.println(objectMapper.writeValueAsString(4.2d));
   }
 
   @Test

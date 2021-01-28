@@ -27,6 +27,7 @@ import lombok.NonNull;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,12 +69,9 @@ public class TagsApi {
         .set("entityId", entityId)
         .set("name", name);
 
-    if (value != null) {
-      uriTemplate.set("value", objectMapper.writeValueAsString(value));
-    }
-
     LOGGER.info("Sending metadata request: " + uriTemplate.expand());
     HttpPut putRequest = new HttpPut(uriTemplate.expand());
+    putRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(value)));
     hopsworksClient.handleRequest(putRequest);
   }
 
@@ -150,8 +148,8 @@ public class TagsApi {
     } catch (JsonParseException | JsonMappingException e1) {
       try {
         return objectMapper.readValue(val, Object[].class);
-      } catch (JsonParseException e2) {
-        return value;
+      } catch (JsonParseException | JsonMappingException e2) {
+        return val;
       }
     }
   }
