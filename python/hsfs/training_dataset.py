@@ -550,6 +550,11 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
+    def init_prepared_statement(self):
+        """Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store."""
+        if self.prepared_statements is None:
+            self._training_dataset_engine.init_prepared_statement(self)
+
     def get_serving_vector(self, entry: Dict[str, Any]):
         """Returns assembled serving vector from online feature store.
 

@@ -57,42 +57,6 @@ public class TrainingDatasetEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
 
-  private void initPreparedStatement(TrainingDataset trainingDataset)
-      throws FeatureStoreException, IOException, SQLException {
-
-    List<ServingPreparedStatement> servingPreparedStatements =
-        trainingDatasetApi.getServingPreparedStatement(trainingDataset);
-
-    StorageConnector storageConnector =
-        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
-    Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
-        jdbcOptions.get("password"));
-    jdbcConnection.setAutoCommit(false);
-    trainingDataset.setPreparedStatementConnection(jdbcConnection);
-
-    // map of prepared statement index and its corresponding parameter indices
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
-    // save map of fg index and its prepared statement
-    TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
-    // save unique primary key names that will be used by user to retrieve serving vector
-    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys();
-    for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
-      preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
-      HashMap<String, Integer> parameterIndices = new HashMap<>();
-      servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
-        servingVectorKeys.add(preparedStatementParameter.getName());
-        parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex());
-      });
-      preparedStatementParameters.put(servingPreparedStatement.getPreparedStatementIndex(), parameterIndices);
-    }
-    trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
-    trainingDataset.setPreparedStatements(preparedStatements);
-    trainingDataset.setServingKeys(servingVectorKeys);
-  }
-
-
   /**
    * Make a REST call to Hopsworks to create the metadata and write the data on the File System.
    *
@@ -206,6 +170,41 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
   }
 
+  public void initPreparedStatement(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException, SQLException {
+
+    List<ServingPreparedStatement> servingPreparedStatements =
+        trainingDatasetApi.getServingPreparedStatement(trainingDataset);
+
+    StorageConnector storageConnector =
+        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
+    Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
+    Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
+        jdbcOptions.get("password"));
+    jdbcConnection.setAutoCommit(false);
+    trainingDataset.setPreparedStatementConnection(jdbcConnection);
+
+    // map of prepared statement index and its corresponding parameter indices
+    Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
+    // save map of fg index and its prepared statement
+    TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
+    // save unique primary key names that will be used by user to retrieve serving vector
+    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys();
+    for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
+      preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
+          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
+      HashMap<String, Integer> parameterIndices = new HashMap<>();
+      servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
+        servingVectorKeys.add(preparedStatementParameter.getName());
+        parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex());
+      });
+      preparedStatementParameters.put(servingPreparedStatement.getPreparedStatementIndex(), parameterIndices);
+    }
+    trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
+    trainingDataset.setPreparedStatements(preparedStatements);
+    trainingDataset.setServingKeys(servingVectorKeys);
+  }
+
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry) throws SQLException,
       FeatureStoreException, IOException {
 
@@ -229,12 +228,11 @@ public class TrainingDatasetEngine {
 
     // construct serving vector
     ArrayList<Object> servingVector = new ArrayList<>();
-    for (Integer fgId : preparedStatements.keySet()) {
-      ResultSet results = preparedStatements.get(fgId).executeQuery();
+    for (Integer PreparedStatementIndex : preparedStatements.keySet()) {
+      ResultSet results = preparedStatements.get(PreparedStatementIndex).executeQuery();
       // check if results contain any data at all and throw exception if not
       if (!results.isBeforeFirst()) {
-        throw new FeatureStoreException("No data was retrieved from online feature store for feature group Id " + fgId
-        + " using input " + entry);
+        throw new FeatureStoreException("No data was retrieved from online feature store using input " + entry);
       }
       //Get column count
       int columnCount = results.getMetaData().getColumnCount();

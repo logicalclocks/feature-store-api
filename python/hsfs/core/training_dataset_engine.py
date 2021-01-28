@@ -130,24 +130,27 @@ class TrainingDatasetEngine:
         serving_vector = []
 
         if training_dataset.prepared_statements is None:
-            self._init_prepared_statement(training_dataset)
+            self.init_prepared_statement(training_dataset)
 
         prepared_statements = training_dataset.prepared_statements
-
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
-            # TODO (davit) check if this returns anything before fetchall
             result_proxy = training_dataset.prepared_statement_connection.execute(
                 prepared_statement, entry
             ).fetchall()
             result_dict = {}
             for row in result_proxy:
                 result_dict = dict(row.items())
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
             serving_vector += list(result_dict.values())
 
         return serving_vector
 
-    def _init_prepared_statement(self, training_dataset):
+    def init_prepared_statement(self, training_dataset):
         online_conn = self._storage_connector_api.get_online_connector()
         jdbc_connection = self._create_mysql_connection(online_conn)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
@@ -193,7 +196,8 @@ class TrainingDatasetEngine:
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
 
-    def _create_mysql_connection(self, online_conn):
+    @staticmethod
+    def _create_mysql_connection(online_conn):
         # TODO: __init__() got an unexpected keyword argument 'useSSL' and  allowPublicKeyRetrieval=true
         online_options = online_conn.spark_options()
         # Here we are replacing the first part of the string returned by Hopsworks,

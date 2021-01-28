@@ -431,6 +431,28 @@ public class TrainingDataset {
         Collectors.toList());
   }
 
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    // init prepared statement if it has not already
+    if (this.getPreparedStatements() == null) {
+      trainingDatasetEngine.initPreparedStatement(this);
+    }
+  }
+
+  /**
+   * Retrieve feature vector from online feature store.
+   *
+   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
+   *              corresponding ids to retrieve feature vector from online feature store.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
       IOException {
