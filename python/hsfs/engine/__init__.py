@@ -39,13 +39,18 @@ def init(engine_type):
                 )
             _engine_type = "hive"
             _engine = hive.Engine()
-        elif engine_type == "hops_experiment":
+        elif engine_type == "tf_data":
             pass
 
 
 def get_instance():
     global _engine
     if _engine:
+        if _engine == "tf_data":
+            raise Exception(
+                "`tf_data` engine doesn't support this operation. "
+                "Supported engines are `'spark'` and `'hive'`."
+            )
         return _engine
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
