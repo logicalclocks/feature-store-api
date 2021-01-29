@@ -39,16 +39,16 @@ def init(engine_type):
                 )
             _engine_type = "hive"
             _engine = hive.Engine()
-        elif engine_type == "tf_data":
+        elif engine_type == "training":
             pass
 
 
 def get_instance():
     global _engine
     if _engine:
-        if _engine == "tf_data":
+        if _engine == "training":
             raise Exception(
-                "`tf_data` engine doesn't support this operation. "
+                "`training` engine doesn't support this operation. "
                 "Supported engines are `'spark'` and `'hive'`."
             )
         return _engine
