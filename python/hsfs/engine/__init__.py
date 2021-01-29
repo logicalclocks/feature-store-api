@@ -39,6 +39,8 @@ def init(engine_type):
                 )
             _engine_type = "hive"
             _engine = hive.Engine()
+        elif engine_type == "hops_experiment":
+            pass
 
 
 def get_instance():

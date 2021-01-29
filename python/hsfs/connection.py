@@ -184,6 +184,8 @@ class Connection:
                 self._engine is None and not importlib.util.find_spec("pyspark")
             ):
                 self._engine = "hive"
+            elif self._engine is not None and self._engine.lower() == "hops_experiment":
+                self._engine = "hops_experiment"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
