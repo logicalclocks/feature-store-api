@@ -82,11 +82,13 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        engine: Which engine to use, `"spark"` or `"hive"`. Defaults to `None`, which
-            initializes the engine to Spark if the environment provides Spark, for
+        engine: Which engine to use, `"spark"`, `"hive"` or `"training"`. Defaults to `None`,
+            which initializes the engine to Spark if the environment provides Spark, for
             example on Hopsworks and Databricks, or falls back on Hive if Spark is not
             available, e.g. on local Python environments or AWS SageMaker. This option
-            allows you to override this behaviour.
+            allows you to override this behaviour. `"training"` engine is useful when only
+            feature store metadata is needed, for example training dataset location and label
+            information when Hopsworks training experiment is conducted.
         region_name: The name of the AWS region in which the required secrets are
             stored, defaults to `"default"`.
         secrets_store: The secrets storage to be used, either `"secretsmanager"`,
