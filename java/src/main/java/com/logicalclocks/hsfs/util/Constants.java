@@ -47,4 +47,13 @@ public class Constants {
   public static final String S3_CREDENTIAL_PROVIDER_ENV = "fs.s3a.aws.credentials.provider";
   public static final String S3_TEMPORARY_CREDENTIAL_PROVIDER =
       "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
+
+  public static final String SNOWFLAKE_USER = "sfUser";
+  public static final String SNOWFLAKE_PWD = "sfPassword";
+  public static final String SNOWFLAKE_URL = "sfURL";
+  public static final String SNOWFLAKE_DB = "sfDatabase";
+  public static final String SNOWFLAKE_SCHEMA = "sfSchema";
+  public static final String SNOWFLAKE_TABLE = "dbtable";
+  public static final String SNOWFLAKE_ROLE = "sfRole";
+  public static final String SNOWFLAKE_WAREHOUSE = "sfWarehouse";
 }

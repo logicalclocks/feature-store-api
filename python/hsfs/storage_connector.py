@@ -23,11 +23,13 @@ class StorageConnector:
     JDBC = "JDBC"
     REDSHIFT = "REDSHIFT"
     ADLS = "ADLS"
+    SNOWFLAKE = "SNOWFLAKE"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
     REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
     ADLS_DTO = "featurestoreADLSConnectorDTO"
+    SNOWFLAKE_DTO = "featurestoreSnowflakeConnectorDTO"
 
     def __init__(
         self,
@@ -66,6 +68,14 @@ class StorageConnector:
         account_name=None,
         container_name=None,
         spark_options=None,
+        database=None,
+        password=None,
+        role=None,
+        schema=None,
+        table=None,
+        url=None,
+        user=None,
+        warehouse=None,
     ):
         self._id = id
         self._name = name
@@ -108,6 +118,16 @@ class StorageConnector:
         self._account_name = account_name
         self._service_credential = service_credential
         self._container_name = container_name
+
+        # SNOWFLAKE
+        self._url = url
+        self._warehouse = warehouse
+        self._database = database
+        self._user = user
+        self._password = password
+        self._schema = schema
+        self._table = table
+        self._role = role
 
         self._spark_options = (
             {opt["name"]: opt["value"] for opt in spark_options}
@@ -340,8 +360,12 @@ class StorageConnector:
 
     @property
     def arguments(self):
-        """Additional JDBC arguments."""
-        if self._storage_connector_type.upper() == self.JDBC:
+        """Additional JDBC, REDSHIFT, or Snowflake arguments."""
+        if (
+            self._storage_connector_type.upper() == self.JDBC
+            or self._storage_connector_type.upper() == self.REDSHIFT
+            or self._storage_connector_type.upper() == self.SNOWFLAKE
+        ):
             return self._arguments
         else:
             raise Exception(
@@ -425,6 +449,89 @@ class StorageConnector:
                 + self._storage_connector_type
             )
 
+    @property
+    def url(self):
+        """URL of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._url
+        else:
+            raise Exception(
+                "URL is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def warehouse(self):
+        """Warehouse of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._warehouse
+        else:
+            raise Exception(
+                "Warehouse is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def database(self):
+        """Database of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._database
+        else:
+            raise Exception(
+                "Database is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def user(self):
+        """User of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._user
+        else:
+            raise Exception(
+                "User is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def password(self):
+        """Password of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._password
+        else:
+            raise Exception(
+                "Password is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def schema(self):
+        """Schema of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._schema
+        else:
+            raise Exception(
+                "Schema is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def table(self):
+        """Table of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._table
+        else:
+            raise Exception(
+                "Table is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def role(self):
+        """Role of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._role
+        else:
+            raise Exception(
+                "Role is not supported for connector " + self._storage_connector_type
+            )
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
@@ -460,6 +567,19 @@ class StorageConnector:
             return props
         elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
+        elif self._storage_connector_type.upper() == self.SNOWFLAKE:
+            props = {
+                "sfURL": self._url,
+                "sfWarehouse": self._warehouse,
+                "sfSchema": self._schema,
+                "sfDatabase": self._database,
+                "sfUser": self._user,
+                "sfPassword": self._password,
+                "sfRole": self._role,
+            }
+            if self._table_name is not None:
+                props["dbtable"] = self._table_name
+            return props
         else:
             raise Exception(
                 "Spark options are not supported for connector "
