@@ -32,6 +32,15 @@ When programmatically signing in, you need to pass the tenant ID with your authe
 </p>
 
 
+5. Create an Application Secret and copy it into the Service Credential field.
+
+<p align="center">
+  <figure>
+    <img src="../../../assets/images/storage-connectors/adls-copy-secret.png" alt="ADLS enter application secret.">
+    <figcaption>You need to copy the Application Secret and paste it to the Hopsworks ADLS storage connector "Service Credential" text field.</figcaption>
+  </figure>
+</p>
+
 
 References: 
   https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal
