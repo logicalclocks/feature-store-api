@@ -21,5 +21,6 @@ public enum StorageConnectorType {
   S3,
   JDBC,
   REDSHIFT,
-  ADLS
+  ADLS,
+  SNOWFLAKE
 }
