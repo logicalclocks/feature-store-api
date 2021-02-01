@@ -40,7 +40,7 @@ def init(engine_type):
             _engine_type = "hive"
             _engine = hive.Engine()
         elif engine_type == "training":
-            pass
+            _engine = "training"
 
 
 def get_instance():
