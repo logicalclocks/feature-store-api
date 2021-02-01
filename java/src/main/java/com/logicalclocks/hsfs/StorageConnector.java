@@ -160,6 +160,10 @@ public class StorageConnector {
 
   @Getter
   @Setter
+  private String token;
+
+  @Getter
+  @Setter
   private String database;
 
   @Getter
@@ -245,7 +249,12 @@ public class StorageConnector {
     options.put(Constants.SNOWFLAKE_SCHEMA, schema);
     options.put(Constants.SNOWFLAKE_DB, database);
     options.put(Constants.SNOWFLAKE_USER, user);
-    options.put(Constants.SNOWFLAKE_PWD, password);
+    if (!Strings.isNullOrEmpty(password)) {
+      options.put(Constants.SNOWFLAKE_PWD, password);
+    } else {
+      options.put(Constants.SNOWFLAKE_AUTH, "oauth");
+      options.put(Constants.SNOWFLAKE_TOKEN, token);
+    }
     if (!Strings.isNullOrEmpty(warehouse)) {
       options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
     }

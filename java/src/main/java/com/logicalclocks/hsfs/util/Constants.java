@@ -50,6 +50,8 @@ public class Constants {
 
   public static final String SNOWFLAKE_USER = "sfUser";
   public static final String SNOWFLAKE_PWD = "sfPassword";
+  public static final String SNOWFLAKE_AUTH = "sfAuthenticator";
+  public static final String SNOWFLAKE_TOKEN = "sfToken";
   public static final String SNOWFLAKE_URL = "sfURL";
   public static final String SNOWFLAKE_DB = "sfDatabase";
   public static final String SNOWFLAKE_SCHEMA = "sfSchema";

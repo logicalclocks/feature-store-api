@@ -70,6 +70,7 @@ class StorageConnector:
         spark_options=None,
         database=None,
         password=None,
+        token=None,
         role=None,
         schema=None,
         table=None,
@@ -125,6 +126,7 @@ class StorageConnector:
         self._database = database
         self._user = user
         self._password = password
+        self._token = token
         self._schema = schema
         self._table = table
         self._role = role
@@ -503,6 +505,16 @@ class StorageConnector:
             )
 
     @property
+    def token(self):
+        """OAuth token of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._token
+        else:
+            raise Exception(
+                "Token is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
     def schema(self):
         """Schema of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
@@ -574,8 +586,11 @@ class StorageConnector:
             props["sfSchema"] = self._schema
             props["sfDatabase"] = self._database
             props["sfUser"] = self._user
-            props["sfPassword"] = self._password
-
+            if self._password is not None:
+                props["sfPassword"] = self._password
+            else:
+                props["sfAuthenticator"] = "oauth"
+                props["sfToken"] = self._token
             if self._warehouse is not None:
                 props["sfWarehouse"] = self._warehouse
             if self._role is not None:
