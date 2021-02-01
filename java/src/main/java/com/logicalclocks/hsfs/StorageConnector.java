@@ -242,15 +242,23 @@ public class StorageConnector {
   private Map<String, String> getSnowflakeOptions() {
     Map<String, String> options = new HashMap<>();
     options.put(Constants.SNOWFLAKE_URL, url);
-    options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
     options.put(Constants.SNOWFLAKE_SCHEMA, schema);
     options.put(Constants.SNOWFLAKE_DB, database);
     options.put(Constants.SNOWFLAKE_USER, user);
     options.put(Constants.SNOWFLAKE_PWD, password);
-    options.put(Constants.SNOWFLAKE_ROLE, role);
+    if (!Strings.isNullOrEmpty(warehouse)) {
+      options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
+    }
+    if (!Strings.isNullOrEmpty(role)) {
+      options.put(Constants.SNOWFLAKE_ROLE, role);
+    }
     if (!Strings.isNullOrEmpty(table)) {
       options.put(Constants.SNOWFLAKE_TABLE, table);
     }
+    Map<String, String> argOptions = Arrays.stream(arguments.split(","))
+        .map(arg -> arg.split("="))
+        .collect(Collectors.toMap(a -> a[0], a -> a[1]));
+        options.putAll(argOptions);
     return options;
   }
 }

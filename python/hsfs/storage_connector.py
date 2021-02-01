@@ -568,17 +568,21 @@ class StorageConnector:
         elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
         elif self._storage_connector_type.upper() == self.SNOWFLAKE:
-            props = {
-                "sfURL": self._url,
-                "sfWarehouse": self._warehouse,
-                "sfSchema": self._schema,
-                "sfDatabase": self._database,
-                "sfUser": self._user,
-                "sfPassword": self._password,
-                "sfRole": self._role,
-            }
+            args = [arg.split("=") for arg in self._arguments.split(",")]
+            props = {a[0]: a[1] for a in args}
+            props["sfURL"] = self._url
+            props["sfSchema"] = self._schema
+            props["sfDatabase"] = self._database
+            props["sfUser"] = self._user
+            props["sfPassword"] = self._password
+
+            if self._warehouse is not None:
+                props["sfWarehouse"] = self._warehouse
+            if self._role is not None:
+                props["sfRole"] = self._role
             if self._table_name is not None:
                 props["dbtable"] = self._table_name
+
             return props
         else:
             raise Exception(
