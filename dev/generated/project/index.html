@@ -1463,11 +1463,13 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
 <li><strong>project</strong> <code>Optional[str]</code>: The name of the project to connect to. When running on Hopsworks, this
     defaults to the project from where the client is run from.
     Defaults to <code>None</code>.</li>
-<li><strong>engine</strong> <code>Optional[str]</code>: Which engine to use, <code>"spark"</code> or <code>"hive"</code>. Defaults to <code>None</code>, which
-    initializes the engine to Spark if the environment provides Spark, for
+<li><strong>engine</strong> <code>Optional[str]</code>: Which engine to use, <code>"spark"</code>, <code>"hive"</code> or <code>"training"</code>. Defaults to <code>None</code>,
+    which initializes the engine to Spark if the environment provides Spark, for
     example on Hopsworks and Databricks, or falls back on Hive if Spark is not
     available, e.g. on local Python environments or AWS SageMaker. This option
-    allows you to override this behaviour.</li>
+    allows you to override this behaviour. <code>"training"</code> engine is useful when only
+    feature store metadata is needed, for example training dataset location and label
+    information when Hopsworks training experiment is conducted.</li>
 <li><strong>region_name</strong> <code>str</code>: The name of the AWS region in which the required secrets are
     stored, defaults to <code>"default"</code>.</li>
 <li><strong>secrets_store</strong> <code>str</code>: The secrets storage to be used, either <code>"secretsmanager"</code>,
@@ -1489,7 +1491,7 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
     Hopsworks project.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L224">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L228">[source]</a></span></p>
 <h3 id="close">close<a class="headerlink" href="#close" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
@@ -1498,7 +1500,7 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
 external environments such as AWS SageMaker.</p>
 <p>Usage is recommended but optional.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L157">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L159">[source]</a></span></p>
 <h3 id="connect">connect<a class="headerlink" href="#connect" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 </code></pre></div>
@@ -1518,7 +1520,7 @@ connection.</p>
 </code></pre></div>
 </div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L140">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L142">[source]</a></span></p>
 <h3 id="get_feature_store">get_feature_store<a class="headerlink" href="#get_feature_store" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1532,7 +1534,7 @@ retrieved by passing the <code>name</code> argument.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureStore</code>. A feature store handle object to perform operations on.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L238">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L242">[source]</a></span></p>
 <h3 id="setup_databricks">setup_databricks<a class="headerlink" href="#setup_databricks" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">setup_databricks</span><span class="p">(</span>
     <span class="n">host</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
