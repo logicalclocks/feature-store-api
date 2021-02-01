@@ -39,11 +39,18 @@ def init(engine_type):
                 )
             _engine_type = "hive"
             _engine = hive.Engine()
+        elif engine_type == "training":
+            pass
 
 
 def get_instance():
     global _engine
     if _engine:
+        if _engine == "training":
+            raise Exception(
+                "`training` engine doesn't support this operation. "
+                "Supported engines are `'spark'` and `'hive'`."
+            )
         return _engine
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
