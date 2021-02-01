@@ -170,7 +170,7 @@ class Connection:
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'` and `'hive'`."
+                    "Supported engines are `'spark'`, `'hive'` and `'training'`."
                 )
 
             # init client

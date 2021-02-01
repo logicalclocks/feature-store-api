@@ -27,7 +27,7 @@ def init(engine_type, host=None, cert_folder=None, project=None, cert_key=None):
         elif engine_type == "hive":
             _engine = hive.Engine(host, cert_folder, project, cert_key)
         elif engine_type == "training":
-            pass
+            _engine = "training"
 
 
 def get_instance():
