@@ -544,6 +544,7 @@ class StorageConnector:
                 "Role is not supported for connector " + self._storage_connector_type
             )
 
+    @property
     def account(self):
         """Account of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
