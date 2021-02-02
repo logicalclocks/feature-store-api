@@ -194,7 +194,7 @@ The setup is now finalized and you can create the Hopsworks cluster.
 
 With this setup the Hopsworks cluster will reside in the same virtual network as the AKS cluster. The difference is that a new subnet in the virtual network will be used for the Hopsworks cluster.
 
-To setup the subnet, first go to the virtual network that was created by AKS. In our example this was hopsworksstagevnet154. Next go to the subnets tab.
+To setup the subnet, first go to the virtual network that was created by AKS. In our example, this was hopsworksstagevnet154. Next go to the subnets tab.
 
 <p align="center">
   <figure>
