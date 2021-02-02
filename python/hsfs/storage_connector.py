@@ -544,6 +544,15 @@ class StorageConnector:
                 "Role is not supported for connector " + self._storage_connector_type
             )
 
+    def account(self):
+        """Account of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            self._url.replace("https://", "").replace(".snowflakecomputing.com", "")
+        else:
+            raise Exception(
+                "Account is not supported for connector " + self._storage_connector_type
+            )
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.

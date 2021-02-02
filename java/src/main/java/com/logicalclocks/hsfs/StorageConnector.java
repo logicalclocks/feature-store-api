@@ -190,6 +190,10 @@ public class StorageConnector {
   @Setter
   private StorageConnectorType storageConnectorType;
 
+  public String getAccount() {
+    return this.url.replace("https://", "").replace(".snowflakecomputing.com", "");
+  }
+
   @JsonIgnore
   public Map<String, String> getSparkOptionsInt() throws FeatureStoreException {
     switch (storageConnectorType) {
