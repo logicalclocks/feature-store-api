@@ -1,6 +1,6 @@
 # Integration with Azure AKS and ACR
 
-This guide shows how to create a cluster in hopsworks.ai with integrated support for Azure Kubernetes Service (AKS) and Azure Container Registry (ACR). This enables Hopsworks to launch Python jobs, Jupyter servers, and ML model servings on top of AKS.
+This guide shows how to create a cluster in hopsworks.ai with integrated support for Azure Kubernetes Service (AKS) and Azure Container Registry (ACR). This enables Hopsworks to launch Python jobs, Jupyter servers, and serve models on top of AKS.
 
 Hopsworks AKS and ACR integration have four requirements:
 
@@ -9,25 +9,29 @@ Hopsworks AKS and ACR integration have four requirements:
 3. One AKS cluster
 4. Permissions to the ACR and AKS attached to a user-managed identity
 
-This guide on example setup with a private AKS cluster and public ACR.
+This guide provides an example setup with a private AKS cluster and public ACR.
 !!! note
 A public AKS cluster means the kubernetes API server is accessible outside the virtual network it is deployed in. Similarly, a public ACR is accessible through the internet.
 
 
-## User-managed identity
+## User assigned managed identity (managed identity)
 
 !!! note
-The managed identity is attached to the virtual machines that runs inside your subscription. Hence, the permissions only applies to services that runs within your subscription. 
+A user assigned managed identity (managed identity) can be created at the subscription level or to a specific resource group in a subscription. The managed identity is attached to the virtual machines that run inside your subscription (or resource group). Hence, the permissions only apply to services that run within your subscription (or resource group). 
 
-AKS and ACR integration requires some additional permissions to be attached to the managed identity used by the hopsworks cluster. 
+AKS and ACR integration requires some additional permissions to be attached to the managed identity used by the Hopsworks cluster. 
 
-To setup the managed identity, go to managed identities in the azure portal and then click add. Place the managed indentity in the same resource group as your are planning to create the hopsworks cluster in. In addition, choose a name for the managed identity, then review and create.
+To setup the managed identity, go to the resource group where you will add the managed identity - this should be the same resource group as you deploy Hopsworks in. In your selected resource group, click on the Access Control (IAM) menu item, and then click on add button. In the search dialog, enter "user assigned managed identity", and then select a name for the managed identity, review it and create it.
 
-Next go to the created managed identity in order to create role assignments. Go to azure role assignments and add the following roles with scope of the resource group you are planning to use:
+### Add role assignment at subscription level
+
+Next go to the created managed identity in order to create role assignments. Go to azure role assignments and add the following roles:
 
 * AcrPull
 * AcrPush
 * Azure Kubernetes Service Contributor Role
+
+The roles can have either scope of your subscription or the specific resource group you are planning to use. A scope of the resource group will restrict the permissions of the roles to the chosen resource group.
 
 !!! warning
 You will also need to attach the Storage Blob Data Owner role to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
@@ -48,7 +52,7 @@ Once finished the role assignments should look similar to the picture below. Not
 This guide will step through setting up a private AKS cluster and a public ACR. 
 
 ### Step 1 Create an AKS cluster
-Go to kubernetes services in the azure portal and click add. Place the kubernetes cluster in the same resource group as the hopsworks cluster will reside in and choose a name for the kubernetes cluster.
+Go to Kubernetes services in the azure portal and click add. Place the Kubernetes cluster in the same resource group as the Hopsworks cluster and choose a name for the Kubernetes cluster.
 
 <p align="center">
   <figure>
@@ -61,7 +65,7 @@ Go to kubernetes services in the azure portal and click add. Place the kubernete
 
 Next click the Authentication tab and verify the settings are identical to the picture below.
 !!! note
-Currently AKS is only supported through managed identities. 
+Currently AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.
 
 <p align="center">
   <figure>
@@ -107,12 +111,12 @@ Choose a name for the registry and check the SKU to be premium. Then press OK.
 
 Next press review and create, then create the cluster.
 
-Because the kubernetes API service is private the hopsworks cluster must be able to reach it over a private network. There are two options to integrate with a private AKS cluster. The first option is to put the hopsworks cluster in a pre-defined virtual network with peering setup to the kubernetes network. The second option is to create a subnet inside the kubernetes virtual network where the hopsworks cluster will be placed.
+Because the kubernetes API service is private the Hopsworks cluster must be able to reach it over a private network. There are two options to integrate with a private AKS cluster. The first option is to put the Hopsworks cluster in a pre-defined virtual network with peering setup to the kubernetes network. The second option is to create a subnet inside the kubernetes virtual network where the Hopsworks cluster will be placed.
 
 #### Step 1 option a Peering setup
 
-In order to create a peering first a virtual network for the hopsworks cluster must be setup. Go to virtual networks and press add.
-Choose a name for the new virtual network and select the same resource group you are planning to use for your hopsworks cluster.
+In order to establish virtual peering between the kubernetes cluster and Hopsworks, you need to select or create a virtual network for Hopsworks. Go to virtual networks and press add.
+Choose a name for the new virtual network and select the same resource group you are planning to use for your Hopsworks cluster.
 
 Next, go to the IP Addresses tab. Create an address space which does not overlap with the address space in the kubernetes network. In the previous example, the automatically created kubernetes network used the address space 10.0.0.0/8. Hence, the address space 172.18.0.0/16 can safely be used.
 
@@ -173,7 +177,7 @@ In the left plane there is a tab called Virtual network links, click on the tab.
   </figure>
 </p>
 
-Choose a name for the private link and select the virtual network you will use for the hopsworks cluster, then press OK.
+Choose a name for the private link and select the virtual network you will use for the Hopsworks cluster, then press OK.
 
 <p align="center">
   <figure>
@@ -184,13 +188,13 @@ Choose a name for the private link and select the virtual network you will use f
   </figure>
 </p>
 
-The setup is now finalized and you can create the hopsworks cluster.
+The setup is now finalized and you can create the Hopsworks cluster.
 
 #### Step 1 option b Subnet in AKS network
 
-With this setup the hopsworks cluster will reside in the same virtual network as the AKS cluster. The difference is that a new subnet in the virtual network will be used for the hopsworks cluster.
+With this setup the Hopsworks cluster will reside in the same virtual network as the AKS cluster. The difference is that a new subnet in the virtual network will be used for the Hopsworks cluster.
 
-To setup the subnet, first go to the virtual network that was created by AKS, in our example this was hopsworksstagevnet154. Next go to the subnets tab.
+To setup the subnet, first go to the virtual network that was created by AKS. In our example this was hopsworksstagevnet154. Next go to the subnets tab.
 
 <p align="center">
   <figure>
@@ -201,7 +205,7 @@ To setup the subnet, first go to the virtual network that was created by AKS, in
   </figure>
 </p>
 
-Press + Subnet. Choose a name for the subnet, for example "hopsworks" and an IP range that does not overlap with the kubernetes network. Then save.
+Press + Subnet. Choose a name for the subnet, for example, "hopsworks" and an IP range that does not overlap with the kubernetes network. Then save.
 
 <p align="center">
   <figure>
@@ -212,9 +216,9 @@ Press + Subnet. Choose a name for the subnet, for example "hopsworks" and an IP 
   </figure>
 </p>
 
-### Step 2 Create hopsworks cluster
+### Create the Hopsworks cluster
 
-This step assumes you create a cluster in hopsworks.ai The AKS configuration can be set under the Managed containers tab. Select the Use Azure AKS and Azure ACR as enabled. Two new fields with the name of the container registry you created and the AKS cluster name will pop up. In the previous example we created an ACR with name hopsaksregistry and an AKS cluster with name hopsaks-cluster. Hence, the configuration should look similar to the picture below
+This step assumes you are creating your Hopsworks cluster using hopsworks.ai. The AKS configuration can be set under the Managed containers tab. Select the Use Azure AKS and Azure ACR as enabled. Two new fields with the name of the container registry you created and the AKS cluster name will pop up. In the previous example we created an ACR with name hopsaksregistry and an AKS cluster with name hopsaks-cluster. Hence, the configuration should look similar to the picture below
 
 <p align="center">
   <figure>
