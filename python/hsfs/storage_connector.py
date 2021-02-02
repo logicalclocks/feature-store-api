@@ -547,7 +547,9 @@ class StorageConnector:
     def account(self):
         """Account of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._url.replace("https://", "").replace(".snowflakecomputing.com", "")
+            return self._url.replace("https://", "").replace(
+                ".snowflakecomputing.com", ""
+            )
         else:
             raise Exception(
                 "Account is not supported for connector " + self._storage_connector_type
