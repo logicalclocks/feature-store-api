@@ -598,8 +598,8 @@ class StorageConnector:
                 props["sfWarehouse"] = self._warehouse
             if self._role is not None:
                 props["sfRole"] = self._role
-            if self._table_name is not None:
-                props["dbtable"] = self._table_name
+            if self._table is not None:
+                props["dbtable"] = self._table
 
             return props
         else:
