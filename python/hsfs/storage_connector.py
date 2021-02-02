@@ -389,7 +389,7 @@ class StorageConnector:
     def generation(self):
         """Generation of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._generation
+            return self._generation
         else:
             raise Exception(
                 "Generation is not supported for connector "
@@ -400,7 +400,7 @@ class StorageConnector:
     def directory_id(self):
         """Directory ID of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._directory_id
+            return self._directory_id
         else:
             raise Exception(
                 "Directory ID is not supported for connector "
@@ -411,7 +411,7 @@ class StorageConnector:
     def application_id(self):
         """Application ID of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._application_id
+            return self._application_id
         else:
             raise Exception(
                 "Application ID is not supported for connector "
@@ -422,7 +422,7 @@ class StorageConnector:
     def account_name(self):
         """Account name of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._account_name
+            return self._account_name
         else:
             raise Exception(
                 "Account name is not supported for connector "
@@ -433,7 +433,7 @@ class StorageConnector:
     def container_name(self):
         """Container name of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._container_name
+            return self._container_name
         else:
             raise Exception(
                 "Container name is not supported for connector "
@@ -444,7 +444,7 @@ class StorageConnector:
     def service_credential(self):
         """Service credential of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._service_credential
+            return self._service_credential
         else:
             raise Exception(
                 "Service Credential is not supported for connector "
@@ -455,7 +455,7 @@ class StorageConnector:
     def url(self):
         """URL of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._url
+            return self._url
         else:
             raise Exception(
                 "URL is not supported for connector " + self._storage_connector_type
@@ -465,7 +465,7 @@ class StorageConnector:
     def warehouse(self):
         """Warehouse of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._warehouse
+            return self._warehouse
         else:
             raise Exception(
                 "Warehouse is not supported for connector "
@@ -476,7 +476,7 @@ class StorageConnector:
     def database(self):
         """Database of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._database
+            return self._database
         else:
             raise Exception(
                 "Database is not supported for connector "
@@ -487,7 +487,7 @@ class StorageConnector:
     def user(self):
         """User of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._user
+            return self._user
         else:
             raise Exception(
                 "User is not supported for connector " + self._storage_connector_type
@@ -497,7 +497,7 @@ class StorageConnector:
     def password(self):
         """Password of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._password
+            return self._password
         else:
             raise Exception(
                 "Password is not supported for connector "
@@ -508,7 +508,7 @@ class StorageConnector:
     def token(self):
         """OAuth token of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._token
+            return self._token
         else:
             raise Exception(
                 "Token is not supported for connector " + self._storage_connector_type
@@ -518,7 +518,7 @@ class StorageConnector:
     def schema(self):
         """Schema of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._schema
+            return self._schema
         else:
             raise Exception(
                 "Schema is not supported for connector " + self._storage_connector_type
@@ -528,7 +528,7 @@ class StorageConnector:
     def table(self):
         """Table of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._table
+            return self._table
         else:
             raise Exception(
                 "Table is not supported for connector " + self._storage_connector_type
@@ -538,7 +538,7 @@ class StorageConnector:
     def role(self):
         """Role of the Snowflake storage connector"""
         if self._storage_connector_type.upper() == self.SNOWFLAKE:
-            self._role
+            return self._role
         else:
             raise Exception(
                 "Role is not supported for connector " + self._storage_connector_type
