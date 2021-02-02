@@ -14,13 +14,18 @@ pipeline {
               TOKEN = credentials('token')
             }
             steps {
+                sh "git branch -D gh-pages || true"
+
                 dir("java") {
                     sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\\[|Download\\w+:)' > ../version.log"
                 }
+
                 dir("python") {
                     sh "pip3 install -e .[dev,docs]"
                 }
+
                 sh "python3 auto_doc.py"
+
                 sh '''
                   git config user.name jenkins
                   git config user.email jenkins@hops.works
@@ -34,6 +39,7 @@ pipeline {
                   echo "$token"
                   mike deploy \$VERSION \$TAG --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                 '''
+
             }
         }
     }
