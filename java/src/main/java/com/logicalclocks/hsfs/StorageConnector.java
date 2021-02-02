@@ -264,10 +264,12 @@ public class StorageConnector {
     if (!Strings.isNullOrEmpty(table)) {
       options.put(Constants.SNOWFLAKE_TABLE, table);
     }
-    Map<String, String> argOptions = Arrays.stream(arguments.split(";"))
-        .map(arg -> arg.split("="))
-        .collect(Collectors.toMap(a -> a[0], a -> a[1]));
-    options.putAll(argOptions);
+    if (!Strings.isNullOrEmpty(arguments)) {
+      Map<String, String> argOptions = Arrays.stream(arguments.split(";"))
+          .map(arg -> arg.split("="))
+          .collect(Collectors.toMap(a -> a[0], a -> a[1]));
+      options.putAll(argOptions);
+    }
     return options;
   }
 }

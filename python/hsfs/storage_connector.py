@@ -580,8 +580,11 @@ class StorageConnector:
         elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
         elif self._storage_connector_type.upper() == self.SNOWFLAKE:
-            args = [arg.split("=") for arg in self._arguments.split(";")]
-            props = {a[0]: a[1] for a in args}
+            if self._arguments:
+                args = [arg.split("=") for arg in self._arguments.split(";")]
+                props = {a[0]: a[1] for a in args}
+            else:
+                props = {}
             props["sfURL"] = self._url
             props["sfSchema"] = self._schema
             props["sfDatabase"] = self._database
