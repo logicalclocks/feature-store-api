@@ -31,7 +31,8 @@ pipeline {
                   git branch -D gh-pages || true
                   git branch -D tmp || true
 
-                  git pull --all
+                  git remote set-url origin https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
+                  git fetch --all
                   git checkout -b tmp
                   git checkout gh-pages
                   git checkout tmp
