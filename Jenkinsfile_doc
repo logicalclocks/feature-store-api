@@ -31,7 +31,7 @@ pipeline {
                   git branch -D gh-pages || true
                   git branch -D tmp || true
 
-                  git fetch --all
+                  git pull --all
                   git checkout -b tmp
                   git checkout gh-pages
                   git checkout tmp
