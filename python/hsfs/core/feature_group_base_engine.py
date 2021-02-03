@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.core import feature_group_api, storage_connector_api, tags_api
+from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
 
 
 class FeatureGroupBaseEngine:
@@ -26,6 +26,7 @@ class FeatureGroupBaseEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._kafka_api = kafka_api.KafkaApi()
 
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)

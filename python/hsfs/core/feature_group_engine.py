@@ -203,3 +203,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
+
+    def get_avro_schema(self, feature_group):
+        return self._kafka_api.get_topic_subject(
+            self._get_table_name(feature_group) + "_online_fs"
+        )

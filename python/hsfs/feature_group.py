@@ -846,6 +846,11 @@ class FeatureGroup(FeatureGroupBase):
         """Timestamp when the feature group was created."""
         return self._created
 
+    @property
+    def avro_schema(self):
+        """Avro schema representation of the feature group."""
+        return self._feature_group_engine.get_avro_schema(self)
+
     @version.setter
     def version(self, version):
         self._version = version
