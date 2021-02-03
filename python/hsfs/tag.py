@@ -15,6 +15,9 @@
 #
 
 import humps
+import json
+
+from hsfs import util
 
 
 class Tag:
@@ -24,6 +27,15 @@ class Tag:
         self._name = name
         self._value = value
 
+    def to_dict(self):
+        return {
+            "name": self._name,
+            "value": self._value,
+        }
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -31,5 +43,26 @@ class Tag:
             return []
         return [cls(**tag) for tag in json_decamelized["items"]]
 
-    def to_dict(self):
-        return {self._name: self._value}
+    @property
+    def name(self):
+        """Name of the tag."""
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def value(self):
+        """Value of tag."""
+        return self.value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return f"Tag({self._name!r}, {self._value!r})"

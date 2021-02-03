@@ -38,9 +38,13 @@ class FeatureGroupBaseEngine:
         """Remove a tag from a feature group."""
         self._tags_api.delete(feature_group, name)
 
-    def get_tags(self, feature_group, name):
-        """Get tag with a certain name or all tags for a feature group."""
-        return [tag.to_dict() for tag in self._tags_api.get(feature_group, name)]
+    def get_tag(self, feature_group, name):
+        """Get tag with a certain name."""
+        return self._tags_api.get(feature_group, name)[name]
+
+    def get_tags(self, feature_group):
+        """Get all tags for a feature group."""
+        return self._tags_api.get(feature_group)
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
