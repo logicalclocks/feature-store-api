@@ -206,5 +206,5 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def get_avro_schema(self, feature_group):
         return self._kafka_api.get_topic_subject(
-            self._get_table_name(feature_group) + "_online_fs"
+            self._get_online_table_name(feature_group) + "_onlinefs"
         )
