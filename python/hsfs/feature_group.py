@@ -773,6 +773,12 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
         }
 
+    def _get_table_name(self):
+        return self.feature_store_name + "." + self.name + "_" + str(self.version)
+
+    def _get_online_table_name(self):
+        return self.name + "_" + str(self.version)
+
     @property
     def id(self):
         """Feature group id."""

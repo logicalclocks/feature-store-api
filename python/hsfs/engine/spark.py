@@ -24,6 +24,8 @@ import numpy as np
 try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
+    from pyspark.sql.column import Column, _to_java_column
+    from pyspark.sql.functions import struct, array
 except ImportError:
     pass
 
@@ -37,6 +39,10 @@ from hsfs.constructor import query
 class Engine:
     HIVE_FORMAT = "hive"
     JDBC_FORMAT = "jdbc"
+    KAFKA_FORMAT = "kafka"
+
+    APPEND = "append"
+    OVERWRITE = "overwrite"
 
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
@@ -162,10 +168,8 @@ class Engine:
 
     def save_dataframe(
         self,
-        table_name,
         feature_group,
         dataframe,
-        save_mode,
         operation,
         online_enabled,
         storage,
@@ -174,29 +178,21 @@ class Engine:
     ):
         if storage == "offline" or not online_enabled:
             self._save_offline_dataframe(
-                table_name,
                 feature_group,
                 dataframe,
-                save_mode,
                 operation,
                 offline_write_options,
             )
         elif storage == "online":
-            self._save_online_dataframe(
-                table_name, dataframe, save_mode, online_write_options
-            )
+            self._save_online_dataframe(feature_group, dataframe, online_write_options)
         elif online_enabled and storage is None:
             self._save_offline_dataframe(
-                table_name,
                 feature_group,
                 dataframe,
-                save_mode,
                 operation,
                 offline_write_options,
             )
-            self._save_online_dataframe(
-                table_name, dataframe, save_mode, online_write_options
-            )
+            self._save_online_dataframe(feature_group, dataframe, online_write_options)
         else:
             raise FeatureStoreException(
                 "Error writing to offline and online feature store."
@@ -204,10 +200,8 @@ class Engine:
 
     def _save_offline_dataframe(
         self,
-        table_name,
         feature_group,
         dataframe,
-        save_mode,
         operation,
         write_options,
     ):
@@ -220,21 +214,41 @@ class Engine:
                 self._spark_context,
             )
             hudi_engine_instance.save_hudi_fg(
-                dataframe, save_mode, operation, write_options
+                dataframe, self.APPEND, operation, write_options
             )
         else:
-            dataframe.write.format(self.HIVE_FORMAT).mode(save_mode).options(
+            dataframe.write.format(self.HIVE_FORMAT).mode(self.APPEND).options(
                 **write_options
             ).partitionBy(
                 feature_group.partition_key if feature_group.partition_key else []
             ).saveAsTable(
-                table_name
+                feature_group._get_table_name()
             )
 
-    def _save_online_dataframe(self, table_name, dataframe, save_mode, write_options):
-        dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
-            **write_options
+    def _save_online_dataframe(self, feature_group, dataframe, write_options):
+
+        serialized_df = self._online_fg_to_avro(feature_group, dataframe)
+        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
+            "topic", feature_group._get_online_table_name() + "_onlinefs"
         ).save()
+
+        # dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
+        #    **write_options
+        # ).save()
+
+    def _online_fg_to_avro(self, feature_group, dataframe):
+        """Packs all features into named struct to be serialized to single avro/binary
+        column. And packs primary key into arry to be serialized for partitioning.
+        """
+        return dataframe.select(
+            [
+                self.to_avro(array(feature_group.primary_key)).alias("key"),
+                self.to_avro(
+                    struct([f.name for f in feature_group.features]),
+                    feature_group.avro_schema,
+                ).alias("value"),
+            ]
+        )
 
     def write_training_dataset(
         self, training_dataset, features, user_write_options, save_mode
@@ -493,6 +507,101 @@ class Engine:
 
         # Monkey patch the class to use the one defined above.
         hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+
+    def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
+        print(
+            """
+    ________________________________________________________________________________________________
+    Spark %(lib_name)s libraries not found in class path. Try one of the following.
+    1. Include the %(lib_name)s library and its dependencies with in the
+        spark-submit command as
+        $ bin/spark-submit --packages org.apache.spark:spark-%(pkg_name)s:%(spark_version)s ...
+    2. Download the JAR of the artifact from Maven Central http://search.maven.org/,
+        Group Id = org.apache.spark, Artifact Id = spark-%(jar_name)s, Version = %(spark_version)s.
+        Then, include the jar in the spark-submit command as
+        $ bin/spark-submit --jars <spark-%(jar_name)s.jar> ...
+    ________________________________________________________________________________________________
+    """
+            % {
+                "lib_name": lib_name,
+                "pkg_name": pkg_name,
+                "jar_name": jar_name,
+                "spark_version": spark_version,
+            }
+        )
+
+    def from_avro(self, data, jsonFormatSchema, options={}):
+        """
+        Converts a binary column of avro format into its corresponding catalyst value. The specified
+        schema must match the read data, otherwise the behavior is undefined: it may fail or return
+        arbitrary result.
+        Note: Avro is built-in but external data source module since Spark 2.4. Please deploy the
+        application as per the deployment section of "Apache Avro Data Source Guide".
+        :param data: the binary column.
+        :param jsonFormatSchema: the avro schema in JSON string format.
+        :param options: options to control how the Avro record is parsed.
+        >>> from pyspark.sql import Row
+        >>> from pyspark.sql.avro.functions import from_avro, to_avro
+        >>> data = [(1, Row(name='Alice', age=2))]
+        >>> df = spark.createDataFrame(data, ("key", "value"))
+        >>> avroDf = df.select(to_avro(df.value).alias("avro"))
+        >>> avroDf.collect()
+        [Row(avro=bytearray(b'\\x00\\x00\\x04\\x00\\nAlice'))]
+        >>> jsonFormatSchema = '''{"type":"record","name":"topLevelRecord","fields":
+        ...     [{"name":"avro","type":[{"type":"record","name":"value","namespace":"topLevelRecord",
+        ...     "fields":[{"name":"age","type":["long","null"]},
+        ...     {"name":"name","type":["string","null"]}]},"null"]}]}'''
+        >>> avroDf.select(from_avro(avroDf.avro, jsonFormatSchema).alias("value")).collect()
+        [Row(value=Row(avro=Row(age=2, name=u'Alice')))]
+        """
+
+        try:
+            jc = self._jvm.org.apache.spark.sql.avro.functions.from_avro(
+                _to_java_column(data), jsonFormatSchema, options
+            )
+        except TypeError as e:
+            if str(e) == "'JavaPackage' object is not callable":
+                self._print_missing_jar(
+                    "Avro", "avro", "avro", self._spark_context.version
+                )
+            raise
+        return Column(jc)
+
+    def to_avro(self, data, jsonFormatSchema=""):
+        """
+        Converts a column into binary of avro format.
+        Note: Avro is built-in but external data source module since Spark 2.4. Please deploy the
+        application as per the deployment section of "Apache Avro Data Source Guide".
+        :param data: the data column.
+        :param jsonFormatSchema: user-specified output avro schema in JSON string format.
+        >>> from pyspark.sql import Row
+        >>> from pyspark.sql.avro.functions import to_avro
+        >>> data = ['SPADES']
+        >>> df = spark.createDataFrame(data, "string")
+        >>> df.select(to_avro(df.value).alias("suite")).collect()
+        [Row(suite=bytearray(b'\\x00\\x0cSPADES'))]
+        >>> jsonFormatSchema = '''["null", {"type": "enum", "name": "value",
+        ...     "symbols": ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]}]'''
+        >>> df.select(to_avro(df.value, jsonFormatSchema).alias("suite")).collect()
+        [Row(suite=bytearray(b'\\x02\\x00'))]
+        """
+
+        try:
+            if jsonFormatSchema == "":
+                jc = self._jvm.org.apache.spark.sql.avro.functions.to_avro(
+                    _to_java_column(data)
+                )
+            else:
+                jc = self._jvm.org.apache.spark.sql.avro.functions.to_avro(
+                    _to_java_column(data), jsonFormatSchema
+                )
+        except TypeError as e:
+            if str(e) == "'JavaPackage' object is not callable":
+                self._print_missing_jar(
+                    "Avro", "avro", "avro", self._spark_context.version
+                )
+            raise
+        return Column(jc)
 
 
 class SchemaError(Exception):

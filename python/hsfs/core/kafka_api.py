@@ -29,7 +29,7 @@ class KafkaApi:
             "subjects",
         ]
         headers = {"content-type": "application/json"}
-        return _client._send_request("GET", path_params, headers=headers)
+        return _client._send_request("GET", path_params, headers=headers)["schema"]
 
     def get_broker_endpoints(self):
         _client = client.get_instance()
