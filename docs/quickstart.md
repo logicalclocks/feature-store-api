@@ -92,7 +92,7 @@ Of course you can also use your own data if you read it into a Spark DataFrame.
 
 ### Feature Groups
 
-Assuming you have done some feature engineering on the raw data, having produced a DataFrame with Features, these can now be saved to the Feature Store. For exmaples of feature engineering on the provided Sales data, see the [example notebook](https://github.com/logicalclocks/hops-examples/blob/master/notebooks/featurestore/hsfs/feature_engineering.ipynb).
+Assuming you have done some feature engineering on the raw data, having produced a DataFrame with Features, these can now be saved to the Feature Store. For examples of feature engineering on the provided Sales data, see the [example notebook](https://github.com/logicalclocks/hops-examples/blob/master/notebooks/featurestore/hsfs/feature_engineering.ipynb).
 
 #### Creation
 
