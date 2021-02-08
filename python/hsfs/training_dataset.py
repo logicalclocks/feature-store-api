@@ -562,8 +562,8 @@ class TrainingDataset:
             entry: dictionary of training dataset feature group primary key names as keys and values provided by
             serving application.
         # Returns
-            `array` Array of features related to provided values, ordered according to positions of this features in
-            training dataset query.
+            `list` List of feature values related to provided primary keys, ordered according to positions of this
+            features in training dataset query.
         """
         return self._training_dataset_engine.get_serving_vector(self, entry)
 
