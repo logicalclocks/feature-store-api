@@ -22,9 +22,10 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -36,12 +37,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private HudiEngine hudiEngine = new HudiEngine();
+  protected KafkaApi kafkaApi = new KafkaApi();
   private Utils utils = new Utils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
@@ -57,7 +59,7 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+  public void save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                                List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
@@ -118,40 +120,13 @@ public class FeatureGroupEngine {
     }
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, null, SaveMode.Append,
+    saveDataframe(featureGroup, dataset, null,
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-            ? HudiOperationType.BULK_INSERT : null, writeOptions);
+            ? HudiOperationType.BULK_INSERT : null, writeOptions, getKafkaConfig(featureGroup, writeOptions));
   }
 
-  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
-    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
-      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
-          + "write to the offline storage.");
-    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
-    } else if (storage == Storage.ONLINE) {
-      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-    } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
-      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-    } else {
-      throw new FeatureStoreException("Error writing to offline and online feature store.");
-    }
-  }
-
-  /**
-   * Write dataframe to the offline feature store.
-   *
-   * @param featureGroup
-   * @param dataset
-   * @param saveMode
-   * @param operation
-   * @param writeOptions
-   */
-  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                    HudiOperationType operation, Map<String, String> writeOptions)
+  public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
+                     HudiOperationType operation, SaveMode saveMode, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
 
     if (saveMode == SaveMode.Overwrite) {
@@ -160,19 +135,29 @@ public class FeatureGroupEngine {
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
       // After that it's going to be just a normal append
       featureGroupApi.deleteContent(featureGroup);
-      saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions);
+    saveDataframe(featureGroup, featureData, storage, operation,
+        writeOptions, getKafkaConfig(featureGroup, writeOptions));
   }
 
-  private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                   SaveMode saveMode, Map<String, String> providedWriteOptions)
+  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
+                            HudiOperationType operation, Map<String, String> offlineWriteOptions,
+                            Map<String, String> onlineWriteOptions)
       throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getOnlineStorageConnector(featureGroup.getFeatureStore());
-    Map<String, String> writeOptions =
-        SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
-    SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
+    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
+          + "write to the offline storage.");
+    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation, offlineWriteOptions);
+    } else if (storage == Storage.ONLINE) {
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+    } else if (featureGroup.getOnlineEnabled() && storage == null) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation, offlineWriteOptions);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+    } else {
+      throw new FeatureStoreException("Error writing to offline and online feature store.");
+    }
   }
 
   public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
@@ -197,5 +182,29 @@ public class FeatureGroupEngine {
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
                                          Map<String, String> writeOptions) throws IOException, FeatureStoreException {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
+  }
+
+  public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), utils.getOnlineTableName(featureGroup)
+        + "_onlinefs").getSchema();
+  }
+
+  public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    Map<String, String> config = new HashMap<>(writeOptions);
+
+    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+
+    config.put("kafka.bootstrap.servers",
+        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    config.put("kafka.security.protocol", "SSL");
+    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
+    config.put("kafka.ssl.truststore.password", client.getCertKey());
+    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
+    config.put("kafka.ssl.keystore.password", client.getCertKey());
+    config.put("kafka.ssl.key.password", client.getCertKey());
+    config.put("kafka.ssl.endpoint.identification.algorithm", "");
+    return config;
   }
 }

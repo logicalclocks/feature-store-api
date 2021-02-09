@@ -25,6 +25,7 @@ public class Constants {
 
   public static final String HIVE_FORMAT = "hive";
   public static final String JDBC_FORMAT = "jdbc";
+  public static final String KAFKA_FORMAT = "kafka";
 
   // Spark options
   public static final String DELIMITER = "delimiter";

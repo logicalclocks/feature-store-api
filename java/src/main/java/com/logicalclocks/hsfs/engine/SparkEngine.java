@@ -34,10 +34,16 @@ import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.array;
+import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.struct;
+
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
@@ -269,63 +275,54 @@ public class SparkEngine {
   }
 
   /**
-   * Build the option maps to write the dataset to the JDBC sink.
-   * URL, username and password are taken from the storage connector.
-   * They can however be overwritten by the user if they pass a option map. For instance if they want to change the
+   * Writes feature group dataframe to kafka for online-fs ingestion.
    *
-   * @param providedWriteOptions
    * @param featureGroup
-   * @param storageConnector
-   * @return Map
+   * @param dataset
+   * @param writeOptions
    * @throws FeatureStoreException
+   * @throws IOException
    */
-  public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
-                                              FeatureGroup featureGroup,
-                                              StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> writeOptions = storageConnector.getSparkOptionsInt();
-    writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
-
-    // add user provided configuration
-    if (providedWriteOptions != null) {
-      writeOptions.putAll(providedWriteOptions);
-    }
-    return writeOptions;
+  public void writeOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    onlineFeatureGroupToAvro(featureGroup, dataset).write().format(Constants.KAFKA_FORMAT).options(writeOptions).option(
+        "topic", utils.getOnlineTableName(featureGroup) + "_onlinefs").save();
   }
 
   /**
-   * Write dataset on the JDBC sink.
+   * Serializes dataframe to two binary columns, one avro serialized key and one avro serialized value column.
    *
+   * @param featureGroup
    * @param dataset
-   * @param saveMode
-   * @param writeOptions
+   * @return dataset
    * @throws FeatureStoreException
+   * @throws IOException
    */
-  public void writeOnlineDataframe(Dataset<Row> dataset, SaveMode saveMode, Map<String, String> writeOptions) {
-    dataset
-        .write()
-        .format(Constants.JDBC_FORMAT)
-        .options(writeOptions)
-        .mode(saveMode)
-        .save();
+  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws FeatureStoreException, IOException {
+    return dataset.select(
+        to_avro(array(featureGroup.getPrimaryKeys().stream().map(name -> col(name)).toArray(Column[]::new))).alias(
+            "key"),
+        to_avro(struct(featureGroup.getFeatures().stream().map(f -> col(f.getName())).toArray(Column[]::new)),
+            featureGroup.avroSchema()).alias("value"));
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
+                                    HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions);
+      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions);
     } else {
-      writeSparkDataset(featureGroup, dataset, saveMode, writeOptions);
+      writeSparkDataset(featureGroup, dataset, writeOptions);
     }
   }
 
-  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                 SaveMode saveMode, Map<String, String> writeOptions) {
+  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions) {
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)
-        .mode(saveMode)
+        .mode(SaveMode.Append)
         // write options cannot be null
         .options(writeOptions == null ? new HashMap<>() : writeOptions)
         .partitionBy(utils.getPartitionColumns(featureGroup))

@@ -55,6 +55,8 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   protected String location;
 
+  @Getter
+  @Setter
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> primaryKeys;
@@ -177,7 +179,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData);
@@ -241,8 +243,8 @@ public class FeatureGroup extends FeatureGroupBase {
       }
     }
 
-    featureGroupEngine.saveDataframe(this, featureData, storage,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
+    featureGroupEngine.insert(this, featureData, storage, operation,
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
 
     computeStatistics();
   }
@@ -290,5 +292,9 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<String, Map<String, String>> commitDetails(Integer limit) throws IOException, FeatureStoreException {
     return featureGroupEngine.commitDetails(this, limit);
+  }
+
+  public String avroSchema() throws FeatureStoreException, IOException {
+    return featureGroupEngine.getAvroSchema(this);
   }
 }

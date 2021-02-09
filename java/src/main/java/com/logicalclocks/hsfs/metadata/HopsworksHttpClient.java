@@ -25,4 +25,10 @@ import java.io.IOException;
 public interface HopsworksHttpClient {
   <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler)
       throws IOException, FeatureStoreException;
+
+  String getTrustStorePath();
+
+  String getKeyStorePath();
+
+  String getCertKey();
 }

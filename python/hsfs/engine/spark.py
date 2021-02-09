@@ -232,10 +232,6 @@ class Engine:
             "topic", feature_group._get_online_table_name() + "_onlinefs"
         ).save()
 
-        # dataframe.write.format(self.JDBC_FORMAT).mode(save_mode).options(
-        #    **write_options
-        # ).save()
-
     def _online_fg_to_avro(self, feature_group, dataframe):
         """Packs all features into named struct to be serialized to single avro/binary
         column. And packs primary key into arry to be serialized for partitioning.

@@ -89,8 +89,7 @@ public class HudiEngine {
 
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
-                                   Dataset<Row> dataset, SaveMode saveMode, HudiOperationType operation,
-                                   Map<String, String> writeOptions)
+                                   Dataset<Row> dataset, HudiOperationType operation, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
@@ -98,7 +97,7 @@ public class HudiEngine {
     dataset.write()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
-        .mode(saveMode)
+        .mode(SaveMode.Append)
         .save(featureGroup.getLocation());
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
