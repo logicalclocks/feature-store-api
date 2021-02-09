@@ -28,6 +28,7 @@ class FeatureGroupCommit:
         rows_inserted=None,
         rows_updated=None,
         rows_deleted=None,
+        validation_id=None,
         committime=None,
         type=None,
         items=None,
@@ -39,6 +40,7 @@ class FeatureGroupCommit:
         self._rows_inserted = rows_inserted
         self._rows_updated = rows_updated
         self._rows_deleted = rows_deleted
+        self._validation_id = validation_id
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -65,6 +67,7 @@ class FeatureGroupCommit:
             "rowsInserted": self._rows_inserted,
             "rowsUpdated": self._rows_updated,
             "rowsDeleted": self._rows_deleted,
+            "validationId": self._validation_id,
         }
 
     @property
@@ -87,6 +90,10 @@ class FeatureGroupCommit:
     def rows_deleted(self):
         return self._rows_deleted
 
+    @property
+    def validation_id(self):
+        return self._validation_id
+
     @commitid.setter
     def commitid(self, commitid):
         self._commitid = commitid
@@ -106,3 +113,7 @@ class FeatureGroupCommit:
     @rows_deleted.setter
     def rows_deleted(self, rows_deleted):
         self._rows_deleted = rows_deleted
+
+    @validation_id.setter
+    def validation_id(self, validation_id):
+        self._validation_id = validation_id

@@ -41,7 +41,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
-      + "updateMetadata}";
+      + "updateMetadata,validationType}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
       + "/commits{?sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
@@ -162,6 +162,11 @@ public class FeatureGroupApi {
 
   public FeatureGroup updateMetadata(FeatureGroupBase featureGroup, String queryParameter)
       throws FeatureStoreException, IOException {
+    return updateMetadata(featureGroup, queryParameter, true);
+  }
+
+  public FeatureGroup updateMetadata(FeatureGroupBase featureGroup, String queryParameter, Object value)
+      throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -171,7 +176,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
-        .set(queryParameter, true)
+        .set(queryParameter, value)
         .expand();
 
     String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);

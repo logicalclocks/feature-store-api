@@ -17,35 +17,29 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import com.logicalclocks.hsfs.metadata.validation.Rule;
+import lombok.ToString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public abstract class RestDto<D> {
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Builder
+public class ValidationResult {
 
-  protected List<D> items = new ArrayList<>();
-  protected Integer count = null;
-
-  public RestDto() {
-  }
-
-  public List<D> getItems() {
-    return items;
-  }
-
-  public void setItems(List<D> items) {
-    this.items = items;
-  }
-
-  public void setCount(Integer count) {
-    this.count = count;
-  }
-
-  public Integer getCount() {
-    return count;
-  }
-
+  @Getter @Setter
+  private ExpectationResult.Status status;
+  @Getter @Setter
+  private String message;
+  @Getter @Setter
+  private String value;
+  @Getter @Setter
+  private String feature;
+  @Getter @Setter
+  private Rule rule;
 }
