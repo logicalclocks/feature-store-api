@@ -410,9 +410,8 @@ class FeatureGroup(FeatureGroupBase):
                 ][0]
             else:
                 self._hudi_precombine_key = None
-            self._statistics_config = StatisticsConfig.from_response_json(
-                statistics_config
-            )
+
+            self.statistics_config = statistics_config
 
         else:
             # initialized by user
@@ -928,9 +927,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 if features
                 else None
             )
-            self._statistics_config = StatisticsConfig.from_response_json(
-                statistics_config
-            )
+            self.statistics_config = statistics_config
 
             self._options = (
                 {option["name"]: option["value"] for option in options}
