@@ -191,8 +191,10 @@ public class FeatureGroupEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>(writeOptions);
-
+    Map<String, String> config = new HashMap<>();
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
     config.put("kafka.bootstrap.servers",
