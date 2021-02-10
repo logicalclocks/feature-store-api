@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.SecretStore;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
@@ -50,6 +51,7 @@ import software.amazon.awssdk.services.sts.StsClient;
 import software.amazon.awssdk.services.sts.model.GetCallerIdentityResponse;
 
 import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -78,10 +80,10 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   //needed for kafka
   @Getter
-  private String trustStorePath = T_CERTIFICATE;
+  private String trustStorePath;
 
   @Getter
-  private String keyStorePath = K_CERTIFICATE;
+  private String keyStorePath;
 
   @Getter
   private String certKey;
@@ -136,6 +138,10 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     } else {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
+
+    trustStorePath = SparkEngine.getInstance().getTrustStorePath();
+    keyStorePath = SparkEngine.getInstance().getKeyStorePath();
+    certKey = readCertKey(SparkEngine.getInstance().getCertKey());
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
@@ -163,6 +169,20 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         .register("https", sslsf)
         .register("http", PlainConnectionSocketFactory.getSocketFactory())
         .build();
+  }
+
+  private static String readCertKey(String materialPwd) {
+    try (FileInputStream fis = new FileInputStream(materialPwd)) {
+      StringBuilder sb = new StringBuilder();
+      int content;
+      while ((content = fis.read()) != -1) {
+        sb.append((char) content);
+      }
+      return sb.toString();
+    } catch (IOException ex) {
+      LOGGER.warn("Failed to get cert password.", ex);
+    }
+    return null;
   }
 
   /**

@@ -81,6 +81,18 @@ public class SparkEngine {
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
+  public String getTrustStorePath() {
+    return sparkSession.conf().get("spark.hadoop.hops.ssl.trustore.name");
+  }
+
+  public String getKeyStorePath() {
+    return sparkSession.conf().get("spark.hadoop.hops.ssl.keystore.name");
+  }
+
+  public String getCertKey() {
+    return sparkSession.conf().get("spark.hadoop.hops.ssl.keystores.passwd.name");
+  }
+
   public Dataset<Row> sql(String query) {
     return sparkSession.sql(query);
   }
