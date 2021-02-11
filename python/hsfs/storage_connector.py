@@ -77,6 +77,7 @@ class StorageConnector:
         url=None,
         user=None,
         warehouse=None,
+        sf_options=None,
     ):
         self._id = id
         self._name = name
@@ -130,6 +131,10 @@ class StorageConnector:
         self._schema = schema
         self._table = table
         self._role = role
+
+        self._sf_options = (
+            {opt["name"]: opt["value"] for opt in sf_options} if sf_options else {}
+        )
 
         self._spark_options = (
             {opt["name"]: opt["value"] for opt in spark_options}
@@ -366,7 +371,6 @@ class StorageConnector:
         if (
             self._storage_connector_type.upper() == self.JDBC
             or self._storage_connector_type.upper() == self.REDSHIFT
-            or self._storage_connector_type.upper() == self.SNOWFLAKE
         ):
             return self._arguments
         else:
@@ -556,6 +560,17 @@ class StorageConnector:
                 "Account is not supported for connector " + self._storage_connector_type
             )
 
+    @property
+    def sf_options(self):
+        """Additional options for the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._sf_options
+        else:
+            raise Exception(
+                "sf_options are not supported for connector "
+                + self._storage_connector_type
+            )
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
@@ -592,11 +607,7 @@ class StorageConnector:
         elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
         elif self._storage_connector_type.upper() == self.SNOWFLAKE:
-            if self._arguments:
-                args = [arg.split("=") for arg in self._arguments.split(";")]
-                props = {a[0]: a[1] for a in args}
-            else:
-                props = {}
+            props = self._sf_options
             props["sfURL"] = self._url
             props["sfSchema"] = self._schema
             props["sfDatabase"] = self._database

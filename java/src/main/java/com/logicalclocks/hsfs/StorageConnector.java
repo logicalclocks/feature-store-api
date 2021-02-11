@@ -188,6 +188,10 @@ public class StorageConnector {
 
   @Getter
   @Setter
+  private List<Option> sfOptions;
+
+  @Getter
+  @Setter
   private StorageConnectorType storageConnectorType;
 
   public String getAccount() {
@@ -268,10 +272,9 @@ public class StorageConnector {
     if (!Strings.isNullOrEmpty(table)) {
       options.put(Constants.SNOWFLAKE_TABLE, table);
     }
-    if (!Strings.isNullOrEmpty(arguments)) {
-      Map<String, String> argOptions = Arrays.stream(arguments.split(";"))
-          .map(arg -> arg.split("="))
-          .collect(Collectors.toMap(a -> a[0], a -> a[1]));
+    if (!sfOptions.isEmpty()) {
+      Map<String, String> argOptions = sfOptions.stream()
+          .collect(Collectors.toMap(Option::getName, Option::getValue));
       options.putAll(argOptions);
     }
     return options;
