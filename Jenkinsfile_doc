@@ -40,7 +40,20 @@ pipeline {
                   export VERSION=\$(cat version.log)
                   mike deploy \$VERSION --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                 '''
+            }
+        }
+        stage("publish") {
+            agent {
+                node "local"
+            }
 
+            steps {
+                sh '''
+                  rm -r /opt/docs/*
+                  cd /opt/docs
+                  git clone https://github.com/logicalclocks/feature-store-api .
+                  git checkout gh-pages
+                '''
             }
         }
     }
