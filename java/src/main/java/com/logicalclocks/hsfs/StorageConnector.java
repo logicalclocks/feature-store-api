@@ -272,7 +272,7 @@ public class StorageConnector {
     if (!Strings.isNullOrEmpty(table)) {
       options.put(Constants.SNOWFLAKE_TABLE, table);
     }
-    if (!sfOptions.isEmpty()) {
+    if (sfOptions != null && !sfOptions.isEmpty()) {
       Map<String, String> argOptions = sfOptions.stream()
           .collect(Collectors.toMap(Option::getName, Option::getValue));
       options.putAll(argOptions);
