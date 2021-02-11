@@ -34,6 +34,7 @@ pipeline {
                   git remote set-url origin https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                   git fetch --all
 
+                  rm -r java/?
                   git add docs/index.md
                   git commit -m "tmp commit"
 
