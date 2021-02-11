@@ -239,7 +239,7 @@ class Engine:
         return dataframe.select(
             [
                 f.name
-                if not feature_group.get_complex_features().contains(f.name)
+                if f.name not in feature_group.get_complex_features()
                 else self.to_avro(
                     f.name, feature_group._get_feature_avro_schema(f.name)
                 ).alias(f.name)
