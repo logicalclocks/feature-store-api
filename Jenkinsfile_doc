@@ -33,6 +33,10 @@ pipeline {
 
                   git remote set-url origin https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                   git fetch --all
+
+                  git add docs/index.md
+                  git commit -m "tmp commit"
+
                   git checkout -b tmp
                   git checkout gh-pages
                   git checkout tmp
@@ -49,7 +53,7 @@ pipeline {
 
             steps {
                 sh '''
-                  rm -r /opt/docs/*
+                  rm -rf /opt/docs/*
                   cd /opt/docs
                   git clone https://github.com/logicalclocks/feature-store-api .
                   git checkout gh-pages
