@@ -804,7 +804,7 @@ class FeatureGroup(FeatureGroupBase):
         return schema_s
 
     def _get_feature_avro_schema(self, feature_name):
-        for field in self.avro_schema:
+        for field in json.loads(self.avro_schema):
             if field["name"] == feature_name:
                 return field["type"]
 
