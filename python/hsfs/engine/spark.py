@@ -227,12 +227,15 @@ class Engine:
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
 
-        serialized_df = self._online_fg_to_avro(feature_group, dataframe)
+        serialized_df = self._online_fg_to_avro(
+            feature_group, self._encode_complex_features(feature_group, dataframe)
+        )
         serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._get_online_table_name() + "_onlinefs"
         ).save()
 
     def _encode_complex_features(self, feature_group, dataframe):
+        """Encodes all complex type features to binary using their avro type as schema."""
         return dataframe.select(
             [
                 f.name
