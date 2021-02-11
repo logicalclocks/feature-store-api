@@ -1064,19 +1064,6 @@
   </li>
 
         
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="generated/api/statistics_config_api/" class="md-nav__link">
-      StatisticsConfig
-    </a>
-  </li>
-
-        
       </ul>
     </nav>
   </li>
@@ -1283,6 +1270,13 @@ additional connection information, such as host and port, is required. For more 
 <span class="n">train_input</span> <span class="o">=</span> <span class="n">tf_data_object</span><span class="o">.</span><span class="n">tf_record_dataset</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                                                <span class="n">num_epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                                                <span class="n">process</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></p>
+<p>A short introduction to the Scala API:
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs._</span>
+<span class="k">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="o">.</span><span class="n">builder</span><span class="o">().</span><span class="n">build</span><span class="o">()</span>
+<span class="k">val</span> <span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">getFeatureStore</span><span class="o">();</span>
+<span class="k">val</span> <span class="n">attendances_features_fg</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">getFeatureGroup</span><span class="o">(</span><span class="s">&quot;games_features&quot;</span><span class="o">,</span> <span class="mi">1</span><span class="o">);</span>
+<span class="n">attendances_features_fg</span><span class="o">.</span><span class="n">show</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
 </code></pre></div></p>
 <p>You can find more examples on how to use the library in our <a href="https://github.com/logicalclocks/hops-examples">hops-examples</a> repository.</p>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">#</a></h2>

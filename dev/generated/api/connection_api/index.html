@@ -1093,6 +1093,20 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get_rule" class="md-nav__link">
+    get_rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_rules" class="md-nav__link">
+    get_rules
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#setup_databricks" class="md-nav__link">
     setup_databricks
   </a>
@@ -1172,19 +1186,6 @@
   <li class="md-nav__item">
     <a href="../feature_api/" class="md-nav__link">
       Feature
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="../statistics_config_api/" class="md-nav__link">
-      StatisticsConfig
     </a>
   </li>
 
@@ -1371,6 +1372,20 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get_rule" class="md-nav__link">
+    get_rule
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_rules" class="md-nav__link">
+    get_rules
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#setup_databricks" class="md-nav__link">
     setup_databricks
   </a>
@@ -1396,7 +1411,7 @@
                 
                 
                 <h1 id="connection">Connection<a class="headerlink" href="#connection" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L34">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L33">[source]</a></span></p>
 <h3 id="connection_1">Connection<a class="headerlink" href="#connection_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span>
     <span class="n">host</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1575,6 +1590,18 @@ retrieved by passing the <code>name</code> argument.</p>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureStore</code>. A feature store handle object to perform operations on.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L494">[source]</a></span></p>
+<h3 id="get_rule">get_rule<a class="headerlink" href="#get_rule" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_rule</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a rule with a certain name or all rules available for data validation.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L489">[source]</a></span></p>
+<h3 id="get_rules">get_rules<a class="headerlink" href="#get_rules" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_rules</span><span class="p">()</span>
+</code></pre></div>
+<p>Get a rule with a certain name or all rules available for data validation.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L242">[source]</a></span></p>
 <h3 id="setup_databricks">setup_databricks<a class="headerlink" href="#setup_databricks" title="Permanent link">#</a></h3>
