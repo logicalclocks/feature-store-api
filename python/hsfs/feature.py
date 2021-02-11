@@ -78,7 +78,7 @@ class Feature:
         return cls(**json_decamelized)
 
     def is_complex(self):
-        return any(map(self._type.startswith, self.COMPLEX_TYPES))
+        return any(map(self._type.upper().startswith, self.COMPLEX_TYPES))
 
     @property
     def name(self):
