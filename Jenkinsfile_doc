@@ -54,6 +54,8 @@ pipeline {
             steps {
                 sh '''
                   rm -rf /opt/docs/*
+                  rm -rf /opt/docs/.git
+                  rm -rf /opt/docs/.nojekyll
                   cd /opt/docs
                   git clone https://github.com/logicalclocks/feature-store-api .
                   git checkout gh-pages
