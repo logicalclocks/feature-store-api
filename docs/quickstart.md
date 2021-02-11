@@ -6,8 +6,8 @@ A feature is not restricted to an numeric value, it could be a string representi
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/quickstart.png">
-      <img src="../../assets/images/quickstart.png" alt="The Hopsworks Feature Store">
+    <a  href="../assets/images/quickstart.png">
+      <img src="../assets/images/quickstart.png" alt="The Hopsworks Feature Store">
     </a>
     <figcaption>The Hopsworks Feature Store</figcaption>
   </figure>
@@ -82,7 +82,7 @@ In order to use the example data, you need to unzip the `archive.zip` file which
 
 <p align="center">
   <figure>
-    <img src="../../assets/images/extract-zip.png" width="400" alt="The Hopsworks Feature Store">
+    <img src="../assets/images/extract-zip.png" width="400" alt="The Hopsworks Feature Store">
     <figcaption>The Data Sets browser</figcaption>
   </figure>
 </p>
