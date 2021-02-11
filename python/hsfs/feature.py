@@ -28,6 +28,8 @@ class Feature:
     feature representation of training dataset schemas.
     """
 
+    COMPLEX_TYPES = ["MAP", "ARRAY", "STRUCT", "UNIONTYPE"]
+
     def __init__(
         self,
         name,
@@ -74,6 +76,9 @@ class Feature:
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
+
+    def is_complex(self):
+        return any(map(self._type.startswith, self.COMPLEX_TYPES))
 
     @property
     def name(self):

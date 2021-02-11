@@ -19,6 +19,7 @@ import json
 import warnings
 import pandas as pd
 import numpy as np
+import avro.schema
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature, storage_connector as sc
@@ -392,6 +393,8 @@ class FeatureGroup(FeatureGroupBase):
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
+
+        self._avro_schema = None
 
         if id is not None:
             # initialized by backend
@@ -779,6 +782,32 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
+    def get_complex_features(self):
+        """Returns the names of all features with a complex data type in this
+        feature group.
+        """
+        return [f.name for f in self.features if f.is_complex()]
+
+    def _get_encoded_avro_schema(self):
+        complex_features = self.get_complex_features()
+        schema = json.loads(self.avro_schema)
+
+        for field in schema["fields"]:
+            if complex_features.contains(field["name"]):
+                field["type"] = ["null", "bytes"]
+
+        schema_s = json.dumps(schema)
+        try:
+            avro.schema.parse(schema_s)
+        except avro.schema.SchemaParseException as e:
+            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+        return schema_s
+
+    def _get_feature_avro_schema(self, feature_name):
+        for field in self.avro_schema:
+            if field["name"] == feature_name:
+                return field["type"]
+
     @property
     def id(self):
         """Feature group id."""
@@ -855,7 +884,11 @@ class FeatureGroup(FeatureGroupBase):
     @property
     def avro_schema(self):
         """Avro schema representation of the feature group."""
-        return self._feature_group_engine.get_avro_schema(self)
+        if self._avro_schema is None:
+            # cache the schema
+            self._avro_schema = self._feature_group_engine.get_avro_schema(self)
+        else:
+            self._avro_schema
 
     @version.setter
     def version(self, version):

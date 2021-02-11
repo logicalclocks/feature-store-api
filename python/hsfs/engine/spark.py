@@ -232,6 +232,18 @@ class Engine:
             "topic", feature_group._get_online_table_name() + "_onlinefs"
         ).save()
 
+    def _encode_complex_features(self, feature_group, dataframe):
+        return dataframe.select(
+            [
+                f.name
+                if not feature_group.get_complex_features().contains(f.name)
+                else self.to_avro(
+                    f.name, feature_group._get_feature_avro_schema(f.name)
+                ).alias(f.name)
+                for f in feature_group.features
+            ]
+        )
+
     def _online_fg_to_avro(self, feature_group, dataframe):
         """Packs all features into named struct to be serialized to single avro/binary
         column. And packs primary key into arry to be serialized for partitioning.
@@ -241,7 +253,7 @@ class Engine:
                 self.to_avro(array(feature_group.primary_key)).alias("key"),
                 self.to_avro(
                     struct([f.name for f in feature_group.features]),
-                    feature_group.avro_schema,
+                    feature_group._get_encoded_avro_schema(),
                 ).alias("value"),
             ]
         )
