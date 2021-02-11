@@ -35,8 +35,6 @@ pipeline {
                   git fetch --all
 
                   rm -r java/?
-                  git add docs/index.md
-                  git commit -m "tmp commit"
 
                   git checkout -b tmp
                   git checkout gh-pages
