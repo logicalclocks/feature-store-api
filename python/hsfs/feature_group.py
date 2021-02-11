@@ -887,8 +887,7 @@ class FeatureGroup(FeatureGroupBase):
         if self._avro_schema is None:
             # cache the schema
             self._avro_schema = self._feature_group_engine.get_avro_schema(self)
-        else:
-            return self._avro_schema
+        return self._avro_schema
 
     @version.setter
     def version(self, version):
