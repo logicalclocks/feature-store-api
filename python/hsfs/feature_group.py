@@ -888,7 +888,7 @@ class FeatureGroup(FeatureGroupBase):
             # cache the schema
             self._avro_schema = self._feature_group_engine.get_avro_schema(self)
         else:
-            self._avro_schema
+            return self._avro_schema
 
     @version.setter
     def version(self, version):
