@@ -201,10 +201,41 @@ Congratulations, you have successfully connected you Azure account to Hopsworks.
 
 ## Step 2: Creating and configuring a storage
 
-The Hopsworks clusters deployed by hopsworks.ai store their data in a container in your Azure account.
-To enable this you need to create a storage account and a User Assigned Managed Identity to give the Hopsworks cluster access to the storage.
+The Hopsworks clusters deployed by hopsworks.ai store their data in a container in your Azure account. To enable this you need to perform the following operations
 
-### Step 2.1: Creating a User Assigned Managed Identity
+- Create a restrictive role to limit access to the storage account
+- Create a User Assigned Managed Identity
+- Create a storage account and give Hopsworks clusters access to the storage using the restrictive role
+
+### Step 2.1: Creating a Restrictive Role for Accessing Storage 
+
+Similar to [Step 1](#step-1-connecting-your-azure-account) create a new role named `Hopsworks Storage Role`. Add the following permissions to the role
+
+```json
+"permissions": [
+    {
+        "actions": [
+            "Microsoft.Storage/storageAccounts/blobServices/containers/write",
+            "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+            "Microsoft.Storage/storageAccounts/blobServices/write",
+            "Microsoft.Storage/storageAccounts/blobServices/read"
+        ],
+        "notActions": [],
+        "dataActions": [
+            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
+            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action",
+            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+        ],
+        "notDataActions": []
+    }
+]
+```
+
+Non-enterprise users can remove the policies  *Microsoft.Storage/storageAccounts/blobServices/write*, *Microsoft.Storage/storageAccounts/blobServices/read* as these policies are needed for cluster backups and restore operations available only for the enterprise version. 
+
+
+### Step 2.2: Creating a User Assigned Managed Identity
 
 Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
 
@@ -239,7 +270,7 @@ Click on *Create*. Then, select the Location you want to use and name the identi
   </figure>
 </p>
 
-### Step 2.2: Creating a Storage account
+### Step 2.3: Creating a Storage account
 
 Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
 
@@ -274,10 +305,10 @@ Click on *Create*, name your storage account, select the Location you want to us
   </figure>
 </p>
 
-### Step 2.3: Give the Managed Identity access to the storage
+### Step 2.4: Give the Managed Identity access to the storage
 
 Proceed to the Storage Account you just created and click on *Access Control (IAM)* (1). Click on *Add* (2), then click on *Add role assignment* (3).
-In *Role* select *Storage Blob Data Contributor* (4). In *Assign access to* select *User assigned managed identity* (5). Select the identity you created in step 2.1 (6).
+In *Role* select *Hopsworks Storage Role* (4). In *Assign access to* select *User assigned managed identity* (5). Select the identity you created in step 2.1 (6).
 Click on *Save* (7).
 
 <p align="center">
