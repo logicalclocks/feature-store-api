@@ -371,22 +371,29 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-21-creating-a-user-assigned-managed-identity" class="md-nav__link">
-    Step 2.1: Creating a User Assigned Managed Identity
+  <a href="#step-21-creating-a-restrictive-role-for-accessing-storage" class="md-nav__link">
+    Step 2.1: Creating a Restrictive Role for Accessing Storage
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-22-creating-a-storage-account" class="md-nav__link">
-    Step 2.2: Creating a Storage account
+  <a href="#step-22-creating-a-user-assigned-managed-identity" class="md-nav__link">
+    Step 2.2: Creating a User Assigned Managed Identity
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-23-give-the-managed-identity-access-to-the-storage" class="md-nav__link">
-    Step 2.3: Give the Managed Identity access to the storage
+  <a href="#step-23-creating-a-storage-account" class="md-nav__link">
+    Step 2.3: Creating a Storage account
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-24-give-the-managed-identity-access-to-the-storage" class="md-nav__link">
+    Step 2.4: Give the Managed Identity access to the storage
   </a>
   
 </li>
@@ -1136,19 +1143,6 @@
   </li>
 
         
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="../../../generated/api/statistics_config_api.md" class="md-nav__link">
-      StatisticsConfig
-    </a>
-  </li>
-
-        
       </ul>
     </nav>
   </li>
@@ -1247,22 +1241,29 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-21-creating-a-user-assigned-managed-identity" class="md-nav__link">
-    Step 2.1: Creating a User Assigned Managed Identity
+  <a href="#step-21-creating-a-restrictive-role-for-accessing-storage" class="md-nav__link">
+    Step 2.1: Creating a Restrictive Role for Accessing Storage
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-22-creating-a-storage-account" class="md-nav__link">
-    Step 2.2: Creating a Storage account
+  <a href="#step-22-creating-a-user-assigned-managed-identity" class="md-nav__link">
+    Step 2.2: Creating a User Assigned Managed Identity
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-23-give-the-managed-identity-access-to-the-storage" class="md-nav__link">
-    Step 2.3: Give the Managed Identity access to the storage
+  <a href="#step-23-creating-a-storage-account" class="md-nav__link">
+    Step 2.3: Creating a Storage account
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-24-give-the-managed-identity-access-to-the-storage" class="md-nav__link">
+    Step 2.4: Give the Managed Identity access to the storage
   </a>
   
 </li>
@@ -1489,9 +1490,35 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 </p>
 
 <h2 id="step-2-creating-and-configuring-a-storage">Step 2: Creating and configuring a storage<a class="headerlink" href="#step-2-creating-and-configuring-a-storage" title="Permanent link">#</a></h2>
-<p>The Hopsworks clusters deployed by hopsworks.ai store their data in a container in your Azure account.
-To enable this you need to create a storage account and a User Assigned Managed Identity to give the Hopsworks cluster access to the storage.</p>
-<h3 id="step-21-creating-a-user-assigned-managed-identity">Step 2.1: Creating a User Assigned Managed Identity<a class="headerlink" href="#step-21-creating-a-user-assigned-managed-identity" title="Permanent link">#</a></h3>
+<p>The Hopsworks clusters deployed by hopsworks.ai store their data in a container in your Azure account. To enable this you need to perform the following operations</p>
+<ul>
+<li>Create a restrictive role to limit access to the storage account</li>
+<li>Create a User Assigned Managed Identity</li>
+<li>Create a storage account and give Hopsworks clusters access to the storage using the restrictive role</li>
+</ul>
+<h3 id="step-21-creating-a-restrictive-role-for-accessing-storage">Step 2.1: Creating a Restrictive Role for Accessing Storage<a class="headerlink" href="#step-21-creating-a-restrictive-role-for-accessing-storage" title="Permanent link">#</a></h3>
+<p>Similar to <a href="#step-1-connecting-your-azure-account">Step 1</a> create a new role named <code>Hopsworks Storage Role</code>. Add the following permissions to the role</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;permissions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/write&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/read&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/write&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/read&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;notActions&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="nt">&quot;dataActions&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;notDataActions&quot;</span><span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>Non-enterprise users can remove the policies  <em>Microsoft.Storage/storageAccounts/blobServices/write</em>, <em>Microsoft.Storage/storageAccounts/blobServices/read</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
+<h3 id="step-22-creating-a-user-assigned-managed-identity">Step 2.2: Creating a User Assigned Managed Identity<a class="headerlink" href="#step-22-creating-a-user-assigned-managed-identity" title="Permanent link">#</a></h3>
 <p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
 <p align="center">
   <figure>
@@ -1522,7 +1549,7 @@ To enable this you need to create a storage account and a User Assigned Managed 
   </figure>
 </p>
 
-<h3 id="step-22-creating-a-storage-account">Step 2.2: Creating a Storage account<a class="headerlink" href="#step-22-creating-a-storage-account" title="Permanent link">#</a></h3>
+<h3 id="step-23-creating-a-storage-account">Step 2.3: Creating a Storage account<a class="headerlink" href="#step-23-creating-a-storage-account" title="Permanent link">#</a></h3>
 <p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
 <p align="center">
   <figure>
@@ -1553,9 +1580,9 @@ To enable this you need to create a storage account and a User Assigned Managed 
   </figure>
 </p>
 
-<h3 id="step-23-give-the-managed-identity-access-to-the-storage">Step 2.3: Give the Managed Identity access to the storage<a class="headerlink" href="#step-23-give-the-managed-identity-access-to-the-storage" title="Permanent link">#</a></h3>
+<h3 id="step-24-give-the-managed-identity-access-to-the-storage">Step 2.4: Give the Managed Identity access to the storage<a class="headerlink" href="#step-24-give-the-managed-identity-access-to-the-storage" title="Permanent link">#</a></h3>
 <p>Proceed to the Storage Account you just created and click on <em>Access Control (IAM)</em> (1). Click on <em>Add</em> (2), then click on <em>Add role assignment</em> (3).
-In <em>Role</em> select <em>Storage Blob Data Contributor</em> (4). In <em>Assign access to</em> select <em>User assigned managed identity</em> (5). Select the identity you created in step 2.1 (6).
+In <em>Role</em> select <em>Hopsworks Storage Role</em> (4). In <em>Assign access to</em> select <em>User assigned managed identity</em> (5). Select the identity you created in step 2.1 (6).
 Click on <em>Save</em> (7).</p>
 <p align="center">
   <figure>

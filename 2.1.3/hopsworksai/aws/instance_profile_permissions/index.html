@@ -1000,19 +1000,6 @@
   </li>
 
         
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="../../../generated/api/statistics_config_api.md" class="md-nav__link">
-      StatisticsConfig
-    </a>
-  </li>
-
-        
       </ul>
     </nav>
   </li>
@@ -1059,7 +1046,7 @@
                 
                   <h1>Instance profile permissions</h1>
                 
-                <p>Replace <em>BUCKET_NAME</em> with appropriate S3 bucket name.
+                <p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name. Non-enterprise users can remove the policies  <em>S3:PutLifecycleConfiguration</em>, <em>S3:GetLifecycleConfiguration</em>, <em>S3:PutBucketVersioning</em>, <em>S3:GetBucketVersioning</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
   <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
@@ -1073,7 +1060,11 @@
         <span class="s2">&quot;S3:GetObject&quot;</span><span class="p">,</span>
         <span class="s2">&quot;S3:DeleteObject&quot;</span><span class="p">,</span>
         <span class="s2">&quot;S3:AbortMultipartUpload&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;S3:ListBucketMultipartUploads&quot;</span>
+        <span class="s2">&quot;S3:ListBucketMultipartUploads&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S3:PutLifecycleConfiguration&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S3:GetLifecycleConfiguration&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S3:PutBucketVersioning&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;S3:GetBucketVersioning&quot;</span>
       <span class="p">],</span>
       <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="s2">&quot;arn:aws:s3:::BUCKET_NAME/*&quot;</span><span class="p">,</span>
@@ -1103,7 +1094,7 @@
     <span class="p">}</span>
   <span class="p">]</span>
 <span class="p">}</span>
-</code></pre></div></p>
+</code></pre></div>
                 
               
               

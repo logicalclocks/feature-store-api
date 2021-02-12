@@ -1102,19 +1102,6 @@
   </li>
 
         
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="../../../generated/api/statistics_config_api.md" class="md-nav__link">
-      StatisticsConfig
-    </a>
-  </li>
-
-        
       </ul>
     </nav>
   </li>
@@ -1367,7 +1354,11 @@ Navigate to your newly created role in <a href="https://console.aws.amazon.com/i
                 <span class="s2">&quot;S3:GetObject&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;S3:DeleteObject&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;S3:AbortMultipartUpload&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;S3:ListBucketMultipartUploads&quot;</span>
+                <span class="s2">&quot;S3:ListBucketMultipartUploads&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;S3:PutLifecycleConfiguration&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;S3:GetLifecycleConfiguration&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;S3:PutBucketVersioning&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;S3:GetBucketVersioning&quot;</span>
             <span class="p">],</span>
             <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="s2">&quot;arn:aws:s3:::bucket.name/*&quot;</span><span class="p">,</span>
@@ -1377,7 +1368,7 @@ Navigate to your newly created role in <a href="https://console.aws.amazon.com/i
     <span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Do not forget to replace <em>bucket.name</em> with appropriate S3 bucket name.</p>
+<p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name. Non-enterprise users can remove the policies  <em>S3:PutLifecycleConfiguration</em>, <em>S3:GetLifecycleConfiguration</em>, <em>S3:PutBucketVersioning</em>, <em>S3:GetBucketVersioning</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
 <h2 id="step-3-allow-your-role-to-use-your-eks-cluster">Step 3: Allow your role to use your EKS cluster<a class="headerlink" href="#step-3-allow-your-role-to-use-your-eks-cluster" title="Permanent link">#</a></h2>
 <p>You need to give your role permissions to access your EKS cluster using the following kubectl command. For more details, check <a href="https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html">Managing users or IAM roles for your cluster</a>. The kubectl edit command uses <em>vi</em> editor by default, however, you can override this behaviour by setting <em>KUBE_EDITOR</em> to your preferred editor, check <a href="https://kubernetes.io/docs/reference/kubectl/cheatsheet/#editing-resources">Kubernetes editing resources</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="nv">KUBE_EDITOR</span><span class="o">=</span><span class="s2">&quot;vi&quot;</span> kubectl edit configmap aws-auth -n kube-system
