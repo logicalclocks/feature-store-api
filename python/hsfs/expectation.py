@@ -22,6 +22,8 @@ from hsfs.core import expectations_engine
 
 
 class Expectation:
+    """Metadata object representing an feature validation expectation in the Feature Store."""
+
     def __init__(
         self,
         name,

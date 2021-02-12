@@ -21,6 +21,11 @@ from hsfs import util
 
 
 class Rule:
+    """Metadata object representing the validation rule that is used by feature group expectations.
+
+    This class is made for hsfs internal use only.
+    """
+
     def __init__(
         self,
         name: str,

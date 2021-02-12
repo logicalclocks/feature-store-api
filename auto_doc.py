@@ -84,6 +84,36 @@ PAGES = {
             "hsfs.statistics_config.StatisticsConfig"
         ),
     },
+    "feature_validation.md": {
+        "ruledefinition": ["hsfs.ruledefinition.RuleDefinition"],
+        "ruledefinition_getall": ["hsfs.connection.Connection.get_rules"],
+        "ruledefinition_get": ["hsfs.connection.Connection.get_rule"],
+        "ruledefinition_properties": keras_autodoc.get_properties(
+            "hsfs.ruledefinition.RuleDefinition"
+        ),
+        "expectation": ["hsfs.expectation.Expectation"],
+        "expectation_properties": keras_autodoc.get_properties(
+            "hsfs.expectation.Expectation"
+        ),
+        "expectation_methods": keras_autodoc.get_methods(
+            "hsfs.expectation.Expectation",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+        "expectation_create": ["hsfs.feature_store.FeatureStore.create_expectation"],
+        "expectation_get": ["hsfs.feature_store.FeatureStore.get_expectation"],
+        "expectation_getall": ["hsfs.feature_store.FeatureStore.get_expectations"],
+        "validation_result": ["hsfs.validation_result.ValidationResult"],
+        "validation_result_properties": keras_autodoc.get_properties(
+            "hsfs.validation_result.ValidationResult"
+        ),
+        "validate": ["hsfs.feature_group.FeatureGroup.validate"],
+        "validation_result_get": ["hsfs.feature_group.FeatureGroup.get_validations"],
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(

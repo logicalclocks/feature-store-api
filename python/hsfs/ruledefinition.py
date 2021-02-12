@@ -21,6 +21,11 @@ from hsfs import util
 
 
 class RuleDefinition:
+    """Metadata object representing the validation rule that is used by feature group expectations.
+
+    The set of rule definitions, for example "has max", "has avg" is provided by hsfs and cannot be modified.
+    """
+
     def __init__(
         self,
         name,

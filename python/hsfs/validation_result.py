@@ -21,6 +21,8 @@ from hsfs import util
 
 
 class ValidationResult:
+    """Metadata object representing the validation result of a single rule of an expectation result of a Feature Group."""
+
     def __init__(
         self,
         status,

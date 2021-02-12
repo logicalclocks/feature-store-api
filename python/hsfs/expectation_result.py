@@ -21,6 +21,8 @@ from hsfs import util
 
 
 class ExpectationResult:
+    """Metadata object representing the expectation results of the data into a Feature Group."""
+
     def __init__(
         self,
         expectation,

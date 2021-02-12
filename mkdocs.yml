@@ -56,7 +56,7 @@ nav:
     - Training Dataset: generated/training_dataset.md
     - Query vs. Dataframe: generated/query_vs_dataframe.md
     - Statistics: generated/statistics.md
-    # - Data Validation: guides/data_validation.md
+    - Feature Validation: generated/feature_validation.md
   - API Reference:
     - Connection: generated/api/connection_api.md
     - FeatureStore: generated/api/feature_store_api.md

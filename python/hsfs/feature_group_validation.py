@@ -21,6 +21,11 @@ from hsfs import util
 
 
 class FeatureGroupValidation:
+    """Metadata object representing the validation result of a feature group.
+
+    Refer to expectation_result for individual feature group expectation results.
+    """
+
     def __init__(
         self,
         validation_time,
