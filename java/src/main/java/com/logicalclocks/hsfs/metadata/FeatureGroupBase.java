@@ -125,50 +125,39 @@ public class FeatureGroupBase {
   }
 
   /**
-   * Add a tag without value to the feature group.
-   *
-   * @param name name of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name) throws FeatureStoreException, IOException {
-    addTag(name, null);
-  }
-
-  /**
    * Add name/value tag to the feature group.
    *
    * @param name  name of the tag
-   * @param value value of the tag
+   * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects.
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void addTag(String name, String value) throws FeatureStoreException, IOException {
+  public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.addTag(this, name, value);
   }
 
   /**
    * Get all tags of the feature group.
    *
-   * @return map of all tags from name to value
+   * @return map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTag() throws FeatureStoreException, IOException {
-    return getTag(null);
+  public Map<String, Object> getTags() throws FeatureStoreException, IOException {
+    return featureGroupBaseEngine.getTags(this);
   }
 
   /**
    * Get a single tag value of the feature group.
    *
    * @param name name of tha tag
-   * @return string value of the tag
+   * @return The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
+  public Object getTag(String name) throws FeatureStoreException, IOException {
     return featureGroupBaseEngine.getTag(this, name);
   }
 

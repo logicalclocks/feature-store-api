@@ -128,13 +128,16 @@ public class TrainingDatasetEngine {
         .read(trainingDataset.getStorageConnector(), trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
-  public void addTag(TrainingDataset trainingDataset, String name, String value)
+  public void addTag(TrainingDataset trainingDataset, String name, Object value)
       throws FeatureStoreException, IOException {
     tagsApi.add(trainingDataset, name, value);
   }
 
-  public Map<String, String> getTag(TrainingDataset trainingDataset, String name)
-      throws FeatureStoreException, IOException {
+  public Map<String, Object> getTags(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    return tagsApi.get(trainingDataset);
+  }
+
+  public Object getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
     return tagsApi.get(trainingDataset, name);
   }
 

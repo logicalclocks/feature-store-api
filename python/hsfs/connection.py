@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-
 import os
 import importlib.util
 
@@ -22,7 +21,7 @@ from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
 from hsfs import engine, client
-from hsfs.core import feature_store_api, project_api, hosts_api, services_api
+from hsfs.core import feature_store_api, project_api, hosts_api, services_api, rules_api
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443
@@ -82,11 +81,13 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        engine: Which engine to use, `"spark"` or `"hive"`. Defaults to `None`, which
-            initializes the engine to Spark if the environment provides Spark, for
+        engine: Which engine to use, `"spark"`, `"hive"` or `"training"`. Defaults to `None`,
+            which initializes the engine to Spark if the environment provides Spark, for
             example on Hopsworks and Databricks, or falls back on Hive if Spark is not
             available, e.g. on local Python environments or AWS SageMaker. This option
-            allows you to override this behaviour.
+            allows you to override this behaviour. `"training"` engine is useful when only
+            feature store metadata is needed, for example training dataset location and label
+            information when Hopsworks training experiment is conducted.
         region_name: The name of the AWS region in which the required secrets are
             stored, defaults to `"default"`.
         secrets_store: The secrets storage to be used, either `"secretsmanager"`,
@@ -134,6 +135,7 @@ class Connection:
         self._api_key_file = api_key_file
         self._api_key_value = api_key_value
         self._connected = False
+        self._rules_api = rules_api.RulesApi()
 
         self.connect()
 
@@ -184,10 +186,12 @@ class Connection:
                 self._engine is None and not importlib.util.find_spec("pyspark")
             ):
                 self._engine = "hive"
+            elif self._engine is not None and self._engine.lower() == "training":
+                self._engine = "training"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'` and `'hive'`."
+                    "Supported engines are `'spark'`, `'hive'` and `'training'`."
                 )
 
             # init client
@@ -481,6 +485,16 @@ class Connection:
     @not_connected
     def api_key_value(self, api_key_value):
         self._api_key_value = api_key_value
+
+    def get_rules(self):
+        """Get a rule with a certain name or all rules available for data validation."""
+
+        return self._rules_api.get()
+
+    def get_rule(self, name: str):
+        """Get a rule with a certain name or all rules available for data validation."""
+
+        return self._rules_api.get(name)
 
     def __enter__(self):
         self.connect()

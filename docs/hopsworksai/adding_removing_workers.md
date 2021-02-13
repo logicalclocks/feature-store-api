@@ -7,8 +7,8 @@ To add workers to a cluster, go to the *Details* tab of this cluster and click o
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/add-worker.png">
-      <img src="../../../assets/images/hopsworksai/add-worker.png" alt="Add worker">
+    <a  href="../../assets/images/hopsworksai/add-worker.png">
+      <img src="../../assets/images/hopsworksai/add-worker.png" alt="Add worker">
     </a>
     <figcaption>Add worker</figcaption>
   </figure>
@@ -18,8 +18,8 @@ Select the number of workers you want to add (1). Select the type of instance yo
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/add-workers-config.png">
-      <img src="../../../assets/images/hopsworksai/add-workers-config.png" alt="Add workers config">
+    <a  href="../../assets/images/hopsworksai/add-workers-config.png">
+      <img src="../../assets/images/hopsworksai/add-workers-config.png" alt="Add workers config">
     </a>
     <figcaption>Add workers</figcaption>
   </figure>
@@ -29,8 +29,8 @@ Review your request and click *Add*.
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/add-workers-review.png">
-      <img src="../../../assets/images/hopsworksai/add-workers-review.png" alt="Add workers review">
+    <a  href="../../assets/images/hopsworksai/add-workers-review.png">
+      <img src="../../assets/images/hopsworksai/add-workers-review.png" alt="Add workers review">
     </a>
     <figcaption>Add workers</figcaption>
   </figure>
@@ -45,15 +45,15 @@ If the load on your Hopsworks cluster is low, you can decide to remove worker no
 !!! warning
     When removing workers Hopsworks.ai will try to select workers that can be removed while interfering as little as possible with any ongoing computation. It will also wait for the workers to be done with their computation before stopping them. But, if this computation lasts too long, the worker may get stopped before the computation properly finish. This could interfere with your ongoing computation.
 
-!!! note 
+!!! note
     You can remove all the workers of your cluster. If you do so the cluster will be able to store data but not run any computations. This may affect feature store functionality.
 
 To remove workers from a cluster, go to the *Details* tab of this cluster and click on *Remove workers*
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/remove-worker.png">
-      <img src="../../../assets/images/hopsworksai/remove-worker.png" alt="Remove worker">
+    <a  href="../../assets/images/hopsworksai/remove-worker.png">
+      <img src="../../assets/images/hopsworksai/remove-worker.png" alt="Remove worker">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>
@@ -63,8 +63,8 @@ For each of the types of instances existing in your cluster select the number of
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/remove-worker-config.png">
-      <img src="../../../assets/images/hopsworksai/remove-worker-config.png" alt="Remove workers config">
+    <a  href="../../assets/images/hopsworksai/remove-worker-config.png">
+      <img src="../../assets/images/hopsworksai/remove-worker-config.png" alt="Remove workers config">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>
@@ -74,8 +74,8 @@ Review your request and click *Remove*.
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/remove-workers-review.png">
-      <img src="../../../assets/images/hopsworksai/remove-workers-review.png" alt="Remove workers review">
+    <a  href="../../assets/images/hopsworksai/remove-workers-review.png">
+      <img src="../../assets/images/hopsworksai/remove-workers-review.png" alt="Remove workers review">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>

@@ -310,11 +310,13 @@ public class SparkEngine {
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
+                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions,
+                                    Integer validationId)
       throws IOException, FeatureStoreException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions);
+      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions,
+          validationId);
     } else {
       writeSparkDataset(featureGroup, dataset, saveMode, writeOptions);
     }

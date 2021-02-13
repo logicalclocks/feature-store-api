@@ -6,8 +6,8 @@ A feature is not restricted to an numeric value, it could be a string representi
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/quickstart.png">
-      <img src="../../assets/images/quickstart.png" alt="The Hopsworks Feature Store">
+    <a  href="../assets/images/quickstart.png">
+      <img src="../assets/images/quickstart.png" alt="The Hopsworks Feature Store">
     </a>
     <figcaption>The Hopsworks Feature Store</figcaption>
   </figure>
@@ -82,7 +82,7 @@ In order to use the example data, you need to unzip the `archive.zip` file which
 
 <p align="center">
   <figure>
-    <img src="../../assets/images/extract-zip.png" width="400" alt="The Hopsworks Feature Store">
+    <img src="../assets/images/extract-zip.png" width="400" alt="The Hopsworks Feature Store">
     <figcaption>The Data Sets browser</figcaption>
   </figure>
 </p>
@@ -92,7 +92,7 @@ Of course you can also use your own data if you read it into a Spark DataFrame.
 
 ### Feature Groups
 
-Assuming you have done some feature engineering on the raw data, having produced a DataFrame with Features, these can now be saved to the Feature Store. For exmaples of feature engineering on the provided Sales data, see the [example notebook](https://github.com/logicalclocks/hops-examples/blob/master/notebooks/featurestore/hsfs/feature_engineering.ipynb).
+Assuming you have done some feature engineering on the raw data, having produced a DataFrame with Features, these can now be saved to the Feature Store. For examples of feature engineering on the provided Sales data, see the [example notebook](https://github.com/logicalclocks/hops-examples/blob/master/notebooks/featurestore/hsfs/feature_engineering.ipynb).
 
 #### Creation
 
