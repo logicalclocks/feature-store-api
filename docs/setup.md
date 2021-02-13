@@ -8,7 +8,7 @@ If you are using Spark or Python within Hopsworks, there is no further configura
 
 ## Storage Connectors
 
-Storage connectors encapsulate the configuration information needed for a Spark or Python execution engine to securely read and write to a specific storage. The [storage connector guide](integrations/storage_connectors/guide.md) explains step by step how to configure different data sources (such as S3, Azure Data Lake, Redshift, Snowflake, any JDBC data source) and how they can be used to ingest data and define external (on-demand) Feature Groups.
+Storage connectors encapsulate the configuration information needed for a Spark or Python execution engine to securely read and write to a specific storage. The [storage connector guide](integrations/storage-connectors/guide.md) explains step by step how to configure different data sources (such as S3, Azure Data Lake, Redshift, Snowflake, any JDBC data source) and how they can be used to ingest data and define external (on-demand) Feature Groups.
  
 ## Databricks
 
