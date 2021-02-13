@@ -61,9 +61,6 @@ class TrainingDataset:
         from_query=None,
         querydto=None,
         label=None,
-        prepared_statement_connection=None,
-        prepared_statements=None,
-        serving_keys=None,
     ):
         self._id = id
         self._name = name
@@ -75,9 +72,9 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
-        self._prepared_statement_connection = prepared_statement_connection
-        self._prepared_statements = prepared_statements
-        self._serving_keys = serving_keys
+        self._prepared_statement_connection = None
+        self._prepared_statements = None
+        self._serving_keys = None
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id

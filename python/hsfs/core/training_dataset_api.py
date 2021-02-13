@@ -154,7 +154,7 @@ class TrainingDatasetApi:
             self._feature_store_id,
             "trainingdatasets",
             training_dataset_instance.id,
-            "prepStatement",
+            "preparedstatements",
         ]
         headers = {"content-type": "application/json"}
         return serving_prepared_statement.ServingPreparedStatement.from_response_json(
