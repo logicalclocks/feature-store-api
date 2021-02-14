@@ -1,6 +1,6 @@
-## JDBC Source
+## JDBC 
 
-MySQL, Postgres, Oracle, DB2, MongoDB
+Most databases can be connected to using our generic JDBC Storage Connector (such as MySQL, Postgres, Oracle, DB2, and MongoDB). Typically, you will need to add username and password in your JDBC URL or as key/value parameters. Consult the documentation of your target database to determine the correct JDBC URL and parameters.
 
 <p align="center">
   <figure>

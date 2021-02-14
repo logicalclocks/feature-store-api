@@ -2,8 +2,8 @@
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake.png" alt="Define a Snowflake storage connector using">
-    <figcaption>You can define a storage connector using credentials, an IAM role (AWS), or a managed account (Azure).</figcaption>
+    <img src="../../../assets/images/storage-connectors/snowflake.png" alt="Setup a Snowflake storage connector">
+    <figcaption>Configure the Snowflake storage connector in the Hopsworks UI.</figcaption>    
   </figure>
 </p>
 

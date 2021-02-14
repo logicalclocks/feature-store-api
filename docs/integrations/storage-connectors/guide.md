@@ -1,6 +1,8 @@
 # Storage Connectors
 
-You can define a storage connector in Hopsworks for batch and streaming data sources. External (on-demand) Feature Groups can also be defined with storage connectors, where only the metadata is stored in Hopsworks. You will need to authenticate against your external data source to be able to read data from it. Our storage connectors provide two main mechanisms for authentication: using credentials or an authentication role (IAM Role on AWS or Managed Identity on Azure). Hopsworks supports both a single IAM role or Managed Identity for the whole Hopsworks cluster or more advanced multiple IAM roles or Managed Identities that can only be assumed by users with a specific role in a specific project.
+You can define storage connectors in Hopsworks for batch and streaming data sources. Storage connectors securely store information in Hopsworks about how to securely connect to external data stores. They can be used in both programs and in Hopsworks to easily and securely connect and ingest data to the Feature Store. External (on-demand) Feature Groups can also be defined with storage connectors, where only the metadata is stored in Hopsworks. 
+
+Storage connectors provide two main mechanisms for authentication: using credentials or an authentication role (IAM Role on AWS or Managed Identity on Azure). Hopsworks supports both a single IAM role (AWS) or Managed Identity (Azure) for the whole Hopsworks cluster or more advanced multiple IAM roles (AWS) or Managed Identities (Azure) that can only be assumed by users with a specific role in a specific project.
 
 !!! info "Multiple IAM Roles/Managed Identities"
     In the Admin Panel for Hopsworks, you can specify a Cloud Role (IAM role or managed identity) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to an IAM Role with Redshift access to users who have the 'Data Owner' Role in a Project called 'RawFeatures'. 
@@ -13,8 +15,10 @@ You can define a storage connector in Hopsworks for batch and streaming data sou
 [JDBC](./jdbc.md)
 [HopsFS](./hopsfs.md)
 
-## Spark Connectors
 
+## Programmatic Connectors (Spark, Python, Java/Scala, Flink)
+
+It is also possible to use the rich ecosystem of connectors available in programs run on Hopsworks. Just Spark has tens of open-source libraries for connecting to relational databases, key-value stores, file systems, object stores, search databases, and graph databases. In Hopsworks, you can securely save your credentials as secrets, and securely access them with API calls when you need to connect to your external store. 
 
 ## Next Steps
 
