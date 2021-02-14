@@ -4,17 +4,15 @@ You can define storage connectors in Hopsworks for batch and streaming data sour
 
 Storage connectors provide two main mechanisms for authentication: using credentials or an authentication role (IAM Role on AWS or Managed Identity on Azure). Hopsworks supports both a single IAM role (AWS) or Managed Identity (Azure) for the whole Hopsworks cluster or more advanced multiple IAM roles (AWS) or Managed Identities (Azure) that can only be assumed by users with a specific role in a specific project.
 
-!!! info "Multiple IAM Roles/Managed Identities"
-    In the Admin Panel for Hopsworks, you can specify a Cloud Role (IAM role or managed identity) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to an IAM Role with Redshift access to users who have the 'Data Owner' Role in a Project called 'RawFeatures'. 
+!!! info "Mapping IAM Roles to Projects/Roles in Hopsworks"
+    In the Admin Panel for Hopsworks, you can specify a Cloud Role (IAM role or managed identity) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to a given IAM Role to users who have the 'Data Owner' role in a Project called 'RawFeatures'. That IAM Role could provide read access to a Redshift database/table, providing fine-grained access to Redshift from selected users in selected projects in Hopsworks.
 
-[S3](./s3.md)
-[Delta Lake](./s3.md)
-[Redshift](./redshift.md)
 [ADLS](./adls.md)
-[Snowflake](./snowflake.md)
-[JDBC](./jdbc.md)
 [HopsFS](./hopsfs.md)
-
+[JDBC](./jdbc.md)
+[Redshift](./redshift.md)
+[S3](./s3.md)
+[Snowflake](./snowflake.md)
 
 ## Programmatic Connectors (Spark, Python, Java/Scala, Flink)
 
