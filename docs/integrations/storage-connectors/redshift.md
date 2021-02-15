@@ -1,4 +1,3 @@
-## Redshift
 Amazon Redshift is a popular managed data warehouse on AWS. 
 
 <p align="center">

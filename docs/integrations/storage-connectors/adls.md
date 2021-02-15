@@ -1,4 +1,3 @@
-## ADLS
 Azure Data Lake Storage (ADLS) Gen2 is a HDFS-compatible filesystem on Azure for data analytics. The ADLS Gen2 filesystem stores its data in Azure Blob storage, ensuring low-cost storage, high availability, and disaster recovery. In Hopsworks, you can access ADLS Gen2 by defining a Storage Connector and creating and granting persmissions to a service principal.
 
 ### Requirements
@@ -14,7 +13,7 @@ Azure Data Lake Storage (ADLS) Gen2 is a HDFS-compatible filesystem on Azure for
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/storage-connectors/adls.png" alt="Define a Azure Data Lake storage connector using service credentials and account details.">
+    <img src="../../../assets/images/storage-connectors/adls-connector.png" alt="Define a Azure Data Lake storage connector using service credentials and account details.">
     <figcaption>Configure an ADLS storage connector in the Hopsworks UI.</figcaption>    
   </figure>
 </p>

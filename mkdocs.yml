@@ -32,6 +32,14 @@ nav:
     - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Integrations:
     - Overview: setup.md
+    - Storage Connectors:
+      - Overview: integrations/storage-connectors.md    
+      - ADLS: integrations/storage-connectors/adls.md
+      - HopsFS: integrations/storage-connectors/hopsfs.md
+      - JDBC: integrations/storage-connectors/jdbc.md
+      - Redshift: integrations/storage-connectors/redshift.md
+      - S3: integrations/storage-connectors/s3.md
+      - Snowflake: integrations/storage-connectors/snowflake.md
     - Databricks:
       - Networking: integrations/databricks/networking.md
       - Hopsworks API Key: integrations/databricks/api_key.md

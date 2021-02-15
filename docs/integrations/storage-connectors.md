@@ -7,12 +7,17 @@ Storage connectors provide two main mechanisms for authentication: using credent
 !!! info "Mapping IAM Roles to Projects/Roles in Hopsworks"
     In the Admin Panel for Hopsworks, you can specify a Cloud Role (IAM role or managed identity) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to a given IAM Role to users who have the 'Data Owner' role in a Project called 'RawFeatures'. That IAM Role could provide read access to a Redshift database/table, providing fine-grained access to Redshift from selected users in selected projects in Hopsworks.
 
-[ADLS](./adls.md)
-[HopsFS](./hopsfs.md)
-[JDBC](./jdbc.md)
-[Redshift](./redshift.md)
-[S3](./s3.md)
-[Snowflake](./snowflake.md)
+* [ADLS](./storage-connectors/adls.md)
+
+* [HopsFS](./storage-connectors/hopsfs.md)
+
+* [JDBC](./storage-connectors/jdbc.md)
+
+* [Redshift](./storage-connectors/redshift.md)
+
+* [S3](./storage-connectors/s3.md)
+
+* [Snowflake](./storage-connectors/snowflake.md)
 
 ## Programmatic Connectors (Spark, Python, Java/Scala, Flink)
 
@@ -20,4 +25,5 @@ It is also possible to use the rich ecosystem of connectors available in program
 
 ## Next Steps
 
-For more information about how to connect, see the [Connection](../generated/project.md) guide. Or continue with the Data Source guide to import your own data to the Feature Store.
+For more information about how to use the Feature Store, see the [Quickstart Guide](../quickstart.md).
+

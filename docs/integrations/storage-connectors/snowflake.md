@@ -1,12 +1,13 @@
-## Snowflake
 Snowflake is a popular managed data warehouse on AWS, Azure, and GCP.
 
+<!--
 <p align="center">
   <figure>
     <img src="../../../assets/images/storage-connectors/snowflake.png" alt="Setup a Snowflake storage connector">
     <figcaption>Configure the Snowflake storage connector in the Hopsworks UI.</figcaption>    
   </figure>
 </p>
+-->
 
 In the UI for the Snowflake connector, you should enter the following:
 
