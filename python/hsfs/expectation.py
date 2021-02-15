@@ -44,6 +44,7 @@ class Expectation:
         self._featurestore_id = featurestore_id
 
     def save(self):
+        """Persist the expectation metadata object to the feature store."""
         expectations_engine.ExpectationsEngine(self._featurestore_id).save(self)
 
     @classmethod

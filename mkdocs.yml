@@ -64,6 +64,10 @@ nav:
     - TrainingDataset: generated/api/training_dataset_api.md
     - Storage Connector: generated/api/storage_connector_api.md
     - Feature: generated/api/feature_api.md
+    - Rule Definiton: generated/api/rule_definition_api.md
+    - Rule: generated/api/rule_api.md
+    - Expectation: generated/api/expectation_api.md
+    - Validation: generated/api/validation_api.md
   - Contributing: CONTRIBUTING.md
   - Support: https://community.hopsworks.ai/
 

@@ -1,11 +1,7 @@
 # Rule
 
-{{feature}}
+{{rule}}
 
 ## Properties
 
-{{feature_properties}}
-
-## Retrieval
-
-{{feature_methods}}
+{{rule_properties}}
