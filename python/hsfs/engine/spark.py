@@ -16,6 +16,7 @@
 
 import importlib.util
 import os
+import json
 
 import pandas as pd
 import numpy as np
@@ -238,12 +239,12 @@ class Engine:
         """Encodes all complex type features to binary using their avro type as schema."""
         return dataframe.select(
             [
-                col_name
-                if col_name not in feature_group.get_complex_features()
+                field["name"]
+                if field["name"] not in feature_group.get_complex_features()
                 else self.to_avro(
-                    col_name, feature_group._get_feature_avro_schema(col_name)
-                ).alias(col_name)
-                for col_name in dataframe.columns
+                    field["name"], feature_group._get_feature_avro_schema(field["name"])
+                ).alias(field["name"])
+                for field in json.loads(feature_group.avro_schema)["fields"]
             ]
         )
 
@@ -253,9 +254,15 @@ class Engine:
         """
         return dataframe.select(
             [
-                self.to_avro(array(feature_group.primary_key)).alias("key"),
+                # be aware: primary_key array should always be sorted
+                self.to_avro(array(sorted(feature_group.primary_key))).alias("key"),
                 self.to_avro(
-                    struct([f.name for f in feature_group.features]),
+                    struct(
+                        [
+                            field["name"]
+                            for field in json.loads(feature_group.avro_schema)["fields"]
+                        ]
+                    ),
                     feature_group._get_encoded_avro_schema(),
                 ).alias("value"),
             ]
