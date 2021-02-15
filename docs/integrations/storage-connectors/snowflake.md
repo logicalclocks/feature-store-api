@@ -28,8 +28,8 @@ With regards to the database driver, the library to interact with Snowflake *is 
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake-add-driver-jupyter.png" alt="When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.">
-    <figcaption>When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.</figcaption>
+    <img src="../../../assets/images/storage-connectors/snowflake-upload-driver.png" alt="Upload the Snowflake the driver.">
+    <figcaption>Upload the JDBC driver and Snowflake Spark connector to Hopsworks.</figcaption>
   </figure>
 </p>
 
@@ -37,7 +37,8 @@ Then, you add the file to your notebook or job before launching it, as shown in 
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake-upload-driver.png" alt="Upload the Snowflake the driver.">
-    <figcaption>Upload the JDBC driver and Snowflake Spark connector to Hopsworks.</figcaption>
+    <img src="../../../assets/images/storage-connectors/snowflake-add-driver-jupyter.png" alt="When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.">
+    <figcaption>When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.</figcaption>
   </figure>
 </p>
+
