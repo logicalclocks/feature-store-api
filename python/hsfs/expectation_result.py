@@ -60,6 +60,7 @@ class ExpectationResult:
 
     @property
     def status(self):
+        """Status of the expectation after feature ingestion, one of "NONE", "SUCCESS", "WARNING", "FAILURE"."""
         return self._status
 
     @status.setter
@@ -68,6 +69,7 @@ class ExpectationResult:
 
     @property
     def expectation(self):
+        """The expectation this result refers to."""
         return self._expectation
 
     @expectation.setter
@@ -80,4 +82,5 @@ class ExpectationResult:
 
     @results.setter
     def results(self, results):
+        """List of validation results, that is results for all feature-rule pairs."""
         self._results = results

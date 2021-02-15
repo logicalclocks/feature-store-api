@@ -69,6 +69,7 @@ class Expectation:
 
     @property
     def name(self):
+        """Name of the expectation, unique per feature store (project)."""
         return self._name
 
     @name.setter
@@ -77,6 +78,7 @@ class Expectation:
 
     @property
     def description(self):
+        """Description of the expectation."""
         return self._description
 
     @description.setter
@@ -85,6 +87,7 @@ class Expectation:
 
     @property
     def features(self):
+        """List of features this expectation is applied to."""
         return self._features
 
     @features.setter
@@ -93,6 +96,7 @@ class Expectation:
 
     @property
     def rules(self):
+        """List of rules applied to the features of the expectation."""
         return self._rules
 
     @rules.setter

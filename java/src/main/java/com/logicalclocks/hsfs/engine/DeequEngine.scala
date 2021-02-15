@@ -96,8 +96,8 @@ object DeequEngine {
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
       case "IS_GREATER_THAN_OR_EQUAL_TO" => check.isGreaterThanOrEqualTo(constraint.columns.get.head,
         constraint.columns.get(1), doubleBoundary(constraint.min, constraint.max), constraint.hint)
-      //      case "IS_CONTAINED_IN" => check.isContainedIn(constraint.columns.get.head, constraint.legalValues.get,
-      //        doubleBoundary(constraint.min, constraint.max), constraint.hint)
+      case "IS_CONTAINED_IN" => check.isContainedIn(constraint.columns.get.head, constraint.legalValues.get,
+        doubleBoundary(constraint.min, constraint.max), constraint.hint)
     }
   }
 

@@ -68,14 +68,17 @@ class RuleDefinition:
 
     @property
     def name(self):
+        """Name of the rule definition. Unique across all features stores."""
         return self._name
 
     @property
     def predicate(self):
+        """Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN"."""
         return self._predicate
 
     @property
     def value_type(self):
+        """The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String", "Numeric"."""
         return self._value_type
 
     @property

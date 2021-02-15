@@ -85,6 +85,8 @@ PAGES = {
         ),
     },
     "feature_validation.md": {
+        "rule": ["hsfs.rule.Rule"],
+        "rule_properties": keras_autodoc.get_properties("hsfs.rule.Rule"),
         "ruledefinition": ["hsfs.ruledefinition.RuleDefinition"],
         "ruledefinition_getall": ["hsfs.connection.Connection.get_rules"],
         "ruledefinition_get": ["hsfs.connection.Connection.get_rule"],

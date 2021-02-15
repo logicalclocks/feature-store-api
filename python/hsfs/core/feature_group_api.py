@@ -127,7 +127,7 @@ class FeatureGroupApi:
         feature_group_instance,
         feature_group_copy,
         query_parameter,
-        query_parameter_value: True,
+        query_parameter_value=True,
     ):
         """Update the metadata of a feature group.
 

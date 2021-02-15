@@ -69,10 +69,12 @@ class ValidationResult:
 
     @status.setter
     def status(self, status):
+        """Status of the expectation after feature ingestion, one of "NONE", "SUCCESS", "WARNING", "FAILURE"."""
         self._status = status
 
     @property
     def message(self):
+        """Message describing the outcome of applying the rule against the feature."""
         return self._message
 
     @message.setter
@@ -81,6 +83,7 @@ class ValidationResult:
 
     @property
     def value(self):
+        """The computed value of the feature according to the rule."""
         return self._value
 
     @value.setter
@@ -89,6 +92,7 @@ class ValidationResult:
 
     @property
     def feature(self):
+        """Feature of the validation result on which the rule was applied."""
         return self._feature
 
     @feature.setter
@@ -97,6 +101,7 @@ class ValidationResult:
 
     @property
     def rule(self):
+        """Feature of the validation result on which the rule was applied."""
         return self._rule
 
     @rule.setter

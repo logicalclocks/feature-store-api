@@ -72,6 +72,7 @@ class FeatureGroupValidation:
 
     @property
     def validation_id(self):
+        """Unique id of the feature group validation."""
         return self._validation_id
 
     @validation_id.setter
@@ -80,6 +81,7 @@ class FeatureGroupValidation:
 
     @property
     def validation_time(self):
+        """Timestamp in seconds of when feature validation started."""
         return self._validation_time
 
     @validation_time.setter
@@ -88,6 +90,7 @@ class FeatureGroupValidation:
 
     @property
     def status(self):
+        """Status of the expectation after feature ingestion, one of "NONE", "SUCCESS", "WARNING", "FAILURE"."""
         return self._status
 
     @status.setter
@@ -96,6 +99,7 @@ class FeatureGroupValidation:
 
     @property
     def expectation_results(self):
+        """List of expectation results."""
         return self._expectation_results
 
     @expectation_results.setter
@@ -104,6 +108,7 @@ class FeatureGroupValidation:
 
     @property
     def validation_path(self):
+        """Path in the Hopsworks datasets where the feature group validation results are persisted."""
         return self._validation_path
 
     @validation_path.setter
@@ -112,6 +117,7 @@ class FeatureGroupValidation:
 
     @property
     def commit_time(self):
+        """Timestamp in seconds of when the feature dataframe was committed (time-travel FGs only)."""
         return self._commit_time
 
     @commit_time.setter

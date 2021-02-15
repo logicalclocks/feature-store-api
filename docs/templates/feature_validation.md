@@ -66,50 +66,29 @@ and to get a rule definition by name:
 
 # Rules
 
-Used as part of expectations applied on ingested features
+Used as part of expectations that are applied on ingested features. Rule names correspond to the names of the
+rule definitions (see section above) and you can set the severity level and the actual values that the feature should
+respect.
 
-## Retrieval
+## Setting rules values
 
-{{ruledefinition_getall}}
+Rules applied on numerical features except for a specific value they can also accept a range of values,
+for example if you need a feature to be ingested if its minimum value is below zero, then you can set
+`min(0)` and `max(0)` but if you want the minimum to fall within a range of `0` and `1000` then you need to set
+`min(0)` and `max(1000)`. See section `Expectations` below for a detailed example.
 
-{{ruledefinition_get}}
+## Properties
+{{rule}}
 
-For example, to get all available rule definitions in hsfs:
+{{rule_properties}}
 
-=== "Python"
-```python
-import hsfs
-connection = hsfs.connection()
-rules = connection.get_rules()
-```
-
-=== "Scala"
-```scala
-import com.logicalclocks.hsfs._
-val connection = HopsworksConnection.builder().build();
-val rules = connection.getRules()
-```
-
-and to get a rule definition by name:
-
-=== "Python"
-```python
-import hsfs
-connection = hsfs.connection()
-rules = connection.get_rules()
-```
-
-=== "Scala"
-```scala
-import com.logicalclocks.hsfs._
-val connection = HopsworksConnection.builder().build();
-val rules = connection.getRules()
-```
 
 # Expectations
 
-A set of rule instances that are applied on a set of features. Expecations are created at the feature store level
-and can be attached to multiple feature groups.
+A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
+and can be attached to multiple feature groups. An expectation contains a list of featues it is applied to.
+If the feature group the expectation is attached to, does not contain all the expectations features, the expectation
+will not be met.
 
 ## Creation
 

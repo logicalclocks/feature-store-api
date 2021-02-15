@@ -72,6 +72,7 @@ class Rule:
 
     @property
     def name(self):
+        """Name of the rule as found in rule definitions."""
         return self._name
 
     @name.setter
@@ -80,6 +81,7 @@ class Rule:
 
     @property
     def level(self):
+        """Severity level of a rule, one of "WARNING" or "ERROR"."""
         return self._level
 
     @level.setter
@@ -88,6 +90,7 @@ class Rule:
 
     @property
     def min(self):
+        """The lower bound of the value range this feature should fall into."""
         return self._min
 
     @min.setter
@@ -96,6 +99,7 @@ class Rule:
 
     @property
     def max(self):
+        """The upper bound of the value range this feature should fall into."""
         return self._max
 
     @max.setter
@@ -104,6 +108,7 @@ class Rule:
 
     @property
     def pattern(self):
+        """Pattern to check for a feature's pattern compliance. Applicable only to the HAS_PATTERN rule."""
         return self._pattern
 
     @pattern.setter
@@ -112,6 +117,7 @@ class Rule:
 
     @property
     def accepted_type(self):
+        """Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule."""
         return self._accepted_type
 
     @accepted_type.setter
@@ -120,6 +126,7 @@ class Rule:
 
     @property
     def legal_values(self):
+        """List of legal values a feature should be found int. feature.Applicable only to IS_CONTAINED_IN rule."""
         return self._legal_values
 
     @legal_values.setter
