@@ -209,7 +209,7 @@ The Hopsworks clusters deployed by hopsworks.ai store their data in a container 
 
 ### Step 2.1: Creating a Restrictive Role for Accessing Storage 
 
-Similar to [Step 1](#step-1-connecting-your-azure-account) create a new role named `Hopsworks Storage Role`. Add the following permissions to the role
+Similarly to [Step 1.2](#step-12-creating-a-custom-role-for-hopsworksai) create a new role named `Hopsworks Storage Role`. Add the following permissions to the role
 
 ```json
 "permissions": [
@@ -232,8 +232,8 @@ Similar to [Step 1](#step-1-connecting-your-azure-account) create a new role nam
 ]
 ```
 
-Non-enterprise users can remove the policies  *Microsoft.Storage/storageAccounts/blobServices/write*, *Microsoft.Storage/storageAccounts/blobServices/read* as these policies are needed for cluster backups and restore operations available only for the enterprise version. 
-
+!!! note
+    Some of these permissions can be removed at the cost of hopsworks features, see [Limiting Azure permissions](./restrictive_permissions.md) for more details.
 
 ### Step 2.2: Creating a User Assigned Managed Identity
 
@@ -396,7 +396,7 @@ Select the *SSH key* that you want to use to access cluster instances:
   </figure>
 </p>
 
-Select the *User assigned managed identity* that you created above:
+Select the *User assigned managed identity* that you created above and click on *Review and Create*:
 
 <p align="center">
   <figure>
@@ -407,49 +407,8 @@ Select the *User assigned managed identity* that you created above:
   </figure>
 </p>
 
-Select the *Virtual Network* or choose to automatically create a new one:
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-13.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-13.png" alt="Choose virtual network">
-    </a>
-    <figcaption>Choose virtual network</figcaption>
-  </figure>
-</p>
-
-Select the *Subnet* or choose to automatically create a new one:
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-14.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-14.png" alt="Choose subnet">
-    </a>
-    <figcaption>Choose subnet</figcaption>
-  </figure>
-</p>
-
-Select the *Security group* or choose to automatically create a new one:
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-15.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-15.png" alt="Choose security group">
-    </a>
-    <figcaption>Choose security group</figcaption>
-  </figure>
-</p>
-
-Choose the user management you want. Select *Managed* to manage users via Hopsworks.ai, *LDAP* to integrate with your organization's LDAP/ActiveDirectory server or *Disabled* to manage users manually from within Hopsworks:
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-16.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-16.png" alt="Choose user management type">
-    </a>
-    <figcaption>Choose user management type</figcaption>
-  </figure>
-</p>
+!!! note
+    If you are an enterprise user you will have one more step before being able to click on *Review and Create*. In this step, you will be asked to set the backups retention policy. More details about this step [here](./cluster_creation.md#step-5-set-the-backup-retention-policy)
 
 Review all information and select *Create*:
 
@@ -461,6 +420,9 @@ Review all information and select *Create*:
     <figcaption>Review cluster information</figcaption>
   </figure>
 </p>
+
+!!! note
+    We skipped cluster creation steps that are not mandatory. You can find more details about these steps [here](./cluster_creation.md)
 
 The cluster will start. This will take a few minutes:
 

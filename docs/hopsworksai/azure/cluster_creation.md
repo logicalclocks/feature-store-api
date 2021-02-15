@@ -69,7 +69,23 @@ In order to let the cluster instances access to the Azure storage we need to att
   </figure>
 </p>
 
-### Step 5 Virtual network selection
+### Step 5 set the backup retention policy:
+
+!!! note
+    This step is only accessible to enterprise users.
+
+To back up the Azure blob storage data when taking a cluster backups we need to set a retention policy for the blob storage. In this step, you choose the length in days of this data retention. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
+      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+    </a>
+    <figcaption>Choose the backup retention policy</figcaption>
+  </figure>
+</p>
+
+### Step 6 Virtual network selection
 In this step, you can select the virtual network which will be used by the Hopsworks cluster. You can either select an existing virtual network or let Hopsworks.ai create one for you. If you decide to let Hopsworks.ai create the virtual network for you, you can choose the CIDR block for this virtual network. 
 Refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1-create-a-virtual-network-and-subnet) for more details on how to create your own virtual network in Azure.
 
@@ -82,7 +98,7 @@ Refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1
   </figure>
 </p>
 
-### Step 6 Subnet selection
+### Step 7 Subnet selection
 If you selected an existing virtual network in the previous step, this step lets you select which subnet of this virtual network to use. For more information about creating your own subnet refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1-create-a-virtual-network-and-subnet).
 
 If you did not select an existing virtual network in the previous step Hopsworks.ai will create the subnet for you. You can choose the CIDR block this subnet will use.
@@ -96,7 +112,7 @@ If you did not select an existing virtual network in the previous step Hopsworks
   </figure>
 </p>
 
-### Step 7 Network Security group selection
+### Step 8 Network Security group selection
 In this step, you can select the network security group you want to use to manage the inbound and outbound network rules. You can either let Hopsworks.ai create a network security group for you or select an existing security group. For more information about how to create your own network security group in Azure refer to [Create a network security group](restrictive_permissions.md#step-2-create-a-network-security-group).
 
 <p align="center">
@@ -108,7 +124,7 @@ In this step, you can select the network security group you want to use to manag
   </figure>
 </p>
 
-### Step 8 User management selection
+### Step 9 User management selection
 In this step, you can choose which user management system to use. You have three choices: 
 
 * *Managed*: Hopsworks.ai automatically adds and removes users from the Hopsworks cluster when you add and remove users from your organization.
@@ -124,7 +140,7 @@ In this step, you can choose which user management system to use. You have three
   </figure>
 </p>
 
-### Step 9 add tags to your instances.
+### Step 10 add tags to your instances.
 In this step, you can define tags that will be added to the cluster virtual machines.
 
 <p align="center">
@@ -136,7 +152,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
   </figure>
 </p>
 
-### Step 10 Review and create
+### Step 11 Review and create
 Review all information and select *Create*:
 
 <p align="center">
