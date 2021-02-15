@@ -315,7 +315,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    Schema schema = deserialzeAvroSchema(getAvroSchema());
+    Schema schema = getDeserialzedAvroSchema();
     Schema.Field complexField = schema.getFields().stream().filter(field ->
         field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
             new FeatureStoreException(
@@ -326,7 +326,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    Schema schema = deserialzeAvroSchema(getAvroSchema());
+    Schema schema = getDeserialzedAvroSchema();
     List<Schema.Field> fields = schema.getFields().stream()
         .map(field -> getComplexFeatures().contains(field.name())
             ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
@@ -336,7 +336,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   @JsonIgnore
-  private Schema deserialzeAvroSchema(String schema) throws FeatureStoreException, IOException {
+  public Schema getDeserialzedAvroSchema() throws FeatureStoreException, IOException {
     try {
       return new Schema.Parser().parse(getAvroSchema());
     } catch (SchemaParseException e) {

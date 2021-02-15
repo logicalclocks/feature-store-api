@@ -20,7 +20,6 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
-import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -33,6 +32,7 @@ import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
+import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.Column;
@@ -49,6 +49,7 @@ import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -317,11 +318,11 @@ public class SparkEngine {
   public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
     List<Column> select = new ArrayList<>();
-    for (Feature f : featureGroup.getFeatures()) {
-      if (featureGroup.getComplexFeatures().contains(f.getName())) {
-        select.add(to_avro(col(f.getName()), featureGroup.getFeatureAvroSchema(f.getName())).alias(f.getName()));
+    for (Schema.Field f : featureGroup.getDeserialzedAvroSchema().getFields()) {
+      if (featureGroup.getComplexFeatures().contains(f.name())) {
+        select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
       } else {
-        select.add(col(f.getName()));
+        select.add(col(f.name()));
       }
     }
     return dataset.select(select.stream().toArray(Column[]::new));
@@ -338,11 +339,12 @@ public class SparkEngine {
    */
   private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroup featureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
+    Collections.sort(featureGroup.getPrimaryKeys());
     return dataset.select(
         to_avro(array(featureGroup.getPrimaryKeys().stream().map(name -> col(name)).toArray(Column[]::new))).alias(
             "key"),
-        to_avro(struct(featureGroup.getFeatures().stream().map(f -> col(f.getName())).toArray(Column[]::new)),
-            featureGroup.getEncodedAvroSchema()).alias("value"));
+        to_avro(struct(featureGroup.getDeserialzedAvroSchema().getFields().stream()
+                .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
