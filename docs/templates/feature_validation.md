@@ -17,8 +17,8 @@ validation is part of the HSFS Java/Scala and Python API for working with Featur
 
 
 # Rule definitions
-A set of pre-defined validation rules applied on a dataframe that is inserted into a Feature Group. Users can discover
-which rules are available in hsfs so they can later use them when creating expectations on features.
+A set of pre-defined and immutable rule definitions (RuleDefiniton) that are unique by name and are used for creating
+validation rules (Rule) and expectations (Expectation) applied on a dataframe that is inserted into a Feature Group.
 
 ## Retrieval
 
@@ -63,6 +63,48 @@ and to get a rule definition by name:
 
 {{ruledefinition_properties}}
 
+
+# Rules
+
+Used as part of expectations applied on ingested features
+
+## Retrieval
+
+{{ruledefinition_getall}}
+
+{{ruledefinition_get}}
+
+For example, to get all available rule definitions in hsfs:
+
+=== "Python"
+```python
+import hsfs
+connection = hsfs.connection()
+rules = connection.get_rules()
+```
+
+=== "Scala"
+```scala
+import com.logicalclocks.hsfs._
+val connection = HopsworksConnection.builder().build();
+val rules = connection.getRules()
+```
+
+and to get a rule definition by name:
+
+=== "Python"
+```python
+import hsfs
+connection = hsfs.connection()
+rules = connection.get_rules()
+```
+
+=== "Scala"
+```scala
+import com.logicalclocks.hsfs._
+val connection = HopsworksConnection.builder().build();
+val rules = connection.getRules()
+```
 
 # Expectations
 
