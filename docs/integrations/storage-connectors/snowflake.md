@@ -22,9 +22,9 @@ In the UI for the Snowflake connector, you should enter the following:
 * "table": "CUSTOMER_CHURN"
 
 
-There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See [Configure Snowflake OAuth] (https://docs.snowflake.com/en/user-guide/oauth-custom.html) for instruction on how to configure OAuth support for snowflake, and [Using External OAuth] (https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth) on how you can use External OAuth to authenticate to Snowflake.
+There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See [Configure Snowflake OAuth](https://docs.snowflake.com/en/user-guide/oauth-custom.html) for instruction on how to configure OAuth support for snowflake, and [Using External OAuth](https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth) on how you can use External OAuth to authenticate to Snowflake.
 
-With regards to the database driver, the library to interact with Snowflake *is not* included in Hopsworks - you need to upload the driver yourself. First, you need to [download the jdbc driver](https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/) and to use snowflake as the data source in spark [ the snowflake spark connector] (https://docs.snowflake.com/en/user-guide/spark-connector-install.html).
+With regards to the database driver, the library to interact with Snowflake *is not* included in Hopsworks - you need to upload the driver yourself. First, you need to [download the jdbc driver](https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc) and to use snowflake as the data source in spark [the snowflake spark connector](https://docs.snowflake.com/en/user-guide/spark-connector-install.html).
 
 <p align="center">
   <figure>
@@ -38,7 +38,7 @@ Then, you add the file to your notebook or job before launching it, as shown in 
 <p align="center">
   <figure>
     <img src="../../../assets/images/storage-connectors/snowflake-add-driver-jupyter.png" alt="When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.">
-    <figcaption>When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.</figcaption>
+    <figcaption>When you start a Jupyter notebook for Snowflake, you need to add both the JDBC driver and the Snowflake Spark Connector.</figcaption>
   </figure>
 </p>
 
