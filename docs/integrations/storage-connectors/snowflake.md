@@ -17,9 +17,6 @@ In the UI for the Snowflake connector, you should enter the following:
 * "token": "oauth token", # required if no password
 * "database": "ML_WORKSHOP", # required
 * "schema": "PUBLIC", # required
-* "warehouse": "COMPUTE_WH",
-* "role": "HOPSWORKS_ROLE",
-* "table": "CUSTOMER_CHURN"
 
 
 There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See [Configure Snowflake OAuth](https://docs.snowflake.com/en/user-guide/oauth-custom.html) for instruction on how to configure OAuth support for snowflake, and [Using External OAuth](https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth) on how you can use External OAuth to authenticate to Snowflake.
