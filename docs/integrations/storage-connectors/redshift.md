@@ -32,6 +32,6 @@ Then, you add the file to your notebook or job before launching it, as shown in 
 <p align="center">
   <figure>
     <img src="../../../assets/images/storage-connectors/redshift-upload-driver.png" alt="Upload the Redshift the driver.">
-    <figcaption>Upload the Redshift the driver to Hopsworks.</figcaption>
+    <figcaption>Upload the Redshift driver to Hopsworks.</figcaption>
   </figure>
 </p>
