@@ -5,7 +5,7 @@ You can define storage connectors in Hopsworks for batch and streaming data sour
 Storage connectors provide two main mechanisms for authentication: using credentials or an authentication role (IAM Role on AWS or Managed Identity on Azure). Hopsworks supports both a single IAM role (AWS) or Managed Identity (Azure) for the whole Hopsworks cluster or more advanced multiple IAM roles (AWS) or Managed Identities (Azure) that can only be assumed by users with a specific role in a specific project.
 
 !!! info "Mapping IAM Roles to Projects/Roles in Hopsworks"
-    In the Admin Panel for Hopsworks, you can specify a Cloud Role (IAM role or managed identity) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to a given IAM Role to users who have the 'Data Owner' role in a Project called 'RawFeatures'. That IAM Role could provide read access to a Redshift database/table, providing fine-grained access to Redshift from selected users in selected projects in Hopsworks.
+    In Hopsworks, [you can specify a Cloud Role (IAM role or managed identity)](https://hopsworks.readthedocs.io/en/latest/admin_guide/cloud_role_mapping.html) and (1) in which Project and (2) what role within that Project can assume that Cloud Role. For example, you could limit access to a given IAM Role to users who have the 'Data Owner' role in a Project called 'RawFeatures'. That IAM Role could provide read access to a Redshift database/table, providing fine-grained access to Redshift from selected users in selected projects in Hopsworks.
 
 * [ADLS](./storage-connectors/adls.md)
 
