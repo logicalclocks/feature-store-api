@@ -238,12 +238,12 @@ class Engine:
         """Encodes all complex type features to binary using their avro type as schema."""
         return dataframe.select(
             [
-                f.name
-                if f.name not in feature_group.get_complex_features()
+                col_name
+                if col_name not in feature_group.get_complex_features()
                 else self.to_avro(
-                    f.name, feature_group._get_feature_avro_schema(f.name)
-                ).alias(f.name)
-                for f in feature_group.features
+                    col_name, feature_group._get_feature_avro_schema(col_name)
+                ).alias(col_name)
+                for col_name in dataframe.columns
             ]
         )
 
