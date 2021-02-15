@@ -630,3 +630,19 @@ class StorageConnector:
                 "Spark options are not supported for connector "
                 + self._storage_connector_type
             )
+
+    def snowflake_connector_options(self):
+        props = {
+            "user": self._user,
+            "account": self.account,
+            "database": self._database,
+            "schema": self._schema,
+        }
+        if self._password is not None:
+            props["password"] = self._password
+        else:
+            props["authenticator"] = "oauth"
+            props["token"] = self._token
+        if self._warehouse is not None:
+            props["warehouse"] = self._warehouse
+        return props
