@@ -20,6 +20,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -47,6 +48,7 @@ import static org.apache.spark.sql.functions.struct;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -297,8 +299,32 @@ public class SparkEngine {
    */
   public void writeOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    onlineFeatureGroupToAvro(featureGroup, dataset).write().format(Constants.KAFKA_FORMAT).options(writeOptions).option(
-        "topic", utils.getOnlineTableName(featureGroup) + "_onlinefs").save();
+    onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+        .write()
+        .format(Constants.KAFKA_FORMAT)
+        .options(writeOptions)
+        .option("topic", utils.getOnlineTableName(featureGroup) + "_onlinefs")
+        .save();
+  }
+
+  /**
+   * Encodes all complex type features to binary using their avro type as schema.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @return
+   */
+  public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws FeatureStoreException, IOException {
+    List<Column> select = new ArrayList<>();
+    for (Feature f : featureGroup.getFeatures()) {
+      if (featureGroup.getComplexFeatures().contains(f.getName())) {
+        select.add(to_avro(col(f.getName()), featureGroup.getFeatureAvroSchema(f.getName())).alias(f.getName()));
+      } else {
+        select.add(col(f.getName()));
+      }
+    }
+    return dataset.select(select.stream().toArray(Column[]::new));
   }
 
   /**
@@ -316,7 +342,7 @@ public class SparkEngine {
         to_avro(array(featureGroup.getPrimaryKeys().stream().map(name -> col(name)).toArray(Column[]::new))).alias(
             "key"),
         to_avro(struct(featureGroup.getFeatures().stream().map(f -> col(f.getName())).toArray(Column[]::new)),
-            featureGroup.avroSchema()).alias("value"));
+            featureGroup.getEncodedAvroSchema()).alias("value"));
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,

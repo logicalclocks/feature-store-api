@@ -25,15 +25,19 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParseException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.avro.Schema;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -55,7 +59,6 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   protected String location;
 
-  @Getter
   @Setter
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
@@ -68,6 +71,9 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
+
+  @JsonIgnore
+  private String avroSchema;
 
   private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
@@ -294,7 +300,55 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetails(this, limit);
   }
 
-  public String avroSchema() throws FeatureStoreException, IOException {
-    return featureGroupEngine.getAvroSchema(this);
+  @JsonIgnore
+  public String getAvroSchema() throws FeatureStoreException, IOException {
+    if (avroSchema == null) {
+      avroSchema = featureGroupEngine.getAvroSchema(this);
+    }
+    return avroSchema;
+  }
+
+  @JsonIgnore
+  public List<String> getComplexFeatures() {
+    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+  }
+
+  @JsonIgnore
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    Schema schema = deserialzeAvroSchema(getAvroSchema());
+    Schema.Field complexField = schema.getFields().stream().filter(field ->
+        field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
+            new FeatureStoreException(
+                "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
+
+    return complexField.schema().toString(true);
+  }
+
+  @JsonIgnore
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    Schema schema = deserialzeAvroSchema(getAvroSchema());
+    List<Schema.Field> fields = schema.getFields().stream()
+        .map(field -> getComplexFeatures().contains(field.name())
+            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
+            : new Schema.Field(field.name(), field.schema(), null, null))
+        .collect(Collectors.toList());
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+  }
+
+  @JsonIgnore
+  private Schema deserialzeAvroSchema(String schema) throws FeatureStoreException, IOException {
+    try {
+      return new Schema.Parser().parse(getAvroSchema());
+    } catch (SchemaParseException e) {
+      throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
+    }
+  }
+
+  @JsonIgnore
+  public List<String> getPrimaryKeys() {
+    if (primaryKeys == null) {
+      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
+    }
+    return primaryKeys;
   }
 }

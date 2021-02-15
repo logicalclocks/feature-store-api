@@ -16,12 +16,17 @@
 
 package com.logicalclocks.hsfs.util;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Constants {
 
   // env vars
   public static final String PROJECTNAME_ENV = "hopsworks.projectname";
 
   public static final String FEATURESTORE_SUFFIX = "_featurestore";
+
+  public static final List<String> COMPLEX_FEATURE_TYPES = Arrays.asList("MAP", "ARRAY", "STRUCT", "UNIONTYPE");
 
   public static final String HIVE_FORMAT = "hive";
   public static final String JDBC_FORMAT = "jdbc";

@@ -793,7 +793,7 @@ class FeatureGroup(FeatureGroupBase):
         schema = json.loads(self.avro_schema)
 
         for field in schema["fields"]:
-            if complex_features.contains(field["name"]):
+            if field["name"] in complex_features:
                 field["type"] = ["null", "bytes"]
 
         schema_s = json.dumps(schema)

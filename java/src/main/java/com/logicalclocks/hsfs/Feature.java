@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.SqlFilterCondition;
+import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -116,6 +117,10 @@ public class Feature {
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+  }
+
+  public boolean isComplex() {
+    return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.startsWith(c));
   }
 
   public Filter lt(Object value) {
