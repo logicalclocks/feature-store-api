@@ -249,7 +249,7 @@ Similarly to [Step 1.2](#step-12-creating-a-custom-role-for-hopsworksai) create 
 ```
 
 !!! note
-    Some of these permissions can be removed at the cost of hopsworks features, see [Limiting Azure permissions](./restrictive_permissions.md) for more details.
+    Some of these permissions can be removed at the cost of Hopsworks features, see [Limiting Azure permissions](./restrictive_permissions.md) for more details.
 
 ### Step 2.2: Creating a User Assigned Managed Identity
 

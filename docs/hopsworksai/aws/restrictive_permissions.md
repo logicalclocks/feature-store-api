@@ -25,7 +25,7 @@ After you have created the VPC either [Create a Security Group](https://docs.aws
 
 !!! note
     The [Security Group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#AddRemoveRules) and/or [Network ACLs](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#Rules)
-    need to be configured so that at least port `80` is reachable from the internet otherwise you will have to use self signed certificates in the hopsworks cluster.
+    need to be configured so that at least port `80` is reachable from the internet otherwise you will have to use self signed certificate in your Hopsworks cluster.
 
 !!! note
     If you intend to use the managed users option on your Hopsworks cluster you should also add a rule to open port 443.
@@ -37,7 +37,7 @@ Follow this guide to create a role to be used by EC2 with no permissions attache
 [Creating a Role for an AWS Service (Console)](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html).
 Take note of the ARN of the role you just created.
 
-You will need to add permissions to the instance profile to give access to the S3 bucket where hopsworks will store its data. For more details about these permissions check [our guide here](../getting_started/#step-2-creating-instance-profile).
+You will need to add permissions to the instance profile to give access to the S3 bucket where Hopsworks will store its data. For more details about these permissions check [our guide here](../getting_started/#step-2-creating-instance-profile).
 Check [bellow](#limiting-the-instance-profile-permissions) for more information on restricting the permissions given the instance profile.
 
 ### Step 3: Set permissions of the cross-account role
@@ -173,7 +173,7 @@ See: [Creating a Condition with Multiple Keys or Values](https://docs.aws.amazon
 
 ### Backup permissions
 
-The following permissions are only needed for the backup feature.You can remove them if you are not going to create backups or if you do not have access to this Enterprise feature.
+The following permissions are only needed for the backup feature. You can remove them if you are not going to create backups or if you do not have access to this Enterprise feature.
 
 ```json
       {
@@ -192,7 +192,7 @@ The following permissions are only needed for the backup feature.You can remove 
 
 ### Other removable permissions
 
-The following permissions are needed to give an early warning if your VPC and security groups are badly configured. You can remove them if you don't need this early warning.
+The following permissions are needed to give an early warning if your VPC and security groups are badly configured. You can remove them if you don't need it.
 ```json
           "ec2:DescribeVpcAttribute",
           "ec2:DescribeRouteTables"
@@ -229,7 +229,7 @@ For this remove the following permissions from the instance profile:
       "S3:GetBucketVersioning"
 ```
 
-Hopsworks put its logs in cloudwatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:
+Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:
 
 ```json
     {

@@ -79,7 +79,7 @@ In order to let the cluster instances access to the Azure storage we need to att
 !!! note
     This step is only accessible to enterprise users.
 
-To back up the Azure blob storage data when taking a cluster backups we need to set a retention policy for the blob storage. In this step, you choose the length in days of this data retention. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
+To back up the Azure blob storage data when taking a cluster backups we need to set a retention policy for the blob storage. In this step, you choose the retention period in days. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
 
 <p align="center">
   <figure>
