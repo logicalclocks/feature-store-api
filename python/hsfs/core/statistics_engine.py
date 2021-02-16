@@ -16,7 +16,7 @@
 
 import datetime
 
-from hsfs import engine, statistics
+from hsfs import engine, statistics, util
 from hsfs.core import statistics_api
 from hsfs.client import exceptions
 
@@ -83,4 +83,5 @@ class StatisticsEngine:
 
     def get(self, metadata_instance, commit_time):
         """Get Statistics with the specified commit time of an entity."""
-        return self._statistics_api.get(metadata_instance, commit_time)
+        commit_timestamp = util.get_timestamp_from_date_string(commit_time)
+        return self._statistics_api.get(metadata_instance, commit_timestamp)

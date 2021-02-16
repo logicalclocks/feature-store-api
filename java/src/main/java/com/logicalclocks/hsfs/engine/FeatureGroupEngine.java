@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class FeatureGroupEngine {
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                                List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
@@ -128,7 +129,7 @@ public class FeatureGroupEngine {
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       FeatureGroupValidation validation = featureGroup.validate(dataset);
@@ -163,7 +164,7 @@ public class FeatureGroupEngine {
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
                                     HudiOperationType operation, Map<String, String> writeOptions,
                                     Integer validationId)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
@@ -188,8 +189,12 @@ public class FeatureGroupEngine {
   }
 
   private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
-                                                           Integer limit) throws FeatureStoreException, IOException {
-    List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.getCommitDetails(featureGroup, wallclockTime, limit);
+                                                           Integer limit)
+      throws FeatureStoreException, IOException, ParseException {
+
+    Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
+    List<FeatureGroupCommit> featureGroupCommits =
+        featureGroupApi.getCommitDetails(featureGroup, wallclockTimestamp, limit);
     if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
@@ -207,18 +212,19 @@ public class FeatureGroupEngine {
   }
 
   public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     return getCommitDetails(featureGroup, null, limit);
   }
 
   public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
                                                                      String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     return getCommitDetails(featureGroup, wallclockTime, limit);
   }
 
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException {
+                                         Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException, ParseException {
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 

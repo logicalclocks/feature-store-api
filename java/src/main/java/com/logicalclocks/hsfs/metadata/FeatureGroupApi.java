@@ -212,8 +212,8 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public List<FeatureGroupCommit> getCommitDetails(FeatureGroup featureGroupBase, String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException {
+  public List<FeatureGroupCommit> getCommitDetails(FeatureGroup featureGroupBase, Long wallclockTimestamp,
+                                                   Integer limit) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -223,7 +223,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
-        .set("wallclockTime", wallclockTime) //!= null ? wallclockTime: "00000000000000"
+        .set("wallclockTime", wallclockTimestamp)
         .set("sort_by", "committed_on:desc")
         .set("offset", 0)
         .set("limit", limit)

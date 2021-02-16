@@ -13,7 +13,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
@@ -138,8 +138,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             engine.get_instance()._spark_context,
             engine.get_instance()._spark_session,
         )
+        wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
         feature_group_commits = self._feature_group_api.commit_details(
-            feature_group, wallclock_time, limit
+            feature_group, wallclock_timestamp, limit
         )
         commit_details = {}
         for feature_group_commit in feature_group_commits:

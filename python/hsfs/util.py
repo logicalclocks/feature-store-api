@@ -15,7 +15,10 @@
 #
 
 import os
+import re
 import json
+
+from datetime import datetime
 from pathlib import Path
 from sqlalchemy import create_engine
 
@@ -97,6 +100,29 @@ def create_mysql_connection(online_conn):
 
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
     return sql_alchemy_engine.connect()
+
+
+def get_timestamp_from_date_string(input_date):
+    date_format_patterns = {
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
+    }
+    input_date = (
+        input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
+    )
+    date_format = None
+
+    for pattern in date_format_patterns:
+        date_format_pattern = re.match(pattern, input_date)
+        if date_format_pattern:
+            break
+
+    if date_format in None:
+        raise ("Unable to identify format of the provided date value : " + input_date)
+
+    return int(float(datetime.strptime(input_date, date_format).timestamp()) * 1000)
 
 
 class VersionWarning(Warning):

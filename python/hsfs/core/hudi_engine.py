@@ -197,6 +197,9 @@ class HudiEngine:
         return feature_group_commit.FeatureGroupCommit(
             commitid=None,
             commit_date_string=commit_timeline.lastInstant().get().getTimestamp(),
+            commit_time=util.get_timestamp_from_date_string(
+                commit_timeline.lastInstant().get().getTimestamp()
+            ),
             rows_inserted=commit_metadata.fetchTotalInsertRecordsWritten(),
             rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
             rows_deleted=commit_metadata.getTotalRecordsDeleted(),

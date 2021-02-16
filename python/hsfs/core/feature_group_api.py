@@ -200,14 +200,14 @@ class FeatureGroupApi:
             ),
         )
 
-    def commit_details(self, feature_group_instance, wallclock_time, limit):
+    def commit_details(self, feature_group_instance, wallclock_timestamp, limit):
         """
         Get feature group commit metadata.
         # Arguments
         feature_group_instance: FeatureGroup, required
             metadata object of feature group.
         limit: number of commits to retrieve
-        wallclock_time: specific point in time if not None.
+        wallclock_timestamp: specific point in time.
         # Returns
             `FeatureGroupCommit`.
         """
@@ -226,7 +226,7 @@ class FeatureGroupApi:
             "sort_by": "committed_on:desc",
             "offset": 0,
             "limit": limit,
-            "wallclockTime": wallclock_time,
+            "wallclockTime": wallclock_timestamp,
         }
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(
