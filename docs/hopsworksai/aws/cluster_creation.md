@@ -74,7 +74,7 @@ To let the cluster instances access the S3 bucket we need to attach an *instance
 !!! note
     This step is only accessible to enterprise users.
 
-To back up the S3 bucket data when taking a cluster backup we need to set a retention policy for S3. In this step, you choose the length in days of this data retention. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
+To back up the S3 bucket data when taking a cluster backup we need to set a retention policy for S3. In this step, you choose the retention period in days. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
 
 <p align="center">
   <figure>
