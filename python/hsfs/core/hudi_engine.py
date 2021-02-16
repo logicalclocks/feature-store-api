@@ -105,7 +105,8 @@ class HudiEngine:
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
     def delete_record(self, delete_df, write_options):
-        write_options.update({self.PAYLOAD_CLASS_OPT_KEY, self.PAYLOAD_CLASS_OPT_VAL})
+        write_options[self.PAYLOAD_CLASS_OPT_KEY] = self.PAYLOAD_CLASS_OPT_VAL
+
         fg_commit = self._write_hudi_dataset(
             delete_df, "append", self.HUDI_UPSERT, write_options
         )
