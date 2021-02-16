@@ -19,7 +19,7 @@ The following options are required to create a snowflake connector:
 - database: the database to use for the session after connecting.
 - schema: the schema to use for the session after connecting.
 
-Remaining options are not required:
+The remaining options are not required, but are optional:
 - warehouse: the default virtual warehouse to use for the session after connecting.
 - role: the default security role to use for the session after connecting.
 - table: the table to which data is written to or read from. 
