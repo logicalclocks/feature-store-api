@@ -91,6 +91,17 @@ public class SparkEngine {
         .load();
   }
 
+  public Dataset<Row> snowflake(String query, StorageConnector storageConnector) throws FeatureStoreException {
+    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
+    if (!Strings.isNullOrEmpty(query)) {
+      readOptions.put("query", query);
+    }
+    return sparkSession.read()
+        .format(Constants.SNOWFLAKE_FORMAT)
+        .options(readOptions)
+        .load();
+  }
+
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException {
     Dataset<Row> dataset;
@@ -99,6 +110,9 @@ public class SparkEngine {
       case REDSHIFT:
       case JDBC:
         dataset = jdbc(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
+        break;
+      case SNOWFLAKE:
+        dataset = snowflake(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
         break;
       default:
         dataset = read(onDemandFeatureGroup.getStorageConnector(),

@@ -194,7 +194,7 @@ public class StorageConnector {
   @Setter
   private StorageConnectorType storageConnectorType;
 
-  public String getAccount() {
+  public String account() {
     return this.url.replace("https://", "").replace(".snowflakecomputing.com", "");
   }
 
