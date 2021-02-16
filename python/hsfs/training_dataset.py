@@ -56,7 +56,6 @@ class TrainingDataset:
         statistics_config=None,
         featurestore_name=None,
         id=None,
-        jobs=None,
         inode_id=None,
         training_dataset_type=None,
         from_query=None,
