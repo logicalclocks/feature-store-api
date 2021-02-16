@@ -18,6 +18,11 @@ In the UI for the Snowflake connector, you should enter the following:
 * "database": "ML_WORKSHOP", # required
 * "schema": "PUBLIC", # required
 
+The following options are not required (optional):
+
+* warehouse: the default virtual warehouse to use for the session after connecting
+* role: the default security role to use for the session after connecting
+* table: the table to which data is written to or read from. 
 
 There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See [Configure Snowflake OAuth](https://docs.snowflake.com/en/user-guide/oauth-custom.html) for instruction on how to configure OAuth support for snowflake, and [Using External OAuth](https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth) on how you can use External OAuth to authenticate to Snowflake.
 
