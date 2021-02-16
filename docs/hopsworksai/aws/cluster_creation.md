@@ -69,7 +69,23 @@ To let the cluster instances access the S3 bucket we need to attach an *instance
   </figure>
 </p>
 
-### Step 5 Managed Containers:
+### Step 5 set the backup retention policy:
+
+!!! note
+    This step is only accessible to enterprise users.
+
+To back up the S3 bucket data when taking a cluster backup we need to set a retention policy for S3. In this step, you choose the length in days of this data retention. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
+      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+    </a>
+    <figcaption>Choose the backup retention policy</figcaption>
+  </figure>
+</p>
+
+### Step 6 Managed Containers:
 Hopsworks can integrate with Amazon Elastic Kubernetes Service (EKS) and Amazon Elastic Container Registry (ECR) to launch Python jobs, Jupyter servers, and ML model servings on top of Amazon EKS. For more detail on how to set up this integration refer to [Integration with Amazon EKS and Amazon ECR](eks_ecr_integration.md).
 <p align="center">
   <figure>
@@ -80,7 +96,7 @@ Hopsworks can integrate with Amazon Elastic Kubernetes Service (EKS) and Amazon 
   </figure>
 </p>
 
-### Step 6 VPC selection
+### Step 7 VPC selection
 In this step, you can select the VPC which will be used by the Hopsworks cluster. You can either select an existing VPC or let Hopsworks.ai create one for you. If you decide to let Hopsworks.ai create the VPC for you, you can choose the CIDR block for this virtual network. 
 Refer to [Create a VPC](restrictive_permissions.md#step-1-create-a-vpc) for more details on how to create your own VPC in AWS.
 
@@ -93,7 +109,7 @@ Refer to [Create a VPC](restrictive_permissions.md#step-1-create-a-vpc) for more
   </figure>
 </p>
 
-### Step 7 Availability Zone selection
+### Step 8 Availability Zone selection
 If you selected an existing VPC in the previous step, this step lets you select which availability zone of this VPC to use.
 
 If you did not select an existing virtual network in the previous step Hopsworks.ai will create an availability zone for you. You can choose the CIDR block this subnet will use.
@@ -107,7 +123,7 @@ If you did not select an existing virtual network in the previous step Hopsworks
   </figure>
 </p>
 
-### Step 8 Security group selection
+### Step 9 Security group selection
 If you selected an existing VPC in the previous step, this step lets you select which security group to use.
 
 !!! note
@@ -124,7 +140,7 @@ If you selected an existing VPC in the previous step, this step lets you select 
   </figure>
 </p>
 
-### Step 9 User management selection
+### Step 10 User management selection
 In this step, you can choose which user management system to use. You have three choices: 
 
 * *Managed*: Hopsworks.ai automatically adds and removes users from the Hopsworks cluster when you add and remove users from your organization.
@@ -140,7 +156,7 @@ In this step, you can choose which user management system to use. You have three
   </figure>
 </p>
 
-### Step 10 add tags to your instances.
+### Step 11 add tags to your instances.
 In this step, you can define tags that will be added to the cluster virtual machines.
 
 <p align="center">
@@ -152,7 +168,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
   </figure>
 </p>
 
-### Step 11 Review and create
+### Step 12 Review and create
 Review all information and select *Create*:
 
 <p align="center">

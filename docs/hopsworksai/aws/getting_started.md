@@ -354,6 +354,9 @@ Select the *Instance Profile* that you created above and click on *Review and Su
   </figure>
 </p>
 
+!!! note
+    If you are an enterprise user you will have one more step before being able to click on *Review and Create*. In this step, you will be asked to set the backups retention policy. More details about this step [here](./cluster_creation.md#step-5-set-the-backup-retention-policy)
+
 Review all information and select *Create*:
 
 <p align="center">
