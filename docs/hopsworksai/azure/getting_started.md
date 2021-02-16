@@ -10,6 +10,19 @@ Hopsworks.ai deploys Hopsworks clusters to your Azure account. To enable this, y
 create a service principal and a custom role for Hopsworks.ai granting access
 to either a subscription or resource group.
 
+### Step 1.1: Prerequisite
+
+For Hopsworks.ai to deploy a cluster the following resource providers need to be registered on your Azure subscription.
+You can verify that they are registered by going to your subscription in the Azure portal and click on *Resource providers*.
+If one of the resource providers is not registered select it and click on *Register*.
+
+```json
+    Microsoft.Network
+    Microsoft.Compute
+    Microsoft.Storage
+    Microsoft.ManagedIdentity
+```
+
 ### Step 1.1: Creating a service principal for Hopsworks.ai
 
 On Hopsworks.ai, go to *Settings/Cloud Accounts* and choose to *Configure* Azure:
@@ -76,8 +89,11 @@ In this case, please ask your Azure administrator to add it for you or give you 
 ### Step 1.2: Creating a custom role for Hopsworks.ai
 
 Proceed to the Azure Portal and open either a *Subscription* or *Resource Group* that you want to use for Hopsworks.ai.
-Select *Add* and choose *Add custom role*. Granting access to a *Subscription* will grant access to all *Resource Groups*
-in that *Subscription*. If you are uncertain if that is what you want, then start with a *Resource Group*.
+Select *Add* and choose *Add custom role*. 
+
+!!! note
+    Granting access to a *Subscription* will grant access to all *Resource Groups* 
+    in that *Subscription*. If you are uncertain if that is what you want, then start with a *Resource Group*.
 
 <p align="center">
   <figure>
@@ -359,7 +375,12 @@ In Hopsworks.ai, select *Create cluster*:
   </figure>
 </p>
 
-Select the *Location* in which you want your cluster to run (1), name your cluster (2) and select the *Resource Group* (3) in which you created your *storage account* and *user assigned managed identity* (see above).
+Select the *Resource Group* (1) in which you created your *storage account* and *user assigned managed identity* (see above).
+
+!!! note
+    If the *Resource Group* does not appear in the drop-down, make sure that you properly [created and set the custom role](#step-12-creating-a-custom-role-for-hopsworksai) for this resource group.
+
+Name your cluster (2). Your cluster will be deployed in the *Location* of your *Resource Group* (3).
 
 Select the *Instance type* (4) and *Local storage* (5) size for the cluster *Head node*.
 
@@ -369,7 +390,7 @@ Select the *Instance type* (7) and *Local storage* size (8) for the *worker node
 !!! note
     It is possible to add or remove workers once the cluster is running.
 
-Enter the name of the *storage account* (9) you created above in *Azure Storage account name* and name the container in which the data wil be stored in *Azure Container name* (10).
+Select the *storage account* (9) you created above in *Azure Storage account name*. The name of the container in which the data will be stored is displayed in *Azure Container name* (10), you can modify it if needed.
 
 !!! note
     You can choose to use a container already existing in your *storage account* by using the name of this container, but you need to first make sure that this container is empty.
