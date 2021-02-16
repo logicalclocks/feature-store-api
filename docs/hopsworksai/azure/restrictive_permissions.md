@@ -135,7 +135,7 @@ If you are not going to create backups or if you do not have access to this Ente
 The following permissions are used to let you close and open ports on your cluster from hopswork.ai, you can remove them if you do not want to open ports on your cluster or if you want to manually open ports in Azure.
 
 ```json
-"actions": [
+  "actions": [
     "Microsoft.Network/networkSecurityGroups/securityRules/write",
     "Microsoft.Network/networkSecurityGroups/securityRules/delete",
   ]

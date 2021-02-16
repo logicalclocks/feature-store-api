@@ -10,7 +10,7 @@ Hopsworks.ai deploys Hopsworks clusters to your Azure account. To enable this, y
 create a service principal and a custom role for Hopsworks.ai granting access
 to either a subscription or resource group.
 
-### Step 1.1: Prerequisite
+### Step 1.0: Prerequisite
 
 For Hopsworks.ai to deploy a cluster the following resource providers need to be registered on your Azure subscription.
 You can verify that they are registered by going to your subscription in the Azure portal and click on *Resource providers*.
