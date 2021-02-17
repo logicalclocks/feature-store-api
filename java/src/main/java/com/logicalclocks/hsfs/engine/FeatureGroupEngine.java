@@ -192,7 +192,7 @@ public class FeatureGroupEngine {
                                                            Integer limit)
       throws FeatureStoreException, IOException, ParseException {
 
-    Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
+    Long wallclockTimestamp =  wallclockTime != null ? utils.getTimeStampFromDateString(wallclockTime): null;
     List<FeatureGroupCommit> featureGroupCommits =
         featureGroupApi.getCommitDetails(featureGroup, wallclockTimestamp, limit);
     if (featureGroupCommits == null) {

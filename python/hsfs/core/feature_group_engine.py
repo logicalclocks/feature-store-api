@@ -138,7 +138,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             engine.get_instance()._spark_context,
             engine.get_instance()._spark_session,
         )
-        wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
+        wallclock_timestamp = (
+            util.get_timestamp_from_date_string(wallclock_time)
+            if wallclock_time is not None
+            else None
+        )
         feature_group_commits = self._feature_group_api.commit_details(
             feature_group, wallclock_timestamp, limit
         )

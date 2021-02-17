@@ -226,7 +226,7 @@ class FeatureGroupApi:
             "sort_by": "committed_on:desc",
             "offset": 0,
             "limit": limit,
-            "wallclockTime": wallclock_timestamp,
+            "filter_by": "committed_on:" + wallclock_timestamp,
         }
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(

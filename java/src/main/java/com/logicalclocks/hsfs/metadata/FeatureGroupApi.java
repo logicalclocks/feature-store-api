@@ -43,7 +43,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata,validationType}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
-      + "/commits{?wallclockTime,sort_by,offset,limit}";
+      + "/commits{?filter_by,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -223,7 +223,7 @@ public class FeatureGroupApi {
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
-        .set("wallclockTime", wallclockTimestamp)
+        .set("filter_by", "committed_on:" + wallclockTimestamp)
         .set("sort_by", "committed_on:desc")
         .set("offset", 0)
         .set("limit", limit)
