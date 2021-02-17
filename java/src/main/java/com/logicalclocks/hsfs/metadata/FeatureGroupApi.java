@@ -228,7 +228,7 @@ public class FeatureGroupApi {
         .set("limit", limit);
 
     if (wallclockTimestamp != null) {
-      uriTemplate.set("filter_by", "committed_on:" + wallclockTimestamp);
+      uriTemplate.set("filter_by", "commited_on_ltoeq:" + wallclockTimestamp);
     }
 
     String uri = uriTemplate.expand();

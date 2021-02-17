@@ -363,6 +363,26 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetails(this, limit);
   }
 
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, Object>> commitDetails(String wallclockTime)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   public Map<Long, Map<String, Object>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);

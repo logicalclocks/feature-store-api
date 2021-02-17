@@ -224,7 +224,7 @@ class FeatureGroupApi:
         headers = {"content-type": "application/json"}
         query_params = {"sort_by": "committed_on:desc", "offset": 0, "limit": limit}
         if wallclock_timestamp is not None:
-            query_params["filter_by"] = "committed_on:" + str(wallclock_timestamp)
+            query_params["filter_by"] = "commited_on_ltoeq:" + str(wallclock_timestamp)
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers),
