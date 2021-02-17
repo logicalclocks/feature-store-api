@@ -21,6 +21,11 @@ from hsfs import util
 
 
 class RuleDefinition:
+    """Metadata object representing the validation rule that is used by feature group expectations.
+
+    The set of rule definitions, for example "has max", "has avg" is provided by hsfs and cannot be modified.
+    """
+
     def __init__(
         self,
         name,
@@ -63,14 +68,17 @@ class RuleDefinition:
 
     @property
     def name(self):
+        """Name of the rule definition. Unique across all features stores."""
         return self._name
 
     @property
     def predicate(self):
+        """Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN"."""
         return self._predicate
 
     @property
     def value_type(self):
+        """The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String", "Numeric"."""
         return self._value_type
 
     @property

@@ -22,6 +22,8 @@ from hsfs.core import expectations_engine
 
 
 class Expectation:
+    """Metadata object representing an feature validation expectation in the Feature Store."""
+
     def __init__(
         self,
         name,
@@ -42,6 +44,7 @@ class Expectation:
         self._featurestore_id = featurestore_id
 
     def save(self):
+        """Persist the expectation metadata object to the feature store."""
         expectations_engine.ExpectationsEngine(self._featurestore_id).save(self)
 
     @classmethod
@@ -67,6 +70,7 @@ class Expectation:
 
     @property
     def name(self):
+        """Name of the expectation, unique per feature store (project)."""
         return self._name
 
     @name.setter
@@ -75,6 +79,7 @@ class Expectation:
 
     @property
     def description(self):
+        """Description of the expectation."""
         return self._description
 
     @description.setter
@@ -83,6 +88,7 @@ class Expectation:
 
     @property
     def features(self):
+        """List of features this expectation is applied to."""
         return self._features
 
     @features.setter
@@ -91,6 +97,7 @@ class Expectation:
 
     @property
     def rules(self):
+        """List of rules applied to the features of the expectation."""
         return self._rules
 
     @rules.setter
