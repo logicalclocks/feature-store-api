@@ -168,6 +168,12 @@ PAGES = {
             "hsfs.storage_connector.StorageConnector"
         ),
     },
+    "api/statistics_config_api.md": {
+        "statistics_config": ["hsfs.statistics_config.StatisticsConfig"],
+        "statistics_config_properties": keras_autodoc.get_properties(
+            "hsfs.statistics_config.StatisticsConfig"
+        ),
+    },
     "api/rule_api.md": {
         "rule": ["hsfs.rule.Rule"],
         "rule_properties": keras_autodoc.get_properties("hsfs.rule.Rule"),
