@@ -188,7 +188,7 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
+  private Map<Long, Map<String, Object>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
                                                            Integer limit)
       throws FeatureStoreException, IOException, ParseException {
 
@@ -198,25 +198,25 @@ public class FeatureGroupEngine {
     if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
-    Map<Long, Map<String, String>> commitDetails = new HashMap<>();
+    Map<Long, Map<String, Object>> commitDetails = new HashMap<>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
-      commitDetails.put(featureGroupCommit.getCommitID(), new HashMap<String, String>() {{
+      commitDetails.put(featureGroupCommit.getCommitID(), new HashMap<String, Object>() {{
             put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
-            put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
-            put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
-            put("rowsDeleted", featureGroupCommit.getRowsDeleted().toString());
+            put("rowsUpdated", featureGroupCommit.getRowsUpdated());
+            put("rowsInserted", featureGroupCommit.getRowsInserted());
+            put("rowsDeleted", featureGroupCommit.getRowsDeleted());
           }}
       );
     }
     return commitDetails;
   }
 
-  public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
+  public Map<Long, Map<String, Object>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return getCommitDetails(featureGroup, null, limit);
   }
 
-  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
+  public Map<Long, Map<String, Object>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
                                                                      String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return getCommitDetails(featureGroup, wallclockTime, limit);

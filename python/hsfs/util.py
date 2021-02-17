@@ -119,7 +119,7 @@ def get_timestamp_from_date_string(input_date):
         if date_format_pattern:
             break
 
-    if date_format in None:
+    if date_format is None:
         raise ("Unable to identify format of the provided date value : " + input_date)
 
     return int(float(datetime.strptime(input_date, date_format).timestamp()) * 1000)

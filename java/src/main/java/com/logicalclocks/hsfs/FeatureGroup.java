@@ -335,7 +335,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
+  public Map<Long, Map<String, Object>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
     if (this.timeTravelFormat == TimeTravelFormat.NONE) {
       throw new FeatureStoreException("commitDetails function is only valid for "
@@ -352,7 +352,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, String>> commitDetails(Integer limit)
+  public Map<Long, Map<String, Object>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
     if (this.timeTravelFormat == TimeTravelFormat.NONE) {
@@ -363,7 +363,7 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetails(this, limit);
   }
 
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+  public Map<Long, Map<String, Object>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
@@ -443,7 +443,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {
-      Map<Long, Map<String, String>> latestCommitMetaData =
+      Map<Long, Map<String, Object>> latestCommitMetaData =
           featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
