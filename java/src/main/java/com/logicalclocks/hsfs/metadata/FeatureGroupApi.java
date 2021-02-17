@@ -219,15 +219,19 @@ public class FeatureGroupApi {
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_COMMIT_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
-        .set("filter_by", "committed_on:" + wallclockTimestamp)
         .set("sort_by", "committed_on:desc")
         .set("offset", 0)
-        .set("limit", limit)
-        .expand();
+        .set("limit", limit);
+
+    if (wallclockTimestamp != null) {
+      uriTemplate.set("filter_by", "committed_on:" + wallclockTimestamp);
+    }
+
+    String uri = uriTemplate.expand();
 
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
