@@ -56,7 +56,8 @@ public class StatisticsEngine {
     return statisticsApi.post(featureGroup, computeStatistics(dataFrame,
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),
-        featureGroup.getStatisticsConfig().getCorrelations(), commitId));
+        featureGroup.getStatisticsConfig().getCorrelations(),
+        commitId));
   }
 
   private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,

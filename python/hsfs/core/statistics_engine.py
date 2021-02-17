@@ -36,18 +36,14 @@ class StatisticsEngine:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Hive engine
             # and calling compute_statistics
-
-            # feature_dataframe = (
-            #     feature_dataframe if feature_dataframe else metadata_instance.read()
-            # )
             if feature_dataframe is None:
                 if feature_group_commit_id is not None:
                     feature_dataframe = (
                         metadata_instance.select_all()
                         .as_of(
-                            datetime.datetime.fromtimestamp(
-                                int(feature_group_commit_id / 1000)
-                            ).strftime("%Y%m%d%H%M%S")
+                            util.get_hudi_datestr_from_timestamp(
+                                feature_group_commit_id
+                            )
                         )
                         .read(online=False, dataframe_type="default", read_options={})
                     )
