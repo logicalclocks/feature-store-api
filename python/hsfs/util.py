@@ -112,11 +112,12 @@ def get_timestamp_from_date_string(input_date):
     input_date = (
         input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
     )
-    date_format = None
 
+    date_format = None
     for pattern in date_format_patterns:
         date_format_pattern = re.match(pattern, input_date)
         if date_format_pattern:
+            date_format = date_format_patterns[pattern]
             break
 
     if date_format is None:
