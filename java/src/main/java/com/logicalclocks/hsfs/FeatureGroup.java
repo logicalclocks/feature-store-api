@@ -335,7 +335,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, Object>> commitDetails() throws IOException, FeatureStoreException, ParseException {
+  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
     if (this.timeTravelFormat == TimeTravelFormat.NONE) {
       throw new FeatureStoreException("commitDetails function is only valid for "
@@ -352,7 +352,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, Object>> commitDetails(Integer limit)
+  public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
     if (this.timeTravelFormat == TimeTravelFormat.NONE) {
@@ -370,8 +370,13 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, Object>> commitDetails(String wallclockTime)
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
   }
 
@@ -383,8 +388,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<Long, Map<String, Object>> commitDetails(String wallclockTime, Integer limit)
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
@@ -462,8 +471,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
     if (statisticsConfig.getEnabled()) {
-      Map<Long, Map<String, Object>> latestCommitMetaData =
+      Map<Long, Map<String, String>> latestCommitMetaData =
           featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
