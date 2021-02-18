@@ -198,7 +198,6 @@ class TrainingDatasetEngine:
 
     @staticmethod
     def _create_mysql_connection(online_conn):
-        # TODO: __init__() got an unexpected keyword argument 'useSSL' and  allowPublicKeyRetrieval=true
         online_options = online_conn.spark_options()
         # Here we are replacing the first part of the string returned by Hopsworks,
         # jdbc:mysql:// with the sqlalchemy one + username and password
