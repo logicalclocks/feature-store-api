@@ -538,7 +538,7 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
-        This function only works on feature group's with `HUDI` time travel format.
+        This function only works on feature groups with `HUDI` time travel format.
 
         !!! example "Reading commits incrementally between specified points in time:"
             ```python
@@ -560,7 +560,15 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.  No data is available for feature group with this commit date.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "read_changes can only be used on time travel enabled feature groups"
+            )
 
         return (
             self.select_all()
@@ -706,7 +714,8 @@ class FeatureGroup(FeatureGroupBase):
             self.compute_statistics()
 
     def commit_details(self, limit: Optional[int] = None):
-        """Retrieves commit timeline for this feature group.
+        """Retrieves commit timeline for this feature group. This method can only be used
+        on time travel enabled feature groups
 
         # Arguments
             limit: Number of commits to retrieve. Defaults to `None`.
@@ -717,7 +726,15 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "commit_details can only be used on time travel enabled feature groups"
+            )
         return self._feature_group_engine.commit_details(self, limit)
 
     def commit_delete_record(
@@ -726,7 +743,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group.
+        Feature group. This method can only be used on time travel enabled feature groups
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
@@ -735,6 +752,13 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`.
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "commit_delete_record can only be used on time travel enabled feature groups"
+            )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
     # def update_validation_type(self, validation_type: str):

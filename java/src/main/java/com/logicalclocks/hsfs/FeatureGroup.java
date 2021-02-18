@@ -151,7 +151,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return read(false, null);
+    return read(false, readOptions);
   }
 
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -328,6 +328,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<String, Map<String, String>> commitDetails() throws IOException, FeatureStoreException {
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return featureGroupEngine.commitDetails(this, null);
   }
 
@@ -339,6 +345,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<String, Map<String, String>> commitDetails(Integer limit) throws IOException, FeatureStoreException {
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return featureGroupEngine.commitDetails(this, limit);
   }
 
