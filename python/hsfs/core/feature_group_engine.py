@@ -131,13 +131,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.delete(feature_group)
 
     def commit_details(self, feature_group, wallclock_time, limit):
-        hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_group.feature_store_id,
-            feature_group.feature_store_name,
-            feature_group,
-            engine.get_instance()._spark_context,
-            engine.get_instance()._spark_session,
-        )
         wallclock_timestamp = (
             util.get_timestamp_from_date_string(wallclock_time)
             if wallclock_time is not None
@@ -149,7 +142,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         commit_details = {}
         for feature_group_commit in feature_group_commits:
             commit_details[feature_group_commit.commitid] = {
-                "committedOn": hudi_engine_instance._timestamp_to_hudiformat(
+                "committedOn": util.get_hudi_datestr_from_timestamp(
                     feature_group_commit.commitid
                 ),
                 "rowsUpdated": feature_group_commit.rows_updated,
