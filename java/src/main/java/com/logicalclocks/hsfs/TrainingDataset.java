@@ -61,6 +61,10 @@ public class TrainingDataset {
 
   @Getter
   @Setter
+  private Boolean coalesce;
+
+  @Getter
+  @Setter
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter
@@ -107,12 +111,13 @@ public class TrainingDataset {
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
-                         StorageConnector storageConnector, String location, List<Split> splits, Long seed,
-                         FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
+                         Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
+                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
     this.name = name;
     this.version = version;
     this.description = description;
     this.dataFormat = dataFormat != null ? dataFormat : DataFormat.TFRECORDS;
+    this.coalesce = coalesce != null ? coalesce : false;
     this.location = location;
     this.storageConnector = storageConnector;
 

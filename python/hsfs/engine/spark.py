@@ -248,6 +248,9 @@ class Engine:
         else:
             dataset = features
 
+        if training_dataset.coalesce:
+            dataset = dataset.coalesce(1)
+
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )

@@ -137,6 +137,10 @@ public class SparkEngine {
 
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
+    if (trainingDataset.getCoalesce()) {
+      dataset = dataset.coalesce(1);
+    }
+
     if (trainingDataset.getSplits() == null) {
       // Write a single dataset
 
