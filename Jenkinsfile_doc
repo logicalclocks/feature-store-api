@@ -36,7 +36,7 @@ pipeline {
 
                   rm -r java/?
                   git add docs/index.md
-                  git commit -m "tmp commit"
+                  git commit -m "tmp commit" || true
 
                   git checkout -b tmp
                   git checkout gh-pages
