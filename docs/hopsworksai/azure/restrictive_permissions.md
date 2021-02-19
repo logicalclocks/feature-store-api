@@ -89,7 +89,6 @@ The following permissions are only needed for the backup feature:
     "Microsoft.Compute/snapshots/read",
     "Microsoft.Compute/snapshots/delete",
     "Microsoft.Compute/disks/beginGetAccess/action",
-    "Microsoft.Compute/disks/read"
   ]
 ```
 
