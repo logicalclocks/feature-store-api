@@ -230,14 +230,24 @@ class Engine:
         online_options = online_conn.spark_options()
         # Here we are replacing the first part of the string returned by Hopsworks,
         # jdbc:mysql:// with the sqlalchemy one + username and password
-        sql_alchemy_conn_str = online_options["url"].replace(
-            "jdbc:mysql://",
-            "mysql+pymysql://"
-            + online_options["user"]
-            + ":"
-            + online_options["password"]
-            + "@",
+        # useSSL and allowPublicKeyRetrieval are not valid properties for the pymysql driver
+        # to use SSL we'll have to something like this:
+        # ssl_args = {'ssl_ca': ca_path}
+        # engine = create_engine("mysql+pymysql://<user>:<pass>@<addr>/<schema>", connect_args=ssl_args)
+        sql_alchemy_conn_str = (
+            online_options["url"]
+            .replace(
+                "jdbc:mysql://",
+                "mysql+pymysql://"
+                + online_options["user"]
+                + ":"
+                + online_options["password"]
+                + "@",
+            )
+            .replace("useSSL=false&", "")
+            .replace("?allowPublicKeyRetrieval=true", "")
         )
+
         sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
         return sql_alchemy_engine.connect()
 
