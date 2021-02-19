@@ -29,6 +29,7 @@ Next go to the created managed identity in order to create role assignments. Go 
 
 * AcrPull
 * AcrPush
+* AcrDelete
 * Azure Kubernetes Service Contributor Role
 
 The roles can have either scope of your subscription or the specific resource group you are planning to use. A scope of the resource group will restrict the permissions of the roles to the chosen resource group.
