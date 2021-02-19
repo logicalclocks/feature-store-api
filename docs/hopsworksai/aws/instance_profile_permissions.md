@@ -1,5 +1,8 @@
 
-Replace *BUCKET_NAME* with the appropriate S3 bucket name. Non-enterprise users can remove the policies  *S3:PutLifecycleConfiguration*, *S3:GetLifecycleConfiguration*, *S3:PutBucketVersioning*, *S3:GetBucketVersioning* as these policies are needed for cluster backups and restore operations available only for the enterprise version. 
+Replace *BUCKET_NAME* with the appropriate S3 bucket name.
+
+!!! note
+    Some of these permissions can be removed. Refer to [this guide](restrictive_permissions.md#limiting-the-instance-profile-permissions) for more information.
 
 ```json
 {
