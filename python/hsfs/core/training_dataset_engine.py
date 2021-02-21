@@ -15,9 +15,9 @@
 #
 
 import re
-from sqlalchemy import create_engine, sql
+from sqlalchemy import sql
 
-from hsfs import engine, training_dataset_feature
+from hsfs import engine, training_dataset_feature, util
 from hsfs.core import training_dataset_api, tags_api, storage_connector_api
 from hsfs.constructor import query
 
@@ -152,7 +152,7 @@ class TrainingDatasetEngine:
 
     def init_prepared_statement(self, training_dataset):
         online_conn = self._storage_connector_api.get_online_connector()
-        jdbc_connection = self._create_mysql_connection(online_conn)
+        jdbc_connection = util.create_mysql_connection(online_conn)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )
@@ -195,24 +195,3 @@ class TrainingDatasetEngine:
         training_dataset.prepared_statement_connection = jdbc_connection
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
-
-    @staticmethod
-    def _create_mysql_connection(online_conn):
-        online_options = online_conn.spark_options()
-        # Here we are replacing the first part of the string returned by Hopsworks,
-        # jdbc:mysql:// with the sqlalchemy one + username and password
-        sql_alchemy_conn_str = (
-            online_options["url"]
-            .replace(
-                "jdbc:mysql://",
-                "mysql+pymysql://"
-                + online_options["user"]
-                + ":"
-                + online_options["password"]
-                + "@",
-            )
-            .replace("useSSL=false&", "")
-            .replace("?allowPublicKeyRetrieval=true", "")
-        )
-        sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
-        return sql_alchemy_engine.connect()
