@@ -12,8 +12,8 @@ Organization membership can be edited by clicking **Members** on the left of Hop
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/members_empty.png">
-      <img src="../../../assets/images/hopsworksai/members_empty.png" alt="Organization membership">
+    <a  href="../../assets/images/hopsworksai/members_empty.png">
+      <img src="../../assets/images/hopsworksai/members_empty.png" alt="Organization membership">
     </a>
     <figcaption>Organization membership</figcaption>
   </figure>
@@ -28,15 +28,15 @@ the invitation yet.
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/members_invited.png">
-      <img src="../../../assets/images/hopsworksai/members_invited.png" alt="Invitation">
+    <a  href="../../assets/images/hopsworksai/members_invited.png">
+      <img src="../../assets/images/hopsworksai/members_invited.png" alt="Invitation">
     </a>
     <figcaption>Alice has sent the invitation</figcaption>
   </figure>
 
   <figure>
-    <a  href="../../../assets/images/hopsworksai/members_accept.png">
-      <img src="../../../assets/images/hopsworksai/members_accept.png" alt="Accept invitation">
+    <a  href="../../assets/images/hopsworksai/members_accept.png">
+      <img src="../../assets/images/hopsworksai/members_accept.png" alt="Accept invitation">
     </a>
     <figcaption>Bob's dashboard</figcaption>
   </figure>
@@ -48,15 +48,15 @@ Also, he will be able to view **the same** Dashboard as Alice, so he can start, 
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/alice_dashboard.png">
-      <img src="../../../assets/images/hopsworksai/alice_dashboard.png" alt="Alice dashboard">
+    <a  href="../../assets/images/hopsworksai/alice_dashboard.png">
+      <img src="../../assets/images/hopsworksai/alice_dashboard.png" alt="Alice dashboard">
     </a>
     <figcaption>Alice's dashboard</figcaption>
   </figure>
 
   <figure>
-    <a  href="../../../assets/images/hopsworksai/bob_dashboard.png">
-      <img src="../../../assets/images/hopsworksai/bob_dashboard.png" alt="Bob dashboard">
+    <a  href="../../assets/images/hopsworksai/bob_dashboard.png">
+      <img src="../../assets/images/hopsworksai/bob_dashboard.png" alt="Bob dashboard">
     </a>
     <figcaption>Bob's dashboard</figcaption>
   </figure>
@@ -71,8 +71,8 @@ You will **stop** sharing any resource and the user **will be blocked** from any
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/members_delete.png">
-      <img src="../../../assets/images/hopsworksai/members_delete.png" alt="Delete organization member">
+    <a  href="../../assets/images/hopsworksai/members_delete.png">
+      <img src="../../assets/images/hopsworksai/members_delete.png" alt="Delete organization member">
     </a>
     <figcaption>Delete organization member</figcaption>
   </figure>
