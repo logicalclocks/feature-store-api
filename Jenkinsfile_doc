@@ -15,7 +15,7 @@ pipeline {
             }
             steps {
                 dir("java") {
-                    sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\\[|Download\\w+:)' > ../version.log"
+                    sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev 'Download|INFO|WARNING' > ../version.log"
                 }
 
                 dir("python") {
@@ -43,7 +43,7 @@ pipeline {
                   git checkout tmp
 
                   export VERSION=\$(cat version.log)
-                  mike deploy \$VERSION
+                  mike deploy \$VERSION -u --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                 '''
             }
         }
