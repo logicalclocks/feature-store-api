@@ -103,10 +103,6 @@ class FeatureGroupCommit:
     def commitid(self, commitid):
         self._commitid = commitid
 
-    @commit_date_string.setter
-    def commit_date_string(self, commit_date_string):
-        self._commit_date_string = commit_date_string
-
     @commit_time.setter
     def commit_time(self, commit_time):
         self._commit_time = commit_time
