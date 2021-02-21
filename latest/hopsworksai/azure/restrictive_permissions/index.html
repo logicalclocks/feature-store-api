@@ -384,29 +384,63 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#limiting-the-cross-account-role-permissions" class="md-nav__link">
+    Limiting the cross-account role permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Limiting the cross-account role permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#step-1-create-a-virtual-network-and-subnet" class="md-nav__link">
     Step 1: Create a virtual network and subnet
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-2-create-a-network-security-group" class="md-nav__link">
     Step 2: Create a network security group
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-3-set-permissions-of-the-cross-account-role" class="md-nav__link">
     Step 3: Set permissions of the cross-account role
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-4-create-your-hopsworks-instance" class="md-nav__link">
     Step 4: Create your Hopsworks instance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-permissions" class="md-nav__link">
+    Backup permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-removable-permissions" class="md-nav__link">
+    Other removable permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-user-assigned-managed-identity-permissions" class="md-nav__link">
+    Limiting the User Assigned Managed Identity permissions
   </a>
   
 </li>
@@ -955,7 +989,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics.md" class="md-nav__link">
+    <a href="../../../generated/statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1124,29 +1158,63 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#limiting-the-cross-account-role-permissions" class="md-nav__link">
+    Limiting the cross-account role permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Limiting the cross-account role permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#step-1-create-a-virtual-network-and-subnet" class="md-nav__link">
     Step 1: Create a virtual network and subnet
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-2-create-a-network-security-group" class="md-nav__link">
     Step 2: Create a network security group
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-3-set-permissions-of-the-cross-account-role" class="md-nav__link">
     Step 3: Set permissions of the cross-account role
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-4-create-your-hopsworks-instance" class="md-nav__link">
     Step 4: Create your Hopsworks instance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-permissions" class="md-nav__link">
+    Backup permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-removable-permissions" class="md-nav__link">
+    Other removable permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-user-assigned-managed-identity-permissions" class="md-nav__link">
+    Limiting the User Assigned Managed Identity permissions
   </a>
   
 </li>
@@ -1170,12 +1238,13 @@ By default, these permissions are set to easily allow a wide range of different 
 us to automate as many steps as possible. While we ensure to never access resources we shouldn’t,
 we do understand that this might not be enough for your organization or security policy.
 This guide explains how to lock down access permissions following the IT security policy principle of least privilege.</p>
-<h2 id="step-1-create-a-virtual-network-and-subnet">Step 1: Create a virtual network and subnet<a class="headerlink" href="#step-1-create-a-virtual-network-and-subnet" title="Permanent link">#</a></h2>
+<h2 id="limiting-the-cross-account-role-permissions">Limiting the cross-account role permissions<a class="headerlink" href="#limiting-the-cross-account-role-permissions" title="Permanent link">#</a></h2>
+<h3 id="step-1-create-a-virtual-network-and-subnet">Step 1: Create a virtual network and subnet<a class="headerlink" href="#step-1-create-a-virtual-network-and-subnet" title="Permanent link">#</a></h3>
 <p>To restrict Hopsworks.ai from having write and delete access on virtual networks and subnet you need to create them manually.
 This can be achieved in the Azure portal following this guide: <a href="https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal">Create a virtual network</a>.
 Make sure to use the resource group and location in which you intend to deploy your Hopsworks cluster. For the remaining of the configuration, the default options proposed by the portal should work out of the box.
 Note the names of the virtual network and subnet you want to use for the following steps.</p>
-<h2 id="step-2-create-a-network-security-group">Step 2: Create a network security group<a class="headerlink" href="#step-2-create-a-network-security-group" title="Permanent link">#</a></h2>
+<h3 id="step-2-create-a-network-security-group">Step 2: Create a network security group<a class="headerlink" href="#step-2-create-a-network-security-group" title="Permanent link">#</a></h3>
 <p>To restrict Hopsworks.ai from having write and delete access on network security groups you need to create it manually.
 This can be achieved in the Azure portal following this guide: <a href="https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-group#create-a-network-security-group">Create a network security group</a>.
 Make sure to use the resource group and location in which you intend to deploy your Hopsworks cluster.</p>
@@ -1187,20 +1256,29 @@ Setting the destination port ranges to 80 and letting the default values for the
 <p class="admonition-title">Note</p>
 <p>If you intend to use the managed users option on your Hopsworks cluster you should also add a rule to open port 443.</p>
 </div>
-<h2 id="step-3-set-permissions-of-the-cross-account-role">Step 3: Set permissions of the cross-account role<a class="headerlink" href="#step-3-set-permissions-of-the-cross-account-role" title="Permanent link">#</a></h2>
+<h3 id="step-3-set-permissions-of-the-cross-account-role">Step 3: Set permissions of the cross-account role<a class="headerlink" href="#step-3-set-permissions-of-the-cross-account-role" title="Permanent link">#</a></h3>
 <p>During the account setup for Hopsworks.ai, you were asked to create create a custom role for your resource group.
 Edit this role in the Azure portal by going to your resource group, clicking on <em>Access control (IAM)</em>, opening the tab <em>Roles</em>, searching for the role you created, clicking on the three dots at the end of the role line and clicking on edit.
 You can then navigate to the JSON tab and overwrite the "action" field with the following:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">&quot;Microsoft.Compute/virtualMachines/*&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/virtualMachines/write&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/start/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/powerOff/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/restart/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/delete&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Compute/disks/write&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Compute/disks/delete&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Microsoft.Network/locations/*&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Microsoft.Network/networkInterfaces/*&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/delete&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/join/action&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/defaultSecurityRules/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/delete&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/publicIPAddresses/join/action&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/publicIPAddresses/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Network/publicIPAddresses/write&quot;</span><span class="p">,</span>
@@ -1211,11 +1289,93 @@ You can then navigate to the JSON tab and overwrite the "action" field with the 
     <span class="s2">&quot;Microsoft.Resources/subscriptions/resourceGroups/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Compute/sshPublicKeys/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.ManagedIdentity/userAssignedIdentities/assign/action&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Microsoft.ManagedIdentity/userAssignedIdentities/read&quot;</span>
+    <span class="s2">&quot;Microsoft.ManagedIdentity/userAssignedIdentities/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Storage/storageAccounts/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/disks/beginGetAccess/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/disks/read&quot;</span>
+
   <span class="p">]</span>
 </code></pre></div>
-<h2 id="step-4-create-your-hopsworks-instance">Step 4: Create your Hopsworks instance<a class="headerlink" href="#step-4-create-your-hopsworks-instance" title="Permanent link">#</a></h2>
+<h3 id="step-4-create-your-hopsworks-instance">Step 4: Create your Hopsworks instance<a class="headerlink" href="#step-4-create-your-hopsworks-instance" title="Permanent link">#</a></h3>
 <p>You can now create a new Hopsworks instance in Hopsworks.ai by selecting the virtual network, subnet, and network security group during the instance configuration.</p>
+<h3 id="backup-permissions">Backup permissions<a class="headerlink" href="#backup-permissions" title="Permanent link">#</a></h3>
+<p>The following permissions are only needed for the backup feature: </p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/snapshots/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/disks/beginGetAccess/action&quot;</span><span class="p">,</span>
+  <span class="p">]</span>
+</code></pre></div>
+<p>If you are not going to create backups or if you do not have access to this Enterprise feature, you can further limit the permission of the cross-account role to the following:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Microsoft.Compute/virtualMachines/write&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/start/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/powerOff/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/restart/action&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/delete&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Microsoft.Compute/virtualMachines/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/disks/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/disks/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkInterfaces/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/defaultSecurityRules/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/delete&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/virtualNetworks/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/virtualNetworks/subnets/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/virtualNetworks/subnets/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Resources/subscriptions/resourceGroups/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Compute/sshPublicKeys/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.ManagedIdentity/userAssignedIdentities/assign/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.ManagedIdentity/userAssignedIdentities/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Storage/storageAccounts/read&quot;</span><span class="p">,</span>
+  <span class="p">]</span>
+</code></pre></div>
+<h3 id="other-removable-permissions">Other removable permissions<a class="headerlink" href="#other-removable-permissions" title="Permanent link">#</a></h3>
+<p>The following permissions are used to let you close and open ports on your cluster from hopswork.ai, you can remove them if you do not want to open ports on your cluster or if you want to manually open ports in Azure.</p>
+<div class="highlight"><pre><span></span><code>  <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/networkSecurityGroups/securityRules/delete&quot;</span><span class="p">,</span>
+  <span class="p">]</span>
+</code></pre></div>
+<p>The following permission is only needed to select the Azure Storage account through a drop-down during cluster creation. You can remove it from the cross-account role and enter the value manually</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Microsoft.Storage/storageAccounts/read&quot;</span><span class="p">,</span>
+  <span class="p">]</span>
+</code></pre></div>
+<h2 id="limiting-the-user-assigned-managed-identity-permissions">Limiting the User Assigned Managed Identity permissions<a class="headerlink" href="#limiting-the-user-assigned-managed-identity-permissions" title="Permanent link">#</a></h2>
+<p>If you do not intend to take backups or if you do not have access to this Enterprise feature you can remove the permissions that are only used by the backup feature when configuring your managed identity storage permissions.
+For this replace the permissions given in the <a href="../getting_started/#step-21-creating-a-restrictive-role-for-accessing-storage">getting started instructions</a> by the following:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;permissions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/write&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/read&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;notActions&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="nt">&quot;dataActions&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;notDataActions&quot;</span><span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
                 
               
               

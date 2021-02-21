@@ -480,43 +480,50 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-virtual-network-selection" class="md-nav__link">
-    Step 5 Virtual network selection
+  <a href="#step-5-set-the-backup-retention-policy" class="md-nav__link">
+    Step 5 set the backup retention policy:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-6-subnet-selection" class="md-nav__link">
-    Step 6 Subnet selection
+  <a href="#step-6-virtual-network-selection" class="md-nav__link">
+    Step 6 Virtual network selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-7-network-security-group-selection" class="md-nav__link">
-    Step 7 Network Security group selection
+  <a href="#step-7-subnet-selection" class="md-nav__link">
+    Step 7 Subnet selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-8-user-management-selection" class="md-nav__link">
-    Step 8 User management selection
+  <a href="#step-8-network-security-group-selection" class="md-nav__link">
+    Step 8 Network Security group selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-add-tags-to-your-instances" class="md-nav__link">
-    Step 9 add tags to your instances.
+  <a href="#step-9-user-management-selection" class="md-nav__link">
+    Step 9 User management selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-10-review-and-create" class="md-nav__link">
-    Step 10 Review and create
+  <a href="#step-10-add-tags-to-your-instances" class="md-nav__link">
+    Step 10 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-11-review-and-create" class="md-nav__link">
+    Step 11 Review and create
   </a>
   
 </li>
@@ -997,7 +1004,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics.md" class="md-nav__link">
+    <a href="../../../generated/statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1194,43 +1201,50 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-virtual-network-selection" class="md-nav__link">
-    Step 5 Virtual network selection
+  <a href="#step-5-set-the-backup-retention-policy" class="md-nav__link">
+    Step 5 set the backup retention policy:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-6-subnet-selection" class="md-nav__link">
-    Step 6 Subnet selection
+  <a href="#step-6-virtual-network-selection" class="md-nav__link">
+    Step 6 Virtual network selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-7-network-security-group-selection" class="md-nav__link">
-    Step 7 Network Security group selection
+  <a href="#step-7-subnet-selection" class="md-nav__link">
+    Step 7 Subnet selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-8-user-management-selection" class="md-nav__link">
-    Step 8 User management selection
+  <a href="#step-8-network-security-group-selection" class="md-nav__link">
+    Step 8 Network Security group selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-add-tags-to-your-instances" class="md-nav__link">
-    Step 9 add tags to your instances.
+  <a href="#step-9-user-management-selection" class="md-nav__link">
+    Step 9 User management selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-10-review-and-create" class="md-nav__link">
-    Step 10 Review and create
+  <a href="#step-10-add-tags-to-your-instances" class="md-nav__link">
+    Step 10 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-11-review-and-create" class="md-nav__link">
+    Step 11 Review and create
   </a>
   
 </li>
@@ -1262,7 +1276,12 @@
 </p>
 
 <h3 id="step-2-setting-the-general-information">Step 2 setting the General information<a class="headerlink" href="#step-2-setting-the-general-information" title="Permanent link">#</a></h3>
-<p>Select the <em>Location</em> in which you want your cluster to run (1), name your cluster (2) and select the <em>Resource Group</em> (3) in which you want your cluster to run.</p>
+<p>Select the <em>Resource Group</em> (1) in which you created your <em>storage account</em> and <em>user assigned managed identity</em> (see above).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the <em>Resource Group</em> does not appear in the drop-down, make sure that you properly <a href="#step-12-creating-a-custom-role-for-hopsworksai">created and set the custom role</a> for this resource group.</p>
+</div>
+<p>Name your cluster (2). Your cluster will be deployed in the <em>Location</em> of your <em>Resource Group</em> (3).</p>
 <p>Select the <em>Instance type</em> (4) and <em>Local storage</em> (5) size for the cluster <em>Head node</em>.</p>
 <p>Select the number of workers you want to start the cluster with (6).
 Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for the <em>worker nodes</em>.</p>
@@ -1270,7 +1289,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p class="admonition-title">Note</p>
 <p>It is possible to add or remove workers once the cluster is running.</p>
 </div>
-<p>To provide the capacity of adding and removing workers on demand, the Hopsworks clusters deployed by Hopsworks.ai store their data in an Azure storage container. In this step, you select which storage account and container to use for this purpose. Enter the name of the <em>storage account</em> (9) you want to use in <em>Azure Storage account name</em> and name the container in which the data will be stored in <em>Azure Container name</em> (10). For more details on how to create and configure a storage in Azure refer to <a href="../getting_started/#step-2-creating-and-configuring-a-storage">Creating and configuring a storage</a></p>
+<p>To provide the capacity of adding and removing workers on demand, the Hopsworks clusters deployed by Hopsworks.ai store their data in an Azure storage container. In this step, you select which storage account and container to use for this purpose. Select the <em>storage account</em> (9) you want to use in <em>Azure Storage account name</em>. The name of the container in which the data will be stored is displayed in <em>Azure Container name</em> (10). You can change this name. For more details on how to create and configure a storage in Azure refer to <a href="../getting_started/#step-2-creating-and-configuring-a-storage">Creating and configuring a storage</a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You can choose to use a container already existing in your <em>storage account</em> by using the name of this container, but you need to first make sure that this container is empty.</p>
@@ -1308,7 +1327,22 @@ Select the <em>SSH key</em> that you want to use to access cluster instances. Fo
   </figure>
 </p>
 
-<h3 id="step-5-virtual-network-selection">Step 5 Virtual network selection<a class="headerlink" href="#step-5-virtual-network-selection" title="Permanent link">#</a></h3>
+<h3 id="step-5-set-the-backup-retention-policy">Step 5 set the backup retention policy:<a class="headerlink" href="#step-5-set-the-backup-retention-policy" title="Permanent link">#</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This step is only accessible to enterprise users.</p>
+</div>
+<p>To back up the Azure blob storage data when taking a cluster backups we need to set a retention policy for the blob storage. In this step, you choose the retention period in days. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
+      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+    </a>
+    <figcaption>Choose the backup retention policy</figcaption>
+  </figure>
+</p>
+
+<h3 id="step-6-virtual-network-selection">Step 6 Virtual network selection<a class="headerlink" href="#step-6-virtual-network-selection" title="Permanent link">#</a></h3>
 <p>In this step, you can select the virtual network which will be used by the Hopsworks cluster. You can either select an existing virtual network or let Hopsworks.ai create one for you. If you decide to let Hopsworks.ai create the virtual network for you, you can choose the CIDR block for this virtual network. 
 Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-and-subnet">Create a virtual network and subnet</a> for more details on how to create your own virtual network in Azure.</p>
 <p align="center">
@@ -1320,7 +1354,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-6-subnet-selection">Step 6 Subnet selection<a class="headerlink" href="#step-6-subnet-selection" title="Permanent link">#</a></h3>
+<h3 id="step-7-subnet-selection">Step 7 Subnet selection<a class="headerlink" href="#step-7-subnet-selection" title="Permanent link">#</a></h3>
 <p>If you selected an existing virtual network in the previous step, this step lets you select which subnet of this virtual network to use. For more information about creating your own subnet refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-and-subnet">Create a virtual network and subnet</a>.</p>
 <p>If you did not select an existing virtual network in the previous step Hopsworks.ai will create the subnet for you. You can choose the CIDR block this subnet will use.</p>
 <p align="center">
@@ -1332,7 +1366,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-7-network-security-group-selection">Step 7 Network Security group selection<a class="headerlink" href="#step-7-network-security-group-selection" title="Permanent link">#</a></h3>
+<h3 id="step-8-network-security-group-selection">Step 8 Network Security group selection<a class="headerlink" href="#step-8-network-security-group-selection" title="Permanent link">#</a></h3>
 <p>In this step, you can select the network security group you want to use to manage the inbound and outbound network rules. You can either let Hopsworks.ai create a network security group for you or select an existing security group. For more information about how to create your own network security group in Azure refer to <a href="../restrictive_permissions/#step-2-create-a-network-security-group">Create a network security group</a>.</p>
 <p align="center">
   <figure>
@@ -1343,7 +1377,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-8-user-management-selection">Step 8 User management selection<a class="headerlink" href="#step-8-user-management-selection" title="Permanent link">#</a></h3>
+<h3 id="step-9-user-management-selection">Step 9 User management selection<a class="headerlink" href="#step-9-user-management-selection" title="Permanent link">#</a></h3>
 <p>In this step, you can choose which user management system to use. You have three choices: </p>
 <ul>
 <li><em>Managed</em>: Hopsworks.ai automatically adds and removes users from the Hopsworks cluster when you add and remove users from your organization.</li>
@@ -1359,7 +1393,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-9-add-tags-to-your-instances">Step 9 add tags to your instances.<a class="headerlink" href="#step-9-add-tags-to-your-instances" title="Permanent link">#</a></h3>
+<h3 id="step-10-add-tags-to-your-instances">Step 10 add tags to your instances.<a class="headerlink" href="#step-10-add-tags-to-your-instances" title="Permanent link">#</a></h3>
 <p>In this step, you can define tags that will be added to the cluster virtual machines.</p>
 <p align="center">
   <figure>
@@ -1370,7 +1404,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-10-review-and-create">Step 10 Review and create<a class="headerlink" href="#step-10-review-and-create" title="Permanent link">#</a></h3>
+<h3 id="step-11-review-and-create">Step 11 Review and create<a class="headerlink" href="#step-11-review-and-create" title="Permanent link">#</a></h3>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>

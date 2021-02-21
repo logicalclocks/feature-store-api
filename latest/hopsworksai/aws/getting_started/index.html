@@ -1016,7 +1016,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics.md" class="md-nav__link">
+    <a href="../../../generated/statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1479,7 +1479,11 @@ If you want to limit the required AWS permissions, see <a href="../restrictive_p
 <p>Hopsworks cluster nodes need access to certain resources such as S3 bucket and CloudWatch.</p>
 <p>Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: <a href="https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html">Guide</a></p>
 <p>When creating the policy, paste the following in the JSON tab.</p>
-<p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name. Non-enterprise users can remove the policies  <em>S3:PutLifecycleConfiguration</em>, <em>S3:GetLifecycleConfiguration</em>, <em>S3:PutBucketVersioning</em>, <em>S3:GetBucketVersioning</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
+<p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some of these permissions can be removed. Refer to <a href="../restrictive_permissions/#limiting-the-instance-profile-permissions">this guide</a> for more information.</p>
+</div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
   <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
@@ -1649,6 +1653,10 @@ Select the <em>Instance type</em> (6) and <em>Local storage</em> size (7) for th
   </figure>
 </p>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are an enterprise user you will have one more step before being able to click on <em>Review and Create</em>. In this step, you will be asked to set the backups retention policy. More details about this step <a href="../cluster_creation/#step-5-set-the-backup-retention-policy">here</a></p>
+</div>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>

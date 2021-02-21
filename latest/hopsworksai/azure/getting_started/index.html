@@ -337,6 +337,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-10-prerequisite" class="md-nav__link">
+    Step 1.0: Prerequisite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-11-creating-a-service-principal-for-hopsworksai" class="md-nav__link">
     Step 1.1: Creating a service principal for Hopsworks.ai
   </a>
@@ -1030,7 +1037,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics.md" class="md-nav__link">
+    <a href="../../../generated/statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1207,6 +1214,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-10-prerequisite" class="md-nav__link">
+    Step 1.0: Prerequisite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-11-creating-a-service-principal-for-hopsworksai" class="md-nav__link">
     Step 1.1: Creating a service principal for Hopsworks.ai
   </a>
@@ -1322,6 +1336,15 @@ SageMaker and KubeFlow. This guide shows how to set up Hopsworks.ai with your or
 <p>Hopsworks.ai deploys Hopsworks clusters to your Azure account. To enable this, you have to
 create a service principal and a custom role for Hopsworks.ai granting access
 to either a subscription or resource group.</p>
+<h3 id="step-10-prerequisite">Step 1.0: Prerequisite<a class="headerlink" href="#step-10-prerequisite" title="Permanent link">#</a></h3>
+<p>For Hopsworks.ai to deploy a cluster the following resource providers need to be registered on your Azure subscription.
+You can verify that they are registered by going to your subscription in the Azure portal and click on <em>Resource providers</em>.
+If one of the resource providers is not registered select it and click on <em>Register</em>.</p>
+<div class="highlight"><pre><span></span><code>    <span class="err">Microso</span><span class="kc">ft</span><span class="err">.Ne</span><span class="kc">t</span><span class="err">work</span>
+    <span class="err">Microso</span><span class="kc">ft</span><span class="err">.Compu</span><span class="kc">te</span>
+    <span class="err">Microso</span><span class="kc">ft</span><span class="err">.S</span><span class="kc">t</span><span class="err">orage</span>
+    <span class="err">Microso</span><span class="kc">ft</span><span class="err">.Ma</span><span class="kc">na</span><span class="err">gedIde</span><span class="kc">nt</span><span class="err">i</span><span class="kc">t</span><span class="err">y</span>
+</code></pre></div>
 <h3 id="step-11-creating-a-service-principal-for-hopsworksai">Step 1.1: Creating a service principal for Hopsworks.ai<a class="headerlink" href="#step-11-creating-a-service-principal-for-hopsworksai" title="Permanent link">#</a></h3>
 <p>On Hopsworks.ai, go to <em>Settings/Cloud Accounts</em> and choose to <em>Configure</em> Azure:</p>
 <p align="center">
@@ -1377,8 +1400,12 @@ In this case, please ask your Azure administrator to add it for you or give you 
 </div>
 <h3 id="step-12-creating-a-custom-role-for-hopsworksai">Step 1.2: Creating a custom role for Hopsworks.ai<a class="headerlink" href="#step-12-creating-a-custom-role-for-hopsworksai" title="Permanent link">#</a></h3>
 <p>Proceed to the Azure Portal and open either a <em>Subscription</em> or <em>Resource Group</em> that you want to use for Hopsworks.ai.
-Select <em>Add</em> and choose <em>Add custom role</em>. Granting access to a <em>Subscription</em> will grant access to all <em>Resource Groups</em>
+Select <em>Add</em> and choose <em>Add custom role</em>. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Granting access to a <em>Subscription</em> will grant access to all <em>Resource Groups</em> 
 in that <em>Subscription</em>. If you are uncertain if that is what you want, then start with a <em>Resource Group</em>.</p>
+</div>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-3.png">
@@ -1497,7 +1524,7 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <li>Create a storage account and give Hopsworks clusters access to the storage using the restrictive role</li>
 </ul>
 <h3 id="step-21-creating-a-restrictive-role-for-accessing-storage">Step 2.1: Creating a Restrictive Role for Accessing Storage<a class="headerlink" href="#step-21-creating-a-restrictive-role-for-accessing-storage" title="Permanent link">#</a></h3>
-<p>Similar to <a href="#step-1-connecting-your-azure-account">Step 1</a> create a new role named <code>Hopsworks Storage Role</code>. Add the following permissions to the role</p>
+<p>Similarly to <a href="#step-12-creating-a-custom-role-for-hopsworksai">Step 1.2</a> create a new role named <code>Hopsworks Storage Role</code>. Add the following permissions to the role</p>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;permissions&quot;</span><span class="p">:</span> <span class="p">[</span>
     <span class="p">{</span>
         <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
@@ -1517,7 +1544,10 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
     <span class="p">}</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>Non-enterprise users can remove the policies  <em>Microsoft.Storage/storageAccounts/blobServices/write</em>, <em>Microsoft.Storage/storageAccounts/blobServices/read</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some of these permissions can be removed at the cost of Hopsworks features, see <a href="../restrictive_permissions/">Limiting Azure permissions</a> for more details.</p>
+</div>
 <h3 id="step-22-creating-a-user-assigned-managed-identity">Step 2.2: Creating a User Assigned Managed Identity<a class="headerlink" href="#step-22-creating-a-user-assigned-managed-identity" title="Permanent link">#</a></h3>
 <p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
 <p align="center">
@@ -1626,7 +1656,12 @@ Click on <em>Save</em> (7).</p>
   </figure>
 </p>
 
-<p>Select the <em>Location</em> in which you want your cluster to run (1), name your cluster (2) and select the <em>Resource Group</em> (3) in which you created your <em>storage account</em> and <em>user assigned managed identity</em> (see above).</p>
+<p>Select the <em>Resource Group</em> (1) in which you created your <em>storage account</em> and <em>user assigned managed identity</em> (see above).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the <em>Resource Group</em> does not appear in the drop-down, make sure that you properly <a href="#step-12-creating-a-custom-role-for-hopsworksai">created and set the custom role</a> for this resource group.</p>
+</div>
+<p>Name your cluster (2). Your cluster will be deployed in the <em>Location</em> of your <em>Resource Group</em> (3).</p>
 <p>Select the <em>Instance type</em> (4) and <em>Local storage</em> (5) size for the cluster <em>Head node</em>.</p>
 <p>Select the number of workers you want to start the cluster with (6).
 Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for the <em>worker nodes</em>.</p>
@@ -1634,7 +1669,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p class="admonition-title">Note</p>
 <p>It is possible to add or remove workers once the cluster is running.</p>
 </div>
-<p>Enter the name of the <em>storage account</em> (9) you created above in <em>Azure Storage account name</em> and name the container in which the data wil be stored in <em>Azure Container name</em> (10).</p>
+<p>Select the <em>storage account</em> (9) you created above in <em>Azure Storage account name</em>. The name of the container in which the data will be stored is displayed in <em>Azure Container name</em> (10), you can modify it if needed.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You can choose to use a container already existing in your <em>storage account</em> by using the name of this container, but you need to first make sure that this container is empty.</p>
@@ -1659,7 +1694,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
   </figure>
 </p>
 
-<p>Select the <em>User assigned managed identity</em> that you created above:</p>
+<p>Select the <em>User assigned managed identity</em> that you created above and click on <em>Review and Create</em>:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-identity.png">
@@ -1669,46 +1704,10 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
   </figure>
 </p>
 
-<p>Select the <em>Virtual Network</em> or choose to automatically create a new one:</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-13.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-13.png" alt="Choose virtual network">
-    </a>
-    <figcaption>Choose virtual network</figcaption>
-  </figure>
-</p>
-
-<p>Select the <em>Subnet</em> or choose to automatically create a new one:</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-14.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-14.png" alt="Choose subnet">
-    </a>
-    <figcaption>Choose subnet</figcaption>
-  </figure>
-</p>
-
-<p>Select the <em>Security group</em> or choose to automatically create a new one:</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-15.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-15.png" alt="Choose security group">
-    </a>
-    <figcaption>Choose security group</figcaption>
-  </figure>
-</p>
-
-<p>Choose the user management you want. Select <em>Managed</em> to manage users via Hopsworks.ai, <em>LDAP</em> to integrate with your organization's LDAP/ActiveDirectory server or <em>Disabled</em> to manage users manually from within Hopsworks:</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-16.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-16.png" alt="Choose user management type">
-    </a>
-    <figcaption>Choose user management type</figcaption>
-  </figure>
-</p>
-
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are an enterprise user you will have one more step before being able to click on <em>Review and Create</em>. In this step, you will be asked to set the backups retention policy. More details about this step <a href="../cluster_creation/#step-5-set-the-backup-retention-policy">here</a></p>
+</div>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>
@@ -1719,6 +1718,10 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
   </figure>
 </p>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We skipped cluster creation steps that are not mandatory. You can find more details about these steps <a href="../cluster_creation/">here</a></p>
+</div>
 <p>The cluster will start. This will take a few minutes:</p>
 <p align="center">
   <figure>

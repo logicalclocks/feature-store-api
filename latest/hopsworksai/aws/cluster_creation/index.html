@@ -454,50 +454,57 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-managed-containers" class="md-nav__link">
-    Step 5 Managed Containers:
+  <a href="#step-5-set-the-backup-retention-policy" class="md-nav__link">
+    Step 5 set the backup retention policy:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-6-vpc-selection" class="md-nav__link">
-    Step 6 VPC selection
+  <a href="#step-6-managed-containers" class="md-nav__link">
+    Step 6 Managed Containers:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-7-availability-zone-selection" class="md-nav__link">
-    Step 7 Availability Zone selection
+  <a href="#step-7-vpc-selection" class="md-nav__link">
+    Step 7 VPC selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-8-security-group-selection" class="md-nav__link">
-    Step 8 Security group selection
+  <a href="#step-8-availability-zone-selection" class="md-nav__link">
+    Step 8 Availability Zone selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-user-management-selection" class="md-nav__link">
-    Step 9 User management selection
+  <a href="#step-9-security-group-selection" class="md-nav__link">
+    Step 9 Security group selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-10-add-tags-to-your-instances" class="md-nav__link">
-    Step 10 add tags to your instances.
+  <a href="#step-10-user-management-selection" class="md-nav__link">
+    Step 10 User management selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-11-review-and-create" class="md-nav__link">
-    Step 11 Review and create
+  <a href="#step-11-add-tags-to-your-instances" class="md-nav__link">
+    Step 11 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-12-review-and-create" class="md-nav__link">
+    Step 12 Review and create
   </a>
   
 </li>
@@ -1004,7 +1011,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics.md" class="md-nav__link">
+    <a href="../../../generated/statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1201,50 +1208,57 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-managed-containers" class="md-nav__link">
-    Step 5 Managed Containers:
+  <a href="#step-5-set-the-backup-retention-policy" class="md-nav__link">
+    Step 5 set the backup retention policy:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-6-vpc-selection" class="md-nav__link">
-    Step 6 VPC selection
+  <a href="#step-6-managed-containers" class="md-nav__link">
+    Step 6 Managed Containers:
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-7-availability-zone-selection" class="md-nav__link">
-    Step 7 Availability Zone selection
+  <a href="#step-7-vpc-selection" class="md-nav__link">
+    Step 7 VPC selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-8-security-group-selection" class="md-nav__link">
-    Step 8 Security group selection
+  <a href="#step-8-availability-zone-selection" class="md-nav__link">
+    Step 8 Availability Zone selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-user-management-selection" class="md-nav__link">
-    Step 9 User management selection
+  <a href="#step-9-security-group-selection" class="md-nav__link">
+    Step 9 Security group selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-10-add-tags-to-your-instances" class="md-nav__link">
-    Step 10 add tags to your instances.
+  <a href="#step-10-user-management-selection" class="md-nav__link">
+    Step 10 User management selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-11-review-and-create" class="md-nav__link">
-    Step 11 Review and create
+  <a href="#step-11-add-tags-to-your-instances" class="md-nav__link">
+    Step 11 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-12-review-and-create" class="md-nav__link">
+    Step 12 Review and create
   </a>
   
 </li>
@@ -1322,7 +1336,22 @@ Select the <em>SSH key</em> that you want to use to access cluster instances. Fo
   </figure>
 </p>
 
-<h3 id="step-5-managed-containers">Step 5 Managed Containers:<a class="headerlink" href="#step-5-managed-containers" title="Permanent link">#</a></h3>
+<h3 id="step-5-set-the-backup-retention-policy">Step 5 set the backup retention policy:<a class="headerlink" href="#step-5-set-the-backup-retention-policy" title="Permanent link">#</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This step is only accessible to enterprise users.</p>
+</div>
+<p>To back up the S3 bucket data when taking a cluster backup we need to set a retention policy for S3. In this step, you choose the retention period in days. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
+      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+    </a>
+    <figcaption>Choose the backup retention policy</figcaption>
+  </figure>
+</p>
+
+<h3 id="step-6-managed-containers">Step 6 Managed Containers:<a class="headerlink" href="#step-6-managed-containers" title="Permanent link">#</a></h3>
 <p>Hopsworks can integrate with Amazon Elastic Kubernetes Service (EKS) and Amazon Elastic Container Registry (ECR) to launch Python jobs, Jupyter servers, and ML model servings on top of Amazon EKS. For more detail on how to set up this integration refer to <a href="../eks_ecr_integration/">Integration with Amazon EKS and Amazon ECR</a>.</p>
 <p align="center">
   <figure>
@@ -1333,7 +1362,7 @@ Select the <em>SSH key</em> that you want to use to access cluster instances. Fo
   </figure>
 </p>
 
-<h3 id="step-6-vpc-selection">Step 6 VPC selection<a class="headerlink" href="#step-6-vpc-selection" title="Permanent link">#</a></h3>
+<h3 id="step-7-vpc-selection">Step 7 VPC selection<a class="headerlink" href="#step-7-vpc-selection" title="Permanent link">#</a></h3>
 <p>In this step, you can select the VPC which will be used by the Hopsworks cluster. You can either select an existing VPC or let Hopsworks.ai create one for you. If you decide to let Hopsworks.ai create the VPC for you, you can choose the CIDR block for this virtual network. 
 Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC</a> for more details on how to create your own VPC in AWS.</p>
 <p align="center">
@@ -1345,7 +1374,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC<
   </figure>
 </p>
 
-<h3 id="step-7-availability-zone-selection">Step 7 Availability Zone selection<a class="headerlink" href="#step-7-availability-zone-selection" title="Permanent link">#</a></h3>
+<h3 id="step-8-availability-zone-selection">Step 8 Availability Zone selection<a class="headerlink" href="#step-8-availability-zone-selection" title="Permanent link">#</a></h3>
 <p>If you selected an existing VPC in the previous step, this step lets you select which availability zone of this VPC to use.</p>
 <p>If you did not select an existing virtual network in the previous step Hopsworks.ai will create an availability zone for you. You can choose the CIDR block this subnet will use.</p>
 <p align="center">
@@ -1357,7 +1386,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC<
   </figure>
 </p>
 
-<h3 id="step-8-security-group-selection">Step 8 Security group selection<a class="headerlink" href="#step-8-security-group-selection" title="Permanent link">#</a></h3>
+<h3 id="step-9-security-group-selection">Step 9 Security group selection<a class="headerlink" href="#step-9-security-group-selection" title="Permanent link">#</a></h3>
 <p>If you selected an existing VPC in the previous step, this step lets you select which security group to use.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1373,7 +1402,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC<
   </figure>
 </p>
 
-<h3 id="step-9-user-management-selection">Step 9 User management selection<a class="headerlink" href="#step-9-user-management-selection" title="Permanent link">#</a></h3>
+<h3 id="step-10-user-management-selection">Step 10 User management selection<a class="headerlink" href="#step-10-user-management-selection" title="Permanent link">#</a></h3>
 <p>In this step, you can choose which user management system to use. You have three choices: </p>
 <ul>
 <li><em>Managed</em>: Hopsworks.ai automatically adds and removes users from the Hopsworks cluster when you add and remove users from your organization.</li>
@@ -1389,7 +1418,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC<
   </figure>
 </p>
 
-<h3 id="step-10-add-tags-to-your-instances">Step 10 add tags to your instances.<a class="headerlink" href="#step-10-add-tags-to-your-instances" title="Permanent link">#</a></h3>
+<h3 id="step-11-add-tags-to-your-instances">Step 11 add tags to your instances.<a class="headerlink" href="#step-11-add-tags-to-your-instances" title="Permanent link">#</a></h3>
 <p>In this step, you can define tags that will be added to the cluster virtual machines.</p>
 <p align="center">
   <figure>
@@ -1400,7 +1429,7 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-vpc">Create a VPC<
   </figure>
 </p>
 
-<h3 id="step-11-review-and-create">Step 11 Review and create<a class="headerlink" href="#step-11-review-and-create" title="Permanent link">#</a></h3>
+<h3 id="step-12-review-and-create">Step 12 Review and create<a class="headerlink" href="#step-12-review-and-create" title="Permanent link">#</a></h3>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>

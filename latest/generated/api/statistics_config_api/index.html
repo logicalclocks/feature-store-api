@@ -13,14 +13,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/integrations/emr/emr_configuration/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/generated/api/statistics_config_api/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
     
     
       
-        <title>Configure EMR for the Hopsworks Feature Store - HSFS: Hopsworks Feature Store</title>
+        <title>StatisticsConfig - HSFS: Hopsworks Feature Store</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#configure-emr-for-the-hopsworks-feature-store" class="md-skip">
+        <a href="#statisticsconfig" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Configure EMR for the Hopsworks Feature Store
+              StatisticsConfig
             
           </span>
         </div>
@@ -490,14 +490,12 @@
       
 
 
-  
-
 
   
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
     
     <label class="md-nav__link" for="nav-4">
       Integrations
@@ -555,7 +553,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../databricks/networking/" class="md-nav__link">
+    <a href="../../../integrations/databricks/networking/" class="md-nav__link">
       Networking
     </a>
   </li>
@@ -568,7 +566,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../databricks/api_key/" class="md-nav__link">
+    <a href="../../../integrations/databricks/api_key/" class="md-nav__link">
       Hopsworks API Key
     </a>
   </li>
@@ -581,7 +579,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../databricks/configuration/" class="md-nav__link">
+    <a href="../../../integrations/databricks/configuration/" class="md-nav__link">
       Configuration
     </a>
   </li>
@@ -599,7 +597,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../sagemaker/" class="md-nav__link">
+    <a href="../../../integrations/sagemaker/" class="md-nav__link">
       AWS Sagemaker
     </a>
   </li>
@@ -610,14 +608,12 @@
           
 
 
-  
-
 
   
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" type="checkbox" id="nav-4-4" >
     
     <label class="md-nav__link" for="nav-4-4">
       AWS EMR
@@ -638,7 +634,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../networking/" class="md-nav__link">
+    <a href="../../../integrations/emr/networking/" class="md-nav__link">
       Networking
     </a>
   </li>
@@ -649,110 +645,11 @@
           
 
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Configure EMR for the Hopsworks Feature Store
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-    
-    <a href="./" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../../../integrations/emr/emr_configuration/" class="md-nav__link">
       Configure EMR for the Hopsworks Feature Store
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-set-up-a-hopsworks-api-key" class="md-nav__link">
-    Step 1: Set up a Hopsworks API key
-  </a>
-  
-    <nav class="md-nav" aria-label="Step 1: Set up a Hopsworks API key">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#generate-an-api-key" class="md-nav__link">
-    Generate an API key
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#store-the-api-key-in-the-aws-secrets-manager" class="md-nav__link">
-    Store the API key in the AWS Secrets Manager
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#grant-access-to-the-secret-to-the-emr-ec2-instance-profile" class="md-nav__link">
-    Grant access to the secret to the EMR EC2 instance profile
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-configure-your-emr-cluster" class="md-nav__link">
-    Step 2: Configure your EMR cluster
-  </a>
-  
-    <nav class="md-nav" aria-label="Step 2: Configure your EMR cluster">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#add-the-hopsworks-feature-store-configuration-to-your-emr-cluster" class="md-nav__link">
-    Add the Hopsworks Feature Store configuration to your EMR cluster
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#add-the-bootstrap-action-to-your-emr-cluster" class="md-nav__link">
-    Add the Bootstrap Action to your EMR cluster
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    Next Steps
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
         
@@ -768,7 +665,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../hdinsight/" class="md-nav__link">
+    <a href="../../../integrations/hdinsight/" class="md-nav__link">
       Azure HDInsight
     </a>
   </li>
@@ -805,7 +702,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../mlstudio_designer/" class="md-nav__link">
+    <a href="../../../integrations/mlstudio_designer/" class="md-nav__link">
       Designer
     </a>
   </li>
@@ -818,7 +715,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../mlstudio_notebooks/" class="md-nav__link">
+    <a href="../../../integrations/mlstudio_notebooks/" class="md-nav__link">
       Notebooks
     </a>
   </li>
@@ -836,7 +733,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../python/" class="md-nav__link">
+    <a href="../../../integrations/python/" class="md-nav__link">
       Python
     </a>
   </li>
@@ -849,7 +746,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../spark/" class="md-nav__link">
+    <a href="../../../integrations/spark/" class="md-nav__link">
       Spark
     </a>
   </li>
@@ -904,7 +801,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/project/" class="md-nav__link">
+    <a href="../../project/" class="md-nav__link">
       Project/Connection
     </a>
   </li>
@@ -917,7 +814,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/feature_store/" class="md-nav__link">
+    <a href="../../feature_store/" class="md-nav__link">
       Feature Store
     </a>
   </li>
@@ -930,7 +827,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/feature_group/" class="md-nav__link">
+    <a href="../../feature_group/" class="md-nav__link">
       Feature Group
     </a>
   </li>
@@ -943,7 +840,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/storage_connector/" class="md-nav__link">
+    <a href="../../storage_connector/" class="md-nav__link">
       Storage Connector
     </a>
   </li>
@@ -956,7 +853,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/feature/" class="md-nav__link">
+    <a href="../../feature/" class="md-nav__link">
       Feature
     </a>
   </li>
@@ -969,7 +866,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/training_dataset/" class="md-nav__link">
+    <a href="../../training_dataset/" class="md-nav__link">
       Training Dataset
     </a>
   </li>
@@ -982,7 +879,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/query_vs_dataframe/" class="md-nav__link">
+    <a href="../../query_vs_dataframe/" class="md-nav__link">
       Query vs. Dataframe
     </a>
   </li>
@@ -995,7 +892,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/statistics/" class="md-nav__link">
+    <a href="../../statistics/" class="md-nav__link">
       Statistics
     </a>
   </li>
@@ -1037,7 +934,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/connection_api/" class="md-nav__link">
+    <a href="../connection_api/" class="md-nav__link">
       Connection
     </a>
   </li>
@@ -1050,7 +947,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/feature_store_api/" class="md-nav__link">
+    <a href="../feature_store_api/" class="md-nav__link">
       FeatureStore
     </a>
   </li>
@@ -1063,7 +960,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/feature_group_api/" class="md-nav__link">
+    <a href="../feature_group_api/" class="md-nav__link">
       FeatureGroup
     </a>
   </li>
@@ -1076,7 +973,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/training_dataset_api/" class="md-nav__link">
+    <a href="../training_dataset_api/" class="md-nav__link">
       TrainingDataset
     </a>
   </li>
@@ -1089,7 +986,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/storage_connector_api/" class="md-nav__link">
+    <a href="../storage_connector_api/" class="md-nav__link">
       Storage Connector
     </a>
   </li>
@@ -1102,7 +999,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../../generated/api/feature_api/" class="md-nav__link">
+    <a href="../feature_api/" class="md-nav__link">
       Feature
     </a>
   </li>
@@ -1164,70 +1061,50 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#step-1-set-up-a-hopsworks-api-key" class="md-nav__link">
-    Step 1: Set up a Hopsworks API key
+  <a href="#statisticsconfig_1" class="md-nav__link">
+    StatisticsConfig
   </a>
   
-    <nav class="md-nav" aria-label="Step 1: Set up a Hopsworks API key">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#generate-an-api-key" class="md-nav__link">
-    Generate an API key
+  <a href="#columns" class="md-nav__link">
+    columns
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#store-the-api-key-in-the-aws-secrets-manager" class="md-nav__link">
-    Store the API key in the AWS Secrets Manager
+  <a href="#correlations" class="md-nav__link">
+    correlations
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#grant-access-to-the-secret-to-the-emr-ec2-instance-profile" class="md-nav__link">
-    Grant access to the secret to the EMR EC2 instance profile
+  <a href="#enabled" class="md-nav__link">
+    enabled
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histograms" class="md-nav__link">
+    histograms
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-configure-your-emr-cluster" class="md-nav__link">
-    Step 2: Configure your EMR cluster
-  </a>
-  
-    <nav class="md-nav" aria-label="Step 2: Configure your EMR cluster">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#add-the-hopsworks-feature-store-configuration-to-your-emr-cluster" class="md-nav__link">
-    Add the Hopsworks Feature Store configuration to your EMR cluster
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#add-the-bootstrap-action-to-your-emr-cluster" class="md-nav__link">
-    Add the Bootstrap Action to your EMR cluster
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    Next Steps
-  </a>
   
 </li>
       
@@ -1244,214 +1121,33 @@
               
                 
                 
-                <h1 id="configure-emr-for-the-hopsworks-feature-store">Configure EMR for the Hopsworks Feature Store<a class="headerlink" href="#configure-emr-for-the-hopsworks-feature-store" title="Permanent link">#</a></h1>
-<p>To enable EMR to access the Hopsworks Feature Store, you need to set up a Hopsworks API key, add a bootstrap action and configurations to your EMR cluster.</p>
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p>Ensure <a href="../networking/">Networking</a> is set up correctly before proceeding with this guide.</p>
-</div>
-<h2 id="step-1-set-up-a-hopsworks-api-key">Step 1: Set up a Hopsworks API key<a class="headerlink" href="#step-1-set-up-a-hopsworks-api-key" title="Permanent link">#</a></h2>
-<p>In order for EMR clusters to be able to communicate with the Hopsworks Feature Store, the clients running on EMR need to be able to access a Hopsworks API key.</p>
-<h3 id="generate-an-api-key">Generate an API key<a class="headerlink" href="#generate-an-api-key" title="Permanent link">#</a></h3>
-<p>In Hopsworks, click on your <em>username</em> in the top-right corner and select <em>Settings</em> to open the user settings. Select <em>API keys</em>. Give the key a name and select the project scope before creating the key. Copy the key into your clipboard for the next step.</p>
-<div class="admonition success">
-<p class="admonition-title">Scopes</p>
-<p>The API key should contain at least the following scopes:</p>
-<ol>
-<li>project</li>
-</ol>
-</div>
-<p align="center">
-  <figure>
-    <img src="../../../assets/images/emr/api_key.png" alt="Generating an API key on Hopsworks">
-    <figcaption>API keys can be created in the User Settings on Hopsworks</figcaption>
-  </figure>
-</p>
-
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p>You are only able to retrieve the API key once. If you did not manage to copy it to your clipboard, delete it and create a new one.</p>
-</div>
-<h3 id="store-the-api-key-in-the-aws-secrets-manager">Store the API key in the AWS Secrets Manager<a class="headerlink" href="#store-the-api-key-in-the-aws-secrets-manager" title="Permanent link">#</a></h3>
-<p>In the AWS management console ensure that your active region is the region you use for EMR.
-Go to the <em>AWS Secrets Manager</em> and select <em>Store new secret</em>. Select <em>Other type of secrets</em> and add <em>api-key</em>
-as the key and paste the API key created in the previous step as the value. Click next.</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/databricks/aws/databricks_secrets_manager_step_1.png">
-      <img src="../../../assets/images/databricks/aws/databricks_secrets_manager_step_1.png" alt="Store a Hopsworks API key in the Secrets Manager">
-    </a>
-    <figcaption>Store a Hopsworks API key in the Secrets Manager</figcaption>
-  </figure>
-</p>
-
-<p>As a secret name, enter <em>hopsworks/featurestore</em>. Select next twice and finally store the secret.
-Then click on the secret in the secrets list and take note of the <em>Secret ARN</em>.</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/emr/secrets_manager.png">
-      <img src="../../../assets/images/emr/secrets_manager.png" alt="Name the secret">
-    </a>
-    <figcaption>Name the secret</figcaption>
-  </figure>
-</p>
-
-<h3 id="grant-access-to-the-secret-to-the-emr-ec2-instance-profile">Grant access to the secret to the EMR EC2 instance profile<a class="headerlink" href="#grant-access-to-the-secret-to-the-emr-ec2-instance-profile" title="Permanent link">#</a></h3>
-<p>Identify your EMR EC2 instance profile in the EMR cluster summary:</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/emr/emr_instance_profile.png">
-      <img src="../../../assets/images/emr/emr_instance_profile.png" alt="Identify your EMR EC2 instance profile">
-    </a>
-    <figcaption>Identify your EMR EC2 instance profile</figcaption>
-  </figure>
-</p>
-
-<p>In the AWS Management Console, go to <em>IAM</em>, select <em>Roles</em> and then the EC2 instance profile used by your EMR cluster.
-Select <em>Add inline policy</em>. Choose <em>Secrets Manager</em> as a service, expand the <em>Read</em> access level and check <em>GetSecretValue</em>.
-Expand Resources and select <em>Add ARN</em>. Paste the ARN of the secret created in the previous step.
-Click on <em>Review</em>, give the policy a name und click on <em>Create policy</em>.</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/emr/emr_policy.png">
-      <img src="../../../assets/images/emr/emr_policy.png" alt="Configure the access policy for the Secrets Manager">
-    </a>
-    <figcaption>Configure the access policy for the Secrets Manager</figcaption>
-  </figure>
-</p>
-
-<h2 id="step-2-configure-your-emr-cluster">Step 2: Configure your EMR cluster<a class="headerlink" href="#step-2-configure-your-emr-cluster" title="Permanent link">#</a></h2>
-<h3 id="add-the-hopsworks-feature-store-configuration-to-your-emr-cluster">Add the Hopsworks Feature Store configuration to your EMR cluster<a class="headerlink" href="#add-the-hopsworks-feature-store-configuration-to-your-emr-cluster" title="Permanent link">#</a></h3>
-<p>In order for EMR to be able to talk to the Feature Store, you need to update the Hadoop and Spark configurations.
-Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal with the private DNS name of your Hopsworks master node.</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;hadoop-env&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-
-    <span class="p">},</span>
-    <span class="nt">&quot;Configurations&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="p">{</span>
-        <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;export&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-          <span class="nt">&quot;HADOOP_CLASSPATH&quot;</span><span class="p">:</span> <span class="s2">&quot;$HADOOP_CLASSPATH:/usr/lib/hopsworks/client/*&quot;</span>
-        <span class="p">},</span>
-        <span class="nt">&quot;Configurations&quot;</span><span class="p">:</span> <span class="p">[</span>
-
-        <span class="p">]</span>
-      <span class="p">}</span>
-    <span class="p">]</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;core-site&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;fs.hopsfs.impl&quot;</span><span class="p">:</span> <span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.hostname.verifier&quot;</span><span class="p">:</span> <span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span> <span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.keystore.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.trustore.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;spark-hive-site&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;hive.metastore.uris&quot;</span><span class="p">:</span> <span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">]</span>
+                <h1 id="statisticsconfig">StatisticsConfig<a class="headerlink" href="#statisticsconfig" title="Permanent link">#</a></h1>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L23">[source]</a></span></p>
+<h3 id="statisticsconfig_1">StatisticsConfig<a class="headerlink" href="#statisticsconfig_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">statistics_config</span><span class="o">.</span><span class="n">StatisticsConfig</span><span class="p">(</span>
+    <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">correlations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">histograms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[]</span>
+<span class="p">)</span>
 </code></pre></div>
-<p>When you create your EMR cluster, add the configuration:</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Don't forget to replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal with the private DNS name of your Hopsworks master node.</p>
-</div>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/emr/emr_config.png">
-      <img src="../../../assets/images/emr/emr_config.png" alt="Configure EMR to access the Feature Store">
-    </a>
-    <figcaption>Configure EMR to access the Feature Store</figcaption>
-  </figure>
-</p>
-
-<h3 id="add-the-bootstrap-action-to-your-emr-cluster">Add the Bootstrap Action to your EMR cluster<a class="headerlink" href="#add-the-bootstrap-action-to-your-emr-cluster" title="Permanent link">#</a></h3>
-<p>EMR requires Hopsworks connectors to be able to communicate with the Hopsworks Feature Store. These connectors can be installed with the
-bootstrap action shown below. Copy the content into a file and name the file <code>hopsworks.sh</code>. Copy that file into any S3 bucket that
-is readable by your EMR clusters and take note of the S3 URI of that file e.g., <code>s3://my-emr-init/hopsworks.sh</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-<span class="nb">set</span> -e
-
-<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$#</span><span class="s2">&quot;</span> -ne <span class="m">3</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-    <span class="nb">echo</span> <span class="s2">&quot;Usage hopsworks.sh HOPSWORKS_API_KEY_SECRET, HOPSWORKS_HOST, PROJECT_NAME&quot;</span>
-    <span class="nb">exit</span> <span class="m">1</span>
-<span class="k">fi</span>
-
-<span class="nv">SECRET_NAME</span><span class="o">=</span><span class="nv">$1</span>
-<span class="nv">HOST</span><span class="o">=</span><span class="nv">$2</span>
-<span class="nv">PROJECT</span><span class="o">=</span><span class="nv">$3</span>
-
-<span class="nv">API_KEY</span><span class="o">=</span><span class="k">$(</span>aws secretsmanager get-secret-value --secret-id <span class="nv">$SECRET_NAME</span> <span class="p">|</span> jq -r .SecretString <span class="p">|</span> jq -r <span class="s1">&#39;.[&quot;api-key&quot;]&#39;</span><span class="k">)</span>
-
-<span class="nv">PROJECT_ID</span><span class="o">=</span><span class="k">$(</span>curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/getProjectInfo/<span class="nv">$PROJECT</span> <span class="p">|</span> jq -r .projectId<span class="k">)</span>
-
-sudo yum -y install python3-devel.x86_64 <span class="o">||</span> <span class="nb">true</span>
-
-sudo mkdir /usr/lib/hopsworks
-sudo chown hadoop:hadoop /usr/lib/hopsworks
-<span class="nb">cd</span> /usr/lib/hopsworks
-
-curl -o client.tar.gz -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/client
-
-tar -xvf client.tar.gz
-tar -xzf client/apache-hive-*-bin.tar.gz
-mv apache-hive-*-bin apache-hive-bin
-rm client.tar.gz
-rm client/apache-hive-*-bin.tar.gz
-
-curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .kStore <span class="p">|</span> base64 -d &gt; keyStore.jks
-
-curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .tStore <span class="p">|</span> base64 -d &gt; trustStore.jks
-
-<span class="nb">echo</span> -n <span class="k">$(</span>curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .password<span class="k">)</span> &gt; material_passwd
-
-chmod -R o-rwx /usr/lib/hopsworks
-</code></pre></div>
-<p>Add the bootstrap actions when configuring your EMR cluster. Provide 3 arguments to the bootstrap action: The name of the API key secret e.g., <code>hopsworks/featurestore</code>,
-the public DNS name of your Hopsworks cluster, such as <code>ad005770-33b5-11eb-b5a7-bfabd757769f.cloud.hopsworks.ai</code>, and the name of your Hopsworks project, e.g. <code>demo_fs_meb10179</code>.</p>
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/emr/emr_bootstrap_action.png">
-      <img src="../../../assets/images/emr/emr_bootstrap_action.png" alt="Set the bootstrap action for EMR">
-    </a>
-    <figcaption>Set the bootstrap action for EMR</figcaption>
-  </figure>
-</p>
-
-<p>Your EMR cluster will now be able to access your Hopsworks Feature Store.</p>
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
-<p>If you use Python, then install the <a href="https://pypi.org/project/hsfs/">HSFS library</a>. The Scala version of the library has already been installed to your EMR cluster.
-Use the <a href="../../../generated/api/connection_api/">Connection API</a> to connect to the Hopsworks Feature Store. For more information about how to use the Feature Store, see the <a href="../../../quickstart/">Quickstart Guide</a>.</p>
-<div class="admonition attention">
-<p class="admonition-title">Matching Hopsworks version</p>
-<p>The <strong>major version of <code>HSFS</code></strong> needs to match the <strong>major version of Hopsworks</strong>.</p>
-</div>
-<p align="center">
-    <figure>
-        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
-        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
-    </figure>
-</p>
+<hr />
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L83">[source]</a></span></p>
+<h3 id="columns">columns<a class="headerlink" href="#columns" title="Permanent link">#</a></h3>
+<p>Specify a subset of columns to compute statistics for.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L63">[source]</a></span></p>
+<h3 id="correlations">correlations<a class="headerlink" href="#correlations" title="Permanent link">#</a></h3>
+<p>Enable correlations as an additional statistic to be computed for each
+feature pair.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L54">[source]</a></span></p>
+<h3 id="enabled">enabled<a class="headerlink" href="#enabled" title="Permanent link">#</a></h3>
+<p>Enable statistics, by default this computes only descriptive statistics.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L73">[source]</a></span></p>
+<h3 id="histograms">histograms<a class="headerlink" href="#histograms" title="Permanent link">#</a></h3>
+<p>Enable histograms as an additional statistic to be computed for each
+feature.</p>
+<hr />
                 
               
               
@@ -1466,41 +1162,6 @@ Use the <a href="../../../generated/api/connection_api/">Connection API</a> to c
       
         
 <footer class="md-footer">
-  
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
-        
-          <a href="../networking/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-            </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Networking
-              </div>
-            </div>
-          </a>
-        
-        
-          <a href="../../hdinsight/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Azure HDInsight
-              </div>
-            </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
