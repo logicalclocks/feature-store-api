@@ -893,6 +893,19 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../../generated/feature_validation/" class="md-nav__link">
+      Feature Validation
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1000,6 +1013,58 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../../generated/api/rule_definition_api/" class="md-nav__link">
+      Rule Definiton
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../../generated/api/rule_api/" class="md-nav__link">
+      Rule
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../../generated/api/expectation_api/" class="md-nav__link">
+      Expectation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../../generated/api/validation_api/" class="md-nav__link">
+      Validation
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1046,7 +1111,11 @@
                 
                   <h1>Instance profile permissions</h1>
                 
-                <p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name. Non-enterprise users can remove the policies  <em>S3:PutLifecycleConfiguration</em>, <em>S3:GetLifecycleConfiguration</em>, <em>S3:PutBucketVersioning</em>, <em>S3:GetBucketVersioning</em> as these policies are needed for cluster backups and restore operations available only for the enterprise version. </p>
+                <p>Replace <em>BUCKET_NAME</em> with the appropriate S3 bucket name.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some of these permissions can be removed. Refer to <a href="../restrictive_permissions/#limiting-the-instance-profile-permissions">this guide</a> for more information.</p>
+</div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
   <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
