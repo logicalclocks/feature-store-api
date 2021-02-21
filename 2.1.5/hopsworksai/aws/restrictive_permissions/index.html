@@ -371,36 +371,70 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#limiting-the-cross-account-role-permissions" class="md-nav__link">
+    Limiting the cross-account role permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Limiting the cross-account role permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#step-1-create-a-vpc" class="md-nav__link">
     Step 1: Create a VPC
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-2-create-an-instance-profile" class="md-nav__link">
     Step 2: Create an instance profile
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-3-set-permissions-of-the-cross-account-role" class="md-nav__link">
     Step 3: Set permissions of the cross-account role
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-4-create-your-hopsworks-instance" class="md-nav__link">
     Step 4: Create your Hopsworks instance
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-5-supporting-multiple-vpcs" class="md-nav__link">
     Step 5: Supporting multiple VPCs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-permissions" class="md-nav__link">
+    Backup permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-removable-permissions" class="md-nav__link">
+    Other removable permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-instance-profile-permissions" class="md-nav__link">
+    Limiting the instance profile permissions
   </a>
   
 </li>
@@ -1131,36 +1165,70 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#limiting-the-cross-account-role-permissions" class="md-nav__link">
+    Limiting the cross-account role permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Limiting the cross-account role permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#step-1-create-a-vpc" class="md-nav__link">
     Step 1: Create a VPC
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-2-create-an-instance-profile" class="md-nav__link">
     Step 2: Create an instance profile
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-3-set-permissions-of-the-cross-account-role" class="md-nav__link">
     Step 3: Set permissions of the cross-account role
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-4-create-your-hopsworks-instance" class="md-nav__link">
     Step 4: Create your Hopsworks instance
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#step-5-supporting-multiple-vpcs" class="md-nav__link">
     Step 5: Supporting multiple VPCs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-permissions" class="md-nav__link">
+    Backup permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-removable-permissions" class="md-nav__link">
+    Other removable permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-instance-profile-permissions" class="md-nav__link">
+    Limiting the instance profile permissions
   </a>
   
 </li>
@@ -1185,7 +1253,8 @@ us to automate as many steps as possible. While we ensure to never access resour
 we do understand that this might not be enough for your organization or security policy.
 This guide explains how to lock down AWS permissions following the IT security policy principle of least privilege allowing
 Hopsworks.ai to only access resources in a specific VPC.</p>
-<h2 id="step-1-create-a-vpc">Step 1: Create a VPC<a class="headerlink" href="#step-1-create-a-vpc" title="Permanent link">#</a></h2>
+<h2 id="limiting-the-cross-account-role-permissions">Limiting the cross-account role permissions<a class="headerlink" href="#limiting-the-cross-account-role-permissions" title="Permanent link">#</a></h2>
+<h3 id="step-1-create-a-vpc">Step 1: Create a VPC<a class="headerlink" href="#step-1-create-a-vpc" title="Permanent link">#</a></h3>
 <p>To restrict Hopsworks.ai from accessing resources outside of a specific VPC, you need to create a new VPC
 connected to an Internet Gateway. This can be achieved in the AWS Management Console following this guide:
 <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html#getting-started-create-vpc">Create the VPC</a>.
@@ -1200,17 +1269,20 @@ Note the VPC ID of the VPC you want to use for the following steps.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <a href="https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#AddRemoveRules">Security Group</a> and/or <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#Rules">Network ACLs</a>
-need to be configured so that at least port <code>80</code> is reachable from the internet otherwise creating Hopsworks instances will fail when creating SSL certificates.</p>
+need to be configured so that at least port <code>80</code> is reachable from the internet otherwise you will have to use self signed certificate in your Hopsworks cluster.</p>
 </div>
-<h2 id="step-2-create-an-instance-profile">Step 2: Create an instance profile<a class="headerlink" href="#step-2-create-an-instance-profile" title="Permanent link">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you intend to use the managed users option on your Hopsworks cluster you should also add a rule to open port 443.</p>
+</div>
+<h3 id="step-2-create-an-instance-profile">Step 2: Create an instance profile<a class="headerlink" href="#step-2-create-an-instance-profile" title="Permanent link">#</a></h3>
 <p>You need to create an instance profile that will identify all instances started by Hopsworks.ai.
 Follow this guide to create a role to be used by EC2 with no permissions attached:
 <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html">Creating a Role for an AWS Service (Console)</a>.
 Take note of the ARN of the role you just created.</p>
-<p>For the suggested permissions check <a href="../getting_started/#step-2-creating-instance-profile">our guide here</a>. <strong>Required</strong> permissions are
-only those which give access to the <strong>S3 bucket</strong>. If you select only the required permissions, then enabling <code>Collect logs to CloudWatch</code> feature
-will not have any effect.</p>
-<h2 id="step-3-set-permissions-of-the-cross-account-role">Step 3: Set permissions of the cross-account role<a class="headerlink" href="#step-3-set-permissions-of-the-cross-account-role" title="Permanent link">#</a></h2>
+<p>You will need to add permissions to the instance profile to give access to the S3 bucket where Hopsworks will store its data. For more details about these permissions check <a href="../getting_started/#step-2-creating-instance-profile">our guide here</a>.
+Check <a href="#limiting-the-instance-profile-permissions">bellow</a> for more information on restricting the permissions given the instance profile.</p>
+<h3 id="step-3-set-permissions-of-the-cross-account-role">Step 3: Set permissions of the cross-account role<a class="headerlink" href="#step-3-set-permissions-of-the-cross-account-role" title="Permanent link">#</a></h3>
 <p>During the account setup for Hopsworks.ai, you were asked to create and provide a cross-account role.
 If you don’t remember which role you used then you can find it in Settings/Account Settings in Hopsworks.ai.
 Edit this role in the AWS Management Console and overwrite the existing inline policy with the following policy.</p>
@@ -1226,7 +1298,6 @@ Edit this role in the AWS Management Console and overwrite the existing inline p
         <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
           <span class="s2">&quot;ec2:DescribeInstances&quot;</span><span class="p">,</span>
           <span class="s2">&quot;ec2:DescribeVpcs&quot;</span><span class="p">,</span>
-          <span class="s2">&quot;ec2:CreateSecurityGroup&quot;</span><span class="p">,</span>
           <span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
           <span class="s2">&quot;ec2:DescribeSubnets&quot;</span><span class="p">,</span>
           <span class="s2">&quot;ec2:DescribeKeyPairs&quot;</span><span class="p">,</span>
@@ -1310,16 +1381,96 @@ Edit this role in the AWS Management Console and overwrite the existing inline p
             <span class="nt">&quot;ec2:vpc&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:ec2:*:*:vpc/[VPC_ID]&quot;</span>
           <span class="p">}</span>
         <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;EC2BackupCreation&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span>
       <span class="p">}</span>
     <span class="p">]</span>
   <span class="p">}</span>
 </code></pre></div>
-<h2 id="step-4-create-your-hopsworks-instance">Step 4: Create your Hopsworks instance<a class="headerlink" href="#step-4-create-your-hopsworks-instance" title="Permanent link">#</a></h2>
-<p>You can now create a new Hopsworks instance in Hopsworks.ai by selecting the configured instance profile and
-VPC during instance configuration. Selecting any other VPCs or instance profiles will result in permissions errors.</p>
-<h2 id="step-5-supporting-multiple-vpcs">Step 5: Supporting multiple VPCs<a class="headerlink" href="#step-5-supporting-multiple-vpcs" title="Permanent link">#</a></h2>
+<h3 id="step-4-create-your-hopsworks-instance">Step 4: Create your Hopsworks instance<a class="headerlink" href="#step-4-create-your-hopsworks-instance" title="Permanent link">#</a></h3>
+<p>You can now create a new Hopsworks instance in Hopsworks.ai by selecting the configured instance profile,
+VPC and security group during instance configuration. Selecting any other VPCs or instance profiles will result in permissions errors.</p>
+<h3 id="step-5-supporting-multiple-vpcs">Step 5: Supporting multiple VPCs<a class="headerlink" href="#step-5-supporting-multiple-vpcs" title="Permanent link">#</a></h3>
 <p>The policy can be extended to give Hopsworks.ai access to multiple VPCs.
 See: <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html">Creating a Condition with Multiple Keys or Values</a>.</p>
+<h3 id="backup-permissions">Backup permissions<a class="headerlink" href="#backup-permissions" title="Permanent link">#</a></h3>
+<p>The following permissions are only needed for the backup feature. You can remove them if you are not going to create backups or if you do not have access to this Enterprise feature.</p>
+<div class="highlight"><pre><span></span><code>      <span class="p">{</span>
+        <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;EC2BackupCreation&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+      <span class="p">}</span>
+</code></pre></div>
+<h3 id="other-removable-permissions">Other removable permissions<a class="headerlink" href="#other-removable-permissions" title="Permanent link">#</a></h3>
+<p>The following permissions are needed to give an early warning if your VPC and security groups are badly configured. You can remove them if you don't need it.
+<div class="highlight"><pre><span></span><code>          <span class="s2">&quot;ec2:DescribeVpcAttribute&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DescribeRouteTables&quot;</span>
+</code></pre></div>
+The following permissions are used to let you close and open ports on your cluster from hopswork.ai, you can remove them if you do not want to open ports on your cluster or if you want to manually open ports in EC2.</p>
+<div class="highlight"><pre><span></span><code>      <span class="p">{</span>
+        <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;EC2VpcNonResourceSpecificActions&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="s2">&quot;ec2:AuthorizeSecurityGroupIngress&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:RevokeSecurityGroupIngress&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DeleteSecurityGroup&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Condition&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;ArnLike&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;ec2:vpc&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:ec2:*:*:vpc/[VPC_ID]&quot;</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+</code></pre></div>
+<h2 id="limiting-the-instance-profile-permissions">Limiting the instance profile permissions<a class="headerlink" href="#limiting-the-instance-profile-permissions" title="Permanent link">#</a></h2>
+<p>If you do not intend to take backups or if you do not have access to this Enterprise feature you can remove the permissions that are only used by the backup feature when <a href="../getting_started/#step-2-creating-instance-profile">configuring instance profile permissions</a> .
+For this remove the following permissions from the instance profile:</p>
+<div class="highlight"><pre><span></span><code>      <span class="s2">&quot;S3:PutLifecycleConfiguration&quot;</span><span class="p">,</span> 
+      <span class="s2">&quot;S3:GetLifecycleConfiguration&quot;</span><span class="p">,</span> 
+      <span class="s2">&quot;S3:PutBucketVersioning&quot;</span><span class="p">,</span> 
+      <span class="s2">&quot;S3:GetBucketVersioning&quot;</span>
+</code></pre></div>
+<p>Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:</p>
+<div class="highlight"><pre><span></span><code>    <span class="p">{</span>
+      <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;cloudwatch:PutMetricData&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:DescribeTags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;logs:PutLogEvents&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;logs:DescribeLogStreams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;logs:DescribeLogGroups&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;logs:CreateLogStream&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;logs:CreateLogGroup&quot;</span>
+      <span class="p">],</span>
+      <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;ssm:GetParameter&quot;</span>
+      <span class="p">],</span>
+      <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*&quot;</span>
+    <span class="p">}</span>
+</code></pre></div>
                 
               
               
