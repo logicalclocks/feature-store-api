@@ -32,6 +32,7 @@ public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
   @Getter
   @Setter
   private Long commitID;
+  @Getter
   @Setter
   private String commitDateString;
   @Getter
