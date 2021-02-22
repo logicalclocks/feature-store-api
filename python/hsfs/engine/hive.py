@@ -132,6 +132,7 @@ class Engine:
         storage,
         offline_write_options,
         online_write_options,
+        *args
     ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
