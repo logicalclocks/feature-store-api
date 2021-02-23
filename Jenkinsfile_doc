@@ -19,7 +19,7 @@ pipeline {
                 }
 
                 dir("python") {
-                    sh "cp ../README.md . && pip3 install -e .[dev,docs]"
+                    sh "cp ../README.md . && pip3 install -e .[hive,dev,docs]"
                 }
 
                 sh "python3 auto_doc.py"
