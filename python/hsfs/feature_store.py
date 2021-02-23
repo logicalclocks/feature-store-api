@@ -499,6 +499,7 @@ class FeatureStore:
             seed=seed,
             statistics_config=statistics_config,
             label=label,
+            coalesce=coalesce,
         )
 
     def create_expectation(
