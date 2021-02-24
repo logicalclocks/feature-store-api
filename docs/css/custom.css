@@ -1,5 +1,6 @@
 :root {
   --md-primary-fg-color: #1EB382;
+  --md-secondary-fg-color: #35c495;
 }
 
 .md-logo {
@@ -16,4 +17,12 @@
         height: px2rem(48px);
         fill: currentColor;
 }
+}
+
+.md-tabs {
+  width: 100%;
+  overflow: auto;
+  color: var(--md-primary-bg-color);
+  background-color: var(--md-secondary-fg-color);
+  transition: background-color 250ms;
 }
