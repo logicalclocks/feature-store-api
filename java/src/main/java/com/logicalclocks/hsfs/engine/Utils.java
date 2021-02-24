@@ -75,7 +75,7 @@ public class Utils {
     return features;
   }
 
-  public Dataset<Row> sanetizeFeatureNames(Dataset<Row> dataset) {
+  public Dataset<Row> sanitizeFeatureNames(Dataset<Row> dataset) {
     return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
         Column[]::new));
   }

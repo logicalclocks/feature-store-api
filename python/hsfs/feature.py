@@ -41,7 +41,7 @@ class Feature:
         feature_group_id=None,
         feature_group=None,
     ):
-        self._name = name
+        self._name = name.lower()
         self._type = type
         self._description = description
         self._primary = primary or False

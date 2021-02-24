@@ -26,7 +26,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TrainingDatasetFeature {
   @Getter
-  @Setter
   private String name;
 
   @Getter
@@ -47,20 +46,24 @@ public class TrainingDatasetFeature {
 
   @Builder
   public TrainingDatasetFeature(String name, String type) {
-    this.name = name;
+    setName(name);
     this.type = type;
   }
 
   public TrainingDatasetFeature(String name, String type, Integer index) {
-    this.name = name;
+    setName(name);
     this.type = type;
     this.index = index;
   }
 
   public TrainingDatasetFeature(String name, String type, Integer index, Boolean label) {
-    this.name = name;
+    setName(name);
     this.type = type;
     this.index = index;
     this.label = label;
+  }
+
+  public void setName(String name) {
+    this.name = name.toLowerCase();
   }
 }
