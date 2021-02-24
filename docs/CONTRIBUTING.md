@@ -9,10 +9,10 @@
 
     ```bash
     cd python
-    pip install -e ".[dev]"
+    pip install -e ".[hive,dev]"
     ```
 
-- Install [pre-commit](https://pre-commit.com/) and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through [black](https://github.com/psf/black) and [flake8](https://gitlab.com/pycqa/flake8):
+- Install [pre-commit](https://pre-commit.com/) and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through [black](https://github.com/psf/black) and [flake8](https://gitlab.com/pycqa/flake8). Run the following commands from the `python` directory:
 
     ```bash
     cd python
@@ -26,8 +26,8 @@
 
     ```bash
     cd python
-    flake8 hopsworks
-    black hopsworks
+    flake8 hsfs
+    black hsfs
     ```
 
 ### Python documentation
@@ -66,7 +66,7 @@ We follow a few best practices for writing the Python documentation:
 
 #### Setup and Build Documentation
 
-We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` to auto generate Python API documentation from docstrings.
+We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimporter/mike/)) to build the documentation and a plugin called `keras-autodoc` to auto generate Python API documentation from docstrings.
 
 1. Currently we are using our own version of `keras-autodoc`
 
@@ -77,7 +77,7 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
 2. Install HSFS with `docs` extras:
 
     ```bash
-    pip install -e .[dev,docs]
+    pip install -e .[hive,dev,docs]
     ```
 
 3. To build the docs, first run the auto doc script:
@@ -87,13 +87,31 @@ We use `mkdocs` to build the documentation and a plugin called `keras-autodoc` t
     python auto_doc.py
     ```
 
+##### Option 1: Build only current version of docs
+
 4. Either build the docs, or serve them dynamically:
+
+    Note: Links and pictures might not resolve properly later on when checking with this build.
 
     ```bash
     mkdocs build
     # or
     mkdocs serve
     ```
+
+##### Option 2 (Preferred): Build multi-version doc with `mike`
+
+4. For this you can either checkout and make a local copy of the upstream/gh-pages branch to get the current state of the docs, or just build the branch you are updating:
+
+    Building only *one* branch:
+
+    ```bash
+
+    ```
+
+    **Background:**
+    `mike` builds the documentation and commits it as a new directory to the gh-pages branch. Each directory corresponds to one version of the documentation. Additionally, `mike` maintains a json in the root of gh-pages with the mappings of versions/aliases for each of the directories available. With aliases you can define extra names like `dev` or `latest`.
+
 
 #### Adding new API documentation
 
