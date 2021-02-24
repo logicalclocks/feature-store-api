@@ -103,13 +103,54 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 
 4. For this you can either checkout and make a local copy of the upstream/gh-pages branch to get the current state of the docs, or just build the branch you are updating:
 
-    Building only *one* branch:
+    Building *one* branch:
 
+    Checkout your dev branch with modified docs:
     ```bash
-
+    git checkout [dev-branch]
     ```
 
-    **Background:**
+    Generate API docs if necessary:
+    ```bash
+    python auto_doc.py
+    ```
+
+    Build docs with a version and alias
+    ```bash
+    mike deploy [version] [alias] --update-alias
+
+    # for example, if you branch is based on master and becomes new SNAPSHOT version:
+    mike deploy 2.2.0-SNAPSHOT dev --update-alias
+    ```
+
+    If no gh-pages branch existed in your local repository, this will have created it.
+
+    **Important**: If no previous docs were built, you will have to choose a version as default to be loaded as index, as follows
+
+    ```bash
+    mike set-default [version-or-alias]
+    ```
+
+    You can now checkout the gh-pages branch and serve:
+    ```bash
+    git checkout gh-pages
+    mike serve
+    ```
+
+    You can also list all available versions/aliases:
+    ```bash
+    mike list
+    ```
+
+    Delete and reset your local gh-pages branch:
+    ```bash
+    mike delete --all
+
+    # or delete single version
+    mike delete [version-or-alias]
+    ```
+
+    **Background about `mike`:**
     `mike` builds the documentation and commits it as a new directory to the gh-pages branch. Each directory corresponds to one version of the documentation. Additionally, `mike` maintains a json in the root of gh-pages with the mappings of versions/aliases for each of the directories available. With aliases you can define extra names like `dev` or `latest`.
 
 
