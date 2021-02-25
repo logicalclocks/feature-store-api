@@ -909,15 +909,19 @@ class FeatureGroup(FeatureGroupBase):
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the
         feature store.
+
         Statistics are only computed for data in the offline storage of the feature
         group.
+
         # Arguments
             wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
                 Only valid if feature group is time travel enabled. If specified will recompute statistics on
                 feature group as of specific point in time. If not specified then will compute statistics
-                as of most recent time of this fg. Defaults to `None`.
+                as of most recent time of this feature group. Defaults to `None`.
+
         # Returns
             `Statistics`. The statistics metadata object.
+
         # Raises
             `RestAPIError`. Unable to persist the statistics.
         """
