@@ -200,7 +200,7 @@ class FeatureGroupApi:
             ),
         )
 
-    def commit_details(self, feature_group_instance, wallclock_timestamp, limit):
+    def get_commit_details(self, feature_group_instance, wallclock_timestamp, limit):
         """
         Get feature group commit metadata.
         # Arguments

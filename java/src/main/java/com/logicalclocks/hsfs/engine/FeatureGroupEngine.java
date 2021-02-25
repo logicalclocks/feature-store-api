@@ -216,6 +216,11 @@ public class FeatureGroupEngine {
 
   public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
     return getCommitDetails(featureGroup, null, limit);
   }
 
@@ -228,6 +233,12 @@ public class FeatureGroupEngine {
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
                                          Map<String, String> writeOptions)
       throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("delete function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 

@@ -729,13 +729,6 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.
             `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "commit_details can only be used on time travel enabled feature groups"
-            )
         return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
     def commit_delete_record(
@@ -934,11 +927,6 @@ class FeatureGroup(FeatureGroupBase):
             if wallclock_time is not None:
                 # Retrieve fg commit id related to this wall clock time and recompute statistics. It will throw
                 # exception if its not time travel enabled feature group.
-                if self._time_travel_format is None:
-                    raise FeatureStoreException(
-                        "commit_details can only be used on time travel enabled feature groups"
-                    )
-
                 fg_commit_id = [
                     commit_id
                     for commit_id in self._feature_group_engine.commit_details(

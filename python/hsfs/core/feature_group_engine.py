@@ -131,12 +131,20 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.delete(feature_group)
 
     def commit_details(self, feature_group, wallclock_time, limit):
+        if (
+            feature_group._time_travel_format is None
+            or feature_group._time_travel_format.upper() != "HUDI"
+        ):
+            raise exceptions.FeatureStoreException(
+                "commit_details can only be used on time travel enabled feature groups"
+            )
+
         wallclock_timestamp = (
             util.get_timestamp_from_date_string(wallclock_time)
             if wallclock_time is not None
             else None
         )
-        feature_group_commits = self._feature_group_api.commit_details(
+        feature_group_commits = self._feature_group_api.get_commit_details(
             feature_group, wallclock_timestamp, limit
         )
         commit_details = {}
