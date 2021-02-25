@@ -32,7 +32,7 @@ We require extra permissions to be added to the user assigned managed identity a
     <a  href="../../../assets/images/hopsworksai/azure/azure-managed-identity-details.png">
       <img src="../../../assets/images/hopsworksai/azure/azure-managed-identity-details.png" alt="Azure details tab">
     </a>
-    <figcaption>Getting the user assigned managed identity (1) and resource group name (2) of your cluster</figcaption>
+    <figcaption>Get the resource group name (1) and the user assigned managed identity (2) of your cluster</figcaption>
   </figure>
 </p>
 
@@ -144,6 +144,12 @@ Navigate back to the your Resource group home page at [Azure portal](https://por
 
 You need to click on *Upgrade* to start the upgrade process. You will be prompted with the screen shown below to confirm your intention to upgrade: 
 
+!!! note
+    No need to worry about the following message since this is done already in [Step 2](#step-2-add-upgrade-permissions-to-your-user-assigned-managed-identity)
+
+    **Make sure that your user assigned managed identity (hopsworks-doc-identity) includes the following permissions:
+    [ "Microsoft.Compute/virtualMachines/read", "Microsoft.Compute/virtualMachines/write", "Microsoft.Compute/disks/read", "Microsoft.Compute/disks/write" ]**
+
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt.png">
@@ -195,7 +201,91 @@ Once the upgrade is completed, you can confirm that you have the new Hopsworks v
   </figure>
 </p>
 
-##  Error during upgrade process
+## Error handling
+There are two categories of errors that you may encounter during an upgrade. First, a permission error due to a missing permission in your role connected to Hopsworks.ai, see [Error 1](#error-1-missing-permissions-error). Second, an error during the upgrade process running on your cluster, see [Error 2](#error-2-upgrade-process-error).
+
+### Error 1: Missing permissions error
+If you encounter the following permission error right after starting an upgrade, then you need to make sure that the role you used to connect to Hopsworks.ai, the one that you have created in [Getting started Step 1.2](../getting_started/#step-12-creating-a-custom-role-for-hopsworksai), have permissions to read and write disks
+*("Microsoft.Compute/disks/read", "Microsoft.Compute/disks/write")*. 
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
+    </a>
+    <figcaption>Missing permission error</figcaption>
+  </figure>
+</p>
+
+
+If you don't remember the name of the role that you have created in [Getting started Step 1.2](../getting_started/#step-12-creating-a-custom-role-for-hopsworksai), you can navigate to your Resource group, (1) click on *Access Control*, (2) navigate to *Check Access* tab, (3) search for *hopsworks.ai*, (4) click on the one with the blue icon, (5) now you have the name of your custom role used to connect to hopsworks.ai. 
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
+    </a>
+    <figcaption>Get your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+To edit the permissions associated with your role, stay on the same *Access Control* page, (1) click on the *Roles* tab, (2) search for your role name (the one that you just got), (3) click on **...**, (4) click on *Edit*.
+
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+You will arrive at the *Update a custom role* page as shown below:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+Navigate to the *JSON* tab, then click on *Edit*, as shown below:
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+In our example, we were missing only the read permission ("Microsoft.Compute/disks/read"). First, add the missing permission, then click on *Save*, click on *Review + update*, and finally click on *Update*.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
+    </a>
+    <figcaption>Add missing permissions to your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+Once you have updated your role, click on *Retry* to retry the upgrade process.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
+    </a>
+    <figcaption>Retry the upgrade process</figcaption>
+  </figure>
+</p>
+
+### Error 2: Upgrade process error
 
 If an error occurs during the upgrade process, you will have the option to rollback to your old cluster as shown below: 
 
