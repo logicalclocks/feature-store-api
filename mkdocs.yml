@@ -63,6 +63,10 @@ nav:
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
     - Integrations: "./setup/"
+    - Cluster upgrade:
+      - AWS: hopsworksai/aws/upgrade.md
+      - Azure: hopsworksai/azure/upgrade.md
+  
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Support: https://community.hopsworks.ai/
 
