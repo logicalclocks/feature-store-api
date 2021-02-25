@@ -16,7 +16,12 @@
 
 import warnings
 import humps
-from typing import Optional, Union, List, Dict
+import numpy
+import datetime
+from typing import Optional, Union, List, Dict, TypeVar
+
+from hsfs.transformation_function import TransformationFunction
+from hsfs.core import transformation_function_engine
 
 from hsfs import (
     training_dataset,
@@ -86,6 +91,10 @@ class FeatureStore:
         self._expectations_api = expectations_api.ExpectationsApi(self._id)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
+
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(self._id)
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -446,6 +455,7 @@ class FeatureStore:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         label: Optional[List[str]] = [],
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a training dataset metadata object.
 
@@ -525,6 +535,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             label=label,
             coalesce=coalesce,
+            transformation_functions=transformation_functions,
         )
 
     def create_expectation(
@@ -558,6 +569,93 @@ class FeatureStore:
             rules=rules,
             featurestore_id=self._id,
         )
+
+    def create_transformation_function(
+        self,
+        transformation_function: callable,
+        output_type: Union[
+            str,
+            TypeVar("str"),  # noqa: F821
+            TypeVar("string"),  # noqa: F821
+            bytes,
+            numpy.int8,
+            TypeVar("int8"),  # noqa: F821
+            TypeVar("byte"),  # noqa: F821
+            numpy.int16,
+            TypeVar("int16"),  # noqa: F821
+            TypeVar("short"),  # noqa: F821
+            int,
+            TypeVar("int"),  # noqa: F821
+            numpy.int,
+            numpy.int32,
+            numpy.int64,
+            TypeVar("int64"),  # noqa: F821
+            TypeVar("long"),  # noqa: F821
+            TypeVar("bigint"),  # noqa: F821
+            float,
+            TypeVar("float"),  # noqa: F821
+            numpy.float,
+            numpy.float64,
+            TypeVar("float64"),  # noqa: F821
+            TypeVar("double"),  # noqa: F821
+            datetime.datetime,
+            numpy.datetime64,
+            datetime.date,
+            bool,
+            TypeVar("boolean"),  # noqa: F821
+            TypeVar("bool"),  # noqa: F821
+            numpy.bool,
+        ],
+        version: Optional[int] = None,
+    ):
+        """Create a transformation function metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist the transformation function in the
+            feature store on its own. To materialize the transformation function and save
+            call the `save()` method of the transformation function metadata object.
+
+        # Arguments
+            transformation_function: callable object.
+            output_type: python or numpy output type that will be inferred as pyspark.sql.types type.
+
+        # Returns:
+            `TransformationFunction`: The TransformationFunction metadata object.
+        """
+        return TransformationFunction(
+            featurestore_id=self._id,
+            transformation_fn=transformation_function,
+            output_type=output_type,
+            version=version,
+        )
+
+    def get_transformation_function(
+        self,
+        name: str,
+        version: Optional[int] = None,
+    ):
+        """Get  transformation function metadata object.
+
+        # Arguments
+            name: name of transformation function.
+            version: version of transformation function. Optional, if not provided all functions that match to provided
+                name will be retrieved .
+        # Returns:
+            `TransformationFunction`: The TransformationFunction metadata object.
+            `Dict[str, int, str, TransformationFunction]`. Dictionary object of transformation function name, version,
+                output type and transformation function instance.
+        """
+        return self._transformation_function_engine.get_transformation_fn(name, version)
+
+    def get_transformation_functions(self):
+        """Get  all transformation functions metadata objects.
+
+        # Returns:
+             `Dict[str, int, str, TransformationFunction]`. Dictionary object of transformation function name, version,
+                 output type and transformation function instance.
+
+        """
+        return self._transformation_function_engine.get_transformation_fns()
 
     @property
     def id(self):

@@ -30,6 +30,7 @@ from hsfs.core import (
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
+    transformation_function_engine,
 )
 from hsfs.constructor import query
 
@@ -62,6 +63,7 @@ class TrainingDataset:
         from_query=None,
         querydto=None,
         label=None,
+        transformation_functions=None,
     ):
         self._id = id
         self._name = name
@@ -90,6 +92,10 @@ class TrainingDataset:
             featurestore_id, self.ENTITY_TYPE
         )
 
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
+        )
+
         # set up depending on user initialized or coming from backend response
         if training_dataset_type is None:
             # no type -> user init
@@ -98,6 +104,7 @@ class TrainingDataset:
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
+            self._transformation_functions = transformation_functions
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -115,6 +122,9 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
+            self._transformation_functions = self._transformation_function_engine.get_training_dataset_transformation_fn(
+                self
+            )
 
     def save(
         self,
@@ -667,3 +677,12 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def transformation_functions(self):
+        """Set transformation functions."""
+        return self._transformation_functions
+
+    @transformation_functions.setter
+    def transformation_functions(self, transformation_functions):
+        self._transformation_functions = transformation_functions

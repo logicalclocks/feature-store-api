@@ -78,6 +78,7 @@ class TrainingDatasetApi:
             training_dataset_instance (training_dataset): the metadata instance of the training dataset
             app_options ([type]): the configuration for the training dataset job application
         """
+        # TODO (davit): send also transformers to compute features, if any
 
         _client = client.get_instance()
         path_params = [
@@ -140,9 +141,7 @@ class TrainingDatasetApi:
         )
 
     def get_serving_prepared_statement(self, training_dataset_instance):
-        """
-        ... the training dataset
-
+        """Get serving prepared statement metadata object for a training dataset.
         Args:
             training_dataset_instance (training_dataset): the metadata instance of the training dataset
         """
