@@ -12,7 +12,7 @@ This guide shows you how to upgrade your existing Hopsworks cluster to a newer v
 
 ## Step 1: Stop your cluster 
 
-You need to stop your cluster to start the upgrade process. Once your cluster is stopped, the *Upgrade* button will appear as shown below:
+You need to **Stop** your cluster to start the upgrade process. Once your cluster is stopped, the *Upgrade* button will appear as shown below:
 
 <p align="center">
   <figure>
@@ -38,7 +38,7 @@ We require extra permissions to be added to the user assigned managed identity a
 
 ### Step 2.1: Add custom role for upgrade permissions 
 
-Once you get the names of the resource group and user-assigned managed identity, following the same steps as in [getting started to add a custom role](../getting_started/#step-12-creating-a-custom-role-for-hopsworksai). First, navigate to [Azure portal](https://portal.azure.com/#home), then click on *Resource groups* and then search for your resource group and click on it. Go to the *Access control (IAM)* tab, select *Add*, and click on *Add custom role* 
+Once you get the names of the resource group and user-assigned managed identity, follow the same steps as in [getting started to add a custom role](../getting_started/#step-12-creating-a-custom-role-for-hopsworksai). First, navigate to [Azure portal](https://portal.azure.com/#home), then click on *Resource groups* and then search for your resource group and click on it. Go to the *Access control (IAM)* tab, select *Add*, and click on *Add custom role* 
 
 <p align="center">
   <figure>
@@ -113,7 +113,7 @@ Click on *Review and create* and then click on *Create* to create the custom rol
 
 ### Step 2.2: Assign the custom role to your user-assigned managed identity
 
-Navigate back to the your resource group home page at [Azure portal](https://portal.azure.com/#home), click on *Add* and then click on *Add role assignment*
+Navigate back to the your Resource group home page at [Azure portal](https://portal.azure.com/#home), click on *Add* and then click on *Add role assignment*
 
 <p align="center">
   <figure>
@@ -169,7 +169,7 @@ Check the *Yes, upgrade cluster* checkbox to proceed, then the *Upgrade* button 
 </p>
 
 
-Depending on how big your current cluster, the upgrade process may take from 1 hour to a few hours until completion.
+Depending on how big your current cluster is, the upgrade process may take from 1 hour to a few hours until completion.
 
 !!! note
     We don't delete your old cluster until the upgrade process is successfully completed. 

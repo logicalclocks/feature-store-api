@@ -12,7 +12,7 @@ This guide shows you how to upgrade your existing Hopsworks cluster to a newer v
 
 ## Step 1: Stop your cluster 
 
-You need to stop your cluster to start the upgrade process. Once your cluster is stopped, the *Upgrade* button will appear as shown below:
+You need to **Stop** your cluster to start the upgrade process. Once your cluster is stopped, the *Upgrade* button will appear as shown below:
 
 <p align="center">
   <figure>
@@ -85,7 +85,7 @@ Check the *Yes, upgrade cluster* checkbox to proceed, then the *Upgrade* button 
   </figure>
 </p>
 
-Depending on how big your current cluster, the upgrade process may take from 1 hour to a few hours until completion.
+Depending on how big your current cluster is, the upgrade process may take from 1 hour to a few hours until completion.
 
 !!! note
     We don't delete your old cluster until the upgrade process is successfully completed. 
