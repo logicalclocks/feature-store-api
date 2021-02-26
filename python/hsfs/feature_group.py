@@ -711,11 +711,14 @@ class FeatureGroup(FeatureGroupBase):
             # if Hive, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
-    def commit_details(self, limit: Optional[int] = None):
+    def commit_details(
+        self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
+    ):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
 
         # Arguments
+            wallclock_time: Commit details as of specific point in time. Defaults to `None`.
             limit: Number of commits to retrieve. Defaults to `None`.
 
         # Returns
@@ -726,14 +729,7 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.
             `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "commit_details can only be used on time travel enabled feature groups"
-            )
-        return self._feature_group_engine.commit_details(self, limit)
+        return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
     def commit_delete_record(
         self,
@@ -902,6 +898,56 @@ class FeatureGroup(FeatureGroupBase):
         return self._data_validation_engine.get_validations(
             self, validation_time, commit_time
         )
+
+    def compute_statistics(self, wallclock_time: Optional[str] = None):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+
+        # Arguments
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+                Only valid if feature group is time travel enabled. If specified will recompute statistics on
+                feature group as of specific point in time. If not specified then will compute statistics
+                as of most recent time of this feature group. Defaults to `None`.
+
+        # Returns
+            `Statistics`. The statistics metadata object.
+
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            # Don't read the dataframe here, to avoid triggering a read operation
+            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # to update the statistics.
+
+            fg_commit_id = None
+            if wallclock_time is not None:
+                # Retrieve fg commit id related to this wall clock time and recompute statistics. It will throw
+                # exception if its not time travel enabled feature group.
+                fg_commit_id = [
+                    commit_id
+                    for commit_id in self._feature_group_engine.commit_details(
+                        self, wallclock_time, 1
+                    ).keys()
+                ][0]
+
+            return self._statistics_engine.compute_statistics(
+                self,
+                feature_group_commit_id=fg_commit_id
+                if fg_commit_id is not None
+                else None,
+            )
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
 
     @classmethod
     def from_response_json(cls, json_dict):

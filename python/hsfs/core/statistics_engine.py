@@ -16,7 +16,7 @@
 
 import datetime
 
-from hsfs import engine, statistics
+from hsfs import engine, statistics, util
 from hsfs.core import statistics_api
 from hsfs.client import exceptions
 
@@ -27,17 +27,30 @@ class StatisticsEngine:
             feature_store_id, entity_type
         )
 
-    def compute_statistics(self, metadata_instance, feature_dataframe=None):
+    def compute_statistics(
+        self, metadata_instance, feature_dataframe=None, feature_group_commit_id=None
+    ):
         """Compute statistics for a dataframe and send the result json to Hopsworks."""
         if engine.get_type() == "spark":
+
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Hive engine
             # and calling compute_statistics
-            feature_dataframe = (
-                feature_dataframe if feature_dataframe else metadata_instance.read()
-            )
+            if feature_dataframe is None:
+                if feature_group_commit_id is not None:
+                    feature_dataframe = (
+                        metadata_instance.select_all()
+                        .as_of(
+                            util.get_hudi_datestr_from_timestamp(
+                                feature_group_commit_id
+                            )
+                        )
+                        .read(online=False, dataframe_type="default", read_options={})
+                    )
+                else:
+                    feature_dataframe = metadata_instance.read()
 
-            commit_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
             if len(feature_dataframe.head(1)) == 0:
                 raise exceptions.FeatureStoreException(
                     "There is no data in the entity that you are trying to compute "
@@ -50,7 +63,9 @@ class StatisticsEngine:
                 metadata_instance.statistics_config.correlations,
                 metadata_instance.statistics_config.histograms,
             )
-            stats = statistics.Statistics(commit_str, content_str)
+            stats = statistics.Statistics(
+                commit_time, feature_group_commit_id, content_str
+            )
             self._statistics_api.post(metadata_instance, stats)
             return stats
 
@@ -64,4 +79,5 @@ class StatisticsEngine:
 
     def get(self, metadata_instance, commit_time):
         """Get Statistics with the specified commit time of an entity."""
-        return self._statistics_api.get(metadata_instance, commit_time)
+        commit_timestamp = util.get_timestamp_from_date_string(commit_time)
+        return self._statistics_api.get(metadata_instance, commit_timestamp)

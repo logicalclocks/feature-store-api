@@ -41,6 +41,7 @@ import org.apache.spark.sql.SparkSession;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -312,7 +313,7 @@ public class SparkEngine {
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
                                     SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions,
                                     Integer validationId)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions,

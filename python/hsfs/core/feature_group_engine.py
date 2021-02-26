@@ -13,7 +13,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
@@ -130,21 +130,27 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def delete(self, feature_group):
         self._feature_group_api.delete(feature_group)
 
-    def commit_details(self, feature_group, limit):
-        hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_group.feature_store_id,
-            feature_group.feature_store_name,
-            feature_group,
-            engine.get_instance()._spark_context,
-            engine.get_instance()._spark_session,
+    def commit_details(self, feature_group, wallclock_time, limit):
+        if (
+            feature_group._time_travel_format is None
+            or feature_group._time_travel_format.upper() != "HUDI"
+        ):
+            raise exceptions.FeatureStoreException(
+                "commit_details can only be used on time travel enabled feature groups"
+            )
+
+        wallclock_timestamp = (
+            util.get_timestamp_from_date_string(wallclock_time)
+            if wallclock_time is not None
+            else None
         )
-        feature_group_commits = self._feature_group_api.commit_details(
-            feature_group, limit
+        feature_group_commits = self._feature_group_api.get_commit_details(
+            feature_group, wallclock_timestamp, limit
         )
         commit_details = {}
         for feature_group_commit in feature_group_commits:
             commit_details[feature_group_commit.commitid] = {
-                "committedOn": hudi_engine_instance._timestamp_to_hudiformat(
+                "committedOn": util.get_hudi_datestr_from_timestamp(
                     feature_group_commit.commitid
                 ),
                 "rowsUpdated": feature_group_commit.rows_updated,
