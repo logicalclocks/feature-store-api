@@ -62,6 +62,12 @@ Once you get your instance profile name, navigate to [AWS management console](ht
 
 You need to click on *Upgrade* to start the upgrade process. You will be prompted with the screen shown below to confirm your intention to upgrade: 
 
+!!! note
+    No need to worry about the following message since this is done already in [Step 2](#step-2-add-upgrade-permissions-to-your-instance-profile)
+
+    **Make sure that your instance profile (hopsworks-doc) includes the following permissions:
+    [ "ec2:DetachVolume", "ec2:AttachVolume", "ec2:ModifyInstanceAttribute" ]**
+
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-1.png">
@@ -112,9 +118,9 @@ Once the upgrade is completed, you can confirm that you have the new Hopsworks v
 </p>
 
 ## Error handling 
-There are two categories of errors that you may encounter during an upgrade. First, a permission error due to missing permission or a misconfigured policy in your instance profile, see [Error 1](#1-error-due-to-misconfigured-upgrade-permissions). Second, an error during the upgrade process running on your cluster, see [Error 2](#2-error-during-upgrade-process).
+There are two categories of errors that you may encounter during an upgrade. First, a permission error due to missing permission or a misconfigured policy in your instance profile, see [Error 1](#error-1-misconfigured-upgrade-permissions). Second, an error during the upgrade process running on your cluster, see [Error 2](#error-2-upgrade-process-error).
 
-### 1 - Error due to misconfigured upgrade permissions
+### Error 1: Misconfigured upgrade permissions
 
 During the upgrade process, Hopsworks.ai starts by validating your instance profile permissions to ensure that it includes the required upgrade permissions. If one or more permissions are missing, or if the resource is not set correctly, you will be notified with an error message and a *Retry* button will appear as shown below:
 
@@ -138,7 +144,7 @@ Update you instance profile accordingly, then click *Retry*
   </figure>
 </p>
 
-### 2 - Error during upgrade process
+### Error 2: Upgrade process error
 
 If an error occurs during the upgrade process, you will have the option to rollback to your old cluster as shown below: 
 
