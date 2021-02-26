@@ -36,6 +36,7 @@ pipeline {
 
                   rm -r java/?
                   git add docs/index.md
+                  git add docs/CONTRIBUTING.md
                   git commit -m "tmp commit" || true
 
                   git checkout -b tmp
