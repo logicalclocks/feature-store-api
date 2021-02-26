@@ -33,8 +33,13 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -100,6 +105,26 @@ public class TrainingDataset {
   @Setter
   @JsonIgnore
   private List<String> label;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Connection preparedStatementConnection;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Map<Integer, Map<String, Integer>> preparedStatementParameters;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private TreeMap<Integer, PreparedStatement> preparedStatements;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private HashSet<String> servingKeys;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -333,50 +358,39 @@ public class TrainingDataset {
   }
 
   /**
-   * Add a tag without value to the training dataset.
-   *
-   * @param name name of the tag
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void addTag(String name) throws FeatureStoreException, IOException {
-    addTag(name, null);
-  }
-
-  /**
    * Add name/value tag to the training dataset.
    *
    * @param name  name of the tag
-   * @param value value of the tag
+   * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void addTag(String name, String value) throws FeatureStoreException, IOException {
+  public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     trainingDatasetEngine.addTag(this, name, value);
   }
 
   /**
    * Get all tags of the training dataset.
    *
-   * @return map of all tags from name to value
+   * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTag() throws FeatureStoreException, IOException {
-    return getTag(null);
+  public Map<String, Object> getTags() throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getTags(this);
   }
 
   /**
    * Get a single tag value of the training dataset.
    *
-   * @param name name of tha tag
-   * @return string value of the tag
+   * @param name name of the tag
+   * @return The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException
    * @throws IOException
    */
   @JsonIgnore
-  public Map<String, String> getTag(String name) throws FeatureStoreException, IOException {
+  public Object getTag(String name) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getTag(this, name);
   }
 
@@ -415,5 +429,33 @@ public class TrainingDataset {
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    // init prepared statement if it has not already
+    if (this.getPreparedStatements() == null) {
+      trainingDatasetEngine.initPreparedStatement(this);
+    }
+  }
+
+  /**
+   * Retrieve feature vector from online feature store.
+   *
+   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
+   *              corresponding ids to retrieve feature vector from online feature store.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
+      IOException {
+    return trainingDatasetEngine.getServingVector(this, entry);
   }
 }

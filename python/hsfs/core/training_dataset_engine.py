@@ -14,8 +14,11 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, training_dataset_feature
-from hsfs.core import training_dataset_api, tags_api
+import re
+from sqlalchemy import sql
+
+from hsfs import engine, training_dataset_feature, util
+from hsfs.core import training_dataset_api, tags_api, storage_connector_api
 from hsfs.constructor import query
 
 
@@ -29,6 +32,9 @@ class TrainingDatasetEngine:
             feature_store_id
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            feature_store_id
+        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -104,12 +110,88 @@ class TrainingDatasetEngine:
         """Remove a tag from a training dataset."""
         self._tags_api.delete(training_dataset, name)
 
-    def get_tags(self, training_dataset, name):
-        """Get tag with a certain name or all tags for a training dataset."""
-        return [tag.to_dict() for tag in self._tags_api.get(training_dataset, name)]
+    def get_tag(self, training_dataset, name):
+        """Get tag with a certain name for a training dataset."""
+        return self._tags_api.get(training_dataset, name)[name].to_dict()
+
+    def get_tags(self, training_dataset):
+        """Get all tags for a training dataset."""
+        return [tag.to_dict() for tag in self._tags_api.get(training_dataset)]
 
     def update_statistics_config(self, training_dataset):
         """Update the statistics configuration of a feature group."""
         self._training_dataset_api.update_metadata(
             training_dataset, training_dataset, "updateStatsConfig"
         )
+
+    def get_serving_vector(self, training_dataset, entry):
+        """Assembles serving vector from online feature store."""
+
+        serving_vector = []
+
+        if training_dataset.prepared_statements is None:
+            self.init_prepared_statement(training_dataset)
+
+        prepared_statements = training_dataset.prepared_statements
+        for prepared_statement_index in prepared_statements:
+            prepared_statement = prepared_statements[prepared_statement_index]
+            result_proxy = training_dataset.prepared_statement_connection.execute(
+                prepared_statement, entry
+            ).fetchall()
+            result_dict = {}
+            for row in result_proxy:
+                result_dict = dict(row.items())
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
+            serving_vector += list(result_dict.values())
+
+        return serving_vector
+
+    def init_prepared_statement(self, training_dataset):
+        online_conn = self._storage_connector_api.get_online_connector()
+        jdbc_connection = util.create_mysql_connection(online_conn)
+        prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
+            training_dataset
+        )
+
+        prepared_statements_dict = {}
+        serving_vector_keys = set()
+        for prepared_statement in prepared_statements:
+            query_online = str(prepared_statement.query_online).replace("\n", "")
+
+            # In java prepared statement `?` is used for parametrization.
+            # In sqlalchemy `:feature_name` is used instead of `?`
+            pk_names = [
+                psp.name
+                for psp in sorted(
+                    prepared_statement.prepared_statement_parameters,
+                    key=lambda psp: psp.index,
+                )
+            ]
+            # Now we have ordered pk_names, iterate over it and replace `?` with `:feature_name` one by one.
+            # Regex `"^(.*?)\?"` will identify 1st occurrence of `?` in the sql string and replace it with provided
+            # feature name, e.g. `:feature_name`:. As we iteratively update `query_online` we are always aiming to
+            # replace 1st occurrence of `?`. This approach can only work if primary key names are sorted properly.
+            # Regex `"^(.*?)\?"`:
+            # `^` - asserts position at start of a line
+            # `.*?` - matches any character (except for line terminators). `*?` Quantifier —  Matches between zero and
+            # unlimited times, expanding until needed, i.e 1st occurrence of `\?` character.
+            for pk_name in pk_names:
+                serving_vector_keys.add(pk_name)
+                query_online = re.sub(
+                    r"^(.*?)\?",
+                    r"\1:" + pk_name,
+                    query_online,
+                )
+            query_online = sql.text(query_online)
+
+            prepared_statements_dict[
+                prepared_statement.prepared_statement_index
+            ] = query_online
+
+        training_dataset.prepared_statement_connection = jdbc_connection
+        training_dataset.prepared_statements = prepared_statements_dict
+        training_dataset.serving_keys = serving_vector_keys

@@ -15,11 +15,11 @@ pipeline {
             }
             steps {
                 dir("java") {
-                    sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\\[|Download\\w+:)' > ../version.log"
+                    sh "mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev 'Download|INFO|WARNING' > ../version.log"
                 }
 
                 dir("python") {
-                    sh "cp ../README.md . && pip3 install -e .[dev,docs]"
+                    sh "cp ../README.md . && pip3 install -e .[hive,dev,docs]"
                 }
 
                 sh "python3 auto_doc.py"
@@ -31,15 +31,36 @@ pipeline {
                   git branch -D gh-pages || true
                   git branch -D tmp || true
 
+                  git remote set-url origin https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                   git fetch --all
+
+                  rm -r java/?
+                  git add docs/index.md
+                  git commit -m "tmp commit" || true
+
                   git checkout -b tmp
                   git checkout gh-pages
                   git checkout tmp
 
                   export VERSION=\$(cat version.log)
-                  mike deploy \$VERSION --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
+                  mike deploy \$VERSION -u --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                 '''
+            }
+        }
+        stage("publish") {
+            agent {
+                node "local"
+            }
 
+            steps {
+                sh '''
+                  rm -rf /opt/docs/*
+                  rm -rf /opt/docs/.git
+                  rm -rf /opt/docs/.nojekyll
+                  cd /opt/docs
+                  git clone https://github.com/logicalclocks/feature-store-api .
+                  git checkout gh-pages
+                '''
             }
         }
     }

@@ -35,14 +35,17 @@ public class FeatureGroupBaseEngine {
     featureGroupApi.delete(featureGroupBase);
   }
 
-  public void addTag(FeatureGroupBase featureGroupBase, String name, String value)
+  public void addTag(FeatureGroupBase featureGroupBase, String name, Object value)
       throws FeatureStoreException, IOException {
     tagsApi.add(featureGroupBase, name, value);
   }
 
-  public Map<String, String> getTag(FeatureGroupBase featureGroupBase, String name)
-      throws FeatureStoreException, IOException {
+  public Object getTag(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
     return tagsApi.get(featureGroupBase, name);
+  }
+
+  public Map<String, Object> getTags(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
+    return tagsApi.get(featureGroupBase);
   }
 
   public void deleteTag(FeatureGroupBase featureGroupBase, String name)
@@ -66,7 +69,7 @@ public class FeatureGroupBaseEngine {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
     featureGroup.setFeatures(apiFG.getFeatures());
   }
-  
+
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
     featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());

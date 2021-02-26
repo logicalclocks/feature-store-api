@@ -98,14 +98,18 @@ class HudiEngine:
             self._feature_store_name
         ).connection_string
 
-    def save_hudi_fg(self, dataset, save_mode, operation, write_options):
+    def save_hudi_fg(
+        self, dataset, save_mode, operation, write_options, validation_id=None
+    ):
         fg_commit = self._write_hudi_dataset(
             dataset, save_mode, operation, write_options
         )
+        fg_commit.validation_id = validation_id
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
     def delete_record(self, delete_df, write_options):
-        write_options.update({self.PAYLOAD_CLASS_OPT_KEY, self.PAYLOAD_CLASS_OPT_VAL})
+        write_options[self.PAYLOAD_CLASS_OPT_KEY] = self.PAYLOAD_CLASS_OPT_VAL
+
         fg_commit = self._write_hudi_dataset(
             delete_df, "append", self.HUDI_UPSERT, write_options
         )

@@ -17,14 +17,17 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class RestDto<D> {
 
   protected List<D> items = new ArrayList<>();
+  protected Integer count = null;
 
   public RestDto() {
   }
@@ -36,4 +39,13 @@ public abstract class RestDto<D> {
   public void setItems(List<D> items) {
     this.items = items;
   }
+
+  public void setCount(Integer count) {
+    this.count = count;
+  }
+
+  public Integer getCount() {
+    return count;
+  }
+
 }

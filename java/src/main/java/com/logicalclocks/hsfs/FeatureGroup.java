@@ -20,6 +20,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.DataValidationEngine;
+import com.logicalclocks.hsfs.engine.StatisticsEngine;
+import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationsApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,14 +34,17 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaParseException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.avro.Schema;
+import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,7 +69,18 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   protected String location;
 
+  @Getter
   @Setter
+  @JsonProperty("validationType")
+  private ValidationType validationType = ValidationType.NONE;
+
+  @Getter
+  @Setter
+  private List<String> statisticColumns;
+
+  @Getter @Setter
+  private List<String> expectationsNames;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> primaryKeys;
@@ -75,7 +96,9 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   private String avroSchema;
 
-  private FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+  private final ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -83,7 +106,8 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
-                      StatisticsConfig statisticsConfig) {
+                      StatisticsConfig statisticsConfig,  ValidationType validationType,
+                      scala.collection.Seq<Expectation> expectations) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -95,9 +119,20 @@ public class FeatureGroup extends FeatureGroupBase {
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
+    this.validationType = validationType != null ? validationType : ValidationType.NONE;
+    if (expectations != null && !expectations.isEmpty()) {
+      this.expectationsNames = new ArrayList<>();
+      ((List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava())
+        .forEach(expectation -> this.expectationsNames.add(expectation.getName()));
+    }
   }
 
   public FeatureGroup() {
+  }
+
+  public void updateValidationType(ValidationType validationType) throws FeatureStoreException, IOException {
+    this.validationType = validationType;
+    featureGroupEngine.updateValidationType(this);
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
@@ -109,7 +144,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return read(false, null);
+    return read(false, readOptions);
   }
 
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -286,6 +321,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<String, Map<String, String>> commitDetails() throws IOException, FeatureStoreException {
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return featureGroupEngine.commitDetails(this, null);
   }
 
@@ -297,6 +338,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<String, Map<String, String>> commitDetails(Integer limit) throws IOException, FeatureStoreException {
+    // operation is only valid for time travel enabled feature group
+    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return featureGroupEngine.commitDetails(this, limit);
   }
 
@@ -350,5 +397,68 @@ public class FeatureGroup extends FeatureGroupBase {
       primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
     }
     return primaryKeys;
+  }
+
+  public Expectation getExpectation(String name) throws FeatureStoreException, IOException {
+    return expectationsApi.get(this, name);
+  }
+
+  @JsonIgnore
+  public scala.collection.Seq<Expectation> getExpectations() throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(expectationsApi.get(this)).asScala().toSeq();
+  }
+
+  public scala.collection.Seq<Expectation> attachExpectations(scala.collection.Seq<Expectation> expectations)
+      throws FeatureStoreException, IOException {
+    List<Expectation> expectationsList = new ArrayList<>();
+    for (Expectation expectation : (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava()) {
+      expectationsList.add(attachExpectation(expectation));
+    }
+    return JavaConverters.asScalaBufferConverter(expectationsList).asScala().toSeq();
+  }
+
+  public Expectation attachExpectation(Expectation expectation) throws FeatureStoreException, IOException {
+    return attachExpectation(expectation.getName());
+  }
+
+  public Expectation attachExpectation(String name) throws FeatureStoreException, IOException {
+    return expectationsApi.put(this, name);
+  }
+
+  public void detachExpectation(Expectation expectation) throws FeatureStoreException, IOException {
+    detachExpectation(expectation.getName());
+  }
+
+  public void detachExpectation(String name) throws FeatureStoreException, IOException {
+    expectationsApi.detach(this, name);
+  }
+
+  public void detachExpectations(scala.collection.Seq<Expectation> expectations)
+      throws FeatureStoreException, IOException {
+    for (Expectation expectation : (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava()) {
+      expectationsApi.detach(this, expectation);
+    }
+  }
+
+  public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
+    // Run data validation for entire feature group
+    return validate(this.read());
+  }
+
+  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
+    // Fetch all rules
+    return DataValidationEngine.getInstance().validate(data, this, expectationsApi.get(this));
+  }
+
+  @JsonIgnore
+  public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {
+    return DataValidationEngine.getInstance().getValidations(this);
+  }
+
+  @JsonIgnore
+  public FeatureGroupValidation getValidation(Long time, DataValidationEngine.ValidationTimeType type)
+      throws FeatureStoreException, IOException {
+    return DataValidationEngine.getInstance().getValidation(this,
+      new ImmutablePair<>(type, time));
   }
 }

@@ -26,8 +26,10 @@ from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
+    data_validation_engine,
     feature_group_base_engine,
     on_demand_feature_group_engine,
+    expectations_api,
 )
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
@@ -41,6 +43,9 @@ class FeatureGroupBase:
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
+        )
+        self._expectations_api = expectations_api.ExpectationsApi(
+            featurestore_id, "featuregroups"
         )
 
     def delete(self):
@@ -152,11 +157,11 @@ class FeatureGroupBase:
         """
         return self.select_all().filter(f)
 
-    def add_tag(self, name: str, value: str = None):
+    def add_tag(self, name: str, value):
         """Attach a name/value tag to a feature group.
 
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
+        A tag consists of a name/value pair. Tag names are unique identifiers.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
@@ -165,6 +170,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
+
         self._feature_group_base_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
@@ -180,14 +186,24 @@ class FeatureGroupBase:
         """
         self._feature_group_base_engine.delete_tag(self, name)
 
-    def get_tag(self, name: str = None):
+    def get_tag(self, name: str):
         """Get the tags of a feature group.
 
-        Tag names are unique identifiers. Returns all tags if no tag name is
-        specified.
+        Tag names are unique identifiers.
 
         # Arguments
             name: Name of the tag to get, defaults to `None`.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_group_base_engine.get_tag(self, name)
+
+    def get_tags(self):
+        """Returns all tags attached to a feature group.
 
         # Returns
             `list[Tag]`. List of tags as name/value pairs.
@@ -195,7 +211,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
-        return self._feature_group_base_engine.get_tags(self, name)
+        return self._feature_group_base_engine.get_tags(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
@@ -367,10 +383,11 @@ class FeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         location=None,
-        jobs=None,
         online_enabled=False,
         time_travel_format=None,
         statistics_config=None,
+        validation_type="NONE",
+        expectations=None,
     ):
         super().__init__(featurestore_id)
 
@@ -388,7 +405,6 @@ class FeatureGroup(FeatureGroupBase):
         ]
 
         self._location = location
-        self._jobs = jobs
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -413,9 +429,8 @@ class FeatureGroup(FeatureGroupBase):
                 ][0]
             else:
                 self._hudi_precombine_key = None
-            self._statistics_config = StatisticsConfig.from_response_json(
-                statistics_config
-            )
+
+            self.statistics_config = statistics_config
 
         else:
             # initialized by user
@@ -428,6 +443,17 @@ class FeatureGroup(FeatureGroupBase):
                 else None
             )
             self.statistics_config = statistics_config
+
+        self._data_validation_engine = data_validation_engine.DataValidationEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+        self._validation_type = validation_type.upper()
+        if expectations is not None:
+            self._expectations_names = [
+                expectation.name for expectation in expectations
+            ]
+        else:
+            self._expectations_names = []
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -513,7 +539,7 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
-        This function only works on feature group's with `HUDI` time travel format.
+        This function only works on feature groups with `HUDI` time travel format.
 
         !!! example "Reading commits incrementally between specified points in time:"
             ```python
@@ -535,7 +561,15 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.  No data is available for feature group with this commit date.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "read_changes can only be used on time travel enabled feature groups"
+            )
 
         return (
             self.select_all()
@@ -681,7 +715,8 @@ class FeatureGroup(FeatureGroupBase):
             self.compute_statistics()
 
     def commit_details(self, limit: Optional[int] = None):
-        """Retrieves commit timeline for this feature group.
+        """Retrieves commit timeline for this feature group. This method can only be used
+        on time travel enabled feature groups
 
         # Arguments
             limit: Number of commits to retrieve. Defaults to `None`.
@@ -692,7 +727,15 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "commit_details can only be used on time travel enabled feature groups"
+            )
         return self._feature_group_engine.commit_details(self, limit)
 
     def commit_delete_record(
@@ -701,7 +744,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group.
+        Feature group. This method can only be used on time travel enabled feature groups
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
@@ -710,7 +753,48 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`.
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "commit_delete_record can only be used on time travel enabled feature groups"
+            )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
+
+    # def update_validation_type(self, validation_type: str):
+    #     """Update the data validation type of the feature group.
+    #
+    #     Change the `validation_type` attribute of the feature group and persist the changes by calling
+    #     this method.
+    #
+    #      # Arguments
+    #         validation_type: validation_type.ValidationType. One of "STRICT", "WARNING", "ALL", "NONE".
+    #
+    #     # Returns
+    #         `FeatureGroup`. The updated metadata object of the feature group.
+    #
+    #     # Raises
+    #         `RestAPIError`.
+    #     """
+    #     if validation_type is None:
+    #         self.validation_type = "NONE"
+    #     else:
+    #         self.validation_type = validation_type.upper()
+    #     self._feature_group_engine.update_config(self, "validationType")
+    #     return self
+
+    def update_description(self, description: str):
+        """Update the description of the feature gorup.
+
+        # Arguments
+            description: str. New description string.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_description(self, description)
+        return self
 
     def append_features(self, features):
         """Append features to the schema of the feature group.
@@ -747,6 +831,81 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine.append_features(self, new_features)
         return self
 
+    def attach_expectation(self, expectation):
+        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.attach(self, expectation.name)
+
+    def detach_expectation(self, expectation):
+        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.detach(self, expectation.name)
+
+    def get_expectations(self):
+        """Get all feature group expectations.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. A list of expectation metadata objects.
+
+        """
+        return self._expectations_api.get(feature_group=self)
+
+    def get_expectation(self, name: str):
+        """Get attached expectation by name for this feature group. Name is unique across a feature store.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.get(name, self)
+
+    def validate(self, dataframe: TypeVar("pyspark.sql.DataFrame")):  # noqa: F821
+        """Run validation based on the attached expectations
+
+        # Arguments
+            dataframe: The PySpark dataframe to run the data validation expecations against.
+
+        # Returns
+            `FeatureGroupValidation`. The feature group validation metadata object.
+
+        """
+        return self._data_validation_engine.validate(self, dataframe)
+
+    def get_validations(self, validation_time=None, commit_time=None):
+        """Get feature group data validation results based on the attached expectations
+
+        # Arguments
+           validation_time: The data validation time, when the data validation started.
+           commit_time: The commit time of a time travel enabled feature group.
+
+        # Returns
+           `FeatureGroupValidation`. The feature group validation metadata object.
+
+        """
+        return self._data_validation_engine.get_validations(
+            self, validation_time, commit_time
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -774,6 +933,8 @@ class FeatureGroup(FeatureGroupBase):
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "validationType": self._validation_type,
+            "expectationsNames": self._expectations_names,
         }
 
     def _get_table_name(self):
@@ -889,6 +1050,16 @@ class FeatureGroup(FeatureGroupBase):
             self._avro_schema = self._feature_group_engine.get_avro_schema(self)
         return self._avro_schema
 
+    @property
+    def validation_type(self):
+        """Validation type, one of "STRICT", "WARNING", "ALL", "NONE"."""
+        return self._validation_type
+
+    @property
+    def expectations_names(self):
+        """The names of expectations attached to this feature group."""
+        return self._expectations_names
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -921,6 +1092,18 @@ class FeatureGroup(FeatureGroupBase):
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
 
+    @validation_type.setter
+    def validation_type(self, new_validation_type):
+        if new_validation_type is None:
+            self._validation_type = "NONE"
+        else:
+            self._validation_type = new_validation_type.upper()
+        self._feature_group_engine.update_config(self, "validationType")
+
+    @expectations_names.setter
+    def expectations_names(self, new_expectations_names):
+        self._expectations_names = new_expectations_names
+
 
 class OnDemandFeatureGroup(FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
@@ -942,7 +1125,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         creator=None,
         id=None,
         features=None,
-        jobs=None,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -958,7 +1140,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format
         self._path = path
         self._id = id
-        self._jobs = jobs
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
@@ -971,9 +1152,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 if features
                 else None
             )
-            self._statistics_config = StatisticsConfig.from_response_json(
-                statistics_config
-            )
+            self.statistics_config = statistics_config
 
             self._options = (
                 {option["name"]: option["value"] for option in options}

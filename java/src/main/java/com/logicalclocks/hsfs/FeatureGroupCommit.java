@@ -44,4 +44,7 @@ public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
   @Getter
   @Setter
   private Long rowsDeleted;
+  @Getter
+  @Setter
+  private Integer validationId;
 }

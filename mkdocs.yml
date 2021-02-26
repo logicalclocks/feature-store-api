@@ -1,5 +1,5 @@
-site_name: "HSFS: Hopsworks Feature Store"
-site_description: "HSFS: An environment independent client to interact with the Hopsworks Feature Store"
+site_name: "Hopsworks Documentation"
+site_description: "Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale."
 site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
 
@@ -9,9 +9,50 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-  - Introduction: index.md
-  - Quickstart: quickstart.md
-  - Hopsworks.ai:
+  - Feature Store: 
+    - Introduction: index.md
+    - Quickstart: quickstart.md
+    - Integrations:
+      - Overview: setup.md
+      - Databricks:
+        - Networking: integrations/databricks/networking.md
+        - Hopsworks API Key: integrations/databricks/api_key.md
+        - Configuration: integrations/databricks/configuration.md
+      - AWS Sagemaker: integrations/sagemaker.md
+      - AWS EMR:
+        - Networking: integrations/emr/networking.md
+        - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
+      - Azure HDInsight: integrations/hdinsight.md
+      - Azure Machine Learning:
+        - Designer: integrations/mlstudio_designer.md
+        - Notebooks: integrations/mlstudio_notebooks.md
+      - Python: integrations/python.md
+      - Spark: integrations/spark.md
+    - Guides:
+      - Overview: overview.md
+      - Project/Connection: generated/project.md
+      - Feature Store: generated/feature_store.md
+      - Feature Group: generated/feature_group.md
+      - Storage Connector: generated/storage_connector.md
+      - Feature: generated/feature.md
+      - Training Dataset: generated/training_dataset.md
+      - Query vs. Dataframe: generated/query_vs_dataframe.md
+      - Statistics: generated/statistics.md
+      - Feature Validation: generated/feature_validation.md
+    - API Reference:
+      - Connection: generated/api/connection_api.md
+      - FeatureStore: generated/api/feature_store_api.md
+      - FeatureGroup: generated/api/feature_group_api.md
+      - TrainingDataset: generated/api/training_dataset_api.md
+      - Storage Connector: generated/api/storage_connector_api.md
+      - Feature: generated/api/feature_api.md
+      - Rule Definiton: generated/api/rule_definition_api.md
+      - Rule: generated/api/rule_api.md
+      - Expectation: generated/api/expectation_api.md
+      - Validation: generated/api/validation_api.md
+    - Contributing: CONTRIBUTING.md
+  - Hopsworks.ai: 
+    - Introduction: hopsworksai/index.md
     - Getting Started:
       - AWS: hopsworksai/aws/getting_started.md
       - Azure: hopsworksai/azure/getting_started.md
@@ -25,47 +66,12 @@ nav:
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
-    # - Databricks Quickstart:
-    #  - AWS: hopsworksai/aws/databricks_quickstart.md
-    #  - Azure: hopsworksai/azure/databricks_quickstart.md
-    # - SageMaker Quickstart: hopsworksai/aws/sagemaker_quickstart.md
-    - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
-  - Integrations:
-    - Overview: setup.md
-    - Databricks:
-      - Networking: integrations/databricks/networking.md
-      - Hopsworks API Key: integrations/databricks/api_key.md
-      - Configuration: integrations/databricks/configuration.md
-    - AWS Sagemaker: integrations/sagemaker.md
-    - AWS EMR:
-      - Networking: integrations/emr/networking.md
-      - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
-    - Azure HDInsight: integrations/hdinsight.md
-    - Azure Machine Learning:
-      - Designer: integrations/mlstudio_designer.md
-      - Notebooks: integrations/mlstudio_notebooks.md
-    - Python: integrations/python.md
-    - Spark: integrations/spark.md
-  - Guides:
-    - Overview: overview.md
-    - Project/Connection: generated/project.md
-    - Feature Store: generated/feature_store.md
-    - Feature Group: generated/feature_group.md
-    - Storage Connector: generated/storage_connector.md
-    - Feature: generated/feature.md
-    - Training Dataset: generated/training_dataset.md
-    - Query vs. Dataframe: generated/query_vs_dataframe.md
-    - Statistics: generated/statistics.md
-    # - Data Validation: guides/data_validation.md
-  - API Reference:
-    - Connection: generated/api/connection_api.md
-    - FeatureStore: generated/api/feature_store_api.md
-    - FeatureGroup: generated/api/feature_group_api.md
-    - TrainingDataset: generated/api/training_dataset_api.md
-    - Storage Connector: generated/api/storage_connector_api.md
-    - Feature: generated/api/feature_api.md
-    - StatisticsConfig: generated/api/statistics_config_api.md
-  - Contributing: CONTRIBUTING.md
+    - Integrations: "./setup/"
+    - Cluster upgrade:
+      - AWS: hopsworksai/aws/upgrade.md
+      - Azure: hopsworksai/azure/upgrade.md
+  
+  - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Support: https://community.hopsworks.ai/
 
 theme:
@@ -79,6 +85,9 @@ theme:
     code: "IBM Plex Mono"
   palette:
     accent: teal
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
 
 extra:
   generator: false

@@ -22,6 +22,8 @@
         <spark.version>2.4.3.2</spark.version>
         <deequ.version>1.1.0-SNAPSHOT</deequ.version>
         <hudi.version>0.7.0</hudi.version>
+        <circle.version>0.11.1</circle.version>
+        <awssdk.version>2.10.40</awssdk.version>
         <scala.base>2.11</scala.base>
     </properties>
 
@@ -157,7 +159,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ssm</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -169,7 +171,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sts</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -181,7 +183,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>secretsmanager</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -189,6 +191,23 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-parser_2.12</artifactId>
+            <version>${circle.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-core_2.12</artifactId>
+            <version>${circle.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-generic_2.12</artifactId>
+            <version>${circle.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>io.specto</groupId>
@@ -230,6 +249,27 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>

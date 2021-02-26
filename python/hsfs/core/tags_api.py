@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+import json
+
 from hsfs import client, tag
 
 
@@ -32,8 +34,8 @@ class TagsApi:
     def add(self, metadata_instance, name, value):
         """Attach a name/value tag to a training dataset or feature group.
 
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
+        A tag consists of a name/value pair. Tag names are unique identifiers.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
 
         :param metadata_instance: metadata object of the instance to add the
             tag for
@@ -54,8 +56,9 @@ class TagsApi:
             "tags",
             name,
         ]
-        query_params = {"value": value} if value else None
-        _client._send_request("PUT", path_params, query_params=query_params)
+        headers = {"content-type": "application/json"}
+        json_value = json.dumps(value)
+        _client._send_request("PUT", path_params, headers=headers, data=json_value)
 
     def delete(self, metadata_instance, name):
         """Delete a tag from a training dataset or feature group.
@@ -81,7 +84,7 @@ class TagsApi:
         ]
         _client._send_request("DELETE", path_params)
 
-    def get(self, metadata_instance, name):
+    def get(self, metadata_instance, name: str = None):
         """Get the tags of a training dataset or feature group.
 
         Gets all tags if no tag name is specified.
@@ -91,8 +94,8 @@ class TagsApi:
         :type metadata_instance: TrainingDataset, FeatureGroup
         :param name: tag name
         :type name: str
-        :return: list of tags as name/value pairs
-        :rtype: list of dict
+        :return: dict of tag name/values
+        :rtype: dict
         """
         _client = client.get_instance()
         path_params = [
@@ -105,7 +108,12 @@ class TagsApi:
             "tags",
         ]
 
-        if name:
+        if name is not None:
             path_params.append(name)
 
-        return tag.Tag.from_response_json(_client._send_request("GET", path_params))
+        return {
+            tag._name: json.loads(tag._value)
+            for tag in tag.Tag.from_response_json(
+                _client._send_request("GET", path_params)
+            )
+        }

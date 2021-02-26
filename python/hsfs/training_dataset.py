@@ -56,7 +56,6 @@ class TrainingDataset:
         statistics_config=None,
         featurestore_name=None,
         id=None,
-        jobs=None,
         inode_id=None,
         training_dataset_type=None,
         from_query=None,
@@ -73,6 +72,9 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
+        self._prepared_statement_connection = None
+        self._prepared_statements = None
+        self._serving_keys = None
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -266,11 +268,11 @@ class TrainingDataset:
         """
         self.read(split).show(n)
 
-    def add_tag(self, name: str, value: str = None):
+    def add_tag(self, name: str, value):
         """Attach a name/value tag to a training dataset.
 
-        A tag can consist of a name only or a name/value pair. Tag names are
-        unique identifiers.
+         A tag consists of a name/value pair. Tag names are unique identifiers.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
@@ -288,18 +290,23 @@ class TrainingDataset:
         """
         self._training_dataset_engine.delete_tag(self, name)
 
-    def get_tag(self, name=None):
-        """Get the tags of a training dataset.
-
-        Tag names are unique identifiers. Returns all tags if no tag name is
-        specified.
+    def get_tag(self, name):
+        """Get the tags of a training dataset. Tag names are unique identifiers.
 
         # Arguments
             name: Name of the tag to get, defaults to `None`.
         # Returns
             `List[Tag]`. List of tags as name/value pairs.
         """
-        return self._training_dataset_engine.get_tags(self, name)
+        return self._training_dataset_engine.get_tag(self, name)
+
+    def get_tags(self):
+        """Returns all tags attached to a training dataset.
+
+        # Returns
+            `List[Tag]`. List of tags as name/value pairs.
+        """
+        return self._training_dataset_engine.get_tags(self)
 
     def update_statistics_config(self):
         """Update the statistics configuration of the training dataset.
@@ -540,6 +547,23 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
+    def init_prepared_statement(self):
+        """Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store."""
+        if self.prepared_statements is None:
+            self._training_dataset_engine.init_prepared_statement(self)
+
+    def get_serving_vector(self, entry: Dict[str, Any]):
+        """Returns assembled serving vector from online feature store.
+
+        # Arguments
+            entry: dictionary of training dataset feature group primary key names as keys and values provided by
+            serving application.
+        # Returns
+            `list` List of feature values related to provided primary keys, ordered according to positions of this
+            features in training dataset query.
+        """
+        return self._training_dataset_engine.get_serving_vector(self, entry)
+
     @property
     def label(self):
         """The label/prediction feature of the training dataset.
@@ -555,3 +579,32 @@ class TrainingDataset:
     @property
     def feature_store_id(self):
         return self._feature_store_id
+
+    @property
+    def prepared_statement_connection(self):
+        """JDBC connection to online features store."""
+        return self._prepared_statement_connection
+
+    @prepared_statement_connection.setter
+    def prepared_statement_connection(self, prepared_statement_connection):
+        self._prepared_statement_connection = prepared_statement_connection
+
+    @property
+    def prepared_statements(self):
+        """The dict object of prepared_statements as values and kes as indices of positions in the query for
+        selecting features from feature groups of the training dataset.
+        """
+        return self._prepared_statements
+
+    @prepared_statements.setter
+    def prepared_statements(self, prepared_statements):
+        self._prepared_statements = prepared_statements
+
+    @property
+    def serving_keys(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        return self._serving_keys
+
+    @serving_keys.setter
+    def serving_keys(self, serving_vector_keys):
+        self._serving_keys = serving_vector_keys

@@ -15,8 +15,8 @@
 
 from hsfs import engine, client
 from hsfs import feature_group as fg
-from hsfs.core import feature_group_base_engine, hudi_engine
 from hsfs.client import exceptions
+from hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -42,6 +42,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
+        validation_id = None
+        if feature_group.validation_type != "NONE":
+            validation = feature_group.validate(feature_dataframe)
+            validation_id = validation.validation_id
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
@@ -56,6 +60,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             None,
             offline_write_options,
             online_write_options,
+            validation_id,
         )
 
     def insert(
@@ -67,6 +72,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         storage,
         write_options,
     ):
+        validation_id = None
+        if feature_group.validation_type != "NONE":
+            validation = feature_group.validate(feature_dataframe)
+            validation_id = validation.validation_id
+
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
@@ -86,6 +96,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             storage,
             offline_write_options,
             online_write_options,
+            validation_id,
         )
 
     def delete(self, feature_group):
@@ -124,6 +135,17 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             engine.get_instance()._spark_session,
         )
         return hudi_engine_instance.delete_record(delete_df, write_options)
+
+    def update_config(self, feature_group, metadata):
+        """Update the metadata attribute specified of the feature group ."""
+        metadata_values = {
+            "updateStatsSettings": True,
+            "validationType": feature_group.validation_type,
+        }
+
+        self._feature_group_api.update_metadata(
+            feature_group, feature_group, metadata, metadata_values.get(metadata)
+        )
 
     def sql(self, query, feature_store_name, dataframe_type, online):
         if online:

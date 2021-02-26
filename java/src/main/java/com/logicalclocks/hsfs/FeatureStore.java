@@ -18,6 +18,8 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
@@ -28,8 +30,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FeatureStore {
 
@@ -50,15 +55,17 @@ public class FeatureStore {
   private FeatureGroupApi featureGroupApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
+  private ExpectationsApi expectationsApi;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
   private static final Integer DEFAULT_VERSION = 1;
 
-  public FeatureStore() throws FeatureStoreException {
+  public FeatureStore() {
     featureGroupApi = new FeatureGroupApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
+    expectationsApi = new ExpectationsApi();
   }
 
   /**
@@ -144,6 +151,12 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+
+  public Expectation.ExpectationBuilder createExpectation() {
+    return Expectation.builder()
+        .featureStore(this);
+  }
+
   /**
    * Get a training dataset object from the selected feature store.
    *
@@ -170,6 +183,42 @@ public class FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
+  }
+
+  public scala.collection.Seq<Expectation> createExpectations(scala.collection.Seq<Expectation> expectations)
+      throws FeatureStoreException, IOException {
+    List<Expectation> newExpectations = new ArrayList<>();
+    List<Expectation> expectationsList =
+        (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava();
+    for (Expectation expectation :  expectationsList) {
+      expectation = expectationsApi.put(this, expectation);
+      newExpectations.add(expectation);
+    }
+    return JavaConverters.asScalaBufferConverter(newExpectations).asScala().toSeq();
+  }
+
+  public Expectation getExpectation(String name)
+      throws FeatureStoreException, IOException {
+    return expectationsApi.get(this, name);
+  }
+
+  public scala.collection.Seq<Expectation> getExpectations() throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(expectationsApi.get(this)).asScala().toSeq();
+  }
+
+  public void deleteExpectation(Expectation expectation) throws FeatureStoreException, IOException {
+    deleteExpectation(expectation.getName());
+  }
+
+  public void deleteExpectation(String name) throws FeatureStoreException, IOException {
+    expectationsApi.delete(this, name);
+  }
+
+  public void deleteExpectations(scala.collection.Seq<Expectation> expectations)
+      throws FeatureStoreException, IOException {
+    for (Expectation expectation :  (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava()) {
+      deleteExpectation(expectation);
+    }
   }
 
   @Override

@@ -123,7 +123,11 @@ class FeatureGroupApi:
         _client._send_request("DELETE", path_params)
 
     def update_metadata(
-        self, feature_group_instance, feature_group_copy, query_parameter
+        self,
+        feature_group_instance,
+        feature_group_copy,
+        query_parameter,
+        query_parameter_value=True,
     ):
         """Update the metadata of a feature group.
 
@@ -137,9 +141,9 @@ class FeatureGroupApi:
                 feature group.
             feature_group_copy: FeatureGroup. Metadata object of the feature
                 group with the information to be updated.
-            query_parameter: str. Query parameter that will be set to true to
-                control which information is updated. E.g. "updateMetadata" or
-                "updateStatsSettings".
+            query_parameter: str. Query parameter that controls which information is updated. E.g. "updateMetadata",
+                or "validationType".
+            query_parameter_value: Str. Value of the query_parameter.
 
         # Returns
             FeatureGroup. The updated feature group metadata object.
@@ -154,7 +158,7 @@ class FeatureGroupApi:
             feature_group_instance.id,
         ]
         headers = {"content-type": "application/json"}
-        query_params = {query_parameter: True}
+        query_params = {query_parameter: query_parameter_value}
         return feature_group_instance.update_from_response_json(
             _client._send_request(
                 "PUT",
