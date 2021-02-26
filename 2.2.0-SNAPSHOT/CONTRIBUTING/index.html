@@ -965,6 +965,46 @@
     Setup and Build Documentation
   </a>
   
+    <nav class="md-nav" aria-label="Setup and Build Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-build-only-current-version-of-docs" class="md-nav__link">
+    Option 1: Build only current version of docs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-preferred-build-multi-version-doc-with-mike" class="md-nav__link">
+    Option 2 (Preferred): Build multi-version doc with mike
+  </a>
+  
+    <nav class="md-nav" aria-label="Option 2 (Preferred): Build multi-version doc with mike">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#versioning-on-docshopsworksai" class="md-nav__link">
+    Versioning on docs.hopsworks.ai
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-instructions" class="md-nav__link">
+    Build Instructions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1405,6 +1445,46 @@
     Setup and Build Documentation
   </a>
   
+    <nav class="md-nav" aria-label="Setup and Build Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-build-only-current-version-of-docs" class="md-nav__link">
+    Option 1: Build only current version of docs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-preferred-build-multi-version-doc-with-mike" class="md-nav__link">
+    Option 2 (Preferred): Build multi-version doc with mike
+  </a>
+  
+    <nav class="md-nav" aria-label="Option 2 (Preferred): Build multi-version doc with mike">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#versioning-on-docshopsworksai" class="md-nav__link">
+    Versioning on docs.hopsworks.ai
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-instructions" class="md-nav__link">
+    Build Instructions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1451,11 +1531,11 @@
 <li>
 <p>Install repository in editable mode with development dependencies:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
-pip install -e <span class="s2">&quot;.[dev]&quot;</span>
+pip install -e <span class="s2">&quot;.[hive,dev]&quot;</span>
 </code></pre></div>
 </li>
 <li>
-<p>Install <a href="https://pre-commit.com/">pre-commit</a> and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through <a href="https://github.com/psf/black">black</a> and <a href="https://gitlab.com/pycqa/flake8">flake8</a>:</p>
+<p>Install <a href="https://pre-commit.com/">pre-commit</a> and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through <a href="https://github.com/psf/black">black</a> and <a href="https://gitlab.com/pycqa/flake8">flake8</a>. Run the following commands from the <code>python</code> directory:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
 pip install --user pre-commit
 pre-commit install
@@ -1467,8 +1547,8 @@ pre-commit install
 <li>
 <p>To run formatting and code-style separately, you can configure your IDE, such as VSCode, to use black and flake8, or run them via the command line:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
-flake8 hopsworks
-black hopsworks
+flake8 hsfs
+black hsfs
 </code></pre></div>
 </li>
 </ul>
@@ -1505,7 +1585,9 @@ black hopsworks
 <li>Public Api such as metadata objects should be fully documented with defaults.</li>
 </ol>
 <h4 id="setup-and-build-documentation">Setup and Build Documentation<a class="headerlink" href="#setup-and-build-documentation" title="Permanent link">#</a></h4>
-<p>We use <code>mkdocs</code> to build the documentation and a plugin called <code>keras-autodoc</code> to auto generate Python API documentation from docstrings.</p>
+<p>We use <code>mkdocs</code> together with <code>mike</code> (<a href="https://github.com/jimporter/mike/">for versioning</a>) to build the documentation and a plugin called <code>keras-autodoc</code> to auto generate Python API documentation from docstrings.</p>
+<p><strong>Background about <code>mike</code>:</strong>
+    <code>mike</code> builds the documentation and commits it as a new directory to the gh-pages branch. Each directory corresponds to one version of the documentation. Additionally, <code>mike</code> maintains a json in the root of gh-pages with the mappings of versions/aliases for each of the directories available. With aliases you can define extra names like <code>dev</code> or <code>latest</code>, to indicate stable and unstable releases.</p>
 <ol>
 <li>
 <p>Currently we are using our own version of <code>keras-autodoc</code></p>
@@ -1514,7 +1596,7 @@ black hopsworks
 </li>
 <li>
 <p>Install HSFS with <code>docs</code> extras:</p>
-<div class="highlight"><pre><span></span><code>pip install -e .<span class="o">[</span>dev,docs<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>pip install -e .<span class="o">[</span>hive,dev,docs<span class="o">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -1523,12 +1605,72 @@ black hopsworks
 python auto_doc.py
 </code></pre></div>
 </li>
+</ol>
+<h5 id="option-1-build-only-current-version-of-docs">Option 1: Build only current version of docs<a class="headerlink" href="#option-1-build-only-current-version-of-docs" title="Permanent link">#</a></h5>
+<ol>
 <li>
 <p>Either build the docs, or serve them dynamically:</p>
+<p>Note: Links and pictures might not resolve properly later on when checking with this build.
+The reason for that is that the docs are deployed with versioning on docs.hopsworks.ai and
+therefore another level is added to all paths, e.g. <code>docs.hopsworks.ai/[version-or-alias]</code>.
+Using relative links should not be affected by this, however, building the docs with version
+(Option 2) is recommended.</p>
 <div class="highlight"><pre><span></span><code>mkdocs build
 <span class="c1"># or</span>
 mkdocs serve
 </code></pre></div>
+</li>
+</ol>
+<h5 id="option-2-preferred-build-multi-version-doc-with-mike">Option 2 (Preferred): Build multi-version doc with <code>mike</code><a class="headerlink" href="#option-2-preferred-build-multi-version-doc-with-mike" title="Permanent link">#</a></h5>
+<h6 id="versioning-on-docshopsworksai">Versioning on docs.hopsworks.ai<a class="headerlink" href="#versioning-on-docshopsworksai" title="Permanent link">#</a></h6>
+<p>On docs.hopsworks.ai we implement the following versioning scheme:</p>
+<ul>
+<li>current master branches (e.g. of hsfs corresponding to master of Hopsworks): rendered as current Hopsworks snapshot version, e.g. <strong>2.2.0-SNAPSHOT [dev]</strong>, where <code>dev</code> is an alias to indicate that this is an unstable version.</li>
+<li>the latest release: rendered with full current version, e.g. <strong>2.1.5 [latest]</strong> with <code>latest</code> alias to indicate that this is the latest stable release.</li>
+<li>previous stable releases: rendered without alias, e.g. <strong>2.1.4</strong>.</li>
+</ul>
+<h6 id="build-instructions">Build Instructions<a class="headerlink" href="#build-instructions" title="Permanent link">#</a></h6>
+<ol>
+<li>
+<p>For this you can either checkout and make a local copy of the <code>upstream/gh-pages</code> branch, where
+<code>mike</code> maintains the current state of docs.hopsworks.ai, or just build documentation for the branch you are updating:</p>
+<p>Building <em>one</em> branch:</p>
+<p>Checkout your dev branch with modified docs:
+<div class="highlight"><pre><span></span><code>git checkout <span class="o">[</span>dev-branch<span class="o">]</span>
+</code></pre></div></p>
+<p>Generate API docs if necessary:
+<div class="highlight"><pre><span></span><code>python auto_doc.py
+</code></pre></div></p>
+<p>Build docs with a version and alias
+<div class="highlight"><pre><span></span><code>mike deploy <span class="o">[</span>version<span class="o">]</span> <span class="o">[</span>alias<span class="o">]</span> --update-alias
+
+<span class="c1"># for example, if you are updating documentation to be merged to master,</span>
+<span class="c1"># which will become the new SNAPSHOT version:</span>
+mike deploy <span class="m">2</span>.2.0-SNAPSHOT dev --update-alias
+
+<span class="c1"># if you are updating docs of the latest stable release branch</span>
+mike deploy <span class="o">[</span>version<span class="o">]</span> latest --update-alias
+
+<span class="c1"># if you are updating docs of a previous stable release branch</span>
+mike deploy <span class="o">[</span>version<span class="o">]</span>
+</code></pre></div></p>
+<p>If no gh-pages branch existed in your local repository, this will have created it.</p>
+<p><strong>Important</strong>: If no previous docs were built, you will have to choose a version as default to be loaded as index, as follows</p>
+<div class="highlight"><pre><span></span><code>mike set-default <span class="o">[</span>version-or-alias<span class="o">]</span>
+</code></pre></div>
+<p>You can now checkout the gh-pages branch and serve:
+<div class="highlight"><pre><span></span><code>git checkout gh-pages
+mike serve
+</code></pre></div></p>
+<p>You can also list all available versions/aliases:
+<div class="highlight"><pre><span></span><code>mike list
+</code></pre></div></p>
+<p>Delete and reset your local gh-pages branch:
+<div class="highlight"><pre><span></span><code>mike delete --all
+
+<span class="c1"># or delete single version</span>
+mike delete <span class="o">[</span>version-or-alias<span class="o">]</span>
+</code></pre></div></p>
 </li>
 </ol>
 <h4 id="adding-new-api-documentation">Adding new API documentation<a class="headerlink" href="#adding-new-api-documentation" title="Permanent link">#</a></h4>
