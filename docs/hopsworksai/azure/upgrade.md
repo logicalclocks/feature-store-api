@@ -153,7 +153,7 @@ If you don't remember the name of the role that you have created in [Getting sta
   </figure>
 </p>
 
-To edit the permissions associated with your role, stay on the same *Access Control* page, (1) click on the *Roles* tab, (2) search for your role name (the one that you just got), (3) click on **...**, (4) click on *Edit*.
+To edit the permissions associated with your role, stay on the same *Access Control* page, (1) click on the *Roles* tab, (2) search for your role name (the one you obtained above), (3) click on **...**, (4) click on *Edit*.
 
 
 <p align="center">
