@@ -1289,15 +1289,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-error-due-to-misconfigured-upgrade-permissions" class="md-nav__link">
-    1 - Error due to misconfigured upgrade permissions
+  <a href="#error-1-misconfigured-upgrade-permissions" class="md-nav__link">
+    Error 1: Misconfigured upgrade permissions
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-error-during-upgrade-process" class="md-nav__link">
-    2 - Error during upgrade process
+  <a href="#error-2-upgrade-process-error" class="md-nav__link">
+    Error 2: Upgrade process error
   </a>
   
 </li>
@@ -1417,15 +1417,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-error-due-to-misconfigured-upgrade-permissions" class="md-nav__link">
-    1 - Error due to misconfigured upgrade permissions
+  <a href="#error-1-misconfigured-upgrade-permissions" class="md-nav__link">
+    Error 1: Misconfigured upgrade permissions
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-error-during-upgrade-process" class="md-nav__link">
-    2 - Error during upgrade process
+  <a href="#error-2-upgrade-process-error" class="md-nav__link">
+    Error 2: Upgrade process error
   </a>
   
 </li>
@@ -1500,6 +1500,12 @@
 </code></pre></div>
 <h2 id="step-3-run-the-upgrade-process">Step 3: Run the upgrade process<a class="headerlink" href="#step-3-run-the-upgrade-process" title="Permanent link">#</a></h2>
 <p>You need to click on <em>Upgrade</em> to start the upgrade process. You will be prompted with the screen shown below to confirm your intention to upgrade: </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No need to worry about the following message since this is done already in <a href="#step-2-add-upgrade-permissions-to-your-instance-profile">Step 2</a></p>
+<p><strong>Make sure that your instance profile (hopsworks-doc) includes the following permissions:
+[ "ec2:DetachVolume", "ec2:AttachVolume", "ec2:ModifyInstanceAttribute" ]</strong></p>
+</div>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-1.png">
@@ -1548,8 +1554,8 @@
 </p>
 
 <h2 id="error-handling">Error handling<a class="headerlink" href="#error-handling" title="Permanent link">#</a></h2>
-<p>There are two categories of errors that you may encounter during an upgrade. First, a permission error due to missing permission or a misconfigured policy in your instance profile, see <a href="#1-error-due-to-misconfigured-upgrade-permissions">Error 1</a>. Second, an error during the upgrade process running on your cluster, see <a href="#2-error-during-upgrade-process">Error 2</a>.</p>
-<h3 id="1-error-due-to-misconfigured-upgrade-permissions">1 - Error due to misconfigured upgrade permissions<a class="headerlink" href="#1-error-due-to-misconfigured-upgrade-permissions" title="Permanent link">#</a></h3>
+<p>There are two categories of errors that you may encounter during an upgrade. First, a permission error due to missing permission or a misconfigured policy in your instance profile, see <a href="#error-1-misconfigured-upgrade-permissions">Error 1</a>. Second, an error during the upgrade process running on your cluster, see <a href="#error-2-upgrade-process-error">Error 2</a>.</p>
+<h3 id="error-1-misconfigured-upgrade-permissions">Error 1: Misconfigured upgrade permissions<a class="headerlink" href="#error-1-misconfigured-upgrade-permissions" title="Permanent link">#</a></h3>
 <p>During the upgrade process, Hopsworks.ai starts by validating your instance profile permissions to ensure that it includes the required upgrade permissions. If one or more permissions are missing, or if the resource is not set correctly, you will be notified with an error message and a <em>Retry</em> button will appear as shown below:</p>
 <p align="center">
   <figure>
@@ -1570,7 +1576,7 @@
   </figure>
 </p>
 
-<h3 id="2-error-during-upgrade-process">2 - Error during upgrade process<a class="headerlink" href="#2-error-during-upgrade-process" title="Permanent link">#</a></h3>
+<h3 id="error-2-upgrade-process-error">Error 2: Upgrade process error<a class="headerlink" href="#error-2-upgrade-process-error" title="Permanent link">#</a></h3>
 <p>If an error occurs during the upgrade process, you will have the option to rollback to your old cluster as shown below: </p>
 <p align="center">
   <figure>
