@@ -59,6 +59,7 @@ nav:
       - AWS: hopsworksai/aws/cluster_creation.md
       - Integration with EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
       - Azure: hopsworksai/azure/cluster_creation.md
+      - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
