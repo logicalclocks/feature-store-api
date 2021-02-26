@@ -1320,8 +1320,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-run-the-upgrade-process" class="md-nav__link">
-    Step 3: Run the upgrade process
+  <a href="#step-3-add-disk-read-permissions-to-your-role-connected-to-hopsworksai" class="md-nav__link">
+    Step 3: Add disk read permissions to your role connected to Hopsworks.ai
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-run-the-upgrade-process" class="md-nav__link">
+    Step 4: Run the upgrade process
   </a>
   
 </li>
@@ -1455,8 +1462,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-run-the-upgrade-process" class="md-nav__link">
-    Step 3: Run the upgrade process
+  <a href="#step-3-add-disk-read-permissions-to-your-role-connected-to-hopsworksai" class="md-nav__link">
+    Step 3: Add disk read permissions to your role connected to Hopsworks.ai
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-run-the-upgrade-process" class="md-nav__link">
+    Step 4: Run the upgrade process
   </a>
   
 </li>
@@ -1625,7 +1639,59 @@
 <p class="admonition-title">Warning</p>
 <p><a href="https://docs.microsoft.com/en-us/azure/role-based-access-control/troubleshooting#role-assignment-changes-are-not-being-detected">When you assign roles or remove role assignments, it can take up to 30 minutes for changes to take effect.</a></p>
 </div>
-<h2 id="step-3-run-the-upgrade-process">Step 3: Run the upgrade process<a class="headerlink" href="#step-3-run-the-upgrade-process" title="Permanent link">#</a></h2>
+<h2 id="step-3-add-disk-read-permissions-to-your-role-connected-to-hopsworksai">Step 3: Add disk read permissions to your role connected to Hopsworks.ai<a class="headerlink" href="#step-3-add-disk-read-permissions-to-your-role-connected-to-hopsworksai" title="Permanent link">#</a></h2>
+<p>We require extra permission ("Microsoft.Compute/disks/read") to be added to the role you used to connect to Hopsworks.ai, the one that you have created in <a href="../getting_started/#step-12-creating-a-custom-role-for-hopsworksai">Getting started Step 1.2</a>. 
+If you don't remember the name of the role that you have created in <a href="../getting_started/#step-12-creating-a-custom-role-for-hopsworksai">Getting started Step 1.2</a>, you can navigate to your Resource group, (1) click on <em>Access Control</em>, (2) navigate to the <em>Check Access</em> tab, (3) search for <em>hopsworks.ai</em>, (4) click on it, (5) now you have the name of your custom role used to connect to hopsworks.ai. </p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
+    </a>
+    <figcaption>Get your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+<p>To edit the permissions associated with your role, stay on the same <em>Access Control</em> page, (1) click on the <em>Roles</em> tab, (2) search for your role name (the one you obtained above), (3) click on <strong>...</strong>, (4) click on <em>Edit</em>.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+<p>You will arrive at the <em>Update a custom role</em> page as shown below:</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+<p>Navigate to the <em>JSON</em> tab, then click on <em>Edit</em>, as shown below:</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
+    </a>
+    <figcaption>Edit your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+<p>Now, add the missing permission <em>"Microsoft.Compute/disks/read"</em> to the list of actions, then click on <em>Save</em>, click on <em>Review + update</em>, and finally click on <em>Update</em>.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png">
+      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
+    </a>
+    <figcaption>Add missing permissions to your role connected to hopswork.ai</figcaption>
+  </figure>
+</p>
+
+<h2 id="step-4-run-the-upgrade-process">Step 4: Run the upgrade process<a class="headerlink" href="#step-4-run-the-upgrade-process" title="Permanent link">#</a></h2>
 <p>You need to click on <em>Upgrade</em> to start the upgrade process. You will be prompted with the screen shown below to confirm your intention to upgrade: </p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1694,7 +1760,7 @@
   </figure>
 </p>
 
-<p>If you don't remember the name of the role that you have created in <a href="../getting_started/#step-12-creating-a-custom-role-for-hopsworksai">Getting started Step 1.2</a>, you can navigate to your Resource group, (1) click on <em>Access Control</em>, (2) navigate to <em>Check Access</em> tab, (3) search for <em>hopsworks.ai</em>, (4) click on the one with the blue icon, (5) now you have the name of your custom role used to connect to hopsworks.ai. </p>
+<p>If you don't remember the name of the role that you have created in <a href="../getting_started/#step-12-creating-a-custom-role-for-hopsworksai">Getting started Step 1.2</a>, you can navigate to your Resource group, (1) click on <em>Access Control</em>, (2) navigate to the <em>Check Access</em> tab, (3) search for <em>hopsworks.ai</em>, (4) click on it, (5) now you have the name of your custom role used to connect to hopsworks.ai. </p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png">
@@ -1704,7 +1770,7 @@
   </figure>
 </p>
 
-<p>To edit the permissions associated with your role, stay on the same <em>Access Control</em> page, (1) click on the <em>Roles</em> tab, (2) search for your role name (the one that you just got), (3) click on <strong>...</strong>, (4) click on <em>Edit</em>.</p>
+<p>To edit the permissions associated with your role, stay on the same <em>Access Control</em> page, (1) click on the <em>Roles</em> tab, (2) search for your role name (the one you obtained above), (3) click on <strong>...</strong>, (4) click on <em>Edit</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png">
