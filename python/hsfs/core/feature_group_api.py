@@ -127,7 +127,7 @@ class FeatureGroupApi:
         feature_group_instance,
         feature_group_copy,
         query_parameter,
-        query_parameter_value,
+        query_parameter_value=True,
     ):
         """Update the metadata of a feature group.
 
@@ -142,7 +142,8 @@ class FeatureGroupApi:
             feature_group_copy: FeatureGroup. Metadata object of the feature
                 group with the information to be updated.
             query_parameter: str. Query parameter that controls which information is updated. E.g. "updateMetadata",
-                "updateStatsSettings" or "validationType".
+                or "validationType".
+            query_parameter_value: Str. Value of the query_parameter.
 
         # Returns
             FeatureGroup. The updated feature group metadata object.
@@ -199,13 +200,14 @@ class FeatureGroupApi:
             ),
         )
 
-    def commit_details(self, feature_group_instance, limit):
+    def get_commit_details(self, feature_group_instance, wallclock_timestamp, limit):
         """
         Get feature group commit metadata.
         # Arguments
         feature_group_instance: FeatureGroup, required
             metadata object of feature group.
         limit: number of commits to retrieve
+        wallclock_timestamp: specific point in time.
         # Returns
             `FeatureGroupCommit`.
         """
@@ -221,6 +223,8 @@ class FeatureGroupApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {"sort_by": "committed_on:desc", "offset": 0, "limit": limit}
+        if wallclock_timestamp is not None:
+            query_params["filter_by"] = "commited_on_ltoeq:" + str(wallclock_timestamp)
 
         return feature_group_commit.FeatureGroupCommit.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers),

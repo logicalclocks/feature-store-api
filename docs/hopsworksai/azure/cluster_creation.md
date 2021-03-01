@@ -16,7 +16,12 @@ In Hopsworks.ai, select *Create cluster*:
 
 ### Step 2 setting the General information
 
-Select the *Location* in which you want your cluster to run (1), name your cluster (2) and select the *Resource Group* (3) in which you want your cluster to run.
+Select the *Resource Group* (1) in which you created your *storage account* and *user assigned managed identity* (see above).
+
+!!! note
+    If the *Resource Group* does not appear in the drop-down, make sure that you properly [created and set the custom role](#step-12-creating-a-custom-role-for-hopsworksai) for this resource group.
+
+Name your cluster (2). Your cluster will be deployed in the *Location* of your *Resource Group* (3).
 
 Select the *Instance type* (4) and *Local storage* (5) size for the cluster *Head node*.
 
@@ -26,7 +31,7 @@ Select the *Instance type* (7) and *Local storage* size (8) for the *worker node
 !!! note
     It is possible to add or remove workers once the cluster is running.
 
-To provide the capacity of adding and removing workers on demand, the Hopsworks clusters deployed by Hopsworks.ai store their data in an Azure storage container. In this step, you select which storage account and container to use for this purpose. Enter the name of the *storage account* (9) you want to use in *Azure Storage account name* and name the container in which the data will be stored in *Azure Container name* (10). For more details on how to create and configure a storage in Azure refer to [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
+To provide the capacity of adding and removing workers on demand, the Hopsworks clusters deployed by Hopsworks.ai store their data in an Azure storage container. In this step, you select which storage account and container to use for this purpose. Select the *storage account* (9) you want to use in *Azure Storage account name*. The name of the container in which the data will be stored is displayed in *Azure Container name* (10). You can change this name. For more details on how to create and configure a storage in Azure refer to [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
 
 !!! note
     You can choose to use a container already existing in your *storage account* by using the name of this container, but you need to first make sure that this container is empty.
@@ -69,7 +74,23 @@ In order to let the cluster instances access to the Azure storage we need to att
   </figure>
 </p>
 
-### Step 5 Virtual network selection
+### Step 5 set the backup retention policy:
+
+!!! note
+    This step is only accessible to enterprise users.
+
+To back up the Azure blob storage data when taking a cluster backups we need to set a retention policy for the blob storage. In this step, you choose the retention period in days. You can deactivate the retention policy by setting this value to 0 but this will block you from taking any backup of your cluster.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
+      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+    </a>
+    <figcaption>Choose the backup retention policy</figcaption>
+  </figure>
+</p>
+
+### Step 6 Virtual network selection
 In this step, you can select the virtual network which will be used by the Hopsworks cluster. You can either select an existing virtual network or let Hopsworks.ai create one for you. If you decide to let Hopsworks.ai create the virtual network for you, you can choose the CIDR block for this virtual network. 
 Refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1-create-a-virtual-network-and-subnet) for more details on how to create your own virtual network in Azure.
 
@@ -82,7 +103,7 @@ Refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1
   </figure>
 </p>
 
-### Step 6 Subnet selection
+### Step 7 Subnet selection
 If you selected an existing virtual network in the previous step, this step lets you select which subnet of this virtual network to use. For more information about creating your own subnet refer to [Create a virtual network and subnet](restrictive_permissions.md#step-1-create-a-virtual-network-and-subnet).
 
 If you did not select an existing virtual network in the previous step Hopsworks.ai will create the subnet for you. You can choose the CIDR block this subnet will use.
@@ -96,7 +117,7 @@ If you did not select an existing virtual network in the previous step Hopsworks
   </figure>
 </p>
 
-### Step 7 Network Security group selection
+### Step 8 Network Security group selection
 In this step, you can select the network security group you want to use to manage the inbound and outbound network rules. You can either let Hopsworks.ai create a network security group for you or select an existing security group. For more information about how to create your own network security group in Azure refer to [Create a network security group](restrictive_permissions.md#step-2-create-a-network-security-group).
 
 <p align="center">
@@ -108,7 +129,7 @@ In this step, you can select the network security group you want to use to manag
   </figure>
 </p>
 
-### Step 8 User management selection
+### Step 9 User management selection
 In this step, you can choose which user management system to use. You have three choices: 
 
 * *Managed*: Hopsworks.ai automatically adds and removes users from the Hopsworks cluster when you add and remove users from your organization.
@@ -124,7 +145,7 @@ In this step, you can choose which user management system to use. You have three
   </figure>
 </p>
 
-### Step 9 add tags to your instances.
+### Step 10 add tags to your instances.
 In this step, you can define tags that will be added to the cluster virtual machines.
 
 <p align="center">
@@ -136,7 +157,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
   </figure>
 </p>
 
-### Step 10 Review and create
+### Step 11 Review and create
 Review all information and select *Create*:
 
 <p align="center">

@@ -19,7 +19,7 @@ import humps
 
 class TrainingDatasetFeature:
     def __init__(self, name, type=None, index=None, featuregroup=None, label=False):
-        self._name = name
+        self._name = name.lower()
         self._type = type
         self._index = index
         self._featuregroup = featuregroup

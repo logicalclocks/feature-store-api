@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -40,6 +42,7 @@ public class TrainingDatasetApi {
   private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}";
   public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata}";
+  private static final String PREP_STATEMENT_PATH = TRAINING_DATASETS_PATH + "{/tdId}/preparedstatements";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
@@ -107,6 +110,27 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
 
     return hopsworksClient.handleRequest(getRequest, FsQuery.class);
+  }
+
+  public List<ServingPreparedStatement> getServingPreparedStatement(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + PREP_STATEMENT_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("tdId", trainingDataset.getId())
+        .expand();
+
+    HttpGet getRequest = new HttpGet(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+
+    ServingPreparedStatement servingPreparedStatement = hopsworksClient.handleRequest(getRequest,
+        ServingPreparedStatement.class);
+    return servingPreparedStatement.getItems();
   }
 
   public TrainingDataset updateMetadata(TrainingDataset trainingDataset, String queryParameter)

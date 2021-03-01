@@ -29,7 +29,7 @@ class FeatureGroupCommit:
         rows_updated=None,
         rows_deleted=None,
         validation_id=None,
-        committime=None,
+        commit_time=None,
         type=None,
         items=None,
         count=None,
@@ -37,6 +37,7 @@ class FeatureGroupCommit:
     ):
         self._commitid = commitid
         self._commit_date_string = commit_date_string
+        self._commit_time = commit_time
         self._rows_inserted = rows_inserted
         self._rows_updated = rows_updated
         self._rows_deleted = rows_deleted
@@ -53,7 +54,6 @@ class FeatureGroupCommit:
         json_decamelized = humps.decamelize(json_dict)
         _ = json_decamelized.pop("type")
         _ = json_decamelized.pop("href")
-        _ = json_decamelized.pop("committime")
         self.__init__(**json_decamelized)
         return self
 
@@ -64,6 +64,7 @@ class FeatureGroupCommit:
         return {
             "commitID": self._commitid,
             "commitDateString": self._commit_date_string,
+            "commitTime": self._commit_time,
             "rowsInserted": self._rows_inserted,
             "rowsUpdated": self._rows_updated,
             "rowsDeleted": self._rows_deleted,
@@ -77,6 +78,10 @@ class FeatureGroupCommit:
     @property
     def commit_date_string(self):
         return self._commit_date_string
+
+    @property
+    def commit_time(self):
+        return self._commit_time
 
     @property
     def rows_inserted(self):
@@ -98,9 +103,9 @@ class FeatureGroupCommit:
     def commitid(self, commitid):
         self._commitid = commitid
 
-    @commit_date_string.setter
-    def commit_date_string(self, commit_date_string):
-        self._commit_date_string = commit_date_string
+    @commit_time.setter
+    def commit_time(self, commit_time):
+        self._commit_time = commit_time
 
     @rows_inserted.setter
     def rows_inserted(self, rows_inserted):
