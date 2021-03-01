@@ -236,7 +236,7 @@ class Engine:
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
         serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
-            "topic", feature_group._get_online_table_name() + "_onlinefs"
+            "topic", feature_group._online_topic_name
         ).save()
 
     def _encode_complex_features(self, feature_group, dataframe):

@@ -304,7 +304,7 @@ public class SparkEngine {
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
-        .option("topic", utils.getOnlineTableName(featureGroup) + "_onlinefs")
+        .option("topic", featureGroup.getOnlineTopicName())
         .save();
   }
 

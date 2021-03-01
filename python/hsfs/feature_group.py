@@ -388,6 +388,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         validation_type="NONE",
         expectations=None,
+        online_topic_name=None,
     ):
         super().__init__(featurestore_id)
 
@@ -411,6 +412,7 @@ class FeatureGroup(FeatureGroupBase):
         )
 
         self._avro_schema = None
+        self._online_topic_name = online_topic_name
 
         if id is not None:
             # initialized by backend

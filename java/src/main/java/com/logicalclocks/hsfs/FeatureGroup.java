@@ -96,6 +96,10 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   private String avroSchema;
 
+  @Getter
+  @Setter
+  private String onlineTopicName;
+
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
@@ -107,7 +111,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -125,6 +129,7 @@ public class FeatureGroup extends FeatureGroupBase {
       ((List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava())
         .forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
+    this.onlineTopicName = onlineTopicName;
   }
 
   public FeatureGroup() {
