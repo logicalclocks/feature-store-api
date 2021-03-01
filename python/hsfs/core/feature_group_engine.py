@@ -187,9 +187,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
     def get_avro_schema(self, feature_group):
-        return self._kafka_api.get_topic_subject(
-            feature_group._get_online_table_name() + "_onlinefs"
-        )
+        return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
 
     def get_kafka_config(self, online_write_options):
         config = {

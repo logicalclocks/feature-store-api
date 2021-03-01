@@ -199,8 +199,7 @@ public class FeatureGroupEngine {
   }
 
   public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), utils.getOnlineTableName(featureGroup)
-        + "_onlinefs").getSchema();
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
   // TODO(Fabio): why is this here?
