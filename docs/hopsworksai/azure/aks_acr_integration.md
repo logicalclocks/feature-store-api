@@ -178,7 +178,7 @@ In the left plane there is a tab called Virtual network links, click on the tab.
   </figure>
 </p>
 
-Choose a name for the private link and select the virtual network you will use for the Hopsworks cluster, then press OK.
+Choose a name for the private link and select the **virtual network** you will use for the Hopsworks cluster, then press OK.
 
 <p align="center">
   <figure>
