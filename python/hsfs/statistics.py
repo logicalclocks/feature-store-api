@@ -24,6 +24,7 @@ class Statistics:
     def __init__(
         self,
         commit_time,
+        feature_group_commit_id,
         content,
         href=None,
         expand=None,
@@ -32,6 +33,7 @@ class Statistics:
         type=None,
     ):
         self._commit_time = commit_time
+        self._feature_group_commit_id = feature_group_commit_id
         self._content = json.loads(content)
 
     @classmethod
@@ -44,7 +46,11 @@ class Statistics:
             return cls(**json_decamelized["items"][0])
 
     def to_dict(self):
-        return {"commitTime": self._commit_time, "content": json.dumps(self._content)}
+        return {
+            "commitTime": self._commit_time,
+            "featureGroupCommitId": self._feature_group_commit_id,
+            "content": json.dumps(self._content),
+        }
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -52,6 +58,10 @@ class Statistics:
     @property
     def commit_time(self):
         return self._commit_time
+
+    @property
+    def feature_group_commit_id(self):
+        return self._feature_group_commit_id
 
     @property
     def content(self):

@@ -33,8 +33,13 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -101,9 +106,28 @@ public class TrainingDataset {
   @JsonProperty("queryDTO")
   private Query queryInt;
 
-  @Setter
   @JsonIgnore
   private List<String> label;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Connection preparedStatementConnection;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Map<Integer, Map<String, Integer>> preparedStatementParameters;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private TreeMap<Integer, PreparedStatement> preparedStatements;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private HashSet<String> servingKeys;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -126,7 +150,7 @@ public class TrainingDataset {
     this.seed = seed;
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.label = label;
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
   }
 
   /**
@@ -409,5 +433,38 @@ public class TrainingDataset {
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());
+  }
+
+  @JsonIgnore
+  public void setLabel(List<String> label) {
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    // init prepared statement if it has not already
+    if (this.getPreparedStatements() == null) {
+      trainingDatasetEngine.initPreparedStatement(this);
+    }
+  }
+
+  /**
+   * Retrieve feature vector from online feature store.
+   *
+   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
+   *              corresponding ids to retrieve feature vector from online feature store.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
+      IOException {
+    return trainingDatasetEngine.getServingVector(this, entry);
   }
 }
