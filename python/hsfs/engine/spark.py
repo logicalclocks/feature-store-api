@@ -252,6 +252,9 @@ class Engine:
             dataset = dataset.read()
 
         dataset = self.convert_to_default_dataframe(dataset)
+        if training_dataset.coalesce:
+            dataset = dataset.coalesce(1)
+
         self.training_dataset_schema_match(dataset, training_dataset.schema)
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
