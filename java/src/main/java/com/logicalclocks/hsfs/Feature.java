@@ -30,7 +30,6 @@ import org.apache.parquet.Strings;
 @NoArgsConstructor
 public class Feature {
   @Getter
-  @Setter
   private String name;
 
   @Getter
@@ -66,21 +65,21 @@ public class Feature {
   private Integer featureGroupId;
 
   public Feature(@NonNull String name) {
-    this.name = name;
+    setName(name);
   }
 
   public Feature(@NonNull String name, @NonNull FeatureGroup featureGroup) {
-    this.name = name;
+    setName(name);
     this.featureGroupId = featureGroup.getId();
   }
 
   public Feature(@NonNull String name, @NonNull String type) {
-    this.name = name;
+    this.name = name.toLowerCase();
     this.type = type;
   }
 
   public Feature(@NonNull String name, @NonNull String type, @NonNull String defaultValue) {
-    this.name = name;
+    setName(name);
     this.type = type;
     this.defaultValue = defaultValue;
   }
@@ -90,7 +89,7 @@ public class Feature {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
     }
-    this.name = name;
+    setName(name);
 
     if (Strings.isNullOrEmpty(type)) {
       throw new FeatureStoreException("Type is required when creating a feature");
@@ -106,7 +105,7 @@ public class Feature {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
     }
-    this.name = name;
+    setName(name);
 
     if (Strings.isNullOrEmpty(type)) {
       throw new FeatureStoreException("Type is required when creating a feature");
@@ -116,6 +115,10 @@ public class Feature {
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+  }
+
+  public void setName(String name) {
+    this.name = name.toLowerCase();
   }
 
   public Filter lt(Object value) {

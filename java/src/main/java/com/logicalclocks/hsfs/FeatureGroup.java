@@ -46,6 +46,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -121,9 +122,10 @@ public class FeatureGroup extends FeatureGroupBase {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.primaryKeys = primaryKeys;
-    this.partitionKeys = partitionKeys;
-    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI ? hudiPrecombineKey : null;
+    this.primaryKeys = primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList());
+    this.partitionKeys = partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList());
+    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI && hudiPrecombineKey != null
+        ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;

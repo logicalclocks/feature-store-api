@@ -25,12 +25,14 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetType;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import static org.apache.spark.sql.functions.col;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -39,6 +41,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +56,7 @@ public class Utils {
     List<Feature> features = new ArrayList<>();
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
-      Feature f = new Feature(structField.name(), structField.dataType().catalogString(), false, false);
+      Feature f = new Feature(structField.name().toLowerCase(), structField.dataType().catalogString(), false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
@@ -69,10 +72,16 @@ public class Utils {
     int index = 0;
     for (StructField structField : dataset.schema().fields()) {
       // TODO(Fabio): unit test this one for complext types
-      features.add(new TrainingDatasetFeature(structField.name(), structField.dataType().catalogString(), index++));
+      features.add(new TrainingDatasetFeature(
+          structField.name().toLowerCase(), structField.dataType().catalogString(), index++));
     }
 
     return features;
+  }
+
+  public Dataset<Row> sanitizeFeatureNames(Dataset<Row> dataset) {
+    return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
+        Column[]::new));
   }
 
   public void trainingDatasetSchemaMatch(Dataset<Row> dataset, List<TrainingDatasetFeature> features)

@@ -64,6 +64,7 @@ public class FeatureGroupEngine {
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                                List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
+    dataset = utils.sanitizeFeatureNames(dataset);
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));

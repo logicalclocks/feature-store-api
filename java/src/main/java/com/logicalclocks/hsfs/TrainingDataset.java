@@ -102,7 +102,6 @@ public class TrainingDataset {
   @JsonProperty("queryDTO")
   private Query queryInt;
 
-  @Setter
   @JsonIgnore
   private List<String> label;
 
@@ -146,7 +145,7 @@ public class TrainingDataset {
     this.seed = seed;
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.label = label;
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
   }
 
   /**
@@ -429,6 +428,11 @@ public class TrainingDataset {
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());
+  }
+
+  @JsonIgnore
+  public void setLabel(List<String> label) {
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
   }
 
   /**

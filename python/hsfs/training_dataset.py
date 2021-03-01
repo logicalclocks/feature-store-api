@@ -112,7 +112,7 @@ class TrainingDataset:
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
-            self._label = [feat.name for feat in self._features if feat.label]
+            self._label = [feat.name.lower() for feat in self._features if feat.label]
 
     def save(
         self,
@@ -574,7 +574,7 @@ class TrainingDataset:
 
     @label.setter
     def label(self, label):
-        self._label = label
+        self._label = [lb.lower() for lb in label]
 
     @property
     def feature_store_id(self):

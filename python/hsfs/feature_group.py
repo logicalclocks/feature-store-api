@@ -431,10 +431,10 @@ class FeatureGroup(FeatureGroupBase):
 
         else:
             # initialized by user
-            self._primary_key = primary_key
-            self._partition_key = partition_key
+            self.primary_key = primary_key
+            self.partition_key = partition_key
             self._hudi_precombine_key = (
-                hudi_precombine_key
+                hudi_precombine_key.lower()
                 if time_travel_format is not None
                 and time_travel_format.upper() == "HUDI"
                 else None
@@ -755,28 +755,6 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    # def update_validation_type(self, validation_type: str):
-    #     """Update the data validation type of the feature group.
-    #
-    #     Change the `validation_type` attribute of the feature group and persist the changes by calling
-    #     this method.
-    #
-    #      # Arguments
-    #         validation_type: validation_type.ValidationType. One of "STRICT", "WARNING", "ALL", "NONE".
-    #
-    #     # Returns
-    #         `FeatureGroup`. The updated metadata object of the feature group.
-    #
-    #     # Raises
-    #         `RestAPIError`.
-    #     """
-    #     if validation_type is None:
-    #         self.validation_type = "NONE"
-    #     else:
-    #         self.validation_type = validation_type.upper()
-    #     self._feature_group_engine.update_config(self, "validationType")
-    #     return self
-
     def update_description(self, description: str):
         """Update the description of the feature gorup.
 
@@ -1081,15 +1059,15 @@ class FeatureGroup(FeatureGroupBase):
 
     @primary_key.setter
     def primary_key(self, new_primary_key):
-        self._primary_key = new_primary_key
+        self._primary_key = [pk.lower() for pk in new_primary_key]
 
     @partition_key.setter
     def partition_key(self, new_partition_key):
-        self._partition_key = new_partition_key
+        self._partition_key = [pk.lower() for pk in new_partition_key]
 
     @hudi_precombine_key.setter
     def hudi_precombine_key(self, hudi_precombine_key):
-        self._hudi_precombine_key = hudi_precombine_key
+        self._hudi_precombine_key = hudi_precombine_key.lower()
 
     @online_enabled.setter
     def online_enabled(self, new_online_enabled):

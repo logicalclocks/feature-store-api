@@ -24,6 +24,7 @@ import pandas as pd
 try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
+    from pyspark.sql.functions import col
 except ImportError:
     pass
 
@@ -133,10 +134,10 @@ class Engine:
 
     def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, pd.DataFrame):
-            return self._spark_session.createDataFrame(dataframe)
-        if isinstance(dataframe, list):
+            dataframe = self._spark_session.createDataFrame(dataframe)
+        elif isinstance(dataframe, list):
             dataframe = np.array(dataframe)
-        if isinstance(dataframe, np.ndarray):
+        elif isinstance(dataframe, np.ndarray):
             if dataframe.ndim != 2:
                 raise TypeError(
                     "Cannot convert numpy array that do not have two dimensions to a dataframe. "
@@ -148,11 +149,15 @@ class Engine:
                 col_name = "col_" + str(n_col)
                 dataframe_dict[col_name] = dataframe[:, n_col]
             pandas_df = pd.DataFrame(dataframe_dict)
-            return self._spark_session.createDataFrame(pandas_df)
-        if isinstance(dataframe, RDD):
-            return dataframe.toDF()
+            dataframe = self._spark_session.createDataFrame(pandas_df)
+        elif isinstance(dataframe, RDD):
+            dataframe = dataframe.toDF()
+
         if isinstance(dataframe, DataFrame):
-            return dataframe
+            return dataframe.select(
+                [col(x).alias(x.lower()) for x in dataframe.columns]
+            )
+
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
             "pandas dataframes, python 2D lists, and numpy 2D arrays. The provided dataframe has type: {}".format(
@@ -241,13 +246,13 @@ class Engine:
         ).save()
 
     def write_training_dataset(
-        self, training_dataset, features, user_write_options, save_mode
+        self, training_dataset, dataset, user_write_options, save_mode
     ):
-        if isinstance(features, query.Query):
-            dataset = features.read()
-        else:
-            dataset = features
+        if isinstance(dataset, query.Query):
+            dataset = dataset.read()
 
+        dataset = self.convert_to_default_dataframe(dataset)
+        self.training_dataset_schema_match(dataset, training_dataset.schema)
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
@@ -414,7 +419,7 @@ class Engine:
     def parse_schema_feature_group(self, dataframe):
         return [
             feature.Feature(
-                feat.name,
+                feat.name.lower(),
                 feat.dataType.simpleString(),
                 feat.metadata.get("description", ""),
             )
@@ -424,7 +429,7 @@ class Engine:
     def parse_schema_training_dataset(self, dataframe):
         return [
             training_dataset_feature.TrainingDatasetFeature(
-                feat.name, feat.dataType.simpleString()
+                feat.name.lower(), feat.dataType.simpleString()
             )
             for feat in dataframe.schema
         ]
@@ -432,7 +437,7 @@ class Engine:
     def parse_schema_dict(self, dataframe):
         return {
             feat.name: feature.Feature(
-                feat.name,
+                feat.name.lower(),
                 feat.dataType.simpleString(),
                 feat.metadata.get("description", ""),
             )
@@ -451,7 +456,7 @@ class Engine:
 
         i = 0
         for feat in schema_sorted:
-            if feat.name != insert_schema[i].name:
+            if feat.name != insert_schema[i].name.lower():
                 raise SchemaError(
                     "Schemas do not match, expected feature {} in position {}, found {}".format(
                         feat.name, str(i), insert_schema[i].name
