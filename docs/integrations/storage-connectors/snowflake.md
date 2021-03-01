@@ -11,18 +11,20 @@ Snowflake is a popular managed data warehouse on AWS, Azure, and GCP.
 
 In the UI for the Snowflake connector, you should enter the following:
 
-* "url": "https://12345.west-europe.azure.snowflakecomputing.com", # required
-* "user": "HOPSWORKS", # required
-* "password": "snowflake password", # required if no token
-* "token": "oauth token", # required if no password
-* "database": "ML_WORKSHOP", # required
-* "schema": "PUBLIC", # required
+The following options are required to create a snowflake connector:
+- url: the hostname for your account in the following format: <account_name>.snowflakecomputing.com.
+- user: login name for the Snowflake user.
+- password: password of the Snowflake user. (required if token is not set)
+- token: OAuth token that can be used to access snowflake. (required if password is not set)
+- database: the database to use for the session after connecting.
+- schema: the schema to use for the session after connecting.
 
-The following options are not required (optional):
+The remaining options are not required, but are optional:
+- warehouse: the default virtual warehouse to use for the session after connecting.
+- role: the default security role to use for the session after connecting.
+- table: the table to which data is written to or read from. 
 
-* warehouse: the default virtual warehouse to use for the session after connecting
-* role: the default security role to use for the session after connecting
-* table: the table to which data is written to or read from. 
+Additional snowflake options can be added as a list of key-value pair in sfOptions
 
 There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See [Configure Snowflake OAuth](https://docs.snowflake.com/en/user-guide/oauth-custom.html) for instruction on how to configure OAuth support for snowflake, and [Using External OAuth](https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth) on how you can use External OAuth to authenticate to Snowflake.
 
