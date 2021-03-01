@@ -43,7 +43,7 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata,validationType}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
-      + "/commits{?sort_by,offset,limit}";
+      + "/commits{?filter_by,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
@@ -212,21 +212,26 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public List<FeatureGroupCommit> commitDetails(FeatureGroup featureGroupBase, Integer limit)
-      throws IOException, FeatureStoreException {
+  public List<FeatureGroupCommit> getCommitDetails(FeatureGroup featureGroupBase, Long wallclockTimestamp,
+                                                   Integer limit) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_COMMIT_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
         .set("sort_by", "committed_on:desc")
         .set("offset", 0)
-        .set("limit", limit)
-        .expand();
+        .set("limit", limit);
+
+    if (wallclockTimestamp != null) {
+      uriTemplate.set("filter_by", "commited_on_ltoeq:" + wallclockTimestamp);
+    }
+
+    String uri = uriTemplate.expand();
 
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);

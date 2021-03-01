@@ -15,8 +15,6 @@
 #
 
 
-from datetime import datetime
-
 from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api, storage_connector_api
 
@@ -164,8 +162,8 @@ class HudiEngine:
         return hudi_options
 
     def _setup_hudi_read_opts(self, start_timestamp, end_timestamp, read_options):
-        _hudi_commit_start_time = self._timestamp_to_hudiformat(start_timestamp)
-        _hudi_commit_end_time = self._timestamp_to_hudiformat(end_timestamp)
+        _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(start_timestamp)
+        _hudi_commit_end_time = util.get_hudi_datestr_from_timestamp(end_timestamp)
 
         hudi_options = {
             self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
@@ -197,16 +195,13 @@ class HudiEngine:
         return feature_group_commit.FeatureGroupCommit(
             commitid=None,
             commit_date_string=commit_timeline.lastInstant().get().getTimestamp(),
+            commit_time=util.get_timestamp_from_date_string(
+                commit_timeline.lastInstant().get().getTimestamp()
+            ),
             rows_inserted=commit_metadata.fetchTotalInsertRecordsWritten(),
             rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
             rows_deleted=commit_metadata.getTotalRecordsDeleted(),
         )
-
-    @staticmethod
-    def _timestamp_to_hudiformat(timestamp):
-        date_obj = datetime.fromtimestamp(timestamp / 1000)
-        date_str = date_obj.strftime("%Y%m%d%H%M%S")
-        return date_str
 
     def _get_conn_str(self):
         pw = util.get_cert_pw()

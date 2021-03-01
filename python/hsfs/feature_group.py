@@ -382,7 +382,6 @@ class FeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         location=None,
-        jobs=None,
         online_enabled=False,
         time_travel_format=None,
         statistics_config=None,
@@ -405,7 +404,6 @@ class FeatureGroup(FeatureGroupBase):
         ]
 
         self._location = location
-        self._jobs = jobs
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -538,7 +536,7 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
-        This function only works on feature group's with `HUDI` time travel format.
+        This function only works on feature groups with `HUDI` time travel format.
 
         !!! example "Reading commits incrementally between specified points in time:"
             ```python
@@ -560,7 +558,15 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.  No data is available for feature group with this commit date.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "read_changes can only be used on time travel enabled feature groups"
+            )
 
         return (
             self.select_all()
@@ -705,10 +711,14 @@ class FeatureGroup(FeatureGroupBase):
             # if Hive, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
-    def commit_details(self, limit: Optional[int] = None):
-        """Retrieves commit timeline for this feature group.
+    def commit_details(
+        self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
+    ):
+        """Retrieves commit timeline for this feature group. This method can only be used
+        on time travel enabled feature groups
 
         # Arguments
+            wallclock_time: Commit details as of specific point in time. Defaults to `None`.
             limit: Number of commits to retrieve. Defaults to `None`.
 
         # Returns
@@ -717,8 +727,9 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIError`.
+            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        return self._feature_group_engine.commit_details(self, limit)
+        return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
     def commit_delete_record(
         self,
@@ -726,7 +737,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group.
+        Feature group. This method can only be used on time travel enabled feature groups
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
@@ -735,6 +746,13 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`.
         """
+        if (
+            self._time_travel_format is None
+            or self._time_travel_format.upper() != "HUDI"
+        ):
+            raise FeatureStoreException(
+                "commit_delete_record can only be used on time travel enabled feature groups"
+            )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
     def update_description(self, description: str):
@@ -858,6 +876,56 @@ class FeatureGroup(FeatureGroupBase):
         return self._data_validation_engine.get_validations(
             self, validation_time, commit_time
         )
+
+    def compute_statistics(self, wallclock_time: Optional[str] = None):
+        """Recompute the statistics for the feature group and save them to the
+        feature store.
+
+        Statistics are only computed for data in the offline storage of the feature
+        group.
+
+        # Arguments
+            wallclock_time: Date string in the format of "YYYYMMDD" or "YYYYMMDDhhmmss".
+                Only valid if feature group is time travel enabled. If specified will recompute statistics on
+                feature group as of specific point in time. If not specified then will compute statistics
+                as of most recent time of this feature group. Defaults to `None`.
+
+        # Returns
+            `Statistics`. The statistics metadata object.
+
+        # Raises
+            `RestAPIError`. Unable to persist the statistics.
+        """
+        if self.statistics_config.enabled:
+            # Don't read the dataframe here, to avoid triggering a read operation
+            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # to update the statistics.
+
+            fg_commit_id = None
+            if wallclock_time is not None:
+                # Retrieve fg commit id related to this wall clock time and recompute statistics. It will throw
+                # exception if its not time travel enabled feature group.
+                fg_commit_id = [
+                    commit_id
+                    for commit_id in self._feature_group_engine.commit_details(
+                        self, wallclock_time, 1
+                    ).keys()
+                ][0]
+
+            return self._statistics_engine.compute_statistics(
+                self,
+                feature_group_commit_id=fg_commit_id
+                if fg_commit_id is not None
+                else None,
+            )
+        else:
+            warnings.warn(
+                (
+                    "The statistics are not enabled of feature group `{}`, with version"
+                    " `{}`. No statistics computed."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -1038,7 +1106,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         creator=None,
         id=None,
         features=None,
-        jobs=None,
         statistics_config=None,
     ):
         super().__init__(featurestore_id)
@@ -1054,7 +1121,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format
         self._path = path
         self._id = id
-        self._jobs = jobs
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)

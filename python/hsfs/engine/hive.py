@@ -18,10 +18,9 @@ import pandas as pd
 import numpy as np
 
 from pyhive import hive
-from sqlalchemy import create_engine
 from urllib.parse import urlparse
 
-from hsfs import client, feature
+from hsfs import client, feature, util
 from hsfs.core import (
     feature_group_api,
     dataset_api,
@@ -55,7 +54,7 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type):
-        with self._create_mysql_connection(connector) as mysql_conn:
+        with util.create_mysql_connection(connector) as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
@@ -133,6 +132,7 @@ class Engine:
         storage,
         offline_write_options,
         online_write_options,
+        *args
     ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
@@ -193,7 +193,9 @@ class Engine:
         self, training_dataset, dataset, user_write_options, save_mode
     ):
         if not isinstance(dataset, query.Query):
-            raise "Currently only query based training datasets are supported by the Python engine"
+            raise Exception(
+                "Currently only query based training datasets are supported by the Python engine"
+            )
 
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
@@ -226,21 +228,6 @@ class Engine:
             keystore=client.get_instance()._get_jks_key_store_path(),
             keystore_password=client.get_instance()._cert_key,
         )
-
-    def _create_mysql_connection(self, online_conn):
-        online_options = online_conn.spark_options()
-        # Here we are replacing the first part of the string returned by Hopsworks,
-        # jdbc:mysql:// with the sqlalchemy one + username and password
-        sql_alchemy_conn_str = online_options["url"].replace(
-            "jdbc:mysql://",
-            "mysql+pymysql://"
-            + online_options["user"]
-            + ":"
-            + online_options["password"]
-            + "@",
-        )
-        sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
-        return sql_alchemy_engine.connect()
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:

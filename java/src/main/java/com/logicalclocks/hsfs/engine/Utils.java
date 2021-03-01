@@ -38,10 +38,14 @@ import scala.collection.Seq;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -140,5 +144,36 @@ public class Utils {
     String pw = FileUtils.readFileToString(new File("material_passwd"));
     return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
         + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
+  }
+
+  public Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {
+
+    HashMap<Pattern, String> dateFormatPatterns = new HashMap<Pattern, String>() {{
+          put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})$"), "yyyyMMdd");
+          put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHH");
+          put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmm");
+          put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmmss");
+      }};
+
+    String tempDate = inputDate.replace("/", "")
+        .replace("-", "").replace(" ", "")
+        .replace(":","");
+    String dateFormatPattern = null;
+
+    for (Pattern pattern : dateFormatPatterns.keySet()) {
+      if (pattern.matcher(tempDate).matches()) {
+        dateFormatPattern = dateFormatPatterns.get(pattern);
+        break;
+      }
+    }
+
+    if (dateFormatPattern == null) {
+      throw new FeatureStoreException("Unable to identify format of the provided date value : " + inputDate);
+    }
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern);
+    Long commitTimeStamp = dateFormat.parse(tempDate).getTime();;
+
+    return commitTimeStamp;
   }
 }

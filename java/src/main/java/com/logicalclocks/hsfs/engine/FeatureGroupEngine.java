@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class FeatureGroupEngine {
    */
   public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                                List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
     if (featureGroup.getFeatures() == null) {
@@ -129,7 +130,7 @@ public class FeatureGroupEngine {
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       FeatureGroupValidation validation = featureGroup.validate(dataset);
@@ -164,7 +165,7 @@ public class FeatureGroupEngine {
   private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
                                     HudiOperationType operation, Map<String, String> writeOptions,
                                     Integer validationId)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
@@ -188,27 +189,57 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
   }
 
-  public Map<String, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
-      throws IOException, FeatureStoreException {
-    List<FeatureGroupCommit> featureGroupCommits = featureGroupApi.commitDetails(featureGroup, limit);
+  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
+                                                           Integer limit)
+      throws FeatureStoreException, IOException, ParseException {
+
+    Long wallclockTimestamp =  wallclockTime != null ? utils.getTimeStampFromDateString(wallclockTime) : null;
+    List<FeatureGroupCommit> featureGroupCommits =
+        featureGroupApi.getCommitDetails(featureGroup, wallclockTimestamp, limit);
     if (featureGroupCommits == null) {
       throw new FeatureStoreException("There are no commit details available for this Feature group");
     }
-    Map<String, Map<String, String>> commitDetails = new HashMap<String, Map<String, String>>();
+    Map<Long, Map<String, String>> commitDetails = new HashMap<>();
     for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
-      commitDetails.put(featureGroupCommit.getCommitID().toString(), new HashMap<String, String>() {{
+      commitDetails.put(featureGroupCommit.getCommitID(), new HashMap<String, String>() {{
             put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
-            put("rowsUpdated", featureGroupCommit.getRowsUpdated().toString());
-            put("rowsInserted", featureGroupCommit.getRowsInserted().toString());
-            put("rowsDeleted", featureGroupCommit.getRowsDeleted().toString());
+            put("rowsUpdated", featureGroupCommit.getRowsUpdated() != null
+                ? featureGroupCommit.getRowsUpdated().toString() : "0");
+            put("rowsInserted", featureGroupCommit.getRowsInserted() != null
+                ? featureGroupCommit.getRowsInserted().toString() : "0");
+            put("rowsDeleted", featureGroupCommit.getRowsDeleted() != null
+                ? featureGroupCommit.getRowsDeleted().toString() : "0");
           }}
       );
     }
     return commitDetails;
   }
 
+  public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+    return getCommitDetails(featureGroup, null, limit);
+  }
+
+  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
+                                                                     String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return getCommitDetails(featureGroup, wallclockTime, limit);
+  }
+
   public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException {
+                                         Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
+      throw new FeatureStoreException("delete function is only valid for "
+          + "time travel enabled feature group");
+    }
+
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
   }
 

@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,10 +53,10 @@ public class Query {
   private List<Feature> leftFeatures;
   @Getter
   @Setter
-  private String leftFeatureGroupStartTime;
+  private Long leftFeatureGroupStartTime;
   @Getter
   @Setter
-  private String leftFeatureGroupEndTime;
+  private Long leftFeatureGroupEndTime;
   @Getter
   @Setter
   private List<Join> joins = new ArrayList<>();
@@ -64,6 +66,7 @@ public class Query {
 
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
+  private Utils utils = new Utils();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
@@ -126,15 +129,16 @@ public class Query {
    * @param wallclockTime point in time
    * @return Query
    * @throws FeatureStoreException
-   * @throws IOException
+   * @throws ParseException
    */
-  public Query asOf(String wallclockTime) {
+  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
-      queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTime);
+      queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
       join.setQuery(queryWithTimeStamp);
     }
-    this.setLeftFeatureGroupEndTime(wallclockTime);
+    this.setLeftFeatureGroupEndTime(wallclockTimestamp);
     return this;
   }
 
@@ -146,10 +150,12 @@ public class Query {
    * @return Query
    * @throws FeatureStoreException
    * @throws IOException
+   * @throws ParseException
    */
-  public Query pullChanges(String wallclockStartTime, String wallclockEndTime) {
-    this.setLeftFeatureGroupStartTime(wallclockStartTime);
-    this.setLeftFeatureGroupEndTime(wallclockEndTime);
+  public Query pullChanges(String wallclockStartTime, String wallclockEndTime)
+      throws FeatureStoreException, ParseException {
+    this.setLeftFeatureGroupStartTime(utils.getTimeStampFromDateString(wallclockStartTime));
+    this.setLeftFeatureGroupEndTime(utils.getTimeStampFromDateString(wallclockEndTime));
     return this;
   }
 
