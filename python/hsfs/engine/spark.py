@@ -26,7 +26,7 @@ try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
     from pyspark.sql.column import Column, _to_java_column
-    from pyspark.sql.functions import struct, array
+    from pyspark.sql.functions import struct, concat, col
 except ImportError:
     pass
 
@@ -259,7 +259,14 @@ class Engine:
         return dataframe.select(
             [
                 # be aware: primary_key array should always be sorted
-                self.to_avro(array(sorted(feature_group.primary_key))).alias("key"),
+                self.to_avro(
+                    concat(
+                        *[
+                            col(f).cast("string")
+                            for f in sorted(feature_group.primary_key)
+                        ]
+                    )
+                ).alias("key"),
                 self.to_avro(
                     struct(
                         [
