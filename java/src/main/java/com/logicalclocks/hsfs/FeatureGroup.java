@@ -122,8 +122,10 @@ public class FeatureGroup extends FeatureGroupBase {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.primaryKeys = primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList());
-    this.partitionKeys = partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList());
+    this.primaryKeys = primaryKeys != null
+        ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.partitionKeys = partitionKeys != null
+        ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI && hudiPrecombineKey != null
         ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
