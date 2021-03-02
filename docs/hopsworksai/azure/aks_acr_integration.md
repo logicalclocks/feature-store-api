@@ -112,6 +112,16 @@ Choose a name for the registry and check the SKU to be **premium**. Then press O
 
 Next press review and create, then create the cluster.
 
+To prevent the registry from filling up with unnecessary images and artifacts you can enable a retention policy. A retention policy will automatically remove untagged manifests after a specified number of days. To enable a retention policy, go to the registry you created. Go to the **Retention (preview)** tab and set **Status** from **disabled** to **enabled**. Set the retention policy for 7 days as in the figure below, then press **save**.
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/acr-retention.png">
+      <img src="../../../assets/images/hopsworksai/azure/acr-retention.png" alt="ACR retention policy">
+    </a>
+    <figcaption>ACR retention policy</figcaption>
+  </figure>
+</p>
+
 Because the kubernetes API service is private the Hopsworks cluster must be able to reach it over a private network. There are two options to integrate with a private AKS cluster. The first option is to put the Hopsworks cluster in a pre-defined virtual network with peering setup to the kubernetes network. The second option is to create a subnet inside the kubernetes virtual network where the Hopsworks cluster will be placed.
 
 #### Step 1 option a Peering setup
