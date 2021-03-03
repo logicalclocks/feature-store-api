@@ -148,11 +148,55 @@ public class StorageConnector {
 
   @Getter
   @Setter
+  private String url;
+
+  @Getter
+  @Setter
+  private String user;
+
+  @Getter
+  @Setter
+  private String password;
+
+  @Getter
+  @Setter
+  private String token;
+
+  @Getter
+  @Setter
+  private String database;
+
+  @Getter
+  @Setter
+  private String schema;
+
+  @Getter
+  @Setter
+  private String warehouse;
+
+  @Getter
+  @Setter
+  private String role;
+
+  @Getter
+  @Setter
+  private String table;
+
+  @Getter
+  @Setter
   private List<Option> sparkOptions;
 
   @Getter
   @Setter
+  private List<Option> sfOptions;
+
+  @Getter
+  @Setter
   private StorageConnectorType storageConnectorType;
+
+  public String account() {
+    return this.url.replace("https://", "").replace(".snowflakecomputing.com", "");
+  }
 
   @JsonIgnore
   public Map<String, String> getSparkOptionsInt() throws FeatureStoreException {
@@ -161,6 +205,8 @@ public class StorageConnector {
         return getJdbcOptions();
       case REDSHIFT:
         return getRedshiftOptions();
+      case SNOWFLAKE:
+        return getSnowflakeOptions();
       default:
         throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
     }
@@ -202,5 +248,35 @@ public class StorageConnector {
         throw new FeatureStoreException(
             "Path method not supported for storage connector type: " + storageConnectorType);
     }
+  }
+
+  @JsonIgnore
+  private Map<String, String> getSnowflakeOptions() {
+    Map<String, String> options = new HashMap<>();
+    options.put(Constants.SNOWFLAKE_URL, url);
+    options.put(Constants.SNOWFLAKE_SCHEMA, schema);
+    options.put(Constants.SNOWFLAKE_DB, database);
+    options.put(Constants.SNOWFLAKE_USER, user);
+    if (!Strings.isNullOrEmpty(password)) {
+      options.put(Constants.SNOWFLAKE_PWD, password);
+    } else {
+      options.put(Constants.SNOWFLAKE_AUTH, "oauth");
+      options.put(Constants.SNOWFLAKE_TOKEN, token);
+    }
+    if (!Strings.isNullOrEmpty(warehouse)) {
+      options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
+    }
+    if (!Strings.isNullOrEmpty(role)) {
+      options.put(Constants.SNOWFLAKE_ROLE, role);
+    }
+    if (!Strings.isNullOrEmpty(table)) {
+      options.put(Constants.SNOWFLAKE_TABLE, table);
+    }
+    if (sfOptions != null && !sfOptions.isEmpty()) {
+      Map<String, String> argOptions = sfOptions.stream()
+          .collect(Collectors.toMap(Option::getName, Option::getValue));
+      options.putAll(argOptions);
+    }
+    return options;
   }
 }

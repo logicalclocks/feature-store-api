@@ -38,6 +38,7 @@ from hsfs.constructor import query
 class Engine:
     HIVE_FORMAT = "hive"
     JDBC_FORMAT = "jdbc"
+    SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     def __init__(self):
         self._spark_session = SparkSession.builder.getOrCreate()
@@ -75,6 +76,17 @@ class Engine:
             self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
         )
 
+    def _snowflake(self, sql_query, connector):
+        options = connector.spark_options()
+        if sql_query:
+            options["query"] = sql_query
+
+        return (
+            self._spark_session.read.format(self.SNOWFLAKE_FORMAT)
+            .options(**options)
+            .load()
+        )
+
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default").show(n)
 
@@ -88,6 +100,10 @@ class Engine:
         ):
             # This is a JDBC on demand featuregroup
             on_demand_dataset = self._jdbc(
+                on_demand_fg.query, on_demand_fg.storage_connector
+            )
+        elif on_demand_fg.storage_connector.connector_type == "SNOWFLAKE":
+            on_demand_dataset = self._snowflake(
                 on_demand_fg.query, on_demand_fg.storage_connector
             )
         else:
