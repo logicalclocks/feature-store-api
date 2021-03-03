@@ -41,8 +41,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.struct;
 
 import scala.collection.JavaConverters;
@@ -341,8 +341,8 @@ public class SparkEngine {
       throws FeatureStoreException, IOException {
     Collections.sort(featureGroup.getPrimaryKeys());
     return dataset.select(
-        to_avro(array(featureGroup.getPrimaryKeys().stream().map(name -> col(name)).toArray(Column[]::new))).alias(
-            "key"),
+        to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+            .toArray(Column[]::new))).alias("key"),
         to_avro(struct(featureGroup.getDeserialzedAvroSchema().getFields().stream()
                 .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
   }
