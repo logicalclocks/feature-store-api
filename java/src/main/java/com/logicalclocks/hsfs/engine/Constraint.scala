@@ -16,8 +16,8 @@
 
 package com.logicalclocks.hsfs.engine
 
-import com.logicalclocks.hsfs.metadata.validation.ValueType
+import com.logicalclocks.hsfs.metadata.validation.AcceptedType
 
 case class Constraint(name: String, hint: Option[String], columns: Option[Seq[String]], min: Option[Double],
-                      max: Option[Double], value: Option[Double], pattern: Option[String],
-                      acceptedType: Option[ValueType], legalValues: Option[Array[String]])
+                      max: Option[Double], value: Option[String], pattern: Option[String],
+                      acceptedType: Option[AcceptedType], legalValues: Option[Array[String]])

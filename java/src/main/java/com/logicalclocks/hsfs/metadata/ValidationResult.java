@@ -25,6 +25,8 @@ import lombok.Setter;
 import com.logicalclocks.hsfs.metadata.validation.Rule;
 import lombok.ToString;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,7 +41,7 @@ public class ValidationResult {
   @Getter @Setter
   private String value;
   @Getter @Setter
-  private String feature;
+  private List<String> features;
   @Getter @Setter
   private Rule rule;
 }

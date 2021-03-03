@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,11 +32,13 @@ public class Rule {
   @Getter @Setter
   private Double max;
   @Getter @Setter
+  private String value;
+  @Getter @Setter
   private String pattern;
   @Getter @Setter
-  private ValueType acceptedType;
+  private AcceptedType acceptedType;
   @Getter @Setter
-  private String[] legalValues;
+  private List<String> legalValues;
 
   public static Rule.RuleBuilder createRule(RuleDefinition rule) {
     return com.logicalclocks.hsfs.metadata.validation.Rule.builder().rule(rule);
@@ -46,7 +50,7 @@ public class Rule {
 
   @Builder
   public Rule(RuleName name, RuleDefinition rule, Level level, Double min, Double max, String pattern,
-      ValueType acceptedType, String[] legalValues) {
+      AcceptedType acceptedType, List<String> legalValues) {
     if (rule != null) {
       this.name = rule.getName();
     } else {
