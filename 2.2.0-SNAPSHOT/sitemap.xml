@@ -12,6 +12,34 @@
      <lastmod>2021-03-03</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/adls/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/hopsfs/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/jdbc/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/redshift/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/s3/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/integrations/storage-connectors/snowflake/</loc>
+     <lastmod>2021-03-03</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
      <loc>https://docs.hopsworks.ai/integrations/databricks/networking/</loc>
      <lastmod>2021-03-03</lastmod>
      <changefreq>daily</changefreq>
