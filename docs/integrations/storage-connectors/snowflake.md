@@ -12,6 +12,7 @@ Snowflake is a popular managed data warehouse on AWS, Azure, and GCP.
 In the UI for the Snowflake connector, you should enter the following:
 
 The following options are required to create a snowflake connector:
+
 - url: the hostname for your account in the following format: <account_name>.snowflakecomputing.com.
 - user: login name for the Snowflake user.
 - password: password of the Snowflake user. (required if token is not set)
@@ -20,6 +21,7 @@ The following options are required to create a snowflake connector:
 - schema: the schema to use for the session after connecting.
 
 The remaining options are not required, but are optional:
+
 - warehouse: the default virtual warehouse to use for the session after connecting.
 - role: the default security role to use for the session after connecting.
 - table: the table to which data is written to or read from. 
