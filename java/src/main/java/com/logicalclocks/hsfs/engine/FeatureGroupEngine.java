@@ -117,6 +117,7 @@ public class FeatureGroupEngine {
     featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
