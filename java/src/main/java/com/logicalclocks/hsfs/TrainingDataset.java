@@ -150,7 +150,7 @@ public class TrainingDataset {
     this.seed = seed;
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
+    this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
   }
 
   /**
