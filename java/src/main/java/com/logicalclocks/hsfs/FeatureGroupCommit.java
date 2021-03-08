@@ -37,6 +37,9 @@ public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
   private String commitDateString;
   @Getter
   @Setter
+  private Long commitTime;
+  @Getter
+  @Setter
   private Long rowsInserted;
   @Getter
   @Setter

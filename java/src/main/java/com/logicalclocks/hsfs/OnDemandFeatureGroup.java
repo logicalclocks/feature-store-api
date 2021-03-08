@@ -92,7 +92,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
     onDemandFeatureGroupEngine.saveFeatureGroup(this);
 
     if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, read());
+      statisticsEngine.computeStatistics(this, read(), null);
     }
   }
 

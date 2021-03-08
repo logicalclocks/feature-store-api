@@ -23,11 +23,13 @@ class StorageConnector:
     JDBC = "JDBC"
     REDSHIFT = "REDSHIFT"
     ADLS = "ADLS"
+    SNOWFLAKE = "SNOWFLAKE"
     HOPSFS_DTO = "featurestoreHopsfsConnectorDTO"
     JDBC_DTO = "featurestoreJdbcConnectorDTO"
     S3_DTO = "featurestoreS3ConnectorDTO"
     REDSHIFT_DTO = "featurestoreRedshiftConnectorDTO"
     ADLS_DTO = "featurestoreADLSConnectorDTO"
+    SNOWFLAKE_DTO = "featurestoreSnowflakeConnectorDTO"
 
     def __init__(
         self,
@@ -66,6 +68,16 @@ class StorageConnector:
         account_name=None,
         container_name=None,
         spark_options=None,
+        database=None,
+        password=None,
+        token=None,
+        role=None,
+        schema=None,
+        table=None,
+        url=None,
+        user=None,
+        warehouse=None,
+        sf_options=None,
     ):
         self._id = id
         self._name = name
@@ -108,6 +120,21 @@ class StorageConnector:
         self._account_name = account_name
         self._service_credential = service_credential
         self._container_name = container_name
+
+        # SNOWFLAKE
+        self._url = url
+        self._warehouse = warehouse
+        self._database = database
+        self._user = user
+        self._password = password
+        self._token = token
+        self._schema = schema
+        self._table = table
+        self._role = role
+
+        self._sf_options = (
+            {opt["name"]: opt["value"] for opt in sf_options} if sf_options else {}
+        )
 
         self._spark_options = (
             {opt["name"]: opt["value"] for opt in spark_options}
@@ -340,8 +367,11 @@ class StorageConnector:
 
     @property
     def arguments(self):
-        """Additional JDBC arguments."""
-        if self._storage_connector_type.upper() == self.JDBC:
+        """Additional JDBC, REDSHIFT, or Snowflake arguments."""
+        if (
+            self._storage_connector_type.upper() == self.JDBC
+            or self._storage_connector_type.upper() == self.REDSHIFT
+        ):
             return self._arguments
         else:
             raise Exception(
@@ -363,7 +393,7 @@ class StorageConnector:
     def generation(self):
         """Generation of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._generation
+            return self._generation
         else:
             raise Exception(
                 "Generation is not supported for connector "
@@ -374,7 +404,7 @@ class StorageConnector:
     def directory_id(self):
         """Directory ID of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._directory_id
+            return self._directory_id
         else:
             raise Exception(
                 "Directory ID is not supported for connector "
@@ -385,7 +415,7 @@ class StorageConnector:
     def application_id(self):
         """Application ID of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._application_id
+            return self._application_id
         else:
             raise Exception(
                 "Application ID is not supported for connector "
@@ -396,7 +426,7 @@ class StorageConnector:
     def account_name(self):
         """Account name of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._account_name
+            return self._account_name
         else:
             raise Exception(
                 "Account name is not supported for connector "
@@ -407,7 +437,7 @@ class StorageConnector:
     def container_name(self):
         """Container name of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._container_name
+            return self._container_name
         else:
             raise Exception(
                 "Container name is not supported for connector "
@@ -418,10 +448,126 @@ class StorageConnector:
     def service_credential(self):
         """Service credential of the ADLS storage connector"""
         if self._storage_connector_type.upper() == self.ADLS:
-            self._service_credential
+            return self._service_credential
         else:
             raise Exception(
                 "Service Credential is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def url(self):
+        """URL of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._url
+        else:
+            raise Exception(
+                "URL is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def warehouse(self):
+        """Warehouse of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._warehouse
+        else:
+            raise Exception(
+                "Warehouse is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def database(self):
+        """Database of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._database
+        else:
+            raise Exception(
+                "Database is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def user(self):
+        """User of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._user
+        else:
+            raise Exception(
+                "User is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def password(self):
+        """Password of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._password
+        else:
+            raise Exception(
+                "Password is not supported for connector "
+                + self._storage_connector_type
+            )
+
+    @property
+    def token(self):
+        """OAuth token of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._token
+        else:
+            raise Exception(
+                "Token is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def schema(self):
+        """Schema of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._schema
+        else:
+            raise Exception(
+                "Schema is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def table(self):
+        """Table of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._table
+        else:
+            raise Exception(
+                "Table is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def role(self):
+        """Role of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._role
+        else:
+            raise Exception(
+                "Role is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def account(self):
+        """Account of the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._url.replace("https://", "").replace(
+                ".snowflakecomputing.com", ""
+            )
+        else:
+            raise Exception(
+                "Account is not supported for connector " + self._storage_connector_type
+            )
+
+    @property
+    def sf_options(self):
+        """Additional options for the Snowflake storage connector"""
+        if self._storage_connector_type.upper() == self.SNOWFLAKE:
+            return self._sf_options
+        else:
+            raise Exception(
+                "sf_options are not supported for connector "
                 + self._storage_connector_type
             )
 
@@ -460,8 +606,43 @@ class StorageConnector:
             return props
         elif self._storage_connector_type.upper() == self.ADLS:
             return self._spark_options
+        elif self._storage_connector_type.upper() == self.SNOWFLAKE:
+            props = self._sf_options
+            props["sfURL"] = self._url
+            props["sfSchema"] = self._schema
+            props["sfDatabase"] = self._database
+            props["sfUser"] = self._user
+            if self._password is not None:
+                props["sfPassword"] = self._password
+            else:
+                props["sfAuthenticator"] = "oauth"
+                props["sfToken"] = self._token
+            if self._warehouse is not None:
+                props["sfWarehouse"] = self._warehouse
+            if self._role is not None:
+                props["sfRole"] = self._role
+            if self._table is not None:
+                props["dbtable"] = self._table
+
+            return props
         else:
             raise Exception(
                 "Spark options are not supported for connector "
                 + self._storage_connector_type
             )
+
+    def snowflake_connector_options(self):
+        props = {
+            "user": self._user,
+            "account": self.account,
+            "database": self._database,
+            "schema": self._schema,
+        }
+        if self._password is not None:
+            props["password"] = self._password
+        else:
+            props["authenticator"] = "oauth"
+            props["token"] = self._token
+        if self._warehouse is not None:
+            props["warehouse"] = self._warehouse
+        return props

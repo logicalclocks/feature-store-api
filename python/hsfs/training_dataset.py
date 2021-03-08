@@ -46,6 +46,7 @@ class TrainingDataset:
         data_format,
         location,
         featurestore_id,
+        coalesce=False,
         description=None,
         storage_connector=None,
         splits=None,
@@ -67,6 +68,7 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
+        self._coalesce = coalesce
         self._seed = seed
         self._location = location
         self._from_query = from_query
@@ -112,7 +114,7 @@ class TrainingDataset:
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
-            self._label = [feat.name for feat in self._features if feat.label]
+            self._label = [feat.name.lower() for feat in self._features if feat.label]
 
     def save(
         self,
@@ -360,6 +362,7 @@ class TrainingDataset:
             "version": self._version,
             "description": self._description,
             "dataFormat": self._data_format,
+            "coalesce": self._coalesce,
             "storageConnector": self._storage_connector,
             "location": self._location,
             "trainingDatasetType": self._training_dataset_type,
@@ -414,6 +417,17 @@ class TrainingDataset:
     @data_format.setter
     def data_format(self, data_format):
         self._data_format = data_format
+
+    @property
+    def coalesce(self):
+        """If true the training dataset data will be coalesced into
+        a single partition before writing. The resulting training dataset
+        will be a single file per split"""
+        return self._coalesce
+
+    @coalesce.setter
+    def coalesce(self, coalesce):
+        self._coalesce = coalesce
 
     @property
     def write_options(self):
@@ -574,7 +588,7 @@ class TrainingDataset:
 
     @label.setter
     def label(self, label):
-        self._label = label
+        self._label = [lb.lower() for lb in label]
 
     @property
     def feature_store_id(self):

@@ -46,7 +46,7 @@ class StatisticsApi:
             "POST", path_params, headers=headers, data=statistics.json()
         )
 
-    def get(self, metadata_instance, commit_time):
+    def get(self, metadata_instance, commit_timestamp):
         """Gets the statistics for a specific commit time for an instance."""
         _client = client.get_instance()
         path_params = [
@@ -60,7 +60,7 @@ class StatisticsApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {
-            "filter_by": "commit_time_eq:" + str(commit_time),
+            "filter_by": "commit_time_eq:" + str(commit_timestamp),
             "fields": "content",
         }
         return statistics.Statistics.from_response_json(

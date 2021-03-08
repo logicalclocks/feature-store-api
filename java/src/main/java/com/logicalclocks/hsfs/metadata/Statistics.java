@@ -29,7 +29,11 @@ public class Statistics extends RestDto<Statistics> {
 
   @Getter
   @Setter
-  private String commitTime;
+  private Long commitTime;
+
+  @Getter
+  @Setter
+  private Long featureGroupCommitId;
 
   @Getter
   @Setter

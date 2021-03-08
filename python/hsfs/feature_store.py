@@ -414,6 +414,7 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         data_format: Optional[str] = "tfrecords",
+        coalesce: Optional[bool] = False,
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         splits: Optional[Dict[str, float]] = {},
         location: Optional[str] = "",
@@ -453,6 +454,9 @@ class FeatureStore:
                 `""`.
             data_format: The data format used to save the training dataset,
                 defaults to `"tfrecords"`-format.
+            coalesce: If true the training dataset data will be coalesced into
+                a single partition before writing. The resulting training dataset
+                will be a single file per split. Default False.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -495,6 +499,7 @@ class FeatureStore:
             seed=seed,
             statistics_config=statistics_config,
             label=label,
+            coalesce=coalesce,
         )
 
     def create_expectation(

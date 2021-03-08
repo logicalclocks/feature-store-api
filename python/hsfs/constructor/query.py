@@ -157,14 +157,19 @@ class Query:
         return self
 
     def as_of(self, wallclock_time):
+        wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
         for join in self._joins:
-            join.query.left_feature_group_end_time = wallclock_time
-        self.left_feature_group_end_time = wallclock_time
+            join.query.left_feature_group_end_time = wallclock_timestamp
+        self.left_feature_group_end_time = wallclock_timestamp
         return self
 
     def pull_changes(self, wallclock_start_time, wallclock_end_time):
-        self.left_feature_group_start_time = wallclock_start_time
-        self.left_feature_group_end_time = wallclock_end_time
+        self.left_feature_group_start_time = util.get_timestamp_from_date_string(
+            wallclock_start_time
+        )
+        self.left_feature_group_end_time = util.get_timestamp_from_date_string(
+            wallclock_end_time
+        )
         return self
 
     def filter(self, f: Union[filter.Filter, filter.Logic]):

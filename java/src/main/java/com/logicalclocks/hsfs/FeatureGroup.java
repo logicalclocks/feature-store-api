@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
+import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -44,6 +45,7 @@ import org.apache.avro.Schema;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,9 +118,12 @@ public class FeatureGroup extends FeatureGroupBase {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.primaryKeys = primaryKeys;
-    this.partitionKeys = partitionKeys;
-    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI ? hudiPrecombineKey : null;
+    this.primaryKeys = primaryKeys != null
+        ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.partitionKeys = partitionKeys != null
+        ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI && hudiPrecombineKey != null
+        ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
     this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
@@ -163,8 +168,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
+   * @throws ParseException
    */
-  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, null);
   }
 
@@ -176,9 +182,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
+   * @throws ParseException
    */
   public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
 
@@ -190,9 +197,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
+   * @throws ParseException
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
@@ -204,9 +212,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @return DataFrame.
    * @throws FeatureStoreException
    * @throws IOException
+   * @throws ParseException
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
@@ -219,43 +228,45 @@ public class FeatureGroup extends FeatureGroupBase {
     read(online).show(numRows);
   }
 
-  public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException {
+  public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
   }
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
     if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, featureData);
+      statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
 
-  public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException, ParseException {
     insert(featureData, null, false);
   }
 
   public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, false, null, writeOptions);
   }
 
-  public void insert(Dataset<Row> featureData, Storage storage) throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData, Storage storage)
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, false, null, null);
   }
 
-  public void insert(Dataset<Row> featureData, boolean overwrite) throws IOException, FeatureStoreException {
+  public void insert(Dataset<Row> featureData, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, null, overwrite);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, overwrite, null, null);
   }
 
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, overwrite, null, writeOptions);
   }
 
@@ -268,13 +279,13 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, false, operation, null);
   }
 
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
 
     // operation is only valid for time travel enabled feature group
     if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
@@ -296,26 +307,12 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)
-      throws FeatureStoreException, IOException {
-
-    // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("delete function is only valid for "
-          + "time travel enabled feature group");
-    }
-
+      throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, null);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-
-    // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("delete function is only valid for "
-          + "time travel enabled feature group");
-    }
-
+      throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, writeOptions);
   }
 
@@ -325,13 +322,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<String, Map<String, String>> commitDetails() throws IOException, FeatureStoreException {
-    // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("commitDetails function is only valid for "
-          + "time travel enabled feature group");
-    }
-
+  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, null);
   }
 
@@ -342,14 +333,34 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Map<String, Map<String, String>> commitDetails(Integer limit) throws IOException, FeatureStoreException {
-    // operation is only valid for time travel enabled feature group
-    if (this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("commitDetails function is only valid for "
-          + "time travel enabled feature group");
-    }
-
+  public Map<Long, Map<String, String>> commitDetails(Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, limit);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   @JsonIgnore
@@ -465,5 +476,27 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException {
     return DataValidationEngine.getInstance().getValidation(this,
       new ImmutablePair<>(type, time));
+  }
+
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @param wallclockTime number of commits to return.
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    if (statisticsConfig.getEnabled()) {
+      Map<Long, Map<String, String>> latestCommitMetaData =
+          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
+      Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
+      Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
+      return statisticsEngine.computeStatistics(this, featureData, commitId);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
+    return null;
   }
 }

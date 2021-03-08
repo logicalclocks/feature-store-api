@@ -39,6 +39,7 @@ import scala.collection.Seq;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -91,7 +92,7 @@ public class HudiEngine {
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
                                    Dataset<Row> dataset, HudiOperationType operation,
                                    Map<String, String> writeOptions, Integer validationId)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, ParseException {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
 
@@ -107,7 +108,8 @@ public class HudiEngine {
   }
 
   public FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> deleteDF,
-                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException {
+                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException,
+      ParseException {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
     hudiArgs.put(PAYLOAD_CLASS_OPT_KEY, PAYLOAD_CLASS_OPT_VAL);
@@ -134,11 +136,12 @@ public class HudiEngine {
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
-      throws IOException {
+      throws IOException, FeatureStoreException, ParseException {
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
 
     fgCommitMetadata.setCommitDateString(commitTimeline.lastInstant().get().getTimestamp());
+    fgCommitMetadata.setCommitTime(utils.getTimeStampFromDateString(commitTimeline.lastInstant().get().getTimestamp()));
     byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
     HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn, HoodieCommitMetadata.class);
     fgCommitMetadata.setRowsUpdated(commitMetadata.fetchTotalUpdateRecordsWritten());

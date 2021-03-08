@@ -66,6 +66,10 @@ public class TrainingDataset {
 
   @Getter
   @Setter
+  private Boolean coalesce;
+
+  @Getter
+  @Setter
   private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter
@@ -102,7 +106,6 @@ public class TrainingDataset {
   @JsonProperty("queryDTO")
   private Query queryInt;
 
-  @Setter
   @JsonIgnore
   private List<String> label;
 
@@ -132,12 +135,13 @@ public class TrainingDataset {
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
-                         StorageConnector storageConnector, String location, List<Split> splits, Long seed,
-                         FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
+                         Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
+                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
     this.name = name;
     this.version = version;
     this.description = description;
     this.dataFormat = dataFormat != null ? dataFormat : DataFormat.TFRECORDS;
+    this.coalesce = coalesce != null ? coalesce : false;
     this.location = location;
     this.storageConnector = storageConnector;
 
@@ -146,7 +150,7 @@ public class TrainingDataset {
     this.seed = seed;
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.label = label;
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
   }
 
   /**
@@ -429,6 +433,11 @@ public class TrainingDataset {
   public List<String> getLabel() {
     return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
         Collectors.toList());
+  }
+
+  @JsonIgnore
+  public void setLabel(List<String> label) {
+    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
   }
 
   /**

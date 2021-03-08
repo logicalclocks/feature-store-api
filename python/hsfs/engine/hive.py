@@ -86,6 +86,7 @@ class Engine:
 
     def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, pd.DataFrame):
+            dataframe.columns = [x.lower() for x in dataframe.columns]
             return dataframe
 
         raise TypeError(
@@ -95,7 +96,7 @@ class Engine:
 
     def parse_schema_feature_group(self, dataframe):
         return [
-            feature.Feature(feat_name, self._convert_pandas_type(feat_type))
+            feature.Feature(feat_name.lower(), self._convert_pandas_type(feat_type))
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
 
@@ -189,9 +190,9 @@ class Engine:
         )
 
     def write_training_dataset(
-        self, training_dataset, features, user_write_options, save_mode
+        self, training_dataset, dataset, user_write_options, save_mode
     ):
-        if not isinstance(features, query.Query):
+        if not isinstance(dataset, query.Query):
             raise Exception(
                 "Currently only query based training datasets are supported by the Python engine"
             )
@@ -200,7 +201,7 @@ class Engine:
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         spark_job_configuration = user_write_options.pop("spark", None)
         td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
-            query=features,
+            query=dataset,
             overwrite=(save_mode == "overwrite"),
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,

@@ -14,6 +14,14 @@ nav:
     - Quickstart: quickstart.md
     - Integrations:
       - Overview: setup.md
+      - Storage Connectors:
+        - Overview: integrations/storage-connectors.md
+        - ADLS: integrations/storage-connectors/adls.md
+        - HopsFS: integrations/storage-connectors/hopsfs.md
+        - JDBC: integrations/storage-connectors/jdbc.md
+        - Redshift: integrations/storage-connectors/redshift.md
+        - S3: integrations/storage-connectors/s3.md
+        - Snowflake: integrations/storage-connectors/snowflake.md
       - Databricks:
         - Networking: integrations/databricks/networking.md
         - Hopsworks API Key: integrations/databricks/api_key.md
@@ -63,6 +71,7 @@ nav:
       - AWS: hopsworksai/aws/cluster_creation.md
       - Integration with EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
       - Azure: hopsworksai/azure/cluster_creation.md
+      - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
