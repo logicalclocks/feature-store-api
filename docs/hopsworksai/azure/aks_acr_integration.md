@@ -11,31 +11,31 @@ Hopsworks AKS and ACR integration have four requirements:
 
 This guide provides an example setup with a private AKS cluster and public ACR.
 !!! note
-A public AKS cluster means the kubernetes API server is accessible outside the virtual network it is deployed in. Similarly, a public ACR is accessible through the internet.
+    A public AKS cluster means the Kubernetes API server is accessible outside the virtual network it is deployed in. Similarly, a public ACR is accessible through the internet.
 
 
 ## User assigned managed identity (managed identity)
 
 !!! note
-A user assigned managed identity (managed identity) can be created at the subscription level or to a specific resource group in a subscription. The managed identity is attached to the virtual machines that run inside your subscription (or resource group). Hence, the permissions only apply to services that run within your subscription (or resource group). 
+    A user assigned managed identity (managed identity) can be created at the subscription level or to a specific resource group in a subscription. The managed identity is attached to the virtual machines that run inside your subscription (or resource group). Hence, the permissions only apply to services that run within your subscription (or resource group). 
 
-AKS and ACR integration requires some additional permissions to be attached to the managed identity used by the Hopsworks cluster. 
+The AKS and ACR integration requires some permissions to be attached to the managed identity used by the Hopsworks cluster. 
 
-To setup the managed identity, go to the resource group where you will add the managed identity - this should be the same resource group as you deploy Hopsworks in. In your selected resource group, click on the Access Control (IAM) menu item, and then click on add button. In the search dialog, enter "user assigned managed identity", and then select a name for the managed identity, review it and create it.
+If you have already created a *user assigned managed identity* for the storage continue to [Add role assignment to the managed identity](#add-role-assignment-to-the-managed-identity) using this identity.
 
-### Add role assignment at subscription level
+To set up the managed identity, go to the resource group where you will add the managed identity - this should be the same resource group you will deploy Hopsworks in. Click on the *Add* button. In the search dialog, enter *"user assigned managed identity"*.  Click on *Create*. Then give a name to the managed identity and make sure that it is in the Region where you will deploy your cluster. Click on *Review + create*, and click on *Create*.
 
-Next go to the created managed identity in order to create role assignments. Go to azure role assignments and add the following roles:
+### Add role assignment to the managed identity
 
-* AcrPull
+Go to the managed identity created above. Click on *Azure role assignments* in the left column. Click on *Add role assignment*. For the *Scope* select *Resource group* or *Subscription* depending on your preference. Select the *Role* *AcrPull* and click on *Save*.
+
+Repeat the same operation with the following roles:
 * AcrPush
 * AcrDelete
 * Azure Kubernetes Service Contributor Role
 
-The roles can have either scope of your subscription or the specific resource group you are planning to use. A scope of the resource group will restrict the permissions of the roles to the chosen resource group.
-
 !!! warning
-You will also need to attach the Storage Blob Data Owner role to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
+    You will also need to attach storage access permissions to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
 
 Once finished the role assignments should look similar to the picture below. Note that hopsworks-stage is used as the resource group throughout the example setup.
 
@@ -52,8 +52,8 @@ Once finished the role assignments should look similar to the picture below. Not
 
 This guide will step through setting up a private AKS cluster and a public ACR. 
 
-### Step 1 Create an AKS cluster
-Go to Kubernetes services in the azure portal and click add. Place the Kubernetes cluster in the same resource group as the Hopsworks cluster and choose a name for the Kubernetes cluster.
+### Step 1: Create an AKS cluster
+Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kubernetes cluster in the same resource group as the Hopsworks cluster and choose a name for the Kubernetes cluster.
 
 <p align="center">
   <figure>
@@ -64,31 +64,32 @@ Go to Kubernetes services in the azure portal and click add. Place the Kubernete
   </figure>
 </p>
 
-Next click the Authentication tab and verify the settings are identical to the picture below.
+Next, click on the *Authentication* tab and verify the settings are identical to the picture below.
+
 !!! note
-Currently AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.
+    Currently, AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/aks-base.png">
+    <a  href="../../../assets/images/hopsworksai/azure/aks-authentication.png">
       <img src="../../../assets/images/hopsworksai/azure/aks-authentication.png" alt="AKS authentication configuration">
     </a>
     <figcaption>AKS authencation configuration</figcaption>
   </figure>
 </p>
 
-Next go to the networking tab and check **Azure CNI**. The portal will automatically fill in the IP address ranges for the kubernetes virtual network. Take note of the virtual network name that is created, in this example the virtual network name was hopsworksstagevnet154. Lastly, check the **Enable private cluster** option. 
+Next, go to the networking tab and check **Azure CNI**. The portal will automatically fill in the IP address ranges for the Kubernetes virtual network. Take note of the virtual network name that is created, in this example the virtual network name was hopsworksstagevnet154. Lastly, check the **Enable private cluster** option. 
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/aks-base.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-base.png" alt="AKS network configuration">
+    <a  href="../../../assets/images/hopsworksai/azure/aks-network.png">
+      <img src="../../../assets/images/hopsworksai/azure/aks-network.png" alt="AKS network configuration">
     </a>
     <figcaption>AKS network configuration</figcaption>
   </figure>
 </p>
 
-Next go to Integrations. Under container registry click Create new. 
+Next, go to the *Integrations* tab. Under container registry click Create new. 
 
 <p align="center">
   <figure>
@@ -99,7 +100,7 @@ Next go to Integrations. Under container registry click Create new.
   </figure>
 </p>
 
-Choose a name for the registry and check the SKU to be **premium**. Then press OK. 
+Choose a name for the registry and select **premium** for the SKU. Then press *OK*. 
 
 <p align="center">
   <figure>
@@ -110,7 +111,7 @@ Choose a name for the registry and check the SKU to be **premium**. Then press O
   </figure>
 </p>
 
-Next press review and create, then create the cluster.
+Next press *Review + create*, then click *Create*.
 
 To prevent the registry from filling up with unnecessary images and artifacts you can enable a retention policy. A retention policy will automatically remove untagged manifests after a specified number of days. To enable a retention policy, go to the registry you created. Go to the **Retention (preview)** tab and set **Status** from **disabled** to **enabled**. Set the retention policy for 7 days as in the figure below, then press **save**.
 <p align="center">
@@ -122,18 +123,20 @@ To prevent the registry from filling up with unnecessary images and artifacts yo
   </figure>
 </p>
 
-Because the kubernetes API service is private the Hopsworks cluster must be able to reach it over a private network. There are two options to integrate with a private AKS cluster. The first option is to put the Hopsworks cluster in a pre-defined virtual network with peering setup to the kubernetes network. The second option is to create a subnet inside the kubernetes virtual network where the Hopsworks cluster will be placed.
+### Step 2: create a virtual network for the Hopsworks cluster
 
-#### Step 1 option a Peering setup
+Because the Kubernetes API service is private the Hopsworks cluster must be able to reach it over a private network. There are two options to integrate with a private AKS cluster. The first option (*A*) is to put the Hopsworks cluster in a pre-defined virtual network with a peering setup to the Kubernetes network. The second option (*B*) is to create a subnet inside the Kubernetes virtual network where the Hopsworks cluster will be placed.
 
-In order to establish virtual peering between the kubernetes cluster and Hopsworks, you need to select or create a virtual network for Hopsworks. Go to **virtual networks** and press create.
+#### Option *A*: Peering setup
+
+To establish virtual peering between the Kubernetes cluster and Hopsworks, you need to select or create a virtual network for Hopsworks. Go to **virtual networks** and press create.
 Choose a name for the new virtual network and select the same resource group you are planning to use for your Hopsworks cluster.
 
-Next, go to the IP Addresses tab. Create an address space which does not overlap with the address space in the kubernetes network. In the previous example, the automatically created kubernetes network used the address space 10.0.0.0/8. Hence, the address space 172.18.0.0/16 can safely be used.
+Next, go to the *IP Addresses* tab. Create an address space that does not overlap with the address space in the Kubernetes network. In the previous example, the automatically created Kubernetes network used the address space *10.0.0.0/8*. Hence, the address space *172.18.0.0/16* can safely be used.
 
-Next click review and create, then create.
+Next click *Review + Create*, then *Create*.
 
-Next go to the created virtual network and go to the Peerings tab. Then click add. 
+Next, go to the created virtual network and go to the *Peerings* tab. Then click *Add*. 
 
 <p align="center">
   <figure>
@@ -144,7 +147,7 @@ Next go to the created virtual network and go to the Peerings tab. Then click ad
   </figure>
 </p>
 
-Choose a name for the peering link. Check the Traffic to remote virtual network as allow, and Traffic forwarded from remote virtual network to block.
+Choose a name for the peering link. Check the *Traffic to remote virtual network* as *Allow*, and *Traffic forwarded from remote virtual network* to *Block*.
 
 <p align="center">
   <figure>
@@ -155,7 +158,7 @@ Choose a name for the peering link. Check the Traffic to remote virtual network 
   </figure>
 </p>
 
-For the virtual network select the virtual network which was created by AKS, in our example this was hopsworksstagevnet154. Then press add.
+For the virtual network select the virtual network which was created by AKS, in our example this was *hopsworksstagevnet154*. Then press *Add*.
 
 <p align="center">
   <figure>
@@ -166,7 +169,7 @@ For the virtual network select the virtual network which was created by AKS, in 
   </figure>
 </p>
 
-The last step is to setup a DNS private link in order to be able to use DNS resolution for the kubernetes API servers. Go to resource groups in the Azure portal and find the resource group of the kubernetes cluster. This will be in the form of MC_<resouce_group>_<cluster_name>_<region> in this example it was MC_hopsworks-stage_hopsworks-aks_northeurope. Open the resource group and click on the DNS zone.
+The last step is to set up a DNS private link to be able to use DNS resolution for the Kubernetes API servers. Go to resource groups in the Azure portal and find the resource group of the Kubernetes cluster. This will be in the form of *MC_<resouce_group>_<cluster_name>_<region>* in this example it was *MC_hopsworks-stage_hopsworks-aks_northeurope*. Open the resource group and click on the DNS zone.
 
 <p align="center">
   <figure>
@@ -177,7 +180,7 @@ The last step is to setup a DNS private link in order to be able to use DNS reso
   </figure>
 </p>
 
-In the left plane there is a tab called Virtual network links, click on the tab. Next press add.
+In the left plane there is a tab called *Virtual network links*, click on the tab. Next press *Add*.
 
 <p align="center">
   <figure>
@@ -201,11 +204,11 @@ Choose a name for the private link and select the **virtual network** you will u
 
 The setup is now finalized and you can create the Hopsworks cluster.
 
-#### Step 1 option b Subnet in AKS network
+#### Option *B*: Subnet in AKS network
 
-With this setup the Hopsworks cluster will reside in the same virtual network as the AKS cluster. The difference is that a new subnet in the virtual network will be used for the Hopsworks cluster.
+With this setup, the Hopsworks cluster will reside in the same virtual network as the AKS cluster. The difference is that a new subnet in the virtual network will be used for the Hopsworks cluster.
 
-To setup the subnet, first go to the virtual network that was created by AKS. In our example, this was hopsworksstagevnet154. Next go to the subnets tab.
+To set up the subnet, first, go to the virtual network that was created by AKS. In our example, this was hopsworksstagevnet154. Next, go to the subnets tab.
 
 <p align="center">
   <figure>
@@ -216,7 +219,7 @@ To setup the subnet, first go to the virtual network that was created by AKS. In
   </figure>
 </p>
 
-Press + Subnet. Choose a name for the subnet, for example, "hopsworks" and an IP range that does not overlap with the kubernetes network. Then save.
+Press *+ Subnet*. Choose a name for the subnet, for example, "hopsworks" and an IP range that does not overlap with the Kubernetes network. Then save.
 
 <p align="center">
   <figure>
@@ -227,9 +230,9 @@ Press + Subnet. Choose a name for the subnet, for example, "hopsworks" and an IP
   </figure>
 </p>
 
-### Create the Hopsworks cluster
+## Create the Hopsworks cluster
 
-This step assumes you are creating your Hopsworks cluster using hopsworks.ai. The AKS configuration can be set under the Managed containers tab. Select the Use Azure AKS and Azure ACR as enabled. Two new fields with the name of the container registry you created and the AKS cluster name will pop up. In the previous example we created an ACR with name hopsaksregistry and an AKS cluster with name hopsaks-cluster. Hence, the configuration should look similar to the picture below
+This step assumes you are creating your Hopsworks cluster using hopsworks.ai. The AKS configuration can be set under the *Managed containers* tab. Set *Use Azure AKS and Azure ACR* as enabled. Two new fields will pop up. Fill them with the name of the container registry and the AKS you created above. In the previous example, we created an ACR with the name *hopsworksaks* and an AKS cluster with the name *hopsaks-cluster*. Hence, the configuration should look similar to the picture below
 
 <p align="center">
   <figure>
@@ -240,5 +243,5 @@ This step assumes you are creating your Hopsworks cluster using hopsworks.ai. Th
   </figure>
 </p>
 
-In the virtual network tab you have to select the either the virtual network you created for the peering setup or the kubernetes virtual network depending on which approach you choose. Under the subnet tab you have to choose the default subnet if you choose the peering approach, or the subnet you created if you choose to create a new subnet inside the AKS virtual network.
+In the virtual network tab, you have to select either the virtual network you created for the peering setup or the Kubernetes virtual network depending on which approach you choose. Under the subnet tab, you have to choose the default subnet if you choose the peering approach or the subnet you created if you choose to create a new subnet inside the AKS virtual network.
 
