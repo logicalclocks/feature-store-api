@@ -15,6 +15,9 @@
 #
 
 import re
+import io
+import avro.schema
+import avro.io
 from sqlalchemy import sql
 
 from hsfs import engine, training_dataset_feature, util
@@ -125,7 +128,6 @@ class TrainingDatasetEngine:
 
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
-        print(complex_features)
 
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
@@ -148,14 +150,18 @@ class TrainingDatasetEngine:
 
     def get_complex_feature_schemas(self, training_dataset):
         return {
-            f.name: f._featuregroup._get_feature_avro_schema(f.name)
+            f.name: avro.io.DatumReader(
+                avro.schema.parse(f._featuregroup._get_feature_avro_schema(f.name))
+            )
             for f in training_dataset.schema
             if f.is_complex()
         }
 
     def deserialize_complex_features(self, feature_schemas, row_dict):
         for feature_name, schema in feature_schemas.items():
-            row_dict[feature_name] = "decoded"
+            bytes_reader = io.BytesIO(row_dict[feature_name])
+            decoder = avro.io.BinaryDecoder(bytes_reader)
+            row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
     def init_prepared_statement(self, training_dataset):
