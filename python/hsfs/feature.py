@@ -78,6 +78,7 @@ class Feature:
         return cls(**json_decamelized)
 
     def is_complex(self):
+        """Returns true if the feature has a complex type."""
         return any(map(self._type.upper().startswith, self.COMPLEX_TYPES))
 
     @property

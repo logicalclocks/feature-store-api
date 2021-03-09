@@ -122,6 +122,11 @@ class TrainingDatasetEngine:
             self.init_prepared_statement(training_dataset)
 
         prepared_statements = training_dataset.prepared_statements
+
+        # get schemas for complex features once
+        complex_features = self.get_complex_feature_schemas(training_dataset)
+        print(complex_features)
+
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
             result_proxy = training_dataset.prepared_statement_connection.execute(
@@ -129,7 +134,9 @@ class TrainingDatasetEngine:
             ).fetchall()
             result_dict = {}
             for row in result_proxy:
-                result_dict = dict(row.items())
+                result_dict = self.deserialize_complex_features(
+                    complex_features, dict(row.items())
+                )
                 if not result_dict:
                     raise Exception(
                         "No data was retrieved from online feature store using input "
@@ -138,6 +145,18 @@ class TrainingDatasetEngine:
             serving_vector += list(result_dict.values())
 
         return serving_vector
+
+    def get_complex_feature_schemas(self, training_dataset):
+        return {
+            f.name: f._featuregroup._get_feature_avro_schema(f.name)
+            for f in training_dataset.schema
+            if f.is_complex()
+        }
+
+    def deserialize_complex_features(self, feature_schemas, row_dict):
+        for feature_name, schema in feature_schemas.items():
+            row_dict[feature_name] = "decoded"
+        return row_dict
 
     def init_prepared_statement(self, training_dataset):
         online_conn = self._storage_connector_api.get_online_connector()

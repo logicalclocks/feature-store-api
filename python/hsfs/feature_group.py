@@ -381,7 +381,7 @@ class FeatureGroup(FeatureGroupBase):
         created=None,
         creator=None,
         id=None,
-        features=None,
+        features=[],
         location=None,
         online_enabled=False,
         time_travel_format=None,
@@ -936,7 +936,7 @@ class FeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
