@@ -27,7 +27,7 @@ To set up the managed identity, go to the resource group where you will add the 
 
 ### Add role assignment to the managed identity
 
-Go to the managed identity created above. Click on *Azure role assignments* in the left column. Click on *Add role assignment*. Select the *Scope* *Resource group* or *Subscription* depending on your preference. Select the *Role* *AcrPull* and click on *Save*.
+Go to the managed identity created above. Click on *Azure role assignments* in the left column. Click on *Add role assignment*. For the *Scope* select *Resource group* or *Subscription* depending on your preference. Select the *Role* *AcrPull* and click on *Save*.
 
 Repeat the same operation with the following roles:
 * AcrPush
@@ -35,7 +35,7 @@ Repeat the same operation with the following roles:
 * Azure Kubernetes Service Contributor Role
 
 !!! warning
-    You will also need to attach the Storage Blob Data Owner role to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
+    You will also need to attach storage access permissions to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
 
 Once finished the role assignments should look similar to the picture below. Note that hopsworks-stage is used as the resource group throughout the example setup.
 
@@ -64,7 +64,7 @@ Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kuber
   </figure>
 </p>
 
-Next, click the *Authentication* tab and verify the settings are identical to the picture below.
+Next, click on the *Authentication* tab and verify the settings are identical to the picture below.
 
 !!! note
     Currently, AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.
