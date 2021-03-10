@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
+import lombok.Getter;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -59,6 +60,10 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
   private static final String DOMAIN_CA_TRUSTSTORE = "hopsworks.domain.truststore";
   private static final String TOKEN_PATH = "token.jwt";
 
+  private static final String MATERIAL_PASSWD = "material_passwd";
+  private static final String T_CERTIFICATE = "t_certificate";
+  private static final String K_CERTIFICATE = "k_certificate";
+
   private PoolingHttpClientConnectionManager connectionPool = null;
 
   private HttpHost httpHost = null;
@@ -66,6 +71,15 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
 
   private String hopsworksEndpoint = "";
   private String jwt = "";
+
+  @Getter
+  private String trustStorePath = T_CERTIFICATE;
+
+  @Getter
+  private String keyStorePath = K_CERTIFICATE;
+
+  @Getter
+  private String certKey;
 
   public HopsworksInternalClient() throws IOException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException, FeatureStoreException {
@@ -81,6 +95,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
         .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
         .build();
 
+    certKey = HopsworksHttpClient.readCertKey(MATERIAL_PASSWD);
     refreshJwt();
   }
 
