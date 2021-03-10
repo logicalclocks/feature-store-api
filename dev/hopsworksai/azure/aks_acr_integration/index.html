@@ -1656,15 +1656,18 @@
 <p>To set up the managed identity, go to the resource group where you will add the managed identity - this should be the same resource group you will deploy Hopsworks in. Click on the <em>Add</em> button. In the search dialog, enter <em>"user assigned managed identity"</em>.  Click on <em>Create</em>. Then give a name to the managed identity and make sure that it is in the Region where you will deploy your cluster. Click on <em>Review + create</em>, and click on <em>Create</em>.</p>
 <h3 id="add-role-assignment-to-the-managed-identity">Add role assignment to the managed identity<a class="headerlink" href="#add-role-assignment-to-the-managed-identity" title="Permanent link">#</a></h3>
 <p>Go to the managed identity created above. Click on <em>Azure role assignments</em> in the left column. Click on <em>Add role assignment</em>. For the <em>Scope</em> select <em>Resource group</em> or <em>Subscription</em> depending on your preference. Select the <em>Role</em> <em>AcrPull</em> and click on <em>Save</em>.</p>
-<p>Repeat the same operation with the following roles:
-* AcrPush
-* AcrDelete
-* Azure Kubernetes Service Contributor Role</p>
+<p>Repeat the same operation with the following roles:</p>
+<ul>
+<li>AcrPull</li>
+<li>AcrPush</li>
+<li>AcrDelete</li>
+<li>Azure Kubernetes Service User Role</li>
+</ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>You will also need to attach storage access permissions to the managed identity, see <a href="../getting_started/#step-2-creating-and-configuring-a-storage">Creating and configuring a storage</a></p>
 </div>
-<p>Once finished the role assignments should look similar to the picture below. Note that hopsworks-stage is used as the resource group throughout the example setup.</p>
+<p>Once finished the role assignments should look similar to the picture below. </p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-permissions.png">
