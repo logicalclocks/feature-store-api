@@ -31,6 +31,7 @@ Go to the managed identity created above. Click on *Azure role assignments* in t
 
 Repeat the same operation with the following roles:
 
+* AcrPull
 * AcrPush
 * AcrDelete
 * Azure Kubernetes Service User Role
