@@ -19,10 +19,34 @@ package com.logicalclocks.hsfs.metadata;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.ResponseHandler;
+import org.slf4j.Logger;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 
 public interface HopsworksHttpClient {
+  static final Logger LOGGER = null;
+
   <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler)
       throws IOException, FeatureStoreException;
+
+  String getTrustStorePath();
+
+  String getKeyStorePath();
+
+  String getCertKey();
+
+  static String readCertKey(String materialPwd) {
+    try (FileInputStream fis = new FileInputStream(materialPwd)) {
+      StringBuilder sb = new StringBuilder();
+      int content;
+      while ((content = fis.read()) != -1) {
+        sb.append((char) content);
+      }
+      return sb.toString();
+    } catch (IOException ex) {
+      LOGGER.warn("Failed to get cert password.", ex);
+    }
+    return null;
+  }
 }
