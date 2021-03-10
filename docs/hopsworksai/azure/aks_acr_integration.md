@@ -30,14 +30,15 @@ To set up the managed identity, go to the resource group where you will add the 
 Go to the managed identity created above. Click on *Azure role assignments* in the left column. Click on *Add role assignment*. For the *Scope* select *Resource group* or *Subscription* depending on your preference. Select the *Role* *AcrPull* and click on *Save*.
 
 Repeat the same operation with the following roles:
+
 * AcrPush
 * AcrDelete
-* Azure Kubernetes Service Contributor Role
+* Azure Kubernetes Service User Role
 
 !!! warning
     You will also need to attach storage access permissions to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
 
-Once finished the role assignments should look similar to the picture below. Note that hopsworks-stage is used as the resource group throughout the example setup.
+Once finished the role assignments should look similar to the picture below. 
 
 <p align="center">
   <figure>
