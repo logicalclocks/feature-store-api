@@ -17,11 +17,12 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.ResponseHandler;
 import org.slf4j.Logger;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
 
 public interface HopsworksHttpClient {
@@ -37,13 +38,8 @@ public interface HopsworksHttpClient {
   String getCertKey();
 
   static String readCertKey(String materialPwd) {
-    try (FileInputStream fis = new FileInputStream(materialPwd)) {
-      StringBuilder sb = new StringBuilder();
-      int content;
-      while ((content = fis.read()) != -1) {
-        sb.append((char) content);
-      }
-      return sb.toString();
+    try {
+      return FileUtils.readFileToString(new File(materialPwd));
     } catch (IOException ex) {
       LOGGER.warn("Failed to get cert password.", ex);
     }
