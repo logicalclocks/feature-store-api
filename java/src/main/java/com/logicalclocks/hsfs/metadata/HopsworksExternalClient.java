@@ -65,10 +65,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
   private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
 
-  private static final String MATERIAL_PASSWD = "material_passwd";
-  private static final String T_CERTIFICATE = "t_certificate";
-  private static final String K_CERTIFICATE = "k_certificate";
-
   private PoolingHttpClientConnectionManager connectionPool = null;
 
   private HttpHost httpHost = null;
