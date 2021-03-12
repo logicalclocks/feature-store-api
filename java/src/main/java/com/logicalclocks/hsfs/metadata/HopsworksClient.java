@@ -46,8 +46,6 @@ public class HopsworksClient {
   private static HopsworksClient hopsworksClientInstance = null;
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
 
-  private String certPwd = "";
-
   public static HopsworksClient getInstance() throws FeatureStoreException {
     if (hopsworksClientInstance == null) {
       throw new FeatureStoreException("Client not connected. Please establish a Hopsworks connection first");
@@ -85,6 +83,7 @@ public class HopsworksClient {
     return hopsworksClientInstance;
   }
 
+  @Getter
   private HopsworksHttpClient hopsworksHttpClient;
 
   @Getter

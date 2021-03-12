@@ -20,6 +20,11 @@ import base64
 import json
 import requests
 
+try:
+    from pyspark.sql import SparkSession
+except ImportError:
+    pass
+
 from hsfs.client import base, auth, exceptions
 
 
@@ -76,6 +81,8 @@ class Client(base.Client):
             # certificates need to be provided before the Spark application starts.
             self._cert_folder_base = cert_folder
             self._cert_folder = os.path.join(cert_folder, host, project)
+            self._trust_store_path = os.path.join(self._cert_folder, "trustStore.jks")
+            self._key_store_path = os.path.join(self._cert_folder, "keyStore.jks")
 
             os.makedirs(self._cert_folder, exist_ok=True)
             credentials = self._get_credentials(self._project_id)
@@ -91,6 +98,22 @@ class Client(base.Client):
             self._cert_key = str(credentials["password"])
             with open(os.path.join(self._cert_folder, "material_passwd"), "w") as f:
                 f.write(str(credentials["password"]))
+
+        elif engine == "spark":
+            _spark_session = SparkSession.builder.getOrCreate()
+
+            with open(
+                _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
+                "r",
+            ) as f:
+                self._cert_key = f.read()
+
+            self._trust_store_path = _spark_session.conf.get(
+                "spark.hadoop.hops.ssl.keystore.name"
+            )
+            self._key_store_path = _spark_session.conf.get(
+                "spark.hadoop.hops.ssl.trustore.name"
+            )
 
     def _close(self):
         """Closes a client and deletes certificates."""
@@ -116,10 +139,10 @@ class Client(base.Client):
         self._connected = False
 
     def _get_jks_trust_store_path(self):
-        return os.path.join(self._cert_folder, "trustStore.jks")
+        return self._trust_store_path
 
     def _get_jks_key_store_path(self):
-        return os.path.join(self._cert_folder, "keyStore.jks")
+        return self._key_store_path
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.

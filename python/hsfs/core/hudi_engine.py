@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 
-
-from hsfs import feature_group_commit, util
+from hsfs import feature_group_commit, util, client
 from hsfs.core import feature_group_api, storage_connector_api
 
 
@@ -204,7 +203,7 @@ class HudiEngine:
         )
 
     def _get_conn_str(self):
-        pw = util.get_cert_pw()
+        pw = client.get_instance()._cert_key
         jdbc_url = (
             self._connstr
             + "sslTrustStore=t_certificate;trustStorePassword="

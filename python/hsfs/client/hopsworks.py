@@ -20,7 +20,6 @@ import textwrap
 import base64
 
 from pathlib import Path
-from hsfs import util
 from hsfs.client import base, auth
 
 try:
@@ -42,13 +41,15 @@ class Client(base.Client):
     TRUSTSTORE_SUFFIX = "__tstore.jks"
     KEYSTORE_SUFFIX = "__kstore.jks"
     PEM_CA_CHAIN = "ca_chain.pem"
+    CERT_KEY_SUFFIX = "__cert.key"
+    MATERIAL_PWD = "material_passwd"
 
     def __init__(self):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
         self._host, self._port = self._get_host_port_pair()
 
-        self._cert_key = util.get_cert_pw()
+        self._cert_key = self._get_cert_pw()
         trust_store_path = self._get_trust_store_path()
         hostname_verification = (
             os.environ[self.REQUESTS_VERIFY]
@@ -181,3 +182,19 @@ class Client(base.Client):
         except KeyError:
             hops_user = os.environ[self.HDFS_USER]
         return hops_user
+
+    def _get_cert_pw(self):
+        """
+        Get keystore password from local container
+
+        Returns:
+            Certificate password
+        """
+        pwd_path = Path(self.MATERIAL_PWD)
+        if not pwd_path.exists():
+            username = os.environ[self.HADOOP_USER_NAME]
+            material_directory = Path(os.environ[self.MATERIAL_DIRECTORY])
+            pwd_path = material_directory.joinpath(username + self.CERT_KEY_SUFFIX)
+
+        with pwd_path.open() as f:
+            return f.read()
