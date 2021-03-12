@@ -151,7 +151,7 @@ class TrainingDatasetEngine:
     def get_complex_feature_schemas(self, training_dataset):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(f._featuregroup._get_feature_avro_schema(f.name))
+                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
             )
             for f in training_dataset.schema
             if f.is_complex()

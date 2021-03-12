@@ -119,7 +119,7 @@ public class Feature {
   }
 
   public boolean isComplex() {
-    return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.startsWith(c));
+    return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
   }
 
   public void setName(String name) {

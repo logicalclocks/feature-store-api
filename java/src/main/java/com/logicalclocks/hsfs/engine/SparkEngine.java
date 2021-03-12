@@ -337,7 +337,7 @@ public class SparkEngine {
   public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
     List<Column> select = new ArrayList<>();
-    for (Schema.Field f : featureGroup.getDeserialzedAvroSchema().getFields()) {
+    for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
       if (featureGroup.getComplexFeatures().contains(f.name())) {
         select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
       } else {
@@ -362,7 +362,7 @@ public class SparkEngine {
     return dataset.select(
         to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
             .toArray(Column[]::new))).alias("key"),
-        to_avro(struct(featureGroup.getDeserialzedAvroSchema().getFields().stream()
+        to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
                 .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
   }
 

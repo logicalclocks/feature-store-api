@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -65,5 +66,9 @@ public class TrainingDatasetFeature {
 
   public void setName(String name) {
     this.name = name.toLowerCase();
+  }
+
+  public boolean isComplex() {
+    return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
   }
 }
