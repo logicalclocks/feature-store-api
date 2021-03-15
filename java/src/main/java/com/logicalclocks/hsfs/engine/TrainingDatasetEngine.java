@@ -225,7 +225,6 @@ public class TrainingDatasetEngine {
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
     Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
-    LOGGER.info(complexFeatureSchemas.toString());
 
     // Iterate over entry map of preparedStatements and set values to them
     for (Integer fgId : preparedStatements.keySet()) {
@@ -251,16 +250,9 @@ public class TrainingDatasetEngine {
       while (results.next()) {
         int index = 1;
         while (index <= columnCount) {
-          LOGGER.info("Column: " + results.getMetaData().getColumnName(index));
           if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
-            LOGGER.info("now in deser if");
-            LOGGER.info(complexFeatureSchemas.toString());
-            Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
-            Object result =
-                complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
-            servingVector.add(result);
+            servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
           } else {
-            LOGGER.info("regular");
             servingVector.add(results.getObject(index));
           }
           index++;
@@ -270,6 +262,12 @@ public class TrainingDatasetEngine {
     }
     trainingDataset.getPreparedStatementConnection().commit();
     return servingVector;
+  }
+
+  private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
+      int index) throws SQLException, IOException {
+    Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
+    return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
   }
 
   private Map<String, DatumReader<Object>> getComplexFeatureSchemas(TrainingDataset trainingDataset)
