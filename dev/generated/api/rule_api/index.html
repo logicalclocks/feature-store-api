@@ -1102,6 +1102,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#value" class="md-nav__link">
+    value
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1630,6 +1637,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#value" class="md-nav__link">
+    value
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1656,6 +1670,7 @@
     <span class="n">level</span><span class="p">,</span>
     <span class="nb">min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">pattern</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">legal_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1670,33 +1685,37 @@
 <p>This class is made for hsfs internal use only.</p>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L118">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L130">[source]</a></span></p>
 <h3 id="accepted_type">accepted_type<a class="headerlink" href="#accepted_type" title="Permanent link">#</a></h3>
 <p>Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L127">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L139">[source]</a></span></p>
 <h3 id="legal_values">legal_values<a class="headerlink" href="#legal_values" title="Permanent link">#</a></h3>
 <p>List of legal values a feature should be found int. feature.Applicable only to IS_CONTAINED_IN rule.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L82">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L85">[source]</a></span></p>
 <h3 id="level">level<a class="headerlink" href="#level" title="Permanent link">#</a></h3>
 <p>Severity level of a rule, one of "WARNING" or "ERROR".</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L100">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L103">[source]</a></span></p>
 <h3 id="max">max<a class="headerlink" href="#max" title="Permanent link">#</a></h3>
 <p>The upper bound of the value range this feature should fall into.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L91">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L94">[source]</a></span></p>
 <h3 id="min">min<a class="headerlink" href="#min" title="Permanent link">#</a></h3>
 <p>The lower bound of the value range this feature should fall into.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L73">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L76">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the rule as found in rule definitions.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L109">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L121">[source]</a></span></p>
 <h3 id="pattern">pattern<a class="headerlink" href="#pattern" title="Permanent link">#</a></h3>
 <p>Pattern to check for a feature's pattern compliance. Applicable only to the HAS_PATTERN rule.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L112">[source]</a></span></p>
+<h3 id="value">value<a class="headerlink" href="#value" title="Permanent link">#</a></h3>
+<p>The upper bound of the value range this feature should fall into.</p>
 <hr />
                 
               

@@ -1041,6 +1041,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#accepted_type" class="md-nav__link">
+    accepted_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
     description
   </a>
@@ -1057,13 +1064,6 @@
           <li class="md-nav__item">
   <a href="#predicate" class="md-nav__link">
     predicate
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#value_type" class="md-nav__link">
-    value_type
   </a>
   
 </li>
@@ -1588,6 +1588,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#accepted_type" class="md-nav__link">
+    accepted_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
     description
   </a>
@@ -1604,13 +1611,6 @@
           <li class="md-nav__item">
   <a href="#predicate" class="md-nav__link">
     predicate
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#value_type" class="md-nav__link">
-    value_type
   </a>
   
 </li>
@@ -1666,7 +1666,7 @@
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">ruledefinition</span><span class="o">.</span><span class="n">RuleDefinition</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
     <span class="n">predicate</span><span class="p">,</span>
-    <span class="n">value_type</span><span class="p">,</span>
+    <span class="n">accepted_type</span><span class="p">,</span>
     <span class="n">description</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1679,6 +1679,10 @@
 <p>The set of rule definitions, for example "has max", "has avg" is provided by hsfs and cannot be modified.</p>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L79">[source]</a></span></p>
+<h3 id="accepted_type">accepted_type<a class="headerlink" href="#accepted_type" title="Permanent link">#</a></h3>
+<p>The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String".</p>
+<hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L84">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <hr />
@@ -1689,10 +1693,6 @@
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L74">[source]</a></span></p>
 <h3 id="predicate">predicate<a class="headerlink" href="#predicate" title="Permanent link">#</a></h3>
 <p>Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L79">[source]</a></span></p>
-<h3 id="value_type">value_type<a class="headerlink" href="#value_type" title="Permanent link">#</a></h3>
-<p>The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String", "Numeric".</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L489">[source]</a></span></p>

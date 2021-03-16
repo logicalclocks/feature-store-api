@@ -1542,7 +1542,7 @@ validation rules (Rule) and expectations (Expectation) applied on a dataframe th
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">ruledefinition</span><span class="o">.</span><span class="n">RuleDefinition</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
     <span class="n">predicate</span><span class="p">,</span>
-    <span class="n">value_type</span><span class="p">,</span>
+    <span class="n">accepted_type</span><span class="p">,</span>
     <span class="n">description</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1554,6 +1554,10 @@ validation rules (Rule) and expectations (Expectation) applied on a dataframe th
 <p>Metadata object representing the validation rule that is used by feature group expectations.</p>
 <p>The set of rule definitions, for example "has max", "has avg" is provided by hsfs and cannot be modified.</p>
 <hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L79">[source]</a></span></p>
+<h3 id="accepted_type">accepted_type<a class="headerlink" href="#accepted_type" title="Permanent link">#</a></h3>
+<p>The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String".</p>
+<hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L84">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <hr />
@@ -1564,10 +1568,6 @@ validation rules (Rule) and expectations (Expectation) applied on a dataframe th
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L74">[source]</a></span></p>
 <h3 id="predicate">predicate<a class="headerlink" href="#predicate" title="Permanent link">#</a></h3>
 <p>Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L79">[source]</a></span></p>
-<h3 id="value_type">value_type<a class="headerlink" href="#value_type" title="Permanent link">#</a></h3>
-<p>The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String", "Numeric".</p>
 <hr />
 <h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">#</a></h1>
 <p>Used as part of expectations that are applied on ingested features. Rule names correspond to the names of the
@@ -1586,6 +1586,7 @@ for example if you need a feature to be ingested if its minimum value is below z
     <span class="n">level</span><span class="p">,</span>
     <span class="nb">min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">pattern</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">legal_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1599,33 +1600,37 @@ for example if you need a feature to be ingested if its minimum value is below z
 <p>Metadata object representing the validation rule that is used by feature group expectations.</p>
 <p>This class is made for hsfs internal use only.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L118">[source]</a></span></p>
-<h3 id="accepted_type">accepted_type<a class="headerlink" href="#accepted_type" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L130">[source]</a></span></p>
+<h3 id="accepted_type_1">accepted_type<a class="headerlink" href="#accepted_type_1" title="Permanent link">#</a></h3>
 <p>Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L127">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L139">[source]</a></span></p>
 <h3 id="legal_values">legal_values<a class="headerlink" href="#legal_values" title="Permanent link">#</a></h3>
 <p>List of legal values a feature should be found int. feature.Applicable only to IS_CONTAINED_IN rule.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L82">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L85">[source]</a></span></p>
 <h3 id="level">level<a class="headerlink" href="#level" title="Permanent link">#</a></h3>
 <p>Severity level of a rule, one of "WARNING" or "ERROR".</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L100">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L103">[source]</a></span></p>
 <h3 id="max">max<a class="headerlink" href="#max" title="Permanent link">#</a></h3>
 <p>The upper bound of the value range this feature should fall into.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L91">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L94">[source]</a></span></p>
 <h3 id="min">min<a class="headerlink" href="#min" title="Permanent link">#</a></h3>
 <p>The lower bound of the value range this feature should fall into.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L73">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L76">[source]</a></span></p>
 <h3 id="name_1">name<a class="headerlink" href="#name_1" title="Permanent link">#</a></h3>
 <p>Name of the rule as found in rule definitions.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L109">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L121">[source]</a></span></p>
 <h3 id="pattern">pattern<a class="headerlink" href="#pattern" title="Permanent link">#</a></h3>
 <p>Pattern to check for a feature's pattern compliance. Applicable only to the HAS_PATTERN rule.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L112">[source]</a></span></p>
+<h3 id="value">value<a class="headerlink" href="#value" title="Permanent link">#</a></h3>
+<p>The upper bound of the value range this feature should fall into.</p>
 <hr />
 <h1 id="expectations">Expectations<a class="headerlink" href="#expectations" title="Permanent link">#</a></h1>
 <p>A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
@@ -1808,13 +1813,22 @@ The list of allowed validation types are:</p>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_result.py#L23">[source]</a></span></p>
 <h3 id="validationresult">ValidationResult<a class="headerlink" href="#validationresult" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">validation_result</span><span class="o">.</span><span class="n">ValidationResult</span><span class="p">(</span>
-    <span class="n">status</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">status</span><span class="p">,</span>
+    <span class="n">message</span><span class="p">,</span>
+    <span class="n">value</span><span class="p">,</span>
+    <span class="n">features</span><span class="p">,</span>
+    <span class="n">rule</span><span class="p">,</span>
+    <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Metadata object representing the validation result of a single rule of an expectation result of a Feature Group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_result.py#L93">[source]</a></span></p>
-<h3 id="feature">feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h3>
+<h3 id="features_1">features<a class="headerlink" href="#features_1" title="Permanent link">#</a></h3>
 <p>Feature of the validation result on which the rule was applied.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_result.py#L75">[source]</a></span></p>
@@ -1829,7 +1843,7 @@ The list of allowed validation types are:</p>
 <h3 id="status">status<a class="headerlink" href="#status" title="Permanent link">#</a></h3>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_result.py#L84">[source]</a></span></p>
-<h3 id="value">value<a class="headerlink" href="#value" title="Permanent link">#</a></h3>
+<h3 id="value_1">value<a class="headerlink" href="#value_1" title="Permanent link">#</a></h3>
 <p>The computed value of the feature according to the rule.</p>
 <hr />
                 
