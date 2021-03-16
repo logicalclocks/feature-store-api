@@ -9,7 +9,7 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-  - Feature Store: 
+  - Feature Store:
     - Introduction: index.md
     - Quickstart: quickstart.md
     - Integrations:
@@ -47,7 +47,7 @@ nav:
       - Storage Connector: generated/api/storage_connector_api.md
       - Feature: generated/api/feature_api.md
     - Contributing: CONTRIBUTING.md
-  - Hopsworks.ai: 
+  - Hopsworks.ai:
     - Introduction: hopsworksai/index.md
     - Getting Started:
       - AWS: hopsworksai/aws/getting_started.md
@@ -66,9 +66,9 @@ nav:
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md
       - Azure: hopsworksai/azure/upgrade.md
-  
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
-  - Support: https://community.hopsworks.ai/
+  - Examples: https://examples.hopsworks.ai/
+  - Community: https://community.hopsworks.ai/
 
 theme:
   name: material
