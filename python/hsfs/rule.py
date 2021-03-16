@@ -32,6 +32,7 @@ class Rule:
         level,
         min=None,
         max=None,
+        value=None,
         pattern=None,
         accepted_type=None,
         legal_values=None,
@@ -45,6 +46,7 @@ class Rule:
         self._level = level
         self._min = min
         self._max = max
+        self._value = value
         self._pattern = pattern
         self._accepted_type = accepted_type
         self._legal_values = legal_values
@@ -65,6 +67,7 @@ class Rule:
             "level": self._level,
             "min": self._min,
             "max": self._max,
+            "value": self._value,
             "pattern": self._pattern,
             "acceptedType": self._accepted_type,
             "legalValues": self._legal_values,
@@ -105,6 +108,15 @@ class Rule:
     @max.setter
     def max(self, max):
         self._max = max
+
+    @property
+    def value(self):
+        """The upper bound of the value range this feature should fall into."""
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
     @property
     def pattern(self):

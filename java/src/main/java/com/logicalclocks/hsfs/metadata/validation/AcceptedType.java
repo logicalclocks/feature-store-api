@@ -16,6 +16,6 @@
 
 package com.logicalclocks.hsfs.metadata.validation;
 
-public enum ValueType {
-  Null, Fractional, Integral, Boolean, String, Numeric
+public enum AcceptedType {
+  Null, Fractional, Integral, Boolean, String
 }

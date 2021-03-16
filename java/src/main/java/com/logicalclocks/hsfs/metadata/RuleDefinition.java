@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.metadata.validation.RuleName;
 import com.logicalclocks.hsfs.metadata.validation.Predicate;
-import com.logicalclocks.hsfs.metadata.validation.ValueType;
+import com.logicalclocks.hsfs.metadata.validation.AcceptedType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,7 +42,7 @@ public class RuleDefinition extends RestDto<RuleDefinition> {
   @Getter @Setter
   private Predicate predicate;
   @Getter @Setter
-  private ValueType valueType;
+  private AcceptedType acceptedType;
   @Getter @Setter
   private String description;
 

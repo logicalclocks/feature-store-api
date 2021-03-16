@@ -70,9 +70,9 @@ object DeequEngine {
         longBoundary(constraint.min, constraint.max), hint = constraint.hint)
       case "HAS_ENTROPY" => check.hasEntropy(constraint.columns.get.head,
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
-      case "HAS_MUTUAL_INFORMATION" => check.hasMutualInformation(constraint.columns.get(0), constraint.columns.get(1),
+      case "HAS_MUTUAL_INFORMATION" => check.hasMutualInformation(constraint.columns.get.head, constraint.columns.get(1),
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
-      case "HAS_APPROX_QUANTILE" => check.hasApproxQuantile(constraint.columns.get.head, constraint.value.get,
+      case "HAS_APPROX_QUANTILE" => check.hasApproxQuantile(constraint.columns.get.head, constraint.value.get.toDouble,
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
       case "HAS_STANDARD_DEVIATION" => check.hasStandardDeviation(constraint.columns.get.head,
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
