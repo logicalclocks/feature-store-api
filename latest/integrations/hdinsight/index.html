@@ -1526,7 +1526,7 @@ spark.sql.hive.metastore.jars=/usr/lib/hopsworks/apache-hive-bin/lib/*
 <p>In order for the Feature Store to work correctly with HDInsight, ensure that it is using Parquet instead of ORC for storing features. Open Hopsworks and navigate to the Admin panel:</p>
 <p align="center">
   <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
+    <img src="../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
     <figcaption>Open the admin panel</figcaption>
   </figure>
 </p>
@@ -1534,16 +1534,8 @@ spark.sql.hive.metastore.jars=/usr/lib/hopsworks/apache-hive-bin/lib/*
 <p>In the admin panel, select <code>Edit variables</code>:</p>
 <p align="center">
   <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
+    <img src="../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
     <figcaption>Select Edit variables</figcaption>
-  </figure>
-</p>
-
-<p>Search for the name <code>featurestore_default_storage_format</code> and ensure it is set to <code>PARQUET</code>. To set it to Parquet, select the edit icon to the right, update the value and accept the change. Press <code>Reload variables</code> to ensure that everything is updated correctly:</p>
-<p align="center">
-  <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-2.png" alt="Ensure featurestore_default_storage_format is set to PARQUET">
-    <figcaption>Ensure featurestore_default_storage_format is set to PARQUET</figcaption>
   </figure>
 </p>
 
