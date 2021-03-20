@@ -567,13 +567,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-configure-the-feature-store-for-hdinsight" class="md-nav__link">
-    Step 4: Configure the Feature Store for HDInsight
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#step-5-connect-to-the-feature-store" class="md-nav__link">
     Step 5: Connect to the Feature Store
   </a>
@@ -1376,13 +1369,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-configure-the-feature-store-for-hdinsight" class="md-nav__link">
-    Step 4: Configure the Feature Store for HDInsight
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#step-5-connect-to-the-feature-store" class="md-nav__link">
     Step 5: Connect to the Feature Store
   </a>
@@ -1522,23 +1508,6 @@ spark.sql.hive.metastore.jars=/usr/lib/hopsworks/apache-hive-bin/lib/*
 <p class="admonition-title">Info</p>
 <p>Replace MY_HOPSWORKS_INSTANCE_PRIVATE_IP with the private IP address of you Hopsworks Feature Store.</p>
 </div>
-<h2 id="step-4-configure-the-feature-store-for-hdinsight">Step 4: Configure the Feature Store for HDInsight<a class="headerlink" href="#step-4-configure-the-feature-store-for-hdinsight" title="Permanent link">#</a></h2>
-<p>In order for the Feature Store to work correctly with HDInsight, ensure that it is using Parquet instead of ORC for storing features. Open Hopsworks and navigate to the Admin panel:</p>
-<p align="center">
-  <figure>
-    <img src="../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
-    <figcaption>Open the admin panel</figcaption>
-  </figure>
-</p>
-
-<p>In the admin panel, select <code>Edit variables</code>:</p>
-<p align="center">
-  <figure>
-    <img src="../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
-    <figcaption>Select Edit variables</figcaption>
-  </figure>
-</p>
-
 <h2 id="step-5-connect-to-the-feature-store">Step 5: Connect to the Feature Store<a class="headerlink" href="#step-5-connect-to-the-feature-store" title="Permanent link">#</a></h2>
 <p>You are now ready to connect to the Hopsworks Feature Store, for instance using a Jupyter notebook in HDInsight with a PySpark3 kernel:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">hsfs</span>
