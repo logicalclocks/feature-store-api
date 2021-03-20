@@ -124,26 +124,6 @@ hive.metastore.uris=thrift://MY_HOPSWORKS_INSTANCE_PRIVATE_IP:9083
 !!! info
     Replace MY_HOPSWORKS_INSTANCE_PRIVATE_IP with the private IP address of you Hopsworks Feature Store.
 
-## Step 4: Configure the Feature Store for HDInsight
-
-In order for the Feature Store to work correctly with HDInsight, ensure that it is using Parquet instead of ORC for storing features. Open Hopsworks and navigate to the Admin panel:
-
-<p align="center">
-  <figure>
-    <img src="../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
-    <figcaption>Open the admin panel</figcaption>
-  </figure>
-</p>
-
-In the admin panel, select `Edit variables`:
-
-<p align="center">
-  <figure>
-    <img src="../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
-    <figcaption>Select Edit variables</figcaption>
-  </figure>
-</p>
-
 ## Step 5: Connect to the Feature Store
 
 You are now ready to connect to the Hopsworks Feature Store, for instance using a Jupyter notebook in HDInsight with a PySpark3 kernel:
