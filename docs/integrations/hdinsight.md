@@ -130,7 +130,7 @@ In order for the Feature Store to work correctly with HDInsight, ensure that it 
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
+    <img src="../../assets/images/azure/hdinsight/variables-step-0.png" alt="Open the admin panel">
     <figcaption>Open the admin panel</figcaption>
   </figure>
 </p>
@@ -139,17 +139,8 @@ In the admin panel, select `Edit variables`:
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
+    <img src="../../assets/images/azure/hdinsight/variables-step-1.png" alt="Select Edit variables">
     <figcaption>Select Edit variables</figcaption>
-  </figure>
-</p>
-
-Search for the name `featurestore_default_storage_format` and ensure it is set to `PARQUET`. To set it to Parquet, select the edit icon to the right, update the value and accept the change. Press `Reload variables` to ensure that everything is updated correctly:
-
-<p align="center">
-  <figure>
-    <img src="../../../assets/images/azure/hdinsight/variables-step-2.png" alt="Ensure featurestore_default_storage_format is set to PARQUET">
-    <figcaption>Ensure featurestore_default_storage_format is set to PARQUET</figcaption>
   </figure>
 </p>
 
