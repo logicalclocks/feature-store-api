@@ -305,7 +305,7 @@ Choose your preferred [SSH key](getting_started.md#step-4-create-an-ssh-key) to 
   </figure>
 </p>
 
-Choose the instance profile role that you have created in [Step 2](#step-2-create-an-instance-profile-role-on-aws), then click Next:
+Choose the instance profile role that you have created in [Step 2](#step-2-create-an-instance-profile-role-on-aws) (click on the refresh button if your instance profile is not in the list), then click Next:
 
 <p align="center">
   <figure>
@@ -349,7 +349,7 @@ Add your EKS cluster name, then click Next:
   </figure>
 </p>
 
-Choose the VPC of your EKS cluster. It's name should have the form *eksctl-YOUR-CLUSTER-NAME-cluster*. You can also find it using the *VPC ID* you noted in [Step 4](#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group). Then click Next:
+Choose the VPC of your EKS cluster. It's name should have the form *eksctl-YOUR-CLUSTER-NAME-cluster*. You can also find it using the *VPC ID* you noted in [Step 4](#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group) (click on the refresh button if the VPC is not in the list). Then click Next:
 
 <p align="center">
   <figure>
