@@ -78,7 +78,7 @@ ip-192-168-62-117.us-east-2.compute.internal   Ready    <none>   2m34s   v1.17.9
 ## Step 2: Create an instance profile role on AWS
 
 You need to add permission to [the instance profile you use for instances deployed by Hopsworks.ai](getting_started.md#step-2-creating-instance-profile) to give them access to EKS and ECR.
-Go to the [*IAM service*](https://console.aws.amazon.com/iam) in the *AWS management console*, click *Roles*, search for your role, and click on it. Click on *Add inline policy*. Go to the *JSON* tab and past the following.
+Go to the [*IAM service*](https://console.aws.amazon.com/iam) in the *AWS management console*, click *Roles*, search for your role, and click on it. Click on *Add inline policy*. Go to the *JSON* tab and replace the existing JSON permissions with the JSON permissions below..
 
 ```json
 {
@@ -144,7 +144,7 @@ Copy the *Role ARN* of your profile.
 You configure your EKS cluster to accept connections from the role you created above. This is done by using the following kubectl command. For more details, check [Managing users or IAM roles for your cluster](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html).
 
 !!! note
-    The kubectl edit command uses *vi* editor by default, however, you can [override this behavior by setting *KUBE_EDITOR* to your preferred editor](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#editing-resources).
+    The kubectl edit command uses the *vi* editor by default, however, you can [override this behavior by setting *KUBE_EDITOR* to your preferred editor](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#editing-resources).
 
 ```bash
 KUBE_EDITOR="vi" kubectl edit configmap aws-auth -n kube-system
@@ -175,10 +175,10 @@ selfLink: /api/v1/namespaces/kube-system/configmaps/aws-auth
 uid: c794b2d8-9f10-443d-9072-c65d0f2eb552
 ```
 
-Follow the example below (lines 13-16) to add your role to *mapRoles* and assign *system:masters* group to your role. Make sure to replace 'YOUR ROLE RoleARN' with the *Role ARN* you copied in the previous step before saving.
+Follow the example below (lines 13-16) to add your role to *mapRoles* and assign the *system:masters* group to your role. Make sure to replace 'YOUR ROLE RoleARN' with the *Role ARN* you copied in the previous step before saving.
 
 !!! warning
-    Make sure to keep the same formatting as in the example below. The configuration format is very sensitive to indentation and copy-pasting does not always keep the correct indentation.
+    Make sure to keep the same formatting as in the example below. The configuration format is sensitive to indentation and copy-pasting does not always keep the correct indentation.
 
 
 ```bash hl_lines="13 14 15 16"
@@ -208,7 +208,7 @@ selfLink: /api/v1/namespaces/kube-system/configmaps/aws-auth
 uid: c794b2d8-9f10-443d-9072-c65d0f2eb552
 ```
 
-Once you are done with editing the configmap, save it and leave the editor. The output should be:
+Once you are done with editing the configmap, save it and exit the editor. The output should be:
 
 ```bash
 configmap/aws-auth edited
@@ -258,9 +258,9 @@ Click *Save rules* to save the updated rules to the security group.
 
 ## Step 5: Allow Hopsworks.ai to delete ECR repositories on your behalf
 
-For hopsworks.ai to be able to clean up the ECR repo when terminating your hopsworks cluster, you need to add new inline policy to the [Cross-Account role](getting_started.md#option-1-using-aws-cross-account-roles) or [user connected to Hopsworks.ai](getting_started.md#option-2-using-aws-access-keys), that you set up when [connecting your AWS account to hopsworks.ai](getting_started.md#step-1-connecting-your-aws-account).
+For hopsworks.ai to be able to clean up the ECR repo when terminating your hopsworks cluster, you need to add a new inline policy to the [Cross-Account role](getting_started.md#option-1-using-aws-cross-account-roles) or [user connected to Hopsworks.ai](getting_started.md#option-2-using-aws-access-keys), that you set up when [connecting your AWS account to hopsworks.ai](getting_started.md#step-1-connecting-your-aws-account).
 
-Navigate to [AWS management console](https://console.aws.amazon.com/iam/home#), then click on *Roles* or *Users* depending on which connection method you have used in Hopsworks.ai, and then search for your role or user name and click on it.  Go to the *Permissions* tab, click on *Add inline policy*, and then go to the *JSON* tab. Paste the following snippet, click on *Review policy*, name it, and click *Create policy*.
+Navigate to [AWS management console](https://console.aws.amazon.com/iam/home#), then click on *Roles* or *Users* depending on which connection method you have used in Hopsworks.ai, and then search for your role or user name and click on it.  Go to the *Permissions* tab, click on *Add inline policy* and go to the *JSON* tab. Replace the existing JSON permissions with the JSON permissions below. Click on *Review policy*, name it, and click *Create policy*.
 
 ```json
 {
