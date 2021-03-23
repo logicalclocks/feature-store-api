@@ -15,6 +15,7 @@
 #
 
 import json
+from datetime import datetime
 
 from hsfs import feature
 
@@ -47,6 +48,12 @@ def parse_features(feature_names):
 
 def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
+
+
+def get_hudi_datestr_from_timestamp(timestamp):
+    date_obj = datetime.fromtimestamp(timestamp / 1000)
+    date_str = date_obj.strftime("%Y%m%d%H%M%S")
+    return date_str
 
 
 class VersionWarning(Warning):
