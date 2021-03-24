@@ -31,10 +31,10 @@ Go to the managed identity created above. Click on *Azure role assignments* in t
 
 Repeat the same operation with the following roles:
 
-* AcrPull
-* AcrPush
-* AcrDelete
-* Azure Kubernetes Service User Role
+* *AcrPull*
+* *AcrPush*
+* *AcrDelete*
+* *Azure Kubernetes Service Cluster User Role*
 
 !!! warning
     You will also need to attach storage access permissions to the managed identity, see [Creating and configuring a storage](getting_started.md#step-2-creating-and-configuring-a-storage)
@@ -55,7 +55,7 @@ Once finished the role assignments should look similar to the picture below.
 This guide will step through setting up a private AKS cluster and a public ACR. 
 
 ### Step 1: Create an AKS cluster
-Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kubernetes cluster in the same resource group as the Hopsworks cluster and choose a name for the Kubernetes cluster.
+Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.
 
 <p align="center">
   <figure>
