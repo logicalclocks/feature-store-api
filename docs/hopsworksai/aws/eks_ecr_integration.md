@@ -137,11 +137,20 @@ Go to the [*IAM service*](https://console.aws.amazon.com/iam) in the *AWS manage
 
 Click on *Review policy*. Give a name to your policy and click on *Create policy*.
 
-Copy the *Role ARN* of your profile.
+Copy the *Role ARN* of your profile (not to be confused with the *Instance Profile ARNs* two lines bellow).
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/aws/instance-profile-arn.png">
+      <img src="../../../assets/images/hopsworksai/aws/instance-profile-arn.png" alt="Coppy the Role ARN">
+    </a>
+    <figcaption>Coppy the *Role ARN*</figcaption>
+  </figure>
+</p>
 
 ## Step 3: Allow your role to use your EKS cluster
 
-You configure your EKS cluster to accept connections from the role you created above. This is done by using the following kubectl command. For more details, check [Managing users or IAM roles for your cluster](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html).
+You need to configure your EKS cluster to accept connections from the role you created above. This is done by using the following kubectl command. For more details, check [Managing users or IAM roles for your cluster](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html).
 
 !!! note
     The kubectl edit command uses the *vi* editor by default, however, you can [override this behavior by setting *KUBE_EDITOR* to your preferred editor](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#editing-resources).
@@ -216,7 +225,12 @@ configmap/aws-auth edited
 
 ##Step 4: Open Hopsworks required ports on your EKS cluster security group
 
-We will run hopsworks in the virtual network of the EKS cluster. For hopsworks to run properly we recommend opening the ports for HTTP (80) and HTTPS (443). In this section, we will see how to do it. It is possible to not open these ports at the cost of some features. See [Limiting permissions](restrictive_permissions.md#step-1-create-a-vpc) for more details.
+To keep this documentation simple will run Hopsworks in the same virtual network as the EKS cluster. For this purpose, we need to open ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
+
+!!! Note
+    It is possible not to open ports 80 and 443 at the cost of some features. See [Limiting permissions](restrictive_permissions.md#step-1-create-a-vpc) for more details.
+    
+    You can also use [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) to run hopsworks and EKS in two different VPCs. Make sure to create the peering before starting the hopsworks cluster as it connects to EKS at startup.
 
 First, you need to get the name of the security group of your EKS cluster by using the following eksctl command. Notice that you need to replace *my-eks-cluster* with the name of your cluster.
 
@@ -232,7 +246,7 @@ OutputKey: "ClusterSecurityGroupId",
 OutputValue: "YOUR_EKS_SECURITY_GROUP_ID"
 ```
 
-Go to the [*Security Groups* section of *EC2* in the *AWS management console*](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#SecurityGroups:) and search for your security group using the id obtained above. Not the *VPC ID*, you will need it when creating the hopsworks cluster. Then, click on it then go to the *Inbound rules* tab and click on *Edit inbound rules*. You should now see the following screen.
+Go to the [*Security Groups* section of *EC2* in the *AWS management console*](https://us-east-2.console.aws.amazon.com/ec2/v2/home?#SecurityGroups:) and search for your security group using the id obtained above. Note the *VPC ID*, you will need it when creating the hopsworks cluster. Then, click on it then go to the *Inbound rules* tab and click on *Edit inbound rules*. You should now see the following screen.
 
 <p align="center">
   <figure>
