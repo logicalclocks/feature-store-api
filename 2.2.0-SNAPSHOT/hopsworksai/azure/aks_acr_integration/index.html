@@ -1683,10 +1683,10 @@
 <p>Go to the managed identity created above. Click on <em>Azure role assignments</em> in the left column. Click on <em>Add role assignment</em>. For the <em>Scope</em> select <em>Resource group</em> or <em>Subscription</em> depending on your preference. Select the <em>Role</em> <em>AcrPull</em> and click on <em>Save</em>.</p>
 <p>Repeat the same operation with the following roles:</p>
 <ul>
-<li>AcrPull</li>
-<li>AcrPush</li>
-<li>AcrDelete</li>
-<li>Azure Kubernetes Service User Role</li>
+<li><em>AcrPull</em></li>
+<li><em>AcrPush</em></li>
+<li><em>AcrDelete</em></li>
+<li><em>Azure Kubernetes Service Cluster User Role</em></li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1705,7 +1705,7 @@
 <h2 id="private-aks-cluster-and-public-acr">Private AKS cluster and public ACR<a class="headerlink" href="#private-aks-cluster-and-public-acr" title="Permanent link">#</a></h2>
 <p>This guide will step through setting up a private AKS cluster and a public ACR. </p>
 <h3 id="step-1-create-an-aks-cluster">Step 1: Create an AKS cluster<a class="headerlink" href="#step-1-create-an-aks-cluster" title="Permanent link">#</a></h3>
-<p>Go to <em>Kubernetes services</em> in the azure portal and click <em>Add</em>. Place the Kubernetes cluster in the same resource group as the Hopsworks cluster and choose a name for the Kubernetes cluster.</p>
+<p>Go to <em>Kubernetes services</em> in the azure portal and click <em>Add</em>. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-base.png">
