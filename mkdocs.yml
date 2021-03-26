@@ -22,14 +22,14 @@ nav:
         - Redshift: integrations/storage-connectors/redshift.md
         - S3: integrations/storage-connectors/s3.md
         - Snowflake: integrations/storage-connectors/snowflake.md
+        - AWS Credential passthrough:
+          - Resource role to project mapping : integrations/role_mapping.md
+          - Assume role : integrations/assume_role.md
       - Databricks:
         - Networking: integrations/databricks/networking.md
         - Hopsworks API Key: integrations/databricks/api_key.md
         - Configuration: integrations/databricks/configuration.md
       - AWS Sagemaker: integrations/sagemaker.md
-      - AWS Credential passthrough:
-        - Resource role to project mapping : integrations/role_mapping.md
-        - Assume role : integrations/assume_role.md
       - AWS EMR:
         - Networking: integrations/emr/networking.md
         - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md

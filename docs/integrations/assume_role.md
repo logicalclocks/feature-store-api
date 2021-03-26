@@ -9,7 +9,7 @@ to your project settings.
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/aws-role/project-cloud-roles.png" alt="Cloud roles mapped to project.">
+    <img src="../../assets/images/aws-role/project-cloud-roles.png" alt="Cloud roles mapped to project.">
     <figcaption>Cloud roles mapped to project.</figcaption>
   </figure>
 </p>
