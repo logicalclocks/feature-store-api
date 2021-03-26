@@ -7,8 +7,9 @@ you could have your users use AWS credentials directly in their programs which i
 
 To use Role chaining, you need to first setup IAM roles in AWS:
 
-1. Create an instance profile role with policies that will allow it to assume all resource roles that we can assume from the Hopsworks
-cluster.
+1. Create an instance profile role that contains the different resource roles that we want to allow selected users to be able to assume in the Hopsworks cluster.
+ In the example below, we define 4 different resource roles: test-role, s3-role, dev-s3-role, and redshift -
+ and later we will define which users will be allowed to assume which of these resources roles.
 
 ```json
 
@@ -31,7 +32,7 @@ cluster.
 ```
 Example policy for assuming four roles.
 
-2. Create the resource roles and edit trust relationship and add policy document that will allow the instance profile to assume this role.
+2. Create the resource roles and edit the trust relationship and add a policy document that will allow the instance profile to assume the resource roles.
 
 ```json
 
@@ -53,24 +54,28 @@ Example policy document.
 3. Finally attach the instance profile to the master node of your Hopsworks AWS instance.
 
 
-Role chaining allows the instance profile to assume any role in the policy attached in step 1. To limit access
-to roles we can create a per project mapping from the admin page in hopsworks.
+Role chaining allows the instance profile to assume any of the 4 resource roles in the policy that was attached in step 1.
+Typically, we will not want any user in Hopsworks to assume any of the resource roles. You can grant selected users the ability
+to assume any of the 4 resource roles from the admin page in hopsworks. In particular, we specify in which project(s) a given
+resource role can be used. Within a given project, we can further restrict who can assume the resource role by mapping the
+role to the group of users (data owners or data scientists).
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/aws-role/goto-role-mapping.png" alt="Go to cloud role mapping.">
-    <figcaption>Go to cloud role mapping.</figcaption>
+    <img src="../../../assets/images/aws-role/role-mapping.png" alt="Resource role mapping.">
+    <figcaption>Resource role mapping.</figcaption>
   </figure>
 </p>
 
-By clicking the cloud role mapping icon in the admin page shown in the image above you can add mappings
-by entering the project name, which roles in that project can access the cloud role and the role ARN.
-Optionally you can set a role mapping as default by marking the default checkbox. The default roles can be changed from the project setting by a Data owner in that project.
+By clicking the 'Resource role mapping' icon in the admin page shown in the image above you can add mappings
+by entering the project name and which roles in that project can access the resource role.
+Optionally, you can set a role mapping as default by marking the default checkbox.
+The default roles can only be changed by a Data owner who can do so in the project settings page.
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/aws-role/role-mappings.png" alt="Add cloud role to project mapping.">
-    <figcaption>Add cloud role to project mapping.</figcaption>
+    <img src="../../../assets/images/aws-role/role-mappings.png" alt="Add resource role to project mapping.">
+    <figcaption>Add resource role to project mapping.</figcaption>
   </figure>
 </p>
 
@@ -79,9 +84,9 @@ Any member of a project can then go to the project settings page to see which ro
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/aws-role/project-cloud-roles.png" alt="Cloud roles mapped to project.">
-    <figcaption>Cloud roles mapped to project.</figcaption>
+    <img src="../../../assets/images/aws-role/project-cloud-roles.png" alt="Resource role mapped to project.">
+    <figcaption>Resource role mapped to project.</figcaption>
   </figure>
 </p>
 
-For instructions on how to use the assume role API see [assuming a role](../assume_role/#assuming-a-role)
+For instructions on how to use the assume role API see [assuming a role](../assume_role/#assuming-a-role).
