@@ -27,6 +27,9 @@ nav:
         - Hopsworks API Key: integrations/databricks/api_key.md
         - Configuration: integrations/databricks/configuration.md
       - AWS Sagemaker: integrations/sagemaker.md
+      - AWS Credential passthrough:
+        - Resource role to project mapping : integrations/role_mapping.md
+        - Assume role : integrations/assume_role.md
       - AWS EMR:
         - Networking: integrations/emr/networking.md
         - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
