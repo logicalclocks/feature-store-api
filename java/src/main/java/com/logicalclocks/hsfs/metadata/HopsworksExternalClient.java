@@ -78,7 +78,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   private String apiKey = "";
 
-  //needed for kafka
   @Getter
   private String trustStorePath;
 
@@ -139,9 +138,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
-    trustStorePath = SparkEngine.getInstance().getTrustStorePath();
-    keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-    certKey = readCertKey(SparkEngine.getInstance().getCertKey());
+    this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
+    this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
+    this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,

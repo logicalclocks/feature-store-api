@@ -28,7 +28,7 @@ class ValidationResult:
         status,
         message,
         value,
-        feature,
+        features,
         rule,
         href=None,
         expand=None,
@@ -39,7 +39,7 @@ class ValidationResult:
         self._status = status
         self._message = message
         self._value = value
-        self._feature = feature
+        self._features = features
         self._rule = rule
 
     @classmethod
@@ -59,7 +59,7 @@ class ValidationResult:
             "status": self._status,
             "message": self._message,
             "value": self._value,
-            "feature": self._feature,
+            "features": self._features,
             "rule": self._rule,
         }
 
@@ -91,13 +91,13 @@ class ValidationResult:
         self._value = value
 
     @property
-    def feature(self):
+    def features(self):
         """Feature of the validation result on which the rule was applied."""
-        return self._feature
+        return self._features
 
-    @feature.setter
-    def feature(self, feature):
-        self._feature = feature
+    @features.setter
+    def features(self, features):
+        self._features = features
 
     @property
     def rule(self):

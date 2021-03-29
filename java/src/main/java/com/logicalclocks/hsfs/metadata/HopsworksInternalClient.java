@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -73,7 +72,6 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
   private String hopsworksEndpoint = "";
   private String jwt = "";
 
-  //needed for kafka
   @Getter
   private String trustStorePath = T_CERTIFICATE;
 
@@ -97,7 +95,7 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
         .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
         .build();
 
-    certKey = readCertKey();
+    certKey = HopsworksHttpClient.readCertKey(MATERIAL_PASSWD);
     refreshJwt();
   }
 
@@ -153,20 +151,6 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
     } catch (IOException e) {
       throw new FeatureStoreException("Could not read jwt token from local container." + e.getMessage(), e);
     }
-  }
-
-  private static String readCertKey() {
-    try (FileInputStream fis = new FileInputStream(MATERIAL_PASSWD)) {
-      StringBuilder sb = new StringBuilder();
-      int content;
-      while ((content = fis.read()) != -1) {
-        sb.append((char) content);
-      }
-      return sb.toString();
-    } catch (IOException ex) {
-      LOGGER.warn("Failed to get cert password.", ex);
-    }
-    return null;
   }
 
   @Override

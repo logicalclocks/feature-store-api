@@ -59,15 +59,22 @@ class DataValidationEngine:
             exp = exp_res.getExpectation()
             rules_python = []
             for exp_rule in exp.getRules():
+                legal_values = []
+                if exp_rule.getLegalValues() is not None:
+                    for legal_value in exp_rule.getLegalValues():
+                        legal_values.append(legal_value)
                 rules_python.append(
                     rule.Rule(
                         name=exp_rule.getName().name(),
                         level=exp_rule.getLevel().name(),
                         min=exp_rule.getMin(),
                         max=exp_rule.getMax(),
+                        value=exp_rule.getValue(),
                         pattern=exp_rule.getPattern(),
-                        accepted_type=exp_rule.getAcceptedType(),
-                        legal_values=exp_rule.getLegalValues(),
+                        accepted_type=exp_rule.getAcceptedType().name()
+                        if exp_rule.getAcceptedType() is not None
+                        else None,
+                        legal_values=legal_values,
                     )
                 )
 
@@ -84,22 +91,35 @@ class DataValidationEngine:
             validation_results_python = []
             for validation_result_java in exp_res.getResults():
                 # Create rule python
+                legal_values = []
+                if validation_result_java.getRule().getLegalValues() is not None:
+                    for (
+                        legal_value
+                    ) in validation_result_java.getRule().getLegalValues():
+                        legal_values.append(legal_value)
                 validation_rule_python = rule.Rule(
                     name=validation_result_java.getRule().getName().name(),
                     level=validation_result_java.getRule().getLevel().name(),
                     min=validation_result_java.getRule().getMin(),
                     max=validation_result_java.getRule().getMax(),
+                    value=validation_result_java.getRule().getValue(),
                     pattern=validation_result_java.getRule().getPattern(),
-                    accepted_type=validation_result_java.getRule().getAcceptedType(),
-                    legal_values=validation_result_java.getRule().getLegalValues(),
+                    accepted_type=validation_result_java.getRule()
+                    .getAcceptedType()
+                    .name()
+                    if validation_result_java.getRule().getAcceptedType() is not None
+                    else None,
+                    legal_values=legal_values,
                 )
+
+                features = [feature for feature in validation_result_java.getFeatures()]
 
                 validation_results_python.append(
                     validation_result.ValidationResult(
                         status=validation_result_java.getStatus().name(),
                         message=validation_result_java.getMessage(),
                         value=validation_result_java.getValue(),
-                        feature=validation_result_java.getFeature(),
+                        features=features,
                         rule=validation_rule_python,
                     )
                 )

@@ -420,7 +420,14 @@ class Engine:
                     .min(rule.get("min", None))
                     .max(rule.get("max", None))
                     .pattern(rule.get("pattern", None))
-                    .legalValues(rule.get("legalValues", None))
+                    .acceptedType(
+                        self._jvm.com.logicalclocks.hsfs.metadata.validation.AcceptedType.valueOf(
+                            rule.get("accepted_type")
+                        )
+                        if rule.get("accepted_type") is not None
+                        else None
+                    )
+                    .legalValues(rule.get("legal_values", None))
                     .build()
                 )
             expectation = (

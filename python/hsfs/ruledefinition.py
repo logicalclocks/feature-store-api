@@ -30,7 +30,7 @@ class RuleDefinition:
         self,
         name,
         predicate,
-        value_type,
+        accepted_type,
         description,
         href=None,
         expand=None,
@@ -40,7 +40,7 @@ class RuleDefinition:
     ):
         self._name = name
         self._predicate = predicate
-        self._value_type = value_type
+        self._accepted_type = accepted_type
         self._description = description
 
     @classmethod
@@ -62,7 +62,7 @@ class RuleDefinition:
         return {
             "name": self._name,
             "predicate": self._predicate,
-            "valueType": self._value_type,
+            "acceptedType": self._accepted_type,
             "description": self._description,
         }
 
@@ -77,9 +77,9 @@ class RuleDefinition:
         return self._predicate
 
     @property
-    def value_type(self):
-        """The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String", "Numeric"."""
-        return self._value_type
+    def accepted_type(self):
+        """The type of the feature, one of "Null", "Fractional", "Integral", "Boolean", "String"."""
+        return self._accepted_type
 
     @property
     def description(self):

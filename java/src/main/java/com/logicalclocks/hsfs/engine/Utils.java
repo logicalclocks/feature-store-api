@@ -23,8 +23,8 @@ import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetType;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -36,7 +36,6 @@ import static org.apache.spark.sql.functions.col;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -145,7 +144,7 @@ public class Utils {
     StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
         featureGroup.getFeatureStore().getName());
     String connStr = storageConnector.getConnectionString();
-    String pw = FileUtils.readFileToString(new File("material_passwd"));
+    String pw = HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey();
     return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
         + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
   }

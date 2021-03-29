@@ -9,7 +9,7 @@ repo_url: https://github.com/logicalclocks/feature-store-api
 edit_uri: ""
 
 nav:
-  - Feature Store: 
+  - Feature Store:
     - Introduction: index.md
     - Quickstart: quickstart.md
     - Integrations:
@@ -22,6 +22,9 @@ nav:
         - Redshift: integrations/storage-connectors/redshift.md
         - S3: integrations/storage-connectors/s3.md
         - Snowflake: integrations/storage-connectors/snowflake.md
+        - AWS Credential passthrough:
+          - Resource role to project mapping : integrations/role_mapping.md
+          - Assume role : integrations/assume_role.md
       - Databricks:
         - Networking: integrations/databricks/networking.md
         - Hopsworks API Key: integrations/databricks/api_key.md
@@ -59,7 +62,7 @@ nav:
       - Expectation: generated/api/expectation_api.md
       - Validation: generated/api/validation_api.md
     - Contributing: CONTRIBUTING.md
-  - Hopsworks.ai: 
+  - Hopsworks.ai:
     - Introduction: hopsworksai/index.md
     - Getting Started:
       - AWS: hopsworksai/aws/getting_started.md
@@ -79,9 +82,9 @@ nav:
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md
       - Azure: hopsworksai/azure/upgrade.md
-  
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
-  - Support: https://community.hopsworks.ai/
+  - Examples: https://examples.hopsworks.ai/
+  - Community: https://community.hopsworks.ai/
 
 theme:
   name: material
