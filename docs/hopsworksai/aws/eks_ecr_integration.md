@@ -142,7 +142,7 @@ Copy the *Role ARN* of your profile (not to be confused with the *Instance Profi
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/instance-profile-arn.png">
-      <img src="../../../assets/images/hopsworksai/aws/instance-profile-arn.png" alt="Coppy the Role ARN">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/instance-profile-arn.png" alt="Coppy the Role ARN">
     </a>
     <figcaption>Coppy the *Role ARN*</figcaption>
   </figure>
@@ -251,7 +251,7 @@ Go to the [*Security Groups* section of *EC2* in the *AWS management console*](h
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-sg-edit-inbound-rules.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-sg-edit-inbound-rules.png" alt="Edit inbound rules">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-sg-edit-inbound-rules.png" alt="Edit inbound rules">
     </a>
     <figcaption>Edit inbound rules</figcaption>
   </figure>
@@ -262,7 +262,7 @@ Add two rules for HTTP and HTTPS as follows:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-sg-hopsworks-inbound-rules.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-sg-hopsworks-inbound-rules.png" alt="Edit inbound rules">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-sg-hopsworks-inbound-rules.png" alt="Edit inbound rules">
     </a>
     <figcaption>Edit inbound rules</figcaption>
   </figure>
@@ -302,7 +302,7 @@ In Hopsworks.ai, select *Create cluster*. Choose the region of your EKS cluster 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster.png" alt="Create Hopsworks cluster">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster.png" alt="Create Hopsworks cluster">
     </a>
     <figcaption>Create Hopsworks cluster</figcaption>
   </figure>
@@ -313,7 +313,7 @@ Choose your preferred [SSH key](getting_started.md#step-4-create-an-ssh-key) to 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-0.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-0.png" alt="Choose SSH key">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-0.png" alt="Choose SSH key">
     </a>
     <figcaption>Choose SSH key</figcaption>
   </figure>
@@ -324,7 +324,7 @@ Choose the instance profile role that you have created in [Step 2](#step-2-creat
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png" alt="Choose instance profile role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-1.png" alt="Choose instance profile role">
     </a>
     <figcaption>Choose instance profile role</figcaption>
   </figure>
@@ -335,7 +335,7 @@ Choose the [backup retention period](cluster_creation.md#step-5-set-the-backup-r
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
     </a>
     <figcaption>Choose the backup retention policy</figcaption>
   </figure>
@@ -346,7 +346,7 @@ Choose **Enabled** to enable the use of Amazon EKS and ECR:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Choose Enabled">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Choose Enabled">
     </a>
     <figcaption>Choose Enabled</figcaption>
   </figure>
@@ -357,7 +357,7 @@ Add your EKS cluster name, then click Next:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png" alt="Add EKS cluster name">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-3.png" alt="Add EKS cluster name">
     </a>
     <figcaption>Add EKS cluster name</figcaption>
   </figure>
@@ -368,7 +368,7 @@ Choose the VPC of your EKS cluster. It's name should have the form *eksctl-YOUR-
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-4.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-4.png" alt="Choose VPC">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-4.png" alt="Choose VPC">
     </a>
     <figcaption>Choose VPC</figcaption>
   </figure>
@@ -382,7 +382,7 @@ Choose any of the subnets in the VPC, then click Next.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-5.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-5.png" alt="Choose Subnet">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-5.png" alt="Choose Subnet">
     </a>
     <figcaption>Choose Subnet</figcaption>
   </figure>
@@ -396,7 +396,7 @@ Choose the security group that you have updated in [Step 4](#step-4-open-hopswor
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-6.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-6.png" alt="Choose Security Group">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-6.png" alt="Choose Security Group">
     </a>
     <figcaption>Choose Security Group</figcaption>
   </figure>

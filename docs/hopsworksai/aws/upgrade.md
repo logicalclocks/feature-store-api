@@ -4,7 +4,7 @@ This guide shows you how to upgrade your existing Hopsworks cluster to a newer v
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-notification-running.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-notification-running.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-notification-running.png" alt="New version notification">
     </a>
     <figcaption>A new Hopsworks version is available</figcaption>
   </figure>
@@ -17,7 +17,7 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png" alt="New version notification">
     </a>
     <figcaption>A new Hopsworks version is available</figcaption>
   </figure>
@@ -31,7 +31,7 @@ We require extra permissions to be added to the instance profile attached to you
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-instance-profile.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-instance-profile.png" alt="Getting the name of your instance profile">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-instance-profile.png" alt="Getting the name of your instance profile">
     </a>
     <figcaption>Getting the name of your instance profile</figcaption>
   </figure>
@@ -71,7 +71,7 @@ You need to click on *Upgrade* to start the upgrade process. You will be prompte
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-1.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-1.png" alt="AWS Upgrade Prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-1.png" alt="AWS Upgrade Prompt">
     </a>
     <figcaption>Upgrade confirmation</figcaption>
   </figure>
@@ -85,7 +85,7 @@ Check the *Yes, upgrade cluster* checkbox to proceed, then the *Upgrade* button 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-2.png" alt="AWS Upgrade Prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-prompt-2.png" alt="AWS Upgrade Prompt">
     </a>
     <figcaption>Upgrade confirmation</figcaption>
   </figure>
@@ -100,7 +100,7 @@ Depending on how big your current cluster is, the upgrade process may take from 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png" alt="AWS Upgrade starting">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png" alt="AWS Upgrade starting">
     </a>
     <figcaption>Upgrade is running</figcaption>
   </figure>
@@ -111,7 +111,7 @@ Once the upgrade is completed, you can confirm that you have the new Hopsworks v
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-complete.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-complete.png" alt="AWS Upgrade complete">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-complete.png" alt="AWS Upgrade complete">
     </a>
     <figcaption>Upgrade is complete</figcaption>
   </figure>
@@ -127,7 +127,7 @@ During the upgrade process, Hopsworks.ai starts by validating your instance prof
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-retry.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-retry.png" alt="AWS Upgrade Retry">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-retry.png" alt="AWS Upgrade Retry">
     </a>
     <figcaption>Upgrade permissions are missing</figcaption>
   </figure>
@@ -138,7 +138,7 @@ Update you instance profile accordingly, then click *Retry*
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png" alt="AWS Upgrade starting">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-start.png" alt="AWS Upgrade starting">
     </a>
     <figcaption>Upgrade is running</figcaption>
   </figure>
@@ -151,7 +151,7 @@ If an error occurs during the upgrade process, you will have the option to rollb
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-upgrade-error.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-upgrade-error.png" alt="Error during upgrade">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-upgrade-error.png" alt="Error during upgrade">
     </a>
     <figcaption>Error occurred during upgrade</figcaption>
   </figure>
@@ -162,7 +162,7 @@ Click on *Rollback* to recover your old cluster before upgrade.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-1.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-1.png" alt="Rollback prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-1.png" alt="Rollback prompt">
     </a>
     <figcaption>Upgrade rollback confirmation</figcaption>
   </figure>
@@ -173,7 +173,7 @@ Check the *Yes, rollback cluster* checkbox to proceed, then the *Rollback* butto
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-2.png" alt="Rollback prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-rollback-prompt-2.png" alt="Rollback prompt">
     </a>
     <figcaption>Upgrade rollback confirmation</figcaption>
   </figure>
@@ -184,7 +184,7 @@ Once the rollback is completed, you will be able to continue working as normal w
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-notification-stopped.png" alt="New version notification">
     </a>
     <figcaption>Rollback succeed</figcaption>
   </figure>

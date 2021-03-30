@@ -8,7 +8,7 @@ In Hopsworks.ai, select *Create cluster*:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/create-instance.png">
-      <img src="../../../assets/images/hopsworksai/create-instance.png" alt="Create a Hopsworks cluster">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/create-instance.png" alt="Create a Hopsworks cluster">
     </a>
     <figcaption>Create a Hopsworks cluster</figcaption>
   </figure>
@@ -36,7 +36,7 @@ Press *Next* (9):
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/create-instance-general.png">
-      <img src="../../../assets/images/hopsworksai/aws/create-instance-general.png" alt="Create a Hopsworks cluster, general Information">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/create-instance-general.png" alt="Create a Hopsworks cluster, general Information">
     </a>
     <figcaption>Create a Hopsworks cluster, general information</figcaption>
   </figure>
@@ -50,7 +50,7 @@ Select the *SSH key* that you want to use to access cluster instances. For more 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/connect-aws-ssh.png">
-      <img src="../../../assets/images/hopsworksai/aws/connect-aws-ssh.png" alt="Choose SSH key">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/connect-aws-ssh.png" alt="Choose SSH key">
     </a>
     <figcaption>Choose SSH key</figcaption>
   </figure>
@@ -63,7 +63,7 @@ To let the cluster instances access the S3 bucket we need to attach an *instance
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/connect-aws-profile.png">
-      <img src="../../../assets/images/hopsworksai/aws/connect-aws-profile.png" alt="Choose the instance profile">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/connect-aws-profile.png" alt="Choose the instance profile">
     </a>
     <figcaption>Choose the instance profile</figcaption>
   </figure>
@@ -79,7 +79,7 @@ To back up the S3 bucket data when taking a cluster backup we need to set a rete
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-backup.png">
-      <img src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-backup.png" alt="Choose the backup retention policy">
     </a>
     <figcaption>Choose the backup retention policy</figcaption>
   </figure>
@@ -90,7 +90,7 @@ Hopsworks can integrate with Amazon Elastic Kubernetes Service (EKS) and Amazon 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png">
-      <img src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Add EKS cluster name">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-2.png" alt="Add EKS cluster name">
     </a>
     <figcaption>Add EKS cluster name</figcaption>
   </figure>
@@ -103,7 +103,7 @@ Refer to [Create a VPC](restrictive_permissions.md#step-1-create-a-vpc) for more
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/create-aws-vpc.png">
-      <img src="../../../assets/images/hopsworksai/aws/create-aws-vpc.png" alt="Choose VPC">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/create-aws-vpc.png" alt="Choose VPC">
     </a>
     <figcaption>Choose a VPC</figcaption>
   </figure>
@@ -117,7 +117,7 @@ If you did not select an existing virtual network in the previous step Hopsworks
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/connect-aws-subnet.png">
-      <img src="../../../assets/images/hopsworksai/aws/connect-aws-subnet.png" alt="Choose subnet">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/connect-aws-subnet.png" alt="Choose subnet">
     </a>
     <figcaption>Choose an availability zone</figcaption>
   </figure>
@@ -134,7 +134,7 @@ If you selected an existing VPC in the previous step, this step lets you select 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/connect-aws-security-group.png">
-      <img src="../../../assets/images/hopsworksai/aws/connect-aws-security-group.png" alt="Choose security group">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/connect-aws-security-group.png" alt="Choose security group">
     </a>
     <figcaption>Choose security group</figcaption>
   </figure>
@@ -150,7 +150,7 @@ In this step, you can choose which user management system to use. You have three
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-user-management.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-user-management.png" alt="Choose user management type">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-user-management.png" alt="Choose user management type">
     </a>
     <figcaption>Choose user management type</figcaption>
   </figure>
@@ -162,7 +162,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/aws-tags.png">
-      <img src="../../../assets/images/hopsworksai/aws/aws-tags.png" alt="Add tags">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/aws-tags.png" alt="Add tags">
     </a>
     <figcaption>Add tags</figcaption>
   </figure>
@@ -174,7 +174,7 @@ Review all information and select *Create*:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/connect-aws-review.png">
-      <img src="../../../assets/images/hopsworksai/aws/connect-aws-review.png" alt="Review cluster information">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/aws/connect-aws-review.png" alt="Review cluster information">
     </a>
     <figcaption>Review cluster information</figcaption>
   </figure>
@@ -185,7 +185,7 @@ The cluster will start. This will take a few minutes:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/booting.png">
-      <img src="../../../assets/images/hopsworksai/booting.png" alt="Booting Hopsworks cluster">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/booting.png" alt="Booting Hopsworks cluster">
     </a>
     <figcaption>Booting Hopsworks cluster</figcaption>
   </figure>
@@ -196,7 +196,7 @@ As soon as the cluster has started, you will be able to log in to your new Hopsw
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/running.png">
-      <img src="../../../assets/images/hopsworksai/running.png" alt="Running Hopsworks cluster">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/running.png" alt="Running Hopsworks cluster">
     </a>
     <figcaption>Running Hopsworks cluster</figcaption>
   </figure>
