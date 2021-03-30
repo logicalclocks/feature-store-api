@@ -14,15 +14,15 @@
         <guava.version>14.0.1</guava.version>
         <httpclient.version>4.5.6</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
-        <slf4j.version>1.7.16</slf4j.version>
+        <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <handy.version>2.1.8</handy.version>
         <lombok.version>1.18.10</lombok.version>
-        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version>
-        <spark.version>2.4.3.2</spark.version>
-        <deequ.version>1.1.0-SNAPSHOT</deequ.version>
+        <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
+        <spark.version>3.1.1.0</spark.version>
+        <deequ.version>1.1.0.0</deequ.version>
         <hudi.version>0.7.0</hudi.version>
-        <scala.base>2.11</scala.base>
+        <scala.base>2.12</scala.base>
     </properties>
 
     <dependencies>
