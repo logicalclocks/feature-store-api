@@ -8,7 +8,7 @@ To add workers to a cluster, go to the *Details* tab of this cluster and click o
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/add-worker.png">
-      <img src="../../assets/images/hopsworksai/add-worker.png" alt="Add worker">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/add-worker.png" alt="Add worker">
     </a>
     <figcaption>Add worker</figcaption>
   </figure>
@@ -19,7 +19,7 @@ Select the number of workers you want to add (1). Select the type of instance yo
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/add-workers-config.png">
-      <img src="../../assets/images/hopsworksai/add-workers-config.png" alt="Add workers config">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/add-workers-config.png" alt="Add workers config">
     </a>
     <figcaption>Add workers</figcaption>
   </figure>
@@ -30,7 +30,7 @@ Review your request and click *Add*.
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/add-workers-review.png">
-      <img src="../../assets/images/hopsworksai/add-workers-review.png" alt="Add workers review">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/add-workers-review.png" alt="Add workers review">
     </a>
     <figcaption>Add workers</figcaption>
   </figure>
@@ -53,7 +53,7 @@ To remove workers from a cluster, go to the *Details* tab of this cluster and cl
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/remove-worker.png">
-      <img src="../../assets/images/hopsworksai/remove-worker.png" alt="Remove worker">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/remove-worker.png" alt="Remove worker">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>
@@ -64,7 +64,7 @@ For each of the types of instances existing in your cluster select the number of
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/remove-worker-config.png">
-      <img src="../../assets/images/hopsworksai/remove-worker-config.png" alt="Remove workers config">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/remove-worker-config.png" alt="Remove workers config">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>
@@ -75,7 +75,7 @@ Review your request and click *Remove*.
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/remove-workers-review.png">
-      <img src="../../assets/images/hopsworksai/remove-workers-review.png" alt="Remove workers review">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/remove-workers-review.png" alt="Remove workers review">
     </a>
     <figcaption>Remove workers</figcaption>
   </figure>

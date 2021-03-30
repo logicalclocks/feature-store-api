@@ -7,7 +7,7 @@ When selecting the [workers' instance type](aws/cluster_creation.md#step-2-setti
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/create-gpu.png">
-      <img src="../../assets/images/hopsworksai/create-gpu.png" alt="Create cluster with GPUs">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/create-gpu.png" alt="Create cluster with GPUs">
     </a>
     <figcaption>Create cluster with GPUs</figcaption>
   </figure>
@@ -19,7 +19,7 @@ When [adding workers](adding_removing_workers.md#adding-workers) to a cluster, y
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/add-gpu.png">
-      <img src="../../assets/images/hopsworksai/add-gpu.png" alt="Add GPUs to cluster">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/add-gpu.png" alt="Add GPUs to cluster">
     </a>
     <figcaption>Add GPUs to cluster</figcaption>
   </figure>
@@ -31,7 +31,7 @@ Once workers with GPUs have been added to your cluster you can use them by alloc
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/gpu-jupyter.png">
-      <img src="../../assets/images/hopsworksai/gpu-jupyter.png" alt="Using GPUs in JupyterLab">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/gpu-jupyter.png" alt="Using GPUs in JupyterLab">
     </a>
     <figcaption>Using GPUs in JupyterLab</figcaption>
   </figure>
@@ -40,7 +40,7 @@ Once workers with GPUs have been added to your cluster you can use them by alloc
 <p align="center">
   <figure>
     <a  href="../../assets/images/hopsworksai/gpu-jobs.png">
-      <img src="../../assets/images/hopsworksai/gpu-jobs.png" alt="Using GPUs in jobs">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/gpu-jobs.png" alt="Using GPUs in jobs">
     </a>
     <figcaption>Using GPUs in jobs</figcaption>
   </figure>
