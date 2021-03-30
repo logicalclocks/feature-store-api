@@ -1,10 +1,10 @@
 # Configure your hopsworks cluster to use OAuth2 for user management.
 Once you have created a Hopsworks cluster you can configure it to use OAuth2 for its access control.
 We will go through a step-by-step description of the configuration process.
-To illustrate our explanation We will use Azure Active Directory as the identity provider, but the same can be done with any resource provider supporting OAuth2.
+To illustrate our explanation We will use Azure Active Directory as the identity provider, but the same can be done with any identity provider supporting OAuth2.
 
 ## Step 1: Configure your identity provider.
-To use OAuth2 in hopsworks you first need to create and configure an OAuth client in your resource provider. We will take the example of Azure AD for the remaining of this documentation, but equivalent steps can be taken on other identity providers.
+To use OAuth2 in hopsworks you first need to create and configure an OAuth client in your identity provider. We will take the example of Azure AD for the remaining of this documentation, but equivalent steps can be taken on other identity providers.
 
 Navigate to the [Microsoft Azure Portal](https://portal.azure.com) and authenticate. Navigate to [Azure Active Directory](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview). Click on [App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps). Click on *New Registration*.
 
@@ -139,7 +139,7 @@ Click on *Edit variables*
   </figure>
 </p>
 
-Enter *oauth* in the *Name* entry field (1). Set *oauth_enabled* to *true* (2).Set *oauth_redirect_uri* to the same redirect URI as above (3). Set *oauth_account_status* to 2 (4). Set *oauth_group_mapping* to *ANY_GROUP->HOPS_USER* (5). Click on *Reload variables* (6) and click on *Admin Home* (7). 
+Enter *oauth* in the *Name* entry field (1). Set *oauth_enabled* to *true* (2).Set *oauth_redirect_uri* to the same redirect URI as above (3). Set *oauth_logout_redirect_uri* to the same redirect URI as above without the *callback* at the end (4). Set *oauth_account_status* to 2 (5). Set *oauth_group_mapping* to *ANY_GROUP->HOPS_USER* (6). Click on *Reload variables* (7) and click on *Admin Home* (8). 
 
 !!! Note
         If you let the value 1 for *oauth_account_status* an administrator will need to enable the user in hopsworks each time a new user tries to login with OAuth. 
