@@ -44,7 +44,7 @@ Once finished the role assignments should look similar to the picture below.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-permissions.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-permissions.png" alt="AKS permissions">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-permissions.png" alt="AKS permissions">
     </a>
     <figcaption>AKS permissions</figcaption>
   </figure>
@@ -60,7 +60,7 @@ Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kuber
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-base.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-base.png" alt="AKS general configuration">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-base.png" alt="AKS general configuration">
     </a>
     <figcaption>AKS general configuration</figcaption>
   </figure>
@@ -74,7 +74,7 @@ Next, click on the *Authentication* tab and verify the settings are identical to
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-authentication.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-authentication.png" alt="AKS authentication configuration">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-authentication.png" alt="AKS authentication configuration">
     </a>
     <figcaption>AKS authencation configuration</figcaption>
   </figure>
@@ -85,7 +85,7 @@ Next, go to the networking tab and check **Azure CNI**. The portal will automati
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-network.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-network.png" alt="AKS network configuration">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-network.png" alt="AKS network configuration">
     </a>
     <figcaption>AKS network configuration</figcaption>
   </figure>
@@ -96,7 +96,7 @@ Next, go to the *Integrations* tab. Under container registry click Create new.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-acr-create.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-acr-create.png" alt="AKS create ACR">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-acr-create.png" alt="AKS create ACR">
     </a>
     <figcaption>AKS create ACR</figcaption>
   </figure>
@@ -107,7 +107,7 @@ Choose a name for the registry and select **premium** for the SKU. Then press *O
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-acr.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-acr.png" alt="AKS ACR configuration">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-acr.png" alt="AKS ACR configuration">
     </a>
     <figcaption>ACR configuration</figcaption>
   </figure>
@@ -119,7 +119,7 @@ To prevent the registry from filling up with unnecessary images and artifacts yo
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/acr-retention.png">
-      <img src="../../../assets/images/hopsworksai/azure/acr-retention.png" alt="ACR retention policy">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/acr-retention.png" alt="ACR retention policy">
     </a>
     <figcaption>ACR retention policy</figcaption>
   </figure>
@@ -143,7 +143,7 @@ Next, go to the created virtual network and go to the *Peerings* tab. Then click
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-peering.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-peering.png" alt="Virtual network peering">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-peering.png" alt="Virtual network peering">
     </a>
     <figcaption>Virtual network peering</figcaption>
   </figure>
@@ -154,7 +154,7 @@ Choose a name for the peering link. Check the *Traffic to remote virtual network
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-peering1.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-peering1.png" alt="Virtual network peering">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-peering1.png" alt="Virtual network peering">
     </a>
     <figcaption>Virtual network peering configuration</figcaption>
   </figure>
@@ -165,7 +165,7 @@ For the virtual network select the virtual network which was created by AKS, in 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-peering2.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-peering2.png" alt="Virtual network peering">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-peering2.png" alt="Virtual network peering">
     </a>
     <figcaption>Virtual network peering configuration continuation</figcaption>
   </figure>
@@ -176,7 +176,7 @@ The last step is to set up a DNS private link to be able to use DNS resolution f
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-private-dns.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-private-dns.png" alt="Virtual network peering">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-private-dns.png" alt="Virtual network peering">
     </a>
     <figcaption>Private DNS link setup</figcaption>
   </figure>
@@ -187,7 +187,7 @@ In the left plane there is a tab called *Virtual network links*, click on the ta
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-vnet-link.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-vnet-link.png" alt="">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-vnet-link.png" alt="">
     </a>
     <figcaption>Private DNS link configuration</figcaption>
   </figure>
@@ -198,7 +198,7 @@ Choose a name for the private link and select the **virtual network** you will u
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-vnet-link-config.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-vnet-link-config.png" alt="">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-vnet-link-config.png" alt="">
     </a>
     <figcaption>Private DNS link configuration</figcaption>
   </figure>
@@ -215,7 +215,7 @@ To set up the subnet, first, go to the virtual network that was created by AKS. 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-subnet.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-subnet.png" alt="">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-subnet.png" alt="">
     </a>
     <figcaption>AKS subnet setup</figcaption>
   </figure>
@@ -226,7 +226,7 @@ Press *+ Subnet*. Choose a name for the subnet, for example, "hopsworks" and an 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-subnet-config.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-subnet-config.png" alt="">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-subnet-config.png" alt="">
     </a>
     <figcaption>AKS subnet setup</figcaption>
   </figure>
@@ -239,7 +239,7 @@ This step assumes you are creating your Hopsworks cluster using hopsworks.ai. Th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-hops-config.png">
-      <img src="../../../assets/images/hopsworksai/azure/aks-hops-config.png" alt="">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/aks-hops-config.png" alt="">
     </a>
     <figcaption>Hopsworks AKS configuration</figcaption>
   </figure>
