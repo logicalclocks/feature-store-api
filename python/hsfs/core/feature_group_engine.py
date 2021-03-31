@@ -13,7 +13,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.core import feature_group_base_engine, hudi_engine
 from hsfs.client import exceptions
@@ -120,20 +120,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.delete(feature_group)
 
     def commit_details(self, feature_group, limit):
-        hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_group.feature_store_id,
-            feature_group.feature_store_name,
-            feature_group,
-            engine.get_instance()._spark_context,
-            engine.get_instance()._spark_session,
-        )
         feature_group_commits = self._feature_group_api.commit_details(
             feature_group, limit
         )
         commit_details = {}
         for feature_group_commit in feature_group_commits:
             commit_details[feature_group_commit.commitid] = {
-                "committedOn": hudi_engine_instance._timestamp_to_hudiformat(
+                "committedOn": util.get_hudi_datestr_from_timestamp(
                     feature_group_commit.commitid
                 ),
                 "rowsUpdated": feature_group_commit.rows_updated,
