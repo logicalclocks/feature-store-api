@@ -17,7 +17,7 @@
 import importlib.util
 import os
 import json
-import time
+import datetime
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-from hsfs import feature, training_dataset_feature, util, client
+from hsfs import feature, training_dataset_feature, client
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
@@ -241,7 +241,7 @@ class Engine:
                 "insert_stream_"
                 + feature_group._online_topic_name
                 + "_"
-                + util.get_hudi_datestr_from_timestamp(time.time())
+                + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             )
 
         query = (
