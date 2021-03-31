@@ -235,5 +235,9 @@
      <loc>https://docs.hopsworks.ai/hopsworksai/sso/oauth/</loc>
      <lastmod>2021-03-31</lastmod>
      <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworksai/sso/sso/</loc>
+     <lastmod>2021-03-31</lastmod>
+     <changefreq>daily</changefreq>
     </url>
 </urlset>
