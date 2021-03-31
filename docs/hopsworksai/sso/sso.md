@@ -64,7 +64,7 @@ Click on *Single sign-on*. Then click on *SAML*.
   </figure>
 </p>
 
-Click on *Edit* in the *Basic SAML Configuration* section. Enter the *Identifier (Entity ID)* that you copy from the Hopsworks.ai setup page. Enter the *Reply URL* that you copy from the Hopsworks.ai setup page. Click on *Save*.
+Click on *Edit* in the *Basic SAML Configuration* section. Paste the *Identifier (Entity ID)* and *Reply URL* that you copied from the Hopsworks.ai setup page. Click on *Save*.
 
 <p align="center">
   <figure>
