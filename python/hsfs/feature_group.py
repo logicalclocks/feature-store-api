@@ -726,6 +726,48 @@ class FeatureGroup(FeatureGroupBase):
         timeout: Optional[int] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
+        """Ingest a Spark Structured Streaming Dataframe to the online feature store.
+
+        This method creates a long running Spark Streaming Query, you can control the
+        termination of the query through the arguments.
+
+        It is possible to stop the returned query with the `.stop()` and check its
+        status with `.isActive`.
+
+        To get a list of all active queries, use:
+
+        ```python
+        sqm = spark.streams
+        # get the list of active streaming queries
+        [q.name for q in sqm.active]
+        ```
+
+        # Arguments
+            features: Features in Streaming Dataframe to be saved.
+            query_name: It is possible to optionally specify a name for the query to
+                make it easier to recognise in the Spark UI. Defaults to `None`.
+            output_mode: Specifies how data of a streaming DataFrame/Dataset is
+                written to a streaming sink. (1) `"append"`: Only the new rows in the
+                streaming DataFrame/Dataset will be written to the sink. (2)
+                `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+                written to the sink every time there is some update. (3) `"update"`:
+                only the rows that were updated in the streaming DataFrame/Dataset will
+                be written to the sink every time there are some updates.
+                If the query doesn’t contain aggregations, it will be equivalent to
+                append mode. Defaults to `"append"`.
+            await_termination: Waits for the termination of this query, either by
+                query.stop() or by an exception. If the query has terminated with an
+                exception, then the exception will be thrown. If timeout is set, it
+                returns whether the query has terminated or not within the timeout
+                seconds. Defaults to `Fals`e.
+            timeout: Only relevant in combination with `await_termination=True`.
+                Defaults to `None`.
+            write_options: Additional write options for Spark as key-value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `StreamingQuery`: Spark Structured Streaming Query object.
+        """
         if (
             not engine.get_instance().is_spark_dataframe(features)
             or not features.isStreaming
