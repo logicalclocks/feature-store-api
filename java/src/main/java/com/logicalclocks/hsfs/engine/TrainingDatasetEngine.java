@@ -197,8 +197,7 @@ public class TrainingDatasetEngine {
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
     // save unique primary key names that will be used by user to retrieve serving vector
-    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys() != null ? trainingDataset.getServingKeys() :
-        new HashSet<>();
+    HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
           jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
@@ -209,6 +208,7 @@ public class TrainingDatasetEngine {
       });
       preparedStatementParameters.put(servingPreparedStatement.getPreparedStatementIndex(), parameterIndices);
     }
+    trainingDataset.setServingKeys(servingVectorKeys);
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
     trainingDataset.setServingKeys(servingVectorKeys);
@@ -220,6 +220,10 @@ public class TrainingDatasetEngine {
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
       initPreparedStatement(trainingDataset);
+    }
+
+    if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
+      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
     }
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
