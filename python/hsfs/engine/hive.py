@@ -245,7 +245,14 @@ class Engine:
         return False
 
     def save_stream_dataframe(
-        self, feature_group, dataframe, output_mode, write_options
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        write_options,
     ):
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."

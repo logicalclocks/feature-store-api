@@ -17,6 +17,7 @@
 import importlib.util
 import os
 import json
+import time
 
 import numpy as np
 import pandas as pd
@@ -30,7 +31,7 @@ try:
 except ImportError:
     pass
 
-from hsfs import feature, training_dataset_feature
+from hsfs import feature, training_dataset_feature, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
@@ -223,14 +224,38 @@ class Engine:
             )
 
     def save_stream_dataframe(
-        self, feature_group, dataframe, output_mode, write_options
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        write_options,
     ):
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
-        serialized_df.writeStream.outputMode(output_mode).format(
-            self.KAFKA_FORMAT
-        ).options(**write_options).option("topic", feature_group._online_topic_name)
+        query = (
+            serialized_df.writeStream.outputMode(output_mode)
+            .format(self.KAFKA_FORMAT)
+            .options(**write_options)
+            .option("topic", feature_group._online_topic_name)
+        )
+
+        if query_name is None:
+            query_name = (
+                "insert_stream_"
+                + feature_group._online_topic_name
+                + "_"
+                + util.get_hudi_datestr_from_timestamp(time.time())
+            )
+        query = query.queryName(query_name)
+
+        if await_termination:
+            query = query.awaitTermination(timeout)
+
+        return query.start()
 
     def _save_offline_dataframe(
         self,

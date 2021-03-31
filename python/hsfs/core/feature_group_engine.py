@@ -215,7 +215,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         }
         return {**online_write_options, **config}
 
-    def insert_stream(self, feature_group, dataframe, output_mode, write_options):
+    def insert_stream(
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        write_options,
+    ):
         if not feature_group.online_enabled:
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group. "
@@ -230,6 +239,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 util.ValidationWarning,
             )
 
-        engine.get_instance().save_stream_dataframe(
-            feature_group, dataframe, output_mode, self.get_kafka_config(write_options)
+        return engine.get_instance().save_stream_dataframe(
+            feature_group,
+            dataframe,
+            query_name,
+            output_mode,
+            await_termination,
+            timeout,
+            self.get_kafka_config(write_options),
         )

@@ -720,7 +720,10 @@ class FeatureGroup(FeatureGroupBase):
     def insert_stream(
         self,
         features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        query_name: Optional[str] = None,
         output_mode: Optional[str] = "append",
+        await_termination: Optional[bool] = False,
+        timeout: Optional[int] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         if (
@@ -735,17 +738,22 @@ class FeatureGroup(FeatureGroupBase):
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
                 features
             )
-            # long running spark application
-            self._feature_group_engine.insert_stream(
-                self, feature_dataframe, output_mode, write_options
+            warnings.warn(
+                (
+                    "Stream ingestion for feature group `{}`, with version"
+                    " `{}` will not compute statistics."
+                ).format(self._name, self._version),
+                util.StatisticsWarning,
             )
-        warnings.warn(
-            (
-                "Stream ingestion for feature group `{}`, with version"
-                " `{}` will not compute statistics."
-            ).format(self._name, self._version),
-            util.StatisticsWarning,
-        )
+            return self._feature_group_engine.insert_stream(
+                self,
+                feature_dataframe,
+                query_name,
+                output_mode,
+                await_termination,
+                timeout,
+                write_options,
+            )
 
     def commit_details(
         self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
