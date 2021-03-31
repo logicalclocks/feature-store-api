@@ -1,5 +1,5 @@
 # Hopsworks.ai Single Sign-On
-We will see here how to set up Single Sign-On for Hopsworks.ai. Once this is set up users from your organization will be able to directly sign in to Hopsworks.ai using your identity provider and without needing to manually create an account.
+We will see here how to set up Single Sign-On for Hopsworks.ai. Once this is set up users from your organization will be able to directly sign in to Hopsworks.ai using your identity provider and without the need to manually create an account.
 They will then be able to manage the clusters of your organization and if you set up [user management](../user_management.md) on your clusters an account will automatically be created for them in the clusters.
 
 !!! Note
