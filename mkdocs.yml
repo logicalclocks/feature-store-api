@@ -68,7 +68,9 @@ nav:
       - AWS: hopsworksai/aws/upgrade.md
       - Azure: hopsworksai/azure/upgrade.md
     - Single Sign On:
-      - OAuth2: hopsworksai/sso/oauth.md
+      - Hopsworks:
+        - OAuth2: hopsworksai/sso/oauth.md
+      - Hopsworks.ai: hopsworksai/sso/sso.md
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
