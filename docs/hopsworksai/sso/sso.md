@@ -230,7 +230,7 @@ Go back to Hopsworks.ai. Click on *Next step* and keep following the documentati
 ## Configure Hopsworks.ai.
 Give a name to your organization. This name will be used in your login URL so choose something you will remember. Here we will use *hopsworks-demo*.
 
-Past the set the *Metadata URL* you copied above and click *Finish*.
+Paste the *Metadata URL* you copied above and click *Finish*.
 
 <p align="center">
   <figure>
