@@ -155,7 +155,7 @@ Give a name to your application, for example, *hopsworks_sso*. Scroll to the bot
   </figure>
 </p>
 
-Enter the *Application ACS URL* that you copy from the Hopsworks.ai setup page. Enter the *Application SAML audience* that you copy from the Hopsworks.ai setup page. Click on *Save changes*.
+Paste the *Application ACS URL* and *Application SAML audience* that you copy from the Hopsworks.ai setup page. Click on *Save changes*.
 
 <p align="center">
   <figure>
