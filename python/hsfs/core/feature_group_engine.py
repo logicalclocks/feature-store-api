@@ -13,6 +13,8 @@
 #   limitations under the License.
 #
 
+import warnings
+
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
@@ -212,3 +214,22 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             "kafka.ssl.endpoint.identification.algorithm": "",
         }
         return {**online_write_options, **config}
+
+    def insert_stream(self, feature_group, dataframe, output_mode, write_options):
+        if not feature_group.online_enabled:
+            raise exceptions.FeatureStoreException(
+                "Online storage is not enabled for this feature group. "
+                "It is currently only possible to stream to the online storage."
+            )
+
+        if feature_group.validation_type != "NONE":
+            warnings.warn(
+                "Stream ingestion for feature group `{}`, with version `{}` will not perform validation.".format(
+                    feature_group.name, feature_group.version
+                ),
+                util.ValidationWarning,
+            )
+
+        engine.get_instance().save_stream_dataframe(
+            feature_group, dataframe, output_mode, self.get_kafka_config(write_options)
+        )

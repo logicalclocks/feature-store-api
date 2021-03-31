@@ -222,6 +222,16 @@ class Engine:
                 "Error writing to offline and online feature store."
             )
 
+    def save_stream_dataframe(
+        self, feature_group, dataframe, output_mode, write_options
+    ):
+        serialized_df = self._online_fg_to_avro(
+            feature_group, self._encode_complex_features(feature_group, dataframe)
+        )
+        serialized_df.writeStream.outputMode(output_mode).format(
+            self.KAFKA_FORMAT
+        ).options(**write_options).option("topic", feature_group._online_topic_name)
+
     def _save_offline_dataframe(
         self,
         feature_group,
@@ -572,6 +582,11 @@ class Engine:
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
 
         return path
+
+    def is_spark_dataframe(self, dataframe):
+        if isinstance(dataframe, DataFrame):
+            return True
+        return False
 
     def _setup_pydoop(self):
         # Import Pydoop only here, so it doesn't trigger if the execution environment

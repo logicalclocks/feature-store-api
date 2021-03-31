@@ -717,6 +717,36 @@ class FeatureGroup(FeatureGroupBase):
             # if Hive, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
+    def insert_stream(
+        self,
+        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        output_mode: Optional[str] = "append",
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        if (
+            not engine.get_instance().is_spark_dataframe(features)
+            or not features.isStreaming
+        ):
+            raise TypeError(
+                "Features have to be a streaming type spark dataframe. Use `insert()` method instead."
+            )
+        else:
+            # lower casing feature names
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+                features
+            )
+            # long running spark application
+            self._feature_group_engine.insert_stream(
+                self, feature_dataframe, output_mode, write_options
+            )
+        warnings.warn(
+            (
+                "Stream ingestion for feature group `{}`, with version"
+                " `{}` will not compute statistics."
+            ).format(self._name, self._version),
+            util.StatisticsWarning,
+        )
+
     def commit_details(
         self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
     ):

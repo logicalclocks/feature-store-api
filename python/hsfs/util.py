@@ -117,3 +117,11 @@ class VersionWarning(Warning):
 
 class StorageWarning(Warning):
     pass
+
+
+class StatisticsWarning(Warning):
+    pass
+
+
+class ValidationWarning(Warning):
+    pass
