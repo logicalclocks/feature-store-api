@@ -235,19 +235,19 @@ Paste the *Metadata URL* you copied above and click *Finish*.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png" alt="Configure Hopswoks.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png" alt="Configure Hopsworks.ai">
     </a>
-    <figcaption>Configure Hopswoks.ai</figcaption>
+    <figcaption>Configure Hopsworks.ai</figcaption>
   </figure>
 </p>
 
-If you go back to the *SSO* tab of *Settings* you will get a *logging page* link. By using this link you will automatically be redirected to your identity provider to login. Account will automatically be created in hopsworks.ai for users of your organization when they log in for the first time.
+If you go back to the *SSO* tab of *Settings* you will get a *logging page* link. By using this link you will automatically be redirected to your identity provider to login. An account will automatically be created in hopsworks.ai for users of your organization when they log in for the first time.
 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png" alt="Configure Hopswoks.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png" alt="Configure Hopsworks.ai">
     </a>
-    <figcaption>Configure Hopswoks.ai</figcaption>
+    <figcaption>Configure Hopsworks.ai</figcaption>
   </figure>
 </p>
