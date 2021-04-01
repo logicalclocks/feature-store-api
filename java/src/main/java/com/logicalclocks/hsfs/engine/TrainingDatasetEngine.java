@@ -26,6 +26,12 @@ import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -54,6 +60,8 @@ public class TrainingDatasetEngine {
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private Utils utils = new Utils();
+  private Schema.Parser parser = new Schema.Parser();
+  private BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
 
@@ -189,7 +197,8 @@ public class TrainingDatasetEngine {
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
     // save unique primary key names that will be used by user to retrieve serving vector
-    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys();
+    HashSet<String> servingVectorKeys = trainingDataset.getServingKeys() != null ? trainingDataset.getServingKeys() :
+        new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
           jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
@@ -215,6 +224,7 @@ public class TrainingDatasetEngine {
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
+    Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
 
     // Iterate over entry map of preparedStatements and set values to them
     for (Integer fgId : preparedStatements.keySet()) {
@@ -240,12 +250,36 @@ public class TrainingDatasetEngine {
       while (results.next()) {
         int index = 1;
         while (index <= columnCount) {
-          servingVector.add(results.getObject(index++));
+          if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
+            servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
+          } else {
+            servingVector.add(results.getObject(index));
+          }
+          index++;
         }
       }
       results.close();
     }
     trainingDataset.getPreparedStatementConnection().commit();
     return servingVector;
+  }
+
+  private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
+      int index) throws SQLException, IOException {
+    Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
+    return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
+  }
+
+  private Map<String, DatumReader<Object>> getComplexFeatureSchemas(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    Map<String, DatumReader<Object>> featureSchemaMap = new HashMap<>();
+    for (TrainingDatasetFeature f : trainingDataset.getFeatures()) {
+      if (f.isComplex()) {
+        DatumReader<Object> datumReader =
+            new GenericDatumReader<>(parser.parse(f.getFeaturegroup().getFeatureAvroSchema(f.getName())));
+        featureSchemaMap.put(f.getName(), datumReader);
+      }
+    }
+    return featureSchemaMap;
   }
 }

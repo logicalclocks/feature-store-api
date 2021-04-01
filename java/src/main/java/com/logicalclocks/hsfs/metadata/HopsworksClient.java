@@ -46,6 +46,9 @@ public class HopsworksClient {
   private static HopsworksClient hopsworksClientInstance = null;
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
 
+  @Getter
+  private String project;
+
   public static HopsworksClient getInstance() throws FeatureStoreException {
     if (hopsworksClientInstance == null) {
       throw new FeatureStoreException("Client not connected. Please establish a Hopsworks connection first");
@@ -61,7 +64,7 @@ public class HopsworksClient {
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
                                                                   String trustStorePath, String apiKeyFilePath,
-                                                                  String apiKeyValue)
+                                                                  String apiKeyValue, String project)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -79,7 +82,7 @@ public class HopsworksClient {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
     }
 
-    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient);
+    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient, project);
     return hopsworksClientInstance;
   }
 
@@ -90,13 +93,14 @@ public class HopsworksClient {
   private ObjectMapper objectMapper;
 
   @VisibleForTesting
-  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient) {
+  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient, String project) {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     this.hopsworksHttpClient = hopsworksHttpClient;
+    this.project = project;
   }
 
   @AllArgsConstructor

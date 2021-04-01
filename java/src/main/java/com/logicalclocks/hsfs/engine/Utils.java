@@ -114,6 +114,10 @@ public class Utils {
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
+  public String getOnlineTableName(FeatureGroup offlineFeatureGroup) {
+    return offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+  }
+
   public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
     List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPartition)

@@ -28,19 +28,34 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
+import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.struct;
+
+import org.apache.spark.sql.streaming.DataStreamWriter;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
@@ -300,65 +315,105 @@ public class SparkEngine {
   }
 
   /**
-   * Build the option maps to write the dataset to the JDBC sink.
-   * URL, username and password are taken from the storage connector.
-   * They can however be overwritten by the user if they pass a option map. For instance if they want to change the
+   * Writes feature group dataframe to kafka for online-fs ingestion.
    *
-   * @param providedWriteOptions
    * @param featureGroup
-   * @param storageConnector
-   * @return Map
-   * @throws FeatureStoreException
-   */
-  public Map<String, String> getOnlineOptions(Map<String, String> providedWriteOptions,
-                                              FeatureGroup featureGroup,
-                                              StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> writeOptions = storageConnector.getSparkOptionsInt();
-    writeOptions.put(Constants.JDBC_TABLE, utils.getFgName(featureGroup));
-
-    // add user provided configuration
-    if (providedWriteOptions != null) {
-      writeOptions.putAll(providedWriteOptions);
-    }
-    return writeOptions;
-  }
-
-  /**
-   * Write dataset on the JDBC sink.
-   *
    * @param dataset
-   * @param saveMode
    * @param writeOptions
    * @throws FeatureStoreException
+   * @throws IOException
    */
-  public void writeOnlineDataframe(Dataset<Row> dataset, SaveMode saveMode, Map<String, String> writeOptions) {
-    dataset
+  public void writeOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
         .write()
-        .format(Constants.JDBC_FORMAT)
+        .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
-        .mode(saveMode)
+        .option("topic", featureGroup.getOnlineTopicName())
         .save();
   }
 
+  public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
+                                             String outputMode, boolean awaitTermination, Long timeout,
+                                             Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+
+    DataStreamWriter<Row> writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+        .writeStream()
+        .format(Constants.KAFKA_FORMAT)
+        .outputMode(outputMode)
+        .options(writeOptions)
+        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject() + "/Resources/"
+            + queryName + "-checkpoint")
+        .option("topic", featureGroup.getOnlineTopicName());
+
+    StreamingQuery query = writer.start();
+    if (awaitTermination) {
+      query.awaitTermination(timeout);
+    }
+    return query;
+  }
+
+  /**
+   * Encodes all complex type features to binary using their avro type as schema.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @return
+   */
+  public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws FeatureStoreException, IOException {
+    List<Column> select = new ArrayList<>();
+    for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
+      if (featureGroup.getComplexFeatures().contains(f.name())) {
+        select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
+      } else {
+        select.add(col(f.name()));
+      }
+    }
+    return dataset.select(select.stream().toArray(Column[]::new));
+  }
+
+  /**
+   * Serializes dataframe to two binary columns, one avro serialized key and one avro serialized value column.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @return dataset
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroup featureGroup, Dataset<Row> dataset)
+      throws FeatureStoreException, IOException {
+    Collections.sort(featureGroup.getPrimaryKeys());
+    return dataset.select(
+        to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+            .toArray(Column[]::new))).alias("key"),
+        to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
+                .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
+  }
+
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                    SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions,
-                                    Integer validationId)
+                                    HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, saveMode, operation, writeOptions,
-          validationId);
+      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions, validationId);
     } else {
-      writeSparkDataset(featureGroup, dataset, saveMode, writeOptions);
+      writeSparkDataset(featureGroup, dataset, writeOptions);
     }
   }
 
-  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                 SaveMode saveMode, Map<String, String> writeOptions) {
+  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions) {
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)
-        .mode(saveMode)
+        .mode(SaveMode.Append)
         // write options cannot be null
         .options(writeOptions == null ? new HashMap<>() : writeOptions)
         .partitionBy(utils.getPartitionColumns(featureGroup))

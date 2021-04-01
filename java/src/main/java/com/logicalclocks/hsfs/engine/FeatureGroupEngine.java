@@ -22,15 +22,18 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +42,13 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private HudiEngine hudiEngine = new HudiEngine();
+  protected KafkaApi kafkaApi = new KafkaApi();
 
   private Utils utils = new Utils();
 
@@ -61,8 +65,8 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void saveFeatureGroup(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                               List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
+  public void save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+                   List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
@@ -115,6 +119,7 @@ public class FeatureGroupEngine {
     featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setId(apiFG.getId());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
@@ -123,49 +128,22 @@ public class FeatureGroupEngine {
     }
 
     // Write the dataframe
-    saveDataframe(featureGroup, dataset, null, SaveMode.Append,
+    insert(featureGroup, dataset, null,
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-            ? HudiOperationType.BULK_INSERT : null, writeOptions);
+            ? HudiOperationType.BULK_INSERT : null,
+        SaveMode.Append, writeOptions);
   }
 
-  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            SaveMode saveMode, HudiOperationType operation, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
+  public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
+                     HudiOperationType operation, SaveMode saveMode, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(dataset);
+      FeatureGroupValidation validation = featureGroup.validate(featureData);
       if (validation != null) {
         validationId = validation.getValidationId();
       }
     }
-    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
-      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
-          + "write to the offline storage.");
-    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, validationId);
-    } else if (storage == Storage.ONLINE) {
-      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-    } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      saveOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions, validationId);
-      saveOnlineDataframe(featureGroup, dataset, saveMode, writeOptions);
-    } else {
-      throw new FeatureStoreException("Error writing to offline and online feature store.");
-    }
-  }
-
-  /**
-   * Write dataframe to the offline feature store.
-   *
-   * @param featureGroup
-   * @param dataset
-   * @param saveMode
-   * @param operation
-   * @param writeOptions
-   */
-  private void saveOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, SaveMode saveMode,
-                                    HudiOperationType operation, Map<String, String> writeOptions,
-                                    Integer validationId)
-      throws FeatureStoreException, IOException, ParseException {
 
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
@@ -173,20 +151,50 @@ public class FeatureGroupEngine {
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
       // After that it's going to be just a normal append
       featureGroupApi.deleteContent(featureGroup);
-      saveMode = SaveMode.Append;
     }
 
-    SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, saveMode, operation, writeOptions,
-        validationId);
+    saveDataframe(featureGroup, featureData, storage, operation,
+        writeOptions, getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
-  private void saveOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                   SaveMode saveMode, Map<String, String> providedWriteOptions)
-      throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getOnlineStorageConnector(featureGroup.getFeatureStore());
-    Map<String, String> writeOptions =
-        SparkEngine.getInstance().getOnlineOptions(providedWriteOptions, featureGroup, storageConnector);
-    SparkEngine.getInstance().writeOnlineDataframe(dataset, saveMode, writeOptions);
+  public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
+                                     String outputMode, boolean awaitTermination, Long timeout,
+                                     Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+
+    if (!featureGroup.getOnlineEnabled()) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. "
+          + "It is currently only possible to stream to the online storage.");
+    }
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
+          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    return SparkEngine.getInstance().writeStreamDataframe(featureGroup, utils.sanitizeFeatureNames(featureData),
+        queryName, outputMode, awaitTermination, timeout, getKafkaConfig(featureGroup, writeOptions));
+  }
+
+  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
+                            HudiOperationType operation, Map<String, String> offlineWriteOptions,
+                            Map<String, String> onlineWriteOptions, Integer validationId)
+      throws IOException, FeatureStoreException, ParseException {
+    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
+          + "write to the offline storage.");
+    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+          offlineWriteOptions, validationId);
+    } else if (storage == Storage.ONLINE) {
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+    } else if (featureGroup.getOnlineEnabled() && storage == null) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+          offlineWriteOptions, validationId);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+    } else {
+      throw new FeatureStoreException("Error writing to offline and online feature store.");
+    }
   }
 
   private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
@@ -241,6 +249,32 @@ public class FeatureGroupEngine {
     }
 
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
+  }
+
+  public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
+  }
+
+  // TODO(Fabio): why is this here?
+  public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    Map<String, String> config = new HashMap<>();
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+
+    config.put("kafka.bootstrap.servers",
+        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    config.put("kafka.security.protocol", "SSL");
+    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
+    config.put("kafka.ssl.truststore.password", client.getCertKey());
+    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
+    config.put("kafka.ssl.keystore.password", client.getCertKey());
+    config.put("kafka.ssl.key.password", client.getCertKey());
+    config.put("kafka.ssl.endpoint.identification.algorithm", "");
+    return config;
   }
 
   public void updateValidationType(FeatureGroup featureGroup) throws FeatureStoreException, IOException {

@@ -68,7 +68,7 @@ class HudiEngine:
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
         self._base_path = self._feature_group.location
-        self._table_name = util.feature_group_name(feature_group)
+        self._table_name = feature_group._get_online_table_name()
 
         self._primary_key = ",".join(feature_group.primary_key)
         self._partition_key = (

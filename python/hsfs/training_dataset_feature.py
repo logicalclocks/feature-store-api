@@ -16,13 +16,20 @@
 
 import humps
 
+from hsfs.feature_group import FeatureGroup
+from hsfs.feature import Feature
+
 
 class TrainingDatasetFeature:
     def __init__(self, name, type=None, index=None, featuregroup=None, label=False):
         self._name = name.lower()
         self._type = type
         self._index = index
-        self._featuregroup = featuregroup
+        self._feature_group = (
+            FeatureGroup.from_response_json(featuregroup)
+            if isinstance(featuregroup, dict)
+            else featuregroup
+        )
         self._label = label
 
     def to_dict(self):
@@ -37,6 +44,10 @@ class TrainingDatasetFeature:
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
+
+    def is_complex(self):
+        """Returns true if the feature has a complex type."""
+        return any(map(self._type.upper().startswith, Feature.COMPLEX_TYPES))
 
     @property
     def name(self):

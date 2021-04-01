@@ -22,6 +22,8 @@
         <spark.version>2.4.3.2</spark.version>
         <deequ.version>1.1.0-SNAPSHOT</deequ.version>
         <hudi.version>0.7.0</hudi.version>
+        <circle.version>0.11.1</circle.version>
+        <awssdk.version>2.10.40</awssdk.version>
         <scala.base>2.11</scala.base>
     </properties>
 
@@ -78,6 +80,23 @@
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-avro_2.11</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -140,7 +159,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ssm</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -152,7 +171,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sts</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -164,7 +183,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>secretsmanager</artifactId>
-            <version>2.10.40</version>
+            <version>${awssdk.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -176,17 +195,17 @@
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-parser_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circle.version}</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-core_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circle.version}</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-generic_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circle.version}</version>
         </dependency>
 
 
@@ -220,6 +239,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20190722</version>
         </dependency>
     </dependencies>
 

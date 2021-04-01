@@ -33,12 +33,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParseException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.avro.Schema;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
@@ -70,22 +75,8 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  @JsonProperty("descStatsEnabled")
-  private Boolean statisticsEnabled;
-
-  @Getter
-  @Setter
   @JsonProperty("validationType")
   private ValidationType validationType = ValidationType.NONE;
-
-  @Getter @Setter
-  @JsonProperty("featHistEnabled")
-  private Boolean histograms;
-
-  @Getter
-  @Setter
-  @JsonProperty("featCorrEnabled")
-  private Boolean correlations;
 
   @Getter
   @Setter
@@ -106,6 +97,13 @@ public class FeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
+  @JsonIgnore
+  private String avroSchema;
+
+  @Getter
+  @Setter
+  private String onlineTopicName;
+
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
@@ -117,7 +115,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -138,6 +136,7 @@ public class FeatureGroup extends FeatureGroupBase {
       ((List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava())
         .forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
+    this.onlineTopicName = onlineTopicName;
   }
 
   public FeatureGroup() {
@@ -237,7 +236,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.saveFeatureGroup(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -303,10 +302,43 @@ public class FeatureGroup extends FeatureGroupBase {
       }
     }
 
-    featureGroupEngine.saveDataframe(this, featureData, storage,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, operation, writeOptions);
+    featureGroupEngine.insert(this, featureData, storage, operation,
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
 
     computeStatistics();
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, "append");
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, outputMode, false, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+      boolean awaitTermination, Long timeout) throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+    if (!featureData.isStreaming()) {
+      throw new FeatureStoreException(
+          "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
+    }
+    LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
+        + "` will not compute statistics.");
+    return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination, timeout,
+        writeOptions);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)
@@ -367,6 +399,57 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   @JsonIgnore
+  public String getAvroSchema() throws FeatureStoreException, IOException {
+    if (avroSchema == null) {
+      avroSchema = featureGroupEngine.getAvroSchema(this);
+    }
+    return avroSchema;
+  }
+
+  @JsonIgnore
+  public List<String> getComplexFeatures() {
+    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+  }
+
+  @JsonIgnore
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    Schema schema = getDeserializedAvroSchema();
+    Schema.Field complexField = schema.getFields().stream().filter(field ->
+        field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
+            new FeatureStoreException(
+                "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
+
+    return complexField.schema().toString(true);
+  }
+
+  @JsonIgnore
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    Schema schema = getDeserializedAvroSchema();
+    List<Schema.Field> fields = schema.getFields().stream()
+        .map(field -> getComplexFeatures().contains(field.name())
+            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
+            : new Schema.Field(field.name(), field.schema(), null, null))
+        .collect(Collectors.toList());
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+  }
+
+  @JsonIgnore
+  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
+    try {
+      return new Schema.Parser().parse(getAvroSchema());
+    } catch (SchemaParseException e) {
+      throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
+    }
+  }
+
+  @JsonIgnore
+  public List<String> getPrimaryKeys() {
+    if (primaryKeys == null) {
+      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
+    }
+    return primaryKeys;
+  }
+
   public Expectation getExpectation(String name) throws FeatureStoreException, IOException {
     return expectationsApi.get(this, name);
   }
@@ -429,7 +512,6 @@ public class FeatureGroup extends FeatureGroupBase {
     return DataValidationEngine.getInstance().getValidation(this,
       new ImmutablePair<>(type, time));
   }
-
 
   /**
    * Recompute the statistics for the feature group and save them to the feature store.

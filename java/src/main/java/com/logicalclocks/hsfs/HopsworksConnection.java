@@ -80,7 +80,7 @@ public class HopsworksConnection implements Closeable {
       throws IOException, FeatureStoreException {
     this.host = host;
     this.port = port;
-    this.project = project;
+    this.project = getProjectName(project);
     this.region = region;
     this.secretStore = secretStore;
     this.hostnameVerification = hostnameVerification;
@@ -90,7 +90,7 @@ public class HopsworksConnection implements Closeable {
     this.apiKeyValue = apiKeyValue;
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue, this.project);
     projectObj = getProject();
   }
 
@@ -126,13 +126,17 @@ public class HopsworksConnection implements Closeable {
   }
 
   private Project getProject() throws IOException, FeatureStoreException {
+    LOGGER.info("Getting information for project name: " + project);
+    return projectApi.get(project);
+  }
+
+  private String getProjectName(String project) {
     if (Strings.isNullOrEmpty(project)) {
       // User didn't specify a project in the connection construction. Assume they are running
       // from within Hopsworks and the project name is available a system property
-      project = System.getProperty(Constants.PROJECTNAME_ENV);
+      return System.getProperty(Constants.PROJECTNAME_ENV);
     }
-    LOGGER.info("Getting information for project name: " + project);
-    return projectApi.get(project);
+    return project;
   }
 
   public scala.collection.Seq<RuleDefinition> getRules() throws FeatureStoreException, IOException {
