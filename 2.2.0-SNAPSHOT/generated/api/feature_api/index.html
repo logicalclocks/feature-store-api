@@ -1152,6 +1152,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#is_complex" class="md-nav__link">
+    is_complex
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#json" class="md-nav__link">
     json
   </a>
@@ -1824,6 +1831,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#is_complex" class="md-nav__link">
+    is_complex
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#json" class="md-nav__link">
     json
   </a>
@@ -1876,32 +1890,32 @@
 feature representation of training dataset schemas.</p>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L138">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L144">[source]</a></span></p>
 <h3 id="default_value">default_value<a class="headerlink" href="#default_value" title="Permanent link">#</a></h3>
 <p>Default value of the feature as string, if the feature was appended to the
 feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L129">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L135">[source]</a></span></p>
 <h3 id="hudi_precombine_key">hudi_precombine_key<a class="headerlink" href="#hudi_precombine_key" title="Permanent link">#</a></h3>
 <p>Whether the feature is part of the hudi precombine key of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L78">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L84">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the feature.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L102">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L108">[source]</a></span></p>
 <h3 id="online_type">online_type<a class="headerlink" href="#online_type" title="Permanent link">#</a></h3>
 <p>Data type of the feature in the online feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L120">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L126">[source]</a></span></p>
 <h3 id="partition">partition<a class="headerlink" href="#partition" title="Permanent link">#</a></h3>
 <p>Whether the feature is part of the partition key of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L111">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L117">[source]</a></span></p>
 <h3 id="primary">primary<a class="headerlink" href="#primary" title="Permanent link">#</a></h3>
 <p>Whether the feature is part of the primary key of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L87">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L93">[source]</a></span></p>
 <h3 id="type">type<a class="headerlink" href="#type" title="Permanent link">#</a></h3>
 <p>Data type of the feature in the offline feature store.</p>
 <div class="admonition danger">
@@ -1912,17 +1926,23 @@ the feature store.</p>
 </div>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L73">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L75">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Feature</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L70">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L80">[source]</a></span></p>
+<h3 id="is_complex">is_complex<a class="headerlink" href="#is_complex" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">Feature</span><span class="o">.</span><span class="n">is_complex</span><span class="p">()</span>
+</code></pre></div>
+<p>Returns true if the feature has a complex type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L72">[source]</a></span></p>
 <h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Feature</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L57">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L59">[source]</a></span></p>
 <h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Feature</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 </code></pre></div>
