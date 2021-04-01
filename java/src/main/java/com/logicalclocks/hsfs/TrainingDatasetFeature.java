@@ -35,7 +35,7 @@ public class TrainingDatasetFeature {
 
   @Getter
   @Setter
-  private FeatureGroup featureGroup;
+  private FeatureGroup featuregroup;
 
   @Getter
   @Setter

@@ -67,7 +67,7 @@ public class TrainingDatasetApi {
     // There has to be one otherwise an exception would have been thrown.
     TrainingDataset resultTd = trainingDatasets[0];
     resultTd.setFeatureStore(featureStore);
-    resultTd.getFeatures().forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
+    resultTd.getFeatures().forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
     return resultTd;
   }
 
