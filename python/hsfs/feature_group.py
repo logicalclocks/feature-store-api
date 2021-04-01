@@ -381,7 +381,7 @@ class FeatureGroup(FeatureGroupBase):
         created=None,
         creator=None,
         id=None,
-        features=[],
+        features=None,
         location=None,
         online_enabled=False,
         time_travel_format=None,
@@ -402,7 +402,7 @@ class FeatureGroup(FeatureGroupBase):
         self._id = id
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
-            for feat in features
+            for feat in (features or [])
         ]
 
         self._location = location
