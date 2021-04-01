@@ -39,6 +39,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.avro.Schema;
@@ -304,6 +306,39 @@ public class FeatureGroup extends FeatureGroupBase {
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
 
     computeStatistics();
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, "append");
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
+      throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, outputMode, false, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+      boolean awaitTermination, Long timeout) throws StreamingQueryException, IOException, FeatureStoreException {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
+  }
+
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+    if (!featureData.isStreaming()) {
+      throw new FeatureStoreException(
+          "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
+    }
+    LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
+        + "` will not compute statistics.");
+    return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination, timeout,
+        writeOptions);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)

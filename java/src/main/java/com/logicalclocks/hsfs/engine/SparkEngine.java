@@ -28,6 +28,7 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -45,9 +46,14 @@ import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.struct;
 
+import org.apache.spark.sql.streaming.DataStreamWriter;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.text.ParseException;
@@ -325,6 +331,32 @@ public class SparkEngine {
         .options(writeOptions)
         .option("topic", featureGroup.getOnlineTopicName())
         .save();
+  }
+
+  public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
+                                             String outputMode, boolean awaitTermination, Long timeout,
+                                             Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+
+    DataStreamWriter<Row> writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+        .writeStream()
+        .format(Constants.KAFKA_FORMAT)
+        .outputMode(outputMode)
+        .options(writeOptions)
+        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject() + "/Resources/"
+            + queryName + "-checkpoint")
+        .option("topic", featureGroup.getOnlineTopicName());
+
+    StreamingQuery query = writer.start();
+    if (awaitTermination) {
+      query.awaitTermination(timeout);
+    }
+    return query;
   }
 
   /**

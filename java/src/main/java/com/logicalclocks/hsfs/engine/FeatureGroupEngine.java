@@ -32,6 +32,8 @@ import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,6 +155,25 @@ public class FeatureGroupEngine {
 
     saveDataframe(featureGroup, featureData, storage, operation,
         writeOptions, getKafkaConfig(featureGroup, writeOptions), validationId);
+  }
+
+  public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
+                                     String outputMode, boolean awaitTermination, Long timeout,
+                                     Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException {
+
+    if (!featureGroup.getOnlineEnabled()) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. "
+          + "It is currently only possible to stream to the online storage.");
+    }
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
+          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    return SparkEngine.getInstance().writeStreamDataframe(featureGroup, utils.sanitizeFeatureNames(featureData),
+        queryName, outputMode, awaitTermination, timeout, getKafkaConfig(featureGroup, writeOptions));
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,

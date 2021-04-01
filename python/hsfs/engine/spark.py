@@ -258,12 +258,13 @@ class Engine:
             )
             .option("topic", feature_group._online_topic_name)
             .queryName(query_name)
+            .start()
         )
 
         if await_termination:
-            query = query.awaitTermination(timeout)
+            query.awaitTermination(timeout)
 
-        return query.start()
+        return query
 
     def _save_offline_dataframe(
         self,
