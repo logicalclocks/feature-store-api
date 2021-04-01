@@ -656,6 +656,27 @@ class Engine:
         hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
     def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
+        #
+        # Licensed to the Apache Software Foundation (ASF) under one or more
+        # contributor license agreements.  See the NOTICE file distributed with
+        # this work for additional information regarding copyright ownership.
+        # The ASF licenses this file to You under the Apache License, Version 2.0
+        # (the "License"); you may not use this file except in compliance with
+        # the License.  You may obtain a copy of the License at
+        #
+        #    http://www.apache.org/licenses/LICENSE-2.0
+        #
+        # Unless required by applicable law or agreed to in writing, software
+        # distributed under the License is distributed on an "AS IS" BASIS,
+        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        # See the License for the specific language governing permissions and
+        # limitations under the License.
+        #
+
+        # This function is a copy from https://github.com/apache/spark/blob/master/python/pyspark/util.py
+        # In accordance with the Apache License Version 2.0, the following changes have been made:
+        # - the function was made a method of a class
+
         print(
             """
     ________________________________________________________________________________________________
@@ -702,6 +723,27 @@ class Engine:
         [Row(value=Row(avro=Row(age=2, name=u'Alice')))]
         """
 
+        #
+        # Licensed to the Apache Software Foundation (ASF) under one or more
+        # contributor license agreements.  See the NOTICE file distributed with
+        # this work for additional information regarding copyright ownership.
+        # The ASF licenses this file to You under the Apache License, Version 2.0
+        # (the "License"); you may not use this file except in compliance with
+        # the License.  You may obtain a copy of the License at
+        #
+        #    http://www.apache.org/licenses/LICENSE-2.0
+        #
+        # Unless required by applicable law or agreed to in writing, software
+        # distributed under the License is distributed on an "AS IS" BASIS,
+        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        # See the License for the specific language governing permissions and
+        # limitations under the License.
+        #
+
+        # This function is a copy from https://github.com/apache/spark/blob/master/python/pyspark/sql/avro/functions.py
+        # In accordance with the Apache License Version 2.0, the following changes have been made:
+        # - the function was made a method of a class
+
         try:
             jc = self._jvm.org.apache.spark.sql.avro.functions.from_avro(
                 _to_java_column(data), jsonFormatSchema, options
@@ -732,6 +774,27 @@ class Engine:
         >>> df.select(to_avro(df.value, jsonFormatSchema).alias("suite")).collect()
         [Row(suite=bytearray(b'\\x02\\x00'))]
         """
+
+        #
+        # Licensed to the Apache Software Foundation (ASF) under one or more
+        # contributor license agreements.  See the NOTICE file distributed with
+        # this work for additional information regarding copyright ownership.
+        # The ASF licenses this file to You under the Apache License, Version 2.0
+        # (the "License"); you may not use this file except in compliance with
+        # the License.  You may obtain a copy of the License at
+        #
+        #    http://www.apache.org/licenses/LICENSE-2.0
+        #
+        # Unless required by applicable law or agreed to in writing, software
+        # distributed under the License is distributed on an "AS IS" BASIS,
+        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        # See the License for the specific language governing permissions and
+        # limitations under the License.
+        #
+
+        # This function is a copy from https://github.com/apache/spark/blob/master/python/pyspark/sql/avro/functions.py
+        # In accordance with the Apache License Version 2.0, the following changes have been made:
+        # - the function was made a method of a class
 
         try:
             if jsonFormatSchema == "":
