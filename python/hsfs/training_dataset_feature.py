@@ -21,14 +21,14 @@ from hsfs.feature import Feature
 
 
 class TrainingDatasetFeature:
-    def __init__(self, name, type=None, index=None, feature_group=None, label=False):
+    def __init__(self, name, type=None, index=None, featuregroup=None, label=False):
         self._name = name.lower()
         self._type = type
         self._index = index
         self._feature_group = (
-            FeatureGroup.from_response_json(feature_group)
-            if isinstance(feature_group, dict)
-            else feature_group
+            FeatureGroup.from_response_json(featuregroup)
+            if isinstance(featuregroup, dict)
+            else featuregroup
         )
         self._label = label
 
