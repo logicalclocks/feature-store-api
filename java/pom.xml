@@ -22,7 +22,9 @@
         <spark.version>3.1.1.0</spark.version>
         <deequ.version>1.1.0.0</deequ.version>
         <hudi.version>0.7.0</hudi.version>
-        <scala.base>2.12</scala.base>
+        <scala.version>2.12.10</scala.version>
+        <scala-short.version>2.12</scala-short.version>
+        <circe.version>0.11.1</circe.version>
     </properties>
 
     <dependencies>
@@ -34,7 +36,7 @@
 
         <dependency>
             <groupId>com.logicalclocks</groupId>
-            <artifactId>deequ</artifactId>
+            <artifactId>deequ_${scala-short.version}</artifactId>
             <version>${deequ.version}</version>
             <exclusions>
                 <exclusion>
@@ -50,7 +52,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
+            <artifactId>spark-core_${scala-short.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -67,7 +69,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
+            <artifactId>spark-sql_${scala-short.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -176,17 +178,35 @@
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-parser_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circe.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-core_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circe.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-generic_2.12</artifactId>
-            <version>0.11.1</version>
+            <version>${circe.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -228,6 +248,9 @@
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                </configuration>
                 <executions>
                     <execution>
                         <id>scala-compile-first</id>

@@ -24,14 +24,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.glassfish.jersey.internal.util.Base64;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 import static io.specto.hoverfly.junit.dsl.HoverflyDsl.service;
 import static io.specto.hoverfly.junit.dsl.ResponseCreators.success;
@@ -43,7 +44,8 @@ public class TestHopsworksExternalClient {
   private String certPwd = "password";
 
   private Credentials credentials =
-      new Credentials(Base64.encodeAsString(keystore), Base64.encodeAsString(keystore), certPwd);
+      new Credentials(Base64.getEncoder().encodeToString(keystore.getBytes(StandardCharsets.UTF_8)),
+          Base64.getEncoder().encodeToString(keystore.getBytes(StandardCharsets.UTF_8)), certPwd);
 
   @Rule
   public HoverflyRule hoverflyRule = HoverflyRule.inSimulationMode(SimulationSource.dsl(service("test:80")

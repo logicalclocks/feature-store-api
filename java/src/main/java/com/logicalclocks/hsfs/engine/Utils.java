@@ -89,7 +89,7 @@ public class Utils {
         .sorted(Comparator.comparingInt(TrainingDatasetFeature::getIndex))
         .map(f -> new StructField(f.getName(),
             // What should we do about the nullables
-            new CatalystSqlParser(null).parseDataType(f.getType()), true, Metadata.empty())
+            new CatalystSqlParser().parseDataType(f.getType()), true, Metadata.empty())
         ).toArray(StructField[]::new));
 
     if (!dataset.schema().equals(tdStructType)) {
