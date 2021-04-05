@@ -123,11 +123,11 @@ class TrainingDatasetEngine:
 
         if training_dataset.prepared_statements is None:
             self.init_prepared_statement(training_dataset)
-
-        if not entry.keys() == training_dataset.serving_keys:
-            raise ValueError(
-                "Provided primary key map doesn't correspond to serving_keys"
-            )
+            # check if primary key map correspond to serving_keys. We check this during init state to reduce latency.
+            if not entry.keys() == training_dataset.serving_keys:
+                raise ValueError(
+                    "Provided primary key map doesn't correspond to serving_keys"
+                )
 
         prepared_statements = training_dataset.prepared_statements
 
