@@ -211,7 +211,6 @@ public class TrainingDatasetEngine {
     trainingDataset.setServingKeys(servingVectorKeys);
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
-    trainingDataset.setServingKeys(servingVectorKeys);
   }
 
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry) throws SQLException,
