@@ -124,6 +124,12 @@ class TrainingDatasetEngine:
         if training_dataset.prepared_statements is None:
             self.init_prepared_statement(training_dataset)
 
+        # check if primary key map correspond to serving_keys.
+        if not entry.keys() == training_dataset.serving_keys:
+            raise ValueError(
+                "Provided primary key map doesn't correspond to serving_keys"
+            )
+
         prepared_statements = training_dataset.prepared_statements
 
         # get schemas for complex features once
@@ -174,7 +180,7 @@ class TrainingDatasetEngine:
         prepared_statements_dict = {}
         serving_vector_keys = set()
         for prepared_statement in prepared_statements:
-            query_online = str(prepared_statement.query_online).replace("\n", "")
+            query_online = str(prepared_statement.query_online).replace("\n", " ")
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -201,7 +207,6 @@ class TrainingDatasetEngine:
                     query_online,
                 )
             query_online = sql.text(query_online)
-
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
