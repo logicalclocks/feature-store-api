@@ -63,6 +63,9 @@ public class Query {
   @Getter
   @Setter
   private FilterLogic filter;
+  @Getter
+  @Setter
+  private Boolean hiveEngine = false;
 
   private QueryConstructorApi queryConstructorApi;
   private StorageConnectorApi storageConnectorApi;
