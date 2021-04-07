@@ -220,10 +220,10 @@ public class TrainingDatasetEngine {
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
       initPreparedStatement(trainingDataset);
-      //check if primary key map correspond to serving_keys. We check this during init state to reduce latency.
-      if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
-        throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
-      }
+    }
+    //check if primary key map correspond to serving_keys.
+    if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
+      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
     }
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
