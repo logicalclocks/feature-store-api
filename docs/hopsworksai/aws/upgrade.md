@@ -48,6 +48,7 @@ Once you get your instance profile name, navigate to [AWS management console](ht
             "Sid": "UpgradePermissions",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeVolumes",
                 "ec2:DetachVolume",
                 "ec2:AttachVolume",
                 "ec2:ModifyInstanceAttribute"
