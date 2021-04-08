@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.SqlFilterCondition;
 import com.logicalclocks.hsfs.util.Constants;
@@ -118,6 +119,7 @@ public class Feature {
     this.defaultValue = defaultValue;
   }
 
+  @JsonIgnore
   public boolean isComplex() {
     return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
   }
