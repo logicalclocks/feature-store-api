@@ -123,16 +123,14 @@ class Engine:
 
     def save_dataframe(
         self,
-        table_name,
         feature_group,
         dataframe,
-        save_mode,
         operation,
         online_enabled,
         storage,
         offline_write_options,
         online_write_options,
-        *args
+        validation_id=None,
     ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
