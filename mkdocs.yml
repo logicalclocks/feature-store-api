@@ -50,6 +50,7 @@ nav:
       - Query vs. Dataframe: generated/query_vs_dataframe.md
       - Statistics: generated/statistics.md
       - Feature Validation: generated/feature_validation.md
+      - Feature Store Tags: generated/tags.md
     - API Reference:
       - Connection: generated/api/connection_api.md
       - FeatureStore: generated/api/feature_store_api.md
