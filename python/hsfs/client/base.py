@@ -79,7 +79,7 @@ class Client(ABC):
 
     def _read_jwt(self):
         """Retrieve jwt from local container."""
-        with open(self.TOKEN_FILE, "r") as jwt:
+        with open(os.path.join(self._secrets_dir, self.TOKEN_FILE), "r") as jwt:
             return jwt.read()
 
     @connected
