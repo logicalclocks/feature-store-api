@@ -43,12 +43,15 @@ class Client(base.Client):
     PEM_CA_CHAIN = "ca_chain.pem"
     CERT_KEY_SUFFIX = "__cert.key"
     MATERIAL_PWD = "material_passwd"
+    SECRETS_DIR = "SECRETS_DIR"
 
     def __init__(self):
         """Initializes a client being run from a job/notebook directly on Hopsworks."""
         self._base_url = self._get_hopsworks_rest_endpoint()
         self._host, self._port = self._get_host_port_pair()
-
+        self._secrets_dir = (
+            os.environ[self.SECRETS_DIR] if self.SECRETS_DIR in os.environ else ""
+        )
         self._cert_key = self._get_cert_pw()
         trust_store_path = self._get_trust_store_path()
         hostname_verification = (
