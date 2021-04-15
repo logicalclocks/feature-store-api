@@ -1,10 +1,12 @@
 # Tags
 
-The feature store enables users to attach tags to artifacts, such as feature groups or to training datasets. Tags are aditional metadata attached to your artifacts and thus they can be used for an enhance full text search. Adding tags to an artifact provides users with a more dynamic metadata content that can be used for both storage as well as enhancing artifact discoverability.
+The feature store enables users to attach tags to artifacts, such as feature groups or training datasets. Tags are aditional metadata attached to your artifacts and thus they can be used for an enhanced full text search. Adding tags to an artifact provides users with a more dynamic metadata content that can be used for both storage as well as enhancing artifact discoverability.
 
 <b>Note</b>: By default Hopsworks makes all metadata searchable, users can opt out for particular featurestores if they want to keep them private.
 
-A tag is a {<b>key</b>: <b>value</b>} association, providing additional information about the data, such as for example geographic origin. This is useful in an organization as it adds more context to your data making it easier to share and discover data and artifacts. Tagging is only available in the enterprise version.
+A tag is a {<b>key</b>: <b>value</b>} association, providing additional information about the data, such as for example geographic origin. This is useful in an organization as it adds more context to your data making it easier to share and discover data and artifacts.
+
+<b>Note</b>: Tagging is only available in the enterprise version.
 
 ## Tag Schemas
 The first step is to define the schemas of tags that can later be attached. These schemas follow the [https://json-schema.org](https://json-schema.org) as reference. The schemas define legal jsons and these can be primitives, objects or arrays. The schemas themselves are also defined as jsons.
@@ -25,7 +27,7 @@ and this would allow a json value of:
 string tag value
 ```
 
-But we can define arbitrarily complex json schemas, such as:
+We can also define arbitrarily complex json schemas, such as:
 ```
 {
   "type" : "object",
@@ -55,18 +57,17 @@ and a value that follows this schema would be:
 
 <b>Properties</b> section of a tag is a dictionary that defines field names and types.
 
-Json schema are pretty lenient, all that the properties section tells us, is that if a field appears, it should be of the appropriate type. So if the json object contains the field `first_name`, this field cannot be of type `boolean`, for example, it should be of type `string`. What we emphasize here, is that the properties section does not impose that fields declared are mandatory, or that the json object cannot contain other fields that were not defined in the schemas.
+Json schema are pretty lenient, all that the properties section tells us, is that if a field appears, it should be of the appropriate type. If the json object contains the field `first_name`, this field cannot be of type `boolean`, it has to be of type `string`. What we emphasize here, is that the properties section does not impose that fields declared are mandatory, or that the json object cannot contain other fields that were not defined in the schemas.
 
-<b>Required</b> section enforces the mandatory fields. In our case above `first_name`, `last_name`, `age` are declared as mandatory, while hobbies is left as an optional field.
+<b>Required</b> section enforces the mandatory fields. In our case above `first_name`, `last_name`, `age` are declared as mandatory, while `hobbies` is left as an optional field.
 
 <b>Additional Properties</b> section enforces the strictness of the schema. If we set this to `false` the json objects of this schema can only use fields that are declared (mandatoriy or optional) by the schema. No undeclared fields will be allowed.
 
-Type object is the default type for schemas, so you can ommit it if you want to keep the schema short. The types can be arbitrarily nested within the schema to create arbitrarily complex types.
+Type object is the default type for schemas, so you can ommit it if you want to keep the schema short.
 
 ### Advanced tag usage
-Json schemas as defined by [https://json-schema.org](https://json-schema.org) allow for even more sections.
 
-We could enhance our previous person schema:
+We can use additional properties of schemas as defined by [https://json-schema.org](https://json-schema.org) to enhance our previous person schema:
 
 - Add a `$schema` section to allow us to use more advanced features of the json schemas defined in later drafts. The default schema draft is 4 and we will use 7 here (latest).
 - Add an `id` field that is of type string but has to follow a particular regex pattern. We will also make this field mandatory.
