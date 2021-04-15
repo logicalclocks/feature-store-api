@@ -22,7 +22,7 @@ In Hopsworks, click on your *username* in the top-right corner and select *Setti
 
 <p align="center">
   <figure>
-    <img src="../../../assets/images/azure/hdinsight/step-0.png" alt="Generating an API key on Hopsworks">
+    <img src="../../assets/images/azure/hdinsight/step-0.png" alt="Generating an API key on Hopsworks">
     <figcaption>API keys can be created in the User Settings on Hopsworks</figcaption>
   </figure>
 </p>
