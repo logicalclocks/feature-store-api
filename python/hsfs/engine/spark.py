@@ -415,7 +415,7 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
@@ -426,7 +426,7 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         return (
             self._spark_session.read.format(data_format)
@@ -573,10 +573,10 @@ class Engine:
 
             i += 1
 
-    def _setup_storage_connector(self, storage_connector, path=None):
-        if storage_connector.connector_type == StorageConnector.S3:
+    def setup_storage_connector(self, storage_connector, path=None):
+        if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
-        elif storage_connector.connector_type == StorageConnector.ADLS:
+        elif storage_connector.type == StorageConnector.ADLS:
             return self._setup_adls_hadoop_conf(storage_connector, path)
         else:
             return path
@@ -609,7 +609,7 @@ class Engine:
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
-        return path.replace("s3", "s3a", 1)
+        return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
