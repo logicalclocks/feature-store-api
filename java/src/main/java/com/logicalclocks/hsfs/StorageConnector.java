@@ -17,6 +17,9 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
@@ -25,9 +28,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.parquet.Strings;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
+import java.time.Instant;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,247 +41,301 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class StorageConnector {
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = StorageConnector.HopsFsConnector.class, name = "HOPSFS"),
+    @JsonSubTypes.Type(value = StorageConnector.S3Connector.class, name = "S3"),
+    @JsonSubTypes.Type(value = StorageConnector.RedshiftConnector.class, name = "REDSHIFT"),
+    @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
+    @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
+    @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC")
+})
+public abstract class StorageConnector {
 
-  @Getter
-  @Setter
+  private StorageConnectorType type;
+
+  @Getter @Setter
   private Integer id;
 
-  @Getter
-  @Setter
+  @Getter @Setter
   private String name;
 
-  @Getter
-  @Setter
-  private String accessKey;
+  @Getter @Setter
+  private String description;
 
-  @Getter
-  @Setter
-  private String secretKey;
+  @Getter @Setter
+  private Integer featurestoreId;
 
-  @Getter
-  @Setter
-  private String serverEncryptionAlgorithm;
-
-  @Getter
-  @Setter
-  private String serverEncryptionKey;
-
-  @Getter
-  @Setter
-  private String bucket;
-
-  @Getter
-  @Setter
-  private String clusterIdentifier;
-
-  @Getter
-  @Setter
-  private String databaseDriver;
-
-  @Getter
-  @Setter
-  private String databaseEndpoint;
-
-  @Getter
-  @Setter
-  private String databaseName;
-
-  @Getter
-  @Setter
-  private Integer databasePort;
-
-  @Getter
-  @Setter
-  private String tableName;
-
-  @Getter
-  @Setter
-  private String databaseUserName;
-
-  @Getter
-  @Setter
-  private Boolean autoCreate;
-
-  @Getter
-  @Setter
-  private String databaseGroup;
-
-  @Getter
-  @Setter
-  private Date expiration;
-
-  @Getter
-  @Setter
-  private String databasePassword;
-
-  @Getter
-  @Setter
-  private String sessionToken;
-
-  @Getter
-  @Setter
-  private String connectionString;
-
-  @Getter
-  @Setter
-  private String arguments;
-
-  @Getter
-  @Setter
-  private Integer generation;
-
-  @Getter
-  @Setter
-  private String directoryId;
-
-  @Getter
-  @Setter
-  private String applicationId;
-
-  @Getter
-  @Setter
-  private String serviceCredentials;
-
-  @Getter
-  @Setter
-  private String accountName;
-
-  @Getter
-  @Setter
-  private String containerName;
-
-  @Getter
-  @Setter
-  private String url;
-
-  @Getter
-  @Setter
-  private String user;
-
-  @Getter
-  @Setter
-  private String password;
-
-  @Getter
-  @Setter
-  private String token;
-
-  @Getter
-  @Setter
-  private String database;
-
-  @Getter
-  @Setter
-  private String schema;
-
-  @Getter
-  @Setter
-  private String warehouse;
-
-  @Getter
-  @Setter
-  private String role;
-
-  @Getter
-  @Setter
-  private String table;
-
-  @Getter
-  @Setter
-  private List<Option> sparkOptions;
-
-  @Getter
-  @Setter
-  private List<Option> sfOptions;
-
-  @Getter
-  @Setter
-  private StorageConnectorType storageConnectorType;
-
-  public String account() {
-    return this.url.replace("https://", "").replace(".snowflakecomputing.com", "");
+  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+      throws FeatureStoreException {
+    throw new FeatureStoreException(
+        "Path method not supported for storage connector type: " + type);
   }
 
+  public abstract Map<String, String> sparkOptions();
+
   @JsonIgnore
-  public Map<String, String> getSparkOptionsInt() throws FeatureStoreException {
-    switch (storageConnectorType) {
-      case JDBC:
-        return getJdbcOptions();
-      case REDSHIFT:
-        return getRedshiftOptions();
-      case SNOWFLAKE:
-        return getSnowflakeOptions();
-      default:
-        throw new FeatureStoreException("Spark options are not supported for connector " + storageConnectorType);
+  public StorageConnectorType getType() {
+    return type;
+  }
+
+  public static class HopsFsConnector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.HOPSFS;
+
+    @Getter @Setter
+    private String hopsfsPath;
+
+    @Getter @Setter
+    private String datasetName;
+
+    public Map<String, String> sparkOptions() {
+      return new HashMap<>();
     }
   }
 
-  @JsonIgnore
-  private Map<String, String> getJdbcOptions() {
-    Map<String, String> options = Arrays.stream(arguments.split(","))
-        .map(arg -> arg.split("="))
-        .collect(Collectors.toMap(a -> a[0], a -> a[1]));
-    options.put(Constants.JDBC_URL, connectionString);
-    return options;
+  public static class S3Connector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.S3;
+
+    @Getter @Setter
+    private String accessKey;
+
+    @Getter @Setter
+    private String secretKey;
+
+    @Getter @Setter
+    private String serverEncryptionAlgorithm;
+
+    @Getter @Setter
+    private String serverEncryptionKey;
+
+    @Getter @Setter
+    private String bucket;
+
+    @Getter @Setter
+    private String sessionToken;
+
+    @Getter @Setter
+    private String iamRole;
+
+    @JsonIgnore
+    public String getPath(String subPath) throws FeatureStoreException {
+      return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+    }
+
+    public Map<String, String> sparkOptions() {
+      return new HashMap<>();
+    }
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException {
+      return SparkEngine.getInstance().read(this, dataFormat, options, getPath(path));
+    }
   }
 
-  @JsonIgnore
-  private Map<String, String> getRedshiftOptions() {
-    String constr =
-        "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
-    if (!Strings.isNullOrEmpty(arguments)) {
-      constr += "?" + arguments;
+  public static class RedshiftConnector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.REDSHIFT;
+
+    @Getter @Setter
+    private String clusterIdentifier;
+
+    @Getter @Setter
+    private String databaseDriver;
+
+    @Getter @Setter
+    private String databaseEndpoint;
+
+    @Getter @Setter
+    private String databaseName;
+
+    @Getter @Setter
+    private Integer databasePort;
+
+    @Getter @Setter
+    private String tableName;
+
+    @Getter @Setter
+    private String databaseUserName;
+
+    @Getter @Setter
+    private Boolean autoCreate;
+
+    @Getter @Setter
+    private String databasePassword;
+
+    @Getter @Setter
+    private String databaseGroup;
+
+    @Getter @Setter
+    private String iamRole;
+
+    @Getter @Setter
+    private String arguments;
+
+    @Getter @Setter
+    private Instant expiration;
+
+    public Map<String, String> sparkOptions() {
+      String constr =
+          "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
+      if (!Strings.isNullOrEmpty(arguments)) {
+        constr += "?" + arguments;
+      }
+      Map<String, String> options = new HashMap<>();
+      options.put(Constants.JDBC_DRIVER, databaseDriver);
+      options.put(Constants.JDBC_URL, constr);
+      options.put(Constants.JDBC_USER, databaseUserName);
+      options.put(Constants.JDBC_PWD, databasePassword);
+      if (!Strings.isNullOrEmpty(tableName)) {
+        options.put(Constants.JDBC_TABLE, tableName);
+      }
+      return options;
     }
-    Map<String, String> options = new HashMap<>();
-    options.put(Constants.JDBC_DRIVER, databaseDriver);
-    options.put(Constants.JDBC_URL, constr);
-    options.put(Constants.JDBC_USER, databaseUserName);
-    options.put(Constants.JDBC_PWD, databasePassword);
-    if (!Strings.isNullOrEmpty(tableName)) {
-      options.put(Constants.JDBC_TABLE, tableName);
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      Map<String, String> readOptions = sparkOptions();
+      if (!Strings.isNullOrEmpty(query)) {
+        readOptions.put("query", query);
+      }
+      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
-    return options;
   }
 
-  @JsonIgnore
-  public String getPath(String subPath) throws FeatureStoreException {
-    switch (storageConnectorType) {
-      case S3:
-        return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
-      default:
-        throw new FeatureStoreException(
-            "Path method not supported for storage connector type: " + storageConnectorType);
+  public static class AdlsConnector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.ADLS;
+
+    @Getter @Setter
+    private Integer generation;
+
+    @Getter @Setter
+    private String directoryId;
+
+    @Getter @Setter
+    private String applicationId;
+
+    @Getter @Setter
+    private String serviceCredential;
+
+    @Getter @Setter
+    private String accountName;
+
+    @Getter @Setter
+    private String containerName;
+
+    @Getter @Setter
+    private List<Option> sparkOptions;
+
+    public Map<String, String> sparkOptions() {
+      Map<String, String> options = new HashMap<>();
+      sparkOptions.stream().forEach(option -> options.put(option.getName(), option.getValue()));
+      return options;
     }
   }
 
-  @JsonIgnore
-  private Map<String, String> getSnowflakeOptions() {
-    Map<String, String> options = new HashMap<>();
-    options.put(Constants.SNOWFLAKE_URL, url);
-    options.put(Constants.SNOWFLAKE_SCHEMA, schema);
-    options.put(Constants.SNOWFLAKE_DB, database);
-    options.put(Constants.SNOWFLAKE_USER, user);
-    if (!Strings.isNullOrEmpty(password)) {
-      options.put(Constants.SNOWFLAKE_PWD, password);
-    } else {
-      options.put(Constants.SNOWFLAKE_AUTH, "oauth");
-      options.put(Constants.SNOWFLAKE_TOKEN, token);
+  public static class SnowflakeConnector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.SNOWFLAKE;
+
+    @Getter @Setter
+    private String url;
+
+    @Getter @Setter
+    private String user;
+
+    @Getter @Setter
+    private String password;
+
+    @Getter @Setter
+    private String token;
+
+    @Getter @Setter
+    private String database;
+
+    @Getter @Setter
+    private String schema;
+
+    @Getter @Setter
+    private String warehouse;
+
+    @Getter @Setter
+    private String role;
+
+    @Getter @Setter
+    private String table;
+
+    @Getter @Setter
+    private List<Option> sfOptions;
+
+    public String account() {
+      return this.url.replace("https://", "").replace(".snowflakecomputing.com", "");
     }
-    if (!Strings.isNullOrEmpty(warehouse)) {
-      options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
+
+    public Map<String, String> sparkOptions() {
+      Map<String, String> options = new HashMap<>();
+      options.put(Constants.SNOWFLAKE_URL, url);
+      options.put(Constants.SNOWFLAKE_SCHEMA, schema);
+      options.put(Constants.SNOWFLAKE_DB, database);
+      options.put(Constants.SNOWFLAKE_USER, user);
+      if (!Strings.isNullOrEmpty(password)) {
+        options.put(Constants.SNOWFLAKE_PWD, password);
+      } else {
+        options.put(Constants.SNOWFLAKE_AUTH, "oauth");
+        options.put(Constants.SNOWFLAKE_TOKEN, token);
+      }
+      if (!Strings.isNullOrEmpty(warehouse)) {
+        options.put(Constants.SNOWFLAKE_WAREHOUSE, warehouse);
+      }
+      if (!Strings.isNullOrEmpty(role)) {
+        options.put(Constants.SNOWFLAKE_ROLE, role);
+      }
+      if (!Strings.isNullOrEmpty(table)) {
+        options.put(Constants.SNOWFLAKE_TABLE, table);
+      }
+      if (sfOptions != null && !sfOptions.isEmpty()) {
+        Map<String, String> argOptions = sfOptions.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(argOptions);
+      }
+      return options;
     }
-    if (!Strings.isNullOrEmpty(role)) {
-      options.put(Constants.SNOWFLAKE_ROLE, role);
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      Map<String, String> readOptions = sparkOptions();
+      if (!Strings.isNullOrEmpty(query)) {
+        readOptions.put("query", query);
+      }
+      return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
     }
-    if (!Strings.isNullOrEmpty(table)) {
-      options.put(Constants.SNOWFLAKE_TABLE, table);
+  }
+
+  public static class JdbcConnector extends StorageConnector {
+
+    private static final StorageConnectorType type = StorageConnectorType.JDBC;
+
+    @Getter @Setter
+    private String connectionString;
+
+    @Getter @Setter
+    private String arguments;
+
+    public Map<String, String> sparkOptions() {
+      Map<String, String> options = Arrays.stream(arguments.split(","))
+          .map(arg -> arg.split("="))
+          .collect(Collectors.toMap(a -> a[0], a -> a[1]));
+      options.put(Constants.JDBC_URL, connectionString);
+      return options;
     }
-    if (sfOptions != null && !sfOptions.isEmpty()) {
-      Map<String, String> argOptions = sfOptions.stream()
-          .collect(Collectors.toMap(Option::getName, Option::getValue));
-      options.putAll(argOptions);
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      Map<String, String> readOptions = sparkOptions();
+      if (!Strings.isNullOrEmpty(query)) {
+        readOptions.put("query", query);
+      }
+      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
-    return options;
   }
 }

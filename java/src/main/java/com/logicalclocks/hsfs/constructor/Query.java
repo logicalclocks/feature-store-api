@@ -177,7 +177,7 @@ public class Query {
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
       StorageConnector onlineConnector =
           storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-      return SparkEngine.getInstance().jdbc(fsQuery.getStorageQuery(Storage.ONLINE), onlineConnector);
+      return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
     } else {
       registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
       registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);

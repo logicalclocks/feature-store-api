@@ -128,11 +128,11 @@ public class FeatureStore {
     return SparkEngine.getInstance().sql(query);
   }
 
-  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
+  public <T extends StorageConnector> T getStorageConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name);
   }
 
-  public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
+  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }
 

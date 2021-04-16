@@ -107,46 +107,12 @@ public class SparkEngine {
     return sparkSession.sql(query);
   }
 
-  public Dataset<Row> jdbc(String query, StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
-    if (!Strings.isNullOrEmpty(query)) {
-      readOptions.put("query", query);
-    }
-    return sparkSession.read()
-        .format(Constants.JDBC_FORMAT)
-        .options(readOptions)
-        .load();
-  }
-
-  public Dataset<Row> snowflake(String query, StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
-    if (!Strings.isNullOrEmpty(query)) {
-      readOptions.put("query", query);
-    }
-    return sparkSession.read()
-        .format(Constants.SNOWFLAKE_FORMAT)
-        .options(readOptions)
-        .load();
-  }
-
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException {
-    Dataset<Row> dataset;
+    Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
+        onDemandFeatureGroup.getDataFormat().toString(), getOnDemandOptions(onDemandFeatureGroup),
+        onDemandFeatureGroup.getPath());
 
-    switch (onDemandFeatureGroup.getStorageConnector().getStorageConnectorType()) {
-      case REDSHIFT:
-      case JDBC:
-        dataset = jdbc(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
-        break;
-      case SNOWFLAKE:
-        dataset = snowflake(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
-        break;
-      default:
-        dataset = read(onDemandFeatureGroup.getStorageConnector(),
-            onDemandFeatureGroup.getDataFormat().toString(),
-            getOnDemandOptions(onDemandFeatureGroup),
-            onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
-    }
     dataset.createOrReplaceTempView(alias);
     return dataset;
   }
@@ -454,12 +420,12 @@ public class SparkEngine {
       return;
     }
 
-    switch (storageConnector.getStorageConnectorType()) {
+    switch (storageConnector.getType()) {
       case S3:
-        setupS3ConnectorHadoopConf(storageConnector);
+        setupS3ConnectorHadoopConf((StorageConnector.S3Connector) storageConnector);
         break;
       case ADLS:
-        setupAdlsConnectorHadoopConf(storageConnector);
+        setupAdlsConnectorHadoopConf((StorageConnector.AdlsConnector) storageConnector);
         break;
       default:
         // No-OP
@@ -474,7 +440,7 @@ public class SparkEngine {
     return path;
   }
 
-  private void setupS3ConnectorHadoopConf(StorageConnector storageConnector) {
+  private void setupS3ConnectorHadoopConf(StorageConnector.S3Connector storageConnector) {
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
@@ -501,7 +467,7 @@ public class SparkEngine {
     }
   }
 
-  private void setupAdlsConnectorHadoopConf(StorageConnector storageConnector) {
+  private void setupAdlsConnectorHadoopConf(StorageConnector.AdlsConnector storageConnector) {
     for (Option confOption : storageConnector.getSparkOptions()) {
       sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
     }

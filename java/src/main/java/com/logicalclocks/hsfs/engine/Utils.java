@@ -101,7 +101,7 @@ public class Utils {
   public TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {
     if (storageConnector == null) {
       return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
-    } else if (storageConnector.getStorageConnectorType() == StorageConnectorType.HOPSFS) {
+    } else if (storageConnector.getType() == StorageConnectorType.HOPSFS) {
       return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
     } else {
       return TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
@@ -141,7 +141,8 @@ public class Utils {
   }
 
   public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
+    StorageConnector.JdbcConnector storageConnector =
+        (StorageConnector.JdbcConnector) storageConnectorApi.getByName(featureGroup.getFeatureStore(),
         featureGroup.getFeatureStore().getName());
     String connStr = storageConnector.getConnectionString();
     String pw = HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey();

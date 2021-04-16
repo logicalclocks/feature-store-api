@@ -35,7 +35,7 @@ public class StorageConnectorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
-  public StorageConnector getByName(FeatureStore featureStore, String name)
+  public <T extends StorageConnector> T getByName(FeatureStore featureStore, String name)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -50,10 +50,11 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
+
+    return (T) hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
   }
 
-  public StorageConnector getOnlineStorageConnector(FeatureStore featureStore)
+  public StorageConnector.JdbcConnector getOnlineStorageConnector(FeatureStore featureStore)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -66,6 +67,6 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.JdbcConnector.class);
   }
 }
