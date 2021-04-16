@@ -156,6 +156,11 @@ public class DataValidationEngine {
               deequRule = "iscontainedin";
               deequFeatures.add(constraintInfo[2]);
               featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
+            } else if (constraintResult.constraint().toString().contains("is positive")) {
+              // ComplianceConstraint(Compliance(age is positive,COALESCE(car, 1.0) > 0,None))
+              deequRule = "ispositive";
+              deequFeatures.add(constraintInfo[2]);
+              featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
             } else {
               deequRule = String.join("", Arrays.stream(constraintInfo, 3, 5 + 1).toArray(String[]::new));
               deequFeatures.addAll(Arrays.asList(
