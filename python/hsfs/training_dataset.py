@@ -271,34 +271,42 @@ class TrainingDataset:
         self.read(split).show(n)
 
     def add_tag(self, name: str, value):
-        """Attach a name/value tag to a training dataset.
+        """Attach a tag to a training dataset.
 
-         A tag consists of a name/value pair. Tag names are unique identifiers.
+        A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
-            value: Value of the tag to be added, defaults to `None`.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
         """
         self._training_dataset_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
-        """Delete a tag from a training dataset.
-
-        Tag names are unique identifiers.
+        """Delete a tag attached to a training dataset.
 
         # Arguments
             name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
         """
         self._training_dataset_engine.delete_tag(self, name)
 
     def get_tag(self, name):
-        """Get the tags of a training dataset. Tag names are unique identifiers.
+        """Get the tags of a training dataset.
 
         # Arguments
-            name: Name of the tag to get, defaults to `None`.
+            name: Name of the tag to get.
+
         # Returns
-            `List[Tag]`. List of tags as name/value pairs.
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._training_dataset_engine.get_tag(self, name)
 
@@ -306,7 +314,10 @@ class TrainingDataset:
         """Returns all tags attached to a training dataset.
 
         # Returns
-            `List[Tag]`. List of tags as name/value pairs.
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._training_dataset_engine.get_tags(self)
 
