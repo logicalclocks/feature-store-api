@@ -4,8 +4,8 @@ site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
 
 # Repository
-repo_name: logicalclocks/feature-store-api
-repo_url: https://github.com/logicalclocks/feature-store-api
+repo_name: logicalclocks/hopsworks
+repo_url: https://github.com/logicalclocks/hopsworks
 edit_uri: ""
 
 nav:
