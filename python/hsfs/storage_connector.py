@@ -351,7 +351,11 @@ class AdlsConnector(StorageConnector):
         self._service_credential = service_credential
         self._container_name = container_name
 
-        self._spark_options = spark_options if spark_options is not None else {}
+        self._spark_options = (
+            {opt["name"]: opt["value"] for opt in spark_options}
+            if spark_options
+            else {}
+        )
 
     @property
     def generation(self):
