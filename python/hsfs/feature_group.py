@@ -158,58 +158,54 @@ class FeatureGroupBase:
         return self.select_all().filter(f)
 
     def add_tag(self, name: str, value):
-        """Attach a name/value tag to a feature group.
+        """Attach a tag to a feature group.
 
-        A tag consists of a name/value pair. Tag names are unique identifiers.
+        A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
-            value: Value of the tag to be added, defaults to `None`.
+            value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to add the tag.
         """
 
         self._feature_group_base_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
-        """Delete a tag from a feature group.
-
-        Tag names are unique identifiers.
+        """Delete a tag attached to a feature group.
 
         # Arguments
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to delete the tag.
         """
         self._feature_group_base_engine.delete_tag(self, name)
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
 
-        Tag names are unique identifiers.
-
         # Arguments
-            name: Name of the tag to get, defaults to `None`.
+            name: Name of the tag to get.
 
         # Returns
             tag value
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_group_base_engine.get_tag(self, name)
 
     def get_tags(self):
-        """Returns all tags attached to a feature group.
+        """Retrieves all tags attached to a feature group.
 
         # Returns
-            `list[Tag]`. List of tags as name/value pairs.
+            `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_base_engine.get_tags(self)
 
