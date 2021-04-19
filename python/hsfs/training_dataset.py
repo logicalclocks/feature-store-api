@@ -24,7 +24,7 @@ import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector
+from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
     training_dataset_api,
     training_dataset_engine,
@@ -449,8 +449,8 @@ class TrainingDataset:
             self._storage_connector = storage_connector
         elif storage_connector is None:
             # init empty connector, otherwise will have to handle it at serialization time
-            self._storage_connector = StorageConnector(
-                None, None, None, None, None, None, None, None
+            self._storage_connector = HopsFSConnector(
+                None, None, None, None, None, None
             )
         else:
             raise TypeError(
