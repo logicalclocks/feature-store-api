@@ -459,7 +459,7 @@ class TrainingDataset:
                 )
             )
         self._training_dataset_type = self._infer_training_dataset_type(
-            self._storage_connector.connector_type
+            self._storage_connector.type
         )
 
     @property

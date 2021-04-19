@@ -52,6 +52,11 @@ class StorageConnector(ABC):
         return {"id": self._id}
 
     @property
+    def type(self):
+        """Type of the connector as string, e.g. "HOPFS, S3, ADLS, REDSHIFT, JDBC or SNOWFLAKE."""
+        return self._type
+
+    @property
     def id(self):
         """Id of the storage connector uniquely identifying it in the Feature store."""
         return self._id

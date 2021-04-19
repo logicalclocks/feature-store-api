@@ -102,14 +102,14 @@ class Engine:
 
     def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
         if (
-            on_demand_fg.storage_connector.connector_type == "JDBC"
-            or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
+            on_demand_fg.storage_connector.type == "JDBC"
+            or on_demand_fg.storage_connector.type == "REDSHIFT"
         ):
             # This is a JDBC on demand featuregroup
             on_demand_dataset = self._jdbc(
                 on_demand_fg.query, on_demand_fg.storage_connector
             )
-        elif on_demand_fg.storage_connector.connector_type == "SNOWFLAKE":
+        elif on_demand_fg.storage_connector.type == "SNOWFLAKE":
             on_demand_dataset = self._snowflake(
                 on_demand_fg.query, on_demand_fg.storage_connector
             )
