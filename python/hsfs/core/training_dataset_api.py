@@ -160,3 +160,17 @@ class TrainingDatasetApi:
         return serving_prepared_statement.ServingPreparedStatement.from_response_json(
             _client._send_request("GET", path_params, headers=headers)
         )
+
+    def delete(self, training_dataset_instance):
+        """Delete the training dataset and materialized files in HopsFS."""
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "trainingdatasets",
+            training_dataset_instance.id,
+        ]
+        headers = {"content-type": "application/json"}
+        _client._send_request("DELETE", path_params, headers=headers)

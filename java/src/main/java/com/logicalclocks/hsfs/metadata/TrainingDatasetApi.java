@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -157,5 +158,24 @@ public class TrainingDatasetApi {
     LOGGER.info(trainingDatasetJson);
 
     return hopsworksClient.handleRequest(putRequest, TrainingDataset.class);
+  }
+
+  public void delete(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_DATASET_ID_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("fgId", trainingDataset.getId())
+        .expand();
+
+    HttpDelete deleteRequest = new HttpDelete(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+
+    hopsworksClient.handleRequest(deleteRequest);
   }
 }
