@@ -336,6 +336,24 @@ class TrainingDataset:
         self._training_dataset_engine.update_statistics_config(self)
         return self
 
+    def delete(self):
+        """Delete training dataset and all associated metadata.
+
+        !!! note "Drops only HopsFS data"
+            Note that this operation drops only files which were materialized in
+            HopsFS. If you used a Storage Connector for a cloud storage such as S3,
+            the data will not be deleted, but you will not be able to track it anymore
+            from the Feature Store.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            training dataset **and** and the materialized data in HopsFS.
+
+        # Raises
+            `RestAPIError`.
+        """
+        self._training_dataset_api.delete(self)
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
