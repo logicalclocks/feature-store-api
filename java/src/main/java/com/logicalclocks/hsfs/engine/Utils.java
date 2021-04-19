@@ -101,7 +101,7 @@ public class Utils {
   public TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {
     if (storageConnector == null) {
       return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
-    } else if (storageConnector.getType() == StorageConnectorType.HOPSFS) {
+    } else if (storageConnector.getStorageConnectorType() == StorageConnectorType.HOPSFS) {
       return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
     } else {
       return TrainingDatasetType.EXTERNAL_TRAINING_DATASET;

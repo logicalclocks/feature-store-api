@@ -420,7 +420,7 @@ public class SparkEngine {
       return;
     }
 
-    switch (storageConnector.getType()) {
+    switch (storageConnector.getStorageConnectorType()) {
       case S3:
         setupS3ConnectorHadoopConf((StorageConnector.S3Connector) storageConnector);
         break;

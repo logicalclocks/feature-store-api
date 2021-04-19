@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @ToString
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType")
+    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType", visible = true)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = StorageConnector.HopsFsConnector.class, name = "HOPSFS"),
     @JsonSubTypes.Type(value = StorageConnector.S3Connector.class, name = "S3"),
@@ -53,7 +53,8 @@ import java.util.stream.Collectors;
 })
 public abstract class StorageConnector {
 
-  private StorageConnectorType type;
+  @Getter @Setter
+  private StorageConnectorType storageConnectorType;
 
   @Getter @Setter
   private Integer id;
@@ -70,19 +71,12 @@ public abstract class StorageConnector {
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException {
     throw new FeatureStoreException(
-        "Path method not supported for storage connector type: " + type);
+        "Path method not supported for storage connector type: " + storageConnectorType);
   }
 
   public abstract Map<String, String> sparkOptions();
 
-  @JsonIgnore
-  public StorageConnectorType getType() {
-    return type;
-  }
-
   public static class HopsFsConnector extends StorageConnector {
-
-    private static final StorageConnectorType type = StorageConnectorType.HOPSFS;
 
     @Getter @Setter
     private String hopsfsPath;
@@ -96,8 +90,6 @@ public abstract class StorageConnector {
   }
 
   public static class S3Connector extends StorageConnector {
-
-    private static final StorageConnectorType type = StorageConnectorType.S3;
 
     @Getter @Setter
     private String accessKey;
@@ -136,8 +128,6 @@ public abstract class StorageConnector {
   }
 
   public static class RedshiftConnector extends StorageConnector {
-
-    private static final StorageConnectorType type = StorageConnectorType.REDSHIFT;
 
     @Getter @Setter
     private String clusterIdentifier;
@@ -206,8 +196,6 @@ public abstract class StorageConnector {
 
   public static class AdlsConnector extends StorageConnector {
 
-    private static final StorageConnectorType type = StorageConnectorType.ADLS;
-
     @Getter @Setter
     private Integer generation;
 
@@ -237,8 +225,6 @@ public abstract class StorageConnector {
   }
 
   public static class SnowflakeConnector extends StorageConnector {
-
-    private static final StorageConnectorType type = StorageConnectorType.SNOWFLAKE;
 
     @Getter @Setter
     private String url;
@@ -313,8 +299,6 @@ public abstract class StorageConnector {
   }
 
   public static class JdbcConnector extends StorageConnector {
-
-    private static final StorageConnectorType type = StorageConnectorType.JDBC;
 
     @Getter @Setter
     private String connectionString;
