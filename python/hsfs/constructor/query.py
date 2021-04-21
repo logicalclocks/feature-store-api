@@ -245,7 +245,7 @@ class Query:
             A partially deserialize query object
         """
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized = json_decamelized.pop("hive_engine", None)
+        _ = json_decamelized.pop("hive_engine", None)
         new = cls(**json_decamelized)
         new._joins = humps.camelize(new._joins)
         return new
