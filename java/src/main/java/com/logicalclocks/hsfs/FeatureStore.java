@@ -132,7 +132,33 @@ public class FeatureStore {
     return storageConnectorApi.getByName(this, name);
   }
 
-  public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
+  public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.JdbcConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.S3Connector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.HopsFsConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
+      throws FeatureStoreException, IOException {
+    return (StorageConnector.RedshiftConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
+      throws FeatureStoreException, IOException {
+    return (StorageConnector.SnowflakeConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }
 

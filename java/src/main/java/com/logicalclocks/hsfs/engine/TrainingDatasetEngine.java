@@ -186,7 +186,7 @@ public class TrainingDatasetEngine {
 
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
+    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
     Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
         jdbcOptions.get("password"));
     jdbcConnection.setAutoCommit(false);

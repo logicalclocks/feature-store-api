@@ -141,7 +141,8 @@ public class Utils {
   }
 
   public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
+    StorageConnector.JdbcConnector storageConnector =
+        (StorageConnector.JdbcConnector) storageConnectorApi.getByName(featureGroup.getFeatureStore(),
         featureGroup.getFeatureStore().getName());
     String connStr = storageConnector.getConnectionString();
     String pw = HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey();
