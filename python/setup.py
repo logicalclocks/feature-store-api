@@ -24,7 +24,9 @@ setup(
         "numpy",
         "pyjks",
         "mock",
-        "avro==1.10.1"
+        "avro==1.10.1",
+        "sqlalchemy",
+        "PyMySQL",
     ],
     extras_require={
         "dev": [
@@ -37,7 +39,7 @@ setup(
             "mike==0.5.5",
             "keras-autodoc",
             "markdown-include"],
-        "hive": ["pyhopshive[thrift]", "sqlalchemy", "PyMySQL"],
+        "hive": ["pyhopshive[thrift]"]
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",
