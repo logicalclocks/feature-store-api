@@ -2000,7 +2000,6 @@ For this remove the following permissions from the instance profile:</p>
 <div class="highlight"><pre><span></span><code>      <span class="s2">&quot;S3:PutLifecycleConfiguration&quot;</span><span class="p">,</span> 
       <span class="s2">&quot;S3:GetLifecycleConfiguration&quot;</span><span class="p">,</span> 
       <span class="s2">&quot;S3:PutBucketVersioning&quot;</span><span class="p">,</span> 
-      <span class="s2">&quot;S3:GetBucketVersioning&quot;</span>
 </code></pre></div>
 <p>Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:</p>
 <div class="highlight"><pre><span></span><code>    <span class="p">{</span>
