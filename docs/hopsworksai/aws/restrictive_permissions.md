@@ -226,7 +226,6 @@ For this remove the following permissions from the instance profile:
       "S3:PutLifecycleConfiguration", 
       "S3:GetLifecycleConfiguration", 
       "S3:PutBucketVersioning", 
-      "S3:GetBucketVersioning"
 ```
 
 Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:

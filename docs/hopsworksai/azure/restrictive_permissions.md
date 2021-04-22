@@ -162,6 +162,7 @@ For this replace the permissions given in the [getting started instructions](./g
         "actions": [
             "Microsoft.Storage/storageAccounts/blobServices/containers/write",
             "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+            "Microsoft.Storage/storageAccounts/blobServices/read"
         ],
         "notActions": [],
         "dataActions": [
