@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -123,12 +125,18 @@ public class Utils {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
-        featureGroup.getFeatureStore().getName());
-    String connStr = storageConnector.getConnectionString();
-    String pw = HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey();
-    return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
-        + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
+  public String getHiveServerConnection(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
+    credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+    credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
+    credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+
+    StorageConnector storageConnector = storageConnectorApi
+        .getByName(featureGroup.getFeatureStore(), featureGroup.getFeatureStore().getName());
+
+    return storageConnector.getConnectionString()
+        + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
+            .collect(Collectors.joining(";"));
   }
 }
