@@ -1296,17 +1296,17 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
 
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
-            # Got from Hopsworks, deserialize features and storage connector
-            self._features = (
-                [feature.Feature.from_response_json(feat) for feat in features]
-                if features
-                else None
-            )
+            # Got from Hopsworks, deserialize storage connector
             self.statistics_config = statistics_config
 
             self._options = (
