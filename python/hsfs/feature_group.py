@@ -1201,7 +1201,7 @@ class FeatureGroup(FeatureGroupBase):
             self._validation_type = "NONE"
         else:
             self._validation_type = new_validation_type.upper()
-        self._feature_group_engine.update_config(self, "validationType")
+        self._feature_group_engine.update_validation_type(self)
 
     @expectations_names.setter
     def expectations_names(self, new_expectations_names):
