@@ -28,7 +28,6 @@ from hsfs.core import (
     feature_group_engine,
     statistics_engine,
     data_validation_engine,
-    feature_group_base_engine,
     on_demand_feature_group_engine,
     expectations_api,
 )
@@ -39,9 +38,6 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = (
-            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
-        )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -172,7 +168,7 @@ class FeatureGroupBase:
             `RestAPIError` in case the backend fails to add the tag.
         """
 
-        self._feature_group_base_engine.add_tag(self, name, value)
+        self._feature_group_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature group.
@@ -183,7 +179,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to delete the tag.
         """
-        self._feature_group_base_engine.delete_tag(self, name)
+        self._feature_group_engine.delete_tag(self, name)
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
@@ -197,7 +193,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to retrieve the tag.
         """
-        return self._feature_group_base_engine.get_tag(self, name)
+        return self._feature_group_engine.get_tag(self, name)
 
     def get_tags(self):
         """Retrieves all tags attached to a feature group.
@@ -208,7 +204,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to retrieve the tags.
         """
-        return self._feature_group_base_engine.get_tags(self)
+        return self._feature_group_engine.get_tags(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
@@ -252,7 +248,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError`.
         """
-        self._feature_group_base_engine.update_statistics_config(self)
+        self._feature_group_engine.update_statistics_config(self)
         return self
 
     def update_description(self, description: str):
@@ -268,7 +264,7 @@ class FeatureGroupBase:
         # Returns
             `FeatureGroup`. The updated feature group object.
         """
-        self._feature_group_base_engine.update_description(self, description)
+        self._feature_group_engine.update_description(self, description)
         return self
 
     def update_features(self, features: Union[feature.Feature, List[feature.Feature]]):
@@ -307,7 +303,7 @@ class FeatureGroupBase:
                 "The argument `features` has to be of type `Feature` or a list "
                 "thereof, but is of type: `{}`".format(type(features))
             )
-        self._feature_group_base_engine.update_features(self, new_features)
+        self._feature_group_engine.update_features(self, new_features)
         return self
 
     def update_feature_description(self, feature_name: str, description: str):
@@ -326,7 +322,7 @@ class FeatureGroupBase:
         """
         f_copy = copy.deepcopy(self[feature_name])
         f_copy.description = description
-        self._feature_group_base_engine.update_features(self, [f_copy])
+        self._feature_group_engine.update_features(self, [f_copy])
         return self
 
     def append_features(self, features: Union[feature.Feature, List[feature.Feature]]):
@@ -366,7 +362,7 @@ class FeatureGroupBase:
                 "The argument `features` has to be of type `Feature` or a list "
                 "thereof, but is of type: `{}`".format(type(features))
             )
-        self._feature_group_base_engine.append_features(self, new_features)
+        self._feature_group_engine.append_features(self, new_features)
         return self
 
     def __getattr__(self, name):
