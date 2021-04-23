@@ -167,10 +167,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
         copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            None,
-            None,
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=None,
             id=feature_group.id,
             features=feature_group.features + new_features,
         )
@@ -181,10 +181,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            description,
-            None,
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=description,
             id=feature_group.id,
             features=feature_group.features,
         )
