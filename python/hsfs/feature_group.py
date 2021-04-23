@@ -326,7 +326,7 @@ class FeatureGroupBase:
         """
         f_copy = copy.deepcopy(self[feature_name])
         f_copy.description = description
-        self._feature_group_base_engine.append_features(self, [f_copy])
+        self._feature_group_base_engine.update_features(self, [f_copy])
         return self
 
     def append_features(self, features: Union[feature.Feature, List[feature.Feature]]):
