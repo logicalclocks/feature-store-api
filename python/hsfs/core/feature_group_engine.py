@@ -16,7 +16,6 @@
 import warnings
 
 from hsfs import engine, client, util
-from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
 
@@ -144,15 +143,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         return hudi_engine_instance.delete_record(delete_df, write_options)
 
-    def update_config(self, feature_group, metadata):
-        """Update the metadata attribute specified of the feature group ."""
-        metadata_values = {
-            "updateStatsSettings": True,
-            "validationType": feature_group.validation_type,
-        }
-
+    def update_validation_type(self, feature_group):
         self._feature_group_api.update_metadata(
-            feature_group, feature_group, metadata, metadata_values.get(metadata)
+            feature_group,
+            feature_group,
+            "validationType",
+            feature_group.validation_type,
         )
 
     def sql(self, query, feature_store_name, dataframe_type, online):
@@ -162,36 +158,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             online_conn = None
         return engine.get_instance().sql(
             query, feature_store_name, online_conn, dataframe_type
-        )
-
-    def append_features(self, feature_group, new_features):
-        """Appends features to a feature group."""
-        # perform changes on copy in case the update fails, so we don't leave
-        # the user object in corrupted state
-        copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            None,
-            None,
-            id=feature_group.id,
-            features=feature_group.features + new_features,
-        )
-        self._feature_group_api.update_metadata(
-            feature_group, copy_feature_group, "updateMetadata"
-        )
-
-    def update_description(self, feature_group, description):
-        """Updates the description of a feature group."""
-        copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            description,
-            None,
-            id=feature_group.id,
-            features=feature_group.features,
-        )
-        self._feature_group_api.update_metadata(
-            feature_group, copy_feature_group, "updateMetadata"
         )
 
     def get_avro_schema(self, feature_group):
