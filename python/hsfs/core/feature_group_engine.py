@@ -161,44 +161,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             query, feature_store_name, online_conn, dataframe_type
         )
 
-    def update_features(self, feature_group, updated_features):
-        """Updates features safely."""
-        # perform changes on copy in case the update fails, so we don't leave
-        # the user object in corrupted state
-        new_features = []
-        for feature in feature_group.features:
-            match = False
-            for updated_feature in updated_features:
-                if updated_feature.name.lower() == feature.name:
-                    match = True
-                    new_features.append(updated_feature)
-                    break
-            if not match:
-                new_features.append(feature)
-
-        copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            None,
-            None,
-            id=feature_group.id,
-            features=new_features,
-        )
-        self._feature_group_api.update_metadata(
-            feature_group, copy_feature_group, "updateMetadata"
-        )
-
-    def append_features(self, feature_group, new_features):
-        """Appends features to a feature group."""
+    def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
         copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            None,
-            None,
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=None,
             id=feature_group.id,
-            features=feature_group.features + new_features,
+            features=features,
         )
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
@@ -207,10 +179,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            description,
-            None,
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=description,
             id=feature_group.id,
             features=feature_group.features,
         )
