@@ -22,7 +22,6 @@
         <spark.version>2.4.3.2</spark.version>
         <deequ.version>1.1.0-SNAPSHOT</deequ.version>
         <hudi.version>0.7.0</hudi.version>
-        <circle.version>0.11.1</circle.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.base>2.11</scala.base>
     </properties>
@@ -191,23 +190,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-parser_2.12</artifactId>
-            <version>${circle.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-core_2.12</artifactId>
-            <version>${circle.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-generic_2.12</artifactId>
-            <version>${circle.version}</version>
-        </dependency>
-
 
         <dependency>
             <groupId>io.specto</groupId>
