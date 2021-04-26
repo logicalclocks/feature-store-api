@@ -4,7 +4,7 @@ Managed [RonDB](https://www.rondb.com/). You don't need to worry about configura
 automatically pick the best options for your setup.
 
 ## Enabling RonDB
-To setup a cluster with RonDB, click on the `Enable` checkbox during cluster creation. If you don't see this option contact [sales](mailto: sales@logicalclocks.com).
+To setup a cluster with RonDB, click on the `Enable` checkbox during cluster creation. If you don't see this option contact [us](mailto: sales@logicalclocks.com).
 
 <p align="center">
   <figure>
