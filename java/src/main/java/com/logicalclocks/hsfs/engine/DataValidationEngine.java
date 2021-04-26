@@ -273,6 +273,10 @@ public class DataValidationEngine {
         return RuleName.HAS_CORRELATION;
       case "patternmatch":
         return RuleName.HAS_PATTERN;
+      case "minlength":
+        return RuleName.HAS_MIN_LENGTH;
+      case "maxlength":
+        return RuleName.HAS_MAX_LENGTH;
       case "datatype":
         return RuleName.HAS_DATATYPE;
       case "isnonnegative":
