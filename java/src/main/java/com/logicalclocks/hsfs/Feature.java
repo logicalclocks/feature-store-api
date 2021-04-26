@@ -102,21 +102,19 @@ public class Feature {
   }
 
   @Builder
-  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue)
+  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue,
+                 String description)
       throws FeatureStoreException {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
     }
     setName(name);
-
-    if (Strings.isNullOrEmpty(type)) {
-      throw new FeatureStoreException("Type is required when creating a feature");
-    }
     this.type = type;
     this.onlineType = onlineType;
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+    this.description = description;
   }
 
   @JsonIgnore
