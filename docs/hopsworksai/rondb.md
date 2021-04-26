@@ -59,7 +59,7 @@ One use-case which might be interesting is to *benchmark* RonDB. In that case yo
 select the checkbox which **grants access** to a benchmark user to specific tables in MySQL.
 
 ## RonDB details
-Once the cluster is created you can view some details by clicking in the `RonDB` tab as shown in the picture below.
+Once the cluster is created you can view some details by clicking on the `RonDB` tab as shown in the picture below.
 
 <p align="center">
   <figure>
