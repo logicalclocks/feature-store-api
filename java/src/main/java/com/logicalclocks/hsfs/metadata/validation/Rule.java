@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import scala.collection.JavaConverters;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class Rule {
 
   @Builder
   public Rule(RuleName name, RuleDefinition rule, Level level, Double min, Double max, String pattern,
-      AcceptedType acceptedType, List<String> legalValues) {
+      AcceptedType acceptedType, scala.collection.Seq<String> legalValues) {
     if (rule != null) {
       this.name = rule.getName();
     } else {
@@ -61,7 +62,9 @@ public class Rule {
     this.max = max;
     this.pattern = pattern;
     this.acceptedType = acceptedType;
-    this.legalValues = legalValues;
+    if (legalValues != null) {
+      this.legalValues = (List<String>) JavaConverters.seqAsJavaListConverter(legalValues).asJava();
+    }
   }
 
 }
