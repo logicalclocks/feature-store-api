@@ -168,7 +168,7 @@ Hopsworks.ai users have the option to create a cluster with dedicated VMs runnin
   </figure>
 </p>
 
-If you don't see this step please contact [sales](mailto:sales@logicalclocks.com).
+If you need this feature and don't see this step please contact [us](mailto:sales@logicalclocks.com).
 
 For details on how to configure RonDB check our guide [here](../rondb.md).
 
