@@ -50,7 +50,7 @@ In this section you can change advanced settings of RonDB. Proceed **only** if y
 ### Number of replicas
 RonDB is a distributed in-memory database. To provide high-availability RonDB replicates data on different node groups. The
 default number of replicas is 2 which covers most of the cases. If you change this value, you must change the number of
-*Datanodes* too. The number of Datanodes configured in the `Basic` tab should be evenly divisible by the numer of replicas.
+*Datanodes* accordingly. The number of Datanodes configured in the `Basic` tab should be evenly divisible by the numer of replicas.
 
 ### API nodes
 API nodes are specialized nodes which can run user code connecting directly to RonDB datanodes for increased performance.
@@ -59,7 +59,7 @@ One use-case which might be interesting is to *benchmark* RonDB. In that case yo
 select the checkbox which **grants access** to a benchmark user to specific tables in MySQL.
 
 ## RonDB details
-Once the cluster is created you can view some details by clicking in the `RonDB` tab as shown in the picture below.
+Once the cluster is created you can view some details by clicking on the `RonDB` tab as shown in the picture below.
 
 <p align="center">
   <figure>
