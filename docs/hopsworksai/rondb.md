@@ -33,7 +33,8 @@ memory optimized instance type. Local storage is not very important as RonDB is 
 big enough for offline storage of recovery data.
 
 Next you can configure the number of MySQLd nodes. If you have a specific use-case where you expect high load on MySQL servers,
-then you can add more. In a general use-case you can go with zero, cluster's Head node already comes with a MySQL server.
+such as a custom streaming application performing SQL queries in short interval, then you can add more. In a general use-case
+you can go with zero, cluster's Head node already comes with a MySQL server.
 
 ## Advanced
 In this section you can change advanced settings of RonDB. Proceed **only** if you know what you are doing.
