@@ -16,7 +16,7 @@ To setup a cluster with RonDB, click on the `Enable` checkbox during cluster cre
 </p>
 
 ## Node selection
-If you enable Managed RonDB you will see a basic configuration page where you can select the number of database nodes.
+If you enable Managed RonDB you will see a basic configuration page where you can configure the database nodes.
 
 <p align="center">
   <figure>
