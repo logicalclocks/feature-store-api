@@ -159,6 +159,8 @@ In this step, you can choose which user management system to use. You have three
 ### Step 11 Managed RonDB
 Hopsworks.ai users have the option to create a cluster with dedicated VMs running [RonDB](https://www.rondb.com/).
 
+For details on how to configure RonDB check our guide [here](../rondb.md).
+
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/rondb/rondb_enable.png">
@@ -169,8 +171,6 @@ Hopsworks.ai users have the option to create a cluster with dedicated VMs runnin
 </p>
 
 If you need this feature and don't see this step please contact [us](mailto:sales@logicalclocks.com).
-
-For details on how to configure RonDB check our guide [here](../rondb.md).
 
 ### Step 12 add tags to your instances.
 In this step, you can define tags that will be added to the cluster virtual machines.
