@@ -194,7 +194,7 @@ public class FeatureGroupBase {
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
     featureGroupBaseEngine.updateFeatures(this,
-        Collections.singletonList(Feature.builder().name(featureName).description(description).build()),
+        Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
         this.getClass());
   }
 

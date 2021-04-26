@@ -57,15 +57,11 @@ class FeatureGroupBaseEngine:
         """Updates features safely."""
         new_features = []
         for feature in feature_group.features:
-            match = False
-            for updated_feature in updated_features:
-                if updated_feature.name.lower() == feature.name:
-                    match = True
-                    new_features.append(updated_feature)
-                    break
-            if not match:
+            if not any(
+                updated.name.lower() == feature.name for updated in updated_features
+            ):
                 new_features.append(feature)
-        self._update_features_metadata(feature_group, new_features)
+        self._update_features_metadata(feature_group, new_features + updated_features)
 
     def append_features(self, feature_group, new_features):
         """Appends features to a feature group."""

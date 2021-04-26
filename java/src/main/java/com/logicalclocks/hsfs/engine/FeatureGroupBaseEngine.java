@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
   protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -66,8 +67,13 @@ public class FeatureGroupBaseEngine {
       throws FeatureStoreException, IOException {
     List<Feature> newFeatures = new ArrayList<>();
     for (Feature feature : featureGroup.getFeatures()) {
-      if (features.stream().noneMatch(updated -> updated.getName().equalsIgnoreCase(feature.getName()))) {
+      Optional<Feature> match =
+          features.stream().filter(updated -> updated.getName().equalsIgnoreCase(feature.getName())).findAny();
+      if (!match.isPresent()) {
         newFeatures.add(feature);
+      } else {
+        match.get().setType(feature.getType());
+        newFeatures.add(match.get());
       }
     }
     newFeatures.addAll(features);

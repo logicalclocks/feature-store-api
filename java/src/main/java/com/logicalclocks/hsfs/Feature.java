@@ -109,6 +109,10 @@ public class Feature {
       throw new FeatureStoreException("Name is required when creating a feature");
     }
     setName(name);
+
+    if (Strings.isNullOrEmpty(type)) {
+      throw new FeatureStoreException("Type is required when creating a feature");
+    }
     this.type = type;
     this.onlineType = onlineType;
     this.primary = primary;
