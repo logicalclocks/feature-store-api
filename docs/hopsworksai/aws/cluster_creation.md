@@ -156,7 +156,23 @@ In this step, you can choose which user management system to use. You have three
   </figure>
 </p>
 
-### Step 11 add tags to your instances.
+### Step 11 Managed RonDB
+Hopsworks.ai users have the option to create a cluster with dedicated VMs running [RonDB](https://www.rondb.com/).
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/rondb/rondb_enable.png">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/rondb/rondb_enable.png" alt="Enable Managed RonDB">
+    </a>
+    <figcaption>Enable Managed RonDB</figcaption>
+  </figure>
+</p>
+
+If you don't see this step please contact [sales](mailto:sales@logicalclocks.com).
+
+For details on how to configure RonDB check our guide [here](../rondb.md).
+
+### Step 12 add tags to your instances.
 In this step, you can define tags that will be added to the cluster virtual machines.
 
 <p align="center">
@@ -168,7 +184,7 @@ In this step, you can define tags that will be added to the cluster virtual mach
   </figure>
 </p>
 
-### Step 12 Review and create
+### Step 13 Review and create
 Review all information and select *Create*:
 
 <p align="center">
