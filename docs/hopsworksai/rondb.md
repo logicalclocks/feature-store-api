@@ -50,7 +50,7 @@ In this section you can change advanced settings of RonDB. Proceed **only** if y
 ### Number of replicas
 RonDB is a distributed in-memory database. To provide high-availability RonDB replicates data on different node groups. The
 default number of replicas is 2 which covers most of the cases. If you change this value, you must change the number of
-*Datanodes* too.
+*Datanodes* accordingly.
 
 ### API nodes
 API nodes are specialized nodes which can run user code connecting directly to RonDB datanodes for increased performance.
