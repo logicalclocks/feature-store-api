@@ -8,8 +8,8 @@ To setup a cluster with RonDB, click on the `Enable` checkbox during cluster cre
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/rondb/rondb_enable.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/rondb/rondb_enable.png" alt="Enable Managed RonDB">
+    <a  href="../../assets/images/hopsworksai/rondb/rondb_enable.png">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/rondb/rondb_enable.png" alt="Enable Managed RonDB">
     </a>
     <figcaption>Enable Managed RonDB</figcaption>
   </figure>
@@ -20,8 +20,8 @@ If you enable Managed RonDB you will see a basic configuration page where you ca
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/rondb/rondb_basic.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/rondb/rondb_basic.png" alt="RonDB basic configuration">
+    <a  href="../../assets/images/hopsworksai/rondb/rondb_basic.png">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/rondb/rondb_basic.png" alt="RonDB basic configuration">
     </a>
     <figcaption>RonDB basic configuration</figcaption>
   </figure>
@@ -41,8 +41,8 @@ In this section you can change advanced settings of RonDB. Proceed **only** if y
 
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/rondb/rondb_advanced.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/rondb/rondb_advanced.png" alt="RonDB advanced configuration">
+    <a  href="../../assets/images/hopsworksai/rondb/rondb_advanced.png">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/rondb/rondb_advanced.png" alt="RonDB advanced configuration">
     </a>
     <figcaption>RonDB advanced configuration</figcaption>
   </figure>
@@ -64,8 +64,8 @@ Once the cluster is created you can view some details by clicking on the `RonDB`
 
 <p align="center">
   <figure>
-    <a href="../../../assets/images/hopsworksai/rondb/rondb_details.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/rondb/rondb_details.png" alt="RonDB cluster details">
+    <a href="../../assets/images/hopsworksai/rondb/rondb_details.png">
+      <img style="border: 1px solid #000" src="../../assets/images/hopsworksai/rondb/rondb_details.png" alt="RonDB cluster details">
     </a>
     <figcaption>RonDB cluster details</figcaption>
   </figure>
