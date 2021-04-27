@@ -79,6 +79,7 @@ nav:
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
+    - Managed RonDB: hopsworksai/rondb.md
     - Integrations: "./setup/"
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md
