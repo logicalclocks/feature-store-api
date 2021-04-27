@@ -43,10 +43,10 @@ If an expectation contains a rule that can be applied
 | HAS_DISTINCTNESS              | VALUE         | Fractional    | NULL         | Assert on the distincness of a single or combined set of features.                      |
 | HAS_ENTROPY                   | VALUE         | Fractional    | NULL         | Assert on the entropy of a feature.                                                     |
 | HAS_MAX                       | VALUE         | Fractional    | Quantitative | Assert on the max of a feature.                                                         |
-| HAS_MAX_LENGTH                | PATTERN       | String        | Categorical  | Assert on the maximum length of the feature value.                                      |
+| HAS_MAX_LENGTH                | VALUE         | String        | Categorical  | Assert on the maximum length of the feature value.                                      |
 | HAS_MEAN                      | VALUE         | Fractional    | Quantitative | Assert on the mean of a feature.                                                        |
 | HAS_MIN                       | VALUE         | Fractional    | Quantitative | Assert on the min of a feature.                                                         |
-| HAS_MIN_LENGTH                | PATTERN       | String        | Categorical  | Assert on the minimum length of the feature value.                                      |
+| HAS_MIN_LENGTH                | VALUE         | String        | Categorical  | Assert on the minimum length of the feature value.                                      |
 | HAS_MUTUAL_INFORMATION        | VALUE         | Fractional    | NULL         | Assert on the mutual information between two features.                                  |
 | HAS_NUMBER_OF_DISTINCT_VALUES | VALUE         | Integral      | NULL         | Assert on the number of distinct values of a feature.                                   |
 | HAS_PATTERN                   | PATTERN       | String        | Categorical  | Assert on the average compliance of the feature to the regular expression.              |
