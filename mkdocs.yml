@@ -77,6 +77,7 @@ nav:
       - Azure: hopsworksai/azure/cluster_creation.md
       - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
+    - Autoscaling: hopsworksai/autoscaling.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
     - Managed RonDB: hopsworksai/rondb.md
