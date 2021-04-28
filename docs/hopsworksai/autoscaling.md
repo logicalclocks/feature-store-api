@@ -13,7 +13,7 @@ Once you have created a cluster you can enable autoscaling by going to the *Deta
   </figure>
 </p>
 
-Once you have clicked on *Configure autoscale* you will access a form allowing you to configure the autoscaling. This form is in two parts. In the first part, you configure the autoscaling for general-purpose compute nodes. In the second part, you configure the autoscaling for nodes equipped with GPUs. In both part you will have to set up the following:
+Once you have clicked on *Configure autoscale* you will access a form allowing you to configure the autoscaling. This form is in two parts. In the first part, you configure the autoscaling for general-purpose compute nodes. In the second part, you configure the autoscaling for nodes equipped with GPUs. In both parts you will have to set up the following:
 
 1. The instance type you want to use. You can decide to not enable the autoscaling for GPU nodes by selecting *No GPU autoscale*.
 2. The size of the instances' disk.
