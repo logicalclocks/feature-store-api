@@ -19,7 +19,7 @@ Once you have clicked on *Configure autoscale* you will access a form allowing y
 2. The size of the instances' disk.
 3. The minimum number of workers. 
 4. The maximum number of workers.
-5. The targeted number of overprovisioned nodes. Setting resource overprovisioning ensures that there are always some free resources in your cluster. This ensures that requests for new resources are fulfilled promptly. You configure the overprovisioning by setting the number of nodes you want to be overprovisioned. For example, if you set a value of *0.5* the system will start a new worker each time there are less than the resource equivalent of half a worker in the cluster. If you set this value to 0 new workers will only be started when a job or notebook request the resources.
+5. The targeted number of overprovisioned workers. Setting resource overprovisioning ensures that there are always some free resources in your cluster. This ensures that requests for new resources are fulfilled promptly. You configure the overprovisioning by setting the amount of workers you want to be overprovisioned. For example, if you set a value of *0.5* the system will start a new worker every time the aggregated free cluster resources drop below 50% of a worker's resources. If you set this value to 0 new workers will only be started when a job or notebook request the resources.
 6. The time to wait before removing unused resources. One often starts a new computation shortly after finishing the previous one. To avoid having to wait for workers to stop and start between each computation it is recommended to wait before shutting down workers. Here you set the amount of time in seconds resources need to be unused before they get removed from the system.
 
 !!! note
@@ -52,7 +52,7 @@ Once you have set your configuration you can review it and enable the autoscalin
 </p>
 
 ## Modifying the autoscaling configuration
-You can update the autoscale configuration by going to the *Details* tab of the cluster and clicking on *Configure autoscale*. You will then go through the same steps as above. Note that if you change the *instance type*, nodes that are currently existing in the cluster with a different instance type will not be managed by the autoscale system anymore and you will have to remove them manually. 
+You can update the autoscale configuration by going to the *Details* tab of the cluster and clicking on *Configure autoscale*. You will then go through the same steps as above. Note that if you change the *instance type*, nodes that currently exist in the cluster with a different instance type will not be managed by the autoscale system anymore and you will have to remove them manually. 
 
 ## Disabling the autoscaling
 To disable the autoscaling go to the *Details* tab, click on *Disable autoscale* and confirm your action. When you disable autoscaling the nodes that are currently running will keep running. You will need to stop them manually.
