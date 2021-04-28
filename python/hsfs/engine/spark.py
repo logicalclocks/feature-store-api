@@ -529,7 +529,7 @@ class Engine:
             feature.Feature(
                 feat.name.lower(),
                 feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
+                feat.metadata.get("description", None),
             )
             for feat in dataframe.schema
         ]
