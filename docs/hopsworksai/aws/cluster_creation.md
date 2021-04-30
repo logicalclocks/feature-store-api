@@ -115,7 +115,7 @@ To back up the S3 bucket data when taking a cluster backup we need to set a rete
   </figure>
 </p>
 
-### Step 7 Managed Containers:
+### Step 7 Managed Containers
 Hopsworks can integrate with Amazon Elastic Kubernetes Service (EKS) and Amazon Elastic Container Registry (ECR) to launch Python jobs, Jupyter servers, and ML model servings on top of Amazon EKS. For more detail on how to set up this integration refer to [Integration with Amazon EKS and Amazon ECR](eks_ecr_integration.md).
 <p align="center">
   <figure>
