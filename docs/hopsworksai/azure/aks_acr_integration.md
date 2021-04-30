@@ -55,7 +55,7 @@ Once finished the role assignments should look similar to the picture below.
 This guide will step through setting up a private AKS cluster and a public ACR. 
 
 ### Step 1: Create an AKS cluster
-Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.
+Go to *Kubernetes services* in the azure portal and click *Add* then *Add Kubernetes cluster*. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.
 
 <p align="center">
   <figure>
@@ -66,7 +66,11 @@ Go to *Kubernetes services* in the azure portal and click *Add*. Place the Kuber
   </figure>
 </p>
 
-Next, click on the *Authentication* tab and verify the settings are identical to the picture below.
+Next, click on the *Authentication* tab and verify the settings are as follow:
+
+* Authentication method: System-assigned managed identity
+* Role-based access control (RBAC): Enabled
+* AKS-managed Azure Active Directory: Disabled
 
 !!! note
     Currently, AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.
