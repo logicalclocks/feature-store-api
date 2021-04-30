@@ -1765,7 +1765,7 @@ Identify your EMR VPC in the Summary of your EMR cluster:</p>
 </div>
 <div class="admonition info">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you are on <strong>Hopsworks.ai</strong>, you can directly deploy Hopsworks to the EMR VPC, by simply selecting it at the <a href="../../../hopsworksai/aws/cluster_creation/#step-6-vpc-selection">VPC selection step during cluster creation</a>.</p>
+<p>If you are on <strong>Hopsworks.ai</strong>, you can directly deploy Hopsworks to the EMR VPC, by simply selecting it at the <a href="../../../hopsworksai/aws/cluster_creation/#step-8-vpc-selection">VPC selection step during cluster creation</a>.</p>
 </div>
 <p><strong>Option 2: Set up VPC peering</strong></p>
 <p>Follow the guide <a href="https://docs.aws.amazon.com/vpc/latest/peering/create-vpc-peering-connection.html">VPC Peering</a> to set up VPC peering between the Feature Store and EMR. Get your Feature Store <em>VPC ID</em> and <em>CIDR</em> by searching for the Feature Store VPC in the AWS Management Console:</p>
@@ -1786,7 +1786,7 @@ Identify your EMR VPC in the Summary of your EMR cluster:</p>
 <p>The Feature Store <em>Security Group</em> needs to be configured to allow traffic from your EMR clusters to be able to connect to the Feature Store.</p>
 <div class="admonition note">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="../../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store">outside access of the Feature Store services</a>.</p>
+<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="../../../hopsworksai/aws/getting_started/#step-6-outside-access-to-the-feature-store">outside access of the Feature Store services</a>.</p>
 </div>
 <p>Open your feature store instance under EC2 in the AWS Management Console and ensure that ports <em>443</em>, <em>3306</em>, <em>9083</em>, <em>9085</em>, <em>8020</em> and <em>30010</em> (443,3306,8020,30010,9083,9085) are reachable
 from the EMR Security Group:</p>

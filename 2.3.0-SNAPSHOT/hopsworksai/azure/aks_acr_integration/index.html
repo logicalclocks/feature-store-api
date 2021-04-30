@@ -1883,7 +1883,7 @@
 <h2 id="private-aks-cluster-and-public-acr">Private AKS cluster and public ACR<a class="headerlink" href="#private-aks-cluster-and-public-acr" title="Permanent link">#</a></h2>
 <p>This guide will step through setting up a private AKS cluster and a public ACR. </p>
 <h3 id="step-1-create-an-aks-cluster">Step 1: Create an AKS cluster<a class="headerlink" href="#step-1-create-an-aks-cluster" title="Permanent link">#</a></h3>
-<p>Go to <em>Kubernetes services</em> in the azure portal and click <em>Add</em>. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.</p>
+<p>Go to <em>Kubernetes services</em> in the azure portal and click <em>Add</em> then <em>Add Kubernetes cluster</em>. Place the Kubernetes cluster in the same resource group and region as the Hopsworks cluster and choose a name for the Kubernetes cluster.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/aks-base.png">
@@ -1893,7 +1893,12 @@
   </figure>
 </p>
 
-<p>Next, click on the <em>Authentication</em> tab and verify the settings are identical to the picture below.</p>
+<p>Next, click on the <em>Authentication</em> tab and verify the settings are as follow:</p>
+<ul>
+<li>Authentication method: System-assigned managed identity</li>
+<li>Role-based access control (RBAC): Enabled</li>
+<li>AKS-managed Azure Active Directory: Disabled</li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Currently, AKS is only supported through managed identities. Contact the Logical Clocks sales team if you have a self-managed Kubernetes cluster.</p>
