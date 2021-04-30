@@ -82,6 +82,10 @@ object DeequEngine {
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
       case "HAS_PATTERN" => check.hasPattern(constraint.columns.get.head, constraint.pattern.get.r,
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
+      case "HAS_MIN_LENGTH" => check.hasMinLength(constraint.columns.get.head,
+        doubleBoundary(constraint.min, constraint.max), constraint.hint)
+      case "HAS_MAX_LENGTH" => check.hasMaxLength(constraint.columns.get.head,
+        doubleBoundary(constraint.min, constraint.max), constraint.hint)
       case "HAS_DATATYPE" => check.hasDataType(constraint.columns.get.head,
         ConstrainableDataTypes.withName(constraint.acceptedType.get.name()),
         doubleBoundary(constraint.min, constraint.max), constraint.hint)
