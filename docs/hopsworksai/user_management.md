@@ -62,7 +62,7 @@ Also, he will be able to view **the same** Dashboard as Alice, so he can start, 
   </figure>
 </p>
 
-If Alice had existing clusters running and she had selected [Managed user management](../aws/cluster_creation/#step-9-user-management-selection)
+If Alice had existing clusters running and she had selected [Managed user management](../aws/cluster_creation/#step-11-user-management-selection)
 during cluster creation, an account will be automatically created for Bob on these clusters.
 
 ## Removing members from an organization
