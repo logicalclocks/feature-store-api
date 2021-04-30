@@ -75,7 +75,7 @@ You can set the autoscaling configuration by selecting enabled in the first drop
 ### Step 4 select an SSH key
 
 When deploying clusters, Hopsworks.ai installs an ssh key on the cluster's instances so that you can access them if necessary.
-Select the *SSH key* that you want to use to access cluster instances. For more detail on how to add a shh key in AWS refer to [Create an ssh key](getting_started.md#step-3-create-an-ssh-key)
+Select the *SSH key* that you want to use to access cluster instances. For more detail on how to add a shh key in AWS refer to [Create an ssh key](getting_started.md#step-4-create-an-ssh-key)
 
 <p align="center">
   <figure>
@@ -99,7 +99,7 @@ To let the cluster instances access the S3 bucket we need to attach an *instance
   </figure>
 </p>
 
-### Step 6 set the backup retention policy:
+### Step 6 set the backup retention policy
 
 !!! note
     This step is only accessible to enterprise users.

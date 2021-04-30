@@ -330,7 +330,7 @@ Choose the instance profile role that you have created in [Step 2](#step-2-creat
   </figure>
 </p>
 
-Choose the [backup retention period](cluster_creation.md#step-5-set-the-backup-retention-policy) and click Next:
+Choose the [backup retention period](cluster_creation.md#step-6-set-the-backup-retention-policy) and click Next:
 
 <p align="center">
   <figure>

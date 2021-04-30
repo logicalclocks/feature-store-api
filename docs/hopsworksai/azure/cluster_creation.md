@@ -16,7 +16,7 @@ In Hopsworks.ai, select *Create cluster*:
 
 ### Step 2 setting the General information
 
-Select the *Resource Group* (1) in you want to use.
+Select the *Resource Group* (1) you want to use.
 
 !!! note
     If the *Resource Group* does not appear in the drop-down, make sure that you properly [created and set the custom role](#step-12-creating-a-custom-role-for-hopsworksai) for this resource group.
