@@ -10,6 +10,18 @@ Hopsworks.ai deploys Hopsworks clusters to your Azure account. To enable this, y
 create a service principal and a custom role for Hopsworks.ai granting access
 to either a subscription or resource group.
 
+<p align="center">
+  <iframe
+    title="Azure information video"
+    style="width:700px; height: 370px;"
+    src="https://www.youtube.com/embed/Pfx2b3UTt88"
+    frameBorder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  >
+  </iframe>
+</p>
+
 ### Step 1.0: Prerequisite
 
 For Hopsworks.ai to deploy a cluster the following resource providers need to be registered on your Azure subscription.
@@ -88,7 +100,7 @@ In this case, please ask your Azure administrator to add it for you or give you 
 
 ### Step 1.2: Creating a custom role for Hopsworks.ai
 
-Proceed to the Azure Portal and open either a *Subscription* or *Resource Group* that you want to use for Hopsworks.ai.
+Proceed to the Azure Portal and open either a *Subscription* or *Resource Group* that you want to use for Hopsworks.ai. Click on *Access control (IAM)*
 Select *Add* and choose *Add custom role*. 
 
 !!! note
@@ -154,7 +166,7 @@ Press *Save*, proceed to *Review + create* and create the role:
 
 ### Step 1.3: Assigning the custom role to Hopsworks.ai
 
-Back in the *Subscription* or *Resource Group* overview, select *Add* and choose *Add role assignment*:
+Back in the *Subscription* or *Resource Group*, in *Access control (IAM)*, select *Add* and choose *Add role assignment*:
 
 <p align="center">
   <figure>
@@ -253,7 +265,7 @@ Similarly to [Step 1.2](#step-12-creating-a-custom-role-for-hopsworksai) create 
 
 ### Step 2.2: Creating a User Assigned Managed Identity
 
-Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
+Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add* then *Marketplace*.
 
 <p align="center">
   <figure>
@@ -288,7 +300,7 @@ Click on *Create*. Then, select the Location you want to use and name the identi
 
 ### Step 2.3: Creating a Storage account
 
-Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
+Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add* then *Marketplace*.
 
 <p align="center">
   <figure>
@@ -340,7 +352,7 @@ Click on *Save* (7).
 
 When deploying clusters, Hopsworks.ai installs a ssh key on the cluster's instances so that you can access them if necessary. For this purpose you need to add a ssh key to your resource group.
 
-Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add*.
+Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on *Add* then *Marketplace*.
 
 <p align="center">
   <figure>

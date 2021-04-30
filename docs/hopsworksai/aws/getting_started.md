@@ -13,6 +13,18 @@ to security reasons.
 
 ### Option 1: Using AWS Cross-Account Roles
 
+<p align="center">
+  <iframe
+    title="Azure information video"
+    style="width:700px; height: 370px;"
+    src="https://www.youtube.com/embed/DLMBdA8d9nU"
+    frameBorder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  >
+  </iframe>
+</p>
+
 To create a cross-account role for Hopsworks.ai, you need our AWS account id and the external
 id we created for you. You can find this information on the first screen of the cross-account
 configuration flow. Take note of the account id and external id and go to the *Roles* section
