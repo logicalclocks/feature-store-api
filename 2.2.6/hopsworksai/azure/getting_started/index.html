@@ -1916,6 +1916,18 @@ SageMaker and KubeFlow. This guide shows how to set up Hopsworks.ai with your or
 <p>Hopsworks.ai deploys Hopsworks clusters to your Azure account. To enable this, you have to
 create a service principal and a custom role for Hopsworks.ai granting access
 to either a subscription or resource group.</p>
+<p align="center">
+  <iframe
+    title="Azure information video"
+    style="width:700px; height: 370px;"
+    src="https://www.youtube.com/embed/Pfx2b3UTt88"
+    frameBorder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  >
+  </iframe>
+</p>
+
 <h3 id="step-10-prerequisite">Step 1.0: Prerequisite<a class="headerlink" href="#step-10-prerequisite" title="Permanent link">#</a></h3>
 <p>For Hopsworks.ai to deploy a cluster the following resource providers need to be registered on your Azure subscription.
 You can verify that they are registered by going to your subscription in the Azure portal and click on <em>Resource providers</em>.
@@ -1930,7 +1942,7 @@ If one of the resource providers is not registered select it and click on <em>Re
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-0.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-0.png" alt="Cloud account settings">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-0.png" alt="Cloud account settings">
     </a>
     <figcaption>Cloud account settings</figcaption>
   </figure>
@@ -1940,7 +1952,7 @@ If one of the resource providers is not registered select it and click on <em>Re
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-0.1.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-0.1.png" alt="Add subscription keys">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-0.1.png" alt="Add subscription keys">
     </a>
     <figcaption>Add subscription keys</figcaption>
   </figure>
@@ -1953,7 +1965,7 @@ and are logged in <a href="https://docs.microsoft.com/en-us/cli/azure/authentica
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-1.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-1.png" alt="Connect your Azure Account">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-1.png" alt="Connect your Azure Account">
     </a>
     <figcaption>Connect your Azure Account</figcaption>
   </figure>
@@ -1963,7 +1975,7 @@ and are logged in <a href="https://docs.microsoft.com/en-us/cli/azure/authentica
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-2.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-2.png" alt="Add service principal">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-2.png" alt="Add service principal">
     </a>
     <figcaption>Add service principal</figcaption>
   </figure>
@@ -1979,7 +1991,7 @@ In this case, please ask your Azure administrator to add it for you or give you 
 <p>When using this permission, the backing application of the service principal being created must in the local tenant.</p>
 </div>
 <h3 id="step-12-creating-a-custom-role-for-hopsworksai">Step 1.2: Creating a custom role for Hopsworks.ai<a class="headerlink" href="#step-12-creating-a-custom-role-for-hopsworksai" title="Permanent link">#</a></h3>
-<p>Proceed to the Azure Portal and open either a <em>Subscription</em> or <em>Resource Group</em> that you want to use for Hopsworks.ai.
+<p>Proceed to the Azure Portal and open either a <em>Subscription</em> or <em>Resource Group</em> that you want to use for Hopsworks.ai. Click on <em>Access control (IAM)</em>
 Select <em>Add</em> and choose <em>Add custom role</em>. </p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1989,7 +2001,7 @@ in that <em>Subscription</em>. If you are uncertain if that is what you want, th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-3.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-3.png" alt="Add custom role">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-3.png" alt="Add custom role">
     </a>
     <figcaption>Add custom role</figcaption>
   </figure>
@@ -1999,7 +2011,7 @@ in that <em>Subscription</em>. If you are uncertain if that is what you want, th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-4.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-4.png" alt="Name custom role">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-4.png" alt="Name custom role">
     </a>
     <figcaption>Name custom role</figcaption>
   </figure>
@@ -2010,7 +2022,7 @@ You can change it here if required. Proceed to the JSON tab:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-5.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-5.png" alt="Review assignable scope">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-5.png" alt="Review assignable scope">
     </a>
     <figcaption>Review assignable scope</figcaption>
   </figure>
@@ -2020,7 +2032,7 @@ You can change it here if required. Proceed to the JSON tab:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-5.1.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-5.1.png" alt="Hopsworks.ai permission list">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-5.1.png" alt="Hopsworks.ai permission list">
     </a>
     <figcaption>Hopsworks.ai permission list</figcaption>
   </figure>
@@ -2034,18 +2046,18 @@ You can change it here if required. Proceed to the JSON tab:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-6.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-6.png" alt="Update permission JSON">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-6.png" alt="Update permission JSON">
     </a>
     <figcaption>Update permission JSON</figcaption>
   </figure>
 </p>
 
 <h3 id="step-13-assigning-the-custom-role-to-hopsworksai">Step 1.3: Assigning the custom role to Hopsworks.ai<a class="headerlink" href="#step-13-assigning-the-custom-role-to-hopsworksai" title="Permanent link">#</a></h3>
-<p>Back in the <em>Subscription</em> or <em>Resource Group</em> overview, select <em>Add</em> and choose <em>Add role assignment</em>:</p>
+<p>Back in the <em>Subscription</em> or <em>Resource Group</em>, in <em>Access control (IAM)</em>, select <em>Add</em> and choose <em>Add role assignment</em>:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-7.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-7.png" alt="Add role assignment">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-7.png" alt="Add role assignment">
     </a>
     <figcaption>Add role assignment</figcaption>
   </figure>
@@ -2056,7 +2068,7 @@ and select the <em>hopsworks.ai</em> service principal. Press <em>Save</em>:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-8.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-8.png" alt="Configure Hopsworks.ai as role assignment">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-8.png" alt="Configure Hopsworks.ai as role assignment">
     </a>
     <figcaption>Configure Hopsworks.ai as role assignment</figcaption>
   </figure>
@@ -2066,7 +2078,7 @@ and select the <em>hopsworks.ai</em> service principal. Press <em>Save</em>:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-9.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-9.png" alt="Configure subscription and tenant id">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-9.png" alt="Configure subscription and tenant id">
     </a>
     <figcaption>Configure subscription and tenant id</figcaption>
   </figure>
@@ -2077,7 +2089,7 @@ If so, ensure that you pick the subscription that you want to use.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-10.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-10.png" alt="Show subscription and tenant id">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-10.png" alt="Show subscription and tenant id">
     </a>
     <figcaption>Show subscription and tenant id</figcaption>
   </figure>
@@ -2090,7 +2102,7 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-10.1.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-10.1.png" alt="Store subscription and tenant id">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-10.1.png" alt="Store subscription and tenant id">
     </a>
     <figcaption>Store subscription and tenant id</figcaption>
   </figure>
@@ -2129,11 +2141,11 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p>Some of these permissions can be removed at the cost of Hopsworks features, see <a href="../restrictive_permissions/">Limiting Azure permissions</a> for more details.</p>
 </div>
 <h3 id="step-22-creating-a-user-assigned-managed-identity">Step 2.2: Creating a User Assigned Managed Identity<a class="headerlink" href="#step-22-creating-a-user-assigned-managed-identity" title="Permanent link">#</a></h3>
-<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
+<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em> then <em>Marketplace</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/add-to-resource-group.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
     </a>
     <figcaption>Add to resource group</figcaption>
   </figure>
@@ -2143,7 +2155,7 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/search-user-assigned-identity.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/search-user-assigned-identity.png" alt="Search User Assigned Managed Identity">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/search-user-assigned-identity.png" alt="Search User Assigned Managed Identity">
     </a>
     <figcaption>Search User Assigned Managed Identity</figcaption>
   </figure>
@@ -2153,18 +2165,18 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/create-user-assigned-identity.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/create-user-assigned-identity.png" alt="Create a User Assigned Managed Identity">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/create-user-assigned-identity.png" alt="Create a User Assigned Managed Identity">
     </a>
     <figcaption>Create a User Assigned Managed Identity</figcaption>
   </figure>
 </p>
 
 <h3 id="step-23-creating-a-storage-account">Step 2.3: Creating a Storage account<a class="headerlink" href="#step-23-creating-a-storage-account" title="Permanent link">#</a></h3>
-<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
+<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em> then <em>Marketplace</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/add-to-resource-group.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
     </a>
     <figcaption>Add to resource group</figcaption>
   </figure>
@@ -2174,7 +2186,7 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/search-storage-account.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/search-storage-account.png" alt="Search Storage Account Identity">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/search-storage-account.png" alt="Search Storage Account Identity">
     </a>
     <figcaption>Search Storage Account Identity</figcaption>
   </figure>
@@ -2184,7 +2196,7 @@ Paste the value into the <em>Tenant ID</em> field on Hopsworks.ai and press <em>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/create-storage-account.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/create-storage-account.png" alt="Create a Storage Account">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/create-storage-account.png" alt="Create a Storage Account">
     </a>
     <figcaption>Create a Storage Account</figcaption>
   </figure>
@@ -2197,7 +2209,7 @@ Click on <em>Save</em> (7).</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/add-role-to-storage.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/add-role-to-storage.png" alt="Add role assignment to storage">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/add-role-to-storage.png" alt="Add role assignment to storage">
     </a>
     <figcaption>Add role assignment to storage</figcaption>
   </figure>
@@ -2205,11 +2217,11 @@ Click on <em>Save</em> (7).</p>
 
 <h2 id="step-3-adding-a-ssh-key-to-your-resource-group">Step 3: Adding a ssh key to your resource group<a class="headerlink" href="#step-3-adding-a-ssh-key-to-your-resource-group" title="Permanent link">#</a></h2>
 <p>When deploying clusters, Hopsworks.ai installs a ssh key on the cluster's instances so that you can access them if necessary. For this purpose you need to add a ssh key to your resource group.</p>
-<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em>.</p>
+<p>Proceed to the Azure Portal and open the Resource Group that you want to use for Hopsworks.ai. Click on <em>Add</em> then <em>Marketplace</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/add-to-resource-group.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/add-to-resource-group.png" alt="Add to resource group">
     </a>
     <figcaption>Add to resource group</figcaption>
   </figure>
@@ -2219,7 +2231,7 @@ Click on <em>Save</em> (7).</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/create-ssh-key.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/create-ssh-key.png" alt="Create a SSH key">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/create-ssh-key.png" alt="Create a SSH key">
     </a>
     <figcaption>Add to resource group</figcaption>
   </figure>
@@ -2230,7 +2242,7 @@ Click on <em>Save</em> (7).</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/create-instance.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/create-instance.png" alt="Create a Hopsworks cluster">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/create-instance.png" alt="Create a Hopsworks cluster">
     </a>
     <figcaption>Create a Hopsworks cluster</figcaption>
   </figure>
@@ -2243,24 +2255,38 @@ Click on <em>Save</em> (7).</p>
 </div>
 <p>Name your cluster (2). Your cluster will be deployed in the <em>Location</em> of your <em>Resource Group</em> (3).</p>
 <p>Select the <em>Instance type</em> (4) and <em>Local storage</em> (5) size for the cluster <em>Head node</em>.</p>
-<p>Select the number of workers you want to start the cluster with (6).
-Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for the <em>worker nodes</em>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It is possible to add or remove workers once the cluster is running.</p>
 </div>
-<p>Select the <em>storage account</em> (9) you created above in <em>Azure Storage account name</em>. The name of the container in which the data will be stored is displayed in <em>Azure Container name</em> (10), you can modify it if needed.</p>
+<p>Select the <em>storage account</em> (6) you created above in <em>Azure Storage account name</em>. The name of the container in which the data will be stored is displayed in <em>Azure Container name</em> (7), you can modify it if needed.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You can choose to use a container already existing in your <em>storage account</em> by using the name of this container, but you need to first make sure that this container is empty.</p>
 </div>
-<p>Press <em>Next</em> (11):</p>
+<p>Press <em>Next</em>:</p>
 <p align="center">
   <figure>
-    <a  href="../../../assets/images/hopsworksai/azure/connect-azure-11.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-11.png" alt="General configuration">
+    <a  href="../../../assets/images/hopsworksai/azure/create-instance-general.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/create-instance-general.png" alt="General configuration">
     </a>
     <figcaption>General configuration</figcaption>
+  </figure>
+</p>
+
+<p>Select the number of workers you want to start the cluster with (2).
+Select the <em>Instance type</em> (3) and <em>Local storage</em> size (4) for the <em>worker nodes</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is possible to <a href="../../adding_removing_workers/">add or remove workers</a> or to <a href="../../autoscaling/">enable autoscaling</a> once the cluster is running.</p>
+</div>
+<p>Press <em>Next</em>:</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/create-instance-workers-static.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/create-instance-workers-static.png" alt="Create a Hopsworks cluster, static workers configuration">
+    </a>
+    <figcaption>Create a Hopsworks cluster, static workers configuration</figcaption>
   </figure>
 </p>
 
@@ -2268,7 +2294,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-12.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-12.png" alt="Choose SSH key">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-12.png" alt="Choose SSH key">
     </a>
     <figcaption>Choose SSH key</figcaption>
   </figure>
@@ -2278,7 +2304,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-identity.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-identity.png" alt="Choose the User assigned managed identity">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-identity.png" alt="Choose the User assigned managed identity">
     </a>
     <figcaption>Choose the User assigned managed identity</figcaption>
   </figure>
@@ -2286,13 +2312,13 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you are an enterprise user you will have one more step before being able to click on <em>Review and Create</em>. In this step, you will be asked to set the backups retention policy. More details about this step <a href="../cluster_creation/#step-5-set-the-backup-retention-policy">here</a></p>
+<p>If you are an enterprise user you will have one more step before being able to click on <em>Review and Create</em>. In this step, you will be asked to set the backups retention policy. More details about this step <a href="../cluster_creation/#step-6-set-the-backup-retention-policy">here</a></p>
 </div>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/connect-azure-17.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/connect-azure-17.png" alt="Review cluster information">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/connect-azure-17.png" alt="Review cluster information">
     </a>
     <figcaption>Review cluster information</figcaption>
   </figure>
@@ -2306,7 +2332,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/booting.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/booting.png" alt="Booting Hopsworks cluster">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/booting.png" alt="Booting Hopsworks cluster">
     </a>
     <figcaption>Booting Hopsworks cluster</figcaption>
   </figure>
@@ -2316,7 +2342,7 @@ Select the <em>Instance type</em> (7) and <em>Local storage</em> size (8) for th
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/running.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/running.png" alt="Running Hopsworks cluster">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/running.png" alt="Running Hopsworks cluster">
     </a>
     <figcaption>Running Hopsworks cluster</figcaption>
   </figure>
@@ -2329,7 +2355,7 @@ To integrate with external platforms and access APIs for services such as the Fe
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/open-ports.png">
-      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/open-ports.png" alt="Outside Access to the Feature Store">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/open-ports.png" alt="Outside Access to the Feature Store">
     </a>
     <figcaption>Outside Access to the Feature Store</figcaption>
   </figure>
