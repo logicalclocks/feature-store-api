@@ -196,10 +196,12 @@ class TransformationFunction:
 
     def to_dict(self):
         return {
+            "id": self._id,
             "name": self._name,
             "version": self._version,
             "sourceCodeContent": self._source_code_content,
             "outputType": self._output_type,
+            "featurestoreId": self._featurestore_id,
         }
 
     @property
