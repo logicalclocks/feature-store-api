@@ -1837,7 +1837,7 @@ Identify your Databricks VPC by searching for VPCs containing Databricks in thei
 </div>
 <div class="admonition info">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you are working on <strong>Hopsworks.ai</strong>, you can directly deploy the Hopsworks instance to the Databricks VPC, by simply selecting it at the <a href="../../../hopsworksai/aws/cluster_creation/#step-7-vpc-selection">VPC selection step during cluster creation</a>.</p>
+<p>If you are working on <strong>Hopsworks.ai</strong>, you can directly deploy the Hopsworks instance to the Databricks VPC, by simply selecting it at the <a href="../../../hopsworksai/aws/cluster_creation/#step-8-vpc-selection">VPC selection step during cluster creation</a>.</p>
 </div>
 <p><strong>Option 2: Set up VPC peering</strong></p>
 <p>Follow the guide <a href="https://docs.databricks.com/administration-guide/cloud-configurations/aws/vpc-peering.html">VPC Peering</a> to set up VPC peering between the Feature Store cluster and Databricks. Get your Feature Store <em>VPC ID</em> and <em>CIDR</em> by searching for thr Feature Store VPC in the AWS Management Console:</p>
@@ -1858,7 +1858,7 @@ Identify your Databricks VPC by searching for VPCs containing Databricks in thei
 <p>The Feature Store <em>Security Group</em> needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.</p>
 <div class="admonition note">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="../../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store">outside access of the Feature Store services</a>.</p>
+<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="../../../hopsworksai/aws/getting_started/#step-6-outside-access-to-the-feature-store">outside access of the Feature Store services</a>.</p>
 </div>
 <p>Open your feature store instance under EC2 in the AWS Management Console and ensure that ports <em>443</em>, <em>3306</em>, <em>9083</em>, <em>9085</em>, <em>8020</em> and <em>30010</em> are reachable from the Databricks Security Group:</p>
 <p align="center">
@@ -2004,7 +2004,7 @@ network used by Databricks and press <em>OK</em> to create the peering:</p>
 <p>Ensure that ports <em>443</em>, <em>9083</em>, <em>9085</em>, <em>8020</em> and <em>50010</em> are reachable from the Databricks cluster <em>Network Security Group</em>.</p>
 <div class="admonition note">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable <a href="../../../hopsworksai/azure/getting_started/#step-5-outside-access-to-the-feature-store">outside access of the Feature Store and Online Feature Store services</a>.</p>
+<p>If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable <a href="../../../hopsworksai/azure/getting_started/#step-6-outside-access-to-the-feature-store">outside access of the Feature Store and Online Feature Store services</a>.</p>
 </div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
 <p>Continue with the <a href="../api_key/">Hopsworks API key guide</a> to setup access to a Hopsworks API key from the Databricks Cluster, in order to be able to use the Hopsworks Feature Store.</p>
