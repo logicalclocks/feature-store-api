@@ -31,11 +31,11 @@ Add the following configuration to the Spark application:
 spark.hadoop.fs.hopsfs.impl                         io.hops.hopsfs.client.HopsFileSystem
 spark.hadoop.hops.ipc.server.ssl.enabled            true
 spark.hadoop.hops.ssl.hostname.verifier             ALLOW_ALL
-spark.hadoop.hops.rpc.socket.factory.class.default  io.hop.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"
+spark.hadoop.hops.rpc.socket.factory.class.default  io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory
 spark.hadoop.client.rpc.ssl.enabled.protocol        TLSv1.2
 spark.hadoop.hops.ssl.keystores.passwd.name         material_passwd
 spark.hadoop.hops.ssl.keystore.name                 keyStore.jks
-spark.hadoop.hops.ssl.truststore.name               trustStore.jks
+spark.hadoop.hops.ssl.trustore.name                 trustStore.jks
 
 spark.sql.hive.metastore.jars                       [Path to the Hopsworks Hive Jars]
 spark.hadoop.hive.metastore.uris                    thrift://[metastore_ip]:[metastore_port]
