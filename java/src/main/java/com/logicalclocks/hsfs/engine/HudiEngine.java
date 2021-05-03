@@ -90,7 +90,7 @@ public class HudiEngine {
 
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
-                                   Dataset<Row> dataset, SaveMode saveMode, HudiOperationType operation,
+                                   Dataset<Row> dataset, HudiOperationType operation,
                                    Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
@@ -99,7 +99,7 @@ public class HudiEngine {
     dataset.write()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
-        .mode(saveMode)
+        .mode(SaveMode.Append)
         .save(featureGroup.getLocation());
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
@@ -185,8 +185,7 @@ public class HudiEngine {
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");
     hudiArgs.put(HUDI_HIVE_SYNC_TABLE, tableName);
-    String jdbcUrl = utils.getHiveMetastoreConnector(featureGroup);
-    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, jdbcUrl);
+    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
 

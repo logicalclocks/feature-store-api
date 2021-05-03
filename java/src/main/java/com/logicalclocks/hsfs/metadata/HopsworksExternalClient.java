@@ -51,6 +51,7 @@ import software.amazon.awssdk.services.sts.StsClient;
 import software.amazon.awssdk.services.sts.model.GetCallerIdentityResponse;
 
 import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -64,6 +65,11 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
   private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
   private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
+
+
+  private static final String MATERIAL_PASSWD = "material_passwd";
+  private static final String T_CERTIFICATE = "t_certificate";
+  private static final String K_CERTIFICATE = "k_certificate";
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -162,6 +168,20 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         .register("https", sslsf)
         .register("http", PlainConnectionSocketFactory.getSocketFactory())
         .build();
+  }
+
+  private static String readCertKey(String materialPwd) {
+    try (FileInputStream fis = new FileInputStream(materialPwd)) {
+      StringBuilder sb = new StringBuilder();
+      int content;
+      while ((content = fis.read()) != -1) {
+        sb.append((char) content);
+      }
+      return sb.toString();
+    } catch (IOException ex) {
+      LOGGER.warn("Failed to get cert password.", ex);
+    }
+    return null;
   }
 
   /**

@@ -109,10 +109,10 @@ class Client(base.Client):
                 self._cert_key = f.read()
 
             self._trust_store_path = _spark_session.conf.get(
-                "spark.hadoop.hops.ssl.keystore.name"
+                "spark.hadoop.hops.ssl.trustore.name"
             )
             self._key_store_path = _spark_session.conf.get(
-                "spark.hadoop.hops.ssl.trustore.name"
+                "spark.hadoop.hops.ssl.keystore.name"
             )
 
     def _close(self):

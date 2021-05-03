@@ -43,6 +43,7 @@ class Query:
         self._left_feature_group_end_time = left_feature_group_end_time
         self._joins = joins or []
         self._filter = filter
+        self._hive_engine = True if engine.get_type() == "hive" else False
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
@@ -227,6 +228,7 @@ class Query:
             "leftFeatureGroupEndTime": self._left_feature_group_end_time,
             "joins": self._joins,
             "filter": self._filter,
+            "hiveEngine": self._hive_engine,
         }
 
     @classmethod
@@ -243,6 +245,7 @@ class Query:
             A partially deserialize query object
         """
         json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("hive_engine", None)
         new = cls(**json_decamelized)
         new._joins = humps.camelize(new._joins)
         return new

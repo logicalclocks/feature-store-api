@@ -13,16 +13,15 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, util
+import warnings
+
+from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
-    OVERWRITE = "overwrite"
-    APPEND = "append"
-
     def save(self, feature_group, feature_dataframe, write_options):
 
         if len(feature_group.features) == 0:
@@ -51,24 +50,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             validation_id = validation.validation_id
 
         offline_write_options = write_options
-        online_write_options = write_options
-
-        table_name = self._get_table_name(feature_group)
-
-        if feature_group.online_enabled:
-            # Add JDBC connection configuration in case of online feature group
-            online_conn = self._storage_connector_api.get_online_connector()
-
-            jdbc_options = online_conn.spark_options()
-            jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
-
-            online_write_options = {**jdbc_options, **online_write_options}
+        online_write_options = self.get_kafka_config(write_options)
 
         engine.get_instance().save_dataframe(
-            table_name,
             feature_group,
             feature_dataframe,
-            self.APPEND,
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
             if feature_group.time_travel_format == "HUDI"
             else None,
@@ -94,31 +80,19 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             validation_id = validation.validation_id
 
         offline_write_options = write_options
-        online_write_options = write_options
+        online_write_options = self.get_kafka_config(write_options)
 
         if not feature_group.online_enabled and storage == "online":
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group."
             )
-        elif (
-            feature_group.online_enabled and storage != "offline"
-        ) or storage == "online":
-            # Add JDBC connection configuration in case of online feature group
-            online_conn = self._storage_connector_api.get_online_connector()
-
-            jdbc_options = online_conn.spark_options()
-            jdbc_options["dbtable"] = self._get_online_table_name(feature_group)
-
-            online_write_options = {**jdbc_options, **online_write_options}
 
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
         engine.get_instance().save_dataframe(
-            self._get_table_name(feature_group),
             feature_group,
             feature_dataframe,
-            self.APPEND,
             "bulk_insert" if overwrite else operation,
             feature_group.online_enabled,
             storage,
@@ -181,18 +155,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group, feature_group, metadata, metadata_values.get(metadata)
         )
 
-    def _get_table_name(self, feature_group):
-        return (
-            feature_group.feature_store_name
-            + "."
-            + feature_group.name
-            + "_"
-            + str(feature_group.version)
-        )
-
-    def _get_online_table_name(self, feature_group):
-        return feature_group.name + "_" + str(feature_group.version)
-
     def sql(self, query, feature_store_name, dataframe_type, online):
         if online:
             online_conn = self._storage_connector_api.get_online_connector()
@@ -230,4 +192,59 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def get_avro_schema(self, feature_group):
+        return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
+
+    def get_kafka_config(self, online_write_options):
+        config = {
+            "kafka.bootstrap.servers": ",".join(
+                [
+                    endpoint.replace("INTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints()
+                ]
+            ),
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
+            "kafka.ssl.truststore.password": client.get_instance()._cert_key,
+            "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
+            "kafka.ssl.keystore.password": client.get_instance()._cert_key,
+            "kafka.ssl.key.password": client.get_instance()._cert_key,
+            "kafka.ssl.endpoint.identification.algorithm": "",
+        }
+        return {**online_write_options, **config}
+
+    def insert_stream(
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        write_options,
+    ):
+        if not feature_group.online_enabled:
+            raise exceptions.FeatureStoreException(
+                "Online storage is not enabled for this feature group. "
+                "It is currently only possible to stream to the online storage."
+            )
+
+        if feature_group.validation_type != "NONE":
+            warnings.warn(
+                "Stream ingestion for feature group `{}`, with version `{}` will not perform validation.".format(
+                    feature_group.name, feature_group.version
+                ),
+                util.ValidationWarning,
+            )
+
+        return engine.get_instance().save_stream_dataframe(
+            feature_group,
+            dataframe,
+            query_name,
+            output_mode,
+            await_termination,
+            timeout,
+            self.get_kafka_config(write_options),
         )

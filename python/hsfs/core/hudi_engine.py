@@ -68,7 +68,7 @@ class HudiEngine:
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
         self._base_path = self._feature_group.location
-        self._table_name = util.feature_group_name(feature_group)
+        self._table_name = feature_group._get_online_table_name()
 
         self._primary_key = ",".join(feature_group.primary_key)
         self._partition_key = (
@@ -203,12 +203,13 @@ class HudiEngine:
         )
 
     def _get_conn_str(self):
-        pw = client.get_instance()._cert_key
-        jdbc_url = (
-            self._connstr
-            + "sslTrustStore=t_certificate;trustStorePassword="
-            + pw
-            + ";sslKeyStore=k_certificate;keyStorePassword="
-            + pw
+        credentials = {
+            "sslTrustStore": client.get_instance()._get_jks_trust_store_path(),
+            "trustStorePassword": client.get_instance()._cert_key,
+            "sslKeyStore": client.get_instance()._get_jks_key_store_path(),
+            "keyStorePassword": client.get_instance()._cert_key,
+        }
+
+        return self._connstr + ";".join(
+            ["{}={}".format(option[0], option[1]) for option in credentials.items()]
         )
-        return jdbc_url

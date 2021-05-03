@@ -4,7 +4,7 @@ This guide shows you how to upgrade your existing Hopsworks cluster to a newer v
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-notification-running.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-notification-running.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-notification-running.png" alt="New version notification">
     </a>
     <figcaption>A new Hopsworks version is available</figcaption>
   </figure>
@@ -17,7 +17,7 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png" alt="New version notification">
     </a>
     <figcaption>A new Hopsworks version is available</figcaption>
   </figure>
@@ -30,7 +30,7 @@ We require extra permissions to be added to the user assigned managed identity a
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-managed-identity-details.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-managed-identity-details.png" alt="Azure details tab">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-managed-identity-details.png" alt="Azure details tab">
     </a>
     <figcaption>Get the resource group name (1) and the user assigned managed identity (2) of your cluster</figcaption>
   </figure>
@@ -43,7 +43,7 @@ Once you get the names of the resource group and user-assigned managed identity,
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade.png" alt="Azure add custom role">
     </a>
     <figcaption>Add a custom role for upgrade</figcaption>
   </figure>
@@ -54,7 +54,7 @@ Name the custom role and then click on next till you reach the *JSON* tab.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-1.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-1.png" alt="Azure add custom role">
     </a>
     <figcaption>Name the custom role for upgrade</figcaption>
   </figure>
@@ -65,7 +65,7 @@ Once you reach the *JSON* tab, click on *Edit* to edit the role permissions:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-2.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-2.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-2.png" alt="Azure add custom role">
     </a>
     <figcaption>Edit the JSON permissions for the custom role for upgrade</figcaption>
   </figure>
@@ -94,7 +94,7 @@ Then, click on *Save* to save the updated permissions
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-3.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-3.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-3.png" alt="Azure add custom role">
     </a>
     <figcaption>Save permissions for the custom role for upgrade</figcaption>
   </figure>
@@ -105,7 +105,7 @@ Click on *Review and create* and then click on *Create* to create the custom rol
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-4.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-4.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-add-custom-upgrade-4.png" alt="Azure add custom role">
     </a>
     <figcaption>Save permissions for the custom role for upgrade</figcaption>
   </figure>
@@ -118,7 +118,7 @@ Navigate back to the your Resource group home page at [Azure portal](https://por
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity.png" alt="Azure add custom role">
     </a>
     <figcaption>Assign upgrade role to your user assigned managed identity</figcaption>
   </figure>
@@ -129,7 +129,7 @@ Navigate back to the your Resource group home page at [Azure portal](https://por
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity-1.png" alt="Azure add custom role">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-portal-assign-upgrade-role-to-managed-identity-1.png" alt="Azure add custom role">
     </a>
     <figcaption>Assign upgrade role to your user assigned managed identity</figcaption>
   </figure>
@@ -147,7 +147,7 @@ If you don't remember the name of the role that you have created in [Getting sta
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
     </a>
     <figcaption>Get your role connected to hopswork.ai</figcaption>
   </figure>
@@ -159,7 +159,7 @@ To edit the permissions associated with your role, stay on the same *Access Cont
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -170,7 +170,7 @@ You will arrive at the *Update a custom role* page as shown below:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -181,7 +181,7 @@ Navigate to the *JSON* tab, then click on *Edit*, as shown below:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -192,7 +192,7 @@ Now, add the missing permission *"Microsoft.Compute/disks/read"* to the list of 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
     </a>
     <figcaption>Add missing permissions to your role connected to hopswork.ai</figcaption>
   </figure>
@@ -211,7 +211,7 @@ You need to click on *Upgrade* to start the upgrade process. You will be prompte
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt.png" alt="Azure Upgrade Prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt.png" alt="Azure Upgrade Prompt">
     </a>
     <figcaption>Upgrade confirmation</figcaption>
   </figure>
@@ -226,7 +226,7 @@ Check the *Yes, upgrade cluster* checkbox to proceed, then the *Upgrade* button 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt-1.png" alt="Azure Upgrade Prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-prompt-1.png" alt="Azure Upgrade Prompt">
     </a>
     <figcaption>Upgrade confirmation</figcaption>
   </figure>
@@ -242,7 +242,7 @@ Depending on how big your current cluster is, the upgrade process may take from 
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-start.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-start.png" alt="Azure Upgrade starting">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-start.png" alt="Azure Upgrade starting">
     </a>
     <figcaption>Upgrade is running</figcaption>
   </figure>
@@ -253,7 +253,7 @@ Once the upgrade is completed, you can confirm that you have the new Hopsworks v
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-complete.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-complete.png" alt="Azure Upgrade complete">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-complete.png" alt="Azure Upgrade complete">
     </a>
     <figcaption>Upgrade is complete</figcaption>
   </figure>
@@ -269,7 +269,7 @@ If you encounter the following permission error right after starting an upgrade,
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
     </a>
     <figcaption>Missing permission error</figcaption>
   </figure>
@@ -281,7 +281,7 @@ If you don't remember the name of the role that you have created in [Getting sta
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-get-connected-hopswork.ai-role.png" alt="Get your connected role to hopswork.ai">
     </a>
     <figcaption>Get your role connected to hopswork.ai</figcaption>
   </figure>
@@ -293,7 +293,7 @@ To edit the permissions associated with your role, stay on the same *Access Cont
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role.png" alt="Edit your connected role to hopswork.ai">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -304,7 +304,7 @@ You will arrive at the *Update a custom role* page as shown below:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-1.png" alt="Edit your connected role to hopswork.ai 1">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -315,7 +315,7 @@ Navigate to the *JSON* tab, then click on *Edit*, as shown below:
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-2.png" alt="Edit your connected role to hopswork.ai 2">
     </a>
     <figcaption>Edit your role connected to hopswork.ai</figcaption>
   </figure>
@@ -326,7 +326,7 @@ In our example, we were missing only the read permission ("Microsoft.Compute/dis
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-edit-connected-hopsworks.ai-role-3.png" alt="Edit your connected role to hopswork.ai 3">
     </a>
     <figcaption>Add missing permissions to your role connected to hopswork.ai</figcaption>
   </figure>
@@ -337,7 +337,7 @@ Once you have updated your role, click on *Retry* to retry the upgrade process.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-permission-error.png" alt="Azure upgrade permission error">
     </a>
     <figcaption>Retry the upgrade process</figcaption>
   </figure>
@@ -350,7 +350,7 @@ If an error occurs during the upgrade process, you will have the option to rollb
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-upgrade-error.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-upgrade-error.png" alt="Error during upgrade">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-upgrade-error.png" alt="Error during upgrade">
     </a>
     <figcaption>Error occurred during upgrade</figcaption>
   </figure>
@@ -361,7 +361,7 @@ Click on *Rollback* to recover your old cluster before upgrade.
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-1.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-1.png" alt="Rollback prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-1.png" alt="Rollback prompt">
     </a>
     <figcaption>Upgrade rollback confirmation</figcaption>
   </figure>
@@ -372,7 +372,7 @@ Check the *Yes, rollback cluster* checkbox to proceed, then the *Rollback* butto
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-2.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-2.png" alt="Rollback prompt">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-rollback-prompt-2.png" alt="Rollback prompt">
     </a>
     <figcaption>Upgrade rollback confirmation</figcaption>
   </figure>
@@ -383,7 +383,7 @@ Once the rollback is completed, you will be able to continue working as normal w
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png">
-      <img src="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png" alt="New version notification">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/azure/azure-notification-stopped.png" alt="New version notification">
     </a>
     <figcaption>Rollback succeed</figcaption>
   </figure>

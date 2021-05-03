@@ -19,6 +19,7 @@ import json
 import warnings
 import pandas as pd
 import numpy as np
+import avro.schema
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
 from hsfs import util, engine, feature, storage_connector as sc
@@ -157,58 +158,54 @@ class FeatureGroupBase:
         return self.select_all().filter(f)
 
     def add_tag(self, name: str, value):
-        """Attach a name/value tag to a feature group.
+        """Attach a tag to a feature group.
 
-        A tag consists of a name/value pair. Tag names are unique identifiers.
+        A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
             name: Name of the tag to be added.
-            value: Value of the tag to be added, defaults to `None`.
+            value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to add the tag.
         """
 
         self._feature_group_base_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
-        """Delete a tag from a feature group.
-
-        Tag names are unique identifiers.
+        """Delete a tag attached to a feature group.
 
         # Arguments
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to delete the tag.
         """
         self._feature_group_base_engine.delete_tag(self, name)
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
 
-        Tag names are unique identifiers.
-
         # Arguments
-            name: Name of the tag to get, defaults to `None`.
+            name: Name of the tag to get.
 
         # Returns
             tag value
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_group_base_engine.get_tag(self, name)
 
     def get_tags(self):
-        """Returns all tags attached to a feature group.
+        """Retrieves all tags attached to a feature group.
 
         # Returns
-            `list[Tag]`. List of tags as name/value pairs.
+            `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError`.
+            `RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_base_engine.get_tags(self)
 
@@ -387,6 +384,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         validation_type="NONE",
         expectations=None,
+        online_topic_name=None,
     ):
         super().__init__(featurestore_id)
 
@@ -400,7 +398,7 @@ class FeatureGroup(FeatureGroupBase):
         self._id = id
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
-            for feat in features
+            for feat in (features or [])
         ]
 
         self._location = location
@@ -408,6 +406,9 @@ class FeatureGroup(FeatureGroupBase):
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
+
+        self._avro_schema = None
+        self._online_topic_name = online_topic_name
 
         if id is not None:
             # initialized by backend
@@ -712,6 +713,86 @@ class FeatureGroup(FeatureGroupBase):
             # if Hive, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
+    def insert_stream(
+        self,
+        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        query_name: Optional[str] = None,
+        output_mode: Optional[str] = "append",
+        await_termination: Optional[bool] = False,
+        timeout: Optional[int] = None,
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Ingest a Spark Structured Streaming Dataframe to the online feature store.
+
+        This method creates a long running Spark Streaming Query, you can control the
+        termination of the query through the arguments.
+
+        It is possible to stop the returned query with the `.stop()` and check its
+        status with `.isActive`.
+
+        To get a list of all active queries, use:
+
+        ```python
+        sqm = spark.streams
+        # get the list of active streaming queries
+        [q.name for q in sqm.active]
+        ```
+
+        # Arguments
+            features: Features in Streaming Dataframe to be saved.
+            query_name: It is possible to optionally specify a name for the query to
+                make it easier to recognise in the Spark UI. Defaults to `None`.
+            output_mode: Specifies how data of a streaming DataFrame/Dataset is
+                written to a streaming sink. (1) `"append"`: Only the new rows in the
+                streaming DataFrame/Dataset will be written to the sink. (2)
+                `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+                written to the sink every time there is some update. (3) `"update"`:
+                only the rows that were updated in the streaming DataFrame/Dataset will
+                be written to the sink every time there are some updates.
+                If the query doesn’t contain aggregations, it will be equivalent to
+                append mode. Defaults to `"append"`.
+            await_termination: Waits for the termination of this query, either by
+                query.stop() or by an exception. If the query has terminated with an
+                exception, then the exception will be thrown. If timeout is set, it
+                returns whether the query has terminated or not within the timeout
+                seconds. Defaults to `Fals`e.
+            timeout: Only relevant in combination with `await_termination=True`.
+                Defaults to `None`.
+            write_options: Additional write options for Spark as key-value pairs.
+                Defaults to `{}`.
+
+        # Returns
+            `StreamingQuery`: Spark Structured Streaming Query object.
+        """
+        if (
+            not engine.get_instance().is_spark_dataframe(features)
+            or not features.isStreaming
+        ):
+            raise TypeError(
+                "Features have to be a streaming type spark dataframe. Use `insert()` method instead."
+            )
+        else:
+            # lower casing feature names
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+                features
+            )
+            warnings.warn(
+                (
+                    "Stream ingestion for feature group `{}`, with version"
+                    " `{}` will not compute statistics."
+                ).format(self._name, self._version),
+                util.StatisticsWarning,
+            )
+            return self._feature_group_engine.insert_stream(
+                self,
+                feature_dataframe,
+                query_name,
+                output_mode,
+                await_termination,
+                timeout,
+                write_options,
+            )
+
     def commit_details(
         self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
     ):
@@ -931,7 +1012,7 @@ class FeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
@@ -958,6 +1039,38 @@ class FeatureGroup(FeatureGroupBase):
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
         }
+
+    def _get_table_name(self):
+        return self.feature_store_name + "." + self.name + "_" + str(self.version)
+
+    def _get_online_table_name(self):
+        return self.name + "_" + str(self.version)
+
+    def get_complex_features(self):
+        """Returns the names of all features with a complex data type in this
+        feature group.
+        """
+        return [f.name for f in self.features if f.is_complex()]
+
+    def _get_encoded_avro_schema(self):
+        complex_features = self.get_complex_features()
+        schema = json.loads(self.avro_schema)
+
+        for field in schema["fields"]:
+            if field["name"] in complex_features:
+                field["type"] = ["null", "bytes"]
+
+        schema_s = json.dumps(schema)
+        try:
+            avro.schema.parse(schema_s)
+        except avro.schema.SchemaParseException as e:
+            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+        return schema_s
+
+    def _get_feature_avro_schema(self, feature_name):
+        for field in json.loads(self.avro_schema)["fields"]:
+            if field["name"] == feature_name:
+                return json.dumps(field["type"])
 
     @property
     def id(self):
@@ -1031,6 +1144,14 @@ class FeatureGroup(FeatureGroupBase):
     def created(self):
         """Timestamp when the feature group was created."""
         return self._created
+
+    @property
+    def avro_schema(self):
+        """Avro schema representation of the feature group."""
+        if self._avro_schema is None:
+            # cache the schema
+            self._avro_schema = self._feature_group_engine.get_avro_schema(self)
+        return self._avro_schema
 
     @property
     def validation_type(self):
@@ -1182,8 +1303,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if "type" in json_decamelized:
-            _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("online_topic_name", None)
+        _ = json_decamelized.pop("type", None)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):

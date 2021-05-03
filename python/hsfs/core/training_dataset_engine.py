@@ -15,6 +15,9 @@
 #
 
 import re
+import io
+import avro.schema
+import avro.io
 from sqlalchemy import sql
 
 from hsfs import engine, training_dataset_feature, util
@@ -121,7 +124,17 @@ class TrainingDatasetEngine:
         if training_dataset.prepared_statements is None:
             self.init_prepared_statement(training_dataset)
 
+        # check if primary key map correspond to serving_keys.
+        if not entry.keys() == training_dataset.serving_keys:
+            raise ValueError(
+                "Provided primary key map doesn't correspond to serving_keys"
+            )
+
         prepared_statements = training_dataset.prepared_statements
+
+        # get schemas for complex features once
+        complex_features = self.get_complex_feature_schemas(training_dataset)
+
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
             result_proxy = training_dataset.prepared_statement_connection.execute(
@@ -129,7 +142,9 @@ class TrainingDatasetEngine:
             ).fetchall()
             result_dict = {}
             for row in result_proxy:
-                result_dict = dict(row.items())
+                result_dict = self.deserialize_complex_features(
+                    complex_features, dict(row.items())
+                )
                 if not result_dict:
                     raise Exception(
                         "No data was retrieved from online feature store using input "
@@ -138,6 +153,22 @@ class TrainingDatasetEngine:
             serving_vector += list(result_dict.values())
 
         return serving_vector
+
+    def get_complex_feature_schemas(self, training_dataset):
+        return {
+            f.name: avro.io.DatumReader(
+                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
+            )
+            for f in training_dataset.schema
+            if f.is_complex()
+        }
+
+    def deserialize_complex_features(self, feature_schemas, row_dict):
+        for feature_name, schema in feature_schemas.items():
+            bytes_reader = io.BytesIO(row_dict[feature_name])
+            decoder = avro.io.BinaryDecoder(bytes_reader)
+            row_dict[feature_name] = schema.read(decoder)
+        return row_dict
 
     def init_prepared_statement(self, training_dataset):
         online_conn = self._storage_connector_api.get_online_connector()
@@ -149,7 +180,7 @@ class TrainingDatasetEngine:
         prepared_statements_dict = {}
         serving_vector_keys = set()
         for prepared_statement in prepared_statements:
-            query_online = str(prepared_statement.query_online).replace("\n", "")
+            query_online = str(prepared_statement.query_online).replace("\n", " ")
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -176,7 +207,6 @@ class TrainingDatasetEngine:
                     query_online,
                 )
             query_online = sql.text(query_online)
-
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online

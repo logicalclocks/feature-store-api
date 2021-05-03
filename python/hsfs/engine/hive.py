@@ -123,16 +123,14 @@ class Engine:
 
     def save_dataframe(
         self,
-        table_name,
         feature_group,
         dataframe,
-        save_mode,
         operation,
         online_enabled,
         storage,
         offline_write_options,
         online_write_options,
-        *args
+        validation_id=None,
     ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
@@ -239,4 +237,21 @@ class Engine:
 
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
+        )
+
+    def is_spark_dataframe(self, dataframe):
+        return False
+
+    def save_stream_dataframe(
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        write_options,
+    ):
+        raise NotImplementedError(
+            "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
