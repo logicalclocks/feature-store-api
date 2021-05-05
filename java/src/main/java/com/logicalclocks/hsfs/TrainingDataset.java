@@ -467,4 +467,20 @@ public class TrainingDataset {
       IOException {
     return trainingDatasetEngine.getServingVector(this, entry);
   }
+
+  /**
+   * Delete training dataset and all associated metadata.
+   * Note that this operation drops only files which were materialized in
+   * HopsFS. If you used a Storage Connector for a cloud storage such as S3,
+   * the data will not be deleted, but you will not be able to track it anymore
+   * from the Feature Store.
+   * This operation drops all metadata associated with this version of the
+   * training dataset and and the materialized data in HopsFS.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void delete() throws FeatureStoreException, IOException {
+    trainingDatasetEngine.delete(this);
+  }
 }
