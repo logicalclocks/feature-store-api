@@ -257,7 +257,7 @@ public class DataValidationEngine {
         return RuleName.HAS_DISTINCTNESS;
       case "uniquevalueratio":
         return RuleName.HAS_UNIQUE_VALUE_RATIO;
-      case "countdistinct":
+      case "histogram":
         return RuleName.HAS_NUMBER_OF_DISTINCT_VALUES;
       case "entropy":
         return RuleName.HAS_ENTROPY;
@@ -273,6 +273,10 @@ public class DataValidationEngine {
         return RuleName.HAS_CORRELATION;
       case "patternmatch":
         return RuleName.HAS_PATTERN;
+      case "minlength":
+        return RuleName.HAS_MIN_LENGTH;
+      case "maxlength":
+        return RuleName.HAS_MAX_LENGTH;
       case "datatype":
         return RuleName.HAS_DATATYPE;
       case "isnonnegative":
@@ -291,7 +295,7 @@ public class DataValidationEngine {
         return RuleName.IS_CONTAINED_IN;
 
       default:
-        throw new UnsupportedOperationException("Deequ rule not supported");
+        throw new UnsupportedOperationException("Deequ rule not supported: " + rule);
     }
   }
 

@@ -2,7 +2,8 @@
 If you run a Hopsworks cluster version 2.2 or above you can enable autoscaling to let hopsworks.ai start and stop workers depending on the demand.
 
 ## Enabling and configuring the autoscaling
-Once you have created a cluster you can enable autoscaling by going to the *Details* tab and clicking on *Configure autoscale*
+Once you have created a cluster you can enable autoscaling by going to the *Details* tab and clicking on *Configure autoscale*.
+You can also set up autoscaling during the cluster creation. For more details about this see the cluster creation documentation ([AWS](./aws/cluster_creation.md#autoscaling-workers-configuration), [AZURE](./azure/cluster_creation.md#autoscaling-workers-configuration)).
 
 <p align="center">
   <figure>
@@ -19,11 +20,11 @@ Once you have clicked on *Configure autoscale* you will access a form allowing y
 2. The size of the instances' disk.
 3. The minimum number of workers. 
 4. The maximum number of workers.
-5. The targeted number of overprovisioned workers. Setting resource overprovisioning ensures that there are always some free resources in your cluster. This ensures that requests for new resources are fulfilled promptly. You configure the overprovisioning by setting the amount of workers you want to be overprovisioned. For example, if you set a value of *0.5* the system will start a new worker every time the aggregated free cluster resources drop below 50% of a worker's resources. If you set this value to 0 new workers will only be started when a job or notebook request the resources.
+5. The targeted number of standby workers. Setting some resources in standby ensures that there are always some free resources in your cluster. This ensures that requests for new resources are fulfilled promptly. You configure the standby by setting the amount of workers you want to be in standby. For example, if you set a value of *0.5* the system will start a new worker every time the aggregated free cluster resources drop below 50% of a worker's resources. If you set this value to 0 new workers will only be started when a job or notebook request the resources.
 6. The time to wait before removing unused resources. One often starts a new computation shortly after finishing the previous one. To avoid having to wait for workers to stop and start between each computation it is recommended to wait before shutting down workers. Here you set the amount of time in seconds resources need to be unused before they get removed from the system.
 
 !!! note
-    The overprovisioning will not be taken into account if you set the minimum number of workers to 0 and no resources are used in the cluster. This ensures that the number of nodes can fall to 0 when no resources are used. The overprovisioning will start to take effect as soon as you start using resources.
+    The standby will not be taken into account if you set the minimum number of workers to 0 and no resources are used in the cluster. This ensures that the number of nodes can fall to 0 when no resources are used. The standby will start to take effect as soon as you start using resources.
 
 <p align="center">
   <figure>
