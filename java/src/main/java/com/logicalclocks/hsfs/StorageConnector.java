@@ -245,9 +245,9 @@ public class StorageConnector {
       case S3:
         return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
       case ADLS:
-        return this.generation == 2
-            ? "abfss://" + this.containerName + "@" + this.accountName + ".dfs.core.windows.net"
-            : "adl://" + this.accountName + ".azuredatalakestore.net"
+        return (this.generation == 2
+            ? "abfss://" + this.containerName + "@" + this.accountName + ".dfs.core.windows.net/"
+            : "adl://" + this.accountName + ".azuredatalakestore.net/")
             + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
       default:
         throw new FeatureStoreException(
