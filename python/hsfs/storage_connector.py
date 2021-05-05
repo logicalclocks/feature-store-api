@@ -384,6 +384,13 @@ class StorageConnector:
         """If the connector refers to a path (e.g. S3) - return the path of the connector"""
         if self._storage_connector_type.upper() == self.S3:
             return "s3://" + self._bucket
+        elif self._storage_connector_type.upper() == self.ADLS:
+            if self.generation == 2:
+                return "abfss://{}@{}.dfs.core.windows.net".format(
+                    self.container_name, self.account_name
+                )
+            else:
+                return "adl://{}.azuredatalakestore.net".format(self.account_name)
         else:
             raise Exception(
                 "Path is not supported for connector " + self._storage_connector_type

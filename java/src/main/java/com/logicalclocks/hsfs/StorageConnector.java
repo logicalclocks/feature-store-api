@@ -244,6 +244,11 @@ public class StorageConnector {
     switch (storageConnectorType) {
       case S3:
         return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+      case ADLS:
+        return (this.generation == 2
+            ? "abfss://" + this.containerName + "@" + this.accountName + ".dfs.core.windows.net/"
+            : "adl://" + this.accountName + ".azuredatalakestore.net/")
+            + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
       default:
         throw new FeatureStoreException(
             "Path method not supported for storage connector type: " + storageConnectorType);
