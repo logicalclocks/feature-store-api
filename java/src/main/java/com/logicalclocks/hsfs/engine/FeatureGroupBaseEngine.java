@@ -17,15 +17,16 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
   protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -53,26 +54,46 @@ public class FeatureGroupBaseEngine {
     tagsApi.deleteTag(featureGroupBase, name);
   }
 
-  public void updateDescription(FeatureGroupBase featureGroup, String description)
+  public <T extends FeatureGroupBase> void updateDescription(FeatureGroupBase featureGroup, String description,
+                                                             Class<T> fgClass)
       throws FeatureStoreException, IOException {
-    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
-    fgBaseSend.setDescription(description);
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    featureGroup.setDescription(description);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setDescription(apiFG.getDescription());
   }
 
-  public void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features)
+  public <T extends FeatureGroupBase> void updateFeatures(FeatureGroupBase featureGroup, List<Feature> features,
+                                                          Class<T> fgClass)
       throws FeatureStoreException, IOException {
-    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
-    features.addAll(featureGroup.getFeatures());
-    fgBaseSend.setFeatures(features);
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    List<Feature> newFeatures = new ArrayList<>();
+    for (Feature feature : featureGroup.getFeatures()) {
+      Optional<Feature> match =
+          features.stream().filter(updated -> updated.getName().equalsIgnoreCase(feature.getName())).findAny();
+      if (!match.isPresent()) {
+        newFeatures.add(feature);
+      } else {
+        match.get().setType(feature.getType());
+        newFeatures.add(match.get());
+      }
+    }
+    newFeatures.addAll(features);
+    featureGroup.setFeatures(newFeatures);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
   }
 
-  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
-    featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());
-    featureGroup.getStatisticsConfig().setHistograms(apiFG.getStatisticsConfig().getHistograms());
+  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
+                                                          Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    featureGroup.getFeatures().addAll(features);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
+        fgClass);
+    featureGroup.setFeatures(apiFG.getFeatures());
+  }
+
+  public <T extends FeatureGroupBase> void updateStatisticsConfig(FeatureGroupBase featureGroup, Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig", fgClass);
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
   }
 }

@@ -14,6 +14,7 @@
 #
 
 from hsfs import engine
+from hsfs import feature_group as fg
 from hsfs.core import feature_group_base_engine
 
 
@@ -31,3 +32,27 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             )
 
         self._feature_group_api.save(feature_group)
+
+    def _update_features_metadata(self, feature_group, features):
+        # perform changes on copy in case the update fails, so we don't leave
+        # the user object in corrupted state
+        copy_feature_group = fg.OnDemandFeatureGroup(
+            storage_connector=feature_group.storage_connector,
+            id=feature_group.id,
+            features=features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_description(self, feature_group, description):
+        """Updates the description of a feature group."""
+        copy_feature_group = fg.OnDemandFeatureGroup(
+            storage_connector=feature_group.storage_connector,
+            id=feature_group.id,
+            description=description,
+            features=feature_group.features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )

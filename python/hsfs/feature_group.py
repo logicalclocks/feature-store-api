@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import copy
 import humps
 import json
 import warnings
@@ -27,7 +28,6 @@ from hsfs.core import (
     feature_group_engine,
     statistics_engine,
     data_validation_engine,
-    feature_group_base_engine,
     on_demand_feature_group_engine,
     expectations_api,
 )
@@ -38,9 +38,6 @@ from hsfs.client.exceptions import FeatureStoreException
 
 class FeatureGroupBase:
     def __init__(self, featurestore_id):
-        self._feature_group_base_engine = (
-            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
-        )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -171,7 +168,7 @@ class FeatureGroupBase:
             `RestAPIError` in case the backend fails to add the tag.
         """
 
-        self._feature_group_base_engine.add_tag(self, name, value)
+        self._feature_group_engine.add_tag(self, name, value)
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature group.
@@ -182,7 +179,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to delete the tag.
         """
-        self._feature_group_base_engine.delete_tag(self, name)
+        self._feature_group_engine.delete_tag(self, name)
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
@@ -196,7 +193,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to retrieve the tag.
         """
-        return self._feature_group_base_engine.get_tag(self, name)
+        return self._feature_group_engine.get_tag(self, name)
 
     def get_tags(self):
         """Retrieves all tags attached to a feature group.
@@ -207,7 +204,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIError` in case the backend fails to retrieve the tags.
         """
-        return self._feature_group_base_engine.get_tags(self)
+        return self._feature_group_engine.get_tags(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
@@ -257,13 +254,115 @@ class FeatureGroupBase:
     def update_description(self, description: str):
         """Update the description of the feature gorup.
 
+        !!! info "Safe update"
+            This method updates the feature group description safely. In case of failure
+            your local metadata object will keep the old description.
+
         # Arguments
-            description: str. New description string.
+            description: New description string.
 
         # Returns
             `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
+        return self
+
+    def update_features(self, features: Union[feature.Feature, List[feature.Feature]]):
+        """Update a single feature in this feature group.
+
+        Currently it's only supported to update the description of a feature.
+
+        !!! danger "Unsafe update"
+            Note that if you use an existing `Feature` object of the schema in the
+            feature group metadata object, this might leave your metadata object in a
+            corrupted state if the update fails.
+
+        # Arguments
+            features: `Feature` or list of features. A feature object or list thereof to
+                be updated.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        new_features = []
+        if isinstance(features, feature.Feature):
+            new_features.append(features)
+        elif isinstance(features, list):
+            for feat in features:
+                if isinstance(feat, feature.Feature):
+                    new_features.append(feat)
+                else:
+                    raise TypeError(
+                        "The argument `features` has to be of type `Feature` or "
+                        "a list thereof, but an element is of type: `{}`".format(
+                            type(features)
+                        )
+                    )
+        else:
+            raise TypeError(
+                "The argument `features` has to be of type `Feature` or a list "
+                "thereof, but is of type: `{}`".format(type(features))
+            )
+        self._feature_group_engine.update_features(self, new_features)
+        return self
+
+    def update_feature_description(self, feature_name: str, description: str):
+        """Update the description of a single feature in this feature group.
+
+        !!! info "Safe update"
+            This method updates the feature description safely. In case of failure
+            your local metadata object will keep the old description.
+
+        # Arguments
+            feature_name: Name of the feature to be updated.
+            description: New description string.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        f_copy = copy.deepcopy(self[feature_name])
+        f_copy.description = description
+        self._feature_group_engine.update_features(self, [f_copy])
+        return self
+
+    def append_features(self, features: Union[feature.Feature, List[feature.Feature]]):
+        """Append features to the schema of the feature group.
+
+        !!! info "Safe append"
+            This method appends the features to the feature group description safely.
+            In case of failure your local metadata object will contain the correct
+            schema.
+
+        It is only possible to append features to a feature group. Removing
+        features is considered a breaking change.
+
+        # Arguments
+            features: Feature or list. A feature object or list thereof to append to
+                the schema of the feature group.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        new_features = []
+        if isinstance(features, feature.Feature):
+            new_features.append(features)
+        elif isinstance(features, list):
+            for feat in features:
+                if isinstance(feat, feature.Feature):
+                    new_features.append(feat)
+                else:
+                    raise TypeError(
+                        "The argument `features` has to be of type `Feature` or "
+                        "a list thereof, but an element is of type: `{}`".format(
+                            type(features)
+                        )
+                    )
+        else:
+            raise TypeError(
+                "The argument `features` has to be of type `Feature` or a list "
+                "thereof, but is of type: `{}`".format(type(features))
+            )
+        self._feature_group_engine.append_features(self, new_features)
         return self
 
     def __getattr__(self, name):
@@ -837,53 +936,6 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def update_description(self, description: str):
-        """Update the description of the feature gorup.
-
-        # Arguments
-            description: str. New description string.
-
-        # Returns
-            `FeatureGroup`. The updated feature group object.
-        """
-        self._feature_group_engine.update_description(self, description)
-        return self
-
-    def append_features(self, features):
-        """Append features to the schema of the feature group.
-
-        It is only possible to append features to a feature group. Removing
-        features is considered a breaking change.
-
-        # Arguments
-            features: Feature or list. A feature object or list thereof to append to
-                the schema of the feature group.
-
-        # Returns
-            FeatureGroup. The updated feature group object.
-        """
-        new_features = []
-        if isinstance(features, feature.Feature):
-            new_features.append(features)
-        elif isinstance(features, list):
-            for feat in features:
-                if isinstance(feat, feature.Feature):
-                    new_features.append(feat)
-                else:
-                    raise TypeError(
-                        "The argument `features` has to be of type `Feature` or "
-                        "a list thereof, but an element is of type: `{}`".format(
-                            type(features)
-                        )
-                    )
-        else:
-            raise TypeError(
-                "The argument `features` has to be of type `Feature` or a list "
-                "thereof, but is of type: `{}`".format(type(features))
-            )
-        self._feature_group_engine.append_features(self, new_features)
-        return self
-
     def attach_expectation(self, expectation):
         """Get feature group expectations. Gets all expectations if no expectation name is specified.
 
@@ -1201,7 +1253,7 @@ class FeatureGroup(FeatureGroupBase):
             self._validation_type = "NONE"
         else:
             self._validation_type = new_validation_type.upper()
-        self._feature_group_engine.update_config(self, "validationType")
+        self._feature_group_engine.update_validation_type(self)
 
     @expectations_names.setter
     def expectations_names(self, new_expectations_names):
@@ -1244,17 +1296,17 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
 
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
-            # Got from Hopsworks, deserialize features and storage connector
-            self._features = (
-                [feature.Feature.from_response_json(feat) for feat in features]
-                if features
-                else None
-            )
+            # Got from Hopsworks, deserialize storage connector
             self.statistics_config = statistics_config
 
             self._options = (
