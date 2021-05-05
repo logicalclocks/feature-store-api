@@ -122,9 +122,6 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
-            self._transformation_functions = self._transformation_function_engine.get_training_dataset_transformation_fn(
-                self
-            )
 
     def save(
         self,
@@ -681,8 +678,8 @@ class TrainingDataset:
     @property
     def transformation_functions(self):
         """Set transformation functions."""
-        return self._transformation_functions
-
-    @transformation_functions.setter
-    def transformation_functions(self, transformation_functions):
-        self._transformation_functions = transformation_functions
+        return (
+            self._transformation_function_engine.get_training_dataset_transformation_fn(
+                self
+            )
+        )

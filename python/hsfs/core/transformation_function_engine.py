@@ -73,6 +73,11 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def get_training_dataset_transformation_fn(training_dataset):
+        training_dataset = (
+            transformation_function_api.get_training_dataset_transformation_fn(
+                training_dataset
+            )
+        )
         transformation_fn_dict = {}
         for feature in training_dataset._features:
             if feature.transformation_function is not None:
@@ -80,11 +85,11 @@ class TransformationFunctionEngine:
         return transformation_fn_dict
 
     def attach_transformation_fn(self, training_dataset):
-        if training_dataset.transformation_functions:
+        if training_dataset._transformation_functions:
             for (
                 feature_name,
                 transformation_fn,
-            ) in training_dataset.transformation_functions.items():
+            ) in training_dataset._transformation_functions.items():
                 self._validate_feature_exists(training_dataset._querydto, feature_name)
                 training_dataset._features.append(
                     training_dataset_feature.TrainingDatasetFeature(

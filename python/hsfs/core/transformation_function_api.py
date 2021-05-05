@@ -34,7 +34,7 @@ class TransformationFunctionApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
-            "transformationFunctions",
+            "transformationfunctions",
         ]
         headers = {"content-type": "application/json"}
         return transformation_function.TransformationFunction.from_response_json(
@@ -61,7 +61,7 @@ class TransformationFunctionApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
-            "transformationFunctions",
+            "transformationfunctions",
         ]
 
         if name:
@@ -88,8 +88,30 @@ class TransformationFunctionApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
-            "transformationFunctions",
+            "transformationfunctions",
             transformation_function_instance.id,
         ]
         headers = {"content-type": "application/json"}
         _client._send_request("DELETE", path_params, headers=headers)
+
+    def get_training_dataset_transformation_fn(self, training_dataset_instance):
+        """
+        Retrieve training_dataset_instance with transformation function attached
+        Args:
+        training_dataset_instance: TrainingDataset, required
+            training dataset metadata object.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "trainingdatasets",
+            training_dataset_instance.id,
+            "transformationfunctions",
+        ]
+
+        return transformation_function.TransformationFunction.from_response_json(
+            _client._send_request("GET", path_params)
+        )
