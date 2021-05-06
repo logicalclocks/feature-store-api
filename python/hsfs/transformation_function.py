@@ -37,6 +37,8 @@ class TransformationFunction:
         source_code_content=None,
         output_type=None,
         id=None,
+        created=None,
+        creator=None,
         type=None,
         items=None,
         count=None,
