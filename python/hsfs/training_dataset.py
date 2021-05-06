@@ -678,8 +678,8 @@ class TrainingDataset:
     @property
     def transformation_functions(self):
         """Set transformation functions."""
-        return (
-            self._transformation_function_engine.get_training_dataset_transformation_fn(
+        if self._id is not None:
+            self._transformation_functions = self._transformation_function_engine.get_training_dataset_transformation_fn(
                 self
             )
-        )
+        return self._transformation_functions
