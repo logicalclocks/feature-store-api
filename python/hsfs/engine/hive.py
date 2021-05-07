@@ -58,6 +58,44 @@ class Engine:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
+    def read(self, storage_connector, data_format, read_options, location, split):
+        df = pd.DataFrame()
+        if storage_connector.connector_type == storage_connector.HOPSFS:
+            # providing more informative error
+            try:
+                from pydoop import hdfs
+            except ImportError as err:
+                raise ModuleNotFoundError(
+                    "Reading training dataset from HOPSFS requires `pydoop`"
+                ) from err
+
+            util.setup_pydoop()
+
+            if split is None:
+                path_list = hdfs.ls(location, recursive=True)
+            else:
+                path_list = hdfs.ls(location + "/" + str(split), recursive=True)
+
+            for path in path_list:
+                if hdfs.path.isfile(path) and not path.endswith("_SUCCESS"):
+                    if data_format.lower() == "csv":
+                        df_tmp = pd.read_csv(path)
+                    elif data_format.lower() == "tsv":
+                        df_tmp = pd.read_csv(path, sep="\t")
+                    elif data_format.lower() == "parquet":
+                        df_tmp = pd.read_parquet(path)
+                    df = pd.concat(df, df_tmp, ignore_index=True)
+        else:
+            raise NotImplementedError(
+                "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
+                    storage_connector.connector_type
+                )
+            )
+        return df
+
+    def read_options(self, data_format, provided_options):
+        return {}
+
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default").head(n)
 
