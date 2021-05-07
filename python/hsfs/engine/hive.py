@@ -84,6 +84,12 @@ class Engine:
                         df_tmp = pd.read_csv(path, sep="\t")
                     elif data_format.lower() == "parquet":
                         df_tmp = pd.read_parquet(path)
+                    else:
+                        raise TypeError(
+                            "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                                data_format
+                            )
+                        )
                     df = pd.concat(df, df_tmp, ignore_index=True)
         else:
             raise NotImplementedError(
