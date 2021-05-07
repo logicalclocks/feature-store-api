@@ -28,6 +28,7 @@ setup(
         "sqlalchemy",
         "PyMySQL",
         "s3fs",
+        "aiobotocore[boto3]",
     ],
     extras_require={
         "dev": [
