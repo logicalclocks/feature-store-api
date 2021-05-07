@@ -66,7 +66,7 @@ class Engine:
                 from pydoop import hdfs
             except ImportError as err:
                 raise ModuleNotFoundError(
-                    "Reading training dataset from HOPSFS requires `pydoop`"
+                    "Reading training dataset from HopsFS requires `pydoop`"
                 ) from err
 
             util.setup_pydoop()
@@ -77,7 +77,11 @@ class Engine:
                 path_list = hdfs.ls(location + "/" + str(split), recursive=True)
 
             for path in path_list:
-                if hdfs.path.isfile(path) and not path.endswith("_SUCCESS"):
+                if (
+                    hdfs.path.isfile(path)
+                    and not path.endswith("_SUCCESS")
+                    and hdfs.path.getsize(path) > 0
+                ):
                     if data_format.lower() == "csv":
                         df_tmp = pd.read_csv(path)
                     elif data_format.lower() == "tsv":
