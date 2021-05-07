@@ -59,7 +59,7 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location, split):
-        df = pd.DataFrame()
+        df_list = []
         if storage_connector.connector_type == storage_connector.HOPSFS:
             # providing more informative error
             try:
@@ -94,14 +94,14 @@ class Engine:
                                 data_format
                             )
                         )
-                    df = df.append(df_tmp, ignore_index=True)
+                    df_list.append(df_tmp)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
                     storage_connector.connector_type
                 )
             )
-        return df
+        return pd.concat(df_list, ignore_index=True)
 
     def read_options(self, data_format, provided_options):
         return {}
