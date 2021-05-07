@@ -90,7 +90,7 @@ class Engine:
                                 data_format
                             )
                         )
-                    df = pd.concat(df, df_tmp, ignore_index=True)
+                    df = df.append(df_tmp, ignore_index=True)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
