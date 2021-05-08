@@ -21,7 +21,12 @@ import avro.io
 from sqlalchemy import sql
 
 from hsfs import engine, training_dataset_feature, util
-from hsfs.core import training_dataset_api, tags_api, storage_connector_api
+from hsfs.core import (
+    training_dataset_api,
+    tags_api,
+    storage_connector_api,
+    transformation_function_engine,
+)
 from hsfs.constructor import query
 
 
@@ -38,6 +43,11 @@ class TrainingDatasetEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(
+                feature_store_id
+            )
+        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -48,6 +58,9 @@ class TrainingDatasetEngine:
                 )
                 for label_name in training_dataset.label
             ]
+            self._transformation_function_engine.attach_transformation_fn(
+                training_dataset
+            )
         else:
             features = engine.get_instance().convert_to_default_dataframe(features)
             training_dataset._features = (
@@ -58,8 +71,14 @@ class TrainingDatasetEngine:
                     if feature.name == label_name:
                         feature.label = True
 
-        self._training_dataset_api.post(training_dataset)
+            # check if user provided transformation functions and throw error as transformation functions work only
+            # with query objects
+            if training_dataset.transformation_functions:
+                raise ValueError(
+                    "Transformation functions can only be applied to training datasets generated from Query object"
+                )
 
+        self._training_dataset_api.post(training_dataset)
         engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
