@@ -1,6 +1,5 @@
 package com.logicalclocks.hsfs;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.metadata.RestDto;
 import lombok.AllArgsConstructor;
