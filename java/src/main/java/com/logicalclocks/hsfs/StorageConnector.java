@@ -71,7 +71,7 @@ public abstract class StorageConnector {
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException {
     throw new FeatureStoreException(
-        "Path method not supported for storage connector type: " + storageConnectorType);
+        "Read method not supported for storage connector type: " + storageConnectorType);
   }
 
   public abstract Map<String, String> sparkOptions();
