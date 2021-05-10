@@ -68,8 +68,13 @@ public abstract class StorageConnector {
   @Getter @Setter
   private Integer featurestoreId;
 
-  public abstract Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-      throws FeatureStoreException;
+  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+      throws FeatureStoreException {
+    return SparkEngine.getInstance().read(this, dataFormat, options, getPath(path));
+  }
+
+  @JsonIgnore
+  public abstract String getPath(String subPath) throws FeatureStoreException;
 
   public abstract Map<String, String> sparkOptions();
 
@@ -89,6 +94,11 @@ public abstract class StorageConnector {
         throws FeatureStoreException {
       throw new FeatureStoreException(
           "Read method not supported for storage connector type: " + storageConnectorType);
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return hopsfsPath + "/" + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
   }
 
@@ -116,7 +126,7 @@ public abstract class StorageConnector {
     private String iamRole;
 
     @JsonIgnore
-    public String getPath(String subPath) throws FeatureStoreException {
+    public String getPath(String subPath) {
       return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
 
@@ -194,6 +204,12 @@ public abstract class StorageConnector {
         readOptions.put("query", query);
       }
       return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) throws FeatureStoreException {
+      throw new FeatureStoreException(
+          "getPath method not supported for storage connector type: " + storageConnectorType);
     }
   }
 
@@ -313,6 +329,12 @@ public abstract class StorageConnector {
       }
       return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
     }
+
+    @JsonIgnore
+    public String getPath(String subPath) throws FeatureStoreException {
+      throw new FeatureStoreException(
+          "getPath method not supported for storage connector type: " + storageConnectorType);
+    }
   }
 
   public static class JdbcConnector extends StorageConnector {
@@ -337,6 +359,12 @@ public abstract class StorageConnector {
         readOptions.put("query", query);
       }
       return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) throws FeatureStoreException {
+      throw new FeatureStoreException(
+          "getPath method not supported for storage connector type: " + storageConnectorType);
     }
   }
 }
