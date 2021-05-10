@@ -44,6 +44,8 @@ public class TrainingDatasetApi {
   public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata}";
   private static final String PREP_STATEMENT_PATH = TRAINING_DATASETS_PATH + "{/tdId}/preparedstatements";
+  private static final String TRAINING_DATASET_TRANSFORMATION_FUNCTION_PATH =
+      TRAINING_DATASETS_PATH + "{/tdId}/transformationfunctions";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
@@ -179,5 +181,22 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
 
     hopsworksClient.handleRequest(deleteRequest);
+  }
+
+  public TrainingDataset getTrainingDatasetTransformationFunction(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_DATASET_TRANSFORMATION_FUNCTION_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("fsId", trainingDataset.getFeatureStore().getId())
+        .set("tdId", trainingDataset.getId())
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    return hopsworksClient.handleRequest(new HttpGet(uri), TrainingDataset.class);
   }
 }

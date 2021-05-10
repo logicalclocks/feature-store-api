@@ -127,9 +127,15 @@ public class TrainingDatasetEngine {
    */
   public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> providedOptions, SaveMode saveMode)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     // validate that the schema matches
     utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
+
+    // check if this training dataset has transformation functions attached and throw exception if any
+    if (getTrainingDatasetTransformationFunction(trainingDataset).size() > 0) {
+      throw new FeatureStoreException("This training dataset has transformation functions attached and "
+          + "insert operation must be performed from pyspark kernel");
+    }
 
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
@@ -293,5 +299,20 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
+  }
+
+  private List<TrainingDatasetFeature> getTrainingDatasetTransformationFunction(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    List<TrainingDatasetFeature> featuresWithtransformationFunction = new ArrayList<>();
+
+    TrainingDataset updatedTrainingDataset =
+        trainingDatasetApi.getTrainingDatasetTransformationFunction(trainingDataset);
+
+    for (TrainingDatasetFeature trainingDatasetFeature: updatedTrainingDataset.getFeatures()) {
+      if (trainingDatasetFeature.getTransformationFunction() != null) {
+        featuresWithtransformationFunction.add(trainingDatasetFeature);
+      }
+    }
+    return featuresWithtransformationFunction;
   }
 }
