@@ -285,4 +285,8 @@ public class TrainingDatasetEngine {
     }
     return featureSchemaMap;
   }
+
+  public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
+    trainingDatasetApi.delete(trainingDataset);
+  }
 }

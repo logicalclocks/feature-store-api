@@ -156,6 +156,11 @@ public class DataValidationEngine {
               deequRule = "iscontainedin";
               deequFeatures.add(constraintInfo[2]);
               featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
+            } else if (constraintResult.constraint().toString().contains("is positive")) {
+              // ComplianceConstraint(Compliance(age is positive,COALESCE(car, 1.0) > 0,None))
+              deequRule = "ispositive";
+              deequFeatures.add(constraintInfo[2]);
+              featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
             } else {
               deequRule = String.join("", Arrays.stream(constraintInfo, 3, 5 + 1).toArray(String[]::new));
               deequFeatures.addAll(Arrays.asList(
@@ -252,7 +257,7 @@ public class DataValidationEngine {
         return RuleName.HAS_DISTINCTNESS;
       case "uniquevalueratio":
         return RuleName.HAS_UNIQUE_VALUE_RATIO;
-      case "countdistinct":
+      case "histogram":
         return RuleName.HAS_NUMBER_OF_DISTINCT_VALUES;
       case "entropy":
         return RuleName.HAS_ENTROPY;
@@ -268,6 +273,10 @@ public class DataValidationEngine {
         return RuleName.HAS_CORRELATION;
       case "patternmatch":
         return RuleName.HAS_PATTERN;
+      case "minlength":
+        return RuleName.HAS_MIN_LENGTH;
+      case "maxlength":
+        return RuleName.HAS_MAX_LENGTH;
       case "datatype":
         return RuleName.HAS_DATATYPE;
       case "isnonnegative":
@@ -286,7 +295,7 @@ public class DataValidationEngine {
         return RuleName.IS_CONTAINED_IN;
 
       default:
-        throw new UnsupportedOperationException("Deequ rule not supported");
+        throw new UnsupportedOperationException("Deequ rule not supported: " + rule);
     }
   }
 

@@ -4,8 +4,8 @@ site_author: "Logical Clocks"
 site_url: "https://docs.hopsworks.ai"
 
 # Repository
-repo_name: logicalclocks/feature-store-api
-repo_url: https://github.com/logicalclocks/feature-store-api
+repo_name: logicalclocks/hopsworks
+repo_url: https://github.com/logicalclocks/hopsworks
 edit_uri: ""
 
 nav:
@@ -50,6 +50,7 @@ nav:
       - Query vs. Dataframe: generated/query_vs_dataframe.md
       - Statistics: generated/statistics.md
       - Feature Validation: generated/feature_validation.md
+      - Feature Store Tags: generated/tags.md
     - API Reference:
       - Connection: generated/api/connection_api.md
       - FeatureStore: generated/api/feature_store_api.md
@@ -76,8 +77,10 @@ nav:
       - Azure: hopsworksai/azure/cluster_creation.md
       - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
+    - Autoscaling: hopsworksai/autoscaling.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
+    - Managed RonDB: hopsworksai/rondb.md
     - Integrations: "./setup/"
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md

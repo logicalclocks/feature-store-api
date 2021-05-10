@@ -146,6 +146,16 @@ PAGES = {
         "validate": ["hsfs.feature_group.FeatureGroup.validate"],
         "validation_result_get": ["hsfs.feature_group.FeatureGroup.get_validations"],
     },
+    "tags.md": {
+        "fg_tag_add": ["hsfs.feature_group.FeatureGroupBase.add_tag"],
+        "fg_tag_get": ["hsfs.feature_group.FeatureGroupBase.get_tag"],
+        "fg_tag_get_all": ["hsfs.feature_group.FeatureGroupBase.get_tags"],
+        "fg_tag_delete": ["hsfs.feature_group.FeatureGroupBase.delete_tag"],
+        "td_tag_add": ["hsfs.training_dataset.TrainingDataset.add_tag"],
+        "td_tag_get": ["hsfs.training_dataset.TrainingDataset.get_tag"],
+        "td_tag_get_all": ["hsfs.training_dataset.TrainingDataset.get_tags"],
+        "td_tag_delete": ["hsfs.training_dataset.TrainingDataset.delete_tag"],
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(
