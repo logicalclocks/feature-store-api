@@ -27,7 +27,6 @@ setup(
         "avro==1.10.1",
         "sqlalchemy",
         "PyMySQL",
-        "s3fs==0.6.0",
     ],
     extras_require={
         "dev": [
