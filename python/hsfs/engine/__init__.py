@@ -28,7 +28,7 @@ def init(engine_type):
         if engine_type == "spark":
             _engine_type = "spark"
             _engine = spark.Engine()
-        elif engine_type == "hive":
+        elif engine_type == "hive" or engine_type == "training":
             try:
                 from hsfs.engine import hive
             except ImportError:
