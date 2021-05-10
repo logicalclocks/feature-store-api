@@ -658,6 +658,5 @@ class JdbcConnector(StorageConnector):
         options = self.spark_options()
         if query:
             options["query"] = query
-        print("{}".format(options))
-        print("{}".format(self.__dict__))
-        engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
