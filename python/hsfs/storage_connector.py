@@ -650,11 +650,12 @@ class JdbcConnector(StorageConnector):
         self, query: str, data_format: str = None, options: dict = {}, path: str = None
     ):
         """Reads a query into a dataframe using the storage connector."""
-        options = (
-            {**self.spark_options(), **options}
-            if options is not None
-            else self.spark_options()
-        )
+        # options = (
+        #     {**self.spark_options(), **options}
+        #     if options is not None
+        #     else self.spark_options()
+        # )
+        options = self.spark_options()
         if query:
             options["query"] = query
         print("{}".format(options))
