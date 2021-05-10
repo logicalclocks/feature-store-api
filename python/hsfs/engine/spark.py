@@ -39,9 +39,6 @@ from hsfs.constructor import query
 
 class Engine:
     HIVE_FORMAT = "hive"
-    JDBC_FORMAT = "jdbc"
-    KAFKA_FORMAT = "kafka"
-    SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     APPEND = "append"
     OVERWRITE = "overwrite"
