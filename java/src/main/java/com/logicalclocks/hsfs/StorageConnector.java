@@ -217,6 +217,14 @@ public abstract class StorageConnector {
     @Getter @Setter
     private List<Option> sparkOptions;
 
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return (this.generation == 2
+          ? "abfss://" + this.containerName + "@" + this.accountName + ".dfs.core.windows.net/"
+          : "adl://" + this.accountName + ".azuredatalakestore.net/")
+          + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+    }
+
     public Map<String, String> sparkOptions() {
       Map<String, String> options = new HashMap<>();
       sparkOptions.stream().forEach(option -> options.put(option.getName(), option.getValue()));

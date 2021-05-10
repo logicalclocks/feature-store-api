@@ -392,6 +392,16 @@ class AdlsConnector(StorageConnector):
         """Service credential of the ADLS storage connector"""
         return self._service_credential
 
+    @property
+    def path(self):
+        """If the connector refers to a path (e.g. ADLS) - return the path of the connector"""
+        if self.generation == 2:
+            return "abfss://{}@{}.dfs.core.windows.net".format(
+                self.container_name, self.account_name
+            )
+        else:
+            return "adl://{}.azuredatalakestore.net".format(self.account_name)
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
