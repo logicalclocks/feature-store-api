@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-import os
 import json
 import datetime
 import importlib.util
@@ -64,7 +63,7 @@ class Engine:
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = self._jdbc(sql_query, connector)
+            result_df = connector.read(sql_query, None, {}, None)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -74,26 +73,6 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def _jdbc(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
-        )
-
-    def _snowflake(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.SNOWFLAKE_FORMAT)
-            .options(**options)
-            .load()
-        )
-
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default").show(n)
 
@@ -101,25 +80,12 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
-        if (
-            on_demand_fg.storage_connector.type == "JDBC"
-            or on_demand_fg.storage_connector.type == "REDSHIFT"
-        ):
-            # This is a JDBC on demand featuregroup
-            on_demand_dataset = self._jdbc(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        elif on_demand_fg.storage_connector.type == "SNOWFLAKE":
-            on_demand_dataset = self._snowflake(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        else:
-            on_demand_dataset = self.read(
-                on_demand_fg.storage_connector,
-                on_demand_fg.data_format,
-                on_demand_fg.options,
-                os.path.join(on_demand_fg.storage_connector.path, on_demand_fg.path),
-            )
+        on_demand_dataset = on_demand_fg.storage_connector.read(
+            on_demand_fg.query,
+            on_demand_fg.data_format,
+            on_demand_fg.options,
+            on_demand_fg.path,
+        )
 
         on_demand_dataset.createOrReplaceTempView(alias)
         return on_demand_dataset
@@ -421,14 +387,17 @@ class Engine:
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, location, split):
-        if split is None:
-            path = location + "/**"
-        else:
-            path = location + "/" + str(split)
+    def read(self, storage_connector, data_format, read_options, location, split=None):
+        if isinstance(location, str):
+            if split is None:
+                path = location + "/**"
+            else:
+                path = location + "/" + str(split)
 
-        if data_format.lower() == "tsv":
-            data_format = "csv"
+            if data_format.lower() == "tsv":
+                data_format = "csv"
+        else:
+            path = None
 
         path = self.setup_storage_connector(storage_connector, path)
 

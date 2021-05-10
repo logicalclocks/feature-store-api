@@ -58,9 +58,9 @@ class Engine:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location, split):
+    def read(self, storage_connector, data_format, read_options, location, split=None):
         df_list = []
-        if storage_connector.connector_type == storage_connector.HOPSFS:
+        if storage_connector.type == storage_connector.HOPSFS:
             # providing more informative error
             try:
                 from pydoop import hdfs
@@ -98,7 +98,7 @@ class Engine:
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
-                    storage_connector.connector_type
+                    storage_connector.type
                 )
             )
         return pd.concat(df_list, ignore_index=True)

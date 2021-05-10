@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import os
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -74,6 +75,16 @@ class StorageConnector(ABC):
     @abstractmethod
     def spark_options(self):
         pass
+
+    def read(self, query: str, data_format: str, options: dict, path: str):
+        """Reads a query or a path into a dataframe using the storage connector.
+
+        Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
+        queries are meant for JDBC or databases like Redshift and Snowflake.
+        """
+        engine.get_instance().read(
+            self, data_format, options, os.path.join(self.path, path)
+        )
 
 
 class HopsFSConnector(StorageConnector):
@@ -327,6 +338,14 @@ class RedshiftConnector(StorageConnector):
             props["dbtable"] = self._table_name
         return props
 
+    def read(self, query: str, data_format: str, options: dict, path: str):
+        """Reads a query into a dataframe using the storage connector."""
+        options = {**self.spark_options(), **options}
+        if query:
+            options["query"] = query
+
+        engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+
 
 class AdlsConnector(StorageConnector):
     type = StorageConnector.ADLS
@@ -428,6 +447,7 @@ class AdlsConnector(StorageConnector):
 
 class SnowflakeConnector(StorageConnector):
     type = StorageConnector.ADLS
+    SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     def __init__(
         self,
@@ -558,9 +578,18 @@ class SnowflakeConnector(StorageConnector):
 
         return props
 
+    def read(self, query: str, data_format: str, options: dict, path: str):
+        """Reads a query into a dataframe using the storage connector."""
+        options = {**self.spark_options(), **options}
+        if query:
+            options["query"] = query
+
+        engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
+
 
 class JdbcConnector(StorageConnector):
     type = StorageConnector.JDBC
+    JDBC_FORMAT = "jdbc"
 
     def __init__(
         self,
@@ -598,3 +627,11 @@ class JdbcConnector(StorageConnector):
         options["url"] = self._connection_string
 
         return options
+
+    def read(self, query: str, data_format: str, options: dict, path: str):
+        """Reads a query into a dataframe using the storage connector."""
+        options = {**self.spark_options(), **options}
+        if query:
+            options["query"] = query
+
+        engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
