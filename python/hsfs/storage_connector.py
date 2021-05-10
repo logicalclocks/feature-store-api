@@ -76,7 +76,13 @@ class StorageConnector(ABC):
     def spark_options(self):
         pass
 
-    def read(self, query: str, data_format: str, options: dict, path: str):
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
         """Reads a query or a path into a dataframe using the storage connector.
 
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
@@ -338,9 +344,15 @@ class RedshiftConnector(StorageConnector):
             props["dbtable"] = self._table_name
         return props
 
-    def read(self, query: str, data_format: str, options: dict, path: str):
+    def read(
+        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+    ):
         """Reads a query into a dataframe using the storage connector."""
-        options = {**self.spark_options(), **options}
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
         if query:
             options["query"] = query
 
@@ -578,9 +590,15 @@ class SnowflakeConnector(StorageConnector):
 
         return props
 
-    def read(self, query: str, data_format: str, options: dict, path: str):
+    def read(
+        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+    ):
         """Reads a query into a dataframe using the storage connector."""
-        options = {**self.spark_options(), **options}
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
         if query:
             options["query"] = query
 
@@ -628,9 +646,15 @@ class JdbcConnector(StorageConnector):
 
         return options
 
-    def read(self, query: str, data_format: str, options: dict, path: str):
+    def read(
+        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+    ):
         """Reads a query into a dataframe using the storage connector."""
-        options = {**self.spark_options(), **options}
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
         if query:
             options["query"] = query
 

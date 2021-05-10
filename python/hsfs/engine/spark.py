@@ -79,7 +79,7 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
+    def register_on_demand_temporary_table(self, on_demand_fg, alias):
         on_demand_dataset = on_demand_fg.storage_connector.read(
             on_demand_fg.query,
             on_demand_fg.data_format,

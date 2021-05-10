@@ -109,7 +109,7 @@ class Engine:
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default").head(n)
 
-    def register_on_demand_temporary_table(self, query, storage_connector, alias):
+    def register_on_demand_temporary_table(self, on_demand_fg, alias):
         raise NotImplementedError
 
     def register_hudi_temporary_table(
