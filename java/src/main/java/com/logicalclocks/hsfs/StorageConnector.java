@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 public abstract class StorageConnector {
 
   @Getter @Setter
-  private StorageConnectorType storageConnectorType;
+  protected StorageConnectorType storageConnectorType;
 
   @Getter @Setter
   private Integer id;
@@ -68,11 +68,8 @@ public abstract class StorageConnector {
   @Getter @Setter
   private Integer featurestoreId;
 
-  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-      throws FeatureStoreException {
-    throw new FeatureStoreException(
-        "Read method not supported for storage connector type: " + storageConnectorType);
-  }
+  public abstract Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+      throws FeatureStoreException;
 
   public abstract Map<String, String> sparkOptions();
 
@@ -86,6 +83,12 @@ public abstract class StorageConnector {
 
     public Map<String, String> sparkOptions() {
       return new HashMap<>();
+    }
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException {
+      throw new FeatureStoreException(
+          "Read method not supported for storage connector type: " + storageConnectorType);
     }
   }
 
@@ -229,6 +232,12 @@ public abstract class StorageConnector {
       Map<String, String> options = new HashMap<>();
       sparkOptions.stream().forEach(option -> options.put(option.getName(), option.getValue()));
       return options;
+    }
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException {
+      throw new FeatureStoreException(
+          "Read method not supported for storage connector type: " + storageConnectorType);
     }
   }
 
