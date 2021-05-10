@@ -111,6 +111,38 @@ def get_hudi_datestr_from_timestamp(timestamp):
     return date_str
 
 
+def setup_pydoop():
+    # Import Pydoop only here, so it doesn't trigger if the execution environment
+    # does not support Pydoop. E.g. Sagemaker
+    from pydoop import hdfs
+
+    # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
+    class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
+        @classmethod
+        def split(cls, hdfs_path, user):
+            if not hdfs_path:
+                cls.raise_bad_path(hdfs_path, "empty")
+            scheme, netloc, path = cls.parse(hdfs_path)
+            if not scheme:
+                scheme = "file" if hdfs.fs.default_is_local() else "hdfs"
+            if scheme == "hdfs" or scheme == "hopsfs":
+                if not path:
+                    cls.raise_bad_path(hdfs_path, "path part is empty")
+                if ":" in path:
+                    cls.raise_bad_path(hdfs_path, "':' not allowed outside netloc part")
+                hostname, port = cls.split_netloc(netloc)
+                if not path.startswith("/"):
+                    path = "/user/%s/%s" % (user, path)
+            elif scheme == "file":
+                hostname, port, path = "", 0, netloc + path
+            else:
+                cls.raise_bad_path(hdfs_path, "unsupported scheme %r" % scheme)
+            return hostname, port, path
+
+    # Monkey patch the class to use the one defined above.
+    hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+
+
 class VersionWarning(Warning):
     pass
 
