@@ -88,7 +88,7 @@ class StorageConnector(ABC):
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
         """
-        engine.get_instance().read(
+        return engine.get_instance().read(
             self, data_format, options, os.path.join(self.path, path)
         )
 
@@ -356,7 +356,7 @@ class RedshiftConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
 
 
 class AdlsConnector(StorageConnector):
@@ -602,7 +602,7 @@ class SnowflakeConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
+        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
 
 
 class JdbcConnector(StorageConnector):
