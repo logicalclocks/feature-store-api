@@ -658,4 +658,5 @@ class JdbcConnector(StorageConnector):
         if query:
             options["query"] = query
         print("{}".format(options))
+        print("{}".format(self.__dict__))
         engine.get_instance().read(self, self.JDBC_FORMAT, options, None)

@@ -402,6 +402,8 @@ class Engine:
         print("format {}".format(data_format))
         print("path {}".format(path))
         print("modified options: {}".format(read_options if read_options else {}))
+        print("should be engine: {}".format(self.__dict__))
+        print("should be connector: {}".format(storage_connector.__dict__))
         return (
             self._spark_session.read.format(data_format)
             .options(**(read_options if read_options else {}))
