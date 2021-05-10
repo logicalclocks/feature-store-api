@@ -398,6 +398,7 @@ class Engine:
 
         path = self.setup_storage_connector(storage_connector, path)
 
+        print("{}".format(read_options))
         return (
             self._spark_session.read.format(data_format)
             .options(**(read_options if read_options else {}))
