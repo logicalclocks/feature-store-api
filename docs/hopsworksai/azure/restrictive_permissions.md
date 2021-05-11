@@ -184,7 +184,7 @@ For this replace the permissions given in the [getting started instructions](./g
 
 ### Upgrades
 
-If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from your custom role that you have created [here](../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage). For this replace the permissions in the custom role by the following permissions:
+If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created [here](../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage). For this replace the permissions in the custom role by the following permissions:
 
 ```json
 "permissions": [
