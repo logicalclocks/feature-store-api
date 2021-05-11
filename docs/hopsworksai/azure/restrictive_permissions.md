@@ -156,53 +156,23 @@ The following permission is only needed to select the Azure Storage account thro
 ### Backups
 
 If you do not intend to take backups or if you do not have access to this Enterprise feature you can remove the permissions that are only used by the backup feature when configuring your managed identity storage permissions.
-For this replace the permissions given in the [getting started instructions](./getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage) by the following:
+For this remove the following actions from [your user assigned managed identity](./getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage):
 
 ```json
-"permissions": [
-    {
-        "actions": [
-            "Microsoft.Storage/storageAccounts/blobServices/containers/write",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/read",
-            "Microsoft.Storage/storageAccounts/blobServices/read",
-            "Microsoft.Compute/virtualMachines/read",
-            "Microsoft.Compute/virtualMachines/write",
-            "Microsoft.Compute/disks/read",
-            "Microsoft.Compute/disks/write"
-        ],
-        "notActions": [],
-        "dataActions": [
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
-        ],
-        "notDataActions": []
-    }
-]
+  "actions": [
+    "Microsoft.Storage/storageAccounts/blobServices/write"
+  ]
 ```
 
 ### Upgrades
 
-If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created [here](../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage). For this replace the permissions in the custom role by the following permissions:
+If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created [here](../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage). For this remove the following actions from your custom role:
 
 ```json
-"permissions": [
-    {
-        "actions": [
-            "Microsoft.Storage/storageAccounts/blobServices/containers/write",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/read",
-            "Microsoft.Storage/storageAccounts/blobServices/write",
-            "Microsoft.Storage/storageAccounts/blobServices/read"
-        ],
-        "notActions": [],
-        "dataActions": [
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action",
-            "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
-        ],
-        "notDataActions": []
-    }
-]
+  "actions": [
+    "Microsoft.Compute/virtualMachines/read",
+    "Microsoft.Compute/virtualMachines/write",
+    "Microsoft.Compute/disks/read",
+    "Microsoft.Compute/disks/write"
+  ]
 ```

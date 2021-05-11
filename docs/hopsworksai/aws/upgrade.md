@@ -27,8 +27,11 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
 ## Step 2: Add upgrade permissions to your instance profile
 
 !!! note
-    You can skip this step if you have created your instance profile following [this guide](../getting_started/#step-2-creating-instance-profile), where we add the upgrade permissions by default.
-        
+    You can skip this step if you already have the following permissions in your instance profile:
+    ```json 
+    [ "ec2:DescribeVolumes", "ec2:DetachVolume", "ec2:AttachVolume", "ec2:ModifyInstanceAttribute"]
+    ```
+
 We require extra permissions to be added to the instance profile attached to your cluster to proceed with the upgrade. First to get the name of your instance profile, click on the *Details* tab as shown below:
 
 <p align="center">
