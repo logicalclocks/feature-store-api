@@ -37,6 +37,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.Column;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -110,7 +111,8 @@ public class SparkEngine {
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException {
     Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
-        onDemandFeatureGroup.getDataFormat().toString(), getOnDemandOptions(onDemandFeatureGroup),
+        onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
+        getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getPath());
 
     dataset.createOrReplaceTempView(alias);
@@ -272,12 +274,17 @@ public class SparkEngine {
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
                            Map<String, String> readOptions, String path) {
     setupConnectorHadoopConf(storageConnector);
+    path = SparkEngine.sparkPath(path);
 
-    return SparkEngine.getInstance().getSparkSession()
+    DataFrameReader reader = SparkEngine.getInstance().getSparkSession()
         .read()
         .format(dataFormat)
-        .options(readOptions)
-        .load(SparkEngine.sparkPath(path));
+        .options(readOptions);
+
+    if (!Strings.isNullOrEmpty(path)) {
+      return reader.load(SparkEngine.sparkPath(path));
+    }
+    return reader.load();
   }
 
   /**
@@ -434,7 +441,9 @@ public class SparkEngine {
   }
 
   public static String sparkPath(String path) {
-    if (path.startsWith(Constants.S3_SCHEME)) {
+    if (path == null) {
+      return null;
+    } else if (path.startsWith(Constants.S3_SCHEME)) {
       return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
     }
     return path;
