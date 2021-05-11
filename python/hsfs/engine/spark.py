@@ -421,7 +421,7 @@ class Engine:
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, location, split):
+    def read(self, storage_connector, data_format, read_options, location, split=None):
         if split is None:
             path = location + "/**"
         else:
@@ -434,7 +434,7 @@ class Engine:
 
         return (
             self._spark_session.read.format(data_format)
-            .options(**read_options)
+            .options(**(read_options if read_options else {}))
             .load(path)
         )
 
