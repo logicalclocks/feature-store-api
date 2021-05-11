@@ -552,6 +552,17 @@ class SnowflakeConnector(StorageConnector):
         return self._options
 
     def snowflake_connector_options(self):
+        """In order to use the `snowflake.connector` Python library, this method
+        prepares a Python dictionary with the needed arguments for you to connect to
+        a Snowflake database.
+
+        ```python
+        import snowflake.connector
+
+        sc = fs.get_storage_connector("snowflake_conn")
+        ctx = snowflake.connector.connect(**sc.snowflake_connector_options())
+        ```
+        """
         props = {
             "user": self._user,
             "account": self.account,
