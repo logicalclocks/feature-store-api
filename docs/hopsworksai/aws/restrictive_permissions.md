@@ -276,7 +276,7 @@ If you do not intend to upgrade your cluster to newer versions of Hopsworks, the
 
 #### Limiting upgrade permissions
 
-You can restrict the upgrade permissions given to your cluster using the [tags that you have attached to your cluster](../cluster_creation/#step-13-add-tags-to-your-instances). To do that, you need to replace the upgrade permissions with the following policy instead. First you need to replace *REGION* and *ACCOUNT* with your region and account where you run your cluster, then replace *HEAD_NODE_INSTANCE_ID* with your aws instance id of the head node and *HEAD_NODE_VOLUME_ID* with the volume id attached to the head node, and finally replace the *TAG_KEY* and *TAG_VALUE* with your the tag name and value that is used with your cluster.
+You can use tags to restrict the upgrade permissions to only the resources created for your cluster. For this [attach a tag to your cluster during the cluster creation](../cluster_creation/#step-13-add-tags-to-your-instances). Then, replace the upgrade permissions with the following policy instead. First you need to replace *REGION* and *ACCOUNT* with your region and account where you run your cluster, then replace *HEAD_NODE_INSTANCE_ID* with your aws instance id of the head node and *HEAD_NODE_VOLUME_ID* with the volume id attached to the head node, and finally replace the *TAG_KEY* and *TAG_VALUE* with your the tag name and value that is used with your cluster.
 
 ```json
     {
