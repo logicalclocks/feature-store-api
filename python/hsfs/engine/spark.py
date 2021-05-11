@@ -434,7 +434,7 @@ class Engine:
 
         return (
             self._spark_session.read.format(data_format)
-            .options(**read_options)
+            .options(**(read_options if read_options else {}))
             .load(path)
         )
 
