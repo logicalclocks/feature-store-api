@@ -58,7 +58,7 @@ class Engine:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location, split):
+    def read(self, storage_connector, data_format, read_options, location, split=None):
         df_list = []
         if storage_connector.connector_type == storage_connector.HOPSFS:
             # providing more informative error
