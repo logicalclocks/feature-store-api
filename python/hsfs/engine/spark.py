@@ -421,7 +421,7 @@ class Engine:
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, location, split):
+    def read(self, storage_connector, data_format, read_options, location, split=None):
         if split is None:
             path = location + "/**"
         else:
