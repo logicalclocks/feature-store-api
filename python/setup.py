@@ -16,7 +16,7 @@ setup(
     name="hsfs",
     version=__version__,
     install_requires=[
-        "pyhumps",
+        "pyhumps==1.6.1",
         "requests",
         "furl",
         "boto3",
