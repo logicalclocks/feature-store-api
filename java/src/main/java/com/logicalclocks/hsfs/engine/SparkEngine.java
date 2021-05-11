@@ -176,7 +176,6 @@ public class SparkEngine {
    */
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                     Map<String, String> writeOptions, SaveMode saveMode) {
-
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
     if (trainingDataset.getCoalesce()) {
@@ -491,7 +490,7 @@ public class SparkEngine {
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
-          .set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
+          .set("fs.s3a.server-side-encryption-key", storageConnector.getServerEncryptionKey());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
       sparkSession.sparkContext().hadoopConfiguration()
