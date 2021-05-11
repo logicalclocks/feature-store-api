@@ -219,6 +219,7 @@ The following permissions are used to let you close and open ports on your clust
 
 ## Limiting the instance profile permissions
 
+### Backups
 If you do not intend to take backups or if you do not have access to this Enterprise feature you can remove the permissions that are only used by the backup feature when [configuring instance profile permissions](../getting_started/#step-2-creating-instance-profile) .
 For this remove the following permissions from the instance profile:
 
@@ -228,6 +229,7 @@ For this remove the following permissions from the instance profile:
       "S3:PutBucketVersioning", 
 ```
 
+### CloudWatch Logs
 Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:
 
 ```json
@@ -251,5 +253,84 @@ Hopsworks put its logs in Amazon CloudWatch so that you can access them without 
         "ssm:GetParameter"
       ],
       "Resource": "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+    }
+```
+### Upgrade permissions 
+
+#### Removing upgrade permissions
+If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the upgrade permissions statement from your instance profile that you have created [here](../getting_started/#step-2-creating-instance-profile). For this remove the following statement from your instance profile
+
+```json
+    {
+      "Sid": "UpgradePermissions",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVolumes",
+        "ec2:DetachVolume",
+        "ec2:AttachVolume",
+        "ec2:ModifyInstanceAttribute"
+      ],
+      "Resource": "*"
+    }
+```
+
+#### Limiting upgrade permissions
+
+You can restrict the upgrade permissions given to your cluster using the [tags that you have attached to your cluster](../cluster_creation/#step-13-add-tags-to-your-instances). To do that, you need to replace the upgrade permissions with the following policy instead. First you need to replace *REGION* and *ACCOUNT* with your region and account where you run your cluster, then replace *HEAD_NODE_INSTANCE_ID* with your aws instance id of the head node and *HEAD_NODE_VOLUME_ID* with the volume id attached to the head node, and finally replace the *TAG_KEY* and *TAG_VALUE* with your the tag name and value that is used with your cluster.
+
+```json
+    {
+      "Version":"2012-10-17",
+      "Statement":[
+          {
+            "Sid":"AllowAttachVolumeForUpgrade",
+            "Effect":"Allow",
+            "Action":"ec2:AttachVolume",
+            "Resource":"arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID"
+          },
+          {
+            "Sid":"AllowAttachVolumeForUpgradeOnlyTaggedInstance",
+            "Effect":"Allow",
+            "Action":"ec2:AttachVolume",
+            "Resource":"arn:aws:ec2:REGION:ACCOUNT:instance/*",
+            "Condition":{
+                "StringEquals":{
+                  "ec2:ResourceTag/TAG_KEY":"TAG_VALUE"
+                }
+            }
+          },
+          {
+            "Sid":"AllowDetachVolumeForUpgrade",
+            "Effect":"Allow",
+            "Action":"ec2:DetachVolume",
+            "Resource":"arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID"
+          },
+          {
+            "Sid":"AllowDetachVolumeForUpgradeOnlyTaggedInstance",
+            "Effect":"Allow",
+            "Action":"ec2:DetachVolume",
+            "Resource":"arn:aws:ec2:REGION:ACCOUNT:instance/*",
+            "Condition":{
+                "StringEquals":{
+                  "ec2:ResourceTag/TAG_KEY":"TAG_VALUE"
+                }
+            }
+          },
+          {
+            "Sid":"AllowModifyInstanceAttributeForUpgrade",
+            "Effect":"Allow",
+            "Action":"ec2:ModifyInstanceAttribute",
+            "Resource":[
+                "arn:aws:ec2:REGION:ACCOUNT:instance/HEAD_NODE_INSTANCE_ID",
+                "arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID"
+            ]
+          },
+          {
+            "Sid":"AllowDescribeVolumesForUpgrade",
+            "Effect":"Allow",
+            "Action":"ec2:DescribeVolumes",
+            "Resource":"*"
+          }
+      ]
     }
 ```
