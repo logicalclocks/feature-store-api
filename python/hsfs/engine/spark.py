@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 
-import importlib.util
 import os
 import json
 import datetime
+import importlib.util
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-from hsfs import feature, training_dataset_feature, client
+from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
@@ -58,7 +58,7 @@ class Engine:
 
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
-            self._setup_pydoop()
+            util.setup_pydoop()
 
     def sql(self, sql_query, feature_store, connector, dataframe_type):
         if not connector:
@@ -421,7 +421,11 @@ class Engine:
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, path):
+    def read(self, storage_connector, data_format, read_options, location, split=None):
+        if split is None:
+            path = location + "/**"
+        else:
+            path = location + "/" + str(split)
 
         if data_format.lower() == "tsv":
             data_format = "csv"
@@ -430,7 +434,7 @@ class Engine:
 
         return (
             self._spark_session.read.format(data_format)
-            .options(**read_options)
+            .options(**(read_options if read_options else {}))
             .load(path)
         )
 
@@ -621,39 +625,6 @@ class Engine:
         if isinstance(dataframe, DataFrame):
             return True
         return False
-
-    def _setup_pydoop(self):
-        # Import Pydoop only here, so it doesn't trigger if the execution environment
-        # does not support Pydoop. E.g. Sagemaker
-        from pydoop import hdfs
-
-        # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
-        class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
-            @classmethod
-            def split(cls, hdfs_path, user):
-                if not hdfs_path:
-                    cls.raise_bad_path(hdfs_path, "empty")
-                scheme, netloc, path = cls.parse(hdfs_path)
-                if not scheme:
-                    scheme = "file" if hdfs.fs.default_is_local() else "hdfs"
-                if scheme == "hdfs" or scheme == "hopsfs":
-                    if not path:
-                        cls.raise_bad_path(hdfs_path, "path part is empty")
-                    if ":" in path:
-                        cls.raise_bad_path(
-                            hdfs_path, "':' not allowed outside netloc part"
-                        )
-                    hostname, port = cls.split_netloc(netloc)
-                    if not path.startswith("/"):
-                        path = "/user/%s/%s" % (user, path)
-                elif scheme == "file":
-                    hostname, port, path = "", 0, netloc + path
-                else:
-                    cls.raise_bad_path(hdfs_path, "unsupported scheme %r" % scheme)
-                return hostname, port, path
-
-        # Monkey patch the class to use the one defined above.
-        hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
     def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
         #
