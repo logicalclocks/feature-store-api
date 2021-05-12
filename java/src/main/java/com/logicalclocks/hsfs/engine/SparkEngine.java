@@ -267,12 +267,30 @@ public class SparkEngine {
         .save(SparkEngine.sparkPath(path));
   }
 
+  public Dataset<Row> read(StorageConnector storageConnector, String dataFormat, Map<String, String> readOptions,
+                           String path) {
+    return read(storageConnector, dataFormat, readOptions, path, null);
+  }
+
   // Here dataFormat is string as this method is used both with OnDemand Feature Groups as well as with
   // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String path) {
+                           Map<String, String> readOptions, String location, String split) {
     setupConnectorHadoopConf(storageConnector);
+
+    String path = "";
+    if (location != null) {
+      if (com.google.common.base.Strings.isNullOrEmpty(split)) {
+        // ** glob means "all sub directories"
+        path = new Path(location, "**").toString();
+      } else {
+        path = new Path(location, split).toString();
+      }
+    } else {
+      // path is null for jdbc kind of on demand fgs
+      path = null;
+    }
     path = SparkEngine.sparkPath(path);
 
     DataFrameReader reader = SparkEngine.getInstance().getSparkSession()
