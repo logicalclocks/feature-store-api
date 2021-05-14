@@ -122,11 +122,19 @@ class Engine:
 
         prefix = "/".join(path_parts)
 
-        s3 = boto3.client(
-            "s3",
-            aws_access_key_id=storage_connector.access_key,
-            aws_secret_access_key=storage_connector.secret_key,
-        )
+        if storage_connector.session_token is not None:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+                aws_session_token=storage_connector.session_token,
+            )
+        else:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+            )
 
         df_list = []
         object_list = {"is_truncated": True}
