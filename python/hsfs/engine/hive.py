@@ -60,69 +60,10 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location, split=None):
-        df_list = []
         if storage_connector.connector_type == storage_connector.HOPSFS:
-            # providing more informative error
-            try:
-                from pydoop import hdfs
-            except ImportError as err:
-                raise ModuleNotFoundError(
-                    "Reading training dataset from HopsFS requires `pydoop`"
-                ) from err
-
-            util.setup_pydoop()
-
-            if split is None:
-                path_list = hdfs.ls(location, recursive=True)
-            else:
-                path_list = hdfs.ls(location + "/" + str(split), recursive=True)
-
-            for path in path_list:
-                if (
-                    hdfs.path.isfile(path)
-                    and not path.endswith("_SUCCESS")
-                    and hdfs.path.getsize(path) > 0
-                ):
-                    df_list.append(self._read_pandas(data_format, path))
+            df_list = self._read_hopsfs(location, split, data_format)
         elif storage_connector.connector_type == storage_connector.S3:
-            # get key prefix
-            path_parts = location.replace("s3://", "").split("/")
-            _ = path_parts.pop(0)  # pop first element -> bucket
-
-            if split is not None and isinstance(split, str):
-                path_parts.append(split)
-
-            prefix = "/".join(path_parts)
-
-            s3 = boto3.client(
-                "s3",
-                aws_access_key_id=storage_connector.access_key,
-                aws_secret_access_key=storage_connector.secret_key,
-            )
-
-            object_list = {"is_truncated": True}
-            while object_list.get("is_truncated", False):
-                if "NextContinuationToken" in object_list:
-                    object_list = s3.list_objects_v2(
-                        Bucket=storage_connector.bucket,
-                        Prefix=prefix,
-                        MaxKeys=1000,
-                        ContinuationToken=object_list["NextContinuationToken"],
-                    )
-                else:
-                    object_list = s3.list_objects_v2(
-                        Bucket=storage_connector.bucket,
-                        Prefix=prefix,
-                        MaxKeys=1000,
-                    )
-
-                for obj in object_list["Contents"]:
-                    if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
-                        obj = s3.get_object(
-                            Bucket=storage_connector.bucket,
-                            Key=obj["Key"],
-                        )
-                        df_list.append(self._read_pandas(data_format, obj["Body"]))
+            df_list = self._read_s3(storage_connector, location, split, data_format)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
@@ -144,6 +85,74 @@ class Engine:
                     data_format
                 )
             )
+
+    def _read_hopsfs(self, location, split, data_format):
+        # providing more informative error
+        try:
+            from pydoop import hdfs
+        except ImportError as err:
+            raise ModuleNotFoundError(
+                "Reading training dataset from HopsFS requires `pydoop`"
+            ) from err
+
+        util.setup_pydoop()
+
+        if split is None:
+            path_list = hdfs.ls(location, recursive=True)
+        else:
+            path_list = hdfs.ls(location + "/" + str(split), recursive=True)
+
+        df_list = []
+        for path in path_list:
+            if (
+                hdfs.path.isfile(path)
+                and not path.endswith("_SUCCESS")
+                and hdfs.path.getsize(path) > 0
+            ):
+                df_list.append(self._read_pandas(data_format, path))
+        return path_list
+
+    def _read_s3(self, storage_connector, location, split, data_format):
+        # get key prefix
+        path_parts = location.replace("s3://", "").split("/")
+        _ = path_parts.pop(0)  # pop first element -> bucket
+
+        if split is not None and isinstance(split, str):
+            path_parts.append(split)
+
+        prefix = "/".join(path_parts)
+
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=storage_connector.access_key,
+            aws_secret_access_key=storage_connector.secret_key,
+        )
+
+        df_list = []
+        object_list = {"is_truncated": True}
+        while object_list.get("is_truncated", False):
+            if "NextContinuationToken" in object_list:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                    ContinuationToken=object_list["NextContinuationToken"],
+                )
+            else:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                )
+
+            for obj in object_list["Contents"]:
+                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                    obj = s3.get_object(
+                        Bucket=storage_connector.bucket,
+                        Key=obj["Key"],
+                    )
+                    df_list.append(self._read_pandas(data_format, obj["Body"]))
+        return df_list
 
     def read_options(self, data_format, provided_options):
         return {}
