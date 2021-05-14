@@ -110,7 +110,7 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
-        return path_list
+        return df_list
 
     def _read_s3(self, storage_connector, location, split, data_format):
         # get key prefix
