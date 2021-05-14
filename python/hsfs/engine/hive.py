@@ -16,6 +16,7 @@
 
 import pandas as pd
 import numpy as np
+import boto3
 
 from pyhive import hive
 from urllib.parse import urlparse
@@ -82,19 +83,33 @@ class Engine:
                     and not path.endswith("_SUCCESS")
                     and hdfs.path.getsize(path) > 0
                 ):
-                    if data_format.lower() == "csv":
-                        df_tmp = pd.read_csv(path)
-                    elif data_format.lower() == "tsv":
-                        df_tmp = pd.read_csv(path, sep="\t")
-                    elif data_format.lower() == "parquet":
-                        df_tmp = pd.read_parquet(path)
-                    else:
-                        raise TypeError(
-                            "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
-                                data_format
-                            )
+                    df_list.append(self._read_pandas(data_format, path))
+        elif storage_connector.connector_type == storage_connector.S3:
+            path_parts = location.replace("s3://", "").split("/")
+            _ = path_parts.pop(0)  # pop first element -> bucket
+            prefix = "/".join(path_parts)
+
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+            )
+
+            object_list = {"is_truncated": True}
+            while object_list.get("is_truncated", False):
+                object_list = s3.list_objects(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                    ContinuationToken=object_list.get("NextContinuationToken", None),
+                )
+
+                for obj in object_list["Contents"]:
+                    if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                        obj = s3.get_object(
+                            Bucket=storage_connector.bucket, Key=obj["Key"]
                         )
-                    df_list.append(df_tmp)
+                        df_list.append(self._read_pandas(data_format, obj["Body"]))
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
@@ -102,6 +117,20 @@ class Engine:
                 )
             )
         return pd.concat(df_list, ignore_index=True)
+
+    def _read_pandas(self, data_format, obj):
+        if data_format.lower() == "csv":
+            return pd.read_csv(obj)
+        elif data_format.lower() == "tsv":
+            return pd.read_csv(obj, sep="\t")
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
+        else:
+            raise TypeError(
+                "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                    data_format
+                )
+            )
 
     def read_options(self, data_format, provided_options):
         return {}
