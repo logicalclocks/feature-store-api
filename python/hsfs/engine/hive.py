@@ -121,8 +121,6 @@ class Engine:
                         obj = s3.get_object(
                             Bucket=storage_connector.bucket,
                             Key=obj["Key"],
-                            SSECustomerAlgorithm=storage_connector.server_encryption_algorithm,
-                            SSECustomerKey=storage_connector.server_encryption_key,
                         )
                         df_list.append(self._read_pandas(data_format, obj["Body"]))
         else:
