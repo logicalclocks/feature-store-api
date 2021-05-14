@@ -102,18 +102,18 @@ class Engine:
 
             object_list = {"is_truncated": True}
             while object_list.get("is_truncated", False):
-                if object_list.get("NextContinuationToken", False):
+                if "NextContinuationToken" in object_list:
                     object_list = s3.list_objects_v2(
                         Bucket=storage_connector.bucket,
                         Prefix=prefix,
                         MaxKeys=1000,
+                        ContinuationToken=object_list["NextContinuationToken"],
                     )
                 else:
                     object_list = s3.list_objects_v2(
                         Bucket=storage_connector.bucket,
                         Prefix=prefix,
                         MaxKeys=1000,
-                        ContinuationToken=object_list["NextContinuationToken"],
                     )
 
                 for obj in object_list["Contents"]:
