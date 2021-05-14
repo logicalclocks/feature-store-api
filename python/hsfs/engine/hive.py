@@ -85,8 +85,13 @@ class Engine:
                 ):
                     df_list.append(self._read_pandas(data_format, path))
         elif storage_connector.connector_type == storage_connector.S3:
+            # get key prefix
             path_parts = location.replace("s3://", "").split("/")
             _ = path_parts.pop(0)  # pop first element -> bucket
+
+            if split is not None and isinstance(split, str):
+                path_parts.append(split)
+
             prefix = "/".join(path_parts)
 
             s3 = boto3.client(
@@ -97,17 +102,27 @@ class Engine:
 
             object_list = {"is_truncated": True}
             while object_list.get("is_truncated", False):
-                object_list = s3.list_objects(
-                    Bucket=storage_connector.bucket,
-                    Prefix=prefix,
-                    MaxKeys=1000,
-                    ContinuationToken=object_list.get("NextContinuationToken", None),
-                )
+                if object_list.get("NextContinuationToken", False):
+                    object_list = s3.list_objects_v2(
+                        Bucket=storage_connector.bucket,
+                        Prefix=prefix,
+                        MaxKeys=1000,
+                    )
+                else:
+                    object_list = s3.list_objects_v2(
+                        Bucket=storage_connector.bucket,
+                        Prefix=prefix,
+                        MaxKeys=1000,
+                        ContinuationToken=object_list["NextContinuationToken"],
+                    )
 
                 for obj in object_list["Contents"]:
                     if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
                         obj = s3.get_object(
-                            Bucket=storage_connector.bucket, Key=obj["Key"]
+                            Bucket=storage_connector.bucket,
+                            Key=obj["Key"],
+                            SSECustomerAlgorithm=storage_connector.server_encryption_algorithm,
+                            SSECustomerKey=storage_connector.server_encryption_key,
                         )
                         df_list.append(self._read_pandas(data_format, obj["Body"]))
         else:
