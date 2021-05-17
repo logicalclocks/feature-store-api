@@ -21,6 +21,7 @@ from typing import Optional
 import humps
 
 from hsfs import engine
+from hsfs.core import storage_connector_api
 
 
 class StorageConnector(ABC):
@@ -37,6 +38,10 @@ class StorageConnector(ABC):
         self._description = description
         self._featurestore_id = featurestore_id
 
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
+            self._featurestore_id
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -46,6 +51,16 @@ class StorageConnector(ABC):
                 _ = json_decamelized.pop("storage_connector_type")
                 return subcls(**json_decamelized)
         raise ValueError
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        if self.type == json_decamelized["storage_connector_type"]:
+            _ = json_decamelized.pop("storage_connector_type")
+            self.__init__(**json_decamelized)
+        else:
+            raise ValueError("Failed to update storage connector information.")
+        return self
 
     def to_dict(self):
         # Currently we use this method only when creating on demand feature groups.
@@ -88,6 +103,8 @@ class StorageConnector(ABC):
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
         """
+        # Always update the connector before reading, mainly for temp credentials
+        self._storage_connector_api.refetch(self)
         return engine.get_instance().read(
             self, data_format, options, os.path.join(self.path, path)
         )
@@ -348,6 +365,8 @@ class RedshiftConnector(StorageConnector):
         self, query: str, data_format: str = None, options: dict = {}, path: str = None
     ):
         """Reads a query into a dataframe using the storage connector."""
+        # refetch to update temporary credentials
+        self._storage_connector_api.refetch(self)
         options = (
             {**self.spark_options(), **options}
             if options is not None
