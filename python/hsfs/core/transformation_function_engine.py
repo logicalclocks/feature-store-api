@@ -37,19 +37,7 @@ class TransformationFunctionEngine:
         transformation_fn_instances = (
             self._transformation_function_api.get_transformation_fn(name, version)
         )
-        if version is not None:
-            return transformation_fn_instances[0]
-        else:
-            transformation_fns = []
-            for transformation_fn_instance in transformation_fn_instances:
-                transformation_fn_dict = {
-                    "name": transformation_fn_instance.name,
-                    "version": transformation_fn_instance.version,
-                    "output_type": transformation_fn_instance.output_type,
-                    "transformation_function": transformation_fn_instance,
-                }
-                transformation_fns.append(transformation_fn_dict)
-            return transformation_fns
+        return transformation_fn_instances[0]
 
     def get_transformation_fns(self):
         transformation_fn_instances = (
@@ -59,13 +47,7 @@ class TransformationFunctionEngine:
         )
         transformation_fns = []
         for transformation_fn_instance in transformation_fn_instances:
-            transformation_fn_dict = {
-                "name": transformation_fn_instance.name,
-                "version": transformation_fn_instance.version,
-                "output_type": transformation_fn_instance.output_type,
-                "transformation_function": transformation_fn_instance,
-            }
-            transformation_fns.append(transformation_fn_dict)
+            transformation_fns.append(transformation_fn_instance)
         return transformation_fns
 
     def delete(self, transformation_function_instance):

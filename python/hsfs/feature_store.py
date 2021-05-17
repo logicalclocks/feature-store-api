@@ -642,8 +642,6 @@ class FeatureStore:
                 name will be retrieved .
         # Returns:
             `TransformationFunction`: The TransformationFunction metadata object.
-            `Dict[str, int, str, TransformationFunction]`. Dictionary object of transformation function name, version,
-                output type and transformation function instance.
         """
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
@@ -651,9 +649,7 @@ class FeatureStore:
         """Get  all transformation functions metadata objects.
 
         # Returns:
-             `Dict[str, int, str, TransformationFunction]`. Dictionary object of transformation function name, version,
-                 output type and transformation function instance.
-
+             `List[TransformationFunction]`. List of transformation function instances.
         """
         return self._transformation_function_engine.get_transformation_fns()
 

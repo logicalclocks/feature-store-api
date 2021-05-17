@@ -134,7 +134,7 @@ public class TrainingDatasetEngine {
     // check if this training dataset has transformation functions attached and throw exception if any
     if (getTrainingDatasetTransformationFunction(trainingDataset).size() > 0) {
       throw new FeatureStoreException("This training dataset has transformation functions attached and "
-          + "insert operation must be performed from pyspark kernel");
+          + "insert operation must be performed from a PySpark application");
     }
 
     Map<String, String> writeOptions =
