@@ -76,12 +76,11 @@ class TrainingDatasetEngine:
         read_options = engine.get_instance().read_options(
             training_dataset.data_format, user_read_options
         )
-        return engine.get_instance().read(
-            training_dataset.storage_connector,
-            training_dataset.data_format,
-            read_options,
-            training_dataset.location,
-            split,
+        return training_dataset.storage_connector.read(
+            data_format=training_dataset.data_format,
+            options=read_options,
+            path=training_dataset.location,
+            split=split,
         )
 
     def query(self, training_dataset, online, with_label):

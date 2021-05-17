@@ -97,6 +97,7 @@ class StorageConnector(ABC):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        split: str = None,
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -106,7 +107,7 @@ class StorageConnector(ABC):
         # Always update the connector before reading, mainly for temp credentials
         self._storage_connector_api.refetch(self)
         return engine.get_instance().read(
-            self, data_format, options, os.path.join(self.path, path)
+            self, data_format, options, os.path.join(self.path, path), split
         )
 
 
@@ -362,7 +363,12 @@ class RedshiftConnector(StorageConnector):
         return props
 
     def read(
-        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+        self,
+        query: str,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         # refetch to update temporary credentials
@@ -375,7 +381,7 @@ class RedshiftConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, split)
 
 
 class AdlsConnector(StorageConnector):
@@ -621,7 +627,12 @@ class SnowflakeConnector(StorageConnector):
         return props
 
     def read(
-        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+        self,
+        query: str,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         options = (
@@ -632,7 +643,9 @@ class SnowflakeConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
+        return engine.get_instance().read(
+            self, self.SNOWFLAKE_FORMAT, options, None, split
+        )
 
 
 class JdbcConnector(StorageConnector):
@@ -677,7 +690,12 @@ class JdbcConnector(StorageConnector):
         return options
 
     def read(
-        self, query: str, data_format: str = None, options: dict = {}, path: str = None
+        self,
+        query: str,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         # options = (
@@ -689,4 +707,4 @@ class JdbcConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, split)
