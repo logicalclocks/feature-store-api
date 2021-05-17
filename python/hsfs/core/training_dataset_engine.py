@@ -76,12 +76,18 @@ class TrainingDatasetEngine:
         read_options = engine.get_instance().read_options(
             training_dataset.data_format, user_read_options
         )
-        return engine.get_instance().read(
-            storage_connector=training_dataset.storage_connector,
+
+        if split is not None:
+            path = training_dataset.location + "/" + str(split)
+        else:
+            path = training_dataset.location
+
+        return training_dataset.storage_connector.read(
+            # always read from materialized dataset, not query object
+            query=None,
             data_format=training_dataset.data_format,
-            read_options=read_options,
-            location=training_dataset.location,
-            split=split,
+            options=read_options,
+            path=path,
         )
 
     def query(self, training_dataset, online, with_label):

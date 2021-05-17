@@ -59,11 +59,11 @@ class Engine:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location, split=None):
+    def read(self, storage_connector, data_format, read_options, location):
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, split, data_format)
+            df_list = self._read_hopsfs(location, data_format)
         elif storage_connector.type == storage_connector.S3:
-            df_list = self._read_s3(storage_connector, location, split, data_format)
+            df_list = self._read_s3(storage_connector, location, data_format)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
@@ -86,7 +86,7 @@ class Engine:
                 )
             )
 
-    def _read_hopsfs(self, location, split, data_format):
+    def _read_hopsfs(self, location, data_format):
         # providing more informative error
         try:
             from pydoop import hdfs
@@ -96,11 +96,7 @@ class Engine:
             ) from err
 
         util.setup_pydoop()
-
-        if split is None:
-            path_list = hdfs.ls(location, recursive=True)
-        else:
-            path_list = hdfs.ls(location + "/" + str(split), recursive=True)
+        path_list = hdfs.ls(location, recursive=True)
 
         df_list = []
         for path in path_list:
@@ -112,16 +108,10 @@ class Engine:
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
 
-    def _read_s3(self, storage_connector, location, split, data_format):
-        # refetch storage connector for temp credentials
-        storage_connector.refetch()
-
+    def _read_s3(self, storage_connector, location, data_format):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket
-
-        if split is not None and isinstance(split, str):
-            path_parts.append(split)
 
         prefix = "/".join(path_parts)
 

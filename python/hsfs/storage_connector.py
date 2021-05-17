@@ -103,9 +103,10 @@ class StorageConnector(ABC):
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
         """
-        return engine.get_instance().read(
-            self, data_format, options, os.path.join(self.path, path)
-        )
+        return engine.get_instance().read(self, data_format, options, path)
+
+    def _get_path(self, sub_path: str):
+        return None
 
 
 class HopsFSConnector(StorageConnector):
@@ -132,6 +133,9 @@ class HopsFSConnector(StorageConnector):
         arguments.
         """
         return {}
+
+    def _get_path(self, sub_path: str):
+        return os.path.join(self._hopsfs_path, sub_path)
 
 
 class S3Connector(StorageConnector):
@@ -239,15 +243,16 @@ class S3Connector(StorageConnector):
         queries are meant for JDBC or databases like Redshift and Snowflake.
         """
         self.refetch()
-        return engine.get_instance().read(
-            self, data_format, options, os.path.join(self.path, path)
-        )
+        return engine.get_instance().read(self, data_format, options, path)
 
     def refetch(self):
         """
         Refetch storage connector in order to retrieve updated temporary credentials.
         """
         self._storage_connector_api.refetch(self)
+
+    def _get_path(self, sub_path: str):
+        return os.path.join(self.path, sub_path)
 
 
 class RedshiftConnector(StorageConnector):
@@ -505,6 +510,9 @@ class AdlsConnector(StorageConnector):
             path: Path to prepare for reading from cloud storage. Defaults to `None`.
         """
         return engine.get_instance().setup_storage_connector(self, path)
+
+    def _get_path(self, sub_path: str):
+        return os.path.join(self.path, sub_path)
 
 
 class SnowflakeConnector(StorageConnector):

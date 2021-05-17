@@ -81,7 +81,7 @@ class Engine:
             on_demand_fg.query,
             on_demand_fg.data_format,
             on_demand_fg.options,
-            on_demand_fg.path,
+            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
         )
 
         on_demand_dataset.createOrReplaceTempView(alias)
@@ -384,12 +384,9 @@ class Engine:
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, location, split=None):
+    def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):
-            if split is None:
-                path = location + "/**"
-            else:
-                path = location + "/" + str(split)
+            path = location + "/**"
 
             if data_format.lower() == "tsv":
                 data_format = "csv"
