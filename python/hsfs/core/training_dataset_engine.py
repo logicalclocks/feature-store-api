@@ -76,10 +76,11 @@ class TrainingDatasetEngine:
         read_options = engine.get_instance().read_options(
             training_dataset.data_format, user_read_options
         )
-        return training_dataset.storage_connector.read(
+        return engine.get_instance().read(
+            storage_connector=training_dataset.storage_connector,
             data_format=training_dataset.data_format,
-            options=read_options,
-            path=training_dataset.location,
+            read_options=read_options,
+            location=training_dataset.location,
             split=split,
         )
 

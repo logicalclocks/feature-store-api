@@ -113,6 +113,9 @@ class Engine:
         return df_list
 
     def _read_s3(self, storage_connector, location, split, data_format):
+        # refetch storage connector for temp credentials
+        storage_connector.refetch()
+
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket

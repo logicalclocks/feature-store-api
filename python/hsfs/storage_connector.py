@@ -97,17 +97,14 @@ class StorageConnector(ABC):
         data_format: str = None,
         options: dict = {},
         path: str = None,
-        split: str = None,
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
         """
-        # Always update the connector before reading, mainly for temp credentials
-        self._storage_connector_api.refetch(self)
         return engine.get_instance().read(
-            self, data_format, options, os.path.join(self.path, path), split
+            self, data_format, options, os.path.join(self.path, path)
         )
 
 
@@ -228,6 +225,29 @@ class S3Connector(StorageConnector):
             path: Path to prepare for reading from cloud storage. Defaults to `None`.
         """
         return engine.get_instance().setup_storage_connector(self, path)
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        """Reads a query or a path into a dataframe using the storage connector.
+
+        Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
+        queries are meant for JDBC or databases like Redshift and Snowflake.
+        """
+        self.refetch()
+        return engine.get_instance().read(
+            self, data_format, options, os.path.join(self.path, path)
+        )
+
+    def refetch(self):
+        """
+        Refetch storage connector in order to retrieve updated temporary credentials.
+        """
+        self._storage_connector_api.refetch(self)
 
 
 class RedshiftConnector(StorageConnector):
@@ -368,7 +388,6 @@ class RedshiftConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
-        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         # refetch to update temporary credentials
@@ -381,7 +400,13 @@ class RedshiftConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, split)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+
+    def refetch(self):
+        """
+        Refetch storage connector in order to retrieve updated temporary credentials.
+        """
+        self._storage_connector_api.refetch(self)
 
 
 class AdlsConnector(StorageConnector):
@@ -632,7 +657,6 @@ class SnowflakeConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
-        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         options = (
@@ -643,9 +667,7 @@ class SnowflakeConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(
-            self, self.SNOWFLAKE_FORMAT, options, None, split
-        )
+        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
 
 
 class JdbcConnector(StorageConnector):
@@ -695,7 +717,6 @@ class JdbcConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
-        split: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
         # options = (
@@ -707,4 +728,4 @@ class JdbcConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, split)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
