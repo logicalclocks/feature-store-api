@@ -32,6 +32,7 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -134,12 +135,17 @@ public class TrainingDatasetEngine {
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
-  public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions) {
+  public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions)
+      throws FeatureStoreException {
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
-    return SparkEngine.getInstance()
-        .read(trainingDataset.getStorageConnector(), trainingDataset.getDataFormat().toString(), readOptions,
-            trainingDataset.getLocation(), split);
+
+    String path = trainingDataset.getLocation();
+    if (!com.google.common.base.Strings.isNullOrEmpty(split)) {
+      path = new Path(trainingDataset.getLocation(), split).toString();
+    }
+    return trainingDataset.getStorageConnector()
+        .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
   public void addTag(TrainingDataset trainingDataset, String name, Object value)

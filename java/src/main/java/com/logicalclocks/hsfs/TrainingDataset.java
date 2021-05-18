@@ -265,7 +265,7 @@ public class TrainingDataset {
    *
    * @return
    */
-  public Dataset<Row> read() {
+  public Dataset<Row> read() throws FeatureStoreException {
     return read("");
   }
 
@@ -275,7 +275,7 @@ public class TrainingDataset {
    * @param readOptions options to pass to the Spark read operation
    * @return
    */
-  public Dataset<Row> read(Map<String, String> readOptions) {
+  public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException {
     return trainingDatasetEngine.read(this, "", readOptions);
   }
 
@@ -285,7 +285,7 @@ public class TrainingDataset {
    * @param split the split name
    * @return
    */
-  public Dataset<Row> read(String split) {
+  public Dataset<Row> read(String split) throws FeatureStoreException {
     return read(split, null);
   }
 
@@ -297,7 +297,7 @@ public class TrainingDataset {
    * @param readOptions options to pass to the Spark read operation
    * @return
    */
-  public Dataset<Row> read(String split, Map<String, String> readOptions) {
+  public Dataset<Row> read(String split, Map<String, String> readOptions) throws FeatureStoreException {
     return trainingDatasetEngine.read(this, split, readOptions);
   }
 
@@ -306,7 +306,7 @@ public class TrainingDataset {
    *
    * @param numRows
    */
-  public void show(int numRows) {
+  public void show(int numRows) throws FeatureStoreException {
     read("").show(numRows);
   }
 

@@ -70,7 +70,7 @@ public abstract class StorageConnector {
 
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException {
-    return SparkEngine.getInstance().read(this, dataFormat, options, getPath(path));
+    return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
   @JsonIgnore
@@ -88,12 +88,6 @@ public abstract class StorageConnector {
 
     public Map<String, String> sparkOptions() {
       return new HashMap<>();
-    }
-
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException {
-      throw new FeatureStoreException(
-          "Read method not supported for storage connector type: " + storageConnectorType);
     }
 
     @JsonIgnore
@@ -134,9 +128,9 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException {
-      return SparkEngine.getInstance().read(this, dataFormat, options, getPath(path));
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      // TODO refetch
+      return SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
   }
 
@@ -199,6 +193,7 @@ public abstract class StorageConnector {
     }
 
     public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      // TODO refetch
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
@@ -207,9 +202,8 @@ public abstract class StorageConnector {
     }
 
     @JsonIgnore
-    public String getPath(String subPath) throws FeatureStoreException {
-      throw new FeatureStoreException(
-          "getPath method not supported for storage connector type: " + storageConnectorType);
+    public String getPath(String subPath) {
+      return null;
     }
   }
 
@@ -248,12 +242,6 @@ public abstract class StorageConnector {
       Map<String, String> options = new HashMap<>();
       sparkOptions.stream().forEach(option -> options.put(option.getName(), option.getValue()));
       return options;
-    }
-
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException {
-      throw new FeatureStoreException(
-          "Read method not supported for storage connector type: " + storageConnectorType);
     }
   }
 
@@ -331,9 +319,8 @@ public abstract class StorageConnector {
     }
 
     @JsonIgnore
-    public String getPath(String subPath) throws FeatureStoreException {
-      throw new FeatureStoreException(
-          "getPath method not supported for storage connector type: " + storageConnectorType);
+    public String getPath(String subPath) {
+      return null;
     }
   }
 
@@ -362,9 +349,8 @@ public abstract class StorageConnector {
     }
 
     @JsonIgnore
-    public String getPath(String subPath) throws FeatureStoreException {
-      throw new FeatureStoreException(
-          "getPath method not supported for storage connector type: " + storageConnectorType);
+    public String getPath(String subPath) {
+      return null;
     }
   }
 }
