@@ -500,10 +500,10 @@ class AdlsConnector(StorageConnector):
         ```python
         conn.prepare_spark()
 
-        spark.read.format("json").load("abfs://[bucket]/path")
+        spark.read.format("json").load("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]")
 
         # or
-        spark.read.format("json").load(conn.prepare_spark("abfs://[bucket]/path"))
+        spark.read.format("json").load(conn.prepare_spark("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]"))
         ```
 
         # Arguments
@@ -727,12 +727,11 @@ class JdbcConnector(StorageConnector):
         path: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
-        # options = (
-        #     {**self.spark_options(), **options}
-        #     if options is not None
-        #     else self.spark_options()
-        # )
-        options = self.spark_options()
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
         if query:
             options["query"] = query
 
