@@ -134,26 +134,6 @@ class TransformationFunction:
                 imports.append(import_line)
         return imports
 
-    @staticmethod
-    def _get_function_decorators(transformer):
-        decorators = {}
-
-        def _visited_import_mode(node):
-            decorators[node.name] = []
-            for n in node.decorator_list:
-                if isinstance(n, ast.Call):
-                    name = (
-                        n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
-                    )
-                else:
-                    name = n.attr if isinstance(n, ast.Attribute) else n.id
-                decorators[node.name].append(name)
-
-        node_iter = ast.NodeVisitor()
-        node_iter.visit_FunctionDef = _visited_import_mode
-        node_iter.visit(ast.parse(inspect.getsource(transformer)))
-        return decorators
-
     def _load_source_code(self, source_code_content):
         module_imports = source_code_content["module_imports"]
         transformer_code = source_code_content["transformer_code"]
