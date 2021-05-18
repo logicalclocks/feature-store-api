@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client, transformation_function, training_dataset
+from hsfs import client, transformation_function, transformation_function_attached
 
 
 class TransformationFunctionApi:
@@ -112,6 +112,6 @@ class TransformationFunctionApi:
             "transformationfunctions",
         ]
 
-        return training_dataset.TrainingDataset.from_response_json(
+        return transformation_function_attached.TransformationFunctionAttached.from_response_json(
             _client._send_request("GET", path_params)
         )

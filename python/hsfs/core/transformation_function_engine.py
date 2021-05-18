@@ -54,15 +54,16 @@ class TransformationFunctionEngine:
         self._transformation_function_api.delete(transformation_function_instance)
 
     def get_training_dataset_transformation_fn(self, training_dataset):
-        training_dataset = (
+        attached_transformation_fns = (
             self._transformation_function_api.get_training_dataset_transformation_fn(
                 training_dataset
             )
         )
         transformation_fn_dict = {}
-        for feature in training_dataset._features:
-            if feature.transformation_function is not None:
-                transformation_fn_dict[feature.name] = feature.transformation_function
+        for attached_transformation_fn in attached_transformation_fns:
+            transformation_fn_dict[
+                attached_transformation_fn.name
+            ] = attached_transformation_fn.transformation_function
         return transformation_fn_dict
 
     def attach_transformation_fn(self, training_dataset):
