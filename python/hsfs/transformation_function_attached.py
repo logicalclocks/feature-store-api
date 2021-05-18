@@ -14,7 +14,7 @@
 
 import humps
 
-from hsfs.transformation_function import TransformationFunction
+from hsfs import transformation_function as transformation_fn
 
 
 class TransformationFunctionAttached:
@@ -29,7 +29,9 @@ class TransformationFunctionAttached:
     ):
         self._name = name
         self._transformation_function = (
-            TransformationFunction.from_response_json(transformation_function)
+            transformation_fn.TransformationFunction.from_response_json(
+                transformation_function
+            )
             if isinstance(transformation_function, dict)
             else transformation_function
         )
