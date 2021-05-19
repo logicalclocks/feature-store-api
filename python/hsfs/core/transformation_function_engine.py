@@ -81,28 +81,28 @@ class TransformationFunctionEngine:
                 )
 
     @staticmethod
-    def infer_spark_type(ptype):
-        if ptype in (str, "str", "string"):
+    def infer_spark_type(output_type):
+        if output_type in (str, "str", "string"):
             return "StringType()"
-        elif ptype in (bytes,):
+        elif output_type in (bytes,):
             return "BinaryType()"
-        elif ptype in (numpy.int8, "int8", "byte"):
+        elif output_type in (numpy.int8, "int8", "byte"):
             return "ByteType()"
-        elif ptype in (numpy.int16, "int16", "short"):
+        elif output_type in (numpy.int16, "int16", "short"):
             return "ShortType()"
-        elif ptype in (int, "int", numpy.int, numpy.int32):
+        elif output_type in (int, "int", numpy.int, numpy.int32):
             return "IntegerType()"
-        elif ptype in (numpy.int64, "int64", "long", "bigint"):
+        elif output_type in (numpy.int64, "int64", "long", "bigint"):
             return "LongType()"
-        elif ptype in (float, "float", numpy.float):
+        elif output_type in (float, "float", numpy.float):
             return "FloatType()"
-        elif ptype in (numpy.float64, "float64", "double"):
+        elif output_type in (numpy.float64, "float64", "double"):
             return "DoubleType()"
-        elif ptype in (datetime.datetime, numpy.datetime64):
+        elif output_type in (datetime.datetime, numpy.datetime64):
             return "TimestampType()"
-        elif ptype in (datetime.date,):
+        elif output_type in (datetime.date,):
             return "DateType()"
-        elif ptype in (bool, "boolean", "bool", numpy.bool):
+        elif output_type in (bool, "boolean", "bool", numpy.bool):
             return "BooleanType()"
         else:
-            raise TypeError("Not supported type %s." % ptype)
+            raise TypeError("Not supported type %s." % output_type)
