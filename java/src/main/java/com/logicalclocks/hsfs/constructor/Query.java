@@ -83,6 +83,10 @@ public class Query {
     return join(subquery, JoinType.INNER);
   }
 
+  public Query join(Query subquery, String prefix) {
+    return join(subquery, JoinType.INNER, prefix);
+  }
+
   public Query join(Query subquery, List<String> on) {
     return joinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
@@ -92,19 +96,40 @@ public class Query {
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER, prefix);
+  }
+
   public Query join(Query subquery, JoinType joinType) {
-    joins.add(new Join(subquery, joinType));
+    joins.add(new Join(subquery, joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, joinType, prefix));
     return this;
   }
 
   public Query join(Query subquery, List<String> on, JoinType joinType) {
-    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType));
+    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> on, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
     return this;
   }
 
   public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
-        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType));
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
     return this;
   }
 
@@ -112,17 +137,36 @@ public class Query {
     return joinFeatures(subquery, on, JoinType.INNER);
   }
 
+  public Query joinFeatures(Query subquery, List<Feature> on, String prefix) {
+    return joinFeatures(subquery, on, JoinType.INNER, prefix);
+  }
+
   public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
     return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
   }
 
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER, prefix);
+  }
+
   public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
-    joins.add(new Join(subquery, on, joinType));
+    joins.add(new Join(subquery, on, joinType, null));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, on, joinType, prefix));
     return this;
   }
 
   public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
-    joins.add(new Join(subquery, leftOn, rightOn, joinType));
+    joins.add(new Join(subquery, leftOn, rightOn, joinType, null));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType,
+                            String prefix) {
+    joins.add(new Join(subquery, leftOn, rightOn, joinType, prefix));
     return this;
   }
 
