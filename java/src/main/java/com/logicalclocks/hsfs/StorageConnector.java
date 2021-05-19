@@ -143,7 +143,6 @@ public abstract class StorageConnector {
       this.accessKey = updatedConnector.getAccessKey();
       this.secretKey = updatedConnector.getSecretKey();
       this.sessionToken = updatedConnector.getSessionToken();
-      this.iamRole = updatedConnector.getIamRole();
     }
   }
 
@@ -222,9 +221,9 @@ public abstract class StorageConnector {
 
     public void refetch() throws FeatureStoreException, IOException {
       RedshiftConnector updatedConnector = (RedshiftConnector) storageConnectorApi.get(getFeaturestoreId(), getName());
-      this.arguments = updatedConnector.getArguments();
+      this.databaseUserName = updatedConnector.getDatabaseUserName();
       this.expiration = updatedConnector.getExpiration();
-      this.iamRole = updatedConnector.getIamRole();
+      this.databasePassword = updatedConnector.getDatabasePassword();
     }
   }
 
