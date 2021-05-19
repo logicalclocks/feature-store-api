@@ -210,7 +210,7 @@ public class Query {
   }
 
   private void registerOnDemandFeatureGroups(List<OnDemandFeatureGroupAlias> onDemandFeatureGroups)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
       return;
     }

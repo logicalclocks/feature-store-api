@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.SecretStore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,7 +48,8 @@ public class HopsworksClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
 
   @Getter
-  private String project;
+  @Setter
+  private Project project;
 
   public static HopsworksClient getInstance() throws FeatureStoreException {
     if (hopsworksClientInstance == null) {
@@ -64,7 +66,7 @@ public class HopsworksClient {
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
                                                                   String trustStorePath, String apiKeyFilePath,
-                                                                  String apiKeyValue, String project)
+                                                                  String apiKeyValue)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -82,7 +84,7 @@ public class HopsworksClient {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
     }
 
-    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient, project);
+    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient);
     return hopsworksClientInstance;
   }
 
@@ -93,14 +95,13 @@ public class HopsworksClient {
   private ObjectMapper objectMapper;
 
   @VisibleForTesting
-  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient, String project) {
+  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient) {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     this.hopsworksHttpClient = hopsworksHttpClient;
-    this.project = project;
   }
 
   @AllArgsConstructor

@@ -109,7 +109,7 @@ public class SparkEngine {
   }
 
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
@@ -328,8 +328,8 @@ public class SparkEngine {
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
         .options(writeOptions)
-        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject() + "/Resources/"
-            + queryName + "-checkpoint")
+        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+            + "/Resources/" + queryName + "-checkpoint")
         .option("topic", featureGroup.getOnlineTopicName());
 
     StreamingQuery query = writer.start();

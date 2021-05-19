@@ -136,7 +136,7 @@ public class TrainingDatasetEngine {
   }
 
   public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
 

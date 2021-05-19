@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Option;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +32,7 @@ import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,8 +70,10 @@ public abstract class StorageConnector {
   @Getter @Setter
   private Integer featurestoreId;
 
+  protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
@@ -128,9 +132,18 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
-      // TODO refetch
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
+      refetch();
       return SparkEngine.getInstance().read(this, dataFormat, options, path);
+    }
+
+    public void refetch() throws FeatureStoreException, IOException {
+      S3Connector updatedConnector = (S3Connector) storageConnectorApi.get(getFeaturestoreId(), getName());
+      this.accessKey = updatedConnector.getAccessKey();
+      this.secretKey = updatedConnector.getSecretKey();
+      this.sessionToken = updatedConnector.getSessionToken();
+      this.iamRole = updatedConnector.getIamRole();
     }
   }
 
@@ -192,8 +205,9 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
-      // TODO refetch
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
+      refetch();
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
@@ -204,6 +218,13 @@ public abstract class StorageConnector {
     @JsonIgnore
     public String getPath(String subPath) {
       return null;
+    }
+
+    public void refetch() throws FeatureStoreException, IOException {
+      RedshiftConnector updatedConnector = (RedshiftConnector) storageConnectorApi.get(getFeaturestoreId(), getName());
+      this.arguments = updatedConnector.getArguments();
+      this.expiration = updatedConnector.getExpiration();
+      this.iamRole = updatedConnector.getIamRole();
     }
   }
 
