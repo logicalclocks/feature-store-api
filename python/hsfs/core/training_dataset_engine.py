@@ -111,13 +111,29 @@ class TrainingDatasetEngine:
             training_dataset, training_dataset, "updateStatsConfig"
         )
 
-    def get_serving_vector(self, training_dataset, entry):
+    def get_complex_feature_schemas(self, training_dataset):
+        return {
+            f.name: avro.io.DatumReader(
+                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
+            )
+            for f in training_dataset.schema
+            if f.is_complex()
+        }
+
+    def deserialize_complex_features(self, feature_schemas, row_dict):
+        for feature_name, schema in feature_schemas.items():
+            bytes_reader = io.BytesIO(row_dict[feature_name])
+            decoder = avro.io.BinaryDecoder(bytes_reader)
+            row_dict[feature_name] = schema.read(decoder)
+        return row_dict
+
+    def get_serving_vector(self, training_dataset, entry, external):
         """Assembles serving vector from online feature store."""
 
         serving_vector = []
 
         if training_dataset.prepared_statements is None:
-            self.init_prepared_statement(training_dataset)
+            self.init_prepared_statement(training_dataset, external)
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
@@ -149,25 +165,9 @@ class TrainingDatasetEngine:
 
         return serving_vector
 
-    def get_complex_feature_schemas(self, training_dataset):
-        return {
-            f.name: avro.io.DatumReader(
-                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
-            )
-            for f in training_dataset.schema
-            if f.is_complex()
-        }
-
-    def deserialize_complex_features(self, feature_schemas, row_dict):
-        for feature_name, schema in feature_schemas.items():
-            bytes_reader = io.BytesIO(row_dict[feature_name])
-            decoder = avro.io.BinaryDecoder(bytes_reader)
-            row_dict[feature_name] = schema.read(decoder)
-        return row_dict
-
-    def init_prepared_statement(self, training_dataset):
+    def init_prepared_statement(self, training_dataset, external):
         online_conn = self._storage_connector_api.get_online_connector()
-        jdbc_connection = util.create_mysql_connection(online_conn)
+        jdbc_connection = util.create_mysql_connection(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )

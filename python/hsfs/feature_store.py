@@ -210,8 +210,10 @@ class FeatureStore:
         """
         return self._storage_connector_api.get(name)
 
-    def sql(self, query, dataframe_type="default", online=False):
-        return self._feature_group_engine.sql(query, self._name, dataframe_type, online)
+    def sql(self, query, dataframe_type="default", online=False, read_options={}):
+        return self._feature_group_engine.sql(
+            query, self._name, dataframe_type, online, read_options
+        )
 
     def get_online_storage_connector(self):
         """Get the storage connector for the Online Feature Store of the respective
