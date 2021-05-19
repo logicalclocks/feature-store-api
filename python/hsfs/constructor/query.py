@@ -135,6 +135,7 @@ class Query:
         left_on: Optional[List[str]] = [],
         right_on: Optional[List[str]] = [],
         join_type: Optional[str] = "inner",
+        prefix: Optional[str] = None,
     ):
         """Join Query with another Query.
 
@@ -152,12 +153,12 @@ class Query:
                 the join. Defaults to `[]`.
             join_type: Type of join to perform, can be `"inner"`, `"outer"`, `"left"` or
                 `"right"`. Defaults to "inner".
-
+            prefix: User provided prefix to avoid feature name clash. Defaults to `None`.
         # Returns
             `Query`: A new Query object representing the join.
         """
         self._joins.append(
-            join.Join(sub_query, on, left_on, right_on, join_type.upper())
+            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
         )
         return self
 
