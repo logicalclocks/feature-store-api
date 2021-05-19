@@ -96,7 +96,7 @@ class TransformationFunctionApi:
 
     def get_training_dataset_transformation_fn(self, training_dataset_instance):
         """
-        Retrieve training_dataset_instance with transformation function attached
+        Retrieve TransformationFunctionAttached instance
         Args:
         training_dataset_instance: TrainingDataset, required
             training dataset metadata object.

@@ -72,7 +72,6 @@ class TransformationFunctionEngine:
                 feature_name,
                 transformation_fn,
             ) in training_dataset._transformation_functions.items():
-                self._validate_feature_exists(training_dataset._querydto, feature_name)
                 training_dataset._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature_name,
@@ -80,29 +79,6 @@ class TransformationFunctionEngine:
                         transformation_function=transformation_fn,
                     )
                 )
-
-    @staticmethod
-    def _validate_feature_exists(td_query_instance, feature_name):
-        transfrom_feature = None
-        # Fist inspect leftmost feature group
-        for td_feature in td_query_instance._left_feature_group.features:
-            if feature_name == td_feature.name:
-                transfrom_feature = td_feature
-                break
-
-        # If not found iterate over joins
-        if transfrom_feature is None:
-            for join in td_query_instance._joins:
-                for td_feature in join.query._left_feature_group.features:
-                    if feature_name == td_feature.name:
-                        transfrom_feature = td_feature
-                        break
-
-        if transfrom_feature is None:
-            raise Exception(
-                "Provided feature %s doesn't exist in training dataset query"
-                % feature_name
-            )
 
     @staticmethod
     def infer_spark_type(ptype):
