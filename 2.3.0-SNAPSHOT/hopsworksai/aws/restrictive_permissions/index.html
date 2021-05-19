@@ -1351,6 +1351,53 @@
     Limiting the instance profile permissions
   </a>
   
+    <nav class="md-nav" aria-label="Limiting the instance profile permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backups" class="md-nav__link">
+    Backups
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloudwatch-logs" class="md-nav__link">
+    CloudWatch Logs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-permissions" class="md-nav__link">
+    Upgrade permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrade permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#removing-upgrade-permissions" class="md-nav__link">
+    Removing upgrade permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limiting-upgrade-permissions" class="md-nav__link">
+    Limiting upgrade permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1811,6 +1858,53 @@
     Limiting the instance profile permissions
   </a>
   
+    <nav class="md-nav" aria-label="Limiting the instance profile permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backups" class="md-nav__link">
+    Backups
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloudwatch-logs" class="md-nav__link">
+    CloudWatch Logs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-permissions" class="md-nav__link">
+    Upgrade permissions
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrade permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#removing-upgrade-permissions" class="md-nav__link">
+    Removing upgrade permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limiting-upgrade-permissions" class="md-nav__link">
+    Limiting upgrade permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -2021,12 +2115,14 @@ The following permissions are used to let you close and open ports on your clust
       <span class="p">}</span>
 </code></pre></div>
 <h2 id="limiting-the-instance-profile-permissions">Limiting the instance profile permissions<a class="headerlink" href="#limiting-the-instance-profile-permissions" title="Permanent link">#</a></h2>
+<h3 id="backups">Backups<a class="headerlink" href="#backups" title="Permanent link">#</a></h3>
 <p>If you do not intend to take backups or if you do not have access to this Enterprise feature you can remove the permissions that are only used by the backup feature when <a href="../getting_started/#step-2-creating-instance-profile">configuring instance profile permissions</a> .
 For this remove the following permissions from the instance profile:</p>
 <div class="highlight"><pre><span></span><code>      <span class="s2">&quot;S3:PutLifecycleConfiguration&quot;</span><span class="p">,</span> 
       <span class="s2">&quot;S3:GetLifecycleConfiguration&quot;</span><span class="p">,</span> 
       <span class="s2">&quot;S3:PutBucketVersioning&quot;</span><span class="p">,</span> 
 </code></pre></div>
+<h3 id="cloudwatch-logs">CloudWatch Logs<a class="headerlink" href="#cloudwatch-logs" title="Permanent link">#</a></h3>
 <p>Hopsworks put its logs in Amazon CloudWatch so that you can access them without having to ssh into the machine. If you are not interested in this feature you can remove the following from your instance profile policy:</p>
 <div class="highlight"><pre><span></span><code>    <span class="p">{</span>
       <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
@@ -2048,6 +2144,78 @@ For this remove the following permissions from the instance profile:</p>
         <span class="s2">&quot;ssm:GetParameter&quot;</span>
       <span class="p">],</span>
       <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*&quot;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<h3 id="upgrade-permissions">Upgrade permissions<a class="headerlink" href="#upgrade-permissions" title="Permanent link">#</a></h3>
+<h4 id="removing-upgrade-permissions">Removing upgrade permissions<a class="headerlink" href="#removing-upgrade-permissions" title="Permanent link">#</a></h4>
+<p>If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the upgrade permissions statement from the instance profile that you have created <a href="../getting_started/#step-2-creating-instance-profile">here</a>. For this remove the following statement from your instance profile</p>
+<div class="highlight"><pre><span></span><code>    <span class="p">{</span>
+      <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;UpgradePermissions&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span>
+      <span class="p">],</span>
+      <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<h4 id="limiting-upgrade-permissions">Limiting upgrade permissions<a class="headerlink" href="#limiting-upgrade-permissions" title="Permanent link">#</a></h4>
+<p>You can use tags to restrict the upgrade permissions to only the resources created for your cluster. For this <a href="../cluster_creation/#step-13-add-tags-to-your-instances">attach a tag to your cluster during the cluster creation</a>. Then, replace the upgrade permissions with the following policy instead. First you need to replace <em>REGION</em> and <em>ACCOUNT</em> with your region and account where you run your cluster, then replace <em>HEAD_NODE_INSTANCE_ID</em> with your aws instance id of the head node and <em>HEAD_NODE_VOLUME_ID</em> with the volume id attached to the head node, and finally replace the <em>TAG_KEY</em> and <em>TAG_VALUE</em> with your the tag name and value that is used with your cluster.</p>
+<div class="highlight"><pre><span></span><code>    <span class="p">{</span>
+      <span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Statement&quot;</span><span class="p">:[</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowAttachVolumeForUpgrade&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID&quot;</span>
+          <span class="p">},</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowAttachVolumeForUpgradeOnlyTaggedInstance&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:instance/*&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Condition&quot;</span><span class="p">:{</span>
+                <span class="nt">&quot;StringEquals&quot;</span><span class="p">:{</span>
+                  <span class="nt">&quot;ec2:ResourceTag/TAG_KEY&quot;</span><span class="p">:</span><span class="s2">&quot;TAG_VALUE&quot;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+          <span class="p">},</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowDetachVolumeForUpgrade&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID&quot;</span>
+          <span class="p">},</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowDetachVolumeForUpgradeOnlyTaggedInstance&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:instance/*&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Condition&quot;</span><span class="p">:{</span>
+                <span class="nt">&quot;StringEquals&quot;</span><span class="p">:{</span>
+                  <span class="nt">&quot;ec2:ResourceTag/TAG_KEY&quot;</span><span class="p">:</span><span class="s2">&quot;TAG_VALUE&quot;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+          <span class="p">},</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowModifyInstanceAttributeForUpgrade&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:[</span>
+                <span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:instance/HEAD_NODE_INSTANCE_ID&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;arn:aws:ec2:REGION:ACCOUNT:volume/HEAD_NODE_VOLUME_ID&quot;</span>
+            <span class="p">]</span>
+          <span class="p">},</span>
+          <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="s2">&quot;AllowDescribeVolumesForUpgrade&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="s2">&quot;*&quot;</span>
+          <span class="p">}</span>
+      <span class="p">]</span>
     <span class="p">}</span>
 </code></pre></div>
                 

@@ -1807,6 +1807,12 @@
 </p>
 
 <h2 id="step-2-add-upgrade-permissions-to-your-instance-profile">Step 2: Add upgrade permissions to your instance profile<a class="headerlink" href="#step-2-add-upgrade-permissions-to-your-instance-profile" title="Permanent link">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can skip this step if you already have the following permissions in your instance profile:
+<div class="highlight"><pre><span></span><code><span class="p">[</span> <span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span> <span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span> <span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span> <span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span><span class="p">]</span>
+</code></pre></div></p>
+</div>
 <p>We require extra permissions to be added to the instance profile attached to your cluster to proceed with the upgrade. First to get the name of your instance profile, click on the <em>Details</em> tab as shown below:</p>
 <p align="center">
   <figure>
@@ -1818,6 +1824,10 @@
 </p>
 
 <p>Once you get your instance profile name, navigate to <a href="https://console.aws.amazon.com/iam/home#">AWS management console</a>, then click on <em>Roles</em> and then search for your role name and click on it.  Go to the <em>Permissions</em> tab, click on <em>Add inline policy</em>, and then go to the <em>JSON</em> tab. Paste the following snippet, click on <em>Review policy</em>, name it, and click <em>Create policy</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can restrict the upgrade permissions given to your instance profile. Refer to <a href="../restrictive_permissions/#limiting-upgrade-permissions">this guide</a> for more information.</p>
+</div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
     <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
     <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
