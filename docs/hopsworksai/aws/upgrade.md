@@ -26,6 +26,12 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
 
 ## Step 2: Add upgrade permissions to your instance profile
 
+!!! note
+    You can skip this step if you already have the following permissions in your instance profile:
+    ```json 
+    [ "ec2:DescribeVolumes", "ec2:DetachVolume", "ec2:AttachVolume", "ec2:ModifyInstanceAttribute"]
+    ```
+
 We require extra permissions to be added to the instance profile attached to your cluster to proceed with the upgrade. First to get the name of your instance profile, click on the *Details* tab as shown below:
 
 <p align="center">
@@ -39,6 +45,9 @@ We require extra permissions to be added to the instance profile attached to you
 
 
 Once you get your instance profile name, navigate to [AWS management console](https://console.aws.amazon.com/iam/home#), then click on *Roles* and then search for your role name and click on it.  Go to the *Permissions* tab, click on *Add inline policy*, and then go to the *JSON* tab. Paste the following snippet, click on *Review policy*, name it, and click *Create policy*.
+
+!!! note
+    You can restrict the upgrade permissions given to your instance profile. Refer to [this guide](restrictive_permissions.md#limiting-upgrade-permissions) for more information.
 
 ```json
 {
