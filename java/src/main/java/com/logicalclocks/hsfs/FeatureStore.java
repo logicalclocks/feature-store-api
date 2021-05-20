@@ -125,10 +125,6 @@ public class FeatureStore {
   }
 
   public Dataset<Row> sql(String query) {
-    return sql(query, false);
-  }
-
-  public Dataset<Row> sql(String query, boolean external) {
     return SparkEngine.getInstance().sql(query);
   }
 

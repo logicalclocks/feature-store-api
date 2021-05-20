@@ -29,17 +29,15 @@ setup(
         "PyMySQL",
     ],
     extras_require={
-        "dev": [
-            "pytest",
-            "flake8",
-            "black"],
+        "dev": ["pytest", "flake8", "black"],
         "docs": [
             "mkdocs==1.1.2",
             "mkdocs-material==6.2.2",
             "mike==0.5.5",
             "keras-autodoc",
-            "markdown-include"],
-        "hive": ["pyhopshive[thrift]"]
+            "markdown-include",
+        ],
+        "hive": ["pyhopshive[thrift]"],
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",

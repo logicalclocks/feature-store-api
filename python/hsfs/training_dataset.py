@@ -596,10 +596,10 @@ class TrainingDataset:
 
         # Arguments
             external: boolean, optional. If set to True, the connection to the
-            online feature store is established using the same host as
-            for the `host` parameter in the `hsfs.connection()` method.
-            If set to False, the online feature store storage connector is used
-            which relies on the private IP
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
         """
         if self.prepared_statements is None:
             self._training_dataset_engine.init_prepared_statement(self, external)
@@ -611,12 +611,12 @@ class TrainingDataset:
 
         # Arguments
             entry: dictionary of training dataset feature group primary key names as keys and values provided by
-            serving application.
+                serving application.
             external: boolean, optional. If set to True, the connection to the
-            online feature store is established using the same host as
-            for the `host` parameter in the `hsfs.connection()` method.
-            If set to False, the online feature store storage connector is used
-            which relies on the private IP
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
