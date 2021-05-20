@@ -252,3 +252,7 @@ class Client(base.Client):
             os.remove(file_path)
         except OSError:
             pass
+
+    @property
+    def host(self):
+        return self._host

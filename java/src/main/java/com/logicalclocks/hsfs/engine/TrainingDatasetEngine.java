@@ -23,9 +23,11 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
+import com.logicalclocks.hsfs.util.Constants;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryDecoder;
@@ -178,20 +180,25 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
   }
 
-  public void initPreparedStatement(TrainingDataset trainingDataset)
+  public void initPreparedStatement(TrainingDataset trainingDataset, boolean external)
       throws FeatureStoreException, IOException, SQLException {
-
-    List<ServingPreparedStatement> servingPreparedStatements =
-        trainingDatasetApi.getServingPreparedStatement(trainingDataset);
 
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
     Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
-    Connection jdbcConnection = DriverManager.getConnection(jdbcOptions.get("url"), jdbcOptions.get("user"),
-        jdbcOptions.get("password"));
+    String url = jdbcOptions.get(Constants.JDBC_URL);
+    if (external) {
+      // if external is true, replace the IP coming from the storage connector with the host
+      // used during the connection setup
+      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
+    }
+    Connection jdbcConnection =
+        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
     jdbcConnection.setAutoCommit(false);
     trainingDataset.setPreparedStatementConnection(jdbcConnection);
 
+    List<ServingPreparedStatement> servingPreparedStatements =
+        trainingDatasetApi.getServingPreparedStatement(trainingDataset);
     // map of prepared statement index and its corresponding parameter indices
     Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
     // save map of fg index and its prepared statement
@@ -213,12 +220,12 @@ public class TrainingDatasetEngine {
     trainingDataset.setPreparedStatements(preparedStatements);
   }
 
-  public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry) throws SQLException,
-      FeatureStoreException, IOException {
+  public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
+      throws SQLException, FeatureStoreException, IOException {
 
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
-      initPreparedStatement(trainingDataset);
+      initPreparedStatement(trainingDataset, external);
     }
     //check if primary key map correspond to serving_keys.
     if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
