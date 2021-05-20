@@ -60,7 +60,7 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type):
+    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
@@ -95,7 +95,7 @@ class Engine:
         )
 
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default").show(n)
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)

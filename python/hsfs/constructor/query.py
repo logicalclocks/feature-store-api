@@ -90,7 +90,11 @@ class Query:
             )
 
         return engine.get_instance().sql(
-            sql_query, self._feature_store_name, online_conn, dataframe_type
+            sql_query,
+            self._feature_store_name,
+            online_conn,
+            dataframe_type,
+            read_options,
         )
 
     def show(self, n: int, online: Optional[bool] = False):

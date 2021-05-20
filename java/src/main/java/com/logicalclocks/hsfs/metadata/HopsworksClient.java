@@ -48,6 +48,8 @@ public class HopsworksClient {
 
   @Getter
   private String project;
+  @Getter
+  private String host;
 
   public static HopsworksClient getInstance() throws FeatureStoreException {
     if (hopsworksClientInstance == null) {
@@ -82,7 +84,7 @@ public class HopsworksClient {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
     }
 
-    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient, project);
+    hopsworksClientInstance = new HopsworksClient(hopsworksHttpClient, project, host);
     return hopsworksClientInstance;
   }
 
@@ -93,7 +95,7 @@ public class HopsworksClient {
   private ObjectMapper objectMapper;
 
   @VisibleForTesting
-  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient, String project) {
+  public HopsworksClient(HopsworksHttpClient hopsworksHttpClient, String project, String host) {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
@@ -101,6 +103,7 @@ public class HopsworksClient {
 
     this.hopsworksHttpClient = hopsworksHttpClient;
     this.project = project;
+    this.host = host;
   }
 
   @AllArgsConstructor

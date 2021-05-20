@@ -153,13 +153,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group.validation_type,
         )
 
-    def sql(self, query, feature_store_name, dataframe_type, online):
+    def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online:
             online_conn = self._storage_connector_api.get_online_connector()
         else:
             online_conn = None
         return engine.get_instance().sql(
-            query, feature_store_name, online_conn, dataframe_type
+            query, feature_store_name, online_conn, dataframe_type, read_options
         )
 
     def append_features(self, feature_group, new_features):
