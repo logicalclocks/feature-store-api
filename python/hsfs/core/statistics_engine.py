@@ -64,7 +64,9 @@ class StatisticsEngine:
                 metadata_instance.statistics_config.histograms,
             )
             stats = statistics.Statistics(
-                commit_time, feature_group_commit_id, content_str
+                commit_time=commit_time,
+                content=content_str,
+                feature_group_commit_id=feature_group_commit_id,
             )
             self._statistics_api.post(metadata_instance, stats)
             return stats
