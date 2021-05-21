@@ -246,7 +246,11 @@ Similarly to [Step 1.2](#step-12-creating-a-custom-role-for-hopsworksai) create 
             "Microsoft.Storage/storageAccounts/blobServices/containers/write",
             "Microsoft.Storage/storageAccounts/blobServices/containers/read",
             "Microsoft.Storage/storageAccounts/blobServices/write",
-            "Microsoft.Storage/storageAccounts/blobServices/read"
+            "Microsoft.Storage/storageAccounts/blobServices/read",
+            "Microsoft.Compute/virtualMachines/read",
+            "Microsoft.Compute/virtualMachines/write",
+            "Microsoft.Compute/disks/read",
+            "Microsoft.Compute/disks/write"
         ],
         "notActions": [],
         "dataActions": [
