@@ -2120,6 +2120,17 @@ If you want to limit the required AWS permissions, see <a href="../restrictive_p
         <span class="s2">&quot;ssm:GetParameter&quot;</span>
       <span class="p">],</span>
       <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;UpgradePermissions&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span>
+      <span class="p">],</span>
+      <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span>
     <span class="p">}</span>
   <span class="p">]</span>
 <span class="p">}</span>
