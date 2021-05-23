@@ -187,6 +187,12 @@ public class TrainingDatasetEngine {
   public void initPreparedStatement(TrainingDataset trainingDataset, boolean external)
       throws FeatureStoreException, IOException, SQLException {
 
+    // check if this training dataset has transformation functions attached and throw exception if any
+    if (getTransformationFunction(trainingDataset).size() > 0) {
+      throw new FeatureStoreException("This training dataset has transformation functions attached and "
+          + "serving must performed from a Python application");
+    }
+
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
     Map<String, String> jdbcOptions = storageConnector.sparkOptions();

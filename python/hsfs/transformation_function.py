@@ -66,7 +66,9 @@ class TransformationFunction:
         else:
             # load original source code
             self._output_type = output_type
-            self._load_source_code(json.loads(self._source_code_content))
+            self._load_source_code(
+                self._source_code_content, engine.get_type() == "spark"
+            )
 
     def save(self):
         """Persist transformation function in backend."""
@@ -134,11 +136,12 @@ class TransformationFunction:
                 imports.append(import_line)
         return imports
 
-    def _load_source_code(self, source_code_content):
+    def _load_source_code(self, source_code_content, decorate_udf):
+        source_code_content = json.loads(source_code_content)
         module_imports = source_code_content["module_imports"]
         transformer_code = source_code_content["transformer_code"]
         # add udf decorator here if its spark engine
-        if engine.get_type() == "spark":
+        if decorate_udf:
             module_imports = module_imports + "\n" + self.PYSPARK_TYPE_IMPORT
             self._transformer_code = (
                 module_imports
