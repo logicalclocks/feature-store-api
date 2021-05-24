@@ -148,12 +148,13 @@ public class Utils {
     credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
     credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
 
-    StorageConnector storageConnector = storageConnectorApi
-        .getByName(featureGroup.getFeatureStore(), featureGroup.getFeatureStore().getName());
+    StorageConnector.JdbcConnector storageConnector =
+        (StorageConnector.JdbcConnector) storageConnectorApi.getByName(featureGroup.getFeatureStore(),
+            featureGroup.getFeatureStore().getName());
 
     return storageConnector.getConnectionString()
         + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
-            .collect(Collectors.joining(";"));
+        .collect(Collectors.joining(";"));
   }
 
   public Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {

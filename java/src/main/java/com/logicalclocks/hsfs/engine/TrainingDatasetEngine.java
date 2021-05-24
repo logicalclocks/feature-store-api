@@ -137,19 +137,17 @@ public class TrainingDatasetEngine {
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
-  public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions) {
-    String path = "";
-    if (com.google.common.base.Strings.isNullOrEmpty(split)) {
-      // ** glob means "all sub directories"
-      path = new Path(trainingDataset.getLocation(), "**").toString();
-    } else {
-      path = new Path(trainingDataset.getLocation(), split).toString();
-    }
-
+  public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions)
+      throws FeatureStoreException, IOException {
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
-    return SparkEngine.getInstance()
-        .read(trainingDataset.getStorageConnector(), trainingDataset.getDataFormat().toString(), readOptions, path);
+
+    String path = trainingDataset.getLocation();
+    if (!com.google.common.base.Strings.isNullOrEmpty(split)) {
+      path = new Path(trainingDataset.getLocation(), split).toString();
+    }
+    return trainingDataset.getStorageConnector()
+        .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
   public void addTag(TrainingDataset trainingDataset, String name, Object value)
@@ -185,7 +183,7 @@ public class TrainingDatasetEngine {
 
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.getSparkOptionsInt();
+    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
     String url = jdbcOptions.get(Constants.JDBC_URL);
     if (external) {
       // if external is true, replace the IP coming from the storage connector with the host
