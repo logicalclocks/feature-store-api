@@ -251,12 +251,9 @@ class TrainingDatasetEngine:
         if engine.get_type() == "spark":
             for feature_name in transformation_fns:
                 transformation_fn = transformation_fns[feature_name]
-                transformation_fn.transformation_fn = (
-                    transformation_fn._load_source_code
-                ) = transformation_fn._load_source_code(
+                transformation_fn._load_source_code(
                     transformation_fn._source_code_content, False
                 )
-                transformation_fns[feature_name] = transformation_fn
         return transformation_fns
 
     @staticmethod
