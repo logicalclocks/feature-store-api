@@ -196,7 +196,7 @@ public class DataValidationEngine {
             for (Rule rule : expectation.getRules()) {
               if (rule.getName() == ruleName && featuresEqual) {
                 validationResults.add(ValidationResult.builder()
-                    .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status()))
+                    .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status(), rule.getLevel()))
                     .features(deequFeatures)
                     .rule(rule)
                     .message(!constraintResult.message().isEmpty() ? constraintResult.message().get() : "Success")
@@ -209,7 +209,7 @@ public class DataValidationEngine {
               for (Rule rule : expectation.getRules()) {
                 if (rule.getName() == ruleName && feature.equals(constraintInfo[2])) {
                   validationResults.add(ValidationResult.builder()
-                      .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status()))
+                      .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status(), rule.getLevel()))
                       .features(Collections.singletonList(feature))
                       .rule(rule)
                       .message(!constraintResult.message().isEmpty() ? constraintResult.message().get() : "Success")
