@@ -1,0 +1,3045 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale.">
+      
+      
+      
+        <meta name="author" content="Logical Clocks">
+      
+      
+        <link rel="canonical" href="https://docs.hopsworks.ai/generated/training_dataset/">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
+    
+    
+      
+        <title>Training Dataset - Hopsworks Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.73f7c429.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.39b8e14a.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CIBM+Plex+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"IBM Plex Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../css/custom.css">
+    
+      <link rel="stylesheet" href="../../css/version-select.css">
+    
+    
+      
+        
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-85730257-4","auto"),ga("set","anonymizeIp",!0),ga("send","pageview"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){if(this.value){var e=document.location.pathname;ga("send","pageview",e+"?q="+this.value)}})}),document.addEventListener("DOMContentSwitch",function(){ga("send","pageview",document.location.pathname)})</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="teal">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#training-dataset" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
+      
+  <img src="../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            Hopsworks Documentation
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              Training Dataset
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/logicalclocks/feature-store-api" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/feature-store-api
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
+        Feature Store
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../hopsworksai/" class="md-tabs__link">
+        Hopsworks.ai
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Hopsworks Platform
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://examples.hopsworks.ai/" class="md-tabs__link">
+      Examples
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://community.hopsworks.ai/" class="md-tabs__link">
+      Community
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
+      
+  <img src="../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    Hopsworks Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/logicalclocks/feature-store-api" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/feature-store-api
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  
+
+
+  
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
+    
+    <label class="md-nav__link" for="nav-1">
+      Feature Store
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Feature Store" data-md-level="1">
+      <label class="md-nav__title" for="nav-1">
+        <span class="md-nav__icon md-icon"></span>
+        Feature Store
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../.." class="md-nav__link">
+      Introduction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../quickstart/" class="md-nav__link">
+      Quickstart
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3" type="checkbox" id="nav-1-3" >
+    
+    <label class="md-nav__link" for="nav-1-3">
+      Integrations
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Integrations" data-md-level="2">
+      <label class="md-nav__title" for="nav-1-3">
+        <span class="md-nav__icon md-icon"></span>
+        Integrations
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../setup/" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3-2" type="checkbox" id="nav-1-3-2" >
+    
+    <label class="md-nav__link" for="nav-1-3-2">
+      Storage Connectors
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Storage Connectors" data-md-level="3">
+      <label class="md-nav__title" for="nav-1-3-2">
+        <span class="md-nav__icon md-icon"></span>
+        Storage Connectors
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/adls/" class="md-nav__link">
+      ADLS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/hopsfs/" class="md-nav__link">
+      HopsFS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/jdbc/" class="md-nav__link">
+      JDBC
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/redshift/" class="md-nav__link">
+      Redshift
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/s3/" class="md-nav__link">
+      S3
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/storage-connectors/snowflake/" class="md-nav__link">
+      Snowflake
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3-2-8" type="checkbox" id="nav-1-3-2-8" >
+    
+    <label class="md-nav__link" for="nav-1-3-2-8">
+      AWS Credential passthrough
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="AWS Credential passthrough" data-md-level="4">
+      <label class="md-nav__title" for="nav-1-3-2-8">
+        <span class="md-nav__icon md-icon"></span>
+        AWS Credential passthrough
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/role_mapping/" class="md-nav__link">
+      Resource role to project mapping
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/assume_role/" class="md-nav__link">
+      Assume role
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3-3" type="checkbox" id="nav-1-3-3" >
+    
+    <label class="md-nav__link" for="nav-1-3-3">
+      Databricks
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Databricks" data-md-level="3">
+      <label class="md-nav__title" for="nav-1-3-3">
+        <span class="md-nav__icon md-icon"></span>
+        Databricks
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/databricks/networking/" class="md-nav__link">
+      Networking
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/databricks/api_key/" class="md-nav__link">
+      Hopsworks API Key
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/databricks/configuration/" class="md-nav__link">
+      Configuration
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/sagemaker/" class="md-nav__link">
+      AWS Sagemaker
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3-5" type="checkbox" id="nav-1-3-5" >
+    
+    <label class="md-nav__link" for="nav-1-3-5">
+      AWS EMR
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="AWS EMR" data-md-level="3">
+      <label class="md-nav__title" for="nav-1-3-5">
+        <span class="md-nav__icon md-icon"></span>
+        AWS EMR
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/emr/networking/" class="md-nav__link">
+      Networking
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/emr/emr_configuration/" class="md-nav__link">
+      Configure EMR for the Hopsworks Feature Store
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/hdinsight/" class="md-nav__link">
+      Azure HDInsight
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-3-7" type="checkbox" id="nav-1-3-7" >
+    
+    <label class="md-nav__link" for="nav-1-3-7">
+      Azure Machine Learning
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Azure Machine Learning" data-md-level="3">
+      <label class="md-nav__title" for="nav-1-3-7">
+        <span class="md-nav__icon md-icon"></span>
+        Azure Machine Learning
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/mlstudio_designer/" class="md-nav__link">
+      Designer
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/mlstudio_notebooks/" class="md-nav__link">
+      Notebooks
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/python/" class="md-nav__link">
+      Python
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../integrations/spark/" class="md-nav__link">
+      Spark
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+  
+
+
+  
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-4" type="checkbox" id="nav-1-4" checked>
+    
+    <label class="md-nav__link" for="nav-1-4">
+      Guides
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Guides" data-md-level="2">
+      <label class="md-nav__title" for="nav-1-4">
+        <span class="md-nav__icon md-icon"></span>
+        Guides
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../overview/" class="md-nav__link">
+      Overview
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../project/" class="md-nav__link">
+      Project/Connection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../feature_store/" class="md-nav__link">
+      Feature Store
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../feature_group/" class="md-nav__link">
+      Feature Group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../storage_connector/" class="md-nav__link">
+      Storage Connector
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../feature/" class="md-nav__link">
+      Feature
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Training Dataset
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      Training Dataset
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    Versioning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation" class="md-nav__link">
+    Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create_training_dataset" class="md-nav__link">
+    create_training_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    Retrieval
+  </a>
+  
+    <nav class="md-nav" aria-label="Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_training_dataset" class="md-nav__link">
+    get_training_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coalesce" class="md-nav__link">
+    coalesce
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data_format" class="md-nav__link">
+    data_format
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature_store_id" class="md-nav__link">
+    feature_store_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label" class="md-nav__link">
+    label
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepared_statement_connection" class="md-nav__link">
+    prepared_statement_connection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepared_statements" class="md-nav__link">
+    prepared_statements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query" class="md-nav__link">
+    query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seed" class="md-nav__link">
+    seed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serving_keys" class="md-nav__link">
+    serving_keys
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    splits
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistics_config" class="md-nav__link">
+    statistics_config
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage_connector" class="md-nav__link">
+    storage_connector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    version
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_options" class="md-nav__link">
+    write_options
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_tag" class="md-nav__link">
+    add_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute_statistics" class="md-nav__link">
+    compute_statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    delete
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_tag" class="md-nav__link">
+    delete_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_query" class="md-nav__link">
+    get_query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_serving_vector" class="md-nav__link">
+    get_serving_vector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_statistics" class="md-nav__link">
+    get_statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tag" class="md-nav__link">
+    get_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tags" class="md-nav__link">
+    get_tags
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init_prepared_statement" class="md-nav__link">
+    init_prepared_statement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insert" class="md-nav__link">
+    insert
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save" class="md-nav__link">
+    save
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#show" class="md-nav__link">
+    show
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tf_data" class="md-nav__link">
+    tf_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_statistics_config" class="md-nav__link">
+    update_statistics_config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tfdata-engine" class="md-nav__link">
+    TFData engine
+  </a>
+  
+    <nav class="md-nav" aria-label="TFData engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tf_record_dataset" class="md-nav__link">
+    tf_record_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tf_csv_dataset" class="md-nav__link">
+    tf_csv_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../query_vs_dataframe/" class="md-nav__link">
+      Query vs. Dataframe
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../statistics/" class="md-nav__link">
+      Statistics
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../feature_validation/" class="md-nav__link">
+      Feature Validation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../tags/" class="md-nav__link">
+      Feature Store Tags
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-5" type="checkbox" id="nav-1-5" >
+    
+    <label class="md-nav__link" for="nav-1-5">
+      API Reference
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="API Reference" data-md-level="2">
+      <label class="md-nav__title" for="nav-1-5">
+        <span class="md-nav__icon md-icon"></span>
+        API Reference
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/connection_api/" class="md-nav__link">
+      Connection
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/feature_store_api/" class="md-nav__link">
+      FeatureStore
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/feature_group_api/" class="md-nav__link">
+      FeatureGroup
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/training_dataset_api/" class="md-nav__link">
+      TrainingDataset
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/storage_connector_api/" class="md-nav__link">
+      Storage Connector
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/feature_api/" class="md-nav__link">
+      Feature
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/rule_definition_api/" class="md-nav__link">
+      Rule Definiton
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/rule_api/" class="md-nav__link">
+      Rule
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/expectation_api/" class="md-nav__link">
+      Expectation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../api/validation_api/" class="md-nav__link">
+      Validation
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../CONTRIBUTING/" class="md-nav__link">
+      Contributing
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+    
+    <label class="md-nav__link" for="nav-2">
+      Hopsworks.ai
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Hopsworks.ai" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        <span class="md-nav__icon md-icon"></span>
+        Hopsworks.ai
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/" class="md-nav__link">
+      Introduction
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-2" type="checkbox" id="nav-2-2" >
+    
+    <label class="md-nav__link" for="nav-2-2">
+      Getting Started
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Getting Started" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-2">
+        <span class="md-nav__icon md-icon"></span>
+        Getting Started
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/aws/getting_started/" class="md-nav__link">
+      AWS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/azure/getting_started/" class="md-nav__link">
+      Azure
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3" type="checkbox" id="nav-2-3" >
+    
+    <label class="md-nav__link" for="nav-2-3">
+      Limiting Permissions
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Limiting Permissions" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-3">
+        <span class="md-nav__icon md-icon"></span>
+        Limiting Permissions
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/aws/restrictive_permissions/" class="md-nav__link">
+      AWS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/azure/restrictive_permissions/" class="md-nav__link">
+      Azure
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4" >
+    
+    <label class="md-nav__link" for="nav-2-4">
+      Cluster creation
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Cluster creation" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-4">
+        <span class="md-nav__icon md-icon"></span>
+        Cluster creation
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/aws/cluster_creation/" class="md-nav__link">
+      AWS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/aws/eks_ecr_integration/" class="md-nav__link">
+      Integration with EKS and ECR
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/azure/cluster_creation/" class="md-nav__link">
+      Azure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/azure/aks_acr_integration/" class="md-nav__link">
+      Integration with AKS and ACR
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/adding_removing_workers/" class="md-nav__link">
+      Adding and Removing workers
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/autoscaling/" class="md-nav__link">
+      Autoscaling
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/gpu_support/" class="md-nav__link">
+      GPU support
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/user_management/" class="md-nav__link">
+      User management
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/rondb/" class="md-nav__link">
+      Managed RonDB
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../setup/" class="md-nav__link">
+      Integrations
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-11" type="checkbox" id="nav-2-11" >
+    
+    <label class="md-nav__link" for="nav-2-11">
+      Cluster upgrade
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Cluster upgrade" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-11">
+        <span class="md-nav__icon md-icon"></span>
+        Cluster upgrade
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/aws/upgrade/" class="md-nav__link">
+      AWS
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/azure/upgrade/" class="md-nav__link">
+      Azure
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-12" type="checkbox" id="nav-2-12" >
+    
+    <label class="md-nav__link" for="nav-2-12">
+      Single Sign On
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Single Sign On" data-md-level="2">
+      <label class="md-nav__title" for="nav-2-12">
+        <span class="md-nav__icon md-icon"></span>
+        Single Sign On
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  
+  <li class="md-nav__item md-nav__item--nested">
+    
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-12-1" type="checkbox" id="nav-2-12-1" >
+    
+    <label class="md-nav__link" for="nav-2-12-1">
+      Hopsworks
+      <span class="md-nav__icon md-icon"></span>
+    </label>
+    <nav class="md-nav" aria-label="Hopsworks" data-md-level="3">
+      <label class="md-nav__title" for="nav-2-12-1">
+        <span class="md-nav__icon md-icon"></span>
+        Hopsworks
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/sso/oauth/" class="md-nav__link">
+      OAuth2
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../hopsworksai/sso/sso/" class="md-nav__link">
+      Hopsworks.ai
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Hopsworks Platform
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://examples.hopsworks.ai/" class="md-nav__link">
+      Examples
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://community.hopsworks.ai/" class="md-nav__link">
+      Community
+    </a>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    Versioning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation" class="md-nav__link">
+    Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create_training_dataset" class="md-nav__link">
+    create_training_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    Retrieval
+  </a>
+  
+    <nav class="md-nav" aria-label="Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_training_dataset" class="md-nav__link">
+    get_training_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coalesce" class="md-nav__link">
+    coalesce
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data_format" class="md-nav__link">
+    data_format
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature_store_id" class="md-nav__link">
+    feature_store_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label" class="md-nav__link">
+    label
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepared_statement_connection" class="md-nav__link">
+    prepared_statement_connection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepared_statements" class="md-nav__link">
+    prepared_statements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query" class="md-nav__link">
+    query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seed" class="md-nav__link">
+    seed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serving_keys" class="md-nav__link">
+    serving_keys
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    splits
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistics_config" class="md-nav__link">
+    statistics_config
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage_connector" class="md-nav__link">
+    storage_connector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    version
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_options" class="md-nav__link">
+    write_options
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_tag" class="md-nav__link">
+    add_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute_statistics" class="md-nav__link">
+    compute_statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    delete
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_tag" class="md-nav__link">
+    delete_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_query" class="md-nav__link">
+    get_query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_serving_vector" class="md-nav__link">
+    get_serving_vector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_statistics" class="md-nav__link">
+    get_statistics
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tag" class="md-nav__link">
+    get_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tags" class="md-nav__link">
+    get_tags
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init_prepared_statement" class="md-nav__link">
+    init_prepared_statement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insert" class="md-nav__link">
+    insert
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save" class="md-nav__link">
+    save
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#show" class="md-nav__link">
+    show
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tf_data" class="md-nav__link">
+    tf_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_statistics_config" class="md-nav__link">
+    update_statistics_config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tfdata-engine" class="md-nav__link">
+    TFData engine
+  </a>
+  
+    <nav class="md-nav" aria-label="TFData engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tf_record_dataset" class="md-nav__link">
+    tf_record_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tf_csv_dataset" class="md-nav__link">
+    tf_csv_dataset
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="training-dataset">Training Dataset<a class="headerlink" href="#training-dataset" title="Permanent link">#</a></h1>
+<p>The training dataset abstraction in Hopsworks Feature Store allows users to group a set of features (potentially from
+multiple different feature groups) with labels for training a model to do a particular prediction task. The training
+dataset is a versioned and managed dataset and is stored in HopsFS as <code>tfrecords</code>, <code>parquet</code>, <code>csv</code>, or <code>tsv</code> files.</p>
+<h2 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">#</a></h2>
+<p>Training Dataset can be versioned. Data Scientist should use the version to indicate to the model, as well as to the
+schema or the feature engineering logic of the features associated to this training dataset.</p>
+<h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
+<p>To create training dataset, the user supplies a Pandas, Numpy or Spark dataframe with features and labels
+together with metadata. Once the training dataset has been created, the dataset is discoverable in the feature registry
+and users can use it to train models.</p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L436">[source]</a></span></p>
+<h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;tfrecords&quot;</span><span class="p">,</span>
+    <span class="n">coalesce</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">storage_connector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">splits</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">location</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="p">[],</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Create a training dataset metadata object.</p>
+<div class="admonition note">
+<p class="admonition-title">Lazy</p>
+<p>This method is lazy and does not persist any metadata or feature data in the
+feature store on its own. To materialize the training dataset and save
+feature data along the metadata in the feature store, call the <code>save()</code>
+method with a <code>DataFrame</code> or <code>Query</code>.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Data Formats</p>
+<p>The feature store currently supports the following data formats for
+training datasets:</p>
+<ol>
+<li>tfrecord</li>
+<li>csv</li>
+<li>tsv</li>
+<li>parquet</li>
+<li>avro</li>
+<li>orc</li>
+</ol>
+<p>Currently not supported petastorm, hdf5 and npy file formats.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the training dataset to create.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the training dataset to retrieve, defaults to <code>None</code> and
+    will create the training dataset with incremented version from the last
+    version in the feature store.</li>
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the training dataset to
+    improve discoverability for Data Scientists, defaults to empty string
+    <code>""</code>.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: The data format used to save the training dataset,
+    defaults to <code>"tfrecords"</code>-format.</li>
+<li><strong>coalesce</strong> <code>Optional[bool]</code>: If true the training dataset data will be coalesced into
+    a single partition before writing. The resulting training dataset
+    will be a single file per split. Default False.</li>
+<li><strong>storage_connector</strong> <code>Optional[hsfs.StorageConnector]</code>: Storage connector defining the sink location for the
+    training dataset, defaults to <code>None</code>, and materializes training dataset
+    on HopsFS.</li>
+<li><strong>splits</strong> <code>Optional[Dict[str, float]]</code>: A dictionary defining training dataset splits to be created. Keys in
+    the dictionary define the name of the split as <code>str</code>, values represent
+    percentage of samples in the split as <code>float</code>. Currently, only random
+    splits are supported. Defaults to empty dict<code>{}</code>, creating only a single
+    training dataset without splits.</li>
+<li><strong>location</strong> <code>Optional[str]</code>: Path to complement the sink storage connector with, e.g if the
+    storage connector points to an S3 bucket, this path can be used to
+    define a sub-directory inside the bucket to place the training dataset.
+    Defaults to <code>""</code>, saving the training dataset at the root defined by the
+    storage connector.</li>
+<li><strong>seed</strong> <code>Optional[int]</code>: Optionally, define a seed to create the random splits with, in order
+    to guarantee reproducability, defaults to <code>None</code>.</li>
+<li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
+    "<code>enabled</code>" to generally enable descriptive statistics computation for
+    this feature group, <code>"correlations</code>" to turn on feature correlation
+    computation and <code>"histograms"</code> to compute feature value frequencies. The
+    values should be booleans indicating the setting. To fully turn off
+    statistics computation pass <code>statistics_config=False</code>. Defaults to
+    <code>None</code> and will compute only descriptive statistics.</li>
+<li><strong>label</strong> <code>Optional[List[str]]</code>: A list of feature names constituting the prediction label/feature of
+    the training dataset. When replaying a <code>Query</code> during model inference,
+    the label features can be omitted from the feature vector retrieval.
+    Defaults to <code>[]</code>, no label.</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p><code>TrainingDataset</code>: The training dataset metadata object.</p>
+<hr />
+<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L158">[source]</a></span></p>
+<h3 id="get_training_dataset">get_training_dataset<a class="headerlink" href="#get_training_dataset" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a training dataset entity from the feature store.</p>
+<p>Getting a training dataset from the Feature Store means getting its metadata handle
+so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the training dataset to get.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the training dataset to retrieve, defaults to <code>None</code> and will
+    return the <code>version=1</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>TrainingDataset</code>: The training dataset metadata object.</p>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
+</ul>
+<hr />
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L450">[source]</a></span></p>
+<h3 id="coalesce">coalesce<a class="headerlink" href="#coalesce" title="Permanent link">#</a></h3>
+<p>If true the training dataset data will be coalesced into
+a single partition before writing. The resulting training dataset
+will be a single file per split</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L441">[source]</a></span></p>
+<h3 id="data_format">data_format<a class="headerlink" href="#data_format" title="Permanent link">#</a></h3>
+<p>File format of the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L432">[source]</a></span></p>
+<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L638">[source]</a></span></p>
+<h3 id="feature_store_id">feature_store_id<a class="headerlink" href="#feature_store_id" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L405">[source]</a></span></p>
+<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
+<p>Training dataset id.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L626">[source]</a></span></p>
+<h3 id="label">label<a class="headerlink" href="#label" title="Permanent link">#</a></h3>
+<p>The label/prediction feature of the training dataset.</p>
+<p>Can be a composite of multiple features.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L505">[source]</a></span></p>
+<h3 id="location">location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
+<p>Path to the training dataset location.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L414">[source]</a></span></p>
+<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
+<p>Name of the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L642">[source]</a></span></p>
+<h3 id="prepared_statement_connection">prepared_statement_connection<a class="headerlink" href="#prepared_statement_connection" title="Permanent link">#</a></h3>
+<p>JDBC connection to online features store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L651">[source]</a></span></p>
+<h3 id="prepared_statements">prepared_statements<a class="headerlink" href="#prepared_statements" title="Permanent link">#</a></h3>
+<p>The dict object of prepared_statements as values and kes as indices of positions in the query for
+selecting features from feature groups of the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L572">[source]</a></span></p>
+<h3 id="query">query<a class="headerlink" href="#query" title="Permanent link">#</a></h3>
+<p>Query to generate this training dataset from online feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L514">[source]</a></span></p>
+<h3 id="schema">schema<a class="headerlink" href="#schema" title="Permanent link">#</a></h3>
+<p>Training dataset schema.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L519">[source]</a></span></p>
+<h3 id="seed">seed<a class="headerlink" href="#seed" title="Permanent link">#</a></h3>
+<p>Seed.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L662">[source]</a></span></p>
+<h3 id="serving_keys">serving_keys<a class="headerlink" href="#serving_keys" title="Permanent link">#</a></h3>
+<p>Set of primary key names that is used as keys in input dict object for <code>get_serving_vector</code> method.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L494">[source]</a></span></p>
+<h3 id="splits">splits<a class="headerlink" href="#splits" title="Permanent link">#</a></h3>
+<p>Training dataset splits. <code>train</code>, <code>test</code> or <code>eval</code> and corresponding percentages.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L551">[source]</a></span></p>
+<h3 id="statistics">statistics<a class="headerlink" href="#statistics" title="Permanent link">#</a></h3>
+<p>Get the latest computed statistics for the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L528">[source]</a></span></p>
+<h3 id="statistics_config">statistics_config<a class="headerlink" href="#statistics_config" title="Permanent link">#</a></h3>
+<p>Statistics configuration object defining the settings for statistics
+computation of the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L470">[source]</a></span></p>
+<h3 id="storage_connector">storage_connector<a class="headerlink" href="#storage_connector" title="Permanent link">#</a></h3>
+<p>Storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L423">[source]</a></span></p>
+<h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
+<p>Version number of the training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L461">[source]</a></span></p>
+<h3 id="write_options">write_options<a class="headerlink" href="#write_options" title="Permanent link">#</a></h3>
+<p>User provided options to write training dataset.</p>
+<hr />
+<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L273">[source]</a></span></p>
+<h3 id="add_tag">add_tag<a class="headerlink" href="#add_tag" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</code></pre></div>
+<p>Attach a tag to a training dataset.</p>
+<p>A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
+The value of a tag can be any valid json - primitives, arrays or json objects.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the tag to be added.</li>
+<li><strong>value</strong>: Value of the tag to be added.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code> in case the backend fails to add the tag.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L220">[source]</a></span></p>
+<h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
+</code></pre></div>
+<p>Recompute the statistics for the training dataset and save them to the
+feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L339">[source]</a></span></p>
+<h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</code></pre></div>
+<p>Delete training dataset and all associated metadata.</p>
+<div class="admonition note">
+<p class="admonition-title">Drops only HopsFS data</p>
+<p>Note that this operation drops only files which were materialized in
+HopsFS. If you used a Storage Connector for a cloud storage such as S3,
+the data will not be deleted, but you will not be able to track it anymore
+from the Feature Store.</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Potentially dangerous operation</p>
+<p>This operation drops all metadata associated with <strong>this version</strong> of the
+training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
+</div>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L288">[source]</a></span></p>
+<h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Delete a tag attached to a training dataset.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the tag to be removed.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code> in case the backend fails to delete the tag.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L577">[source]</a></span></p>
+<h3 id="get_query">get_query<a class="headerlink" href="#get_query" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="n">online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns the query used to generate this training dataset</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>online</strong> <code>bool</code>: boolean, optional. Return the query for the online storage, else
+    for offline storage, defaults to <code>True</code> - for online storage.</li>
+<li><strong>with_label</strong> <code>bool</code>: Indicator whether the query should contain features which were
+    marked as prediction label/feature when the training dataset was
+    created, defaults to <code>False</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>str</code>. Query string for the chosen storage used to generate this training
+    dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L607">[source]</a></span></p>
+<h3 id="get_serving_vector">get_serving_vector<a class="headerlink" href="#get_serving_vector" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_serving_vector</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns assembled serving vector from online feature store.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>entry</strong> <code>Dict[str, Any]</code>: dictionary of training dataset feature group primary key names as keys and values provided by
+    serving application.</li>
+<li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
+    online feature store is established using the same host as
+    for the <code>host</code> parameter in the <a href="../project/#connection"><code>hsfs.connection()</code></a> method.
+    If set to False, the online feature store storage connector is used
+    which relies on the private IP.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>list</code> List of feature values related to provided primary keys, ordered according to positions of this
+features in training dataset query.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L556">[source]</a></span></p>
+<h3 id="get_statistics">get_statistics<a class="headerlink" href="#get_statistics" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns the statistics for this training dataset at a specific time.</p>
+<p>If <code>commit_time</code> is <code>None</code>, the most recent statistics are returned.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>commit_time</strong> <code>Optional[str]</code>: Commit time in the format <code>YYYYMMDDhhmmss</code>, defaults to <code>None</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Statistics</code>. Object with statistics information.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L299">[source]</a></span></p>
+<h3 id="get_tag">get_tag<a class="headerlink" href="#get_tag" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Get the tags of a training dataset.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong>: Name of the tag to get.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>tag value</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code> in case the backend fails to retrieve the tag.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L313">[source]</a></span></p>
+<h3 id="get_tags">get_tags<a class="headerlink" href="#get_tags" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
+</code></pre></div>
+<p>Returns all tags attached to a training dataset.</p>
+<p><strong>Returns</strong></p>
+<p><code>Dict[str, obj]</code> of tags.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code> in case the backend fails to retrieve the tags.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L593">[source]</a></span></p>
+<h3 id="init_prepared_statement">init_prepared_statement<a class="headerlink" href="#init_prepared_statement" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">init_prepared_statement</span><span class="p">(</span><span class="n">external</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>Initialise and cache parametrized prepared statement to
+   retrieve feature vector from online feature store.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
+    online feature store is established using the same host as
+    for the <code>host</code> parameter in the <a href="../project/#connection"><code>hsfs.connection()</code></a> method.
+    If set to False, the online feature store storage connector is used
+    which relies on the private IP.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L166">[source]</a></span></p>
+<h3 id="insert">insert<a class="headerlink" href="#insert" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
+</code></pre></div>
+<p>Insert additional feature data into the training dataset.</p>
+<p>This method appends data to the training dataset either from a Feature Store
+<code>Query</code>, a Spark or Pandas <code>DataFrame</code>, a Spark RDD, two-dimensional Python
+lists or Numpy ndarrays. The schemas must match for this operation.</p>
+<p>This can also be used to overwrite all data in an existing training dataset.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
+<li><strong>overwrite</strong> <code>bool</code>: Whether to overwrite the entire data in the training dataset.</li>
+<li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key/value pairs.
+    Defaults to <code>{}</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>TrainingDataset</code>: The updated training dataset metadata object, the
+    previous <code>TrainingDataset</code> object on which you call <code>save</code> is also
+    updated.</p>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L205">[source]</a></span></p>
+<h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
+</code></pre></div>
+<p>Read the training dataset into a dataframe.</p>
+<p>It is also possible to read only a specific split.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>split</strong>: Name of the split to read, defaults to <code>None</code>, reading the entire
+    training dataset.</li>
+<li><strong>read_options</strong>: Additional read options as key/value pairs, defaults to <code>{}</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>: The spark dataframe containing the feature data of the
+    training dataset.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L119">[source]</a></span></p>
+<h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
+</code></pre></div>
+<p>Materialize the training dataset to storage.</p>
+<p>This method materializes the training dataset either from a Feature Store
+<code>Query</code>, a Spark or Pandas <code>DataFrame</code>, a Spark RDD, two-dimensional Python
+lists or Numpy ndarrays.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
+<li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key/value pairs.
+    Defaults to <code>{}</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>TrainingDataset</code>: The updated training dataset metadata object, the
+    previous <code>TrainingDataset</code> object on which you call <code>save</code> is also
+    updated.</p>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L261">[source]</a></span></p>
+<h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Show the first <code>n</code> rows of the training dataset.</p>
+<p>You can specify a split from which to retrieve the rows.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>n</strong> <code>int</code>: Number of rows to show.</li>
+<li><strong>split</strong> <code>Optional[str]</code>: Name of the split to show, defaults to <code>None</code>, showing the first rows
+    when taking all splits together.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L227">[source]</a></span></p>
+<h3 id="tf_data">tf_data<a class="headerlink" href="#tf_data" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">tf_data</span><span class="p">(</span>
+    <span class="n">target_name</span><span class="p">,</span>
+    <span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">var_len_features</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">is_training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cycle_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Returns an object with utility methods to read training dataset as <code>tf.data.Dataset</code> object and handle it for further processing.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>target_name</strong> <code>str</code>: Name of the target variable.</li>
+<li><strong>split</strong> <code>Optional[str]</code>: Name of training dataset split. For example, <code>"train"</code>, <code>"test"</code> or <code>"val"</code>, defaults to <code>None</code>,
+    returning the full training dataset.</li>
+<li><strong>feature_names</strong> <code>Optional[list]</code>: Names of training variables, defaults to <code>None</code>.</li>
+<li><strong>var_len_features</strong> <code>Optional[list]</code>: Feature names that have variable length and need to be returned as <code>tf.io.VarLenFeature</code>, defaults to <code>[]</code>.</li>
+<li><strong>is_training</strong> <code>Optional[bool]</code>: Whether it is for training, testing or validation. Defaults to <code>True</code>.</li>
+<li><strong>cycle_length</strong> <code>Optional[int]</code>: Number of files to be read and deserialized in parallel, defaults to <code>2</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>TFDataEngine</code>. An object with utility methods to generate and handle <code>tf.data.Dataset</code> object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L324">[source]</a></span></p>
+<h3 id="update_statistics_config">update_statistics_config<a class="headerlink" href="#update_statistics_config" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
+</code></pre></div>
+<p>Update the statistics configuration of the training dataset.</p>
+<p>Change the <code>statistics_config</code> object and persist the changes by calling
+this method.</p>
+<p><strong>Returns</strong></p>
+<p><code>TrainingDataset</code>. The updated metadata object of the training dataset.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code>.</p>
+<hr />
+<h2 id="tfdata-engine">TFData engine<a class="headerlink" href="#tfdata-engine" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/core/tfdata_engine.py#L97">[source]</a></span></p>
+<h3 id="tf_record_dataset">tf_record_dataset<a class="headerlink" href="#tf_record_dataset" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TFDataEngine</span><span class="o">.</span><span class="n">tf_record_dataset</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">one_hot_encode_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">process</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">serialized_ndarray_fname</span><span class="o">=</span><span class="p">[],</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Reads tfrecord files and returns <code>ParallelMapDataset</code> or <code>PrefetchDataset</code> object, depending on <code>process</code> set
+to <code>False</code> or <code>True</code>, respectively.</p>
+<p>If <code>process</code> set to <code>False</code> returned object <code>ParallelMapDataset</code> can be further processed by user. For example
+applying custom transformations to features, batching, caching etc. <code>process=True</code> will return <code>PrefetchDataset</code>
+object, that contains tuple of feature vector and label, already batched and ready to input into model training.</p>
+<div class="admonition example">
+<p class="admonition-title">Example of using tf_record_dataset:</p>
+<div class="highlight"><pre><span></span><code><span class="n">connection</span> <span class="o">=</span> <span class="n">hsfs</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">td</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="s2">&quot;sample_model&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">td</span><span class="o">.</span><span class="n">tf_data</span><span class="p">(</span><span class="n">target_name</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tf_record_dataset</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>batch_size</strong> <code>Optional[int]</code>: Size of batch, defaults to <code>None</code>.</li>
+<li><strong>num_epochs</strong> <code>Optional[int]</code>: Number of epochs to train, defaults to <code>None</code>.</li>
+<li><strong>one_hot_encode_labels</strong> <code>Optional[bool]</code>: If set <code>True</code> then one hot encode labels, defaults to <code>False</code>.</li>
+<li><strong>num_classes</strong> <code>Optional[int]</code>: If above <code>True</code> then provide number of target classes, defaults to  <code>None</code>.</li>
+<li><strong>process</strong> <code>Optional[bool]</code>: If set <code>True</code> api will optimise tf data read operation, and return feature vector for model
+    with single input, defaults to <code>False</code>.</li>
+<li><strong>serialized_ndarray_fname</strong> <code>Optional[list]</code>: Names of features that contain serialised multi dimensional arrays, defaults to <code>[]</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>PrefetchDataset</code>. If <code>process</code> is set to <code>True</code>. <br/>
+   <code>ParallelMapDataset</code>. If <code>process</code> is set to <code>False</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/core/tfdata_engine.py#L202">[source]</a></span></p>
+<h3 id="tf_csv_dataset">tf_csv_dataset<a class="headerlink" href="#tf_csv_dataset" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">TFDataEngine</span><span class="o">.</span><span class="n">tf_csv_dataset</span><span class="p">(</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">one_hot_encode_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Reads csv files and returns <code>CsvDatasetV2</code> or <code>PrefetchDataset</code> object, depending on <code>process</code> set to <code>False</code>
+or <code>True</code>, respectively.</p>
+<p>If <code>process</code> set to <code>False</code> returned object <code>CsvDatasetV2</code> can be further processed by user. For example
+applying custom transformations to features, batching, caching etc. <code>process=True</code> will return <code>PrefetchDataset</code>
+object, that contains tuple of feature vector and label, already batched and ready to input into model training.</p>
+<div class="admonition example">
+<p class="admonition-title">Example of using tf_record_dataset:</p>
+<div class="highlight"><pre><span></span><code><span class="n">connection</span> <span class="o">=</span> <span class="n">hsfs</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">td</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="s2">&quot;sample_model&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">td</span><span class="o">.</span><span class="n">tf_data</span><span class="p">(</span><span class="n">target_name</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tf_csv_dataset</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>batch_size</strong> <code>Optional[int]</code>: Size of batch, defaults to <code>None</code>.</li>
+<li><strong>num_epochs</strong> <code>Optional[int]</code>: Number of epochs to train, defaults to <code>None</code>.</li>
+<li><strong>one_hot_encode_labels</strong> <code>Optional[bool]</code>: If set true then one hot encode labels, defaults to <code>False</code>.</li>
+<li><strong>num_classes</strong> <code>Optional[int]</code>: If above true then provide number of target classes, defaults to  <code>None</code>.</li>
+<li><strong>process</strong> <code>Optional[bool]</code>: If set true api will optimise tf data read operation, and return feature vector for model
+    with single input, defaults to <code>False</code>.</li>
+<li><strong>serialized_ndarray_fname</strong>: Names of features that contain serialised multi dimensional arrays, defaults to <code>[]</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>PrefetchDataset</code>. If <code>process</code> is set to <code>True</code>. <br/>
+<code>CsvDatasetV2</code>. If <code>process</code> is set to <code>False</code>.</p>
+<hr />
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../feature/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Feature
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../query_vs_dataframe/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Query vs. Dataframe
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+  <div class="md-footer-social">
+    
+      
+      
+        
+        
+      
+      <a href="https://twitter.com/logicalclocks" target="_blank" rel="noopener" title="twitter.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://github.com/logicalclocks/hopsworks" target="_blank" rel="noopener" title="github.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://community.hopsworks.ai/" target="_blank" rel="noopener" title="community.hopsworks.ai" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M225.9 32C103.3 32 0 130.5 0 252.1 0 256 .1 480 .1 480l225.8-.2c122.7 0 222.1-102.3 222.1-223.9C448 134.3 348.6 32 225.9 32zM224 384c-19.4 0-37.9-4.3-54.4-12.1L88.5 392l22.9-75c-9.8-18.1-15.4-38.9-15.4-61 0-70.7 57.3-128 128-128s128 57.3 128 128-57.3 128-128 128z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://www.linkedin.com/company/logicalclocks/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+      </a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/vendor.08c56446.min.js"></script>
+      <script src="../../assets/javascripts/bundle.6ced434e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../..",
+          features: ['navigation.tabs', 'navigation.tabs.sticky'],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.8c7e0a7e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="../../js/version-select.js"></script>
+      
+    
+  </body>
+</html>
