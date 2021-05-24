@@ -87,7 +87,7 @@ class RuleDefinition:
     @property
     def feature_type(self):
         """The type of the feature, one of "Quantitative", "Categorical"."""
-        return self._accepted_type
+        return self._feature_type
 
     @property
     def description(self):
