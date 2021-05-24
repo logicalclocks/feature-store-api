@@ -26,42 +26,42 @@ The following table describes all the supported rule definitions (code examples 
 - Name: The name of the rule.
 - Predicate: The type of value this rule accepts. For example, when using `HAS_MIN` you need to set the value with the `value` parameter.
 - Accepted type: The data type of the value users set for this rule. For example, the value of the `HAS_MIN` predicate must be a fractional number.
-- Feature type: The data type of the feature this rule can be applied to. For example, the `HAS_MIN` rule can only be applied on quantitative features.
+- Feature type: The data type of the feature this rule can be applied to. For example, the `HAS_MIN` rule can only be applied on numerical features.
   If a rule is to be applied to an incompatible feature type, an error will be thrown when the expectation is attached on the feature group.
-  If a rule does not have a feature type, then it can be applied on both quantitative and categorical features.
+  If a rule does not have a feature type, then it can be applied on both numerical and categorical features.
 - Description: A short description of what the rule validates.
 
 If an expectation contains a rule that can be applied
 
 | Name                          | Predicate     | Accepted type | Feature type | Description                                                                             |
 | ------------------------------|---------------|---------------|--------------|---------------------------------------------------------------------------------------- |
-| HAS_APPROX_COUNT_DISTINCT     | VALUE         | Fractional    | NULL         | Assert on the approximate count distinct of a feature.                                  |
-| HAS_APPROX_QUANTILE           | VALUE         | Fractional    | Quantitative | Assert on the approximate quantile of a feature.                                        |
-| HAS_COMPLETENESS              | VALUE         | Fractional    | NULL         | Assert on the uniqueness of a single or combined set of features.                       |
-| HAS_CORRELATION               | VALUE         | Fractional    | Quantitative | Assert on the pearson correleation between two features.                                |
-| HAS_DATATYPE                  | ACCEPTED_TYPE | String        | NULL         | Assert on the fraction of rows that conform to the given data type.                     |
-| HAS_DISTINCTNESS              | VALUE         | Fractional    | NULL         | Assert on the distincness of a single or combined set of features.                      |
-| HAS_ENTROPY                   | VALUE         | Fractional    | NULL         | Assert on the entropy of a feature.                                                     |
-| HAS_MAX                       | VALUE         | Fractional    | Quantitative | Assert on the max of a feature.                                                         |
+| HAS_APPROX_COUNT_DISTINCT     | VALUE         | Fractional    |              | Assert on the approximate count distinct of a feature.                                  |
+| HAS_APPROX_QUANTILE           | VALUE         | Fractional    | Numerical    | Assert on the approximate quantile of a feature.                                        |
+| HAS_COMPLETENESS              | VALUE         | Fractional    |              | Assert on the uniqueness of a single or combined set of features.                       |
+| HAS_CORRELATION               | VALUE         | Fractional    | Numerical    | Assert on the pearson correleation between two features.                                |
+| HAS_DATATYPE                  | ACCEPTED_TYPE | String        |              | Assert on the fraction of rows that conform to the given data type.                     |
+| HAS_DISTINCTNESS              | VALUE         | Fractional    |              | Assert on the distincness of a single or combined set of features.                      |
+| HAS_ENTROPY                   | VALUE         | Fractional    |              | Assert on the entropy of a feature.                                                     |
+| HAS_MAX                       | VALUE         | Fractional    | Numerical    | Assert on the max of a feature.                                                         |
 | HAS_MAX_LENGTH                | VALUE         | String        | Categorical  | Assert on the maximum length of the feature value.                                      |
-| HAS_MEAN                      | VALUE         | Fractional    | Quantitative | Assert on the mean of a feature.                                                        |
-| HAS_MIN                       | VALUE         | Fractional    | Quantitative | Assert on the min of a feature.                                                         |
+| HAS_MEAN                      | VALUE         | Fractional    | Numerical    | Assert on the mean of a feature.                                                        |
+| HAS_MIN                       | VALUE         | Fractional    | Numerical    | Assert on the min of a feature.                                                         |
 | HAS_MIN_LENGTH                | VALUE         | String        | Categorical  | Assert on the minimum length of the feature value.                                      |
-| HAS_MUTUAL_INFORMATION        | VALUE         | Fractional    | NULL         | Assert on the mutual information between two features.                                  |
-| HAS_NUMBER_OF_DISTINCT_VALUES | VALUE         | Integral      | NULL         | Assert on the number of distinct values of a feature.                                   |
+| HAS_MUTUAL_INFORMATION        | VALUE         | Fractional    |              | Assert on the mutual information between two features.                                  |
+| HAS_NUMBER_OF_DISTINCT_VALUES | VALUE         | Integral      |              | Assert on the number of distinct values of a feature.                                   |
 | HAS_PATTERN                   | PATTERN       | String        | Categorical  | Assert on the average compliance of the feature to the regular expression.              |
-| HAS_SIZE                      | VALUE         | Integral      | NULL         | Assert on the number of rows of the dataframe.                                          |
-| HAS_STANDARD_DEVIATION        | VALUE         | Fractional    | Quantitative | Assert on the standard deviation of a feature.                                          |
-| HAS_SUM                       | VALUE         | Fractional    | Quantitative | Assert on the sum of a feature.                                                         |
-| HAS_UNIQUENESS                | VALUE         | Fractional    | NULL         | Assert on the uniqueness of a single or combined set of features.                       |
-| HAS_UNIQUE_VALUE_RATIO        | VALUE         | Fractional    | NULL         | Assert on the unique value ratio of of a single or combined set of features.            |
-| IS_CONTAINED_IN               | LEGAL_VALUES  | String        | NULL         | Assert that every non-null value of feature is contained in a set of predefined values. |
-| IS_GREATER_THAN               | VALUE         | Fractional    | NULL         | Assert on feature A values being greater than feature B.                                |
-| IS_GREATER_THAN_OR_EQUAL_TO   | VALUE         | Fractional    | NULL         | Assert on feature A values being greater than or equal to those of feature B.           |
-| IS_LESS_THAN                  | VALUE         | Fractional    | NULL         | Assert on feature A values being less that feature B.                                   |
-| IS_LESS_THAN_OR_EQUAL_TO      | VALUE         | Fractional    | NULL         | Assert on feature A values being less or equal to those of feature B.                   |
-| IS_NON_NEGATIVE               | VALUE         | Fractional    | NULL         | Assert on feature containing non negative values.                                       |
-| IS_POSITIVE                   | VALUE         | Boolean       | NULL         | Assert on a feature containing non negative values.                                     |
+| HAS_SIZE                      | VALUE         | Integral      |              | Assert on the number of rows of the dataframe.                                          |
+| HAS_STANDARD_DEVIATION        | VALUE         | Fractional    | Numerical    | Assert on the standard deviation of a feature.                                          |
+| HAS_SUM                       | VALUE         | Fractional    | Numerical    | Assert on the sum of a feature.                                                         |
+| HAS_UNIQUENESS                | VALUE         | Fractional    |              | Assert on the uniqueness of a single or combined set of features.                       |
+| HAS_UNIQUE_VALUE_RATIO        | VALUE         | Fractional    |              | Assert on the unique value ratio of of a single or combined set of features.            |
+| IS_CONTAINED_IN               | LEGAL_VALUES  | String        |              | Assert that every non-null value of feature is contained in a set of predefined values. |
+| IS_GREATER_THAN               | VALUE         | Fractional    |              | Assert on feature A values being greater than feature B.                                |
+| IS_GREATER_THAN_OR_EQUAL_TO   | VALUE         | Fractional    |              | Assert on feature A values being greater than or equal to those of feature B.           |
+| IS_LESS_THAN                  | VALUE         | Fractional    |              | Assert on feature A values being less that feature B.                                   |
+| IS_LESS_THAN_OR_EQUAL_TO      | VALUE         | Fractional    |              | Assert on feature A values being less or equal to those of feature B.                   |
+| IS_NON_NEGATIVE               | VALUE         | Fractional    |              | Assert on feature containing non negative values.                                       |
+| IS_POSITIVE                   | VALUE         | Boolean       |              | Assert on a feature containing non negative values.                                     |
 
 
 ## Retrieval
