@@ -260,5 +260,6 @@ class TrainingDatasetEngine:
     def _apply_transformation(transformation_fns, row_dict):
         for feature_name in transformation_fns:
             transformation_fn = transformation_fns[feature_name]
-            row_dict[feature_name] = transformation_fn(row_dict[feature_name])
+            if feature_name in row_dict:
+                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
