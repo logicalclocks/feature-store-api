@@ -448,9 +448,20 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    */
   public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    initPreparedStatement(false);
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement(boolean external) throws SQLException, IOException, FeatureStoreException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this);
+      trainingDatasetEngine.initPreparedStatement(this, external);
     }
   }
 
@@ -465,7 +476,23 @@ public class TrainingDataset {
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
       IOException {
-    return trainingDatasetEngine.getServingVector(this, entry);
+    return getServingVector(entry, false);
+  }
+
+  /**
+   * Retrieve feature vector from online feature store.
+   *
+   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
+   *              corresponding ids to retrieve feature vector from online feature store.
+   * @param external If true, the connection to the online feature store will be established using the hostname
+   *                 provided in the hsfs.connection() setup.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public List<Object> getServingVector(Map<String, Object> entry, boolean external)
+      throws SQLException, FeatureStoreException, IOException {
+    return trainingDatasetEngine.getServingVector(this, entry, external);
   }
 
   /**

@@ -49,6 +49,17 @@ Replace *BUCKET_NAME* with the appropriate S3 bucket name.
         "ssm:GetParameter"
       ],
       "Resource": "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+    },
+    {
+      "Sid": "UpgradePermissions",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVolumes",
+        "ec2:DetachVolume",
+        "ec2:AttachVolume",
+        "ec2:ModifyInstanceAttribute"
+      ],
+      "Resource": "*"
     }
   ]
 }

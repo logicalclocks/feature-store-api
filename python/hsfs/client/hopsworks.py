@@ -201,3 +201,7 @@ class Client(base.Client):
 
         with pwd_path.open() as f:
             return f.read()
+
+    @property
+    def host(self):
+        return self._host

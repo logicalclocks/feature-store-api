@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
@@ -28,7 +29,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.parquet.Strings;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 

@@ -42,11 +42,11 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
-            return self._jdbc(sql_query, online_conn, dataframe_type)
+            return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
@@ -54,8 +54,10 @@ class Engine:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _jdbc(self, sql_query, connector, dataframe_type):
-        with util.create_mysql_connection(connector) as mysql_conn:
+    def _jdbc(self, sql_query, connector, dataframe_type, read_options):
+        with util.create_mysql_connection(
+            connector, "external" in read_options and read_options["external"]
+        ) as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
@@ -159,7 +161,7 @@ class Engine:
         return {}
 
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default").head(n)
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
     def register_on_demand_temporary_table(self, on_demand_fg, alias):
         raise NotImplementedError

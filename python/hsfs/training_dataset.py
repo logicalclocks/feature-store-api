@@ -590,22 +590,38 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
-    def init_prepared_statement(self):
-        """Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store."""
-        if self.prepared_statements is None:
-            self._training_dataset_engine.init_prepared_statement(self)
+    def init_prepared_statement(self, external: Optional[bool] = False):
+        """Initialise and cache parametrized prepared statement to
+           retrieve feature vector from online feature store.
 
-    def get_serving_vector(self, entry: Dict[str, Any]):
+        # Arguments
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        """
+        if self.prepared_statements is None:
+            self._training_dataset_engine.init_prepared_statement(self, external)
+
+    def get_serving_vector(
+        self, entry: Dict[str, Any], external: Optional[bool] = False
+    ):
         """Returns assembled serving vector from online feature store.
 
         # Arguments
             entry: dictionary of training dataset feature group primary key names as keys and values provided by
-            serving application.
+                serving application.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry)
+        return self._training_dataset_engine.get_serving_vector(self, entry, external)
 
     @property
     def label(self):
