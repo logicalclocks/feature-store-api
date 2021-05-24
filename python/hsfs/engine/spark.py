@@ -39,6 +39,7 @@ from hsfs.constructor import query
 
 class Engine:
     HIVE_FORMAT = "hive"
+    KAFKA_FORMAT = "kafka"
 
     APPEND = "append"
     OVERWRITE = "overwrite"
