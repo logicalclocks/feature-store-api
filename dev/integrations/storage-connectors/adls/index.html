@@ -1718,7 +1718,7 @@
 <h3 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">#</a></h3>
 <ul>
 <li>
-<p><a href="https://docs.microsoft.com/azure/storage/data-lake-storage/quickstart-create-account">Create an Azure Data Lake Storage Gen2 account</a> and (initialize a filesystem, enabling the hierarchical namespace)[https://docs.microsoft.com/azure/storage/data-lake-storage/namespace]. Note that your storage account must belong to an Azure resource group.</p>
+<p><a href="https://docs.microsoft.com/azure/storage/data-lake-storage/quickstart-create-account">Create an Azure Data Lake Storage Gen2 account</a> and <a href="https://docs.microsoft.com/azure/storage/data-lake-storage/namespace">initialize a filesystem, enabling the hierarchical namespace</a>. Note that your storage account must belong to an Azure resource group.</p>
 </li>
 <li>
 <p><a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal">Create an Azure AD application and service principal</a> that can access your ADLS storage account and its resource group.</p>
@@ -1732,7 +1732,7 @@
 <p align="center">
   <figure>
     <img src="../../../assets/images/storage-connectors/adls-connector.png" alt="Define a Azure Data Lake storage connector using service credentials and account details.">
-    <figcaption>Configure an ADLS storage connector in the Hopsworks UI.</figcaption>    
+    <figcaption>Configure an ADLS storage connector in the Hopsworks UI.</figcaption>
   </figure>
 </p>
 
@@ -1779,7 +1779,7 @@
 <p>Common Problems:</p>
 <p>If you get a permission denied error when writing or reading to/from a ADLS container, it is often because the storage principal (app) does not have the correct permissions. Have you added the "Storage Blob Data Owner" or "Storage Blob Data Contributor" role to the resource group for your storage account (or the subscription for your storage group, if you apply roles at the subscription level)? Go to your resource group, then in "Access Control (IAM)", click the "Add" buton to add a "role assignment".</p>
 <p>If you get an error "StatusCode=404 StatusDescription=The specified filesystem does not exist.", then maybe you have not created the storage account or the storage container.</p>
-<p>References: </p>
+<p>References:</p>
 <ul>
 <li><a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal">How to create a service principal on Azure</a></li>
 </ul>
