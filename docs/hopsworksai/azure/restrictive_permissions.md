@@ -166,7 +166,7 @@ For this remove the following actions from [your user assigned managed identity]
 
 ### Upgrades
 
-If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created [here](../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage). For this remove the following actions from your custom role:
+If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created [here](../upgrade/#step-2-add-upgrade-permissions-to-your-user-assigned-managed-identity). For this remove the following actions from your custom role:
 
 ```json
   "actions": [

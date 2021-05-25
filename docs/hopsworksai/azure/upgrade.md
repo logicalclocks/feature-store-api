@@ -26,7 +26,7 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
 ## Step 2: Add upgrade permissions to your user assigned managed identity
 
 !!! note
-    You can skip this step if you already have the following permissions in your user assigned managed identity:
+    You can skip this step if you already have the following permissions in [your user assigned managed identity](../getting_started/#step-22-creating-a-user-assigned-managed-identity):
     ```json 
     [
       "Microsoft.Compute/virtualMachines/read", 
@@ -35,6 +35,7 @@ You need to **Stop** your cluster to start the upgrade process. Once your cluste
       "Microsoft.Compute/disks/write"
     ]
     ```
+    Make sure that the scope of these permissions is your resource group.
 
 We require extra permissions to be added to the user assigned managed identity attached to your cluster to proceed with the upgrade. First to get the name of your user assigned managed identity and the resource group of your cluster, click on the *Details* tab as shown below:
 
