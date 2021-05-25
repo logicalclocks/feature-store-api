@@ -1987,7 +1987,7 @@ For this remove the following actions from <a href="../getting_started/#step-21-
   <span class="p">]</span>
 </code></pre></div>
 <h3 id="upgrades">Upgrades<a class="headerlink" href="#upgrades" title="Permanent link">#</a></h3>
-<p>If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created <a href="../getting_started.md#step-21-creating-a-restrictive-role-for-accessing-storage">here</a>. For this remove the following actions from your custom role:</p>
+<p>If you do not intend to upgrade your cluster to newer versions of Hopsworks, then you can remove the permissions required for upgrade from the custom role that you have created <a href="../upgrade/#step-2-add-upgrade-permissions-to-your-user-assigned-managed-identity">here</a>. For this remove the following actions from your custom role:</p>
 <div class="highlight"><pre><span></span><code>  <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
     <span class="s2">&quot;Microsoft.Compute/virtualMachines/read&quot;</span><span class="p">,</span>
     <span class="s2">&quot;Microsoft.Compute/virtualMachines/write&quot;</span><span class="p">,</span>
