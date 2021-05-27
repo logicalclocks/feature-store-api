@@ -1,255 +1,255 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://docs.hopsworks.ai/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/quickstart/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/setup/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/adls/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/hopsfs/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/jdbc/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/redshift/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/s3/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/storage-connectors/snowflake/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/role_mapping/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/assume_role/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/databricks/networking/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/databricks/api_key/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/databricks/configuration/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/sagemaker/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/emr/networking/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/emr/emr_configuration/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/hdinsight/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/mlstudio_designer/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/mlstudio_notebooks/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/python/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/integrations/spark/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/overview/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/project/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/feature_store/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/feature_group/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/storage_connector/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/feature/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/training_dataset/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/query_vs_dataframe/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/statistics/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/feature_validation/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/tags/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/connection_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/feature_store_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/feature_group_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/training_dataset_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/storage_connector_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/feature_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/rule_definition_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/rule_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/expectation_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/validation_api/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/CONTRIBUTING/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/aws/getting_started/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/azure/getting_started/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/aws/restrictive_permissions/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/azure/restrictive_permissions/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/aws/cluster_creation/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/aws/eks_ecr_integration/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/azure/cluster_creation/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/azure/aks_acr_integration/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/adding_removing_workers/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/autoscaling/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/gpu_support/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/user_management/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/rondb/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/aws/upgrade/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/azure/upgrade/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/sso/oauth/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworksai/sso/sso/</loc>
-     <lastmod>2021-05-25</lastmod>
+     <lastmod>2021-05-27</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>

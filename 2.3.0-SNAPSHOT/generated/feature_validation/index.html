@@ -1679,9 +1679,9 @@ Feature Group.</p>
 <li>Name: The name of the rule.</li>
 <li>Predicate: The type of value this rule accepts. For example, when using <code>HAS_MIN</code> you need to set the value with the <code>value</code> parameter.</li>
 <li>Accepted type: The data type of the value users set for this rule. For example, the value of the <code>HAS_MIN</code> predicate must be a fractional number.</li>
-<li>Feature type: The data type of the feature this rule can be applied to. For example, the <code>HAS_MIN</code> rule can only be applied on quantitative features.
+<li>Feature type: The data type of the feature this rule can be applied to. For example, the <code>HAS_MIN</code> rule can only be applied on numerical features.
   If a rule is to be applied to an incompatible feature type, an error will be thrown when the expectation is attached on the feature group.
-  If a rule does not have a feature type, then it can be applied on both quantitative and categorical features.</li>
+  If a rule does not have a feature type, then it can be applied on both numerical and categorical features.</li>
 <li>Description: A short description of what the rule validates.</li>
 </ul>
 <p>If an expectation contains a rule that can be applied</p>
@@ -1700,56 +1700,56 @@ Feature Group.</p>
 <td>HAS_APPROX_COUNT_DISTINCT</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the approximate count distinct of a feature.</td>
 </tr>
 <tr>
 <td>HAS_APPROX_QUANTILE</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the approximate quantile of a feature.</td>
 </tr>
 <tr>
 <td>HAS_COMPLETENESS</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the uniqueness of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>HAS_CORRELATION</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the pearson correleation between two features.</td>
 </tr>
 <tr>
 <td>HAS_DATATYPE</td>
 <td>ACCEPTED_TYPE</td>
 <td>String</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the fraction of rows that conform to the given data type.</td>
 </tr>
 <tr>
 <td>HAS_DISTINCTNESS</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the distincness of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>HAS_ENTROPY</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the entropy of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MAX</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the max of a feature.</td>
 </tr>
 <tr>
@@ -1763,14 +1763,14 @@ Feature Group.</p>
 <td>HAS_MEAN</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the mean of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MIN</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the min of a feature.</td>
 </tr>
 <tr>
@@ -1784,14 +1784,14 @@ Feature Group.</p>
 <td>HAS_MUTUAL_INFORMATION</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the mutual information between two features.</td>
 </tr>
 <tr>
 <td>HAS_NUMBER_OF_DISTINCT_VALUES</td>
 <td>VALUE</td>
 <td>Integral</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the number of distinct values of a feature.</td>
 </tr>
 <tr>
@@ -1805,84 +1805,84 @@ Feature Group.</p>
 <td>HAS_SIZE</td>
 <td>VALUE</td>
 <td>Integral</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the number of rows of the dataframe.</td>
 </tr>
 <tr>
 <td>HAS_STANDARD_DEVIATION</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the standard deviation of a feature.</td>
 </tr>
 <tr>
 <td>HAS_SUM</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>Quantitative</td>
+<td>Numerical</td>
 <td>Assert on the sum of a feature.</td>
 </tr>
 <tr>
 <td>HAS_UNIQUENESS</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the uniqueness of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>HAS_UNIQUE_VALUE_RATIO</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on the unique value ratio of of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>IS_CONTAINED_IN</td>
 <td>LEGAL_VALUES</td>
 <td>String</td>
-<td>NULL</td>
+<td></td>
 <td>Assert that every non-null value of feature is contained in a set of predefined values.</td>
 </tr>
 <tr>
 <td>IS_GREATER_THAN</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on feature A values being greater than feature B.</td>
 </tr>
 <tr>
 <td>IS_GREATER_THAN_OR_EQUAL_TO</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on feature A values being greater than or equal to those of feature B.</td>
 </tr>
 <tr>
 <td>IS_LESS_THAN</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on feature A values being less that feature B.</td>
 </tr>
 <tr>
 <td>IS_LESS_THAN_OR_EQUAL_TO</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on feature A values being less or equal to those of feature B.</td>
 </tr>
 <tr>
 <td>IS_NON_NEGATIVE</td>
 <td>VALUE</td>
 <td>Fractional</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on feature containing non negative values.</td>
 </tr>
 <tr>
 <td>IS_POSITIVE</td>
 <td>VALUE</td>
 <td>Boolean</td>
-<td>NULL</td>
+<td></td>
 <td>Assert on a feature containing non negative values.</td>
 </tr>
 </tbody>
@@ -1935,8 +1935,8 @@ Feature Group.</p>
     <span class="n">name</span><span class="p">,</span>
     <span class="n">predicate</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="p">,</span>
-    <span class="n">feature_type</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">,</span>
+    <span class="n">feature_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1956,7 +1956,7 @@ Feature Group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L87">[source]</a></span></p>
 <h3 id="feature_type">feature_type<a class="headerlink" href="#feature_type" title="Permanent link">#</a></h3>
-<p>The type of the feature, one of "Quantitative", "Categorical".</p>
+<p>The type of the feature, one of "Numerical", "Categorical".</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L72">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
