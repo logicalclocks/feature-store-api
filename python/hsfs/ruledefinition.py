@@ -31,8 +31,8 @@ class RuleDefinition:
         name,
         predicate,
         accepted_type,
-        feature_type,
-        description,
+        feature_type=None,
+        description=None,
         href=None,
         expand=None,
         items=None,
@@ -86,8 +86,8 @@ class RuleDefinition:
 
     @property
     def feature_type(self):
-        """The type of the feature, one of "Quantitative", "Categorical"."""
-        return self._accepted_type
+        """The type of the feature, one of "Numerical", "Categorical"."""
+        return self._feature_type
 
     @property
     def description(self):
