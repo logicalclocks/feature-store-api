@@ -64,7 +64,7 @@ nav:
       - Rule: generated/api/rule_api.md
       - Expectation: generated/api/expectation_api.md
       - Validation: generated/api/validation_api.md
-      - Online Transformations: generated/api/transformation_functions_api.md
+      - Transformation functions: generated/api/transformation_functions_api.md
     - Contributing: CONTRIBUTING.md
   - Hopsworks.ai:
     - Introduction: hopsworksai/index.md
