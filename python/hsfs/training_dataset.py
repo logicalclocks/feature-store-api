@@ -24,7 +24,7 @@ import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector
+from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
     training_dataset_api,
     training_dataset_engine,
@@ -478,8 +478,8 @@ class TrainingDataset:
             self._storage_connector = storage_connector
         elif storage_connector is None:
             # init empty connector, otherwise will have to handle it at serialization time
-            self._storage_connector = StorageConnector(
-                None, None, None, None, None, None, None, None
+            self._storage_connector = HopsFSConnector(
+                None, None, None, None, None, None
             )
         else:
             raise TypeError(
@@ -488,7 +488,7 @@ class TrainingDataset:
                 )
             )
         self._training_dataset_type = self._infer_training_dataset_type(
-            self._storage_connector.connector_type
+            self._storage_connector.type
         )
 
     @property
@@ -590,22 +590,38 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
-    def init_prepared_statement(self):
-        """Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store."""
-        if self.prepared_statements is None:
-            self._training_dataset_engine.init_prepared_statement(self)
+    def init_prepared_statement(self, external: Optional[bool] = False):
+        """Initialise and cache parametrized prepared statement to
+           retrieve feature vector from online feature store.
 
-    def get_serving_vector(self, entry: Dict[str, Any]):
+        # Arguments
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        """
+        if self.prepared_statements is None:
+            self._training_dataset_engine.init_prepared_statement(self, external)
+
+    def get_serving_vector(
+        self, entry: Dict[str, Any], external: Optional[bool] = False
+    ):
         """Returns assembled serving vector from online feature store.
 
         # Arguments
             entry: dictionary of training dataset feature group primary key names as keys and values provided by
-            serving application.
+                serving application.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry)
+        return self._training_dataset_engine.get_serving_vector(self, entry, external)
 
     @property
     def label(self):

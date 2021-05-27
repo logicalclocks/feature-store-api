@@ -2,7 +2,7 @@ Azure Data Lake Storage (ADLS) Gen2 is a HDFS-compatible filesystem on Azure for
 
 ### Requirements
 
-* [Create an Azure Data Lake Storage Gen2 account](https://docs.microsoft.com/azure/storage/data-lake-storage/quickstart-create-account) and (initialize a filesystem, enabling the hierarchical namespace)[https://docs.microsoft.com/azure/storage/data-lake-storage/namespace]. Note that your storage account must belong to an Azure resource group.
+* [Create an Azure Data Lake Storage Gen2 account](https://docs.microsoft.com/azure/storage/data-lake-storage/quickstart-create-account) and [initialize a filesystem, enabling the hierarchical namespace](https://docs.microsoft.com/azure/storage/data-lake-storage/namespace). Note that your storage account must belong to an Azure resource group.
 
 * [Create an Azure AD application and service principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) that can access your ADLS storage account and its resource group.
 * Register the service principal, granting it a role assignment such as Storage Blob Data Contributor, on the Azure Data Lake Storage Gen2 account.
@@ -14,7 +14,7 @@ Azure Data Lake Storage (ADLS) Gen2 is a HDFS-compatible filesystem on Azure for
 <p align="center">
   <figure>
     <img src="../../../assets/images/storage-connectors/adls-connector.png" alt="Define a Azure Data Lake storage connector using service credentials and account details.">
-    <figcaption>Configure an ADLS storage connector in the Hopsworks UI.</figcaption>    
+    <figcaption>Configure an ADLS storage connector in the Hopsworks UI.</figcaption>
   </figure>
 </p>
 
@@ -61,7 +61,6 @@ If you get a permission denied error when writing or reading to/from a ADLS cont
 
 If you get an error "StatusCode=404 StatusDescription=The specified filesystem does not exist.", then maybe you have not created the storage account or the storage container.
 
-References: 
+References:
 
 * [How to create a service principal on Azure](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
-

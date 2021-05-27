@@ -35,16 +35,15 @@ public class StorageConnectorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
-  public StorageConnector getByName(FeatureStore featureStore, String name)
-      throws IOException, FeatureStoreException {
+  public StorageConnector get(Integer featureStoreId, String name) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + CONNECTOR_TYPE_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
+        .set("fsId", featureStoreId)
         .set("name", name)
         .set("temporaryCredentials", true)
         .expand();
@@ -53,7 +52,12 @@ public class StorageConnectorApi {
     return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
   }
 
-  public StorageConnector getOnlineStorageConnector(FeatureStore featureStore)
+  public StorageConnector getByName(FeatureStore featureStore, String name)
+      throws IOException, FeatureStoreException {
+    return get(featureStore.getId(), name);
+  }
+
+  public StorageConnector.JdbcConnector getOnlineStorageConnector(FeatureStore featureStore)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -66,6 +70,6 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.JdbcConnector.class);
   }
 }

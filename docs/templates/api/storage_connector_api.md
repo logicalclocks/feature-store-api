@@ -4,10 +4,62 @@
 
 {{sc_get}}
 
-## Properties
+## HopsFS
 
-{{sc_properties}}
+### Properties
 
-## Methods
+{{hopsfs_properties}}
 
-{{sc_methods}}
+### Methods
+
+{{hopsfs_methods}}
+
+## JDBC
+
+### Properties
+
+{{jdbc_properties}}
+
+### Methods
+
+{{jdbc_methods}}
+
+## S3
+
+### Properties
+
+{{s3_properties}}
+
+### Methods
+
+{{s3_methods}}
+
+## Redshift
+
+### Properties
+
+{{redshift_properties}}
+
+### Methods
+
+{{redshift_methods}}
+
+## Azure Data Lake Storage
+
+### Properties
+
+{{adls_properties}}
+
+### Methods
+
+{{adls_methods}}
+
+## Snowflake
+
+### Properties
+
+{{snowflake_properties}}
+
+### Methods
+
+{{snowflake_methods}}

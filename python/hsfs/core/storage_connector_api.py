@@ -18,19 +18,11 @@ from hsfs import client, storage_connector
 
 
 class StorageConnectorApi:
-    CONST_ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore"
-
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-    def get(self, name):
-        """Get storage connector with name and type.
-
-        :param name: name of the storage connector
-        :type name: str
-        :return: the storage connector
-        :rtype: StorageConnector
-        """
+    def _get(self, name):
+        """Returning response dict instead of initialized object."""
         _client = client.get_instance()
         path_params = [
             "project",
@@ -41,8 +33,25 @@ class StorageConnectorApi:
             name,
         ]
         query_params = {"temporaryCredentials": True}
-        return storage_connector.StorageConnector.from_response_json(
-            _client._send_request("GET", path_params, query_params=query_params)
+        return _client._send_request("GET", path_params, query_params=query_params)
+
+    def get(self, name):
+        """Get storage connector with name and type.
+
+        :param name: name of the storage connector
+        :type name: str
+        :return: the storage connector
+        :rtype: StorageConnector
+        """
+        return storage_connector.StorageConnector.from_response_json(self._get(name))
+
+    def refetch(self, storage_connector_instance):
+        """
+        Refetches the storage connector from Hopsworks, in order to update temporary
+        credentials.
+        """
+        return storage_connector_instance.update_from_response_json(
+            self._get(storage_connector_instance.name)
         )
 
     def get_online_connector(self):

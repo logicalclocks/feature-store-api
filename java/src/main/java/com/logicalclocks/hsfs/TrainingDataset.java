@@ -265,7 +265,7 @@ public class TrainingDataset {
    *
    * @return
    */
-  public Dataset<Row> read() {
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read("");
   }
 
@@ -275,7 +275,7 @@ public class TrainingDataset {
    * @param readOptions options to pass to the Spark read operation
    * @return
    */
-  public Dataset<Row> read(Map<String, String> readOptions) {
+  public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.read(this, "", readOptions);
   }
 
@@ -285,7 +285,7 @@ public class TrainingDataset {
    * @param split the split name
    * @return
    */
-  public Dataset<Row> read(String split) {
+  public Dataset<Row> read(String split) throws FeatureStoreException, IOException {
     return read(split, null);
   }
 
@@ -297,7 +297,7 @@ public class TrainingDataset {
    * @param readOptions options to pass to the Spark read operation
    * @return
    */
-  public Dataset<Row> read(String split, Map<String, String> readOptions) {
+  public Dataset<Row> read(String split, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.read(this, split, readOptions);
   }
 
@@ -306,7 +306,7 @@ public class TrainingDataset {
    *
    * @param numRows
    */
-  public void show(int numRows) {
+  public void show(int numRows) throws FeatureStoreException, IOException {
     read("").show(numRows);
   }
 
@@ -448,9 +448,20 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    */
   public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    initPreparedStatement(false);
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement(boolean external) throws SQLException, IOException, FeatureStoreException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this);
+      trainingDatasetEngine.initPreparedStatement(this, external);
     }
   }
 
@@ -465,7 +476,23 @@ public class TrainingDataset {
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
       IOException {
-    return trainingDatasetEngine.getServingVector(this, entry);
+    return getServingVector(entry, false);
+  }
+
+  /**
+   * Retrieve feature vector from online feature store.
+   *
+   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
+   *              corresponding ids to retrieve feature vector from online feature store.
+   * @param external If true, the connection to the online feature store will be established using the hostname
+   *                 provided in the hsfs.connection() setup.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  @JsonIgnore
+  public List<Object> getServingVector(Map<String, Object> entry, boolean external)
+      throws SQLException, FeatureStoreException, IOException {
+    return trainingDatasetEngine.getServingVector(this, entry, external);
   }
 
   /**

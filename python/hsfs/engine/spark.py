@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-import os
 import json
 import datetime
 import importlib.util
@@ -40,9 +39,7 @@ from hsfs.constructor import query
 
 class Engine:
     HIVE_FORMAT = "hive"
-    JDBC_FORMAT = "jdbc"
     KAFKA_FORMAT = "kafka"
-    SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     APPEND = "append"
     OVERWRITE = "overwrite"
@@ -60,11 +57,11 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type):
+    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = self._jdbc(sql_query, connector)
+            result_df = connector.read(sql_query, None, {}, None)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -74,52 +71,19 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def _jdbc(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
-        )
-
-    def _snowflake(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.SNOWFLAKE_FORMAT)
-            .options(**options)
-            .load()
-        )
-
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default").show(n)
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
-        if (
-            on_demand_fg.storage_connector.connector_type == "JDBC"
-            or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
-        ):
-            # This is a JDBC on demand featuregroup
-            on_demand_dataset = self._jdbc(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        elif on_demand_fg.storage_connector.connector_type == "SNOWFLAKE":
-            on_demand_dataset = self._snowflake(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        else:
-            on_demand_dataset = self.read(
-                on_demand_fg.storage_connector,
-                on_demand_fg.data_format,
-                on_demand_fg.options,
-                os.path.join(on_demand_fg.storage_connector.path, on_demand_fg.path),
-            )
+    def register_on_demand_temporary_table(self, on_demand_fg, alias):
+        on_demand_dataset = on_demand_fg.storage_connector.read(
+            on_demand_fg.query,
+            on_demand_fg.data_format,
+            on_demand_fg.options,
+            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
+        )
 
         on_demand_dataset.createOrReplaceTempView(alias)
         return on_demand_dataset
@@ -415,22 +379,22 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, location, split=None):
-        if split is None:
+    def read(self, storage_connector, data_format, read_options, location):
+        if isinstance(location, str):
             path = location + "/**"
+
+            if data_format.lower() == "tsv":
+                data_format = "csv"
         else:
-            path = location + "/" + str(split)
+            path = None
 
-        if data_format.lower() == "tsv":
-            data_format = "csv"
-
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         return (
             self._spark_session.read.format(data_format)
@@ -577,10 +541,10 @@ class Engine:
 
             i += 1
 
-    def _setup_storage_connector(self, storage_connector, path=None):
-        if storage_connector.connector_type == StorageConnector.S3:
+    def setup_storage_connector(self, storage_connector, path=None):
+        if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
-        elif storage_connector.connector_type == StorageConnector.ADLS:
+        elif storage_connector.type == StorageConnector.ADLS:
             return self._setup_adls_hadoop_conf(storage_connector, path)
         else:
             return path
@@ -613,7 +577,7 @@ class Engine:
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
-        return path.replace("s3", "s3a", 1)
+        return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():

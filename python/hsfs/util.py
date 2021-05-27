@@ -20,7 +20,7 @@ import json
 from datetime import datetime
 from sqlalchemy import create_engine
 
-from hsfs import feature
+from hsfs import client, feature
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -53,7 +53,7 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def create_mysql_connection(online_conn):
+def create_mysql_connection(online_conn, external):
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
     # jdbc:mysql:// with the sqlalchemy one + username and password
@@ -61,6 +61,15 @@ def create_mysql_connection(online_conn):
     # to use SSL we'll have to something like this:
     # ssl_args = {'ssl_ca': ca_path}
     # engine = create_engine("mysql+pymysql://<user>:<pass>@<addr>/<schema>", connect_args=ssl_args)
+    if external:
+        # This only works with external clients.
+        # Hopsworks clients should use the storage connector
+        online_options["url"] = re.sub(
+            "/[0-9.]+:",
+            "/{}:".format(client.get_instance().host),
+            online_options["url"],
+        )
+
     sql_alchemy_conn_str = (
         online_options["url"]
         .replace(

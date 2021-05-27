@@ -16,6 +16,7 @@
 
 import pandas as pd
 import numpy as np
+import boto3
 
 from pyhive import hive
 from urllib.parse import urlparse
@@ -41,11 +42,11 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
-            return self._jdbc(sql_query, online_conn, dataframe_type)
+            return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         print("Lazily executing query: {}".format(sql_query))
@@ -53,63 +54,116 @@ class Engine:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _jdbc(self, sql_query, connector, dataframe_type):
-        with util.create_mysql_connection(connector) as mysql_conn:
+    def _jdbc(self, sql_query, connector, dataframe_type, read_options):
+        with util.create_mysql_connection(
+            connector, "external" in read_options and read_options["external"]
+        ) as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location, split=None):
-        df_list = []
-        if storage_connector.connector_type == storage_connector.HOPSFS:
-            # providing more informative error
-            try:
-                from pydoop import hdfs
-            except ImportError as err:
-                raise ModuleNotFoundError(
-                    "Reading training dataset from HopsFS requires `pydoop`"
-                ) from err
-
-            util.setup_pydoop()
-
-            if split is None:
-                path_list = hdfs.ls(location, recursive=True)
-            else:
-                path_list = hdfs.ls(location + "/" + str(split), recursive=True)
-
-            for path in path_list:
-                if (
-                    hdfs.path.isfile(path)
-                    and not path.endswith("_SUCCESS")
-                    and hdfs.path.getsize(path) > 0
-                ):
-                    if data_format.lower() == "csv":
-                        df_tmp = pd.read_csv(path)
-                    elif data_format.lower() == "tsv":
-                        df_tmp = pd.read_csv(path, sep="\t")
-                    elif data_format.lower() == "parquet":
-                        df_tmp = pd.read_parquet(path)
-                    else:
-                        raise TypeError(
-                            "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
-                                data_format
-                            )
-                        )
-                    df_list.append(df_tmp)
+    def read(self, storage_connector, data_format, read_options, location):
+        if storage_connector.type == storage_connector.HOPSFS:
+            df_list = self._read_hopsfs(location, data_format)
+        elif storage_connector.type == storage_connector.S3:
+            df_list = self._read_s3(storage_connector, location, data_format)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
-                    storage_connector.connector_type
+                    storage_connector.type
                 )
             )
         return pd.concat(df_list, ignore_index=True)
+
+    def _read_pandas(self, data_format, obj):
+        if data_format.lower() == "csv":
+            return pd.read_csv(obj)
+        elif data_format.lower() == "tsv":
+            return pd.read_csv(obj, sep="\t")
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
+        else:
+            raise TypeError(
+                "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                    data_format
+                )
+            )
+
+    def _read_hopsfs(self, location, data_format):
+        # providing more informative error
+        try:
+            from pydoop import hdfs
+        except ImportError as err:
+            raise ModuleNotFoundError(
+                "Reading training dataset from HopsFS requires `pydoop`"
+            ) from err
+
+        util.setup_pydoop()
+        path_list = hdfs.ls(location, recursive=True)
+
+        df_list = []
+        for path in path_list:
+            if (
+                hdfs.path.isfile(path)
+                and not path.endswith("_SUCCESS")
+                and hdfs.path.getsize(path) > 0
+            ):
+                df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    def _read_s3(self, storage_connector, location, data_format):
+        # get key prefix
+        path_parts = location.replace("s3://", "").split("/")
+        _ = path_parts.pop(0)  # pop first element -> bucket
+
+        prefix = "/".join(path_parts)
+
+        if storage_connector.session_token is not None:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+                aws_session_token=storage_connector.session_token,
+            )
+        else:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+            )
+
+        df_list = []
+        object_list = {"is_truncated": True}
+        while object_list.get("is_truncated", False):
+            if "NextContinuationToken" in object_list:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                    ContinuationToken=object_list["NextContinuationToken"],
+                )
+            else:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                )
+
+            for obj in object_list["Contents"]:
+                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                    obj = s3.get_object(
+                        Bucket=storage_connector.bucket,
+                        Key=obj["Key"],
+                    )
+                    df_list.append(self._read_pandas(data_format, obj["Body"]))
+        return df_list
 
     def read_options(self, data_format, provided_options):
         return {}
 
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default").head(n)
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
-    def register_on_demand_temporary_table(self, query, storage_connector, alias):
+    def register_on_demand_temporary_table(self, on_demand_fg, alias):
         raise NotImplementedError
 
     def register_hudi_temporary_table(

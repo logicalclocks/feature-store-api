@@ -65,11 +65,41 @@ PAGES = {
             "hsfs.feature_store.FeatureStore.get_storage_connector",
             "hsfs.feature_store.FeatureStore.get_online_storage_connector",
         ],
-        "sc_methods": keras_autodoc.get_methods(
-            "hsfs.storage_connector.StorageConnector", exclude=["from_response_json"]
+        "hopsfs_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.HopsFSConnector", exclude=["from_response_json"]
         ),
-        "sc_properties": keras_autodoc.get_properties(
-            "hsfs.storage_connector.StorageConnector"
+        "hopsfs_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.HopsFSConnector"
+        ),
+        "s3_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.S3Connector", exclude=["from_response_json"]
+        ),
+        "s3_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.S3Connector"
+        ),
+        "redshift_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.RedshiftConnector", exclude=["from_response_json"]
+        ),
+        "redshift_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.RedshiftConnector"
+        ),
+        "adls_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.AdlsConnector", exclude=["from_response_json"]
+        ),
+        "adls_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.AdlsConnector"
+        ),
+        "snowflake_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.SnowflakeConnector", exclude=["from_response_json"]
+        ),
+        "snowflake_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.SnowflakeConnector"
+        ),
+        "jdbc_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.JdbcConnector", exclude=["from_response_json"]
+        ),
+        "jdbc_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.JdbcConnector"
         ),
     },
     "query_vs_dataframe.md": {
@@ -171,11 +201,41 @@ PAGES = {
             "hsfs.feature_store.FeatureStore.get_storage_connector",
             "hsfs.feature_store.FeatureStore.get_online_storage_connector",
         ],
-        "sc_methods": keras_autodoc.get_methods(
-            "hsfs.storage_connector.StorageConnector"
+        "hopsfs_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.HopsFSConnector", exclude=["from_response_json"]
         ),
-        "sc_properties": keras_autodoc.get_properties(
-            "hsfs.storage_connector.StorageConnector"
+        "hopsfs_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.HopsFSConnector"
+        ),
+        "s3_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.S3Connector", exclude=["from_response_json"]
+        ),
+        "s3_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.S3Connector"
+        ),
+        "redshift_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.RedshiftConnector", exclude=["from_response_json"]
+        ),
+        "redshift_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.RedshiftConnector"
+        ),
+        "adls_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.AdlsConnector", exclude=["from_response_json"]
+        ),
+        "adls_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.AdlsConnector"
+        ),
+        "snowflake_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.SnowflakeConnector", exclude=["from_response_json"]
+        ),
+        "snowflake_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.SnowflakeConnector"
+        ),
+        "jdbc_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.JdbcConnector", exclude=["from_response_json"]
+        ),
+        "jdbc_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.JdbcConnector"
         ),
     },
     "api/statistics_config_api.md": {
