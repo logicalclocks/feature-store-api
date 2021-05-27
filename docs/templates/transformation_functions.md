@@ -40,7 +40,7 @@ If only name is provided then it will default to version 1.
 
 To attach transformation function to training dataset provide transformation functions as dict, where key is feature name and value is online transformation function name.
 Also training dataset must be created from the [Query](query_vs_dataframe.md) object. Once attached transformation function will be applied on whenever `save`, `insert` and `get_serving_vector`
-methods are issued on training dataset object.
+methods are called on training dataset object.
 
 === "Python"
 
@@ -59,7 +59,7 @@ methods are issued on training dataset object.
 !!! warning "Scala support"
     Creating and attaching Transformation functions to training datasets are not supported for hsfs scala client.
     If training dataset with transformation function was created using python client and later `insert` or `getServingVector`
-    methods are issued on this training dataset from scala client hsfs will throw an exception.
+    methods are called on this training dataset from scala client hsfs will throw an exception.
 
 
 # Transfromation Function
