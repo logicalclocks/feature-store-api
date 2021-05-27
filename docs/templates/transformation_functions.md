@@ -10,7 +10,7 @@ When defining transformation function don't decorate with spark `@udf` or `@pand
 
 === "Python"
 
-    !!! example "Registering transformation functions  `plus_one` in the Hopsworks feature store."
+    !!! example "Register transformation function  `plus_one` in the Hopsworks feature store."
         ```python
         from hsfs_transformers import transformers
         plus_one_meta = fs.create_transformation_function(
