@@ -53,11 +53,9 @@ class TransformationFunctionEngine:
     def delete(self, transformation_function_instance):
         self._transformation_function_api.delete(transformation_function_instance)
 
-    def get_training_dataset_transformation_fn(self, training_dataset):
+    def get_td_transformation_fn(self, training_dataset):
         attached_transformation_fns = (
-            self._transformation_function_api.get_training_dataset_transformation_fn(
-                training_dataset
-            )
+            self._transformation_function_api.get_td_transformation_fn(training_dataset)
         )
         transformation_fn_dict = {}
         for attached_transformation_fn in attached_transformation_fns:

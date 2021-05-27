@@ -172,6 +172,32 @@ PAGES = {
         "td_tag_get_all": ["hsfs.training_dataset.TrainingDataset.get_tags"],
         "td_tag_delete": ["hsfs.training_dataset.TrainingDataset.delete_tag"],
     },
+    "transformation_functions.md": {
+        "transformation_function": [
+            "hsfs.transformation_function.TransformationFunction"
+        ],
+        "transformation_function_properties": keras_autodoc.get_properties(
+            "hsfs.transformation_function.TransformationFunction"
+        ),
+        "transformation_function_methods": keras_autodoc.get_methods(
+            "hsfs.transformation_function.TransformationFunction",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+        "create_transformation_function": [
+            "hsfs.feature_store.FeatureStore.create_transformation_function"
+        ],
+        "get_transformation_function": [
+            "hsfs.feature_store.FeatureStore.get_transformation_function"
+        ],
+        "get_transformation_functions": [
+            "hsfs.feature_store.FeatureStore.get_transformation_functions"
+        ],
+    },
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
         "connection_properties": keras_autodoc.get_properties(
@@ -297,6 +323,32 @@ PAGES = {
         ),
         "validate": ["hsfs.feature_group.FeatureGroup.validate"],
         "validation_result_get": ["hsfs.feature_group.FeatureGroup.get_validations"],
+    },
+    "api/transformation_functions_api.md": {
+        "transformation_function": [
+            "hsfs.transformation_function.TransformationFunction"
+        ],
+        "transformation_function_properties": keras_autodoc.get_properties(
+            "hsfs.transformation_function.TransformationFunction"
+        ),
+        "transformation_function_methods": keras_autodoc.get_methods(
+            "hsfs.transformation_function.TransformationFunction",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+        "create_transformation_function": [
+            "hsfs.feature_store.FeatureStore.create_transformation_function"
+        ],
+        "get_transformation_function": [
+            "hsfs.feature_store.FeatureStore.get_transformation_function"
+        ],
+        "get_transformation_functions": [
+            "hsfs.feature_store.FeatureStore.get_transformation_functions"
+        ],
     },
 }
 

@@ -94,7 +94,7 @@ class TransformationFunctionApi:
         headers = {"content-type": "application/json"}
         _client._send_request("DELETE", path_params, headers=headers)
 
-    def get_training_dataset_transformation_fn(self, training_dataset_instance):
+    def get_td_transformation_fn(self, training_dataset_instance):
         """
         Retrieve TransformationFunctionAttached instance
         Args:

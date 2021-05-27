@@ -171,9 +171,6 @@ class TrainingDatasetEngine:
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
 
-        # get transformation functions
-        transformation_fns = self._get_transformation_fns(training_dataset)
-
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
             result_proxy = training_dataset.prepared_statement_connection.execute(
@@ -191,7 +188,7 @@ class TrainingDatasetEngine:
                     )
                 # apply transformation functions
                 result_dict = self._apply_transformation(
-                    transformation_fns, result_dict
+                    training_dataset.transformation_functions, result_dict
                 )
             serving_vector += list(result_dict.values())
 
@@ -238,6 +235,11 @@ class TrainingDatasetEngine:
                 prepared_statement.prepared_statement_index
             ] = query_online
 
+        # attach transformation functions
+        training_dataset.transformation_functions = self._get_transformation_fns(
+            training_dataset
+        )
+
         training_dataset.prepared_statement_connection = jdbc_connection
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
@@ -245,9 +247,9 @@ class TrainingDatasetEngine:
     @staticmethod
     def _get_transformation_fns(training_dataset):
         transformation_fns = training_dataset.transformation_functions
-        # users may initiate get serving vector withing Pyspark application. In this case transformation function will
-        # be decorated with spark udf. However, here we want apply this function to python type and not spark dataframe.
-        # Reload source code without decorator.
+        # users may initiate get serving vector within Pyspark application. In this case transformation function will
+        # be decorated with spark udf. However, here we want to apply this function to python type and not
+        # spark dataframe. Reload source code without decorator.
         if engine.get_type() == "spark":
             for feature_name in transformation_fns:
                 transformation_fn = transformation_fns[feature_name]

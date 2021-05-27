@@ -183,7 +183,7 @@ public class TrainingDatasetApi {
     hopsworksClient.handleRequest(deleteRequest);
   }
 
-  public TrainingDataset getTransformationFunction(TrainingDataset trainingDataset)
+  public TrainingDataset getTransformationFunctions(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
