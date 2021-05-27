@@ -678,7 +678,7 @@ class TrainingDataset:
     @property
     def transformation_functions(self):
         """Set transformation functions."""
-        if self._id is not None or self._transformation_functions is None:
+        if self._id is not None and self._transformation_functions is None:
             self._transformation_functions = (
                 self._transformation_function_engine.get_td_transformation_fn(self)
             )
