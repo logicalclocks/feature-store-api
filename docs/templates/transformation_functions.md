@@ -6,11 +6,11 @@ To be able to attach transformation function to training datasets it has to be p
 [documentation](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries) how to install python libraries in Hopsworks.
 When defining transformation function don't decorate with spark `@udf` or `@pandas_udfs`, as well as don't use any spark dependencies. HSFS will decorate transformation function only if it is used inside spark application.
 
-Example bellow demonstrates how to register transformation function `plus_one` in the Hopsworks feature store.
+## Examples
 
 === "Python"
 
-    !!! example "Registering transformation functions into the feature store".
+    !!! example "Registering transformation functions  `plus_one` in the Hopsworks feature store."
         ```python
         from hsfs_transformers import transformers
         plus_one_meta = fs.create_transformation_function(
@@ -26,7 +26,7 @@ If only name is provided then it will default to version 1.
 
 === "Python"
 
-    !!! example "Retrieving transformation functions from the feature store".
+    !!! example "Retrieving transformation functions from the feature store"
         ```python
         # get all transformation functions
         fs.get_transformation_functions()
@@ -44,7 +44,7 @@ methods are issued on training dataset object.
 
 === "Python"
 
-    !!! example "Attaching transformation functions to the training dataset".
+    !!! example "Attaching transformation functions to the training dataset"
         ```python
         plus_one_meta = fs.get_transformation_function(name="plus_one", version=1)
         fs.create_training_dataset(name="td_demo",
@@ -58,7 +58,7 @@ methods are issued on training dataset object.
 
 !!! warning "Scala support"
     Creating and attaching Transformation functions to training datasets are not supported for hsfs scala client.
-    If training dataset with transformation function was created using python client and later `insert` and `getServingVector`
+    If training dataset with transformation function was created using python client and later `insert` or `getServingVector`
     methods are issued on this training dataset from scala client hsfs will throw an exception.
 
 
