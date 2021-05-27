@@ -153,7 +153,8 @@ class Query:
                 the join. Defaults to `[]`.
             join_type: Type of join to perform, can be `"inner"`, `"outer"`, `"left"` or
                 `"right"`. Defaults to "inner".
-            prefix: User provided prefix to avoid feature name clash. Defaults to `None`.
+            prefix: User provided prefix to avoid feature name clash. Prefix is applied to the right
+                feature group of the query. Defaults to `None`.
         # Returns
             `Query`: A new Query object representing the join.
         """
