@@ -45,7 +45,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         self._feature_group_api.save(feature_group)
         validation_id = None
-        if feature_group.validation_type != "NONE":
+        if (
+            feature_group.validation_type != "NONE"
+            and engine.get_instance().get_type() == "spark"
+        ):
+            # If the engine is Hive, the validation will be executed by
+            # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe)
             validation_id = validation.validation_id
 
@@ -75,7 +80,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
     ):
         validation_id = None
-        if feature_group.validation_type != "NONE":
+        if (
+            feature_group.validation_type != "NONE"
+            and engine.get_instance().get_type() == "spark"
+        ):
+            # If the engine is Hive, the validation will be executed by
+            # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe)
             validation_id = validation.validation_id
 
