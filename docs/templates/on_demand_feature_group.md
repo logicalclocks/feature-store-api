@@ -3,7 +3,7 @@
 On-demand (External) Feature Groups are Feature Groups for which the data is stored on an external storage system (e.g. Data Warehouse, S3, ADLS).
 From an API perspective, on-demand feature groups can be used in the same way as regular feature groups. Users can pick features from on-demand feature groups to create training datasets. On-demand feature groups can be also used as data source to create derived features, meaning features on which additional feature engineering is applied.
 
-On-demand feature groups rely on [Storage Connectors](../../integrations/storage-connectors/) to identify the location and authenticate with the external storage.
+On-demand feature groups rely on [Storage Connectors](../../integrations/storage-connectors/) to identify the location and to authenticate with the external storage.
 When the on-demand feature group is define on top of an external database capabale of running SQL statements (i.e. when using the JDBC, Redshift or Snowflake connectors) the on-demand feature group needs to be defined as a SQL statement. SQL statements can contain feature engineering transformations, when reading the on-demand feature group, the SQL statement is pushed down to the storage which executes it.
 
 === "Python"
