@@ -236,7 +236,7 @@ class TrainingDatasetEngine:
             ] = query_online
 
         # attach transformation functions
-        training_dataset._transformation_functions = self._get_transformation_fns(
+        training_dataset.transformation_functions = self._get_transformation_fns(
             training_dataset
         )
 

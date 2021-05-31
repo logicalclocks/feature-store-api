@@ -683,3 +683,7 @@ class TrainingDataset:
                 self._transformation_function_engine.get_td_transformation_fn(self)
             )
         return self._transformation_functions
+
+    @transformation_functions.setter
+    def transformation_functions(self, transformation_functions):
+        self._transformation_functions = transformation_functions
