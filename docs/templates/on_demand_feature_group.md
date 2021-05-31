@@ -77,7 +77,7 @@ There are two use cases in which a user can benefit from on-demand feature group
 
 - **Existing feature engineering pipelines**: in case users have recently migrated to Hopsworks Feature Store and they have existing feature engineering pipelines in production. Users can register the output of the existing pipelines as on-demand feature groups in Hopsworks, and immediately use their features to build training datasets. With on-demand feature groups, users do not have to modify the existing pipelines to write to the Hopsworks Feature Store.
 
-- **Data Ingestion**: on-demand feature groups can be used as a data source. The benefit of using on-demand feature groups to ingest data from external sources is that the Hopsworks Feature Store keeps track of where the data is located and how to authenticate with the external storage system. In addition to that, the Hopsworks Feature Store tracks also the schema of the underlying data will make sure that, if something changes in the underlying schema, the ingestion pipline fails with a clear error.
+- **Data Ingestion**: on-demand feature groups can be used as a data source. The benefit of using on-demand feature groups to ingest data from external sources is that the Hopsworks Feature Store keeps track of where the data is located and how to authenticate with the external storage system. In addition to that, the Hopsworks Feature Store tracks also the schema of the underlying data and will make sure that, if something changes in the underlying schema, the ingestion pipeline fails with a clear error.
 
 ## Limitations
 
