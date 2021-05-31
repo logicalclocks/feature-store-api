@@ -79,6 +79,7 @@ class TrainingDataset:
         self._prepared_statement_connection = None
         self._prepared_statements = None
         self._serving_keys = None
+        self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -104,7 +105,6 @@ class TrainingDataset:
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
-            self._transformation_functions = transformation_functions
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
