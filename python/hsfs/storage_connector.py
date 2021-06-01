@@ -516,7 +516,7 @@ class AdlsConnector(StorageConnector):
 
 
 class SnowflakeConnector(StorageConnector):
-    type = StorageConnector.ADLS
+    type = StorageConnector.SNOWFLAKE
     SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     def __init__(
