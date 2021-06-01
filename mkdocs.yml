@@ -45,6 +45,7 @@ nav:
       - Feature Store: generated/feature_store.md
       - Feature Group: generated/feature_group.md
       - Storage Connector: generated/storage_connector.md
+      - On-demand (External) Feature Group: generated/on_demand_feature_group.md
       - Feature: generated/feature.md
       - Training Dataset: generated/training_dataset.md
       - Query vs. Dataframe: generated/query_vs_dataframe.md

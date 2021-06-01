@@ -42,6 +42,22 @@ PAGES = {
             ],
         ),
     },
+    "on_demand_feature_group.md": {
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_on_demand_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_on_demand_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.OnDemandFeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.OnDemandFeatureGroup",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+    },
     "training_dataset.md": {
         "td_create": ["hsfs.feature_store.FeatureStore.create_training_dataset"],
         "td_get": ["hsfs.feature_store.FeatureStore.get_training_dataset"],
