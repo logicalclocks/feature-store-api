@@ -49,7 +49,7 @@ Alternatively, you can use your API Key with the [Hopsworks.ai terraform provide
 
 ## Delete your API Key
 
-This section describes how to delete your Hopsworks.ai API Key. First, login to your Hopsworks.ai account, click on the Settings tab, then click on the API Key tab, and finally click on *Delete API Key* as shown below:
+First, login to your Hopsworks.ai account, click on the Settings tab, then click on the API Key tab, and finally click on *Delete API Key* as shown below:
 
 <p align="center">
   <figure>
