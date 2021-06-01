@@ -15,7 +15,7 @@ This section describes how to generate an API Key for Hopsworks.ai. First, login
   </figure>
 </p>
 
-Click on the API Key tab, and then click on *Generate API Key* button:
+Click on the API Key tab, and then click on the *Generate API Key* button:
 
 <p align="center">
   <figure>
