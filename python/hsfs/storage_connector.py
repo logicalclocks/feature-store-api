@@ -640,7 +640,7 @@ class SnowflakeConnector(StorageConnector):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        props = self._sf_options
+        props = self._options
         props["sfURL"] = self._url
         props["sfSchema"] = self._schema
         props["sfDatabase"] = self._database
