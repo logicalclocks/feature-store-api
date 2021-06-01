@@ -4,7 +4,7 @@ Hopsworks.ai allows users to generate an API Key that can be used to authenticat
 
 ## Generate an API Key
 
-This section describes how to generate an API Key for Hopsworks.ai. First, login to your Hopsworks.ai account, then click on the Settings tab as shown below:
+First, login to your Hopsworks.ai account, then click on the Settings tab as shown below:
 
 <p align="center">
   <figure>
@@ -27,6 +27,10 @@ Click on the API Key tab, and then click on the *Generate API Key* button:
 </p>
 
 Copy the generated API Key and store it in a secure location.
+
+!!! warning
+    Make sure to copy your API Key now. You won’t be able to see it again. However, you can always delete it and generate a new one.
+
 
 <p align="center">
   <figure>
