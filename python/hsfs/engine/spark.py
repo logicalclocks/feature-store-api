@@ -314,6 +314,16 @@ class Engine:
             dataset = dataset.read()
 
         dataset = self.convert_to_default_dataframe(dataset)
+
+        # apply transformation functions
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            dataset = dataset.withColumn(
+                feature_name, transformation_fn.transformation_fn(col(feature_name))
+            )
+
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
 

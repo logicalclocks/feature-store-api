@@ -21,7 +21,12 @@ import avro.io
 from sqlalchemy import sql
 
 from hsfs import engine, training_dataset_feature, util
-from hsfs.core import training_dataset_api, tags_api, storage_connector_api
+from hsfs.core import (
+    training_dataset_api,
+    tags_api,
+    storage_connector_api,
+    transformation_function_engine,
+)
 from hsfs.constructor import query
 
 
@@ -38,6 +43,11 @@ class TrainingDatasetEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(
+                feature_store_id
+            )
+        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -48,6 +58,9 @@ class TrainingDatasetEngine:
                 )
                 for label_name in training_dataset.label
             ]
+            self._transformation_function_engine.attach_transformation_fn(
+                training_dataset
+            )
         else:
             features = engine.get_instance().convert_to_default_dataframe(features)
             training_dataset._features = (
@@ -58,8 +71,14 @@ class TrainingDatasetEngine:
                     if feature.name == label_name:
                         feature.label = True
 
-        self._training_dataset_api.post(training_dataset)
+            # check if user provided transformation functions and throw error as transformation functions work only
+            # with query objects
+            if training_dataset.transformation_functions:
+                raise ValueError(
+                    "Transformation functions can only be applied to training datasets generated from Query object"
+                )
 
+        self._training_dataset_api.post(training_dataset)
         engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
@@ -167,6 +186,10 @@ class TrainingDatasetEngine:
                         "No data was retrieved from online feature store using input "
                         + entry
                     )
+                # apply transformation functions
+                result_dict = self._apply_transformation(
+                    training_dataset.transformation_functions, result_dict
+                )
             serving_vector += list(result_dict.values())
 
         return serving_vector
@@ -212,6 +235,33 @@ class TrainingDatasetEngine:
                 prepared_statement.prepared_statement_index
             ] = query_online
 
+        # attach transformation functions
+        training_dataset.transformation_functions = self._get_transformation_fns(
+            training_dataset
+        )
+
         training_dataset.prepared_statement_connection = jdbc_connection
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
+
+    @staticmethod
+    def _get_transformation_fns(training_dataset):
+        transformation_fns = training_dataset.transformation_functions
+        # users may initiate get serving vector within Pyspark application. In this case transformation function will
+        # be decorated with spark udf. However, here we want to apply this function to python type and not
+        # spark dataframe. Reload source code without decorator.
+        if engine.get_type() == "spark":
+            for feature_name in transformation_fns:
+                transformation_fn = transformation_fns[feature_name]
+                transformation_fn._load_source_code(
+                    transformation_fn._source_code_content, False
+                )
+        return transformation_fns
+
+    @staticmethod
+    def _apply_transformation(transformation_fns, row_dict):
+        for feature_name in transformation_fns:
+            if feature_name in row_dict:
+                transformation_fn = transformation_fns[feature_name].transformation_fn
+                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
+        return row_dict

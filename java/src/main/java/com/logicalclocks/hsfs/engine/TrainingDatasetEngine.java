@@ -127,9 +127,15 @@ public class TrainingDatasetEngine {
    */
   public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
                      Map<String, String> providedOptions, SaveMode saveMode)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     // validate that the schema matches
     utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
+
+    // check if this training dataset has transformation functions attached and throw exception if any
+    if (getTransformationFunctions(trainingDataset).size() > 0) {
+      throw new FeatureStoreException("This training dataset has transformation functions attached and "
+          + "insert operation must be performed from a PySpark application");
+    }
 
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
@@ -180,6 +186,12 @@ public class TrainingDatasetEngine {
 
   public void initPreparedStatement(TrainingDataset trainingDataset, boolean external)
       throws FeatureStoreException, IOException, SQLException {
+
+    // check if this training dataset has transformation functions attached and throw exception if any
+    if (getTransformationFunctions(trainingDataset).size() > 0) {
+      throw new FeatureStoreException("This training dataset has transformation functions attached and "
+          + "serving must performed from a Python application");
+    }
 
     StorageConnector storageConnector =
         storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
@@ -293,5 +305,20 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
+  }
+
+  private List<TrainingDatasetFeature> getTransformationFunctions(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    List<TrainingDatasetFeature> featuresWithtransformationFunction = new ArrayList<>();
+
+    TrainingDataset updatedTrainingDataset =
+        trainingDatasetApi.getTransformationFunctions(trainingDataset);
+
+    for (TrainingDatasetFeature trainingDatasetFeature: updatedTrainingDataset.getFeatures()) {
+      if (trainingDatasetFeature.getTransformationFunction() != null) {
+        featuresWithtransformationFunction.add(trainingDatasetFeature);
+      }
+    }
+    return featuresWithtransformationFunction;
   }
 }

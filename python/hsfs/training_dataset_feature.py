@@ -18,10 +18,19 @@ import humps
 
 from hsfs.feature_group import FeatureGroup
 from hsfs.feature import Feature
+from hsfs.transformation_function import TransformationFunction
 
 
 class TrainingDatasetFeature:
-    def __init__(self, name, type=None, index=None, featuregroup=None, label=False):
+    def __init__(
+        self,
+        name,
+        type=None,
+        index=None,
+        featuregroup=None,
+        label=False,
+        transformation_function=None,
+    ):
         self._name = name.lower()
         self._type = type
         self._index = index
@@ -31,6 +40,11 @@ class TrainingDatasetFeature:
             else featuregroup
         )
         self._label = label
+        self._transformation_function = (
+            TransformationFunction.from_response_json(transformation_function)
+            if isinstance(transformation_function, dict)
+            else transformation_function
+        )
 
     def to_dict(self):
         return {
@@ -38,6 +52,7 @@ class TrainingDatasetFeature:
             "type": self._type,
             "index": self._index,
             "label": self._label,
+            "transformationFunction": self._transformation_function,
         }
 
     @classmethod
@@ -79,3 +94,12 @@ class TrainingDatasetFeature:
     @label.setter
     def label(self, label):
         self._label = label
+
+    @property
+    def transformation_function(self):
+        """Set transformation functions."""
+        return self._transformation_function
+
+    @transformation_function.setter
+    def transformation_function(self, transformation_function):
+        self._transformation_function = transformation_function
