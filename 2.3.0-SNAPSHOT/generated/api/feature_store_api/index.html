@@ -960,6 +960,19 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../transformation_functions/" class="md-nav__link">
+      Transformation Functions
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1188,6 +1201,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#create_transformation_function" class="md-nav__link">
+    create_transformation_function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#from_response_json" class="md-nav__link">
     from_response_json
   </a>
@@ -1239,6 +1259,20 @@
           <li class="md-nav__item">
   <a href="#get_training_dataset" class="md-nav__link">
     get_training_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_transformation_function" class="md-nav__link">
+    get_transformation_function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_transformation_functions" class="md-nav__link">
+    get_transformation_functions
   </a>
   
 </li>
@@ -1362,6 +1396,19 @@
   <li class="md-nav__item">
     <a href="../validation_api/" class="md-nav__link">
       Validation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../transformation_functions_api/" class="md-nav__link">
+      Transformation functions
     </a>
   </li>
 
@@ -2062,6 +2109,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#create_transformation_function" class="md-nav__link">
+    create_transformation_function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#from_response_json" class="md-nav__link">
     from_response_json
   </a>
@@ -2118,6 +2172,20 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get_transformation_function" class="md-nav__link">
+    get_transformation_function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_transformation_functions" class="md-nav__link">
+    get_transformation_functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sql" class="md-nav__link">
     sql
   </a>
@@ -2143,7 +2211,7 @@
                 
                 
                 <h1 id="feature-store">Feature Store<a class="headerlink" href="#feature-store" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L40">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L45">[source]</a></span></p>
 <h3 id="featurestore">FeatureStore<a class="headerlink" href="#featurestore" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">feature_store</span><span class="o">.</span><span class="n">FeatureStore</span><span class="p">(</span>
     <span class="n">featurestore_id</span><span class="p">,</span>
@@ -2182,48 +2250,48 @@ retrieved by passing the <code>name</code> argument.</p>
 <p><code>FeatureStore</code>. A feature store handle object to perform operations on.</p>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L582">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L676">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <p>Description of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L602">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L696">[source]</a></span></p>
 <h3 id="hive_endpoint">hive_endpoint<a class="headerlink" href="#hive_endpoint" title="Permanent link">#</a></h3>
 <p>Hive endpoint for the offline feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L562">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L656">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Id of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L592">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L686">[source]</a></span></p>
 <h3 id="mysql_server_endpoint">mysql_server_endpoint<a class="headerlink" href="#mysql_server_endpoint" title="Permanent link">#</a></h3>
 <p>MySQL server endpoint for the online feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L567">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L661">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L607">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L701">[source]</a></span></p>
 <h3 id="offline_featurestore_name">offline_featurestore_name<a class="headerlink" href="#offline_featurestore_name" title="Permanent link">#</a></h3>
 <p>Name of the offline feature store database.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L597">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L691">[source]</a></span></p>
 <h3 id="online_enabled">online_enabled<a class="headerlink" href="#online_enabled" title="Permanent link">#</a></h3>
 <p>Indicator whether online feature store is enabled.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L587">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L681">[source]</a></span></p>
 <h3 id="online_featurestore_name">online_featurestore_name<a class="headerlink" href="#online_featurestore_name" title="Permanent link">#</a></h3>
 <p>Name of the online feature store database.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L577">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L671">[source]</a></span></p>
 <h3 id="project_id">project_id<a class="headerlink" href="#project_id" title="Permanent link">#</a></h3>
 <p>Id of the project in which the feature store is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L572">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L666">[source]</a></span></p>
 <h3 id="project_name">project_name<a class="headerlink" href="#project_name" title="Permanent link">#</a></h3>
 <p>Name of the project in which the feature store is located.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L530">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L541">[source]</a></span></p>
 <h3 id="create_expectation">create_expectation<a class="headerlink" href="#create_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">rules</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -2245,7 +2313,7 @@ call the <code>save()</code> method of the expectation metadata object.</p>
 <p><strong>Returns:</strong></p>
 <p><code>Expectation</code>: The expectation metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L285">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L294">[source]</a></span></p>
 <h3 id="create_feature_group">create_feature_group<a class="headerlink" href="#create_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2315,7 +2383,7 @@ DataFrame.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L369">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L378">[source]</a></span></p>
 <h3 id="create_on_demand_feature_group">create_on_demand_feature_group<a class="headerlink" href="#create_on_demand_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_on_demand_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2370,7 +2438,7 @@ along the metadata in the feature store, call the <code>save()</code> method.</p
 <p><strong>Returns</strong></p>
 <p><code>OnDemandFeatureGroup</code>. The on-demand feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L436">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L445">[source]</a></span></p>
 <h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2384,6 +2452,7 @@ along the metadata in the feature store, call the <code>save()</code> method.</p
     <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">label</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{},</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Create a training dataset metadata object.</p>
@@ -2452,12 +2521,31 @@ training datasets:</p>
 <p><strong>Returns:</strong></p>
 <p><code>TrainingDataset</code>: The training dataset metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L90">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L573">[source]</a></span></p>
+<h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Create a transformation function metadata object.</p>
+<div class="admonition note">
+<p class="admonition-title">Lazy</p>
+<p>This method is lazy and does not persist the transformation function in the
+feature store on its own. To materialize the transformation function and save
+call the <code>save()</code> method of the transformation function metadata object.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>transformation_function</strong> <code>callable</code>: callable object.</li>
+<li><strong>output_type</strong> <code>Union[str, str, string, bytes, numpy.int8, int8, byte, numpy.int16, int16, short, int, int, numpy.int32, numpy.int64, int64, long, bigint, float, float, numpy.float64, float64, double, datetime.datetime, numpy.datetime64, datetime.date, bool, boolean, bool]</code>: python or numpy output type that will be inferred as pyspark.sql.types type.</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L99">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L252">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L261">[source]</a></span></p>
 <h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2475,7 +2563,7 @@ so you can subsequently add features and/or rules and save it which will overwri
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve the expectation from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L270">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L279">[source]</a></span></p>
 <h3 id="get_expectations">get_expectations<a class="headerlink" href="#get_expectations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
 </code></pre></div>
@@ -2489,7 +2577,7 @@ so you can subsequently add features and/or rules and save it which will overwri
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve the expectations from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L95">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L104">[source]</a></span></p>
 <h3 id="get_feature_group">get_feature_group<a class="headerlink" href="#get_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2510,7 +2598,7 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L126">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L135">[source]</a></span></p>
 <h3 id="get_on_demand_feature_group">get_on_demand_feature_group<a class="headerlink" href="#get_on_demand_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_on_demand_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2531,7 +2619,7 @@ Pandas DataFrame or use the <code>Query</code>-API to perform joins between feat
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L241">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L250">[source]</a></span></p>
 <h3 id="get_online_storage_connector">get_online_storage_connector<a class="headerlink" href="#get_online_storage_connector" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_online_storage_connector</span><span class="p">()</span>
 </code></pre></div>
@@ -2541,7 +2629,7 @@ project's feature store.</p>
 <p><strong>Returns</strong></p>
 <p><code>StorageConnector</code>. JDBC storage connector to the Online Feature Store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L186">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L195">[source]</a></span></p>
 <h3 id="get_storage_connector">get_storage_connector<a class="headerlink" href="#get_storage_connector" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2566,7 +2654,7 @@ Feature Store.</p>
 <p><strong>Returns</strong></p>
 <p><code>StorageConnector</code>. Storage connector object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L158">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L167">[source]</a></span></p>
 <h3 id="get_training_dataset">get_training_dataset<a class="headerlink" href="#get_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2586,7 +2674,29 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L213">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L632">[source]</a></span></p>
+<h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Get  transformation function metadata object.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: name of transformation function.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: version of transformation function. Optional, if not provided all functions that match to provided
+    name will be retrieved .</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L648">[source]</a></span></p>
+<h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
+</code></pre></div>
+<p>Get  all transformation functions metadata objects.</p>
+<p><strong>Returns:</strong></p>
+<p><code>List[TransformationFunction]</code>. List of transformation function instances.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L222">[source]</a></span></p>
 <h3 id="sql">sql<a class="headerlink" href="#sql" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>

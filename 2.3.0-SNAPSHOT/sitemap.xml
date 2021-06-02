@@ -140,6 +140,10 @@
      <lastmod>2021-06-02</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
+     <loc>https://docs.hopsworks.ai/generated/transformation_functions/</loc>
+     <lastmod>2021-06-02</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/connection_api/</loc>
      <lastmod>2021-06-02</lastmod>
      <changefreq>daily</changefreq>
@@ -177,6 +181,10 @@
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/generated/api/validation_api/</loc>
+     <lastmod>2021-06-02</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/generated/api/transformation_functions_api/</loc>
      <lastmod>2021-06-02</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
