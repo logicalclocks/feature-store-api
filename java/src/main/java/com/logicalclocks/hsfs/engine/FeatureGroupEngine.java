@@ -42,6 +42,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
@@ -160,7 +161,7 @@ public class FeatureGroupEngine {
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
                                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (!featureGroup.getOnlineEnabled()) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. "

@@ -14,16 +14,17 @@
         <guava.version>14.0.1</guava.version>
         <httpclient.version>4.5.6</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
-        <slf4j.version>1.7.16</slf4j.version>
+        <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <handy.version>2.1.8</handy.version>
         <lombok.version>1.18.10</lombok.version>
-        <fasterxml.jackson.databind.version>2.6.7.1</fasterxml.jackson.databind.version>
-        <spark.version>2.4.3.2</spark.version>
-        <deequ.version>1.1.0-SNAPSHOT</deequ.version>
+        <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
+        <spark.version>3.1.1.0</spark.version>
+        <deequ.version>1.1.0.0</deequ.version>
         <hudi.version>0.7.0</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
-        <scala.base>2.11</scala.base>
+        <scala.version>2.12.10</scala.version>
+        <scala-short.version>2.12</scala-short.version>
     </properties>
 
     <dependencies>
@@ -35,7 +36,7 @@
 
         <dependency>
             <groupId>com.logicalclocks</groupId>
-            <artifactId>deequ</artifactId>
+            <artifactId>deequ_${scala-short.version}</artifactId>
             <version>${deequ.version}</version>
             <exclusions>
                 <exclusion>
@@ -51,7 +52,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
+            <artifactId>spark-core_${scala-short.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -68,7 +69,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
+            <artifactId>spark-sql_${scala-short.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -85,7 +86,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-avro_2.11</artifactId>
+            <artifactId>spark-avro_${scala-short.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -234,6 +235,9 @@
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                </configuration>
                 <executions>
                     <execution>
                         <id>scala-compile-first</id>

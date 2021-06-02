@@ -51,6 +51,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -309,28 +310,29 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData)
-      throws StreamingQueryException, IOException, FeatureStoreException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, null);
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
-      throws StreamingQueryException, IOException, FeatureStoreException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, "append");
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
-      throws StreamingQueryException, IOException, FeatureStoreException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, false, null);
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
-      boolean awaitTermination, Long timeout) throws StreamingQueryException, IOException, FeatureStoreException {
+                                     boolean awaitTermination, Long timeout)
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
     if (!featureData.isStreaming()) {
       throw new FeatureStoreException(
           "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
