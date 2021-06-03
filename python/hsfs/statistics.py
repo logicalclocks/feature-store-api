@@ -18,6 +18,7 @@ import json
 import humps
 
 from hsfs import util
+from hsfs.split_statistics import SplitStatistics
 
 
 class Statistics:
@@ -27,6 +28,7 @@ class Statistics:
         content=None,
         feature_group_commit_id=None,
         split_statistics=None,
+        for_transformation=False,
         href=None,
         expand=None,
         items=None,
@@ -40,7 +42,17 @@ class Statistics:
             self._content = json.loads(content)
         else:
             self._content = content
-        self._split_statistics = split_statistics
+        self._split_statistics = (
+            [
+                SplitStatistics.from_response_json(split)
+                if isinstance(split, dict)
+                else split
+                for split in split_statistics
+            ]
+            if split_statistics is not None
+            else []
+        )
+        self._for_transformation = for_transformation
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -57,6 +69,7 @@ class Statistics:
             "featureGroupCommitId": self._feature_group_commit_id,
             "content": json.dumps(self._content),
             "splitStatistics": self._split_statistics,
+            "forTransformation": self._for_transformation,
         }
 
     def json(self):
@@ -77,3 +90,7 @@ class Statistics:
     @property
     def split_statistics(self):
         return self._split_statistics
+
+    @property
+    def for_transformation(self):
+        return self._for_transformation

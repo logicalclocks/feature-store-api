@@ -28,6 +28,7 @@ class TrainingDatasetFeature:
         type=None,
         index=None,
         featuregroup=None,
+        feature_group_feature_name=None,
         label=False,
         transformation_function=None,
     ):
@@ -39,6 +40,7 @@ class TrainingDatasetFeature:
             if isinstance(featuregroup, dict)
             else featuregroup
         )
+        self._feature_group_feature_name = feature_group_feature_name
         self._label = label
         self._transformation_function = (
             TransformationFunction.from_response_json(transformation_function)
@@ -53,6 +55,7 @@ class TrainingDatasetFeature:
             "index": self._index,
             "label": self._label,
             "transformationFunction": self._transformation_function,
+            "featureGroupFeatureName": self._feature_group_feature_name,
         }
 
     @classmethod
