@@ -76,8 +76,8 @@ public class TrainingDatasetEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void save(TrainingDataset trainingDataset, Dataset<Row> dataset, Map<String, String> userWriteOptions,
-                   List<String> label)
+  public TrainingDataset save(TrainingDataset trainingDataset, Dataset<Row> dataset,
+                              Map<String, String> userWriteOptions, List<String> label)
       throws FeatureStoreException, IOException {
 
     trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
@@ -108,12 +108,14 @@ public class TrainingDatasetEngine {
     trainingDataset.setLocation(apiTD.getLocation());
     trainingDataset.setVersion(apiTD.getVersion());
     trainingDataset.setId(apiTD.getId());
+    trainingDataset.setStorageConnector(apiTD.getStorageConnector());
 
     // Build write options map
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
 
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
+    return trainingDataset;
   }
 
   /**

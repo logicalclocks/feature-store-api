@@ -51,18 +51,7 @@ class StatisticsEngine:
                     feature_dataframe = metadata_instance.read()
 
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
-            if len(feature_dataframe.head(1)) == 0:
-                raise exceptions.FeatureStoreException(
-                    "There is no data in the entity that you are trying to compute "
-                    "statistics for. A possible cause might be that you inserted only data "
-                    "to the online storage of a feature group."
-                )
-            content_str = engine.get_instance().profile(
-                feature_dataframe,
-                metadata_instance.statistics_config.columns,
-                metadata_instance.statistics_config.correlations,
-                metadata_instance.statistics_config.histograms,
-            )
+            content_str = self.profile_statistics(metadata_instance, feature_dataframe)
             stats = statistics.Statistics(
                 commit_time=commit_time,
                 content=content_str,
@@ -74,6 +63,30 @@ class StatisticsEngine:
         else:
             # Hive engine
             engine.get_instance().profile(metadata_instance)
+
+    @staticmethod
+    def profile_statistics(metadata_instance, feature_dataframe):
+        if len(feature_dataframe.head(1)) == 0:
+            raise exceptions.FeatureStoreException(
+                "There is no data in the entity that you are trying to compute "
+                "statistics for. A possible cause might be that you inserted only data "
+                "to the online storage of a feature group."
+            )
+        content_str = engine.get_instance().profile(
+            feature_dataframe,
+            metadata_instance.statistics_config.columns,
+            metadata_instance.statistics_config.correlations,
+            metadata_instance.statistics_config.histograms,
+        )
+        return content_str
+
+    def register_split_statistics(self, td_metadata_instance, statistics_of_splits):
+        commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
+        stats = statistics.Statistics(
+            commit_time=commit_time, content=None, split_statistics=statistics_of_splits
+        )
+        self._statistics_api.post(td_metadata_instance, stats)
+        return stats
 
     def get_last(self, metadata_instance):
         """Get the most recent Statistics of an entity."""

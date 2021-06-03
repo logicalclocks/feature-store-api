@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.Utils;
+import com.logicalclocks.hsfs.metadata.SplitStatistics;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -198,10 +200,9 @@ public class TrainingDataset {
    */
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.save(this, dataset, writeOptions, label);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, dataset);
-    }
+    TrainingDataset trainingDataset = trainingDatasetEngine.save(this, dataset, writeOptions, label);
+    this.setStorageConnector(trainingDataset.getStorageConnector());
+    computeStatistics();
   }
 
   /**
@@ -319,7 +320,20 @@ public class TrainingDataset {
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
-      return statisticsEngine.computeStatistics(this, read());
+      if (this.splits != null && !this.splits.isEmpty()) {
+        List<SplitStatistics> splitStatistics = new ArrayList<>();
+        for (Split split : this.splits) {
+          splitStatistics.add(new SplitStatistics(split.getName(),
+              statisticsEngine.computeStatistics(read(split.getName()),
+                  this.getStatisticsConfig().getColumns(),
+                  this.getStatisticsConfig().getHistograms(),
+                  this.getStatisticsConfig().getCorrelations(),
+                  null).getContent()));
+        }
+        return statisticsEngine.registerSplitStatistics(this, splitStatistics);
+      } else {
+        return statisticsEngine.computeStatistics(this, read());
+      }
     }
     return null;
   }

@@ -86,6 +86,7 @@ class StatisticsApi:
             "limit": 1,
             "fields": "content",
         }
+
         return statistics.Statistics.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
