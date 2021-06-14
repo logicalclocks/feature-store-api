@@ -469,7 +469,18 @@ public class TrainingDataset {
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this, external);
+      trainingDatasetEngine.initPreparedStatement(this, false, external);
+    }
+  }
+
+  public void initBatchPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+    initBatchPreparedStatement(false);
+  }
+
+  public void initBatchPreparedStatement(boolean external) throws SQLException, IOException, FeatureStoreException {
+    // init prepared statement if it has not already
+    if (this.getPreparedStatements() == null) {
+      trainingDatasetEngine.initPreparedStatement(this, true, external);
     }
   }
 
@@ -501,6 +512,18 @@ public class TrainingDataset {
   public List<Object> getServingVector(Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return trainingDatasetEngine.getServingVector(this, entry, external);
+  }
+
+  @JsonIgnore
+  public List<Object> getBatchServingVector(Map<String, List<Object>> entry)
+      throws SQLException, FeatureStoreException, IOException {
+    return getBatchServingVector(entry, false);
+  }
+
+  @JsonIgnore
+  public List<Object> getBatchServingVector(Map<String, List<Object>> entry, boolean external)
+      throws SQLException, FeatureStoreException, IOException {
+    return trainingDatasetEngine.getBatchServingVector(this, entry, external);
   }
 
   /**
