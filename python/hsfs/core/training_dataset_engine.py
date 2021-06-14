@@ -16,9 +16,11 @@
 
 import re
 import io
+from itertools import chain
+
 import avro.schema
 import avro.io
-from sqlalchemy import sql
+from sqlalchemy import sql, bindparam
 
 from hsfs import engine, training_dataset_feature, util
 from hsfs.core import (
@@ -157,13 +159,16 @@ class TrainingDatasetEngine:
             row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def get_serving_vector(self, training_dataset, entry, external):
+    def get_serving_vector(self, training_dataset, entry, batch, external):
         """Assembles serving vector from online feature store."""
 
-        serving_vector = []
+        if batch:
+            batch_dicts = {}
+        else:
+            serving_vector = []
 
         if training_dataset.prepared_statements is None:
-            self.init_prepared_statement(training_dataset, external)
+            self.init_prepared_statement(training_dataset, batch, external)
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
@@ -194,15 +199,37 @@ class TrainingDatasetEngine:
                 result_dict = self._apply_transformation(
                     training_dataset.transformation_functions, result_dict
                 )
-            serving_vector += list(result_dict.values())
 
-        return serving_vector
+                # if this is batch serving then create dict object of prepared statement index as key and values as
+                # list of list to later stitch them correctly
+                if batch:
+                    if prepared_statement_index in batch_dicts:
+                        batch_dicts[prepared_statement_index] += [
+                            list(result_dict.values())
+                        ]
+                    else:
+                        batch_dicts[prepared_statement_index] = [
+                            list(result_dict.values())
+                        ]
 
-    def init_prepared_statement(self, training_dataset, external):
+            if not batch:
+                serving_vector += list(result_dict.values())
+
+        # if this is batch serving then stitch list of lists from each index and return batch of vectors, otherwise
+        # return sigle serving vector
+        if batch:
+            return [
+                list(chain.from_iterable(sublist))
+                for sublist in zip(*list(batch_dicts.values()))
+            ]
+        else:
+            return serving_vector
+
+    def init_prepared_statement(self, training_dataset, batch, external):
         online_conn = self._storage_connector_api.get_online_connector()
         mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
-            training_dataset
+            training_dataset, batch
         )
 
         prepared_statements_dict = {}
@@ -235,6 +262,12 @@ class TrainingDatasetEngine:
                     query_online,
                 )
             query_online = sql.text(query_online)
+            # in case of batch serving vector bind parameters to the prepared statement.
+            if batch:
+                bind_params = [
+                    bindparam(pk_name, expanding=True) for pk_name in pk_names
+                ]
+                query_online = query_online.bindparams(*bind_params)
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
