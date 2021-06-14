@@ -2,7 +2,7 @@
 
 HSFS provides functionality to attach transformation functions to [training datasets](training_dataset.md).
 
-To be able to attach transformation function to training datasets it has to be either part of the library
+To be able to attach a transformation function to a training dataset it has to be either part of the library
 [installed](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries) in Hopsworks
 or attached when starting a [Jupyter notebook](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter)
 or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html).
