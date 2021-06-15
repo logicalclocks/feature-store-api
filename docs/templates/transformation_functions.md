@@ -2,9 +2,14 @@
 
 HSFS provides functionality to attach transformation functions to [training datasets](training_dataset.md).
 
-To be able to attach transformation function to training datasets it has to be part of library installed in Hopsworks. Please refer to
-[documentation](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries) how to install python libraries in Hopsworks.
-When defining transformation function don't decorate with spark `@udf` or `@pandas_udfs`, as well as don't use any spark dependencies. HSFS will decorate transformation function only if it is used inside spark application.
+To be able to attach a transformation function to a training dataset it has to be either part of the library
+[installed](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries) in Hopsworks
+or attached when starting a [Jupyter notebook](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter)
+or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html).
+
+!!! warning "Pyspark decorators."
+    Don't decorate transformation function with Pyspark `@udf` or `@pandas_udf`, as well as don't use any Pyspark dependencies.
+    HSFS will decorate transformation function only if it is used inside Pyspark application.
 
 ## Examples
 
