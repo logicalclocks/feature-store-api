@@ -1756,9 +1756,15 @@
                 
                 <h1 id="transformation-functions">Transformation Functions<a class="headerlink" href="#transformation-functions" title="Permanent link">#</a></h1>
 <p>HSFS provides functionality to attach transformation functions to <a href="../training_dataset/">training datasets</a>.</p>
-<p>To be able to attach transformation function to training datasets it has to be part of library installed in Hopsworks. Please refer to
-<a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries">documentation</a> how to install python libraries in Hopsworks.
-When defining transformation function don't decorate with spark <code>@udf</code> or <code>@pandas_udfs</code>, as well as don't use any spark dependencies. HSFS will decorate transformation function only if it is used inside spark application.</p>
+<p>To be able to attach a transformation function to a training dataset it has to be either part of the library
+<a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries">installed</a> in Hopsworks
+or attached when starting a <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter">Jupyter notebook</a>
+or <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html">Hopsworks job</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Pyspark decorators.</p>
+<p>Don't decorate transformation function with Pyspark <code>@udf</code> or <code>@pandas_udf</code>, as well as don't use any Pyspark dependencies.
+HSFS will decorate transformation function only if it is used inside Pyspark application.</p>
+</div>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h2>
 <div class="tabbed-set" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Python</label><div class="tabbed-content">
 <div class="admonition example">
