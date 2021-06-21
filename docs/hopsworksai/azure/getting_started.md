@@ -229,6 +229,9 @@ Congratulations, you have successfully connected you Azure account to Hopsworks.
 
 ## Step 2: Creating and configuring a storage
 
+!!! note 
+    If you prefer using terraform, you can skip this step and the remaining steps, and instead follow [this guide](../terraform.md#getting-started-with-azure).
+
 The Hopsworks clusters deployed by hopsworks.ai store their data in a container in your Azure account. To enable this you need to perform the following operations
 
 - Create a restrictive role to limit access to the storage account

@@ -226,6 +226,9 @@ Paste the *Access Key ID* and the *Secret Access Key* into Hopsworks.ai and clic
 
 ## Step 2: Creating Instance profile
 
+!!! note 
+    If you prefer using terraform, you can skip this step and the remaining steps, and instead follow [this guide](../terraform.md#getting-started-with-aws).
+
 Hopsworks cluster nodes need access to certain resources such as S3 bucket and CloudWatch.
 
 Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: [Guide](https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html)

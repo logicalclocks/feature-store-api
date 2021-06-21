@@ -90,6 +90,7 @@ nav:
         - OAuth2: hopsworksai/sso/oauth.md
       - Hopsworks.ai: hopsworksai/sso/sso.md
     - API Key: hopsworksai/api_key.md
+    - Terraform: hopsworksai/terraform.md
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
