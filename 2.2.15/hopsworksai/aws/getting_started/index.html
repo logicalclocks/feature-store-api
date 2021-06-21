@@ -1709,6 +1709,19 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../../terraform/" class="md-nav__link">
+      Terraform
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -2081,6 +2094,10 @@ If you want to limit the required AWS permissions, see <a href="../restrictive_p
 </p>
 
 <h2 id="step-2-creating-instance-profile">Step 2: Creating Instance profile<a class="headerlink" href="#step-2-creating-instance-profile" title="Permanent link">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you prefer using terraform, you can skip this step and the remaining steps, and instead follow <a href="../../terraform/#getting-started-with-aws">this guide</a>.</p>
+</div>
 <p>Hopsworks cluster nodes need access to certain resources such as S3 bucket and CloudWatch.</p>
 <p>Follow the instructions in this guide to create an IAM instance profile with access to your S3 bucket: <a href="https://docs.aws.amazon.com/codedeploy/latest/userguide/getting-started-create-iam-instance-profile.html">Guide</a></p>
 <p>When creating the policy, paste the following in the JSON tab.</p>
