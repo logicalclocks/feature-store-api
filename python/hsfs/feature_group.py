@@ -385,6 +385,7 @@ class FeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
         online_topic_name=None,
+        event_time=None,
     ):
         super().__init__(featurestore_id)
 
@@ -409,6 +410,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
+        self._event_time = event_time
 
         if id is not None:
             # initialized by backend
@@ -1038,6 +1040,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
         }
 
     def _get_table_name(self):
