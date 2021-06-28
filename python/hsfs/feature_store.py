@@ -305,6 +305,7 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
+        event_time: Optional[str] = None,
     ):
         """Create a feature group metadata object.
 
@@ -354,6 +355,9 @@ class FeatureStore:
             expectations: Optionally, a list of expectations to be attached to the feature group.
                 The expectations list contains Expectation metadata objects which can be retrieved with
                 the `get_expectation()` and `get_expectations()` functions.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -373,6 +377,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             validation_type=validation_type,
             expectations=expectations,
+            event_time=event_time,
         )
 
     def create_on_demand_feature_group(
@@ -387,6 +392,7 @@ class FeatureStore:
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        event_time: Optional[str] = None,
     ):
         """Create a on-demand feature group metadata object.
 
@@ -423,6 +429,9 @@ class FeatureStore:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
 
         # Returns
             `OnDemandFeatureGroup`. The on-demand feature group metadata object.
@@ -440,6 +449,7 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+            event_time=event_time,
         )
 
     def create_training_dataset(
