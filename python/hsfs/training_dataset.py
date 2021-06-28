@@ -151,7 +151,7 @@ class TrainingDataset:
                   to configure the Hopsworks Job used to compute the training dataset.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
-                  after the Hopsworks Job has finished.
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
             `Job`: When using the `hive` engine, it returns the Hopsworks Job
@@ -210,7 +210,7 @@ class TrainingDataset:
                   to configure the Hopsworks Job used to compute the training dataset.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
-                  after the Hopsworks Job has finished.
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
             `Job`: When using the `hive` engine, it returns the Hopsworks Job

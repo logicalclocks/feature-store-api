@@ -626,7 +626,7 @@ class FeatureGroup(FeatureGroupBase):
                   feature group.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
-                  after the Hopsworks Job has finished.
+                  after the Hopsworks Job has finished. By default it waits.
 
 
         # Returns
@@ -712,7 +712,7 @@ class FeatureGroup(FeatureGroupBase):
                   feature group.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
-                  after the Hopsworks Job has finished.
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
