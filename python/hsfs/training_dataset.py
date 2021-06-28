@@ -224,8 +224,7 @@ class TrainingDataset:
             self, features, write_options, overwrite
         )
 
-        if engine.get_type() == "spark":
-            self.compute_statistics()
+        self.compute_statistics()
 
         return td_job
 

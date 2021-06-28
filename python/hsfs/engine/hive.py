@@ -253,19 +253,16 @@ class Engine:
 
         # Launch job
         print("Launching ingestion job...")
-        fg_job = self._job_api.launch(ingestion_job.job.name)
+        self._job_api.launch(ingestion_job.job.name)
         print(
             "Ingestion Job started successfully, you can follow the progress at {}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
 
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        if offline_write_options.pop("wait_for_job", True):
-            self._wait_for_job(fg_job)
+        self._wait_for_job(ingestion_job.job, offline_write_options)
 
-        return fg_job
+        return ingestion_job.job
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode
@@ -297,8 +294,7 @@ class Engine:
 
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        if user_write_options.pop("wait_for_job", True):
-            self._wait_for_job(td_job)
+        self._wait_for_job(td_job, user_write_options)
 
         return td_job
 
@@ -376,8 +372,12 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def _wait_for_job(self, job):
-        while True:
+    def _wait_for_job(self, job, user_write_options=None):
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        while user_write_options is None or user_write_options.get(
+            "wait_for_job", True
+        ):
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -390,7 +390,7 @@ class Engine:
                 raise exceptions.FeatureStoreException(
                     "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
                 )
-            else:
+            elif execution.final_status.lower() == "killed":
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
