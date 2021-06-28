@@ -65,6 +65,7 @@ nav:
       - Expectation: generated/api/expectation_api.md
       - Validation: generated/api/validation_api.md
       - Transformation functions: generated/api/transformation_functions_api.md
+      - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
   - Hopsworks.ai:
     - Introduction: hopsworksai/index.md

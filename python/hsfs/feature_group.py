@@ -617,11 +617,21 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
-            write_options: Additional write options for Spark as
-                key-value pairs, defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished.
+
 
         # Returns
-            `FeatureGroup`. Returns the persisted `FeatureGroup` metadata object.
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to ingest the feature group data.
 
         # Raises
             `RestAPIError`. Unable to create feature group.
@@ -629,7 +639,9 @@ class FeatureGroup(FeatureGroupBase):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
-        self._feature_group_engine.save(self, feature_dataframe, write_options)
+
+        # fg_job is used only if the hive engine is used
+        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Hive engine, the computation happens in the Hopsworks application
@@ -641,7 +653,7 @@ class FeatureGroup(FeatureGroupBase):
                 ),
                 util.VersionWarning,
             )
-        return self
+        return fg_job
 
     def insert(
         self,
@@ -691,8 +703,16 @@ class FeatureGroup(FeatureGroupBase):
             storage: Overwrite default behaviour, write to offline
                 storage only with `"offline"` or online only with `"online"`, defaults
                 to `None`.
-            write_options: Additional write options for Spark as
-                key-value pairs, defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.

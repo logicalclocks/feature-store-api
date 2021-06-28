@@ -350,6 +350,9 @@ PAGES = {
             "hsfs.feature_store.FeatureStore.get_transformation_functions"
         ],
     },
+    "api/job_configuration.md": {
+        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]

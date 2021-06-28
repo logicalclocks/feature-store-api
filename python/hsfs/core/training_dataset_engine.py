@@ -79,12 +79,12 @@ class TrainingDatasetEngine:
                 )
 
         self._training_dataset_api.post(training_dataset)
-        engine.get_instance().write_training_dataset(
+        return engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
 
     def insert(self, training_dataset, dataset, user_write_options, overwrite):
-        engine.get_instance().write_training_dataset(
+        return engine.get_instance().write_training_dataset(
             training_dataset,
             dataset,
             user_write_options,
