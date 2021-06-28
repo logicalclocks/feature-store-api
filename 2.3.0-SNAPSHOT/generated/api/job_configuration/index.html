@@ -13,14 +13,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/generated/api/statistics_config_api/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/generated/api/job_configuration/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
     
     
       
-        <title>StatisticsConfig - Hopsworks Documentation</title>
+        <title>Job configuration - Hopsworks Documentation</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#statisticsconfig" class="md-skip">
+        <a href="#jobconfiguration" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              StatisticsConfig
+              Job configuration
             
           </span>
         </div>
@@ -169,13 +169,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link md-tabs__link--active">
         Feature Store
       </a>
     </li>
@@ -284,12 +286,14 @@
       
 
 
+  
+
 
   
-  <li class="md-nav__item md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
     
     <label class="md-nav__link" for="nav-1">
       Feature Store
@@ -979,12 +983,14 @@
           
 
 
+  
+
 
   
-  <li class="md-nav__item md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-5" type="checkbox" id="nav-1-5" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1-5" type="checkbox" id="nav-1-5" checked>
     
     <label class="md-nav__link" for="nav-1-5">
       API Reference
@@ -1146,11 +1152,45 @@
           
 
 
+  
 
-  <li class="md-nav__item">
-    <a href="../job_configuration/" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Job configuration
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
       Job configuration
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#jobconfiguration" class="md-nav__link">
+    JobConfiguration
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -1707,8 +1747,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1717,50 +1755,9 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#statisticsconfig_1" class="md-nav__link">
-    StatisticsConfig
+  <a href="#jobconfiguration" class="md-nav__link">
+    JobConfiguration
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    Properties
-  </a>
-  
-    <nav class="md-nav" aria-label="Properties">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#columns" class="md-nav__link">
-    columns
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#correlations" class="md-nav__link">
-    correlations
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#enabled" class="md-nav__link">
-    enabled
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#histograms" class="md-nav__link">
-    histograms
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1777,32 +1774,21 @@
               
                 
                 
-                <h1 id="statisticsconfig">StatisticsConfig<a class="headerlink" href="#statisticsconfig" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L23">[source]</a></span></p>
-<h3 id="statisticsconfig_1">StatisticsConfig<a class="headerlink" href="#statisticsconfig_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">statistics_config</span><span class="o">.</span><span class="n">StatisticsConfig</span><span class="p">(</span>
-    <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">correlations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">histograms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[]</span>
+                  <h1>Job configuration</h1>
+                
+                <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/core/job_configuration.py#L22">[source]</a></span></p>
+<h3 id="jobconfiguration">JobConfiguration<a class="headerlink" href="#jobconfiguration" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">job_configuration</span><span class="o">.</span><span class="n">JobConfiguration</span><span class="p">(</span>
+    <span class="n">am_memory</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">am_cores</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">executor_memory</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+    <span class="n">executor_cores</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">executor_instances</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dynamic_allocation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">dynamic_min_executors</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dynamic_max_executors</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L83">[source]</a></span></p>
-<h3 id="columns">columns<a class="headerlink" href="#columns" title="Permanent link">#</a></h3>
-<p>Specify a subset of columns to compute statistics for.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L63">[source]</a></span></p>
-<h3 id="correlations">correlations<a class="headerlink" href="#correlations" title="Permanent link">#</a></h3>
-<p>Enable correlations as an additional statistic to be computed for each
-feature pair.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L54">[source]</a></span></p>
-<h3 id="enabled">enabled<a class="headerlink" href="#enabled" title="Permanent link">#</a></h3>
-<p>Enable statistics, by default this computes only descriptive statistics.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L73">[source]</a></span></p>
-<h3 id="histograms">histograms<a class="headerlink" href="#histograms" title="Permanent link">#</a></h3>
-<p>Enable histograms as an additional statistic to be computed for each
-feature.</p>
 <hr />
                 
               
@@ -1818,6 +1804,41 @@ feature.</p>
       
         
 <footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../transformation_functions_api/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Transformation functions
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../../../CONTRIBUTING/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Contributing
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
