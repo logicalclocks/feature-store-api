@@ -52,7 +52,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
-        engine.get_instance().save_dataframe(
+        return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
@@ -90,7 +90,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
-        engine.get_instance().save_dataframe(
+        return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
             "bulk_insert" if overwrite else operation,

@@ -222,6 +222,9 @@ PAGES = {
         "validate": ["hsfs.feature_group.FeatureGroup.validate"],
         "validation_result_get": ["hsfs.feature_group.FeatureGroup.get_validations"],
     },
+    "api/job_configuration.md": {
+        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]

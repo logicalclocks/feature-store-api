@@ -136,20 +136,27 @@ class TrainingDataset:
 
         # Arguments
             features: Feature data to be materialized.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `TrainingDataset`: The updated training dataset metadata object, the
-                previous `TrainingDataset` object on which you call `save` is also
-                updated.
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
 
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
         user_version = self._version
         user_stats_config = self._statistics_config
-        self._training_dataset_engine.save(self, features, write_options)
+        # td_job is used only if the hive engine is used
+        td_job = self._training_dataset_engine.save(self, features, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
         if self.statistics_config.enabled and engine.get_type() == "spark":
@@ -161,7 +168,8 @@ class TrainingDataset:
                 ),
                 util.VersionWarning,
             )
-        return self
+
+        return td_job
 
     def insert(
         self,
@@ -187,20 +195,31 @@ class TrainingDataset:
         # Arguments
             features: Feature data to be materialized.
             overwrite: Whether to overwrite the entire data in the training dataset.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `TrainingDataset`: The updated training dataset metadata object, the
-                previous `TrainingDataset` object on which you call `save` is also
-                updated.
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
 
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        self._training_dataset_engine.insert(self, features, write_options, overwrite)
+        # td_job is used only if the hive engine is used
+        td_job = self._training_dataset_engine.insert(
+            self, features, write_options, overwrite
+        )
 
         self.compute_statistics()
+
+        return td_job
 
     def read(self, split=None, read_options={}):
         """Read the training dataset into a dataframe.

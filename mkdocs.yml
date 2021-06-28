@@ -62,6 +62,7 @@ nav:
       - Rule: generated/api/rule_api.md
       - Expectation: generated/api/expectation_api.md
       - Validation: generated/api/validation_api.md
+      - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
   - Hopsworks.ai:
     - Introduction: hopsworksai/index.md
