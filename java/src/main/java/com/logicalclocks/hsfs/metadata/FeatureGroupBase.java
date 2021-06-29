@@ -71,6 +71,10 @@ public class FeatureGroupBase {
   protected List<Feature> features;
 
   @Getter
+  @Setter
+  protected String eventTime;
+
+  @Getter
   protected Date created;
 
   @Getter

@@ -116,7 +116,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -138,6 +138,7 @@ public class FeatureGroup extends FeatureGroupBase {
         .forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
     this.onlineTopicName = onlineTopicName;
+    this.eventTime = eventTime;
   }
 
   public FeatureGroup() {
