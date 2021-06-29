@@ -71,6 +71,11 @@ class HudiEngine:
         self._table_name = feature_group._get_online_table_name()
 
         self._primary_key = ",".join(feature_group.primary_key)
+
+        # add event time to primary key for upserts
+        if feature_group.event_time is not None:
+            self._primary_key = self._primary_key + "," + feature_group.event_time
+
         self._partition_key = (
             ",".join(feature_group.partition_key)
             if len(feature_group.partition_key) >= 1

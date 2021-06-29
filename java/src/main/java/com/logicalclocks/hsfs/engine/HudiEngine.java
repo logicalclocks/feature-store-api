@@ -26,6 +26,7 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
+import org.apache.parquet.Strings;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -160,8 +161,11 @@ public class HudiEngine {
     hudiArgs.put(HUDI_KEY_GENERATOR_OPT_KEY, HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
     // primary keys
-    Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
-    hudiArgs.put(HUDI_RECORD_KEY, primaryColumns.mkString(","));
+    String primaryColumns = utils.getPrimaryColumns(featureGroup).mkString(",");
+    if (!Strings.isNullOrEmpty(featureGroup.getEventTime())) {
+      primaryColumns = primaryColumns + "," + featureGroup.getEventTime();
+    }
+    hudiArgs.put(HUDI_RECORD_KEY, primaryColumns);
 
     // table name
     String tableName = utils.getFgName(featureGroup);
