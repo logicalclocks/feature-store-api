@@ -49,7 +49,6 @@ class Engine:
             return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
-        print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -357,3 +356,12 @@ class Engine:
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
+
+    def get_empty_appended_dataframe(self, dataframe, new_features):
+        """No-op in hive engine, user has to write to feature group manually for schema
+        change to take effect."""
+        return None
+
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op."""
+        pass

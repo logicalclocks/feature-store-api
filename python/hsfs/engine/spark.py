@@ -26,7 +26,7 @@ try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
     from pyspark.sql.column import Column, _to_java_column
-    from pyspark.sql.functions import struct, concat, col
+    from pyspark.sql.functions import struct, concat, col, lit
 except ImportError:
     pass
 
@@ -599,6 +599,24 @@ class Engine:
         if isinstance(dataframe, DataFrame):
             return True
         return False
+
+    def get_empty_appended_dataframe(self, dataframe, new_features):
+        dataframe = dataframe.limit(0)
+        for f in new_features:
+            dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
+        return dataframe
+
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op in hive engine."""
+        self.save_dataframe(
+            feature_group,
+            dataframe,
+            "upsert",
+            feature_group.online_enabled,
+            "offline",
+            {},
+            {},
+        )
 
     def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
         #
