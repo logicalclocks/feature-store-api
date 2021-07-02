@@ -23,7 +23,7 @@ from hsfs.core import feature_group_base_engine, hudi_engine
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def save(self, feature_group, feature_dataframe, write_options):
-
+        print("FeatureGroupEngine.save()")
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(

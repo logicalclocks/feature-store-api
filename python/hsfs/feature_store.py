@@ -387,13 +387,15 @@ class FeatureStore:
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
     ):
         """Create a on-demand feature group metadata object.
 
         !!! note "Lazy"
-            This method is lazy and does not persist any metadata or feature data in the
-            feature store on its own. To persist the feature group and save feature data
-            along the metadata in the feature store, call the `save()` method.
+            This method is lazy and does not persist any metadata in the
+            feature store on its own. To persist the feature group metadata in the feature store,
+            call the `save()` method.
 
         # Arguments
             name: Name of the on-demand feature group to create.
@@ -423,6 +425,12 @@ class FeatureStore:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
 
         # Returns
             `OnDemandFeatureGroup`. The on-demand feature group metadata object.
@@ -440,6 +448,8 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+            validation_type=validation_type,
+            expectations=expectations,
         )
 
     def create_training_dataset(
