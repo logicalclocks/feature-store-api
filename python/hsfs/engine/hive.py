@@ -51,7 +51,6 @@ class Engine:
             return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
-        print("Lazily executing query: {}".format(sql_query))
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -352,6 +351,7 @@ class Engine:
 
     def get_empty_appended_dataframe(self, dataframe, new_features):
         dataframe = dataframe.iloc[:0].copy()
+        dataframe.columns = [f.split(".", 1)[1] for f in dataframe.columns]
         for f in new_features:
             dataframe[f.name] = pd.Series([], dtype=f.type)
         return dataframe
