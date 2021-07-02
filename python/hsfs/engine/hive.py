@@ -227,6 +227,17 @@ class Engine:
 
         return "string"
 
+    def _convert_spark_type(self, dtype):
+        if dtype == "int":
+            return np.dtype("int32")
+        elif dtype == "bigint":
+            return np.dtype("int64")
+        elif dtype == "float":
+            return np.dtype("float32")
+        elif dtype == "double":
+            return np.dtype("float64")
+        return "string"
+
     def save_dataframe(
         self,
         feature_group,
@@ -338,6 +349,12 @@ class Engine:
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
+
+    def get_empty_appended_dataframe(self, dataframe, new_features):
+        dataframe = dataframe.iloc[:0].copy()
+        for f in new_features:
+            dataframe[f.name] = pd.Series([], dtype=f.type)
+        return dataframe
 
     def _get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs
