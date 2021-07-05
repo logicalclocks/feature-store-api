@@ -19,11 +19,16 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,21 +62,26 @@ public class FeatureGroupBaseEngine {
       throws FeatureStoreException, IOException {
     FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
     fgBaseSend.setDescription(description);
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
     featureGroup.setDescription(apiFG.getDescription());
   }
 
   public void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
+    Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
     FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
     features.addAll(featureGroup.getFeatures());
     fgBaseSend.setFeatures(features);
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
     featureGroup.setFeatures(apiFG.getFeatures());
+    if (featureGroup instanceof FeatureGroup) {
+      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
+          HudiOperationType.UPSERT, new HashMap<>(), null);
+    }
   }
 
   public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
+    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
     featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());
     featureGroup.getStatisticsConfig().setHistograms(apiFG.getStatisticsConfig().getHistograms());
   }
