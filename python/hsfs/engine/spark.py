@@ -606,6 +606,18 @@ class Engine:
             dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
         return dataframe
 
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op in hive engine."""
+        self.save_dataframe(
+            feature_group,
+            dataframe,
+            "upsert",
+            feature_group.online_enabled,
+            "offline",
+            {},
+            {},
+        )
+
     def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
         #
         # Licensed to the Apache Software Foundation (ASF) under one or more

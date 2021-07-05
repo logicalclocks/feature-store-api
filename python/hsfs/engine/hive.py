@@ -350,11 +350,13 @@ class Engine:
         )
 
     def get_empty_appended_dataframe(self, dataframe, new_features):
-        dataframe = dataframe.iloc[:0].copy()
-        dataframe.columns = [f.split(".", 1)[1] for f in dataframe.columns]
-        for f in new_features:
-            dataframe[f.name] = pd.Series([], dtype=f.type)
-        return dataframe
+        """No-op in hive engine, user has to write to feature group manually for schema
+        change to take effect."""
+        return None
+
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op."""
+        pass
 
     def _get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs

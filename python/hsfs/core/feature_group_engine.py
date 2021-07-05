@@ -188,9 +188,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         # write empty dataframe to update parquet schema
-        engine.get_instance().save_dataframe(
-            feature_group, df, "upsert", feature_group.online_enabled, "offline", {}, {}
-        )
+        engine.get_instance().save_empty_dataframe(feature_group, df)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
