@@ -88,6 +88,11 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   public OnDemandFeatureGroup() {
   }
 
+  public OnDemandFeatureGroup(FeatureStore featureStore, int id) {
+    this.featureStore = featureStore;
+    this.id = id;
+  }
+
   public void save() throws FeatureStoreException, IOException {
     onDemandFeatureGroupEngine.saveFeatureGroup(this);
 

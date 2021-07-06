@@ -20,6 +20,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
@@ -60,7 +61,7 @@ public class FeatureGroupBaseEngine {
 
   public void updateDescription(FeatureGroupBase featureGroup, String description)
       throws FeatureStoreException, IOException {
-    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
+    FeatureGroupBase fgBaseSend = initFeatureGroupBase(featureGroup);
     fgBaseSend.setDescription(description);
     FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
     featureGroup.setDescription(apiFG.getDescription());
@@ -69,7 +70,7 @@ public class FeatureGroupBaseEngine {
   public void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features)
       throws FeatureStoreException, IOException, ParseException {
     Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
-    FeatureGroupBase fgBaseSend = new FeatureGroupBase(featureGroup.getFeatureStore(), featureGroup.getId());
+    FeatureGroupBase fgBaseSend = initFeatureGroupBase(featureGroup);
     features.addAll(featureGroup.getFeatures());
     fgBaseSend.setFeatures(features);
     FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
@@ -80,9 +81,18 @@ public class FeatureGroupBaseEngine {
     }
   }
 
-  public void updateStatisticsConfig(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public void updateStatisticsConfig(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     FeatureGroupBase apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
     featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());
     featureGroup.getStatisticsConfig().setHistograms(apiFG.getStatisticsConfig().getHistograms());
+  }
+
+  private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
+    if (featureGroup instanceof FeatureGroup) {
+      return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    } else if (featureGroup instanceof OnDemandFeatureGroup) {
+      return new OnDemandFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    }
+    return new FeatureGroupBase();
   }
 }

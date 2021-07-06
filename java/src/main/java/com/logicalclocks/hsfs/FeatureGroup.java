@@ -143,6 +143,11 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup() {
   }
 
+  public FeatureGroup(FeatureStore featureStore, int id) {
+    this.featureStore = featureStore;
+    this.id = id;
+  }
+
   public void updateValidationType(ValidationType validationType) throws FeatureStoreException, IOException {
     this.validationType = validationType;
     featureGroupEngine.updateValidationType(this);
