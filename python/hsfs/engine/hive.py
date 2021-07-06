@@ -226,17 +226,6 @@ class Engine:
 
         return "string"
 
-    def _convert_spark_type(self, dtype):
-        if dtype == "int":
-            return np.dtype("int32")
-        elif dtype == "bigint":
-            return np.dtype("int64")
-        elif dtype == "float":
-            return np.dtype("float32")
-        elif dtype == "double":
-            return np.dtype("float64")
-        return "string"
-
     def save_dataframe(
         self,
         feature_group,
