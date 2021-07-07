@@ -1260,7 +1260,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
-        self._data_format = data_format
+        self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
 
