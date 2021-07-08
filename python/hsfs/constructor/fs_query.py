@@ -25,6 +25,7 @@ class FsQuery:
         on_demand_feature_groups,
         hudi_cached_feature_groups,
         query_online=None,
+        pit_query=None,
         href=None,
         expand=None,
         items=None,
@@ -32,6 +33,7 @@ class FsQuery:
     ):
         self._query = query
         self._query_online = query_online
+        self._pit_query = pit_query
 
         if on_demand_feature_groups is not None:
             self._on_demand_fg_aliases = [
@@ -63,6 +65,10 @@ class FsQuery:
     @property
     def query_online(self):
         return self._query_online
+
+    @property
+    def pit_query(self):
+        return self._pit_query
 
     @property
     def on_demand_fg_aliases(self):

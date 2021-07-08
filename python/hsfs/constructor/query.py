@@ -49,6 +49,32 @@ class Query:
             feature_store_id
         )
 
+    def _prep_read(self, online, read_options):
+        query = self._query_constructor_api.construct_query(self)
+
+        if online:
+            sql_query = query.query_online
+            online_conn = self._storage_connector_api.get_online_connector()
+        elif query.pit_query is not None:
+            sql_query = query.pit_query
+            online_conn = None
+        else:
+            sql_query = query.query
+            online_conn = None
+
+            # Register on demand feature groups as temporary tables
+            self._register_on_demand(query.on_demand_fg_aliases)
+
+            # Register on hudi feature groups as temporary tables
+            self._register_hudi_tables(
+                query.hudi_cached_feature_groups,
+                self._feature_store_id,
+                self._feature_store_name,
+                read_options,
+            )
+
+        return sql_query, online_conn
+
     def read(
         self,
         online: Optional[bool] = False,
@@ -69,25 +95,7 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
-        query = self._query_constructor_api.construct_query(self)
-
-        if online:
-            sql_query = query.query_online
-            online_conn = self._storage_connector_api.get_online_connector()
-        else:
-            sql_query = query.query
-            online_conn = None
-
-            # Register on demand feature groups as temporary tables
-            self._register_on_demand(query.on_demand_fg_aliases)
-
-            # Register on hudi feature groups as temporary tables
-            self._register_hudi_tables(
-                query.hudi_cached_feature_groups,
-                self._feature_store_id,
-                self._feature_store_name,
-                read_options,
-            )
+        sql_query, online_conn = self._prep_read(online, read_options)
 
         return engine.get_instance().sql(
             sql_query,
@@ -104,25 +112,7 @@ class Query:
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
         """
-        query = self._query_constructor_api.construct_query(self)
-
-        if online:
-            sql_query = query.query_online
-            online_conn = self._storage_connector_api.get_online_connector()
-        else:
-            sql_query = query.query
-            online_conn = None
-
-            # Register on demand feature groups as temporary tables
-            self._register_on_demand(query.on_demand_fg_aliases)
-
-            # Register on hudi feature groups as temporary tables
-            self._register_hudi_tables(
-                query.hudi_cached_feature_groups,
-                self._feature_store_id,
-                self._feature_store_name,
-                {},
-            )
+        sql_query, online_conn = self._prep_read(online, {})
 
         return engine.get_instance().show(
             sql_query, self._feature_store_name, n, online_conn
