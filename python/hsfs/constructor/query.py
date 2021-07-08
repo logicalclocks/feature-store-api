@@ -55,11 +55,11 @@ class Query:
         if online:
             sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
-        elif query.pit_query is not None:
-            sql_query = query.pit_query
-            online_conn = None
         else:
-            sql_query = query.query
+            if query.pit_query is not None:
+                sql_query = query.pit_query
+            else:
+                sql_query = query.query
             online_conn = None
 
             # Register on demand feature groups as temporary tables
