@@ -247,8 +247,13 @@ class Query:
         return new
 
     def to_string(self, online=False):
-        fs_query_instance = self._query_constructor_api.construct_query(self)
-        return fs_query_instance.query_online if online else fs_query_instance.query
+        fs_query = self._query_constructor_api.construct_query(self)
+
+        if online:
+            return fs_query.query_online
+        if fs_query.pit_query is not None:
+            return fs_query.pit_query
+        return fs_query.query
 
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
