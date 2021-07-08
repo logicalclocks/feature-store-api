@@ -1508,15 +1508,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-11-add-tags-to-your-instances" class="md-nav__link">
-    Step 11 add tags to your instances.
+  <a href="#step-12-managed-rondb" class="md-nav__link">
+    Step 12 Managed RonDB
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-12-review-and-create" class="md-nav__link">
-    Step 12 Review and create
+  <a href="#step-13-add-tags-to-your-instances" class="md-nav__link">
+    Step 13 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-14-add-an-init-script-to-your-instances" class="md-nav__link">
+    Step 14 add an init script to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-15-review-and-create" class="md-nav__link">
+    Step 15 Review and create
   </a>
   
 </li>
@@ -1948,15 +1962,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-11-add-tags-to-your-instances" class="md-nav__link">
-    Step 11 add tags to your instances.
+  <a href="#step-12-managed-rondb" class="md-nav__link">
+    Step 12 Managed RonDB
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-12-review-and-create" class="md-nav__link">
-    Step 12 Review and create
+  <a href="#step-13-add-tags-to-your-instances" class="md-nav__link">
+    Step 13 add tags to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-14-add-an-init-script-to-your-instances" class="md-nav__link">
+    Step 14 add an init script to your instances.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-15-review-and-create" class="md-nav__link">
+    Step 15 Review and create
   </a>
   
 </li>
@@ -2134,7 +2162,20 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-11-add-tags-to-your-instances">Step 11 add tags to your instances.<a class="headerlink" href="#step-11-add-tags-to-your-instances" title="Permanent link">#</a></h3>
+<h3 id="step-12-managed-rondb">Step 12 Managed RonDB<a class="headerlink" href="#step-12-managed-rondb" title="Permanent link">#</a></h3>
+<p>Hopsworks.ai users have the option to create a cluster with dedicated VMs running <a href="https://www.rondb.com/">RonDB</a>.</p>
+<p>For details on how to configure RonDB check our guide <a href="../../rondb/">here</a>.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/rondb/rondb_enable.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/rondb/rondb_enable.png" alt="Enable Managed RonDB">
+    </a>
+    <figcaption>Enable Managed RonDB</figcaption>
+  </figure>
+</p>
+
+<p>If you need this feature and don't see this step please contact <a href="mailto:sales@logicalclocks.com">us</a>.</p>
+<h3 id="step-13-add-tags-to-your-instances">Step 13 add tags to your instances.<a class="headerlink" href="#step-13-add-tags-to-your-instances" title="Permanent link">#</a></h3>
 <p>In this step, you can define tags that will be added to the cluster virtual machines.</p>
 <p align="center">
   <figure>
@@ -2145,7 +2186,22 @@ Refer to <a href="../restrictive_permissions/#step-1-create-a-virtual-network-an
   </figure>
 </p>
 
-<h3 id="step-12-review-and-create">Step 12 Review and create<a class="headerlink" href="#step-12-review-and-create" title="Permanent link">#</a></h3>
+<h3 id="step-14-add-an-init-script-to-your-instances">Step 14 add an init script to your instances.<a class="headerlink" href="#step-14-add-an-init-script-to-your-instances" title="Permanent link">#</a></h3>
+<p>In this step, you can enter an initialization script that will be run at startup on every instance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>this init script must be a bash script starting with <em>#!/usr/bin/env bash</em></p>
+</div>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/init_script.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/init_script.png" alt="Add initialization script">
+    </a>
+    <figcaption>Add initialization script</figcaption>
+  </figure>
+</p>
+
+<h3 id="step-15-review-and-create">Step 15 Review and create<a class="headerlink" href="#step-15-review-and-create" title="Permanent link">#</a></h3>
 <p>Review all information and select <em>Create</em>:</p>
 <p align="center">
   <figure>
