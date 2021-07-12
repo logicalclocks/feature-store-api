@@ -967,54 +967,6 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def attach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.attach(self, expectation.name)
-
-    def detach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.detach(self, expectation.name)
-
-    def get_expectations(self):
-        """Get all feature group expectations.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. A list of expectation metadata objects.
-
-        """
-        return self._expectations_api.get(feature_group=self)
-
-    def get_expectation(self, name: str):
-        """Get attached expectation by name for this feature group. Name is unique across a feature store.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.get(name, self)
-
     def validate(
         self, dataframe: TypeVar("pyspark.sql.DataFrame") = None  # noqa: F821
     ):
@@ -1382,69 +1334,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             ),
         )
         return self.select_all().show(n)
-
-    def attach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.attach(self, expectation.name)
-
-    def detach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.detach(self, expectation.name)
-
-    def get_expectations(self):
-        """Get all feature group expectations.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. A list of expectation metadata objects.
-
-        """
-        return self._expectations_api.get(feature_group=self)
-
-    def get_expectation(self, name: str):
-        """Get attached expectation by name for this feature group. Name is unique across a feature store.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.get(name, self)
-
-    def get_validations(self, validation_time=None, commit_time=None):
-        """Get feature group data validation results based on the attached expectations
-
-        # Arguments
-           validation_time: The data validation time, when the data validation started.
-           commit_time: The commit time of a time travel enabled feature group.
-
-        # Returns
-           `FeatureGroupValidation`. The feature group validation metadata object.
-
-        """
-        return self._data_validation_engine.get_validations(
-            self, validation_time, commit_time
-        )
 
     def validate(self):  # noqa: F821
         """Run validation based on the attached expectations
