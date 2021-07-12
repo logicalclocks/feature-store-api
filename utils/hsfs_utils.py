@@ -6,6 +6,7 @@ from hsfs.constructor import query
 from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -26,12 +27,33 @@ def get_feature_store_handle(feature_store: str = "") -> hsfs.feature_store:
     return connection.get_feature_store(feature_store)
 
 
-def get_fg_spark_df(job_conf: Dict[Any, Any]) -> Any:
+def sort_schema(fg_schema: StructType, csv_df_schema: StructType) -> StructType:
+    # The schema order of the fg_schema needs to match the
+    # order of the csv_df_schema
+    csv_df_schema_indices = [
+        csv_df_schema.names.index(field) for field in fg_schema.names
+    ]
+    fg_schema_sorted = sorted(
+        zip(fg_schema.fields, csv_df_schema_indices), key=lambda x: x[1]
+    )
+    return StructType([f[0] for f in fg_schema_sorted])
+
+
+def get_fg_spark_df(job_conf: Dict[Any, Any], fg_schema: StructType) -> Any:
     data_path = job_conf.pop("data_path")
     data_format = job_conf.pop("data_format")
     data_options = job_conf.pop("data_options")
 
-    return spark.read.format(data_format).options(**data_options).load(data_path)
+    csv_df = spark.read.format(data_format).options(**data_options).load(data_path)
+
+    schema = sort_schema(fg_schema, csv_df.schema)
+
+    return (
+        spark.read.format(data_format)
+        .options(**data_options)
+        .schema(schema)
+        .load(data_path)
+    )
 
 
 def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
@@ -42,9 +64,9 @@ def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
 
-    df = get_fg_spark_df(job_conf)
     fg = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
 
+    df = get_fg_spark_df(job_conf, fg.read().schema)
     fg.insert(df, write_options=job_conf.pop("write_options", {}) or {})
 
 
