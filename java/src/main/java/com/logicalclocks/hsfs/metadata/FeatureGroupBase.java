@@ -87,7 +87,6 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
-  @JsonProperty("validationType")
   protected ValidationType validationType = ValidationType.NONE;
 
   @Getter
