@@ -75,4 +75,8 @@ public class FeatureGroupBaseEngine {
     featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());
     featureGroup.getStatisticsConfig().setHistograms(apiFG.getStatisticsConfig().getHistograms());
   }
+
+  public void updateValidationType(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
+    featureGroupApi.updateMetadata(featureGroupBase, "validationType", featureGroupBase.getValidationType());
+  }
 }

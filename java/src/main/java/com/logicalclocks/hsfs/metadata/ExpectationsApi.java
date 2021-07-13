@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.HttpHeaders;
@@ -59,9 +58,9 @@ public class ExpectationsApi {
     return put(featureStore.getProjectId(), featureStore.getId(), expectation);
   }
 
-  public Expectation put(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    return put(featureGroup.getFeatureStore().getProjectId(), featureGroup.getId(),
-      featureGroup.getFeatureStore().getId(), name);
+  public Expectation put(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
+    return put(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getId(),
+            featureGroupBase.getFeatureStore().getId(), name);
   }
 
   private Expectation put(Integer projectId, Integer featurestoreId, Expectation expectation)
@@ -103,27 +102,31 @@ public class ExpectationsApi {
     return hopsworksClient.handleRequest(putRequest, Expectation.class);
   }
 
-  public void detach(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    for (Expectation expectation : get(featureGroup)) {
-      detach(featureGroup, expectation);
+  public void detach(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
+    for (Expectation expectation : get(featureGroupBase)) {
+      detach(featureGroupBase, expectation);
     }
   }
 
-  public void detach(FeatureGroup featureGroup, Expectation expectation) throws FeatureStoreException, IOException {
-    delete(featureGroup.getFeatureStore().getProjectId(), featureGroup.getId(), featureGroup.getFeatureStore().getId(),
-        expectation.getName());
+  public void detach(FeatureGroupBase featureGroupBase, Expectation expectation) throws FeatureStoreException,
+                                                                                        IOException {
+    delete(featureGroupBase.getFeatureStore().getProjectId(),
+           featureGroupBase.getId(),
+           featureGroupBase.getFeatureStore().getId(),
+           expectation.getName());
   }
 
   /**
    * Detach an expectation from a feature group.
-   * @param featureGroup feature group
+   * @param featureGroupBase feature group
    * @param name name of the expectation
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
-  public void detach(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
-    delete(featureGroup.getFeatureStore().getProjectId(), featureGroup.getId(), featureGroup.getFeatureStore().getId(),
-        name);
+  public void detach(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
+    delete(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getId(),
+           featureGroupBase.getFeatureStore().getId(),
+           name);
   }
 
   public void delete(FeatureStore featureStore) throws FeatureStoreException, IOException {
@@ -178,9 +181,9 @@ public class ExpectationsApi {
     return !expectations.isEmpty() ? expectations.get(0) : null;
   }
 
-  public List<Expectation> get(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getId(),
-      featureGroup.getFeatureStore().getId(), null);
+  public List<Expectation> get(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
+    return get(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getId(),
+            featureGroupBase.getFeatureStore().getId(), null);
   }
 
   /**
@@ -197,9 +200,9 @@ public class ExpectationsApi {
     return get(projectId, featuregroupId, featurestoreId, null);
   }
 
-  public Expectation get(FeatureGroup featureGroup, String name) throws FeatureStoreException, IOException {
+  public Expectation get(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
     List<Expectation> expectations =
-        get(featureGroup.getFeatureStore().getProjectId(), null, featureGroup.getFeatureStore().getId(), name);
+        get(featureGroupBase.getFeatureStore().getProjectId(), null, featureGroupBase.getFeatureStore().getId(), name);
     return !expectations.isEmpty() ? expectations.get(0) : null;
   }
 

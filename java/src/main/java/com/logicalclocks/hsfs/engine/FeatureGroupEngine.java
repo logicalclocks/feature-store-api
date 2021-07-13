@@ -278,7 +278,4 @@ public class FeatureGroupEngine {
     return config;
   }
 
-  public void updateValidationType(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    featureGroupApi.updateMetadata(featureGroup, "validationType", featureGroup.getValidationType());
-  }
 }

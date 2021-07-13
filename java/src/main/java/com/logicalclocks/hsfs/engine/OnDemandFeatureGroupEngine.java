@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -32,13 +33,18 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   public void saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
       throws FeatureStoreException, IOException {
+    Dataset<Row> onDemandDataset = null;
     if (onDemandFeatureGroup.getFeatures() == null) {
-      Dataset<Row> onDemandDataset = SparkEngine.getInstance()
+      onDemandDataset = SparkEngine.getInstance()
           .registerOnDemandTemporaryTable(onDemandFeatureGroup, "read_ondmd");
       onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
     }
 
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);
     onDemandFeatureGroup.setId(apiFg.getId());
+
+    if (onDemandFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
+      onDemandFeatureGroup.validateOnDemand(onDemandDataset);
+    }
   }
 }
