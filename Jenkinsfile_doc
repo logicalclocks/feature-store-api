@@ -44,7 +44,7 @@ pipeline {
                   git checkout tmp
 
                   export VERSION=\$(cat version.log)
-                  mike deploy \$VERSION dev -u --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
+                  mike deploy \$VERSION latest -u --push -r https://hopsworksjenkins:$token@github.com/logicalclocks/feature-store-api
                 '''
             }
         }
