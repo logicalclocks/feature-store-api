@@ -3460,7 +3460,9 @@ arguments.</p>
 <h3 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">#</a></h3>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L706">[source]</a></span></p>
 <h3 id="arguments">arguments<a class="headerlink" href="#arguments" title="Permanent link">#</a></h3>
-<p>Additional JDBC, REDSHIFT, or Snowflake arguments.</p>
+<p>Additional JDBC arguments. When running hsfs with PySpark/Spark in Hopsworks,
+the driver is automatically provided in the classpath but you need to set the <code>driver</code> argument to
+<code>com.mysql.cj.jdbc.Driver</code> when creating the Storage Connector</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L701">[source]</a></span></p>
 <h3 id="connection_string">connection_string<a class="headerlink" href="#connection_string" title="Permanent link">#</a></h3>
@@ -3479,13 +3481,13 @@ arguments.</p>
 <p>Name of the storage connector.</p>
 <hr />
 <h3 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L722">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L724">[source]</a></span></p>
 <h3 id="read_1">read<a class="headerlink" href="#read_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Reads a query into a dataframe using the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L711">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L713">[source]</a></span></p>
 <h3 id="spark_options_1">spark_options<a class="headerlink" href="#spark_options_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
