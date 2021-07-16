@@ -705,7 +705,9 @@ class JdbcConnector(StorageConnector):
 
     @property
     def arguments(self):
-        """Additional JDBC, REDSHIFT, or Snowflake arguments."""
+        """Additional JDBC arguments. When running hsfs with PySpark/Spark in Hopsworks,
+        the driver is automatically provided in the classpath but you need to set the `driver` argument to
+        `com.mysql.cj.jdbc.Driver` when creating the Storage Connector"""
         return self._arguments
 
     def spark_options(self):

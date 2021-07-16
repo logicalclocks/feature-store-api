@@ -47,6 +47,9 @@ class FeatureGroupBase:
         self._expectations_api = expectations_api.ExpectationsApi(
             featurestore_id, "featuregroups"
         )
+        self._data_validation_engine = data_validation_engine.DataValidationEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -266,6 +269,69 @@ class FeatureGroupBase:
         self._feature_group_engine.update_description(self, description)
         return self
 
+    def attach_expectation(self, expectation):
+        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.attach(self, expectation.name)
+
+    def detach_expectation(self, expectation):
+        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.detach(self, expectation.name)
+
+    def get_expectations(self):
+        """Get all feature group expectations.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. A list of expectation metadata objects.
+
+        """
+        return self._expectations_api.get(feature_group=self)
+
+    def get_expectation(self, name: str):
+        """Get attached expectation by name for this feature group. Name is unique across a feature store.
+
+        # Arguments
+            name: The expectation name.
+
+        # Returns
+            `Expectation`. The expectation metadata object.
+
+        """
+        return self._expectations_api.get(name, self)
+
+    def get_validations(self, validation_time=None, commit_time=None):
+        """Get feature group data validation results based on the attached expectations
+
+        # Arguments
+           validation_time: The data validation time, when the data validation started.
+           commit_time: The commit time of a time travel enabled feature group.
+
+        # Returns
+           `FeatureGroupValidation`. The feature group validation metadata object.
+
+        """
+        return self._data_validation_engine.get_validations(
+            self, validation_time, commit_time
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -443,9 +509,6 @@ class FeatureGroup(FeatureGroupBase):
             )
             self.statistics_config = statistics_config
 
-        self._data_validation_engine = data_validation_engine.DataValidationEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
         self._validation_type = validation_type.upper()
         if expectations is not None:
             self._expectations_names = [
@@ -904,80 +967,21 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def attach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.attach(self, expectation.name)
-
-    def detach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.detach(self, expectation.name)
-
-    def get_expectations(self):
-        """Get all feature group expectations.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. A list of expectation metadata objects.
-
-        """
-        return self._expectations_api.get(feature_group=self)
-
-    def get_expectation(self, name: str):
-        """Get attached expectation by name for this feature group. Name is unique across a feature store.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.get(name, self)
-
-    def validate(self, dataframe: TypeVar("pyspark.sql.DataFrame")):  # noqa: F821
+    def validate(
+        self, dataframe: TypeVar("pyspark.sql.DataFrame") = None  # noqa: F821
+    ):
         """Run validation based on the attached expectations
 
         # Arguments
-            dataframe: The PySpark dataframe to run the data validation expecations against.
+            dataframe: The PySpark dataframe to run the data validation expectations against.
 
         # Returns
             `FeatureGroupValidation`. The feature group validation metadata object.
 
         """
+        if dataframe is None:
+            dataframe = self.read()
         return self._data_validation_engine.validate(self, dataframe)
-
-    def get_validations(self, validation_time=None, commit_time=None):
-        """Get feature group data validation results based on the attached expectations
-
-        # Arguments
-           validation_time: The data validation time, when the data validation started.
-           commit_time: The commit time of a time travel enabled feature group.
-
-        # Returns
-           `FeatureGroupValidation`. The feature group validation metadata object.
-
-        """
-        return self._data_validation_engine.get_validations(
-            self, validation_time, commit_time
-        )
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the
@@ -1221,7 +1225,7 @@ class FeatureGroup(FeatureGroupBase):
             self._validation_type = "NONE"
         else:
             self._validation_type = new_validation_type.upper()
-        self._feature_group_engine.update_config(self, "validationType")
+        self._feature_group_engine.update_validation_type(self)
 
     @expectations_names.setter
     def expectations_names(self, new_expectations_names):
@@ -1249,6 +1253,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         statistics_config=None,
+        validation_type="NONE",
+        expectations=None,
     ):
         super().__init__(featurestore_id)
 
@@ -1260,7 +1266,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._version = version
         self._name = name
         self._query = query
-        self._data_format = data_format
+        self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
 
@@ -1293,12 +1299,21 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
+        self._validation_type = validation_type.upper()
+        if expectations is not None:
+            self._expectations_names = [
+                expectation.name for expectation in expectations
+            ]
+        else:
+            self._expectations_names = []
 
     def save(self):
         self._feature_group_engine.save(self)
+        if self._validation_type != "NONE":
+            self.validate()
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read())
+            self._statistics_engine.compute_statistics(self, self.read)
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
@@ -1319,6 +1334,15 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             ),
         )
         return self.select_all().show(n)
+
+    def validate(self):  # noqa: F821
+        """Run validation based on the attached expectations
+
+        # Returns
+            `FeatureGroupValidation`. The feature group validation metadata object.
+
+        """
+        return self._data_validation_engine.validate(self, self.read())
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -1354,6 +1378,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "validationType": self._validation_type,
+            "expectationsNames": self._expectations_names,
         }
 
     @property
@@ -1404,6 +1430,16 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     def created(self):
         return self._created
 
+    @property
+    def validation_type(self):
+        """Validation type, one of "STRICT", "WARNING", "ALL", "NONE"."""
+        return self._validation_type
+
+    @property
+    def expectations_names(self):
+        """The names of expectations attached to this feature group."""
+        return self._expectations_names
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -1415,3 +1451,15 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @features.setter
     def features(self, new_features):
         self._features = new_features
+
+    @validation_type.setter
+    def validation_type(self, new_validation_type):
+        if new_validation_type is None:
+            self._validation_type = "NONE"
+        else:
+            self._validation_type = new_validation_type.upper()
+        self._feature_group_engine.update_validation_type(self)
+
+    @expectations_names.setter
+    def expectations_names(self, new_expectations_names):
+        self._expectations_names = new_expectations_names

@@ -19,6 +19,7 @@ import numpy as np
 import boto3
 import time
 
+from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
@@ -81,7 +82,7 @@ class Engine:
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
         elif data_format.lower() == "parquet":
-            return pd.read_parquet(obj)
+            return pd.read_parquet(BytesIO(obj.read()))
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
