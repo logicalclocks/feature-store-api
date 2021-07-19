@@ -37,7 +37,8 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id):
+    def __init__(self, featurestore_id, validation_type):
+        self._validation_type = validation_type.upper()
         self._feature_group_base_engine = (
             feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
@@ -258,7 +259,7 @@ class FeatureGroupBase:
         return self
 
     def update_description(self, description: str):
-        """Update the description of the feature gorup.
+        """Update the description of the feature group.
 
         # Arguments
             description: str. New description string.
@@ -270,7 +271,8 @@ class FeatureGroupBase:
         return self
 
     def attach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+        """Attach a feature group expectation. If feature group validation is not already enabled, it will be enabled
+        and set to the stricter setting.
 
         # Arguments
             name: The expectation name.
@@ -279,10 +281,14 @@ class FeatureGroupBase:
             `Expectation`. The expectation metadata object.
 
         """
+        # Turn on validation for this FG and set stricter setting
+        if self._validation_type == "NONE":
+            self._validation_type = "STRICT"
+
         return self._expectations_api.attach(self, expectation.name)
 
     def detach_expectation(self, expectation):
-        """Get feature group expectations. Gets all expectations if no expectation name is specified.
+        """Remove an expectation from a feature group.
 
         # Arguments
             name: The expectation name.
@@ -318,7 +324,7 @@ class FeatureGroupBase:
         return self._expectations_api.get(name, self)
 
     def get_validations(self, validation_time=None, commit_time=None):
-        """Get feature group data validation results based on the attached expectations
+        """Get feature group data validation results based on the attached expectations.
 
         # Arguments
            validation_time: The data validation time, when the data validation started.
@@ -452,7 +458,7 @@ class FeatureGroup(FeatureGroupBase):
         expectations=None,
         online_topic_name=None,
     ):
-        super().__init__(featurestore_id)
+        super().__init__(featurestore_id, validation_type)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -509,7 +515,6 @@ class FeatureGroup(FeatureGroupBase):
             )
             self.statistics_config = statistics_config
 
-        self._validation_type = validation_type.upper()
         if expectations is not None:
             self._expectations_names = [
                 expectation.name for expectation in expectations
@@ -1256,7 +1261,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
     ):
-        super().__init__(featurestore_id)
+        super().__init__(featurestore_id, validation_type)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -1299,7 +1304,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-        self._validation_type = validation_type.upper()
+
         if expectations is not None:
             self._expectations_names = [
                 expectation.name for expectation in expectations
