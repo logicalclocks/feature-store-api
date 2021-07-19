@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
@@ -95,6 +96,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+  private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -222,6 +224,7 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
+    codeEngine.computeCode(this, featureData, null);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
@@ -288,7 +291,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
     featureGroupEngine.insert(this, featureData, storage, operation,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
-
+    codeEngine.computeCode(this, featureData, null);
     computeStatistics();
   }
 

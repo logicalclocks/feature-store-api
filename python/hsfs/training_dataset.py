@@ -30,6 +30,7 @@ from hsfs.core import (
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
+    code_engine,
     transformation_function_engine,
 )
 from hsfs.constructor import query
@@ -90,6 +91,10 @@ class TrainingDataset:
         )
 
         self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
+        self._code_engine = code_engine.CodeEngine(
             featurestore_id, self.ENTITY_TYPE
         )
 
@@ -166,6 +171,7 @@ class TrainingDataset:
         td_job = self._training_dataset_engine.save(self, features, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
+        self._code_engine.compute_code(self, features)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             self._statistics_engine.compute_statistics(self, self.read())
         if user_version is None:
@@ -224,6 +230,7 @@ class TrainingDataset:
             self, features, write_options, overwrite
         )
 
+        self._code_engine.compute_code(self, features)
         self.compute_statistics()
 
         return td_job

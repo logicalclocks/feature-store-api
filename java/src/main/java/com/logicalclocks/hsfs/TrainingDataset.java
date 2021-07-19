@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -131,6 +132,7 @@ public class TrainingDataset {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
+  private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
   private Utils utils = new Utils();
 
   @Builder
@@ -199,6 +201,7 @@ public class TrainingDataset {
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.save(this, dataset, writeOptions, label);
+    codeEngine.computeCode(this, dataset);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, dataset);
     }
@@ -257,6 +260,7 @@ public class TrainingDataset {
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.insert(this, dataset,
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
+    codeEngine.computeCode(this, dataset);
     computeStatistics();
   }
 
