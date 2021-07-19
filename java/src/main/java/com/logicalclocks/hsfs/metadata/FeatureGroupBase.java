@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -207,7 +208,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features));
   }
 
@@ -219,7 +220,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(Feature features) throws FeatureStoreException, IOException {
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
     featureGroupBaseEngine.appendFeatures(this, featureList);
