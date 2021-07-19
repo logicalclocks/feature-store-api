@@ -24,7 +24,7 @@ class Code:
     def __init__(
         self,
         commit_time,
-        content=None,
+        content="",
         feature_group_commit_id=None,
         href=None,
         expand=None,
