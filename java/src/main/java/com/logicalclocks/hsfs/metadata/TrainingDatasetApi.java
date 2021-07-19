@@ -183,7 +183,7 @@ public class TrainingDatasetApi {
     hopsworksClient.handleRequest(deleteRequest);
   }
 
-  public TrainingDataset getTransformationFunctions(TrainingDataset trainingDataset)
+  public List<TransformationFunctionAttached> getTransformationFunctions(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -197,6 +197,8 @@ public class TrainingDatasetApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), TrainingDataset.class);
+    TransformationFunctionAttached transformationFunctionAttached =
+        hopsworksClient.handleRequest(new HttpGet(uri), TransformationFunctionAttached.class);
+    return transformationFunctionAttached.getItems();
   }
 }
