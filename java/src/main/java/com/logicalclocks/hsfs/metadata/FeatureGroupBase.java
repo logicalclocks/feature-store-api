@@ -342,6 +342,10 @@ public class FeatureGroupBase {
   }
 
   public Expectation attachExpectation(String name) throws FeatureStoreException, IOException {
+    // Turn on validation for this FG and set stricter setting
+    if (validationType == ValidationType.NONE) {
+      updateValidationType(ValidationType.STRICT);
+    }
     return expectationsApi.put(this, name);
   }
 
