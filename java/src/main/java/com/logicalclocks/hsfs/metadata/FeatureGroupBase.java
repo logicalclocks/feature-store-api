@@ -388,7 +388,22 @@ public class FeatureGroupBase {
   }
 
   protected FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return DataValidationEngine.getInstance().validate(data, this, expectationsApi.get(this));
+    // Check if an expectation contains features. If it does not, try to use all the current FG features
+    List<Expectation> expectations = expectationsApi.get(this);
+    final List<String> features = new ArrayList<>();
+    LOGGER.debug("validate :: expectations = " + expectations);
+    for (Expectation expectation : expectations) {
+      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
+        // Get all feature names from FG
+        LOGGER.debug("validate :: getFeatures = " + getFeatures());
+        if (features.isEmpty()) {
+          getFeatures().stream().forEach(x -> features.add(x.getName()));
+        }
+        expectation.setFeatures(features);
+        LOGGER.debug("validate :: expectation = " + expectation);
+      }
+    }
+    return DataValidationEngine.getInstance().validate(data, this, expectations);
   }
 
   public FeatureGroupValidation validateOnDemand(Dataset<Row> data) throws FeatureStoreException, IOException {
