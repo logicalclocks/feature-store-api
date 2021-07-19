@@ -24,7 +24,7 @@ class Code:
     def __init__(
         self,
         commit_time,
-        content="",
+        content=None,
         feature_group_commit_id=None,
         href=None,
         expand=None,
@@ -34,7 +34,7 @@ class Code:
     ):
         self._commit_time = commit_time
         self._feature_group_commit_id = feature_group_commit_id
-        self._content = json.loads(content)
+        self._content = "" if content is None else json.loads(content)
 
     @classmethod
     def from_response_json(cls, json_dict):
