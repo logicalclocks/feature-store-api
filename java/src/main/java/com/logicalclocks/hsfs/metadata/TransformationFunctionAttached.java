@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.logicalclocks.hsfs.metadata.RestDto;
+import com.logicalclocks.hsfs.TransformationFunction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,23 +28,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TransformationFunction extends RestDto<TransformationFunction> {
-  @Getter
-  @Setter
-  private Integer id;
+public class TransformationFunctionAttached  extends RestDto<TransformationFunctionAttached> {
   @Getter
   @Setter
   private String name;
+
   @Getter
   @Setter
-  private String outputType;
-  @Getter
-  @Setter
-  private Integer version;
-  @Getter
-  @Setter
-  private String sourceCodeContent;
-  @Getter
-  @Setter
-  private Integer featurestoreId;
+  private TransformationFunction transformationFunction;
 }
