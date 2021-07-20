@@ -37,6 +37,10 @@ public class Code extends RestDto<Code> {
 
   @Getter
   @Setter
+  private String applicationId;
+
+  @Getter
+  @Setter
   private String content;
 }
 

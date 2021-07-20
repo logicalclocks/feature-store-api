@@ -61,6 +61,7 @@ class CodeEngine:
             code_entity = code.Code(
                 commit_time=commit_time,
                 feature_group_commit_id=feature_group_commit_id,
+                application_id=os.environ["APPLICATION_WEB_PROXY_BASE"][7:]
             )
             self._code_api.post(metadata_instance, code_entity, os.environ["HOPSWORKS_KERNEL_ID"], "JUPYTER")
             return code_entity

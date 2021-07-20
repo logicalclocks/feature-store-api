@@ -22,7 +22,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;

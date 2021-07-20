@@ -24,6 +24,7 @@ class Code:
     def __init__(
         self,
         commit_time,
+        application_id,
         content=None,
         feature_group_commit_id=None,
         href=None,
@@ -33,6 +34,7 @@ class Code:
         type=None,
     ):
         self._commit_time = commit_time
+        self._application_id = application_id
         self._feature_group_commit_id = feature_group_commit_id
         self._content = "" if content is None else json.loads(content)
 
@@ -48,6 +50,7 @@ class Code:
     def to_dict(self):
         return {
             "commitTime": self._commit_time,
+            "applicationId": self._application_id,
             "featureGroupCommitId": self._feature_group_commit_id,
             "content": json.dumps(self._content),
         }
@@ -58,6 +61,10 @@ class Code:
     @property
     def commit_time(self):
         return self._commit_time
+
+    @property
+    def application_id(self):
+        return self._application_id
 
     @property
     def feature_group_commit_id(self):

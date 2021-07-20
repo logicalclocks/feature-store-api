@@ -68,6 +68,6 @@ public class CodeEngine {
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
-    return new Code(commitTime, commitId, content);
+    return new Code(commitTime, commitId, content, System.getenv("APPLICATION_WEB_PROXY_BASE").substring(7));
   }
 }
