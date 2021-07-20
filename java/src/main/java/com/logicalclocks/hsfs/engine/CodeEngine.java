@@ -67,7 +67,6 @@ public class CodeEngine {
               + "possible cause might be that you inserted only data to the online storage of a feature group.");
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
-    return new Code(commitTime, commitId, content, System.getenv("APPLICATION_WEB_PROXY_BASE").substring(7));
+    return new Code(commitTime, commitId, System.getenv("APPLICATION_WEB_PROXY_BASE").substring(7), "");
   }
 }
