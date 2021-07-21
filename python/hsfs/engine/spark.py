@@ -412,11 +412,11 @@ class Engine:
             .load(path)
         )
 
-    def profile(self, dataframe, relevant_columns, correlations, histograms, optimize=False, uniqueness_cols=[]):
+    def profile(self, dataframe, relevant_columns, correlations, histograms, exact_uniqueness=True):
         """Profile a dataframe with Deequ."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms, optimize, uniqueness_cols
+                dataframe._jdf, relevant_columns, correlations, histograms, exact_uniqueness
             )
         )
 
