@@ -709,7 +709,7 @@ class FeatureGroup(FeatureGroupBase):
 
         # fg_job is used only if the hive engine is used
         fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
-        self._code_engine.compute_code(self, feature_dataframe)
+        self._code_engine.compute_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Hive engine, the computation happens in the Hopsworks application
@@ -796,7 +796,7 @@ class FeatureGroup(FeatureGroupBase):
             write_options,
         )
 
-        self._code_engine.compute_code(self, feature_dataframe)
+        self._code_engine.compute_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Hive, the statistics are computed by the application doing the insert

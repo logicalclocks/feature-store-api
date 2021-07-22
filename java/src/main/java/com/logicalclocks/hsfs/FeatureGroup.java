@@ -224,7 +224,7 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
         writeOptions);
-    codeEngine.computeCode(this, featureData, null);
+    codeEngine.computeCode(this, null);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
@@ -291,7 +291,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
     featureGroupEngine.insert(this, featureData, storage, operation,
         overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
-    codeEngine.computeCode(this, featureData, null);
+    codeEngine.computeCode(this, null);
     computeStatistics();
   }
 

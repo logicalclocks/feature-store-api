@@ -22,15 +22,12 @@ import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.Code;
 import com.logicalclocks.hsfs.metadata.CodeApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class CodeEngine {
 
@@ -42,30 +39,19 @@ public class CodeEngine {
     this.codeApi = new CodeApi(entityType);
   }
 
-  public Code computeCode(TrainingDataset trainingDataset, Dataset<Row> dataFrame)
+  public Code computeCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
-    return codeApi.post(trainingDataset, computeCode(dataFrame,
-            trainingDataset.getStatisticsConfig().getColumns(),
-            trainingDataset.getStatisticsConfig().getHistograms(),
-            trainingDataset.getStatisticsConfig().getCorrelations(),
-            null), System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
+    return codeApi.post(trainingDataset, computeCode((Long) null),
+            System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
   }
 
-  public Code computeCode(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
+  public Code computeCode(FeatureGroupBase featureGroup, Long commitId)
           throws FeatureStoreException, IOException {
-    return codeApi.post(featureGroup, computeCode(dataFrame,
-            featureGroup.getStatisticsConfig().getColumns(),
-            featureGroup.getStatisticsConfig().getHistograms(),
-            featureGroup.getStatisticsConfig().getCorrelations(),
-            commitId), System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
+    return codeApi.post(featureGroup, computeCode(commitId),
+            System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
   }
 
-  private Code computeCode(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
-                           Boolean correlations, Long commitId) throws FeatureStoreException {
-    if (dataFrame.isEmpty()) {
-      throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
-              + "possible cause might be that you inserted only data to the online storage of a feature group.");
-    }
+  private Code computeCode(Long commitId) {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     return new Code(commitTime, commitId, System.getenv("APPLICATION_WEB_PROXY_BASE").substring(7), "");
   }

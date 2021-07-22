@@ -1,4 +1,3 @@
-#
 #   Copyright 2020 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -171,7 +170,7 @@ class TrainingDataset:
         td_job = self._training_dataset_engine.save(self, features, write_options)
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
-        self._code_engine.compute_code(self, features)
+        self._code_engine.compute_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             self._statistics_engine.compute_statistics(self, self.read())
         if user_version is None:
@@ -230,7 +229,7 @@ class TrainingDataset:
             self, features, write_options, overwrite
         )
 
-        self._code_engine.compute_code(self, features)
+        self._code_engine.compute_code(self)
         self.compute_statistics()
 
         return td_job

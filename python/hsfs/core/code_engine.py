@@ -16,9 +16,8 @@
 
 import datetime
 
-from hsfs import engine, code, util
+from hsfs import code
 from hsfs.core import code_api
-from hsfs.client import exceptions
 import os
 
 
@@ -32,40 +31,9 @@ class CodeEngine:
         self, metadata_instance, feature_dataframe=None, feature_group_commit_id=None
     ):
         """Compute code for a dataframe and send the result json to Hopsworks."""
-        if engine.get_type() == "spark":
-
-            # If the feature dataframe is None, then trigger a read on the metadata instance
-            # We do it here to avoid making a useless request when using the Hive engine
-            # and calling compute_code
-            if feature_dataframe is None:
-                if feature_group_commit_id is not None:
-                    feature_dataframe = (
-                        metadata_instance.select_all()
-                        .as_of(
-                            util.get_hudi_datestr_from_timestamp(
-                                feature_group_commit_id
-                            )
-                        )
-                        .read(online=False, dataframe_type="default", read_options={})
-                    )
-                else:
-                    feature_dataframe = metadata_instance.read()
-
-            commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
-            if len(feature_dataframe.head(1)) == 0:
-                raise exceptions.FeatureStoreException(
-                    "There is no data in the entity that you are trying to compute "
-                    "code for. A possible cause might be that you inserted only data "
-                    "to the online storage of a feature group."
-                )
-            code_entity = code.Code(
-                commit_time=commit_time,
-                feature_group_commit_id=feature_group_commit_id,
-                application_id=os.environ["APPLICATION_WEB_PROXY_BASE"][7:],
-            )
-            self._code_api.post(metadata_instance, code_entity, os.environ["HOPSWORKS_KERNEL_ID"], "JUPYTER")
-            return code_entity
-
-        else:
-            # Hive engine
-            engine.get_instance().profile(metadata_instance)
+        code_entity = code.Code(
+            commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
+            feature_group_commit_id=feature_group_commit_id,
+            application_id=os.environ["APPLICATION_WEB_PROXY_BASE"][7:],
+        )
+        self._code_api.post(metadata_instance, code_entity, os.environ["HOPSWORKS_KERNEL_ID"], "JUPYTER")
