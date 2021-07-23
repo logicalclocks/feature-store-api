@@ -47,28 +47,28 @@ public class CodeEngine {
     if(kernelId == null || kernelId.isEmpty()){
       return null;
     }
-    return codeApi.post(trainingDataset, saveCode((Long) null),
+    return codeApi.post(trainingDataset, saveCode(),
             kernelId, RunType.JUPYTER.toString());
   }
 
-  public Code saveCode(FeatureGroupBase featureGroup, Long commitId)
+  public Code saveCode(FeatureGroupBase featureGroup)
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(kernelEnv);
     if(kernelId == null || kernelId.isEmpty()){
       return null;
     }
-    return codeApi.post(featureGroup, saveCode(commitId),
+    return codeApi.post(featureGroup, saveCode(),
             kernelId, RunType.JUPYTER.toString());
   }
 
-  private Code saveCode(Long commitId) {
+  private Code saveCode() {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
     String webProxy = System.getenv(webProxyEnv);
     if(webProxy != null && !webProxy.isEmpty()){
       applicationId = webProxy.substring(7);
     }
-    return new Code(commitTime, commitId, applicationId, "");
+    return new Code(commitTime, null, applicationId, "");
   }
 
   enum RunType{

@@ -15,7 +15,6 @@
 #
 
 from hsfs import client, code
-from hsfs.core import job
 
 
 class CodeApi:

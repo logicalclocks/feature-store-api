@@ -31,9 +31,7 @@ class CodeEngine:
             feature_store_id, entity_type
         )
 
-    def save_code(
-        self, metadata_instance, feature_dataframe=None, feature_group_commit_id=None
-    ):
+    def save_code(self, metadata_instance):
         """Compute code for a dataframe and send the result json to Hopsworks."""
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
         if not kernel_id:
@@ -42,7 +40,6 @@ class CodeEngine:
         application_id = None if web_proxy is None else web_proxy[7:]
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
-            feature_group_commit_id=feature_group_commit_id,
             application_id=application_id,
         )
         self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
