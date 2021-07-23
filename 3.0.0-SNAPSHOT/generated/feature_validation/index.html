@@ -2140,7 +2140,8 @@ Accepted types are: Null, Fractional, Integral, Boolean, String</p>
 <hr />
 <h1 id="expectations">Expectations<a class="headerlink" href="#expectations" title="Permanent link">#</a></h1>
 <p>A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
-and can be attached to multiple feature groups. An expectation contains a list of featues it is applied to.
+and can be attached to multiple feature groups. If an expectation contains no features, it will be applied to all the
+features of the feature group when the validation is done An expectation contains a list of featues it is applied to.
 If the feature group the expectation is attached to, does not contain all the expectations features, the expectation
 will not be met.</p>
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
@@ -2164,6 +2165,25 @@ will not be met.</p>
                           <span class="o">.</span><span class="n">features</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">&quot;salary&quot;</span><span class="o">,</span> <span class="s">&quot;commission&quot;</span><span class="o">))</span>
                           <span class="o">.</span><span class="n">build</span><span class="o">())</span>
 <span class="n">expectationSales</span><span class="o">.</span><span class="n">save</span><span class="o">()</span>
+</code></pre></div>
+</div>
+</div>
+<p>Create an expectation with a rule to assert that no feature has a null value:</p>
+<div class="tabbed-set" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><label for="__tabbed_6_1">Python</label><div class="tabbed-content">
+<div class="highlight"><pre><span></span><code><span class="n">expectation_notnull</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="s2">&quot;not_null&quot;</span><span class="p">,</span>
+                                            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Assert no feature is null&quot;</span><span class="p">,</span>
+                                            <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_DATATYPE&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">accepted_type</span><span class="o">=</span><span class="s2">&quot;Null&quot;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">expectation_notnull</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><label for="__tabbed_6_2">Scala</label><div class="tabbed-content">
+<div class="highlight"><pre><span></span><code><span class="k">val</span> <span class="n">expectationNotNull</span> <span class="o">=</span> <span class="o">(</span><span class="n">fs</span><span class="o">.</span><span class="n">createExpectation</span><span class="o">()</span>
+                            <span class="o">.</span><span class="n">rules</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span>
+                                <span class="nc">Rule</span><span class="o">.</span><span class="n">createRule</span><span class="o">(</span><span class="nc">RuleName</span><span class="o">.</span><span class="nc">HAS_DATATYPE</span><span class="o">).</span><span class="n">max</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="n">acceptedType</span><span class="o">(</span><span class="nc">AcceptedType</span><span class="o">.</span><span class="nc">Null</span><span class="o">).</span><span class="n">level</span><span class="o">(</span><span class="nc">Level</span><span class="o">.</span><span class="nc">ERROR</span><span class="o">).</span><span class="n">build</span><span class="o">()))</span>
+                            <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;not_null&quot;</span><span class="o">)</span>
+                            <span class="o">.</span><span class="n">description</span><span class="o">(</span><span class="s">&quot;Assert no feature is null&quot;</span><span class="o">)</span>
+                            <span class="o">.</span><span class="n">build</span><span class="o">())</span>
+<span class="n">expectationNotNull</span><span class="o">.</span><span class="n">save</span><span class="o">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -2246,13 +2266,14 @@ so you can subsequently add features and/or rules and save it which will overwri
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation.py#L89">[source]</a></span></p>
 <h3 id="features">features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
-<p>List of features this expectation is applied to.</p>
+<p>Optional list of features this expectation is applied to. If no features are provided, the expectation
+will be applied to all the feature group features.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation.py#L71">[source]</a></span></p>
 <h3 id="name_2">name<a class="headerlink" href="#name_2" title="Permanent link">#</a></h3>
 <p>Name of the expectation, unique per feature store (project).</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation.py#L98">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation.py#L99">[source]</a></span></p>
 <h3 id="rules_1">rules<a class="headerlink" href="#rules_1" title="Permanent link">#</a></h3>
 <p>List of rules applied to the features of the expectation.</p>
 <hr />
@@ -2277,11 +2298,11 @@ The list of allowed validation types are:</p>
 <li>NONE: Data validation not performed on feature group</li>
 </ul>
 <p>For example, to update the validation type to all:</p>
-<div class="tabbed-set" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><label for="__tabbed_6_1">Python</label><div class="tabbed-content">
+<div class="tabbed-set" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><label for="__tabbed_7_1">Python</label><div class="tabbed-content">
 <div class="highlight"><pre><span></span><code><span class="n">fg</span><span class="o">.</span><span class="n">validation_type</span> <span class="o">=</span> <span class="s2">&quot;ALL&quot;</span>
 </code></pre></div>
 </div>
-<input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><label for="__tabbed_6_2">Scala</label><div class="tabbed-content">
+<input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><label for="__tabbed_7_2">Scala</label><div class="tabbed-content">
 <div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs.metadata.validation._</span>
 <span class="n">fg</span><span class="o">.</span><span class="n">updateValidationType</span><span class="o">(</span><span class="nc">ValidationType</span><span class="o">.</span><span class="nc">ALL</span><span class="o">)</span>
 </code></pre></div>
@@ -2289,7 +2310,7 @@ The list of allowed validation types are:</p>
 </div>
 <h2 id="validate">Validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h2>
 <p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
-<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L970">[source]</a></span></p>
+<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L975">[source]</a></span></p>
 <h3 id="validate_1">validate<a class="headerlink" href="#validate_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2302,11 +2323,11 @@ The list of allowed validation types are:</p>
 <p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
 <hr />
 <h2 id="retrieval_2">Retrieval<a class="headerlink" href="#retrieval_2" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L320">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L326">[source]</a></span></p>
 <h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-<p>Get feature group data validation results based on the attached expectations</p>
+<p>Get feature group data validation results based on the attached expectations.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>validation_time</strong>: The data validation time, when the data validation started.
