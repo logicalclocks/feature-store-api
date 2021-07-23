@@ -32,6 +32,8 @@ import java.time.LocalDateTime;
 public class CodeEngine {
 
   private CodeApi codeApi;
+  private static String kernelEnv = "HOPSWORKS_KERNEL_ID";
+  private static String webProxyEnv = "APPLICATION_WEB_PROXY_BASE";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
 
@@ -39,20 +41,39 @@ public class CodeEngine {
     this.codeApi = new CodeApi(entityType);
   }
 
-  public Code computeCode(TrainingDataset trainingDataset)
+  public Code saveCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
-    return codeApi.post(trainingDataset, computeCode((Long) null),
-            System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
+    String kernelId = System.getenv(kernelEnv);
+    if(kernelId == null || kernelId.isEmpty()){
+      return null;
+    }
+    return codeApi.post(trainingDataset, saveCode((Long) null),
+            kernelId, RunType.JUPYTER.toString());
   }
 
-  public Code computeCode(FeatureGroupBase featureGroup, Long commitId)
+  public Code saveCode(FeatureGroupBase featureGroup, Long commitId)
           throws FeatureStoreException, IOException {
-    return codeApi.post(featureGroup, computeCode(commitId),
-            System.getenv("HOPSWORKS_KERNEL_ID"), "JUPYTER");
+    String kernelId = System.getenv(kernelEnv);
+    if(kernelId == null || kernelId.isEmpty()){
+      return null;
+    }
+    return codeApi.post(featureGroup, saveCode(commitId),
+            kernelId, RunType.JUPYTER.toString());
   }
 
-  private Code computeCode(Long commitId) {
+  private Code saveCode(Long commitId) {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    return new Code(commitTime, commitId, System.getenv("APPLICATION_WEB_PROXY_BASE").substring(7), "");
+    String applicationId = null;
+    String webProxy = System.getenv(webProxyEnv);
+    if(webProxy != null && !webProxy.isEmpty()){
+      applicationId = webProxy.substring(7);
+    }
+    return new Code(commitTime, commitId, applicationId, "");
+  }
+
+  enum RunType{
+    JUPYTER,
+    JOB,
+    DATABRICKS;
   }
 }

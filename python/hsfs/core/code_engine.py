@@ -22,18 +22,32 @@ import os
 
 
 class CodeEngine:
+    
+    KERNEL_ENV = "HOPSWORKS_KERNEL_ID"
+    WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE"
+    
     def __init__(self, feature_store_id, entity_type):
         self._code_api = code_api.CodeApi(
             feature_store_id, entity_type
         )
 
-    def compute_code(
+    def save_code(
         self, metadata_instance, feature_dataframe=None, feature_group_commit_id=None
     ):
         """Compute code for a dataframe and send the result json to Hopsworks."""
+        kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
+        if not kernel_id:
+            return
+        web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
+        application_id = None if web_proxy is None else web_proxy[7:]
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
             feature_group_commit_id=feature_group_commit_id,
-            application_id=os.environ["APPLICATION_WEB_PROXY_BASE"][7:],
+            application_id=application_id,
         )
-        self._code_api.post(metadata_instance, code_entity, os.environ["HOPSWORKS_KERNEL_ID"], "JUPYTER")
+        self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
+    
+class RunType:
+    JUPYTER = "JUPYTER"
+    JOB = "JOB"
+    DATABRICKS = "DATABRICKS"

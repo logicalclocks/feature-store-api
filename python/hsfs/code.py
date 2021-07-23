@@ -15,7 +15,6 @@
 #
 
 import json
-import humps
 
 from hsfs import util
 
@@ -36,23 +35,12 @@ class Code:
         self._commit_time = commit_time
         self._application_id = application_id
         self._feature_group_commit_id = feature_group_commit_id
-        self._content = "" if content is None else json.loads(content)
-
-    @classmethod
-    def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        # Currently getting multiple commits at the same time is not allowed
-        if json_decamelized["count"] == 0:
-            return None
-        elif len(json_decamelized["items"]) == 1:
-            return cls(**json_decamelized["items"][0])
 
     def to_dict(self):
         return {
             "commitTime": self._commit_time,
             "applicationId": self._application_id,
             "featureGroupCommitId": self._feature_group_commit_id,
-            "content": json.dumps(self._content),
         }
 
     def json(self):

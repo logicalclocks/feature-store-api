@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
@@ -67,6 +68,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
 
   private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();
+  private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   @Builder
   public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
@@ -102,7 +104,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
   public void save() throws FeatureStoreException, IOException {
     onDemandFeatureGroupEngine.saveFeatureGroup(this);
-
+    codeEngine.saveCode(this, null);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, read(), null);
     }

@@ -201,7 +201,7 @@ public class TrainingDataset {
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.save(this, dataset, writeOptions, label);
-    codeEngine.computeCode(this);
+    codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, dataset);
     }
@@ -260,7 +260,7 @@ public class TrainingDataset {
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.insert(this, dataset,
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
-    codeEngine.computeCode(this);
+    codeEngine.saveCode(this);
     computeStatistics();
   }
 
