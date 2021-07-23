@@ -34,13 +34,11 @@ class Code:
     ):
         self._commit_time = commit_time
         self._application_id = application_id
-        self._feature_group_commit_id = feature_group_commit_id
 
     def to_dict(self):
         return {
             "commitTime": self._commit_time,
             "applicationId": self._application_id,
-            "featureGroupCommitId": self._feature_group_commit_id,
         }
 
     def json(self):
