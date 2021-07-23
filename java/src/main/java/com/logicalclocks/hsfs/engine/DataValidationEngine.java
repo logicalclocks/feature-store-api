@@ -20,10 +20,10 @@ import com.amazon.deequ.checks.Check;
 import com.amazon.deequ.checks.CheckResult;
 import com.amazon.deequ.constraints.ConstraintResult;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationResult;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
 import com.logicalclocks.hsfs.metadata.ValidationResult;
@@ -59,10 +59,11 @@ public class DataValidationEngine {
   private final FeatureGroupValidationsApi featureGroupValidationsApi =
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
-  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroup featureGroup, List<Expectation> expectations)
+  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
+                                         List<Expectation> expectations)
       throws FeatureStoreException, IOException {
     List<ExpectationResult> expectationResults = validate(data, expectations);
-    return featureGroupValidationsApi.put(featureGroup,
+    return featureGroupValidationsApi.put(featureGroupBase,
       FeatureGroupValidation.builder()
         .validationTime(Instant.now().toEpochMilli())
         .expectationResults(expectationResults).build());
@@ -227,14 +228,15 @@ public class DataValidationEngine {
     return expectationResults;
   }
 
-  public List<FeatureGroupValidation> getValidations(FeatureGroup featureGroup)
+  public List<FeatureGroupValidation> getValidations(FeatureGroupBase featureGroupBase)
       throws FeatureStoreException, IOException {
-    return featureGroupValidationsApi.get(featureGroup);
+    return featureGroupValidationsApi.get(featureGroupBase);
   }
 
-  public FeatureGroupValidation getValidation(FeatureGroup featureGroup, ImmutablePair<ValidationTimeType, Long> pair)
+  public FeatureGroupValidation getValidation(FeatureGroupBase featureGroupBase, ImmutablePair<ValidationTimeType,
+                                              Long> pair)
       throws FeatureStoreException, IOException {
-    return featureGroupValidationsApi.get(featureGroup, pair);
+    return featureGroupValidationsApi.get(featureGroupBase, pair);
   }
 
   public RuleName getRuleNameFromDeequ(String rule) {

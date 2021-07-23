@@ -129,7 +129,8 @@ class Rule:
 
     @property
     def accepted_type(self):
-        """Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule."""
+        """Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule.
+        Accepted types are: Null, Fractional, Integral, Boolean, String"""
         return self._accepted_type
 
     @accepted_type.setter

@@ -52,3 +52,12 @@ class FeatureGroupBaseEngine:
         self._feature_group_api.update_metadata(
             feature_group, feature_group, "updateStatsConfig"
         )
+
+    def update_validation_type(self, feature_group):
+        """Update the metadata attribute specified of the feature group ."""
+        self._feature_group_api.update_metadata(
+            feature_group,
+            feature_group,
+            "validationType",
+            feature_group.validation_type,
+        )

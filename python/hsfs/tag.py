@@ -22,7 +22,15 @@ from hsfs import util
 
 class Tag:
     def __init__(
-        self, name, value, href=None, expand=None, items=None, count=None, type=None
+        self,
+        name,
+        value,
+        schema=None,
+        href=None,
+        expand=None,
+        items=None,
+        count=None,
+        type=None,
     ):
         self._name = name
         self._value = value

@@ -21,6 +21,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -45,6 +46,7 @@ import org.apache.spark.sql.SparkSession;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 import org.apache.spark.sql.streaming.DataStreamWriter;
@@ -499,5 +501,13 @@ public class SparkEngine {
     for (Option confOption : storageConnector.getSparkOptions()) {
       sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
     }
+  }
+
+  public Dataset<Row> getEmptyAppendedDataframe(Dataset<Row> dataframe, List<Feature> newFeatures) {
+    Dataset<Row> emptyDataframe = dataframe.limit(0);
+    for (Feature f : newFeatures) {
+      emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
+    }
+    return emptyDataframe;
   }
 }
