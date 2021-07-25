@@ -16,7 +16,6 @@
 
 import re
 import io
-from itertools import chain
 
 import avro.schema
 import avro.io
@@ -159,16 +158,43 @@ class TrainingDatasetEngine:
             row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def get_serving_vector(self, training_dataset, entry, batch, external):
+    def get_serving_vector(self, training_dataset, entry, external):
         """Assembles serving vector from online feature store."""
 
-        if batch:
+        if (
+            training_dataset.serving_batch_size is not None
+            and training_dataset.serving_batch_size > 1
+        ):
+            if training_dataset.prepared_statements is None:
+                self.init_prepared_statement(
+                    training_dataset, len(entry.get(0)), external
+                )
+
+            if not isinstance(entry.values(), list):
+                raise ValueError(
+                    " entry is expected expected to be list of primary keys"
+                )
+
+            # check if size of batch of keys corresponds to one that was used during initialisation.
+            batch_sizes = list(set([len(x) for x in entry.values()]))
+            if (
+                len(batch_sizes) != 1
+                and batch_sizes != training_dataset.serving_batch_size
+            ):
+                raise ValueError(
+                    "Size of provided batch of primary keys doesn't correspond to "
+                    + "size used during initialisation"
+                )
+            batch = True
+            # create dict object that will have of order of the vector as key and values as
+            # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+            # expect that backend will return correctly ordered vectors.
             batch_dicts = {}
         else:
+            if training_dataset.prepared_statements is None:
+                self.init_prepared_statement(training_dataset, None, external)
+            batch = False
             serving_vector = []
-
-        if training_dataset.prepared_statements is None:
-            self.init_prepared_statement(training_dataset, batch, external)
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
@@ -181,7 +207,8 @@ class TrainingDatasetEngine:
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
 
-        for prepared_statement_index in prepared_statements:
+        for prepared_statement_index in training_dataset.prepared_statements:
+            order_in_batch = 0
             prepared_statement = prepared_statements[prepared_statement_index]
             with training_dataset.prepared_statement_engine.connect() as mysql_conn:
                 result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
@@ -200,32 +227,29 @@ class TrainingDatasetEngine:
                     training_dataset.transformation_functions, result_dict
                 )
 
-                # if this is batch serving then create dict object of prepared statement index as key and values as
-                # list of list to later stitch them correctly
+                # if this is batch serving then get vector by order and update with vector from other feature group(s)
                 if batch:
-                    if prepared_statement_index in batch_dicts:
-                        batch_dicts[prepared_statement_index] += [
-                            list(result_dict.values())
-                        ]
+                    if order_in_batch in batch_dicts:
+                        batch_dicts[order_in_batch] += list(result_dict.values())
                     else:
-                        batch_dicts[prepared_statement_index] = [
-                            list(result_dict.values())
-                        ]
+                        batch_dicts[order_in_batch] = list(result_dict.values())
+                order_in_batch += 1
 
             if not batch:
                 serving_vector += list(result_dict.values())
 
-        # if this is batch serving then stitch list of lists from each index and return batch of vectors, otherwise
-        # return sigle serving vector
+        # if this is batch serving then return batch of vectors, otherwise return single serving vector
         if batch:
-            return [
-                list(chain.from_iterable(sublist))
-                for sublist in zip(*list(batch_dicts.values()))
-            ]
+            return list(batch_dicts.values())
         else:
             return serving_vector
 
-    def init_prepared_statement(self, training_dataset, batch, external):
+    def init_prepared_statement(self, training_dataset, batch_size, external):
+        if batch_size is not None and batch_size > 1:
+            batch = True
+            training_dataset.serving_batch_size = batch_size
+        else:
+            batch = False
         online_conn = self._storage_connector_api.get_online_connector()
         mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
