@@ -130,6 +130,11 @@ public class TrainingDataset {
   @JsonIgnore
   private HashSet<String> servingKeys;
 
+  @Getter
+  @Setter
+  @JsonIgnore
+  private Integer servingBatchSize;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
@@ -469,18 +474,36 @@ public class TrainingDataset {
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this, false, external);
+      trainingDatasetEngine.initPreparedStatement(this,null, external);
     }
   }
 
-  public void initBatchPreparedStatement() throws SQLException, IOException, FeatureStoreException {
-    initBatchPreparedStatement(false);
-  }
-
-  public void initBatchPreparedStatement(boolean external) throws SQLException, IOException, FeatureStoreException {
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement(Integer batchSize) throws SQLException, IOException, FeatureStoreException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this, true, external);
+      trainingDatasetEngine.initPreparedStatement(this, batchSize, false);
+    }
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement(Integer batchSize, boolean external) throws SQLException, IOException,
+      FeatureStoreException {
+    // init prepared statement if it has not already
+    if (this.getPreparedStatements() == null) {
+      trainingDatasetEngine.initPreparedStatement(this,batchSize, external);
     }
   }
 
@@ -515,15 +538,15 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public List<Object> getBatchServingVector(Map<String, List<Object>> entry)
+  public List<List<Object>> getServingVectors(Map<Object, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
-    return getBatchServingVector(entry, false);
+    return getServingVectors(entry, false);
   }
 
   @JsonIgnore
-  public List<Object> getBatchServingVector(Map<String, List<Object>> entry, boolean external)
+  public List<List<Object>> getServingVectors(Map<Object, List<Object>> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException {
-    return trainingDatasetEngine.getBatchServingVector(this, entry, external);
+    return trainingDatasetEngine.getServingVectors(this, entry, external);
   }
 
   /**

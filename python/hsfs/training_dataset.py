@@ -79,6 +79,7 @@ class TrainingDataset:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
+        self._serving_batch_size = None
         self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -636,14 +637,14 @@ class TrainingDataset:
         return self._training_dataset_engine.query(self, online, with_label)
 
     def init_prepared_statement(
-        self, batch: Optional[bool] = False, external: Optional[bool] = False
+        self, batch_size: Optional[int] = None, external: Optional[bool] = False
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
 
         # Arguments
-            batch: boolean, optional. If set to True, prepared statements will be
-                initialised for retrieving batch serving vectors
+            batch: integer, optional. If provided, prepared statements will be
+                initialised for retrieving serving vectors as a  batch of size `batch_size`.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
@@ -651,7 +652,9 @@ class TrainingDataset:
                 which relies on the private IP.
         """
         if self.prepared_statements is None:
-            self._training_dataset_engine.init_prepared_statement(self, batch, external)
+            self._training_dataset_engine.init_prepared_statement(
+                self, batch_size, external
+            )
 
     def get_serving_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False
@@ -670,11 +673,9 @@ class TrainingDataset:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(
-            self, entry, False, external
-        )
+        return self._training_dataset_engine.get_serving_vector(self, entry, external)
 
-    def get_batch_serving_vectors(
+    def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
     ):
         """Returns assembled serving vector from online feature store.
@@ -691,9 +692,7 @@ class TrainingDataset:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(
-            self, entry, True, external
-        )
+        return self._training_dataset_engine.get_serving_vector(self, entry, external)
 
     @property
     def label(self):
@@ -739,6 +738,15 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def serving_batch_size(self):
+        """Set size of batch of primary keys for `get_serving_vectors` method."""
+        return self._serving_batch_size
+
+    @serving_batch_size.setter
+    def serving_batch_size(self, serving_batch_size):
+        self._serving_batch_size = serving_batch_size
 
     @property
     def transformation_functions(self):
