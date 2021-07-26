@@ -118,7 +118,7 @@ Paste the *Metadata URL* you copied above and click *Finish*.
 </p>
 
 !!!Note
-    if the organization mane you chose is already used you will need to set a new one and to update the *Sign on URL* in Azure.
+    if the organization name you chose is already used you will need to set a new one and to update the *Sign on URL* in Azure.
 
 If you go back to the *SSO* tab of *Settings* you will get a *logging page* link. By using this link you will automatically be redirected to your identity provider to login. An account will automatically be created in hopsworks.ai for users of your organization when they log in for the first time.
 
