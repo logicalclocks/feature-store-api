@@ -15,6 +15,7 @@
 #
 
 import json
+import os
 
 from hsfs import util
 
@@ -34,6 +35,7 @@ class Code:
     ):
         self._commit_time = commit_time
         self._application_id = application_id
+        self.content = os.environ
 
     def to_dict(self):
         return {

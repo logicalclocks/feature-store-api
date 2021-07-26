@@ -44,7 +44,7 @@ public class CodeEngine {
   public Code saveCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(kernelEnv);
-    if(kernelId == null || kernelId.isEmpty()){
+    if (kernelId == null || kernelId.isEmpty()) {
       return null;
     }
     return codeApi.post(trainingDataset, saveCode(),
@@ -54,7 +54,7 @@ public class CodeEngine {
   public Code saveCode(FeatureGroupBase featureGroup)
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(kernelEnv);
-    if(kernelId == null || kernelId.isEmpty()){
+    if (kernelId == null || kernelId.isEmpty()) {
       return null;
     }
     return codeApi.post(featureGroup, saveCode(),
@@ -65,13 +65,13 @@ public class CodeEngine {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
     String webProxy = System.getenv(webProxyEnv);
-    if(webProxy != null && !webProxy.isEmpty()){
+    if (webProxy != null && !webProxy.isEmpty()) {
       applicationId = webProxy.substring(7);
     }
-    return new Code(commitTime, null, applicationId, "");
+    return new Code(commitTime, null, applicationId, System.getenv().toString());
   }
 
-  enum RunType{
+  enum RunType {
     JUPYTER,
     JOB,
     DATABRICKS;
