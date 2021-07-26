@@ -67,7 +67,7 @@ Click on *Single sign-on*. Then click on *SAML*.
 Click on *Edit* in the *Basic SAML Configuration* section. Paste the *Identifier (Entity ID)* and *Reply URL* that you copied from the Hopsworks.ai setup page. 
 Delete the wild card *Identifier (Entity ID)* that is already set.
 
-For the *Sign on URL* copy the provided pattern (*https://managed.hopsworks.ai/sso-open/<ORGANIZATION>*) and replace *ORGANIZATION* by the name of your organization
+For the *Sign on URL* copy the provided pattern (*https://managed.hopsworks.ai/sso-open/<ORGANIZATION>*) and replace *ORGANIZATION* by the name of your organization.
 
 Click on *Save*.
 
