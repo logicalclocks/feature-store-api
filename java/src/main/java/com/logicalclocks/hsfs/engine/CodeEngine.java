@@ -33,6 +33,7 @@ public class CodeEngine {
 
   private CodeApi codeApi;
   private static String kernelEnv = "HOPSWORKS_KERNEL_ID";
+  private static String jobEnv = "HOPSWORKS_JOB_NAME";
   private static String webProxyEnv = "APPLICATION_WEB_PROXY_BASE";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
@@ -44,31 +45,47 @@ public class CodeEngine {
   public Code saveCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(kernelEnv);
-    if (kernelId == null || kernelId.isEmpty()) {
+    String jobName = System.getenv(jobEnv);
+
+    if (kernelId != null) {
+      return codeApi.post(trainingDataset, saveCode(),
+              kernelId, RunType.JUPYTER.toString());
+    }
+    else if (jobName != null) {
+      return codeApi.post(trainingDataset, saveCode(),
+              jobName, RunType.JOB.toString());
+    }
+    else{
       return null;
     }
-    return codeApi.post(trainingDataset, saveCode(),
-            kernelId, RunType.JUPYTER.toString());
   }
 
   public Code saveCode(FeatureGroupBase featureGroup)
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(kernelEnv);
-    if (kernelId == null || kernelId.isEmpty()) {
+    String jobName = System.getenv(jobEnv);
+
+    if (kernelId != null) {
+      return codeApi.post(featureGroup, saveCode(),
+              kernelId, RunType.JUPYTER.toString());
+    }
+    else if (jobName != null) {
+      return codeApi.post(featureGroup, saveCode(),
+              jobName, RunType.JOB.toString());
+    }
+    else{
       return null;
     }
-    return codeApi.post(featureGroup, saveCode(),
-            kernelId, RunType.JUPYTER.toString());
   }
 
   private Code saveCode() {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
     String webProxy = System.getenv(webProxyEnv);
-    if (webProxy != null && !webProxy.isEmpty()) {
+    if (webProxy != null) {
       applicationId = webProxy.substring(7);
     }
-    return new Code(commitTime, null, applicationId, System.getenv().toString());
+    return new Code(commitTime, null, applicationId, "");
   }
 
   enum RunType {

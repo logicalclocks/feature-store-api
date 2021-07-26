@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client, code
+from hsfs import client
 
 
 class CodeApi:
@@ -29,7 +29,7 @@ class CodeApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def post(self, metadata_instance, code, kernel_id, code_type):
+    def post(self, metadata_instance, code, entity_id, code_type):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -42,7 +42,7 @@ class CodeApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {
-            "kernelId": kernel_id,
+            "entityId": entity_id,
             "type": code_type
         }
         _client._send_request(

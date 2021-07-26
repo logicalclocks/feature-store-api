@@ -34,9 +34,9 @@ import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
 public class CodeApi {
 
-  public static final String ENTITY_ROOT_PATH = "{/entityType}";
-  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?kernelId,type}";
+  public static final String ENTITY_ROOT_PATH = "{/dataSetType}";
+  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/dataSetId}";
+  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeApi.class);
 
@@ -67,9 +67,9 @@ public class CodeApi {
     String uri = UriTemplate.fromTemplate(pathTemplate)
             .set("projectId", projectId)
             .set("fsId", featureStoreId)
-            .set("entityType", entityType.getValue())
-            .set("entityId", entityId)
-            .set("kernelId", kernelId)
+            .set("dataSetType", entityType.getValue())
+            .set("dataSetId", entityId)
+            .set("entityId", kernelId)
             .set("type", type)
             .expand();
 
