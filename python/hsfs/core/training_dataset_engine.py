@@ -170,7 +170,9 @@ class TrainingDatasetEngine:
                     training_dataset, len(entry.get(0)), external
                 )
 
-            if not isinstance(entry.values(), list):
+            if not hasattr(entry.values(), "__iter__") and not isinstance(
+                list(entry.values()), list
+            ):
                 raise ValueError(
                     " entry is expected expected to be list of primary keys"
                 )
