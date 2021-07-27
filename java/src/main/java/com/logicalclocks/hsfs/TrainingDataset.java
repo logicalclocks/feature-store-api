@@ -538,13 +538,13 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<Object, List<Object>> entry)
+  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
     return getServingVectors(entry, false);
   }
 
   @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<Object, List<Object>> entry, boolean external)
+  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException {
     return trainingDatasetEngine.getServingVectors(this, entry, external);
   }

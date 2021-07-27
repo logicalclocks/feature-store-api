@@ -299,7 +299,7 @@ public class TrainingDatasetEngine {
     return servingVector;
   }
 
-  public List<List<Object>> getServingVectors(TrainingDataset trainingDataset, Map<Object, List<Object>> entry,
+  public List<List<Object>> getServingVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
                                         boolean external) throws SQLException, FeatureStoreException, IOException {
 
     // init prepared statement if it has not already
