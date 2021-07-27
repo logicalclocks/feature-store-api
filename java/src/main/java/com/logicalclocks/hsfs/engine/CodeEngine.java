@@ -50,12 +50,10 @@ public class CodeEngine {
     if (kernelId != null) {
       return codeApi.post(trainingDataset, saveCode(),
               kernelId, RunType.JUPYTER.toString());
-    }
-    else if (jobName != null) {
+    } else if (jobName != null) {
       return codeApi.post(trainingDataset, saveCode(),
               jobName, RunType.JOB.toString());
-    }
-    else{
+    } else {
       return null;
     }
   }
@@ -68,12 +66,10 @@ public class CodeEngine {
     if (kernelId != null) {
       return codeApi.post(featureGroup, saveCode(),
               kernelId, RunType.JUPYTER.toString());
-    }
-    else if (jobName != null) {
+    } else if (jobName != null) {
       return codeApi.post(featureGroup, saveCode(),
               jobName, RunType.JOB.toString());
-    }
-    else{
+    } else {
       return null;
     }
   }
