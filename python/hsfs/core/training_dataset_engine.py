@@ -169,17 +169,10 @@ class TrainingDatasetEngine:
                 self.init_prepared_statement(
                     training_dataset, len(list(entry.values())[0]), external
                 )
-                batch = True
-                # create dict object that will have of order of the vector as key and values as
-                # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
-                # expect that backend will return correctly ordered vectors.
-                batch_dicts = {}
             else:
                 self.init_prepared_statement(training_dataset, None, external)
-                batch = False
-                serving_vector = []
 
-        # if serving_batch_size is set then its batch lookup. check sanity of the input
+        # if serving_batch_size is set then its batch lookup.
         if (
             training_dataset.serving_batch_size is not None
             and training_dataset.serving_batch_size > 1
@@ -188,7 +181,7 @@ class TrainingDatasetEngine:
                 list(entry.values()), list
             ):
                 raise ValueError(
-                    "entry is expected expected to be list of primary keys"
+                    "entry is expected expected to be list of primary key values"
                 )
             # check if size of batch of keys corresponds to one that was used during initialisation.
             batch_sizes = list(set([len(x) for x in entry.values()]))
@@ -200,6 +193,14 @@ class TrainingDatasetEngine:
                     "Size of provided batch of primary keys doesn't correspond to "
                     + "size used during initialisation"
                 )
+            # create dict object that will have of order of the vector as key and values as
+            # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+            # expect that backend will return correctly ordered vectors.
+            batch_dicts = {}
+            batch = True
+        else:
+            batch = False
+            serving_vector = []
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
