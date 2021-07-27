@@ -643,7 +643,7 @@ class TrainingDataset:
            retrieve feature vector from online feature store.
 
         # Arguments
-            batch: integer, optional. If provided, prepared statements will be
+            batch_size: integer, optional. If provided, prepared statements will be
                 initialised for retrieving serving vectors as a  batch of size `batch_size`.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
@@ -681,7 +681,7 @@ class TrainingDataset:
         """Returns assembled serving vector from online feature store.
 
         # Arguments
-            entry: dictionary of training dataset feature group primary key names as keys and list of values provided by
+            entry: dict of feature group primary key names as keys and value as list of primary keys provided by
                 serving application.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
