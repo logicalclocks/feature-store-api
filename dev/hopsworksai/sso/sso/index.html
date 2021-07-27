@@ -1674,13 +1674,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#configure-hopsworksai" class="md-nav__link">
-    Configure Hopsworks.ai.
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1814,13 +1807,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#configure-hopsworksai" class="md-nav__link">
-    Configure Hopsworks.ai.
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1874,7 +1860,7 @@ They will then be able to manage the clusters of your organization and if you se
   </figure>
 </p>
 
-<p>Click on <em>Create your own application</em>. Give a name to your application, for example, <em>hopsworks_sso</em>. Make sure that <em>Integrate any other application you don't find in the gallery (Non-gallery)</em> is selected and click on <em>Create</em>.</p>
+<p>Search for <em>hopsworks.ai</em>. Click on it then click on <em>create</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/create_new_app.png">
@@ -1894,7 +1880,10 @@ They will then be able to manage the clusters of your organization and if you se
   </figure>
 </p>
 
-<p>Click on <em>Edit</em> in the <em>Basic SAML Configuration</em> section. Paste the <em>Identifier (Entity ID)</em> and <em>Reply URL</em> that you copied from the Hopsworks.ai setup page. Click on <em>Save</em>.</p>
+<p>Click on <em>Edit</em> in the <em>Basic SAML Configuration</em> section. Paste the <em>Identifier (Entity ID)</em> and <em>Reply URL</em> that you copied from the Hopsworks.ai setup page. 
+Delete the wild card <em>Identifier (Entity ID)</em> that is already set.</p>
+<p>For the <em>Sign on URL</em> copy the provided pattern (<em>https://managed.hopsworks.ai/sso-open/<ORGANIZATION></em>) and replace <em>ORGANIZATION</em> by the name of your organization.</p>
+<p>Click on <em>Save</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/configure_saml.png">
@@ -1922,6 +1911,31 @@ They will then be able to manage the clusters of your organization and if you se
       <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/next_step_azure.png" alt="Next step">
     </a>
     <figcaption>Next step</figcaption>
+  </figure>
+</p>
+
+<p>Set the organization name you chose above. This name will be used in your login URL so choose something you will remember. Here we will use <em>hopsworks-demo</em>.</p>
+<p>Paste the <em>Metadata URL</em> you copied above and click <em>Finish</em>.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png" alt="Configure Hopsworks.ai">
+    </a>
+    <figcaption>Configure Hopsworks.ai</figcaption>
+  </figure>
+</p>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>if the organization name you chose is already used you will need to set a new one and to update the <em>Sign on URL</em> in Azure.</p>
+</div>
+<p>If you go back to the <em>SSO</em> tab of <em>Settings</em> you will get a <em>logging page</em> link. By using this link you will automatically be redirected to your identity provider to login. An account will automatically be created in hopsworks.ai for users of your organization when they log in for the first time.</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png" alt="Configure Hopsworks.ai">
+    </a>
+    <figcaption>Configure Hopsworks.ai</figcaption>
   </figure>
 </p>
 
@@ -2032,7 +2046,7 @@ They will then be able to manage the clusters of your organization and if you se
   </figure>
 </p>
 
-<p>Go back to Hopsworks.ai. Click on <em>Next step</em> and keep following the documentation at <a href="#configure-hopsworksai">Configure Hopsworks.ai</a>.</p>
+<p>Go back to Hopsworks.ai. Click on <em>Next step</em>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/next_step_azure.png">
@@ -2042,7 +2056,6 @@ They will then be able to manage the clusters of your organization and if you se
   </figure>
 </p>
 
-<h2 id="configure-hopsworksai">Configure Hopsworks.ai.<a class="headerlink" href="#configure-hopsworksai" title="Permanent link">#</a></h2>
 <p>Give a name to your organization. This name will be used in your login URL so choose something you will remember. Here we will use <em>hopsworks-demo</em>.</p>
 <p>Paste the <em>Metadata URL</em> you copied above and click <em>Finish</em>.</p>
 <p align="center">
