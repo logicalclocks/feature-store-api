@@ -161,22 +161,35 @@ class TrainingDatasetEngine:
     def get_serving_vector(self, training_dataset, entry, external):
         """Assembles serving vector from online feature store."""
 
+        # initialize prepared statements
+        if training_dataset.prepared_statements is None:
+            if hasattr(entry.values(), "__iter__") and isinstance(
+                list(entry.values()), list
+            ):
+                self.init_prepared_statement(
+                    training_dataset, len(list(entry.values())[0]), external
+                )
+                batch = True
+                # create dict object that will have of order of the vector as key and values as
+                # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+                # expect that backend will return correctly ordered vectors.
+                batch_dicts = {}
+            else:
+                self.init_prepared_statement(training_dataset, None, external)
+                batch = False
+                serving_vector = []
+
+        # if serving_batch_size is set then its batch lookup. check sanity of the input
         if (
             training_dataset.serving_batch_size is not None
             and training_dataset.serving_batch_size > 1
         ):
-            if training_dataset.prepared_statements is None:
-                self.init_prepared_statement(
-                    training_dataset, len(entry.get(0)), external
-                )
-
             if not hasattr(entry.values(), "__iter__") and not isinstance(
                 list(entry.values()), list
             ):
                 raise ValueError(
-                    " entry is expected expected to be list of primary keys"
+                    "entry is expected expected to be list of primary keys"
                 )
-
             # check if size of batch of keys corresponds to one that was used during initialisation.
             batch_sizes = list(set([len(x) for x in entry.values()]))
             if (
@@ -187,16 +200,6 @@ class TrainingDatasetEngine:
                     "Size of provided batch of primary keys doesn't correspond to "
                     + "size used during initialisation"
                 )
-            batch = True
-            # create dict object that will have of order of the vector as key and values as
-            # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
-            # expect that backend will return correctly ordered vectors.
-            batch_dicts = {}
-        else:
-            if training_dataset.prepared_statements is None:
-                self.init_prepared_statement(training_dataset, None, external)
-            batch = False
-            serving_vector = []
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
