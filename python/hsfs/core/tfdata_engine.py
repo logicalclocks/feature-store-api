@@ -402,12 +402,7 @@ class TFDataEngine:
     def _get_hopsfs_dataset_files(self, training_dataset_location, split):
         path = training_dataset_location.replace("hopsfs", "hdfs")
         if split is None:
-            if self._training_dataset.splits:
-                input_files = tf.io.gfile.glob(
-                    path + "/" + "*" + "/" + self._file_pattern
-                )
-            else:
-                input_files = tf.io.gfile.glob(path + "/" + self._file_pattern)
+            input_files = tf.io.gfile.glob(path + "/" + "*" + "/" + self._file_pattern)
         else:
             input_files = tf.io.gfile.glob(
                 path + "/" + split + "/" + self._file_pattern
