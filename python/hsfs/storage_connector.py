@@ -714,9 +714,12 @@ class JdbcConnector(StorageConnector):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        args = [arg.split("=") for arg in self._arguments.split(",")]
+        options = (
+            {a[0]: a[1] for a in [arg.split("=") for arg in self._arguments.split(",")]}
+            if self._arguments
+            else {}
+        )
 
-        options = {a[0]: a[1] for a in args}
         options["url"] = self._connection_string
 
         return options
