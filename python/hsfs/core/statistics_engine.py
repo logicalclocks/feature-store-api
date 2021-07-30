@@ -16,7 +16,7 @@
 
 import datetime
 
-from hsfs import engine, statistics, util
+from hsfs import engine, statistics, util, split_statistics
 from hsfs.core import statistics_api
 from hsfs.client import exceptions
 
@@ -80,10 +80,22 @@ class StatisticsEngine:
         )
         return content_str
 
-    def register_split_statistics(self, td_metadata_instance, statistics_of_splits):
+    def register_split_statistics(self, td_metadata_instance):
+        if td_metadata_instance.splits:
+            statistics_of_splits = []
+            for split_name in td_metadata_instance.splits:
+                statistics_of_splits.append(
+                    split_statistics.SplitStatistics(
+                        split_name,
+                        self.profile_statistics(
+                            td_metadata_instance, td_metadata_instance.read(split_name)
+                        ),
+                    )
+                )
+
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         stats = statistics.Statistics(
-            commit_time=commit_time, content=None, split_statistics=statistics_of_splits
+            commit_time=commit_time, split_statistics=statistics_of_splits
         )
         self._statistics_api.post(td_metadata_instance, stats)
         return stats

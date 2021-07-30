@@ -31,7 +31,7 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
-  public void saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
+  public OnDemandFeatureGroup saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
       throws FeatureStoreException, IOException {
     Dataset<Row> onDemandDataset = null;
     if (onDemandFeatureGroup.getFeatures() == null) {
@@ -46,5 +46,6 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     if (onDemandFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
       onDemandFeatureGroup.validateOnDemand(onDemandDataset);
     }
+    return onDemandFeatureGroup;
   }
 }

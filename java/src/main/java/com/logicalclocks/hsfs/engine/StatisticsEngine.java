@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.SplitStatistics;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class StatisticsEngine {
@@ -72,8 +74,17 @@ public class StatisticsEngine {
     return new Statistics(commitTime, commitId, content, null);
   }
 
-  public Statistics registerSplitStatistics(TrainingDataset trainingDataset, List<SplitStatistics> splitStatistics)
+  public Statistics registerSplitStatistics(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
+    List<SplitStatistics> splitStatistics = new ArrayList<>();
+    for (Split split : trainingDataset.getSplits()) {
+      splitStatistics.add(new SplitStatistics(split.getName(),
+          computeStatistics(trainingDataset.read(split.getName()),
+              trainingDataset.getStatisticsConfig().getColumns(),
+              trainingDataset.getStatisticsConfig().getHistograms(),
+              trainingDataset.getStatisticsConfig().getCorrelations(),
+              null).getContent()));
+    }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     Statistics statistics = new Statistics(commitTime,null,null, splitStatistics);
     return statisticsApi.post(trainingDataset, statistics);

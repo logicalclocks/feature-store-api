@@ -33,7 +33,6 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.constructor import query
-from hsfs import split_statistics
 
 
 class TrainingDataset:
@@ -164,7 +163,9 @@ class TrainingDataset:
         user_version = self._version
         user_stats_config = self._statistics_config
         # td_job is used only if the hive engine is used
-        training_dataset, td_job = self._training_dataset_engine.save(self, features, write_options)
+        training_dataset, td_job = self._training_dataset_engine.save(
+            self, features, write_options
+        )
         self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
@@ -250,22 +251,9 @@ class TrainingDataset:
         feature store.
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
-            if self.splits:
-                statistics_of_splits = []
-                for split_name in self.splits:
-                    statistics_of_splits.append(
-                        split_statistics.SplitStatistics(
-                            split_name,
-                            self._statistics_engine.profile_statistics(
-                                self, self.read(split_name)
-                            ),
-                        )
-                    )
-                return self._statistics_engine.register_split_statistics(
-                    self, statistics_of_splits
-                )
-            else:
-                return self._statistics_engine.compute_statistics(self, self.read())
+            return self._statistics_engine.register_split_statistics(self)
+        else:
+            return self._statistics_engine.compute_statistics(self, self.read())
 
     def tf_data(
         self,
