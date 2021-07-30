@@ -81,17 +81,16 @@ class StatisticsEngine:
         return content_str
 
     def register_split_statistics(self, td_metadata_instance):
-        if td_metadata_instance.splits:
-            statistics_of_splits = []
-            for split_name in td_metadata_instance.splits:
-                statistics_of_splits.append(
-                    split_statistics.SplitStatistics(
-                        split_name,
-                        self.profile_statistics(
-                            td_metadata_instance, td_metadata_instance.read(split_name)
-                        ),
-                    )
+        statistics_of_splits = []
+        for split_name in td_metadata_instance.splits:
+            statistics_of_splits.append(
+                split_statistics.SplitStatistics(
+                    split_name,
+                    self.profile_statistics(
+                        td_metadata_instance, td_metadata_instance.read(split_name)
+                    ),
                 )
+            )
 
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         stats = statistics.Statistics(

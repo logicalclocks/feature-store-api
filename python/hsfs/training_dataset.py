@@ -251,9 +251,10 @@ class TrainingDataset:
         feature store.
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
-            return self._statistics_engine.register_split_statistics(self)
-        else:
-            return self._statistics_engine.compute_statistics(self, self.read())
+            if self.splits:
+                return self._statistics_engine.register_split_statistics(self)
+            else:
+                return self._statistics_engine.compute_statistics(self, self.read())
 
     def tf_data(
         self,
