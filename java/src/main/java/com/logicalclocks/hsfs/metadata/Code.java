@@ -42,5 +42,16 @@ public class Code extends RestDto<Code> {
   @Getter
   @Setter
   private String content;
+
+  public Code(Long featureGroupCommitId, String applicationId) {
+    this.featureGroupCommitId = featureGroupCommitId;
+    this.applicationId = applicationId;
+  }
+
+  public enum RunType {
+    JUPYTER,
+    JOB,
+    DATABRICKS;
+  }
 }
 

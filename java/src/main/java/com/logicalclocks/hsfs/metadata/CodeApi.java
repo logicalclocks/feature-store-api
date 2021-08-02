@@ -46,20 +46,20 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, String type)
+  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, Code.RunType type)
           throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
             featureGroup.getId(), code, kernelId, type);
   }
 
-  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, String type)
+  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, Code.RunType type)
           throws FeatureStoreException, IOException {
     return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
             trainingDataset.getId(), code, kernelId, type);
   }
 
   private Code post(Integer projectId, Integer featureStoreId, Integer entityId, Code code,
-                    String kernelId, String type)
+                    String kernelId, Code.RunType type)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;

@@ -36,11 +36,11 @@ class CodeEngine:
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
         if not kernel_id:
             return
+        
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
-        application_id = None if web_proxy is None else web_proxy[7:]
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
-            application_id=application_id,
+            application_id=web_proxy[7:] if web_proxy else None,
         )
         self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
     
