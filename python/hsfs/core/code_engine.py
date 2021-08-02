@@ -38,10 +38,9 @@ class CodeEngine:
         job_name = os.environ.get(CodeEngine.JOB_ENV)
         
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
-        application_id = None if web_proxy is None else web_proxy[7:]
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
-            application_id=application_id,
+            application_id=web_proxy[7:] if web_proxy else None,
         )
         
         if kernel_id:

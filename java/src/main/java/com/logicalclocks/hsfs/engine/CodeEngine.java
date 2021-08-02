@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.TrainingDataset;
@@ -32,9 +33,9 @@ import java.time.LocalDateTime;
 public class CodeEngine {
 
   private CodeApi codeApi;
-  private static String kernelEnv = "HOPSWORKS_KERNEL_ID";
-  private static String jobEnv = "HOPSWORKS_JOB_NAME";
-  private static String webProxyEnv = "APPLICATION_WEB_PROXY_BASE";
+  private static final String KernelEnv = "HOPSWORKS_KERNEL_ID";
+  private static final String JobEnv = "HOPSWORKS_JOB_NAME";
+  private static final String WebProxyEnv = "APPLICATION_WEB_PROXY_BASE";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
 
@@ -44,15 +45,15 @@ public class CodeEngine {
 
   public Code saveCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
-    String kernelId = System.getenv(kernelEnv);
-    String jobName = System.getenv(jobEnv);
+    String kernelId = System.getenv(KernelEnv);
+    String jobName = System.getenv(JobEnv);
 
-    if (kernelId != null) {
+    if (Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(trainingDataset, saveCode(),
-              kernelId, RunType.JUPYTER.toString());
-    } else if (jobName != null) {
+              kernelId, Code.RunType.JUPYTER);
+    } else if (Strings.isNullOrEmpty(jobName)) {
       return codeApi.post(trainingDataset, saveCode(),
-              jobName, RunType.JOB.toString());
+              jobName, Code.RunType.JOB);
     } else {
       return null;
     }
@@ -60,15 +61,15 @@ public class CodeEngine {
 
   public Code saveCode(FeatureGroupBase featureGroup)
           throws FeatureStoreException, IOException {
-    String kernelId = System.getenv(kernelEnv);
-    String jobName = System.getenv(jobEnv);
+    String kernelId = System.getenv(KernelEnv);
+    String jobName = System.getenv(JobEnv);
 
-    if (kernelId != null) {
+    if (Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(featureGroup, saveCode(),
-              kernelId, RunType.JUPYTER.toString());
-    } else if (jobName != null) {
+              kernelId, Code.RunType.JUPYTER);
+    } else if (Strings.isNullOrEmpty(jobName)) {
       return codeApi.post(featureGroup, saveCode(),
-              jobName, RunType.JOB.toString());
+              jobName, Code.RunType.JOB);
     } else {
       return null;
     }
@@ -77,16 +78,10 @@ public class CodeEngine {
   private Code saveCode() {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
-    String webProxy = System.getenv(webProxyEnv);
+    String webProxy = System.getenv(WebProxyEnv);
     if (webProxy != null) {
       applicationId = webProxy.substring(7);
     }
-    return new Code(commitTime, null, applicationId, "");
-  }
-
-  enum RunType {
-    JUPYTER,
-    JOB,
-    DATABRICKS;
+    return new Code(commitTime, applicationId);
   }
 }
