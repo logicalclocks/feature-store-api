@@ -79,7 +79,7 @@ public class CodeEngine {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
     String webProxy = System.getenv(WEB_PROXY_ENV);
-    if (webProxy != null) {
+    if (!Strings.isNullOrEmpty(webProxy)) {
       applicationId = webProxy.substring(7);
     }
     return new Code(commitTime, applicationId);
