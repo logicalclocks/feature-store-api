@@ -58,8 +58,8 @@ public class CodeApi {
             trainingDataset.getId(), code, kernelId, type);
   }
 
-  private Code post(Integer projectId, Integer featureStoreId, Integer entityId, Code code,
-                    String kernelId, Code.RunType type)
+  private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
+                    String entityId, Code.RunType type)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
@@ -68,8 +68,8 @@ public class CodeApi {
             .set("projectId", projectId)
             .set("fsId", featureStoreId)
             .set("dataSetType", entityType.getValue())
-            .set("dataSetId", entityId)
-            .set("entityId", kernelId)
+            .set("dataSetId", dataSetId)
+            .set("entityId", entityId)
             .set("type", type)
             .expand();
 
