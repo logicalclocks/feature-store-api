@@ -48,10 +48,10 @@ public class CodeEngine {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
 
-    if (Strings.isNullOrEmpty(kernelId)) {
+    if (!Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(trainingDataset, saveCode(),
               kernelId, Code.RunType.JUPYTER);
-    } else if (Strings.isNullOrEmpty(jobName)) {
+    } else if (!Strings.isNullOrEmpty(jobName)) {
       return codeApi.post(trainingDataset, saveCode(),
               jobName, Code.RunType.JOB);
     } else {
@@ -64,10 +64,10 @@ public class CodeEngine {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
 
-    if (Strings.isNullOrEmpty(kernelId)) {
+    if (!Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(featureGroup, saveCode(),
               kernelId, Code.RunType.JUPYTER);
-    } else if (Strings.isNullOrEmpty(jobName)) {
+    } else if (!Strings.isNullOrEmpty(jobName)) {
       return codeApi.post(featureGroup, saveCode(),
               jobName, Code.RunType.JOB);
     } else {
