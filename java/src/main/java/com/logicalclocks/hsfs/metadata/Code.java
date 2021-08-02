@@ -43,8 +43,8 @@ public class Code extends RestDto<Code> {
   @Setter
   private String content;
 
-  public Code(Long featureGroupCommitId, String applicationId) {
-    this.featureGroupCommitId = featureGroupCommitId;
+  public Code(Long commitTime, String applicationId) {
+    this.commitTime = commitTime;
     this.applicationId = applicationId;
   }
 
