@@ -33,9 +33,9 @@ import java.time.LocalDateTime;
 public class CodeEngine {
 
   private CodeApi codeApi;
-  private static final String KernelEnv = "HOPSWORKS_KERNEL_ID";
-  private static final String JobEnv = "HOPSWORKS_JOB_NAME";
-  private static final String WebProxyEnv = "APPLICATION_WEB_PROXY_BASE";
+  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
+  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
+  private static final String WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
 
@@ -45,8 +45,8 @@ public class CodeEngine {
 
   public Code saveCode(TrainingDataset trainingDataset)
           throws FeatureStoreException, IOException {
-    String kernelId = System.getenv(KernelEnv);
-    String jobName = System.getenv(JobEnv);
+    String kernelId = System.getenv(KERNEL_ENV);
+    String jobName = System.getenv(JOB_ENV);
 
     if (Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(trainingDataset, saveCode(),
@@ -61,8 +61,8 @@ public class CodeEngine {
 
   public Code saveCode(FeatureGroupBase featureGroup)
           throws FeatureStoreException, IOException {
-    String kernelId = System.getenv(KernelEnv);
-    String jobName = System.getenv(JobEnv);
+    String kernelId = System.getenv(KERNEL_ENV);
+    String jobName = System.getenv(JOB_ENV);
 
     if (Strings.isNullOrEmpty(kernelId)) {
       return codeApi.post(featureGroup, saveCode(),
@@ -78,7 +78,7 @@ public class CodeEngine {
   private Code saveCode() {
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String applicationId = null;
-    String webProxy = System.getenv(WebProxyEnv);
+    String webProxy = System.getenv(WEB_PROXY_ENV);
     if (webProxy != null) {
       applicationId = webProxy.substring(7);
     }
