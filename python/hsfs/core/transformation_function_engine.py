@@ -73,6 +73,7 @@ class TransformationFunctionEngine:
                 training_dataset._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature_name,
+                        type=transformation_fn.output_type,
                         label=False,
                         transformation_function=transformation_fn,
                     )
