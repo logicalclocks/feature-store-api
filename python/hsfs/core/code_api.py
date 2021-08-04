@@ -29,7 +29,7 @@ class CodeApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def post(self, metadata_instance, code, entity_id, code_type):
+    def post(self, metadata_instance, code, entity_id, code_type, browser_host_name = None):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -40,11 +40,16 @@ class CodeApi:
             metadata_instance.id,
             "code",
         ]
+
         headers = {"content-type": "application/json"}
+
         query_params = {
             "entityId": entity_id,
             "type": code_type
         }
+        if browser_host_name:
+            query_params["clusterId"] = browser_host_name
+
         _client._send_request(
             "POST", path_params, query_params, headers=headers, data=code.json()
         )

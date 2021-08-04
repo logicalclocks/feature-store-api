@@ -36,7 +36,7 @@ public class CodeApi {
 
   public static final String ENTITY_ROOT_PATH = "{/dataSetType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/dataSetId}";
-  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type}";
+  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type,clusterId}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeApi.class);
 
@@ -46,20 +46,21 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, Code.RunType type)
+  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-            featureGroup.getId(), code, kernelId, type);
+            featureGroup.getId(), code, kernelId, type, browserHostName);
   }
 
-  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, Code.RunType type)
+  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, Code.RunType type,
+                   String browserHostName)
           throws FeatureStoreException, IOException {
     return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-            trainingDataset.getId(), code, kernelId, type);
+            trainingDataset.getId(), code, kernelId, type, browserHostName);
   }
 
   private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
-                    String entityId, Code.RunType type)
+                    String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
@@ -71,6 +72,7 @@ public class CodeApi {
             .set("dataSetId", dataSetId)
             .set("entityId", entityId)
             .set("type", type)
+            .set("clusterId", browserHostName)
             .expand();
 
     String codeJson = hopsworksClient.getObjectMapper().writeValueAsString(code);

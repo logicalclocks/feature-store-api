@@ -16,6 +16,8 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.databricks.dbutils_v1.DBUtilsV1;
+import com.databricks.dbutils_v1.DBUtilsHolder;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -33,9 +35,14 @@ import java.time.LocalDateTime;
 public class CodeEngine {
 
   private CodeApi codeApi;
-  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
-  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
+
   private static final String WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE";
+
+  //JUPYTER
+  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
+
+  //JOB
+  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
 
@@ -47,13 +54,16 @@ public class CodeEngine {
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
+    DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(trainingDataset, saveCode(),
-              kernelId, Code.RunType.JUPYTER);
+      return codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(trainingDataset, saveCode(),
-              jobName, Code.RunType.JOB);
+      return codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null);
+    } else if (dbutils != null) {
+      String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+      String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+      return codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
     } else {
       return null;
     }
@@ -63,13 +73,16 @@ public class CodeEngine {
           throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
+    DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(featureGroup, saveCode(),
-              kernelId, Code.RunType.JUPYTER);
+      return codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(featureGroup, saveCode(),
-              jobName, Code.RunType.JOB);
+      return codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null);
+    } else if (dbutils != null) {
+      String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+      String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+      return codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
     } else {
       return null;
     }
