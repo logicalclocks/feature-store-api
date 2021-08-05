@@ -198,10 +198,9 @@ public class TrainingDataset {
    */
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.save(this, dataset, writeOptions, label);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, dataset);
-    }
+    TrainingDataset trainingDataset = trainingDatasetEngine.save(this, dataset, writeOptions, label);
+    this.setStorageConnector(trainingDataset.getStorageConnector());
+    computeStatistics();
   }
 
   /**
@@ -319,7 +318,11 @@ public class TrainingDataset {
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
-      return statisticsEngine.computeStatistics(this, read());
+      if (this.splits != null && !this.splits.isEmpty()) {
+        return statisticsEngine.registerSplitStatistics(this);
+      } else {
+        return statisticsEngine.computeStatistics(this, read());
+      }
     }
     return null;
   }
