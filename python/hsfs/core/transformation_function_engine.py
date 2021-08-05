@@ -72,7 +72,7 @@ class TransformationFunctionEngine:
             ) in training_dataset._transformation_functions.items():
                 if feature_name in training_dataset.label:
                     raise ValueError(
-                        "Online transformations for training dataset labels is not supported."
+                        "Online transformations for training dataset labels are not supported."
                     )
                 training_dataset._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
