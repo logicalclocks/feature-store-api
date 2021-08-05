@@ -20,6 +20,7 @@ import numpy
 import datetime
 from typing import Optional, Union, List, Dict, TypeVar
 
+from hsfs.feature import Feature
 from hsfs.transformation_function import TransformationFunction
 from hsfs.core import transformation_function_engine
 
@@ -30,7 +31,7 @@ from hsfs import (
     util,
     storage_connector,
     expectation,
-    rule,
+    rule, training_dataset_wizard,
 )
 from hsfs.core import (
     feature_group_api,
@@ -548,6 +549,33 @@ class FeatureStore:
             label=label,
             coalesce=coalesce,
             transformation_functions=transformation_functions,
+        )
+
+    def create_training_dataset_with_wizard(
+            self,
+            name: str,
+            label: str,
+            feature_group_id: int
+    ):
+        """Create a training dataset wizard metadata object.
+
+        # Arguments
+            name: Name of the training dataset to create.
+            label: A feature name constituting the prediction label/feature of
+                the training dataset. The wizard will suggest suitable Features to
+                include in the training dataset, based on this label/feature.
+            feature_group_id: The id of the feature group the label is belonging to.
+                The primary key of this feature group will serve as id of the resulting
+                training data set, and feature in this feature group will be added to
+                the preliminary training data set by default.
+        # Returns:
+            `TrainingDatasetWizard`: The training dataset wizard metadata object.
+        """
+        return training_dataset_wizard.TrainingDatasetWizard(
+            name=name,
+            label=label,
+            feature_group_id=feature_group_id,
+            feature_store_id=self._id,
         )
 
     def create_expectation(
