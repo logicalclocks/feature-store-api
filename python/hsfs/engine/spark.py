@@ -320,9 +320,17 @@ class Engine:
             feature_name,
             transformation_fn,
         ) in training_dataset.transformation_functions.items():
+            dataset = dataset.withColumnRenamed(feature_name, feature_name + "_tmp")
             dataset = dataset.withColumn(
-                feature_name, transformation_fn.transformation_fn(col(feature_name))
+                feature_name,
+                transformation_fn.transformation_fn(col(feature_name + "_tmp")),
             )
+            dataset = dataset.drop(feature_name + "_tmp")
+
+        # sort feature order if it was altered by transformation functions
+        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
+        sorted_feature_names = [ft.name for ft in sorded_features]
+        dataset = dataset.select(*sorted_feature_names)
 
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
