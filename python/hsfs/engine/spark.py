@@ -315,17 +315,36 @@ class Engine:
 
         dataset = self.convert_to_default_dataframe(dataset)
 
-        # apply transformation functions
+        # generate transformation function expressions
+        transformed_feature_names = []
+        transformation_fn_expressions = []
         for (
             feature_name,
             transformation_fn,
         ) in training_dataset.transformation_functions.items():
-            dataset = dataset.withColumnRenamed(feature_name, feature_name + "_tmp")
-            dataset = dataset.withColumn(
-                feature_name,
-                transformation_fn.transformation_fn(col(feature_name + "_tmp")),
+            fn_registration_name = (
+                transformation_fn.name + "_" + str(transformation_fn.version)
             )
-            dataset = dataset.drop(feature_name + "_tmp")
+            self._spark_session.udf.register(
+                fn_registration_name, transformation_fn.transformation_fn
+            )
+            transformation_fn_expressions.append(
+                "{fn_name:}({name:}) AS {name:}".format(
+                    fn_name=fn_registration_name, name=feature_name
+                )
+            )
+            transformed_feature_names.append(feature_name)
+
+        # generate non transformation expressions
+        no_transformation_expr = [
+            "{name:} AS {name:}".format(name=col_name)
+            for col_name in dataset.columns
+            if col_name not in transformed_feature_names
+        ]
+
+        # generate entire expression and execute it
+        transformation_fn_expressions.extend(no_transformation_expr)
+        dataset = dataset.selectExpr(*transformation_fn_expressions)
 
         # sort feature order if it was altered by transformation functions
         sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
