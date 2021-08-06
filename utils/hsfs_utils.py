@@ -6,7 +6,7 @@ from hsfs.constructor import query
 from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StructType, _parse_datatype_string
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -66,7 +66,9 @@ def insert_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
 
     fg = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
 
-    df = get_fg_spark_df(job_conf, fg.read().schema)
+    schema = StructType([_parse_datatype_string(f.type) for f in fg.features])
+
+    df = get_fg_spark_df(job_conf, schema)
     fg.insert(df, write_options=job_conf.pop("write_options", {}) or {})
 
 
