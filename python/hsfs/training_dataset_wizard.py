@@ -61,12 +61,10 @@ class TrainingDatasetWizard:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
         # here we lose the information that the user set, e.g. write_options
         self.__init__(**json_decamelized)
         return self
