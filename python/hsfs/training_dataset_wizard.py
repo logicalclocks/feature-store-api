@@ -66,7 +66,8 @@ class TrainingDatasetWizard:
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         # here we lose the information that the user set, e.g. write_options
-        self.__init__(**json_decamelized)
+        self._name = json_decamelized["name"]
+        self._label = json_decamelized["label"]
         return self
 
     @property
