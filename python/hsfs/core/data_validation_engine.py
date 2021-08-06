@@ -39,6 +39,7 @@ class DataValidationEngine:
 
     def validate(self, feature_group, feature_dataframe):
         """Perform data validation for a dataframe and send the result json to Hopsworks."""
+
         validation_time = int(round(time.time() * 1000))
         if len(feature_dataframe.head(1)) == 0:
             raise exceptions.FeatureStoreException(
@@ -48,7 +49,11 @@ class DataValidationEngine:
             )
 
         expectations = self._expectations_api.get(feature_group=feature_group)
-
+        # Check if an expectation contains features. If it does not, try to use all the current FG features
+        feature_names = [feature.name for feature in feature_group.features]
+        for exp in expectations:
+            if not exp.features:
+                exp.features = feature_names
         expectation_results_java = engine.get_instance().validate(
             feature_dataframe, expectations
         )

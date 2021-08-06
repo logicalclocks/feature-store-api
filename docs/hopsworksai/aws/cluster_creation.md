@@ -214,7 +214,22 @@ In this step, you can define tags that will be added to the cluster virtual mach
   </figure>
 </p>
 
-### Step 14 Review and create
+### Step 14 add an init script to your instances.
+In this step, you can enter an initialization script that will be run at startup on every instance.
+
+!!! note
+    this init script must be a bash script starting with *#!/usr/bin/env bash*
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/init_script.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/init_script.png" alt="Add initialization script">
+    </a>
+    <figcaption>Add initialization script</figcaption>
+  </figure>
+</p>
+
+### Step 15 Review and create
 Review all information and select *Create*:
 
 <p align="center">

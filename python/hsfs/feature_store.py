@@ -393,13 +393,15 @@ class FeatureStore:
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
     ):
         """Create a on-demand feature group metadata object.
 
         !!! note "Lazy"
-            This method is lazy and does not persist any metadata or feature data in the
-            feature store on its own. To persist the feature group and save feature data
-            along the metadata in the feature store, call the `save()` method.
+            This method is lazy and does not persist any metadata in the
+            feature store on its own. To persist the feature group metadata in the feature store,
+            call the `save()` method.
 
         # Arguments
             name: Name of the on-demand feature group to create.
@@ -432,6 +434,12 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
 
         # Returns
             `OnDemandFeatureGroup`. The on-demand feature group metadata object.
@@ -450,6 +458,8 @@ class FeatureStore:
             features=features,
             statistics_config=statistics_config,
             event_time=event_time,
+            validation_type=validation_type,
+            expectations=expectations,
         )
 
     def create_training_dataset(
@@ -579,6 +589,17 @@ class FeatureStore:
             rules=rules,
             featurestore_id=self._id,
         )
+
+    def delete_expectation(
+        self,
+        name: str,
+    ):
+        """Delete an expectation from the feature store.
+
+        # Arguments
+            name: Name of the training dataset to create.
+        """
+        return self._expectations_api.delete(name)
 
     def create_transformation_function(
         self,

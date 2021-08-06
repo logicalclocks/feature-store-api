@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.engine.DataValidationEngine;
 import lombok.NonNull;
@@ -52,16 +51,16 @@ public class FeatureGroupValidationsApi {
     this.entityType = entityType;
   }
 
-  public List<FeatureGroupValidation> get(FeatureGroup featureGroup)
+  public List<FeatureGroupValidation> get(FeatureGroupBase featureGroupBase)
       throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), null);
+    return get(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+               featureGroupBase.getId(), null);
   }
 
-  public FeatureGroupValidation get(FeatureGroup featureGroup,
+  public FeatureGroupValidation get(FeatureGroupBase featureGroupBase,
       ImmutablePair<DataValidationEngine.ValidationTimeType, Long> pair) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), pair).get(0);
+    return get(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+            featureGroupBase.getId(), pair).get(0);
   }
 
   private List<FeatureGroupValidation> get(Integer projectId, Integer featurestoreId, Integer entityId,
@@ -100,11 +99,11 @@ public class FeatureGroupValidationsApi {
   }
 
 
-  public FeatureGroupValidation put(FeatureGroup featureGroup,
+  public FeatureGroupValidation put(FeatureGroupBase featureGroupBase,
       FeatureGroupValidation featureGroupValidation)
       throws FeatureStoreException, IOException {
-    return put(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-      featureGroup.getId(), featureGroupValidation);
+    return put(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+            featureGroupBase.getId(), featureGroupValidation);
   }
 
   private FeatureGroupValidation put(Integer projectId, Integer featurestoreId, Integer entityId,

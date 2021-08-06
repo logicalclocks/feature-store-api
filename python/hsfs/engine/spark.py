@@ -397,7 +397,12 @@ class Engine:
 
     def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):
-            path = location + "/**"
+            if data_format.lower() in ["delta", "parquet", "hudi", "orc"]:
+                # All the above data format readers can handle partitioning
+                # by their own, they don't need /**
+                path = location
+            else:
+                path = location + "/**"
 
             if data_format.lower() == "tsv":
                 data_format = "csv"

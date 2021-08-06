@@ -61,7 +61,10 @@ class Client(base.Client):
         )
         self._project_id = os.environ[self.PROJECT_ID]
         self._project_name = self._project_name()
-        self._auth = auth.BearerAuth(self._read_jwt())
+        try:
+            self._auth = auth.BearerAuth(self._read_jwt())
+        except FileNotFoundError:
+            self._auth = auth.ApiKeyAuth(self._read_apikey())
         self._verify = self._get_verify(hostname_verification, trust_store_path)
         self._session = requests.session()
 

@@ -17,7 +17,9 @@
 import pandas as pd
 import numpy as np
 import boto3
+import time
 
+from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
@@ -32,6 +34,7 @@ from hsfs.core import (
     training_dataset_job_conf,
 )
 from hsfs.constructor import query
+from hsfs.client import exceptions
 
 
 class Engine:
@@ -79,7 +82,7 @@ class Engine:
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
         elif data_format.lower() == "parquet":
-            return pd.read_parquet(obj)
+            return pd.read_parquet(BytesIO(obj.read()))
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
@@ -182,6 +185,8 @@ class Engine:
             )
         )
 
+        self._wait_for_job(job)
+
     def set_job_group(self, group_id, description):
         pass
 
@@ -255,38 +260,9 @@ class Engine:
             )
         )
 
-    def _get_job_url(self, href: str):
-        """Use the endpoint returned by the API to construct the UI url for jobs
+        self._wait_for_job(ingestion_job.job, offline_write_options)
 
-        Args:
-            href (str): the endpoint returned by the API
-        """
-        url_splits = urlparse(href)
-        project_id = url_splits.path.split("/")[4]
-        ui_url = url_splits._replace(
-            path="hopsworks/#!/project/{}/jobs".format(project_id)
-        )
-        return ui_url.geturl()
-
-    def _get_app_options(self, user_write_options={}):
-        """
-        Generate the options that should be passed to the application doing the ingestion.
-        Options should be data format, data options to read the input dataframe and
-        insert options to be passed to the insert method
-
-        Users can pass Spark configurations to the save/insert method
-        Property name should match the value in the JobConfiguration.__init__
-        """
-        spark_job_configuration = user_write_options.pop("spark", None)
-        return ingestion_job_conf.IngestionJobConf(
-            data_format="CSV",
-            data_options=[
-                {"name": "header", "value": "true"},
-                {"name": "inferSchema", "value": "true"},
-            ],
-            write_options=user_write_options,
-            spark_job_configuration=spark_job_configuration,
-        )
+        return ingestion_job.job
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode
@@ -315,6 +291,12 @@ class Engine:
                 self._get_job_url(td_job.href)
             )
         )
+
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        self._wait_for_job(td_job, user_write_options)
+
+        return td_job
 
     def _create_hive_connection(self, feature_store):
         return hive.Connection(
@@ -365,3 +347,59 @@ class Engine:
     def save_empty_dataframe(self, feature_group, dataframe):
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
+
+    def _get_job_url(self, href: str):
+        """Use the endpoint returned by the API to construct the UI url for jobs
+
+        Args:
+            href (str): the endpoint returned by the API
+        """
+        url_splits = urlparse(href)
+        project_id = url_splits.path.split("/")[4]
+        ui_url = url_splits._replace(
+            path="hopsworks/#!/project/{}/jobs".format(project_id)
+        )
+        return ui_url.geturl()
+
+    def _get_app_options(self, user_write_options={}):
+        """
+        Generate the options that should be passed to the application doing the ingestion.
+        Options should be data format, data options to read the input dataframe and
+        insert options to be passed to the insert method
+
+        Users can pass Spark configurations to the save/insert method
+        Property name should match the value in the JobConfiguration.__init__
+        """
+        spark_job_configuration = user_write_options.pop("spark", None)
+        return ingestion_job_conf.IngestionJobConf(
+            data_format="CSV",
+            data_options=[
+                {"name": "header", "value": "true"},
+                {"name": "inferSchema", "value": "true"},
+            ],
+            write_options=user_write_options,
+            spark_job_configuration=spark_job_configuration,
+        )
+
+    def _wait_for_job(self, job, user_write_options=None):
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        while user_write_options is None or user_write_options.get(
+            "wait_for_job", True
+        ):
+            executions = self._job_api.last_execution(job)
+            if len(executions) > 0:
+                execution = executions[0]
+            else:
+                return
+
+            if execution.final_status.lower() == "succeeded":
+                return
+            elif execution.final_status.lower() == "failed":
+                raise exceptions.FeatureStoreException(
+                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
+                )
+            elif execution.final_status.lower() == "killed":
+                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
+
+            time.sleep(3)
