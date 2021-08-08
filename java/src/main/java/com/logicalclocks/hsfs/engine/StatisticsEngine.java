@@ -18,8 +18,10 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import com.logicalclocks.hsfs.metadata.SplitStatistics;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.StatisticsApi;
 import org.apache.spark.sql.Dataset;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class StatisticsEngine {
@@ -60,7 +63,7 @@ public class StatisticsEngine {
         commitId));
   }
 
-  private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
+  public Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
                                        Boolean correlations, Long commitId) throws FeatureStoreException {
     if (dataFrame.isEmpty()) {
       throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
@@ -68,7 +71,23 @@ public class StatisticsEngine {
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
-    return new Statistics(commitTime, commitId, content);
+    return new Statistics(commitTime, commitId, content, null);
+  }
+
+  public Statistics registerSplitStatistics(TrainingDataset trainingDataset)
+      throws FeatureStoreException, IOException {
+    List<SplitStatistics> splitStatistics = new ArrayList<>();
+    for (Split split : trainingDataset.getSplits()) {
+      splitStatistics.add(new SplitStatistics(split.getName(),
+          computeStatistics(trainingDataset.read(split.getName()),
+              trainingDataset.getStatisticsConfig().getColumns(),
+              trainingDataset.getStatisticsConfig().getHistograms(),
+              trainingDataset.getStatisticsConfig().getCorrelations(),
+              null).getContent()));
+    }
+    Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
+    Statistics statistics = new Statistics(commitTime,null,null, splitStatistics);
+    return statisticsApi.post(trainingDataset, statistics);
   }
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {

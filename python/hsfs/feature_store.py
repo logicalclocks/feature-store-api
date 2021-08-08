@@ -580,6 +580,17 @@ class FeatureStore:
             featurestore_id=self._id,
         )
 
+    def delete_expectation(
+        self,
+        name: str,
+    ):
+        """Delete an expectation from the feature store.
+
+        # Arguments
+            name: Name of the training dataset to create.
+        """
+        return self._expectations_api.delete(name)
+
     def create_transformation_function(
         self,
         transformation_function: callable,

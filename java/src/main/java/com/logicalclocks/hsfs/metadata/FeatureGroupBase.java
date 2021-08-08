@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -207,7 +208,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException {
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features));
   }
 
@@ -219,7 +220,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(Feature features) throws FeatureStoreException, IOException {
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
     featureGroupBaseEngine.appendFeatures(this, featureList);
@@ -341,6 +342,10 @@ public class FeatureGroupBase {
   }
 
   public Expectation attachExpectation(String name) throws FeatureStoreException, IOException {
+    // Turn on validation for this FG and set stricter setting
+    if (validationType == ValidationType.NONE) {
+      updateValidationType(ValidationType.STRICT);
+    }
     return expectationsApi.put(this, name);
   }
 
@@ -383,7 +388,22 @@ public class FeatureGroupBase {
   }
 
   protected FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return DataValidationEngine.getInstance().validate(data, this, expectationsApi.get(this));
+    // Check if an expectation contains features. If it does not, try to use all the current FG features
+    List<Expectation> expectations = expectationsApi.get(this);
+    final List<String> features = new ArrayList<>();
+    LOGGER.debug("validate :: expectations = " + expectations);
+    for (Expectation expectation : expectations) {
+      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
+        // Get all feature names from FG
+        LOGGER.debug("validate :: getFeatures = " + getFeatures());
+        if (features.isEmpty()) {
+          getFeatures().stream().forEach(x -> features.add(x.getName()));
+        }
+        expectation.setFeatures(features);
+        LOGGER.debug("validate :: expectation = " + expectation);
+      }
+    }
+    return DataValidationEngine.getInstance().validate(data, this, expectations);
   }
 
   public FeatureGroupValidation validateOnDemand(Dataset<Row> data) throws FeatureStoreException, IOException {

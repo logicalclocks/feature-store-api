@@ -164,7 +164,8 @@ Rule.createRule(RuleName.HAS_PATTERN).pattern("a+").min(10).max(10).level(Level.
 # Expectations
 
 A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
-and can be attached to multiple feature groups. An expectation contains a list of featues it is applied to.
+and can be attached to multiple feature groups. If an expectation contains no features, it will be applied to all the
+features of the feature group when the validation is done An expectation contains a list of featues it is applied to.
 If the feature group the expectation is attached to, does not contain all the expectations features, the expectation
 will not be met.
 
@@ -193,6 +194,27 @@ Create an expectation with two rules for ensuring the min and max of the feature
                               .features(Seq("salary", "commission"))
                               .build())
     expectationSales.save()
+    ```
+
+Create an expectation with a rule to assert that no feature has a null value:
+
+=== "Python"
+    ```python
+    expectation_notnull = fs.create_expectation("not_null",
+                                                description="Assert no feature is null",
+                                                rules=[Rule(name="HAS_DATATYPE", level="ERROR", accepted_type="Null", max=0)])
+    expectation_notnull.save()
+    ```
+
+=== "Scala"
+    ```scala
+    val expectationNotNull = (fs.createExpectation()
+                                .rules(Seq(
+                                    Rule.createRule(RuleName.HAS_DATATYPE).max(0).acceptedType(AcceptedType.Null).level(Level.ERROR).build()))
+                                .name("not_null")
+                                .description("Assert no feature is null")
+                                .build())
+    expectationNotNull.save()
     ```
 
 {{expectation_create}}
