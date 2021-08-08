@@ -26,6 +26,7 @@ from hsfs import util, engine, feature, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
+    code_engine,
     data_validation_engine,
     feature_group_base_engine,
     on_demand_feature_group_engine,
@@ -43,6 +44,9 @@ class FeatureGroupBase:
             feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+        self._code_engine = code_engine.CodeEngine(
             featurestore_id, self.ENTITY_TYPE
         )
         self._expectations_api = expectations_api.ExpectationsApi(
@@ -710,6 +714,7 @@ class FeatureGroup(FeatureGroupBase):
 
         # fg_job is used only if the hive engine is used
         fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
+        self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Hive engine, the computation happens in the Hopsworks application
@@ -796,6 +801,7 @@ class FeatureGroup(FeatureGroupBase):
             write_options,
         )
 
+        self._code_engine.save_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Hive, the statistics are computed by the application doing the insert
@@ -1314,6 +1320,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
 
     def save(self):
         self._feature_group_engine.save(self)
+        self._code_engine.save_code(self)
         if self._validation_type != "NONE":
             self.validate()
 
