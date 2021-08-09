@@ -57,13 +57,18 @@ public class CodeEngine {
     DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null);
+      return codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null,
+              CodeApi.ExportFormat.JUPYTER);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null);
+      return codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null,
+              CodeApi.ExportFormat.JUPYTER);
     } else if (dbutils != null) {
       String notebookPath = dbutils.notebook().getContext().notebookPath().get();
       String browserHostName = dbutils.notebook().getContext().browserHostName().get();
-      return codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
+              CodeApi.ExportFormat.DBC);
+      return codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
+              CodeApi.ExportFormat.HTML);
     } else {
       return null;
     }
@@ -76,13 +81,18 @@ public class CodeEngine {
     DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null);
+      return codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null,
+              CodeApi.ExportFormat.JUPYTER);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null);
+      return codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null,
+              CodeApi.ExportFormat.JUPYTER);
     } else if (dbutils != null) {
       String notebookPath = dbutils.notebook().getContext().notebookPath().get();
       String browserHostName = dbutils.notebook().getContext().browserHostName().get();
-      return codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
+              CodeApi.ExportFormat.DBC);
+      return codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
+              CodeApi.ExportFormat.HTML);
     } else {
       return null;
     }

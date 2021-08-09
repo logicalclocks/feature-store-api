@@ -61,16 +61,43 @@ class CodeEngine:
         )
 
         if kernel_id:
-            self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
+            self._code_api.post(metadata_instance=metadata_instance,
+                                code=code_entity,
+                                entity_id=kernel_id,
+                                code_type=RunType.JUPYTER,
+                                export_format=ExportFormat.JUPYTER)
         elif job_name:
-            self._code_api.post(metadata_instance, code_entity, job_name, RunType.JOB)
+            self._code_api.post(metadata_instance=metadata_instance,
+                                code=code_entity,
+                                entity_id=job_name,
+                                code_type=RunType.JOB,
+                                export_format=ExportFormat.JUPYTER)
         elif dbutils:
             context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
             notebook_path = context[CodeEngine.EXTRA_CONTEXT].get(CodeEngine.NOTEBOOK_PATH)
             browser_host_name = context[CodeEngine.TAGS].get(CodeEngine.BROWSER_HOST_NAME)
-            self._code_api.post(metadata_instance, code_entity, notebook_path, RunType.DATABRICKS, browser_host_name)
+            #Save Databricks archive
+            self._code_api.post(metadata_instance=metadata_instance,
+                                code=code_entity,
+                                entity_id=notebook_path,
+                                code_type=RunType.DATABRICKS,
+                                browser_host_name=browser_host_name,
+                                export_format=ExportFormat.DBC)
+            #Save HTML
+            self._code_api.post(metadata_instance=metadata_instance,
+                                code=code_entity,
+                                entity_id=notebook_path,
+                                code_type=RunType.DATABRICKS,
+                                browser_host_name=browser_host_name,
+                                export_format=ExportFormat.HTML)
 
 class RunType:
     JUPYTER = "JUPYTER"
     JOB = "JOB"
     DATABRICKS = "DATABRICKS"
+
+class ExportFormat:
+    JAVA = "JAVA"
+    HTML = "HTML"
+    JUPYTER = "JUPYTER"
+    DBC = "DBC"
