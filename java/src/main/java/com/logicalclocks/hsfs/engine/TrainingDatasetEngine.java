@@ -76,8 +76,8 @@ public class TrainingDatasetEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void save(TrainingDataset trainingDataset, Dataset<Row> dataset, Map<String, String> userWriteOptions,
-                   List<String> label)
+  public TrainingDataset save(TrainingDataset trainingDataset, Dataset<Row> dataset,
+                              Map<String, String> userWriteOptions, List<String> label)
       throws FeatureStoreException, IOException {
 
     trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
@@ -108,12 +108,15 @@ public class TrainingDatasetEngine {
     trainingDataset.setLocation(apiTD.getLocation());
     trainingDataset.setVersion(apiTD.getVersion());
     trainingDataset.setId(apiTD.getId());
+    trainingDataset.setStorageConnector(apiTD.getStorageConnector());
 
     // Build write options map
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
 
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
+
+    return trainingDataset;
   }
 
   /**
@@ -132,7 +135,7 @@ public class TrainingDatasetEngine {
     utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
 
     // check if this training dataset has transformation functions attached and throw exception if any
-    if (getTransformationFunctions(trainingDataset).size() > 0) {
+    if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
       throw new FeatureStoreException("This training dataset has transformation functions attached and "
           + "insert operation must be performed from a PySpark application");
     }
@@ -188,7 +191,7 @@ public class TrainingDatasetEngine {
       throws FeatureStoreException, IOException, SQLException {
 
     // check if this training dataset has transformation functions attached and throw exception if any
-    if (getTransformationFunctions(trainingDataset).size() > 0) {
+    if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
       throw new FeatureStoreException("This training dataset has transformation functions attached and "
           + "serving must performed from a Python application");
     }
@@ -305,20 +308,5 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
-  }
-
-  private List<TrainingDatasetFeature> getTransformationFunctions(TrainingDataset trainingDataset)
-      throws FeatureStoreException, IOException {
-    List<TrainingDatasetFeature> featuresWithtransformationFunction = new ArrayList<>();
-
-    TrainingDataset updatedTrainingDataset =
-        trainingDatasetApi.getTransformationFunctions(trainingDataset);
-
-    for (TrainingDatasetFeature trainingDatasetFeature: updatedTrainingDataset.getFeatures()) {
-      if (trainingDatasetFeature.getTransformationFunction() != null) {
-        featuresWithtransformationFunction.add(trainingDatasetFeature);
-      }
-    }
-    return featuresWithtransformationFunction;
   }
 }

@@ -46,18 +46,18 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, Code.RunType type, String browserHostName,
+  public Code post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName,
                    ExportFormat format)
           throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-            featureGroup.getId(), code, kernelId, type, browserHostName, format);
+            featureGroup.getId(), code, entityId, type, browserHostName, format);
   }
 
-  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, Code.RunType type,
+  public Code post(TrainingDataset trainingDataset, Code code, String entityId, Code.RunType type,
                    String browserHostName, ExportFormat format)
           throws FeatureStoreException, IOException {
     return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-            trainingDataset.getId(), code, kernelId, type, browserHostName, format);
+            trainingDataset.getId(), code, entityId, type, browserHostName, format);
   }
 
   private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,

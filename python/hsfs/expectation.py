@@ -88,7 +88,8 @@ class Expectation:
 
     @property
     def features(self):
-        """List of features this expectation is applied to."""
+        """Optional list of features this expectation is applied to. If no features are provided, the expectation
+        will be applied to all the feature group features."""
         return self._features
 
     @features.setter

@@ -132,6 +132,10 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup() {
   }
 
+  public FeatureGroup(FeatureStore featureStore, int id) {
+    this.featureStore = featureStore;
+    this.id = id;
+  }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(false, null);
