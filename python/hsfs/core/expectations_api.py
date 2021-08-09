@@ -88,6 +88,7 @@ class ExpectationsApi:
             _client._project_id,
             "featurestores",
             self._feature_store_id,
+            "expectations",
             name,
         ]
 

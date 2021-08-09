@@ -66,7 +66,7 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+  public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                    List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
@@ -133,6 +133,8 @@ public class FeatureGroupEngine {
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
             ? HudiOperationType.BULK_INSERT : null,
         SaveMode.Append, writeOptions);
+
+    return featureGroup;
   }
 
   public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,

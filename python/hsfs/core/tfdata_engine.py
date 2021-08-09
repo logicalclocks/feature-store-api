@@ -25,11 +25,6 @@ except ImportError:
     tf = mock.Mock()
 
 try:
-    from pydoop import hdfs
-except ImportError:
-    hdfs = mock.Mock()
-
-try:
     import boto3
 except ImportError:
     pass
@@ -62,6 +57,8 @@ class TFDataEngine:
         var_len_features,
         is_training,
         cycle_length,
+        deterministic,
+        file_pattern,
     ):
 
         self._training_dataset = training_dataset
@@ -71,6 +68,8 @@ class TFDataEngine:
         self._var_len_features = var_len_features
         self._is_training = is_training
         self._cycle_length = cycle_length
+        self._deterministic = deterministic
+        self._file_pattern = file_pattern
 
         self._features = training_dataset.schema
         self._training_dataset_format = self._training_dataset.data_format
@@ -367,9 +366,10 @@ class TFDataEngine:
         dataset = tf.data.Dataset.from_tensor_slices(input_files)
 
         dataset = dataset.interleave(
-            tf.data.TFRecordDataset,
+            lambda x: tf.data.TFRecordDataset(x),
             cycle_length=cycle_length,
-            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            num_parallel_calls=tf.data.AUTOTUNE,
+            deterministic=self._deterministic,
         )
 
         tfrecord_feature_description = self._create_tfrecord_feature_description(
@@ -388,7 +388,6 @@ class TFDataEngine:
         :return: absolute path of input files
         :rtype: list containing file paths.
         """
-
         if training_dataset_location.startswith("hopsfs"):
             input_files = self._get_hopsfs_dataset_files(
                 training_dataset_location, split
@@ -400,27 +399,14 @@ class TFDataEngine:
 
         return input_files
 
-    @staticmethod
-    def _get_hopsfs_dataset_files(training_dataset_location, split):
+    def _get_hopsfs_dataset_files(self, training_dataset_location, split):
         path = training_dataset_location.replace("hopsfs", "hdfs")
         if split is None:
-            path = hdfs.path.abspath(path)
+            input_files = tf.io.gfile.glob(path + "/" + "*" + "/" + self._file_pattern)
         else:
-            path = hdfs.path.abspath(path + "/" + str(split))
-
-        input_files = []
-
-        all_list = hdfs.ls(path, recursive=True)
-
-        # Remove directories and spark '_SUCCESS'
-        for file in all_list:
-            # remove empty file if any
-            if (
-                not hdfs.path.isdir(file)
-                and not file.endswith("_SUCCESS")
-                and hdfs.path.getsize(file) >= 1
-            ):
-                input_files.append(file)
+            input_files = tf.io.gfile.glob(
+                path + "/" + split + "/" + self._file_pattern
+            )
 
         return input_files
 

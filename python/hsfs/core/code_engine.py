@@ -36,13 +36,15 @@ class CodeEngine:
         """Compute code for a dataframe and send the result json to Hopsworks."""
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
         job_name = os.environ.get(CodeEngine.JOB_ENV)
+        if not kernel_id:
+            return
         
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
             application_id=web_proxy[7:] if web_proxy else None,
         )
-        
+
         if kernel_id:
             self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
         elif job_name:

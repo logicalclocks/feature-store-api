@@ -42,7 +42,7 @@ Go to the [Azure Portal](https://portal.azure.com) then proceed to the [Active D
   </figure>
 </p>
 
-Click on *Create your own application*. Give a name to your application, for example, *hopsworks_sso*. Make sure that *Integrate any other application you don't find in the gallery (Non-gallery)* is selected and click on *Create*.
+Search for *hopsworks.ai*. Click on it then click on *create*.
 
 <p align="center">
   <figure>
@@ -64,7 +64,12 @@ Click on *Single sign-on*. Then click on *SAML*.
   </figure>
 </p>
 
-Click on *Edit* in the *Basic SAML Configuration* section. Paste the *Identifier (Entity ID)* and *Reply URL* that you copied from the Hopsworks.ai setup page. Click on *Save*.
+Click on *Edit* in the *Basic SAML Configuration* section. Paste the *Identifier (Entity ID)* and *Reply URL* that you copied from the Hopsworks.ai setup page. 
+Delete the wild card *Identifier (Entity ID)* that is already set.
+
+For the *Sign on URL* copy the provided pattern (*https://managed.hopsworks.ai/sso-open/<ORGANIZATION>*) and replace *ORGANIZATION* by the name of your organization.
+
+Click on *Save*.
 
 <p align="center">
   <figure>
@@ -96,6 +101,33 @@ Go back to Hopsworks.ai. Click on *Next step* and keep following the documentati
       <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/next_step_azure.png" alt="Next step">
     </a>
     <figcaption>Next step</figcaption>
+  </figure>
+</p>
+
+Set the organization name you chose above. This name will be used in your login URL so choose something you will remember. Here we will use *hopsworks-demo*.
+
+Paste the *Metadata URL* you copied above and click *Finish*.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/hopsworks_config.png" alt="Configure Hopsworks.ai">
+    </a>
+    <figcaption>Configure Hopsworks.ai</figcaption>
+  </figure>
+</p>
+
+!!!Note
+    if the organization name you chose is already used you will need to set a new one and to update the *Sign on URL* in Azure.
+
+If you go back to the *SSO* tab of *Settings* you will get a *logging page* link. By using this link you will automatically be redirected to your identity provider to login. An account will automatically be created in hopsworks.ai for users of your organization when they log in for the first time.
+
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png">
+      <img style="border: 1px solid #000" src="../../../assets/images/hopsworksai/sso/hopsworksai/login_url.png" alt="Configure Hopsworks.ai">
+    </a>
+    <figcaption>Configure Hopsworks.ai</figcaption>
   </figure>
 </p>
 
@@ -216,7 +248,7 @@ Click on Copy URL on the *AWS SSO SAML metadata file* line. We will call this UR
   </figure>
 </p>
 
-Go back to Hopsworks.ai. Click on *Next step* and keep following the documentation at [Configure Hopsworks.ai](#configure-hopsworksai).
+Go back to Hopsworks.ai. Click on *Next step*.
 
 <p align="center">
   <figure>
@@ -227,7 +259,6 @@ Go back to Hopsworks.ai. Click on *Next step* and keep following the documentati
   </figure>
 </p>
 
-## Configure Hopsworks.ai.
 Give a name to your organization. This name will be used in your login URL so choose something you will remember. Here we will use *hopsworks-demo*.
 
 Paste the *Metadata URL* you copied above and click *Finish*.
