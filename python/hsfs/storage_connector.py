@@ -535,6 +535,7 @@ class SnowflakeConnector(StorageConnector):
         url=None,
         user=None,
         warehouse=None,
+        application=None, 
         sf_options=None,
     ):
         super().__init__(id, name, description, featurestore_id)
@@ -549,6 +550,7 @@ class SnowflakeConnector(StorageConnector):
         self._schema = schema
         self._table = table
         self._role = role
+        self._application = application
 
         self._options = (
             {opt["name"]: opt["value"] for opt in sf_options} if sf_options else {}
@@ -605,6 +607,11 @@ class SnowflakeConnector(StorageConnector):
         return self._url.replace("https://", "").replace(".snowflakecomputing.com", "")
 
     @property
+    def application(self):
+        """Application of the Snowflake storage connector"""
+        return self._application
+
+    @property
     def options(self):
         """Additional options for the Snowflake storage connector"""
         return self._options
@@ -634,6 +641,8 @@ class SnowflakeConnector(StorageConnector):
             props["token"] = self._token
         if self._warehouse is not None:
             props["warehouse"] = self._warehouse
+        if self._application is not None:
+            props["application"] = self._application
         return props
 
     def spark_options(self):

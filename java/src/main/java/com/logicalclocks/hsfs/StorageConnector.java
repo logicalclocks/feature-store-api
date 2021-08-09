@@ -295,6 +295,9 @@ public abstract class StorageConnector {
     private String table;
 
     @Getter @Setter
+    private String application;
+
+    @Getter @Setter
     private List<Option> sfOptions;
 
     public String account() {
