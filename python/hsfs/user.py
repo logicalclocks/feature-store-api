@@ -59,12 +59,10 @@ class User:
         self._user_account_type = user_account_type
         self._num_active_projects = num_active_projects
         self._num_remaining_projects = num_remaining_projects
-
+    
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("online_topic_name", None)
-        _ = json_decamelized.pop("type", None)
         return cls(**json_decamelized)
 
     def json(self):
