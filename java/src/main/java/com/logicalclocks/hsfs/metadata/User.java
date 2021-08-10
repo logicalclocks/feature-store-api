@@ -16,16 +16,14 @@
 
 package com.logicalclocks.hsfs.metadata;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 public class User {
-
-  @Getter
-  @Setter
-  private String username;
 
   @Getter
   @Setter
@@ -39,55 +37,4 @@ public class User {
   @Setter
   private String lastName;
 
-  @Getter
-  @Setter
-  private int status;
-
-  @Getter
-  @Setter
-  private String secret;
-
-  @Getter
-  @Setter
-  private String chosenPassword;
-
-  @Getter
-  @Setter
-  private String repeatedPassword;
-
-  @Getter
-  @Setter
-  private boolean tos;
-
-  @Getter
-  @Setter
-  private boolean twoFactor;
-
-  @Getter
-  @Setter
-  private int toursState;
-
-  @Getter
-  @Setter
-  private int maxNumProjects;
-
-  @Getter
-  @Setter
-  private int numCreatedProjects;
-
-  @Getter
-  @Setter
-  private boolean testUser;
-
-  @Getter
-  @Setter
-  private String userAccountType;
-
-  @Getter
-  @Setter
-  private int numActiveProjects;
-
-  @Getter
-  @Setter
-  private int numRemainingProjects;
 }
