@@ -661,6 +661,8 @@ class SnowflakeConnector(StorageConnector):
             props["sfToken"] = self._token
         if self._warehouse is not None:
             props["sfWarehouse"] = self._warehouse
+        if self._application is not None:
+            props["application"] = self._application
         if self._role is not None:
             props["sfRole"] = self._role
         if self._table is not None:

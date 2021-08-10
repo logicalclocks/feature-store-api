@@ -325,6 +325,9 @@ public abstract class StorageConnector {
       if (!Strings.isNullOrEmpty(table)) {
         options.put(Constants.SNOWFLAKE_TABLE, table);
       }
+      if (!Strings.isNullOrEmpty(application)) {
+        options.put(Constants.SNOWFLAKE_APPLICATION, application);
+      }
       if (sfOptions != null && !sfOptions.isEmpty()) {
         Map<String, String> argOptions = sfOptions.stream()
             .collect(Collectors.toMap(Option::getName, Option::getValue));
