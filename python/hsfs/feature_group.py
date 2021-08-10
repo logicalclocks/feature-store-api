@@ -22,7 +22,7 @@ import numpy as np
 import avro.schema
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
-from hsfs import util, engine, feature, storage_connector as sc
+from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
@@ -468,7 +468,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = creator
+        self._creator = user.from_response_json(creator)
         self._version = version
         self._name = name
         self._id = id
@@ -1273,7 +1273,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = creator
+        self._creator = user.from_response_json(creator)
         self._version = version
         self._name = name
         self._query = query
