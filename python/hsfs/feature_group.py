@@ -468,7 +468,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = user.from_response_json(creator)
+        self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
         self._id = id
@@ -1273,7 +1273,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = user.from_response_json(creator)
+        self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
         self._query = query
