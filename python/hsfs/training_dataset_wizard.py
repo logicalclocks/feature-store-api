@@ -17,6 +17,7 @@ import json
 import humps
 from hsfs import util
 from hsfs.core import training_dataset_wizard_api
+from hsfs.constructor.join_suggestion import JoinSuggestion
 
 
 class TrainingDatasetWizard:
@@ -26,21 +27,29 @@ class TrainingDatasetWizard:
             name,
             label,
             feature_group_id,
-            feature_store_id
+            feature_store_id,
+            accepted_suggestions,
+            current_round,
+            min_relatedness
     ):
         self._name = name
         self._label = label
         self._feature_group_id = feature_group_id
         self._feature_store_id = feature_store_id
+        self._accepted_suggestions = [JoinSuggestion.from_response_json(v) for v in accepted_suggestions]
+        self._current_round = current_round
+        self._min_relatedness = min_relatedness
         self._training_dataset_wizard_api = training_dataset_wizard_api.TrainingDatasetWizardApi(
             feature_store_id
         )
 
     def discover_related_featuregroups(self):
+        self._round += 1
         return self._training_dataset_wizard_api.discover(self)
 
-    def add_related_featuregroup(self, foreign_key, feature_group):
-        pass
+    def accept_suggestion(self, suggestion):
+        self._accepted_suggestions.add(suggestion)
+        return self
 
     def run_feature_selection(self):
         return self._training_dataset_wizard_api.featureselection(self)
@@ -56,7 +65,11 @@ class TrainingDatasetWizard:
             "name": self._name,
             "label": self._label,
             "featureGroupId": self._feature_group_id,
-            "featureStoreId": self._feature_store_id
+            "featureStoreId": self._feature_store_id,
+            "acceptedSuggestions": [v.to_dict() for v in self._accepted_suggestions] if self._accepted_suggestions
+            else [],
+            "currentRound": self._current_round,
+            "minRelatedness": self._min_relatedness
         }
 
     @classmethod
@@ -91,8 +104,35 @@ class TrainingDatasetWizard:
     @property
     def feature_group_id(self):
         """The id of the label's feature group."""
-        return self._label
+        return self._feature_group_id
 
     @feature_group_id.setter
     def feature_group_id(self, feature_group_id):
         self._feature_group_id = feature_group_id
+
+    @property
+    def accepted_suggestions(self):
+        """The id of the label's feature group."""
+        return self._accepted_suggestions
+
+    @accepted_suggestions.setter
+    def accepted_suggestions(self, accepted_suggestions):
+        self._accepted_suggestions = accepted_suggestions
+
+    @property
+    def current_round(self):
+        """The number of times .discover() was called."""
+        return self._current_round
+
+    @current_round.setter
+    def current_round(self, current_round):
+        self._current_round = current_round
+
+    @property
+    def min_relatedness(self):
+        """The minimum relatedness threshold for a join suggestion (between 0-100; higher is stricter, default: 80)."""
+        return self._min_relatedness
+
+    @min_relatedness.setter
+    def min_relatedness(self, min_relatedness):
+        self._min_relatedness = min_relatedness

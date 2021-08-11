@@ -17,7 +17,7 @@
 from hsfs import client, training_dataset
 from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement
-
+from hsfs.constructor.join_suggestion import JoinSuggestion
 
 class TrainingDatasetWizardApi:
 
@@ -35,14 +35,13 @@ class TrainingDatasetWizardApi:
             "discover"
         ]
         headers = {"content-type": "application/json"}
-        return training_dataset_wizard_instance.update_from_response_json(
-            _client._send_request(
-                "POST",
-                path_params,
-                headers=headers,
-                data=training_dataset_wizard_instance.json(),
-            ),
+        response = _client._send_request(
+            "POST",
+            path_params,
+            headers=headers,
+            data=training_dataset_wizard_instance.json(),
         )
+        return [JoinSuggestion.from_response_json(v) for v in response]
 
     def featureselection(self, training_dataset_wizard_instance):
         _client = client.get_instance()

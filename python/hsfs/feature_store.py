@@ -576,6 +576,9 @@ class FeatureStore:
             label=label,
             feature_group_id=feature_group_id,
             feature_store_id=self._id,
+            accepted_suggestions=[],
+            current_round=0,
+            min_relatedness=80
         )
 
     def create_expectation(
