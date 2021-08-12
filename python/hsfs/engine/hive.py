@@ -376,6 +376,7 @@ class Engine:
             data_options=[
                 {"name": "header", "value": "true"},
                 {"name": "inferSchema", "value": "true"},
+                {"name": "mode", "value": "DROPMALFORMED"},
             ],
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,
