@@ -551,7 +551,7 @@ class FeatureStore:
             transformation_functions=transformation_functions,
         )
 
-    def create_training_dataset_with_wizard(
+    def create_training_dataset_wizard(
             self,
             name: str,
             label: str,
@@ -567,7 +567,7 @@ class FeatureStore:
                 include in the training dataset, based on this label/feature.
             feature_group_id: The id of the feature group the label is belonging to.
                 The primary key of this feature group will serve as id of the resulting
-                training data set, and feature in this feature group will be added to
+                training data set, and all features in this feature group will be added to
                 the preliminary training data set by default.
         # Returns:
             `TrainingDatasetWizard`: The training dataset wizard metadata object.
@@ -577,8 +577,9 @@ class FeatureStore:
             label=label,
             feature_group_id=feature_group_id,
             feature_store_id=self._id,
+            feature_store_name=self._name,
             accepted_suggestions=[],
-            rejected_suggestions=[],
+            new_suggestions=[],
             current_round=0,
             min_relatedness=min_relatedness
         )
