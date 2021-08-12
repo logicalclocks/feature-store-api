@@ -555,7 +555,8 @@ class FeatureStore:
             self,
             name: str,
             label: str,
-            feature_group_id: int
+            feature_group_id: int,
+            min_relatedness: float = 80
     ):
         """Create a training dataset wizard metadata object.
 
@@ -578,7 +579,7 @@ class FeatureStore:
             feature_store_id=self._id,
             accepted_suggestions=[],
             current_round=0,
-            min_relatedness=80
+            min_relatedness=min_relatedness
         )
 
     def create_expectation(
