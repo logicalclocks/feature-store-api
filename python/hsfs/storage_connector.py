@@ -715,7 +715,7 @@ class JdbcConnector(StorageConnector):
         arguments.
         """
         options = (
-            self._arguments
+            {a.name: a.value for a in self._arguments}
             if self._arguments
             else {}
         )

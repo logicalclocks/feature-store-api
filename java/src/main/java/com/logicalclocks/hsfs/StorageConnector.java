@@ -349,12 +349,13 @@ public abstract class StorageConnector {
     private String connectionString;
 
     @Getter @Setter
-    private Map<String, String> arguments;
+    private List<Option> arguments;
 
     public Map<String, String> sparkOptions() {
-      Map<String, String> options = new HashMap<>(arguments);
-      options.put(Constants.JDBC_URL, connectionString);
-      return options;
+      Map<String, String> readOptions = arguments.stream()
+              .collect(Collectors.toMap(a -> a.getName(), a -> a.getValue()));
+      readOptions.put(Constants.JDBC_URL, connectionString);
+      return readOptions;
     }
 
     public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
