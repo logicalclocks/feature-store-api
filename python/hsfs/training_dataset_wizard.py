@@ -29,6 +29,7 @@ class TrainingDatasetWizard:
             feature_group_id,
             feature_store_id,
             accepted_suggestions,
+            rejected_suggestions,
             current_round,
             min_relatedness
     ):
@@ -37,6 +38,7 @@ class TrainingDatasetWizard:
         self._feature_group_id = feature_group_id
         self._feature_store_id = feature_store_id
         self._accepted_suggestions = [JoinSuggestion.from_response_json(v) for v in accepted_suggestions]
+        self._rejected_suggestions = [JoinSuggestion.from_response_json(v) for v in rejected_suggestions]
         self._current_round = current_round
         self._min_relatedness = min_relatedness
         self._training_dataset_wizard_api = training_dataset_wizard_api.TrainingDatasetWizardApi(
@@ -45,10 +47,13 @@ class TrainingDatasetWizard:
 
     def discover_related_featuregroups(self):
         self._current_round += 1
-        return self._training_dataset_wizard_api.discover(self)
+        received_suggestions = self._training_dataset_wizard_api.discover(self)
+        self._rejected_suggestions.extend(received_suggestions)
+        return received_suggestions
 
     def accept_suggestion(self, suggestion):
-        self._accepted_suggestions.add(suggestion)
+        self._accepted_suggestions.append(suggestion)
+        self._rejected_suggestions.remove(suggestion)
         return self
 
     def run_feature_selection(self):
@@ -67,6 +72,8 @@ class TrainingDatasetWizard:
             "featureGroupId": self._feature_group_id,
             "featureStoreId": self._feature_store_id,
             "acceptedSuggestions": [v.to_dict() for v in self._accepted_suggestions] if self._accepted_suggestions
+            else [],
+            "rejectedSuggestions": [v.to_dict() for v in self._rejected_suggestions] if self._rejected_suggestions
             else [],
             "currentRound": self._current_round,
             "minRelatedness": self._min_relatedness
@@ -112,12 +119,21 @@ class TrainingDatasetWizard:
 
     @property
     def accepted_suggestions(self):
-        """The id of the label's feature group."""
+        """The accepted join suggestions."""
         return self._accepted_suggestions
 
     @accepted_suggestions.setter
     def accepted_suggestions(self, accepted_suggestions):
         self._accepted_suggestions = accepted_suggestions
+
+    @property
+    def rejected_suggestions(self):
+        """The rejected join suggestions."""
+        return self._rejected_suggestions
+
+    @rejected_suggestions.setter
+    def rejected_suggestions(self, rejected_suggestions):
+        self._rejected_suggestions = rejected_suggestions
 
     @property
     def current_round(self):

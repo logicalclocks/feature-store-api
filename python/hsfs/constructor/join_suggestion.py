@@ -24,6 +24,7 @@ class JoinSuggestion:
             self,
             left_on,
             right_featuregroup_id,
+            right_featuregroup_name,
             right_on,
             relatedness,
             round
@@ -40,6 +41,7 @@ class JoinSuggestion:
             else None
         )
         self._right_featuregroup_id = right_featuregroup_id
+        self._right_featuregroup_name = right_featuregroup_name
         self._relatedness = relatedness
         self._round = round
 
@@ -51,6 +53,7 @@ class JoinSuggestion:
         return {
             "leftOn": [v.to_dict() for v in self._left_on],
             "rightFeaturegroupId": self._right_featuregroup_id,
+            "rightFeaturegroupName": self._right_featuregroup_name,
             "rightOn": [v.to_dict() for v in self._right_on],
             "relatedness": self._relatedness,
             "round": self._round
@@ -84,6 +87,15 @@ class JoinSuggestion:
     @other_featuregroup_id.setter
     def label(self, other_featuregroup_id):
         self._other_featuregroup_id = other_featuregroup_id
+
+    @property
+    def other_featuregroup_name(self):
+        """The feature group name of the related features."""
+        return self._other_featuregroup_name
+
+    @other_featuregroup_name.setter
+    def label(self, other_featuregroup_name):
+        self._other_featuregroup_name = other_featuregroup_name
 
     @property
     def right_on(self):
