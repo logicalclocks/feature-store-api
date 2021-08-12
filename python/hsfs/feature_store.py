@@ -578,6 +578,7 @@ class FeatureStore:
             feature_group_id=feature_group_id,
             feature_store_id=self._id,
             accepted_suggestions=[],
+            rejected_suggestions=[],
             current_round=0,
             min_relatedness=min_relatedness
         )
