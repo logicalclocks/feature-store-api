@@ -44,7 +44,7 @@ class TrainingDatasetWizard:
         )
 
     def discover_related_featuregroups(self):
-        self.round += 1
+        self._current_round += 1
         return self._training_dataset_wizard_api.discover(self)
 
     def accept_suggestion(self, suggestion):
