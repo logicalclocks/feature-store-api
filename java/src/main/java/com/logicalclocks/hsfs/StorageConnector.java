@@ -353,7 +353,7 @@ public abstract class StorageConnector {
 
     public Map<String, String> sparkOptions() {
       Map<String, String> readOptions = arguments.stream()
-              .collect(Collectors.toMap(a -> a.getName(), a -> a.getValue()));
+              .collect(Collectors.toMap(arg -> arg.getName(), arg -> arg.getValue()));
       readOptions.put(Constants.JDBC_URL, connectionString);
       return readOptions;
     }
