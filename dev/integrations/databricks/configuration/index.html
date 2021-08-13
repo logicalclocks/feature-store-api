@@ -1940,7 +1940,7 @@ To achieve that, the first step is to register an instance and a valid API key i
 <p>A cluster needs to exist before users can configure it using the Hopsworks UI. The cluster can be in any state prior to the configuration.</p>
 <div class="admonition warning">
 <p class="admonition-title">Runtime limitation</p>
-<p>Currently Runtime 6 is suggested to be able to use the full suite of Hopsworks Feature Store capabilities.</p>
+<p>Currently Runtime 8.x is suggested to be able to use the full suite of Hopsworks Feature Store capabilities.</p>
 </div>
 <h2 id="configure-a-cluster">Configure a cluster<a class="headerlink" href="#configure-a-cluster" title="Permanent link">#</a></h2>
 <p>Clusters are configured for a project user, which, in Hopsworks terms, means a user operating within the scope of a project.
@@ -1987,6 +1987,7 @@ Once the cluster is running users can establish a connection to the Hopsworks Fe
     <span class="s1">&#39;my_instance&#39;</span><span class="p">,</span>                      <span class="c1"># DNS of your Feature Store instance</span>
     <span class="mi">443</span><span class="p">,</span>                                <span class="c1"># Port to reach your Hopsworks instance, defaults to 443</span>
     <span class="s1">&#39;my_project&#39;</span><span class="p">,</span>                       <span class="c1"># Name of your Hopsworks Feature Store project</span>
+    <span class="n">secrets_store</span><span class="o">=</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
     <span class="n">api_key_file</span><span class="o">=</span><span class="s2">&quot;featurestore.key&quot;</span><span class="p">,</span>    <span class="c1"># For Azure, store the API key locally</span>
     <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span>          <span class="c1"># Disable for self-signed certificates</span>
 <span class="p">)</span>
