@@ -72,9 +72,10 @@ class TrainingDatasetWizard:
             "label": self._label,
             "featureGroupId": self._feature_group_id,
             "featureStoreId": self._feature_store_id,
+            "featureStoreName": self._feature_store_name,
             "acceptedSuggestions": [v.to_dict() for v in self._accepted_suggestions] if self._accepted_suggestions
             else [],
-            "newSuggestions": [v.to_dict() for v in self._newSuggestions] if self._newSuggestions
+            "newSuggestions": [v.to_dict() for v in self._new_suggestions] if self._new_suggestions
             else [],
             "currentRound": self._current_round,
             "minRelatedness": self._min_relatedness
