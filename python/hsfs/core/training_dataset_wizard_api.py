@@ -15,7 +15,7 @@
 #
 
 from hsfs import client, training_dataset
-from hsfs.constructor.fs_query import FsQuery
+from hsfs.constructor.query import Query
 from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement
 from hsfs.constructor.join_suggestion import JoinSuggestion
@@ -57,7 +57,7 @@ class TrainingDatasetWizardApi:
             "constructquery"
         ]
         headers = {"content-type": "application/json"}
-        return FsQuery.from_response_json(
+        return Query._hopsworks_json(
             _client._send_request(
                 "POST",
                 path_params,
