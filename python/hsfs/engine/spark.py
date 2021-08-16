@@ -53,9 +53,68 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
         self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
 
+        self.validate_spark_configuration()
+
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
+
+    def validate_spark_configuration(self):
+        key = "spark.hadoop.hops.ssl.trustore.name"
+        if(not self._spark_session.conf.get(key)):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hops.rpc.socket.factory.class.default"
+        if(not self._spark_session.conf.get(key) == "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.serializer"
+        if(not self._spark_session.conf.get(key) == "org.apache.spark.serializer.KryoSerializer"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hops.ssl.hostname.verifier"
+        if(not self._spark_session.conf.get(key) == "ALLOW_ALL"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hops.ssl.keystore.name"
+        if(not self._spark_session.conf.get(key)):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.fs.hopsfs.impl"
+        if(not self._spark_session.conf.get(key) == "io.hops.hopsfs.client.HopsFileSystem"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hops.ssl.keystores.passwd.name"
+        if(not self._spark_session.conf.get(key)):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hops.ipc.server.ssl.enabled"
+        if(not self._spark_session.conf.get(key) == "true"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.sql.hive.metastore.jars"
+        if(not self._spark_session.conf.get(key) == "/hopsworks_metastore_jar/lib/*"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.client.rpc.ssl.enabled.protocol"
+        if(not self._spark_session.conf.get(key) == "TLSv1.2"):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
+        key = "spark.hadoop.hive.metastore.uris"
+        if(not self._spark_session.conf.get(key)):
+            raise FeatureStoreException(
+                "Invalid: " + key
+            )
 
     def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
         if not connector:

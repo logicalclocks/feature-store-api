@@ -35,6 +35,7 @@ import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Column;
@@ -57,12 +58,13 @@ import scala.collection.JavaConverters;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -93,6 +95,64 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
     // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+
+    validateSparkConfiguration();
+  }
+
+  @SneakyThrows
+  private void validateSparkConfiguration() {
+    String key = "spark.hadoop.hops.ssl.trustore.name";
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hops.rpc.socket.factory.class.default";
+    if (!sparkSession.conf().get(key)
+            .equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.serializer";
+    if (!sparkSession.conf().get(key)
+            .equals("org.apache.spark.serializer.KryoSerializer")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hops.ssl.hostname.verifier";
+    if (!sparkSession.conf().get(key)
+            .equals("ALLOW_ALL")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hops.ssl.keystore.name";
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.fs.hopsfs.impl";
+    if (!sparkSession.conf().get(key)
+            .equals("io.hops.hopsfs.client.HopsFileSystem")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hops.ssl.keystores.passwd.name";
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hops.ipc.server.ssl.enabled";
+    if (!sparkSession.conf().get(key)
+            .equals("true")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    //todo ?????
+    key = "spark.sql.hive.metastore.jars";
+    if (!sparkSession.conf().get(key)
+            .equals("/hopsworks_metastore_jar/lib/*")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.client.rpc.ssl.enabled.protocol";
+    if (!sparkSession.conf().get(key)
+            .equals("TLSv1.2")) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
+    key = "spark.hadoop.hive.metastore.uris";
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException("Invalid: " + key);
+    }
   }
 
   public String getTrustStorePath() {
