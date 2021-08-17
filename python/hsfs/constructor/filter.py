@@ -26,6 +26,7 @@ class Filter:
     EQ = "EQUALS"
     LE = "LESS_THAN_OR_EQUAL"
     LT = "LESS_THAN"
+    IN = "IN"
 
     def __init__(self, feature, condition, value):
         self._feature = feature

@@ -151,4 +151,8 @@ public class Feature {
   public Filter ge(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
   }
+
+  public Filter in(Object value) {
+    return new Filter(this, SqlFilterCondition.IN, value.toString());
+  }
 }
