@@ -170,9 +170,6 @@ class Feature:
         return filter.Filter(self, filter.Filter.GT, other)
     
     def __contains__(self, other):
-        raise TypeError(
-                    "Expected type `Filter` or `Logic`, got `{}`".format(type(other))
-                )
         return filter.Filter(self, filter.Filter.IN, other)
 
     def __str__(self):
