@@ -24,6 +24,8 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+
+import com.logicalclocks.hsfs.engine.flink.FlinkEngine;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -32,6 +34,7 @@ import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.SneakyThrows;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaParseException;
@@ -48,23 +51,40 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FeatureGroupUtils {
 
-  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private KafkaApi kafkaApi = new KafkaApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  private final FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private final StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  private final KafkaApi kafkaApi = new KafkaApi();
+  private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  public final String engineType = engineType();
+
+  public FeatureGroupUtils() {
+  }
 
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
       throws FeatureStoreException {
-    return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
+    if (engineType.equals("spark")) {
+      return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
+    } else if (engineType.equals("flink")) {
+      return FlinkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric);
+    } else {
+      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
+    }
   }
 
   public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
-    return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
+    if (engineType.equals("spark")) {
+      return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
+    } else if (engineType.equals("flink")) {
+      return FlinkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
+    } else {
+      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
+    }
   }
 
   // TODO(Fabio): this should be moved in the backend
@@ -113,14 +133,6 @@ public class FeatureGroupUtils {
     return storageConnector.getConnectionString()
         + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
         .collect(Collectors.joining(";"));
-  }
-
-  public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
-    if (inputDate != null) {
-      return new Date(getTimeStampFromDateString(inputDate));
-    } else {
-      return null;
-    }
   }
 
   public static Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {
@@ -181,17 +193,33 @@ public class FeatureGroupUtils {
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-    config.put("kafka.bootstrap.servers",
+    // spark and flink require different key values for kafka config
+    config.put(engineType.equals("spark") ? "kafka.bootstrap.servers" : "bootstrap.servers",
         kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
             "INTERNAL://", "")).collect(Collectors.joining(",")));
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
+    config.put(engineType.equals("spark") ? "kafka.security.protocol" : "security.protocol", "SSL");
+    config.put(engineType.equals("spark") ? "kafka.ssl.truststore.location" :
+        "security.ssl.truststore", client.getTrustStorePath());
+    config.put(engineType.equals("spark") ? "kafka.ssl.truststore.password" :
+        "security.ssl.truststore-password", client.getCertKey());
+    config.put(engineType.equals("spark") ? "kafka.ssl.keystore.location" :
+        "security.ssl.keystore", client.getKeyStorePath());
+    config.put(engineType.equals("spark") ? "kafka.ssl.keystore.password" :
+        "security.ssl.keystore-password", client.getCertKey());
+    config.put(engineType.equals("spark") ? "kafka.ssl.key.password" :
+        "security.ssl.key-password", client.getCertKey());
+    config.put(engineType.equals("spark") ? "kafka.ssl.endpoint.identification.algorithm" :
+        "security.ssl.algorithms", "");
     return config;
+  }
+
+  public Properties getKafkaProperties(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    Map<String, String> kafkaConfig = getKafkaConfig(featureGroup,  writeOptions);
+    Properties properties = new Properties();
+    properties.put("group.id",  featureGroup.getName() + "-" + featureGroup.getVersion());
+    properties.putAll(kafkaConfig);
+    return properties;
   }
 
   private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroupBase featureGroup, String wallclockTime,
@@ -223,10 +251,10 @@ public class FeatureGroupUtils {
   public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.NONE)
         || featureGroupBase instanceof StreamFeatureGroup)) {
       // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("commitDetails function is only valid for "
+      throw new FeatureStoreException("delete function is only valid for "
             + "time travel enabled feature group");
     }
     return getCommitDetails(featureGroupBase, null, limit);
@@ -241,16 +269,20 @@ public class FeatureGroupUtils {
   public <S> FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, S genericDataset,
                                          Map<String, String> writeOptions)
       throws IOException, FeatureStoreException, ParseException {
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.NONE)
         || featureGroupBase instanceof StreamFeatureGroup)) {
       // operation is only valid for time travel enabled feature group
       throw new FeatureStoreException("delete function is only valid for "
             + "time travel enabled feature group");
     }
 
-    HudiEngine hudiEngine = new HudiEngine();
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
-        writeOptions);
+    if (engineType.equals("spark")) {
+      HudiEngine hudiEngine = new HudiEngine();
+      return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
+          writeOptions);
+    } else {
+      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
+    }
   }
 
   public String getAvroSchema(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
@@ -266,9 +298,20 @@ public class FeatureGroupUtils {
     }
   }
 
+  public String engineType() {
+    if (checkIfClassExists("org.apache.spark.sql.Dataset")) {
+      return "spark";
+    } else if (checkIfClassExists("org.apache.flink.streaming.api.datastream.DataStream")) {
+      return "flink";
+    } else {
+      return null;
+    }
+  }
+
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
     if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + onlineTopicName;
+      queryName = "insert_stream_" + onlineTopicName + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     }
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";
@@ -284,7 +327,7 @@ public class FeatureGroupUtils {
         field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
         new FeatureStoreException(
             "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
-    return complexField.schema().toString(false);
+    return complexField.schema().toString(true);
   }
 
   public String getEncodedAvroSchema(Schema schema, List<String> complexFeatures)
@@ -294,7 +337,7 @@ public class FeatureGroupUtils {
             ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
             : new Schema.Field(field.name(), field.schema(), null, null))
         .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(false);
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
   }
 
   public Schema getDeserializedAvroSchema(String avroSchema) throws FeatureStoreException, IOException {
@@ -302,6 +345,14 @@ public class FeatureGroupUtils {
       return new Schema.Parser().parse(avroSchema);
     } catch (SchemaParseException e) {
       throw new FeatureStoreException("Failed to deserialize online feature group schema" + avroSchema + ".");
+    }
+  }
+
+  public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
+    if (inputDate != null) {
+      return new Date(getTimeStampFromDateString(inputDate));
+    } else {
+      return null;
     }
   }
 }

@@ -21,6 +21,7 @@ from hsfs.core import ingestion_job
 
 class FeatureGroupApi:
     CACHED = "cached"
+    STREAM = "stream"
     ONDEMAND = "ondemand"
 
     def __init__(self, feature_store_id):
@@ -80,6 +81,8 @@ class FeatureGroupApi:
 
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
+        elif fg_type == self.STREAM:
+            fg_list = feature_group.StreamFeatureGroup.from_response_json(json_list)
         else:
             fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
 

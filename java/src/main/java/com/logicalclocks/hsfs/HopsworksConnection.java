@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.ProjectApi;
@@ -64,6 +65,7 @@ public class HopsworksConnection implements Closeable {
   @Getter
   private String apiKeyValue;
 
+  private FeatureGroupUtils featureGroupUtils = new FeatureGroupUtils();
   private FeatureStoreApi featureStoreApi = new FeatureStoreApi();
   private ProjectApi projectApi = new ProjectApi();
 

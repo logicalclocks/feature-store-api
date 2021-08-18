@@ -121,6 +121,7 @@ dmypy.json
 .vscode
 *.iml
 target/
+java/dependency-reduced-pom.xml
 
 # Mac
 .DS_Store

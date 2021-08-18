@@ -401,4 +401,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
+
+  public <S> void insertFlinkStream(S featureData) {
+    insertFlinkStream(featureData, null, null, null, null);
+  }
+
+  public <S> void insertFlinkStream(S featureData, List<String> partitionKeys, String hudiPrecombineKey,
+                                    Map<String, String> writeOptions, JobConfiguration jobConfigurations)  {
+    streamFeatureGroupEngine.insertFlinkStream(this, featureData, partitionKeys,
+        hudiPrecombineKey,  writeOptions, jobConfigurations);
+  }
 }

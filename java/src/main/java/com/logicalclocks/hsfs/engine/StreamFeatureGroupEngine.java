@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.engine.flink.FlinkEngine;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -60,7 +61,7 @@ public class StreamFeatureGroupEngine {
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions,
                                      JobConfiguration sparkJobConfiguration)
-          throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException, ParseException {
 
     StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
         writeOptions, sparkJobConfiguration, dataset);
@@ -75,7 +76,7 @@ public class StreamFeatureGroupEngine {
   public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
                                  String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
                                  List<String> partitionKeys, String hudiPrecombineKey, Map<String, String>
-                                       writeOptions, JobConfiguration jobConfiguration) {
+                                     writeOptions, JobConfiguration jobConfiguration) {
 
     if (writeOptions == null) {
       writeOptions = new HashMap<>();
@@ -87,8 +88,8 @@ public class StreamFeatureGroupEngine {
     }
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
-      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
+        utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
   public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
@@ -114,14 +115,14 @@ public class StreamFeatureGroupEngine {
   }
 
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
-                                                     String hudiPrecombineKey, Map<String, String> writeOptions,
-                                                     JobConfiguration sparkJobConfiguration, S featureData)
+                                                         String hudiPrecombineKey, Map<String, String> writeOptions,
+                                                         JobConfiguration sparkJobConfiguration, S featureData)
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils
           .parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData),
-            featureGroup.getTimeTravelFormat()));
+              featureGroup.getTimeTravelFormat()));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
@@ -188,5 +189,23 @@ public class StreamFeatureGroupEngine {
     }
 
     return featureGroup;
+  }
+
+  @SneakyThrows
+  public <S> void insertFlinkStream(StreamFeatureGroup streamFeatureGroup, S featureData, List<String> partitionKeys,
+                                    String hudiPrecombineKey, Map<String, String> writeOptions,
+                                    JobConfiguration jobConfiguration) {
+
+    if (writeOptions == null) {
+      writeOptions = new HashMap<>();
+    }
+
+    if (streamFeatureGroup.getId() == null) {
+      saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    } else {
+      FlinkEngine.getInstance().writeDataStream(streamFeatureGroup, featureData,
+          utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+    }
   }
 }

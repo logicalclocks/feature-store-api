@@ -125,7 +125,7 @@ public class SparkEngine {
     Map<String, String> configurationMap = new HashMap<>();
     configurationMap.put("spark.hadoop.hops.ssl.trustore.name", null);
     configurationMap.put("spark.hadoop.hops.rpc.socket.factory.class.default",
-            "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+        "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
     configurationMap.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
     configurationMap.put("spark.hadoop.hops.ssl.hostname.verifier", "ALLOW_ALL");
     configurationMap.put("spark.hadoop.hops.ssl.keystore.name", null);
@@ -138,8 +138,8 @@ public class SparkEngine {
 
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
       if (!(sparkSession.conf().contains(entry.getKey())
-              && (entry.getValue() == null
-              || sparkSession.conf().get(entry.getKey(), null).equals(entry.getValue())))) {
+          && (entry.getValue() == null
+          || sparkSession.conf().get(entry.getKey(), null).equals(entry.getValue())))) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
@@ -178,9 +178,9 @@ public class SparkEngine {
       throws FeatureStoreException, IOException {
     Dataset<Row> dataset = (Dataset<Row>) onDemandFeatureGroup.getStorageConnector()
         .read(onDemandFeatureGroup.getQuery(),
-        onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
-        getOnDemandOptions(onDemandFeatureGroup),
-        onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
+            onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
+            getOnDemandOptions(onDemandFeatureGroup),
+            onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
     if (!Strings.isNullOrEmpty(onDemandFeatureGroup.getLocation())) {
       sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(), 0).collect();
     }
@@ -233,7 +233,8 @@ public class SparkEngine {
    * @param saveMode
    */
   public Dataset<Row>[] write(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                    Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
+                              Map<String, String> writeOptions, SaveMode saveMode)
+      throws FeatureStoreException, IOException {
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
     if (trainingDataset.getCoalesce()) {
@@ -404,7 +405,7 @@ public class SparkEngine {
    * @throws IOException
    */
   public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
-                                         Map<String, String> writeOptions)
+                                       Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, (Dataset<Row>) dataset))
         .write()
@@ -415,21 +416,21 @@ public class SparkEngine {
   }
 
   public <S> StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, S datasetGeneric, String queryName,
-                                             String outputMode, boolean awaitTermination, Long timeout,
-                                             String checkpointLocation, Map<String, String> writeOptions)
+                                                 String outputMode, boolean awaitTermination, Long timeout,
+                                                 String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
-        .writeStream()
-        .format(Constants.KAFKA_FORMAT)
-        .outputMode(outputMode)
-        .option("checkpointLocation", checkpointLocation == null
-            ? utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
-            : checkpointLocation)
-        .options(writeOptions)
-        .option("topic", featureGroupBase.getOnlineTopicName());
+            .writeStream()
+            .format(Constants.KAFKA_FORMAT)
+            .outputMode(outputMode)
+            .option("checkpointLocation", checkpointLocation == null
+                ? utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
+                : checkpointLocation)
+            .options(writeOptions)
+            .option("topic", featureGroupBase.getOnlineTopicName());
 
     // start streaming to online feature group topic
     StreamingQuery query = writer.start();
@@ -447,7 +448,7 @@ public class SparkEngine {
    * @return
    */
   public Dataset<Row> encodeComplexFeatures(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
-          throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException {
 
     List<Column> select = new ArrayList<>();
     for (Schema.Field f : featureGroupBase.getDeserializedAvroSchema().getFields()) {
@@ -480,7 +481,8 @@ public class SparkEngine {
   }
 
   public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
-      HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
+                                         HudiOperationType operation, Map<String, String> writeOptions,
+                                         Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
     Dataset<Row> dataset = (Dataset<Row>) genericDataset;
@@ -510,7 +512,7 @@ public class SparkEngine {
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
-      Boolean histogram, Boolean exactUniqueness) {
+                        Boolean histogram, Boolean exactUniqueness) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -522,10 +524,10 @@ public class SparkEngine {
       exactUniqueness = true;
     }
     ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
-                                            .onData(df)
-                                            .withCorrelation(correlation, 100)
-                                            .withHistogram(histogram, 20)
-                                            .withExactUniqueness(exactUniqueness);
+        .onData(df)
+        .withCorrelation(correlation, 100)
+        .withHistogram(histogram, 20)
+        .withExactUniqueness(exactUniqueness);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
@@ -628,9 +630,9 @@ public class SparkEngine {
     writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
-  
+
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
-      TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
+                                                   TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     Boolean usingHudi = timeTravelFormat == TimeTravelFormat.HUDI;
@@ -659,12 +661,12 @@ public class SparkEngine {
         throw new FeatureStoreException("Feature '" + structField.name().toLowerCase() + "': "
             + "spark type " + structField.dataType().catalogString() + " not supported.");
       }
-  
+
       Feature f = new Feature(structField.name().toLowerCase(), featureType, false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
-      
+
       features.add(f);
     }
 
@@ -697,7 +699,7 @@ public class SparkEngine {
   }
 
   private Dataset<Row> readStreamKafka(DataStreamReader stream, String messageFormat, String schema,
-      boolean includeMetadata) throws SchemaParseException, FeatureStoreException {
+                                       boolean includeMetadata) throws SchemaParseException, FeatureStoreException {
     Column[] kafkaMetadataColumns = Arrays.asList(
         col("key"),
         col("topic"),
@@ -715,7 +717,7 @@ public class SparkEngine {
 
       if (includeMetadata) {
         return df.withColumn("value", from_avro(df.col("value"), schema))
-          .select(kafkaMetadataColumns);
+            .select(kafkaMetadataColumns);
       }
       return df.withColumn("value", from_avro(df.col("value"), schema)).select(col("value.*"));
     } else if (messageFormat.equals("json") && !Strings.isNullOrEmpty(schema)) {
@@ -723,11 +725,11 @@ public class SparkEngine {
 
       if (includeMetadata) {
         return df.withColumn("value", from_json(df.col("value").cast("string"),
-          schema, new HashMap<>()))
-          .select(kafkaMetadataColumns);
+                schema, new HashMap<>()))
+            .select(kafkaMetadataColumns);
       }
       return df.withColumn("value", from_json(df.col("value").cast("string"), schema, new HashMap<>()))
-        .select(col("value.*"));
+          .select(col("value.*"));
     }
 
     if (includeMetadata) {
