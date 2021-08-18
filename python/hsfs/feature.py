@@ -171,6 +171,9 @@ class Feature:
     
     def __contains__(self, other):
         return filter.Filter(self, filter.Filter.IN, other)
+    
+    def inside(self, other):
+        return filter.Filter(self, filter.Filter.IN, other)
 
     def __str__(self):
         return self.json()
