@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs.engine;
+package com.logicalclocks.hsfs.engine.hudi;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -48,52 +49,65 @@ import java.util.Map;
 
 public class HudiEngine {
 
-  private static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
-  private static final String HUDI_TABLE_NAME = "hoodie.table.name";
-  private static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
-  private static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
+  protected static final String HUDI_BASE_PATH = "hoodie.base.path";
+  protected static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
+  protected static final String HUDI_TABLE_NAME = "hoodie.table.name";
+  protected static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
+  protected static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
 
-  private static final String HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class";
-  private static final String HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator";
-  private static final String HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field";
-  private static final String HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field";
-  private static final String HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field";
+  protected static final String HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class";
+  protected static final String HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator";
+  protected static final String HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field";
+  protected static final String HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field";
+  protected static final String HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field";
 
-  private static final String HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable";
-  private static final String HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table";
-  private static final String HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database";
-  private static final String HUDI_HIVE_SYNC_JDBC_URL =
+  protected static final String HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable";
+  protected static final String HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table";
+  protected static final String HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database";
+  protected static final String HUDI_HIVE_SYNC_JDBC_URL =
       "hoodie.datasource.hive_sync.jdbcurl";
-  private static final String HUDI_HIVE_SYNC_PARTITION_FIELDS =
+  protected static final String HUDI_HIVE_SYNC_PARTITION_FIELDS =
       "hoodie.datasource.hive_sync.partition_fields";
-  private static final String HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP =
-      "hoodie.datasource.hive_sync.support_timestamp";
-
-  private static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
+  protected static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
       "hoodie.datasource.hive_sync.partition_extractor_class";
-  private static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
+  private static final String HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP =
+          "hoodie.datasource.hive_sync.support_timestamp";
+  protected static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
       "org.apache.hudi.hive.MultiPartKeysValueExtractor";
-  private static final String HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
+  protected static final String HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
       "org.apache.hudi.hive.NonPartitionedExtractor";
-  private static final String HIVE_AUTO_CREATE_DATABASE_OPT_KEY = "hoodie.datasource.hive_sync.auto_create_database";
-  private static final String HIVE_AUTO_CREATE_DATABASE_OPT_VAL = "false";
+  protected static final String HIVE_AUTO_CREATE_DATABASE_OPT_KEY = "hoodie.datasource.hive_sync.auto_create_database";
+  protected static final String HIVE_AUTO_CREATE_DATABASE_OPT_VAL = "false";
 
-  private static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
-  private static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
-  private static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
-  private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
-  private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
+  protected static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
+  protected static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
+  protected static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
+  protected static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
+  protected static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
-  private static final String HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates";
+  protected static final String HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates";
 
-  private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
-  private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
+  protected static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
+  protected static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
+
+  protected static final String HUDI_KAFKA_TOPIC = "hoodie.deltastreamer.source.kafka.topic";
+  protected static final String COMMIT_METADATA_KEYPREFIX_OPT_KEY = "hoodie.datasource.write.commitmeta.key.prefix";
+  protected static final String DELTASTREAMER_CHECKPOINT_KEY = "deltastreamer.checkpoint.key";
+  protected static final String CHECKPOINT_PROVIDER_PATH_PROP = "hoodie.deltastreamer.checkpoint.provider.path";
+  protected static final String INITIAL_CHECKPOINT_PROVIDER =
+      "com.logicalclocks.hsfs.engine.hudi.InitialCheckpointFromAnotherHoodieTimelineProvider";
+  protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.FeatureGroup.schema";
+  protected static final String KAFKA_SOURCE = "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerKafkaSource";
+  protected static final String SCHEMA_PROVIDER = "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerSchemaProvider";
+  protected static final String DELTA_STREAMER_TRANSFORMER =
+      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerTransformer";
+  protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
-
+  private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
                                    Dataset<Row> dataset, HudiOperationType operation,
@@ -237,5 +251,33 @@ public class HudiEngine {
   public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
     Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
     return dateFormat.format(commitedOnDate);
+  }
+
+  public void streamToHoodieTable(SparkSession sparkSession, FeatureGroup featureGroup,
+                                  Map<String, String> writeOptions) throws Exception {
+
+    Map<String, String> hudiWriteOpts = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
+    hudiWriteOpts.put("projectId", String.valueOf(featureGroup.getFeatureStore().getProjectId()));
+    hudiWriteOpts.put("featureStoreName", featureGroup.getFeatureStore().getName());
+    hudiWriteOpts.put("featureGroupName", featureGroup.getName());
+    hudiWriteOpts.put("featureGroupVersion", String.valueOf(featureGroup.getVersion()));
+    hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(featureGroup));
+    hudiWriteOpts.put(HUDI_BASE_PATH, featureGroup.getLocation());
+    hudiWriteOpts.put(CHECKPOINT_PROVIDER_PATH_PROP, featureGroup.getLocation());
+    hudiWriteOpts.put(HUDI_KAFKA_TOPIC, featureGroup.getOnlineTopicName());
+    hudiWriteOpts.put(FEATURE_GROUP_SCHEMA, featureGroup.getAvroSchema());
+    hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY, hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
+
+    writeOptions.putAll(hudiWriteOpts);
+    deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
+
+    FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
+    // TODO (davit): how this can be set from transformer?
+    //fgCommit.setValidationId(validationId);
+    featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+
+    if (writeOptions.containsKey("functionType") && writeOptions.get("functionType").equals("streamingQuery")) {
+      featureGroup.computeStatistics();
+    }
   }
 }

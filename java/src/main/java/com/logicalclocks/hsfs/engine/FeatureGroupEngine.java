@@ -23,8 +23,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -43,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
 
@@ -156,7 +154,7 @@ public class FeatureGroupEngine {
     }
 
     saveDataframe(featureGroup, featureData, storage, operation,
-        writeOptions, getKafkaConfig(featureGroup, writeOptions), validationId);
+        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
@@ -174,8 +172,20 @@ public class FeatureGroupEngine {
           + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
     }
 
-    return SparkEngine.getInstance().writeStreamDataframe(featureGroup, utils.sanitizeFeatureNames(featureData),
-        queryName, outputMode, awaitTermination, timeout, getKafkaConfig(featureGroup, writeOptions));
+    StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
+        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+        utils.getKafkaConfig(featureGroup, writeOptions));
+
+    // start streaming to hudi table from online feature group topic
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      writeOptions.put("functionType", "streamingQuery");
+      featureGroupApi.deltaStreamerJob(featureGroup, writeOptions);
+    } else {
+      throw new FeatureStoreException("Hudi DeltaStreamer is only supported for Hudi time travel enabled feature "
+          + "groups");
+    }
+
+    return streamingQuery;
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
@@ -191,9 +201,15 @@ public class FeatureGroupEngine {
     } else if (storage == Storage.ONLINE) {
       SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
-          offlineWriteOptions, validationId);
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      if (featureGroup.getTimeTravelFormat().equals(TimeTravelFormat.HUDI)
+          && !operation.equals(HudiOperationType.BULK_INSERT)) {
+        SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+        featureGroupApi.deltaStreamerJob(featureGroup, offlineWriteOptions);
+      } else {
+        SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+            offlineWriteOptions, validationId);
+        SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      }
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
     }
@@ -255,27 +271,5 @@ public class FeatureGroupEngine {
 
   public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
-  }
-
-  // TODO(Fabio): why is this here?
-  public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>();
-    if (writeOptions != null) {
-      config.putAll(writeOptions);
-    }
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
-    config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", "")).collect(Collectors.joining(",")));
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
-    return config;
   }
 }

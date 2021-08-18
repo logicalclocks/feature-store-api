@@ -31,6 +31,7 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -55,8 +56,7 @@ import org.apache.spark.sql.streaming.StreamingQueryException;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -350,11 +350,6 @@ public class SparkEngine {
                                              Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-    if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
-          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    }
-
     DataStreamWriter<Row> writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
@@ -364,6 +359,7 @@ public class SparkEngine {
         .options(writeOptions)
         .option("topic", featureGroup.getOnlineTopicName());
 
+    // start streaming to online feature group topic
     StreamingQuery query = writer.start();
     if (awaitTermination) {
       query.awaitTermination(timeout);
@@ -538,5 +534,11 @@ public class SparkEngine {
       emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
     }
     return emptyDataframe;
+  }
+
+  public void streamToHudiTable(FeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws Exception {
+    writeOptions = utils.getKafkaConfig(featureGroup, writeOptions);
+    hudiEngine.streamToHoodieTable(sparkSession, featureGroup, writeOptions);
   }
 }

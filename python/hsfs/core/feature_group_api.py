@@ -16,7 +16,7 @@
 
 from hsfs import client
 from hsfs import feature_group, feature_group_commit
-from hsfs.core import ingestion_job
+from hsfs.core import ingestion_job, job, hsfs_util_job_conf
 
 
 class FeatureGroupApi:
@@ -262,5 +262,34 @@ class FeatureGroupApi:
         return ingestion_job.IngestionJob.from_response_json(
             _client._send_request(
                 "POST", path_params, headers=headers, data=ingestion_conf.json()
+            ),
+        )
+
+    def deltastreamer_job(self, feature_group_instance, write_options):
+        """
+        Setup a Hopsworks job for deltastreamer job
+        Args:
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        hsfs_util_job_conf: the configuration for the deltastreamer job application
+        """
+
+        util_app_conf = hsfs_util_job_conf.HsfsUtilJobConf(write_options)
+
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "deltastreamer",
+        ]
+
+        headers = {"content-type": "application/json"}
+        return job.Job.from_response_json(
+            _client._send_request(
+                "POST", path_params, headers=headers, data=util_app_conf.json()
             ),
         )

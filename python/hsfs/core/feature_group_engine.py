@@ -260,7 +260,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 util.ValidationWarning,
             )
 
-        return engine.get_instance().save_stream_dataframe(
+        streaming_query = engine.get_instance().save_stream_dataframe(
             feature_group,
             dataframe,
             query_name,
@@ -269,3 +269,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             timeout,
             self.get_kafka_config(write_options),
         )
+
+        if feature_group.time_travel_format == "HUDI":
+            self._feature_group_api.deltastreamer_job(feature_group, write_options)
+        else:
+            raise exceptions.FeatureStoreException(
+                "Hudi DeltaStreamer is only supported for Hudi time travel enabled feature groups"
+            )
+
+        return streaming_query

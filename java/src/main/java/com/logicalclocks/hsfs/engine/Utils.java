@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
@@ -24,6 +25,8 @@ import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetType;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -39,6 +42,8 @@ import scala.collection.Seq;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -51,6 +56,7 @@ import java.util.stream.Collectors;
 public class Utils {
 
   StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  private KafkaApi kafkaApi = new KafkaApi();
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -186,5 +192,36 @@ public class Utils {
     Long commitTimeStamp = dateFormat.parse(tempDate).getTime();;
 
     return commitTimeStamp;
+  }
+
+  public String constructCheckpointPath(FeatureGroup featureGroup, String queryName, String queryPrefix)
+      throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = queryPrefix + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+        + "/Resources/" + queryName + "-checkpoint";
+  }
+
+  public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    Map<String, String> config = new HashMap<>();
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+
+    config.put("kafka.bootstrap.servers",
+        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    config.put("kafka.security.protocol", "SSL");
+    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
+    config.put("kafka.ssl.truststore.password", client.getCertKey());
+    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
+    config.put("kafka.ssl.keystore.password", client.getCertKey());
+    config.put("kafka.ssl.key.password", client.getCertKey());
+    config.put("kafka.ssl.endpoint.identification.algorithm", "");
+    return config;
   }
 }

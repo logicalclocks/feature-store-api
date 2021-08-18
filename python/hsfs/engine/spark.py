@@ -33,7 +33,7 @@ except ImportError:
 from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine
+from hsfs.core import hudi_engine, feature_group_api
 from hsfs.constructor import query
 
 
@@ -177,13 +177,29 @@ class Engine:
         elif storage == "online":
             self._save_online_dataframe(feature_group, dataframe, online_write_options)
         elif online_enabled and storage is None:
-            self._save_offline_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                offline_write_options,
-            )
-            self._save_online_dataframe(feature_group, dataframe, online_write_options)
+            if (
+                feature_group.time_travel_format == "HUDI"
+                and operation != "bulk_insert"
+            ):
+                self._save_online_dataframe(
+                    feature_group, dataframe, online_write_options
+                )
+                _feature_group_api = feature_group_api.FeatureGroupApi(
+                    feature_group.feature_store_id
+                )
+                _feature_group_api.deltastreamer_job(
+                    feature_group, offline_write_options
+                )
+            else:
+                self._save_offline_dataframe(
+                    feature_group,
+                    dataframe,
+                    operation,
+                    offline_write_options,
+                )
+                self._save_online_dataframe(
+                    feature_group, dataframe, online_write_options
+                )
         else:
             raise FeatureStoreException(
                 "Error writing to offline and online feature store."
