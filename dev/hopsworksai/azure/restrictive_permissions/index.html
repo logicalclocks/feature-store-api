@@ -1393,6 +1393,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#public-ip-addresses-permissions" class="md-nav__link">
+    Public IP Addresses permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#other-removable-permissions" class="md-nav__link">
     Other removable permissions
   </a>
@@ -1879,6 +1886,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#public-ip-addresses-permissions" class="md-nav__link">
+    Public IP Addresses permissions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#other-removable-permissions" class="md-nav__link">
     Other removable permissions
   </a>
@@ -2044,6 +2058,25 @@ You can then navigate to the JSON tab and overwrite the "action" field with the 
     <span class="s2">&quot;Microsoft.Storage/storageAccounts/read&quot;</span><span class="p">,</span>
   <span class="p">]</span>
 </code></pre></div>
+<h3 id="public-ip-addresses-permissions">Public IP Addresses permissions<a class="headerlink" href="#public-ip-addresses-permissions" title="Permanent link">#</a></h3>
+<p>The following permissions are used to create and attach a public IP Address to the head node. If you do not want to use a public IP Address for the head node, you can remove them:</p>
+<p><div class="highlight"><pre><span></span><code><span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/join/action&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/read&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/write&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Microsoft.Network/publicIPAddresses/delete&quot;</span><span class="p">,</span>
+  <span class="p">]</span>
+</code></pre></div>
+You then have to make sure that you uncheck the <em>Attach Public IP</em> check box in the <em>Security Group</em> section of the cluster creation:</p>
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/attach_public_ip.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/attach_public_ip.png" alt="Attach Public IP">
+    </a>
+    <figcaption>Attach Public IP</figcaption>
+  </figure>
+</p>
+
 <h3 id="other-removable-permissions">Other removable permissions<a class="headerlink" href="#other-removable-permissions" title="Permanent link">#</a></h3>
 <p>The following permissions are used to let you close and open ports on your cluster from hopswork.ai, you can remove them if you do not want to open ports on your cluster or if you want to manually open ports in Azure.</p>
 <div class="highlight"><pre><span></span><code>  <span class="nt">&quot;actions&quot;</span><span class="p">:</span> <span class="p">[</span>
