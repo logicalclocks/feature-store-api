@@ -62,8 +62,11 @@ class User:
     
     @classmethod
     def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        return cls(**json_decamelized)
+        if json_dict:
+            json_decamelized = humps.decamelize(json_dict)
+            return cls(**json_decamelized)
+        else:
+            return None
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
