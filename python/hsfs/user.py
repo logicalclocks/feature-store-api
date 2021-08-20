@@ -63,12 +63,9 @@ class User:
     @classmethod
     def from_response_json(cls, json_dict):
         if json_dict:
-            print(json_dict)
             json_decamelized = humps.decamelize(json_dict)
-            print(json_decamelized)
             return cls(**json_decamelized)
         else:
-            print(json_dict)
             return None
 
     def json(self):
