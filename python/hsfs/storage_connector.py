@@ -606,7 +606,7 @@ class StorageConnector:
                 + "/"
                 + self._database_name
             )
-            if self._arguments is not None:
+            if self._arguments:
                 connstr = connstr + "?" + self._arguments
             props = {
                 "url": connstr,
@@ -614,7 +614,7 @@ class StorageConnector:
                 "user": self._database_user_name,
                 "password": self._database_password,
             }
-            if self._table_name is not None:
+            if self._table_name:
                 props["dbtable"] = self._table_name
             return props
         elif self._storage_connector_type.upper() == self.ADLS:
@@ -625,16 +625,16 @@ class StorageConnector:
             props["sfSchema"] = self._schema
             props["sfDatabase"] = self._database
             props["sfUser"] = self._user
-            if self._password is not None:
+            if self._password:
                 props["sfPassword"] = self._password
             else:
                 props["sfAuthenticator"] = "oauth"
                 props["sfToken"] = self._token
-            if self._warehouse is not None:
+            if self._warehouse:
                 props["sfWarehouse"] = self._warehouse
-            if self._role is not None:
+            if self._role:
                 props["sfRole"] = self._role
-            if self._table is not None:
+            if self._table:
                 props["dbtable"] = self._table
 
             return props

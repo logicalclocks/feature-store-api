@@ -74,3 +74,44 @@ class TestJdbcConnector:
         assert spark_options["url"] == connection_string
         assert spark_options["arg1"] == "value1"
         assert spark_options["arg2"] == "value2"
+
+
+class TestSnowflakeConnector:
+    def test_spark_options_db_table_none(self):
+        snowflake_connector = StorageConnector(
+            id=1,
+            name="test_connector",
+            storage_connector_type="SNOWFLAKE",
+            featurestore_id=1,
+            table=None,
+        )
+
+        spark_options = snowflake_connector.spark_options()
+
+        assert "dbtable" not in spark_options
+
+    def test_spark_options_db_table_empty(self):
+        snowflake_connector = StorageConnector(
+            id=1,
+            name="test_connector",
+            storage_connector_type="SNOWFLAKE",
+            featurestore_id=1,
+            table="",
+        )
+
+        spark_options = snowflake_connector.spark_options()
+
+        assert "dbtable" not in spark_options
+
+    def test_spark_options_db_table_value(self):
+        snowflake_connector = StorageConnector(
+            id=1,
+            name="test_connector",
+            storage_connector_type="SNOWFLAKE",
+            featurestore_id=1,
+            table="test",
+        )
+
+        spark_options = snowflake_connector.spark_options()
+
+        assert spark_options["dbtable"] == "test"
