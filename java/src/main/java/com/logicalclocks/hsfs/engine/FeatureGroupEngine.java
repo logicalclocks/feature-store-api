@@ -279,5 +279,4 @@ public class FeatureGroupEngine {
     config.put("kafka.ssl.endpoint.identification.algorithm", "");
     return config;
   }
-
 }
