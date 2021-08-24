@@ -102,57 +102,46 @@ public class SparkEngine {
   @SneakyThrows
   private void validateSparkConfiguration() {
     String key = "spark.hadoop.hops.ssl.trustore.name";
-    if (sparkSession.conf().get(key).isEmpty()) {
+    if (sparkSession.conf().get(key).isEmpty())
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hops.rpc.socket.factory.class.default";
     if (!sparkSession.conf().get(key)
-            .equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory")) {
+            .equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.serializer";
     if (!sparkSession.conf().get(key)
-            .equals("org.apache.spark.serializer.KryoSerializer")) {
+            .equals("org.apache.spark.serializer.KryoSerializer"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hops.ssl.hostname.verifier";
     if (!sparkSession.conf().get(key)
-            .equals("ALLOW_ALL")) {
+            .equals("ALLOW_ALL"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hops.ssl.keystore.name";
-    if (sparkSession.conf().get(key).isEmpty()) {
+    if (sparkSession.conf().get(key).isEmpty())
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.fs.hopsfs.impl";
     if (!sparkSession.conf().get(key)
-            .equals("io.hops.hopsfs.client.HopsFileSystem")) {
+            .equals("io.hops.hopsfs.client.HopsFileSystem"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hops.ssl.keystores.passwd.name";
-    if (sparkSession.conf().get(key).isEmpty()) {
+    if (sparkSession.conf().get(key).isEmpty())
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hops.ipc.server.ssl.enabled";
     if (!sparkSession.conf().get(key)
-            .equals("true")) {
+            .equals("true"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
-    //todo ?????
+    //todo should jars path be compared?
     key = "spark.sql.hive.metastore.jars";
     if (!sparkSession.conf().get(key)
-            .equals("/hopsworks_metastore_jar/lib/*")) {
+            .equals("/hopsworks_metastore_jar/lib/*"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.client.rpc.ssl.enabled.protocol";
     if (!sparkSession.conf().get(key)
-            .equals("TLSv1.2")) {
+            .equals("TLSv1.2"))
       throw new FeatureStoreException("Invalid: " + key);
-    }
     key = "spark.hadoop.hive.metastore.uris";
-    if (sparkSession.conf().get(key).isEmpty()) {
+    if (sparkSession.conf().get(key).isEmpty())
       throw new FeatureStoreException("Invalid: " + key);
-    }
   }
 
   public String getTrustStorePath() {
