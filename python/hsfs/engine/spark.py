@@ -211,6 +211,7 @@ class Engine:
         query = (
             serialized_df.writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
+            .options(**write_options)
             .option(
                 "checkpointLocation",
                 "/Projects/"
@@ -219,7 +220,6 @@ class Engine:
                 + query_name
                 + "-checkpoint",
             )
-            .options(**write_options)
             .option("topic", feature_group._online_topic_name)
             .queryName(query_name)
             .start()

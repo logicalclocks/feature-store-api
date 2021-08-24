@@ -328,9 +328,9 @@ public class SparkEngine {
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
+        .options(writeOptions)
         .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
             + "/Resources/" + queryName + "-checkpoint")
-        .options(writeOptions)
         .option("topic", featureGroup.getOnlineTopicName());
 
     StreamingQuery query = writer.start();
