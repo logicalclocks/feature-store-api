@@ -641,7 +641,7 @@ class SnowflakeConnector(StorageConnector):
             props["token"] = self._token
         if self._warehouse is not None:
             props["warehouse"] = self._warehouse
-        if self._application is not None:
+        if self._application:
             props["application"] = self._application
         return props
 
@@ -661,7 +661,7 @@ class SnowflakeConnector(StorageConnector):
             props["sfToken"] = self._token
         if self._warehouse is not None:
             props["sfWarehouse"] = self._warehouse
-        if self._application is not None:
+        if self._application:
             props["application"] = self._application
         if self._role is not None:
             props["sfRole"] = self._role
