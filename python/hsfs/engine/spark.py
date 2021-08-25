@@ -63,37 +63,37 @@ class Engine:
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
         
         key = "spark.hadoop.hops.ssl.trustore.name"
-        if not self._spark_session.conf.get(key):
+        if not self._spark_session.conf.get(key, None):
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hops.rpc.socket.factory.class.default"
-        if not self._spark_session.conf.get(key) == "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory":
+        if not self._spark_session.conf.get(key, None) == "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory":
             raise FeatureStoreException(exception_text + key)
         key = "spark.serializer"
-        if not self._spark_session.conf.get(key) == "org.apache.spark.serializer.KryoSerializer":
+        if not self._spark_session.conf.get(key, None) == "org.apache.spark.serializer.KryoSerializer":
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hops.ssl.hostname.verifier"
-        if not self._spark_session.conf.get(key) == "ALLOW_ALL":
+        if not self._spark_session.conf.get(key, None) == "ALLOW_ALL":
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hops.ssl.keystore.name"
-        if not self._spark_session.conf.get(key):
+        if not self._spark_session.conf.get(key, None):
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.fs.hopsfs.impl"
-        if not self._spark_session.conf.get(key) == "io.hops.hopsfs.client.HopsFileSystem":
+        if not self._spark_session.conf.get(key, None) == "io.hops.hopsfs.client.HopsFileSystem":
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hops.ssl.keystores.passwd.name"
-        if not self._spark_session.conf.get(key):
+        if not self._spark_session.conf.get(key, None):
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hops.ipc.server.ssl.enabled"
-        if not self._spark_session.conf.get(key) == "true":
+        if not self._spark_session.conf.get(key, None) == "true":
             raise FeatureStoreException(exception_text + key)
         key = "spark.sql.hive.metastore.jars"
-        if not self._spark_session.conf.get(key):
+        if not self._spark_session.conf.get(key, None):
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.client.rpc.ssl.enabled.protocol"
-        if not self._spark_session.conf.get(key) == "TLSv1.2":
+        if not self._spark_session.conf.get(key, None) == "TLSv1.2":
             raise FeatureStoreException(exception_text + key)
         key = "spark.hadoop.hive.metastore.uris"
-        if not self._spark_session.conf.get(key):
+        if not self._spark_session.conf.get(key, None):
             raise FeatureStoreException(exception_text + key)
 
     def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
