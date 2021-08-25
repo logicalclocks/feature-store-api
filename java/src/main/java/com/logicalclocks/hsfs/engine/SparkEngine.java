@@ -35,7 +35,6 @@ import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Column;
@@ -64,7 +63,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -72,7 +70,7 @@ public class SparkEngine {
 
   private static SparkEngine INSTANCE = null;
 
-  public static synchronized SparkEngine getInstance() {
+  public static synchronized SparkEngine getInstance() throws FeatureStoreException {
     if (INSTANCE == null) {
       INSTANCE = new SparkEngine();
     }
@@ -85,7 +83,7 @@ public class SparkEngine {
   private Utils utils = new Utils();
   private HudiEngine hudiEngine = new HudiEngine();
 
-  private SparkEngine() {
+  private SparkEngine() throws FeatureStoreException {
     sparkSession = SparkSession.builder()
         .enableHiveSupport()
         .getOrCreate();
@@ -99,49 +97,53 @@ public class SparkEngine {
     validateSparkConfiguration();
   }
 
-  @SneakyThrows
-  private void validateSparkConfiguration() {
+  private void validateSparkConfiguration() throws FeatureStoreException {
+    String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
+
     String key = "spark.hadoop.hops.ssl.trustore.name";
-    if (sparkSession.conf().get(key).isEmpty())
-      throw new FeatureStoreException("Invalid: " + key);
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hops.rpc.socket.factory.class.default";
-    if (!sparkSession.conf().get(key)
-            .equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (!sparkSession.conf().get(key).equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.serializer";
-    if (!sparkSession.conf().get(key)
-            .equals("org.apache.spark.serializer.KryoSerializer"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (!sparkSession.conf().get(key).equals("org.apache.spark.serializer.KryoSerializer")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hops.ssl.hostname.verifier";
-    if (!sparkSession.conf().get(key)
-            .equals("ALLOW_ALL"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (!sparkSession.conf().get(key).equals("ALLOW_ALL")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hops.ssl.keystore.name";
-    if (sparkSession.conf().get(key).isEmpty())
-      throw new FeatureStoreException("Invalid: " + key);
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.fs.hopsfs.impl";
-    if (!sparkSession.conf().get(key)
-            .equals("io.hops.hopsfs.client.HopsFileSystem"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (!sparkSession.conf().get(key).equals("io.hops.hopsfs.client.HopsFileSystem")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hops.ssl.keystores.passwd.name";
-    if (sparkSession.conf().get(key).isEmpty())
-      throw new FeatureStoreException("Invalid: " + key);
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hops.ipc.server.ssl.enabled";
-    if (!sparkSession.conf().get(key)
-            .equals("true"))
-      throw new FeatureStoreException("Invalid: " + key);
-    //todo should jars path be compared?
+    if (!sparkSession.conf().get(key).equals("true")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.sql.hive.metastore.jars";
-    if (!sparkSession.conf().get(key)
-            .equals("/hopsworks_metastore_jar/lib/*"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.client.rpc.ssl.enabled.protocol";
-    if (!sparkSession.conf().get(key)
-            .equals("TLSv1.2"))
-      throw new FeatureStoreException("Invalid: " + key);
+    if (!sparkSession.conf().get(key).equals("TLSv1.2")) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
     key = "spark.hadoop.hive.metastore.uris";
-    if (sparkSession.conf().get(key).isEmpty())
-      throw new FeatureStoreException("Invalid: " + key);
+    if (sparkSession.conf().get(key).isEmpty()) {
+      throw new FeatureStoreException(exceptionText + key);
+    }
   }
 
   public String getTrustStorePath() {
@@ -323,7 +325,7 @@ public class SparkEngine {
   // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String location) {
+                           Map<String, String> readOptions, String location) throws FeatureStoreException {
     setupConnectorHadoopConf(storageConnector);
 
     String path = "";

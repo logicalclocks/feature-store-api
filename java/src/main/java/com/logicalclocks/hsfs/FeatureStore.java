@@ -124,7 +124,7 @@ public class FeatureStore {
     return getOnDemandFeatureGroup(name, DEFAULT_VERSION);
   }
 
-  public Dataset<Row> sql(String query) {
+  public Dataset<Row> sql(String query) throws FeatureStoreException {
     return SparkEngine.getInstance().sql(query);
   }
 
