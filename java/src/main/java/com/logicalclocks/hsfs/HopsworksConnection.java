@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.ProjectApi;
@@ -88,6 +89,8 @@ public class HopsworksConnection implements Closeable {
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
+
+    SparkEngine.getInstance();
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
         hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
