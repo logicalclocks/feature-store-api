@@ -48,7 +48,14 @@ public class StatisticsConfig {
   @Getter
   @Setter
   private List<String> columns = new ArrayList<>();
-
+  
+  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations) {
+    this.enabled = enabled;
+    this.histograms = histograms;
+    this.correlations = correlations;
+    this.exactUniqueness = true;
+  }
+  
   public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
       Boolean exactUniqueness) {
     this.enabled = enabled;
