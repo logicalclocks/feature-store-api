@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -131,6 +132,7 @@ public class TrainingDataset {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
+  private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
   private Utils utils = new Utils();
 
   @Builder
@@ -198,10 +200,10 @@ public class TrainingDataset {
    */
   public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.save(this, dataset, writeOptions, label);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, dataset);
-    }
+    TrainingDataset trainingDataset = trainingDatasetEngine.save(this, dataset, writeOptions, label);
+    this.setStorageConnector(trainingDataset.getStorageConnector());
+    codeEngine.saveCode(this);
+    computeStatistics();
   }
 
   /**
@@ -257,6 +259,7 @@ public class TrainingDataset {
       throws FeatureStoreException, IOException {
     trainingDatasetEngine.insert(this, dataset,
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
+    codeEngine.saveCode(this);
     computeStatistics();
   }
 
@@ -319,7 +322,11 @@ public class TrainingDataset {
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
-      return statisticsEngine.computeStatistics(this, read());
+      if (this.splits != null && !this.splits.isEmpty()) {
+        return statisticsEngine.registerSplitStatistics(this);
+      } else {
+        return statisticsEngine.computeStatistics(this, read());
+      }
     }
     return null;
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,24 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
-@AllArgsConstructor
-public class Statistics extends RestDto<Statistics> {
+public class User {
 
   @Getter
   @Setter
-  private Long commitTime;
+  private String email;
 
   @Getter
   @Setter
-  private Long featureGroupCommitId;
+  private String firstName;
 
   @Getter
   @Setter
-  private String content;
+  private String lastName;
 
-  @Getter
-  @Setter
-  private List<SplitStatistics> splitStatistics;
 }

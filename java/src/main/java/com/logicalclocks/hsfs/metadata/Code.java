@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Statistics extends RestDto<Statistics> {
+public class Code extends RestDto<Code> {
 
   @Getter
   @Setter
@@ -39,9 +37,21 @@ public class Statistics extends RestDto<Statistics> {
 
   @Getter
   @Setter
-  private String content;
+  private String applicationId;
 
   @Getter
   @Setter
-  private List<SplitStatistics> splitStatistics;
+  private String content;
+
+  public Code(Long commitTime, String applicationId) {
+    this.commitTime = commitTime;
+    this.applicationId = applicationId;
+  }
+
+  public enum RunType {
+    JUPYTER,
+    JOB,
+    DATABRICKS;
+  }
 }
+
