@@ -26,12 +26,14 @@ class StatisticsConfig:
         enabled=True,
         correlations=False,
         histograms=False,
+        exact_uniqueness=False,
         columns=[],
     ):
         self._enabled = enabled
         # use setters for input validation
         self.correlations = correlations
         self.histograms = histograms
+        self.exact_uniqueness = exact_uniqueness
         # overwrite default with new empty [] but keep the empty list default for documentation
         self._columns = columns or []
 
@@ -48,6 +50,7 @@ class StatisticsConfig:
             "enabled": self._enabled,
             "correlations": self._correlations,
             "histograms": self._histograms,
+            "exactUniqueness": self._exact_uniqueness,
             "columns": self._columns,
         }
 
@@ -81,6 +84,16 @@ class StatisticsConfig:
         self._histograms = histograms
 
     @property
+    def exact_uniqueness(self):
+        """Enable exact uniqueness as an additional statistic to be computed for each
+        feature."""
+        return self._exact_uniqueness
+
+    @exact_uniqueness.setter
+    def exact_uniqueness(self, exact_uniqueness):
+        self._exact_uniqueness = exact_uniqueness
+
+    @property
     def columns(self):
         """Specify a subset of columns to compute statistics for."""
         return self._columns
@@ -93,4 +106,6 @@ class StatisticsConfig:
         return self.json()
 
     def __repr__(self):
-        return f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms}, {self._columns})"
+        return f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms}," \
+               f" {self._exact_uniqueness}," \
+               f" {self._columns})"

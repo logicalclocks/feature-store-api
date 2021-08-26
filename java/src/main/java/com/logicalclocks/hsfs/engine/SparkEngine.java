@@ -402,8 +402,9 @@ public class SparkEngine {
         .partitionBy(utils.getPartitionColumns(featureGroup))
         .saveAsTable(utils.getTableName(featureGroup));
   }
-
-  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+  
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
+      Boolean histogram, Boolean exactUniqueness) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -411,13 +412,23 @@ public class SparkEngine {
     if (histogram == null) {
       histogram = true;
     }
-    ColumnProfilerRunBuilder runner =
-        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+    if (exactUniqueness == null) {
+      exactUniqueness = true;
+    }
+    ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
+                                            .onData(df)
+                                            .withCorrelation(correlation, 100)
+                                            .withHistogram(histogram, 20)
+                                            .withExactUniqueness(exactUniqueness);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
     return ColumnProfiles.toJson(result.profiles().values().toSeq());
+  }
+
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+    return profile(df, restrictToColumns, correlation, histogram, true);
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns) {

@@ -344,8 +344,9 @@ class FeatureStore:
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
             validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
@@ -421,8 +422,9 @@ class FeatureStore:
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this on-demand feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
             validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
