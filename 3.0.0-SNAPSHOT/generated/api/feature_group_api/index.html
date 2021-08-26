@@ -2751,8 +2751,9 @@ DataFrame.</p>
 <li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
     "<code>enabled</code>" to generally enable descriptive statistics computation for
     this feature group, <code>"correlations</code>" to turn on feature correlation
-    computation and <code>"histograms"</code> to compute feature value frequencies. The
-    values should be booleans indicating the setting. To fully turn off
+    computation, <code>"histograms"</code> to compute feature value frequencies and
+    <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
+    The values should be booleans indicating the setting. To fully turn off
     statistics computation pass <code>statistics_config=False</code>. Defaults to
     <code>None</code> and will compute only descriptive statistics.</li>
 <li><strong>validation_type</strong> <code>Optional[str]</code>: Optionally, set the validation type to one of "NONE", "STRICT",

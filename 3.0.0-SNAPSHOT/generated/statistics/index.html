@@ -997,6 +997,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#exact_uniqueness" class="md-nav__link">
+    exact_uniqueness
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#histograms" class="md-nav__link">
     histograms
   </a>
@@ -1838,6 +1845,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#exact_uniqueness" class="md-nav__link">
+    exact_uniqueness
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#histograms" class="md-nav__link">
     histograms
   </a>
@@ -1870,7 +1884,7 @@ This object can be passed at creation time of the dataset or group or it can lat
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L23">[source]</a></span></p>
 <h3 id="statisticsconfig">StatisticsConfig<a class="headerlink" href="#statisticsconfig" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">statistics_config</span><span class="o">.</span><span class="n">StatisticsConfig</span><span class="p">(</span>
-    <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">correlations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">histograms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">correlations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">histograms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">exact_uniqueness</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[]</span>
 <span class="p">)</span>
 </code></pre></div>
 <hr />
@@ -1904,20 +1918,25 @@ are computed. However, you can also enable <code>histograms</code> and <code>cor
 statistics are computed.</p>
 </div>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L83">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L96">[source]</a></span></p>
 <h3 id="columns">columns<a class="headerlink" href="#columns" title="Permanent link">#</a></h3>
 <p>Specify a subset of columns to compute statistics for.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L63">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L66">[source]</a></span></p>
 <h3 id="correlations">correlations<a class="headerlink" href="#correlations" title="Permanent link">#</a></h3>
 <p>Enable correlations as an additional statistic to be computed for each
 feature pair.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L54">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L57">[source]</a></span></p>
 <h3 id="enabled">enabled<a class="headerlink" href="#enabled" title="Permanent link">#</a></h3>
 <p>Enable statistics, by default this computes only descriptive statistics.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L73">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L86">[source]</a></span></p>
+<h3 id="exact_uniqueness">exact_uniqueness<a class="headerlink" href="#exact_uniqueness" title="Permanent link">#</a></h3>
+<p>Enable exact uniqueness as an additional statistic to be computed for each
+feature.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/statistics_config.py#L76">[source]</a></span></p>
 <h3 id="histograms">histograms<a class="headerlink" href="#histograms" title="Permanent link">#</a></h3>
 <p>Enable histograms as an additional statistic to be computed for each
 feature.</p>
