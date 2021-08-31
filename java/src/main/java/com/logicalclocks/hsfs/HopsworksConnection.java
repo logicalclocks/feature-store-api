@@ -17,7 +17,6 @@
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.ProjectApi;
