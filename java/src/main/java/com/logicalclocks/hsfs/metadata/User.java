@@ -14,46 +14,27 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
-@Builder
-public class StatisticsConfig {
-  @Getter
-  @Setter
-  private Boolean enabled = true;
+public class User {
 
   @Getter
   @Setter
-  private Boolean histograms = false;
+  private String email;
 
   @Getter
   @Setter
-  private Boolean correlations = false;
-  
-  @Getter
-  @Setter
-  private Boolean exactUniqueness = false;
+  private String firstName;
 
   @Getter
   @Setter
-  private List<String> columns = new ArrayList<>();
+  private String lastName;
 
-  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
-      Boolean exactUniqueness) {
-    this.enabled = enabled;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.exactUniqueness = exactUniqueness;
-  }
 }

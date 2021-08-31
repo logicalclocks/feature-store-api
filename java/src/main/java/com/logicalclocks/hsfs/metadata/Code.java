@@ -14,46 +14,44 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
-@Builder
-public class StatisticsConfig {
-  @Getter
-  @Setter
-  private Boolean enabled = true;
+@AllArgsConstructor
+public class Code extends RestDto<Code> {
 
   @Getter
   @Setter
-  private Boolean histograms = false;
+  private Long commitTime;
 
   @Getter
   @Setter
-  private Boolean correlations = false;
-  
-  @Getter
-  @Setter
-  private Boolean exactUniqueness = false;
+  private Long featureGroupCommitId;
 
   @Getter
   @Setter
-  private List<String> columns = new ArrayList<>();
+  private String applicationId;
 
-  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
-      Boolean exactUniqueness) {
-    this.enabled = enabled;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.exactUniqueness = exactUniqueness;
+  @Getter
+  @Setter
+  private String content;
+
+  public Code(Long commitTime, String applicationId) {
+    this.commitTime = commitTime;
+    this.applicationId = applicationId;
+  }
+
+  public enum RunType {
+    JUPYTER,
+    JOB,
+    DATABRICKS;
   }
 }
+

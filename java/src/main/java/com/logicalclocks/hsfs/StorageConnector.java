@@ -295,6 +295,9 @@ public abstract class StorageConnector {
     private String table;
 
     @Getter @Setter
+    private String application;
+
+    @Getter @Setter
     private List<Option> sfOptions;
 
     public String account() {
@@ -321,6 +324,9 @@ public abstract class StorageConnector {
       }
       if (!Strings.isNullOrEmpty(table)) {
         options.put(Constants.SNOWFLAKE_TABLE, table);
+      }
+      if (!Strings.isNullOrEmpty(application)) {
+        options.put(Constants.SNOWFLAKE_APPLICATION, application);
       }
       if (sfOptions != null && !sfOptions.isEmpty()) {
         Map<String, String> argOptions = sfOptions.stream()

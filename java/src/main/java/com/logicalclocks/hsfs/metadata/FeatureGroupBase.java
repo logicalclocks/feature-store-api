@@ -83,7 +83,7 @@ public class FeatureGroupBase {
   protected Date created;
 
   @Getter
-  protected String creator;
+  protected User creator;
 
   @Getter
   @Setter

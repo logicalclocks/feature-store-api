@@ -211,7 +211,6 @@ class Engine:
         query = (
             serialized_df.writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
-            .options(**write_options)
             .option(
                 "checkpointLocation",
                 "/Projects/"
@@ -220,6 +219,7 @@ class Engine:
                 + query_name
                 + "-checkpoint",
             )
+            .options(**write_options)
             .option("topic", feature_group._online_topic_name)
             .queryName(query_name)
             .start()
@@ -417,11 +417,11 @@ class Engine:
             .load(path)
         )
 
-    def profile(self, dataframe, relevant_columns, correlations, histograms):
+    def profile(self, dataframe, relevant_columns, correlations, histograms, exact_uniqueness=True):
         """Profile a dataframe with Deequ."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms
+                dataframe._jdf, relevant_columns, correlations, histograms, exact_uniqueness
             )
         )
 

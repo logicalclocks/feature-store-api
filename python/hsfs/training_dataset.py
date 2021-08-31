@@ -1,4 +1,3 @@
-#
 #   Copyright 2020 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +29,7 @@ from hsfs.core import (
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
+    code_engine,
     transformation_function_engine,
 )
 from hsfs.constructor import query
@@ -90,6 +90,10 @@ class TrainingDataset:
         )
 
         self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
+        self._code_engine = code_engine.CodeEngine(
             featurestore_id, self.ENTITY_TYPE
         )
 
@@ -169,6 +173,7 @@ class TrainingDataset:
         self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
+        self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             self.compute_statistics()
         if user_version is None:
@@ -227,6 +232,7 @@ class TrainingDataset:
             self, features, write_options, overwrite
         )
 
+        self._code_engine.save_code(self)
         self.compute_statistics()
 
         return td_job
