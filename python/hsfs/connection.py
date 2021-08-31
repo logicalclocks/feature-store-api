@@ -210,10 +210,8 @@ class Connection:
                     self._api_key_file,
                     self._api_key_value,
                 )
-                print("external")
             else:
                 client.init("hopsworks")
-                print("internal")
 
             # init engine
             engine.init(self._engine)

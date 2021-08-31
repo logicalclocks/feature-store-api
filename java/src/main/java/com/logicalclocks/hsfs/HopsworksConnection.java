@@ -92,7 +92,6 @@ public class HopsworksConnection implements Closeable {
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
         hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
-    SparkEngine.getInstance();
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
   }
