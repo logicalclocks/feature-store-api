@@ -348,7 +348,7 @@ class FeatureGroupBase:
                 f"Expected type `str`, got `{type(name)}`. "
                 "Features are accessible by name."
             )
-        feature = [f for f in self._features if f.name == name]
+        feature = [f for f in self.__getattribute__("_features") if f.name == name]
         if len(feature) == 1:
             return feature[0]
         else:
