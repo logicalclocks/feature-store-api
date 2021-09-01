@@ -228,7 +228,7 @@ configmap/aws-auth edited
 For Hopsworks to be able to start containers in the EKS cluster and for these containers to be able to use Hopsworks we need to establish network connectivity between Hopsworks and EKS. For this, we have two solutions. The first option (*A*) is to run Hopsworks and EKS in the same virtual network and security group. The second option (*B*) is to pair the EKS and Hopsworks virtual networks. If you choose this option, make sure to create the peering before starting the Hopsworks cluster as it connects to EKS at startup.
 
 ### Option *A*: run Hopsworks and EKS in the same virtual network.
-Running EKS and Hopsworks in the same security group is the simplest of the two solutions when it comes to setting up the system. All you need to do is to open the port needed by Hopsworks in the security group created by the EKS cluster. Then you can just select this security group during the Hopsworks cluster creation. We will now see how to open the ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
+Running EKS and Hopsworks in the same security group is the simplest of the two solutions when it comes to setting up the system. All you need to do is to open the ports needed by Hopsworks in the security group created by the EKS cluster. Then you can just select this security group during the Hopsworks cluster creation. We will now see how to open the ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
 
 !!! Note
     It is possible not to open ports 80 and 443 at the cost of some features. See [Limiting permissions](restrictive_permissions.md#step-1-create-a-vpc) for more details.
