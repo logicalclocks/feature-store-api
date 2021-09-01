@@ -29,7 +29,7 @@ The online Feature store is required for online applications, where the goal is 
 Port: 3306
 
 ## Kafka
-Hopsworks provides Kafka-as-a-Service for streaming applications and to ingest data. You can find more information about how to use Kafka in hopsworks in this [documentation](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/kafka.html)
+Hopsworks provides Kafka-as-a-Service for streaming applications and to ingest data. You can find more information about how to use Kafka in Hopsworks in this [documentation](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/kafka.html)
 
 Port: 9092
 
