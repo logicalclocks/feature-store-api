@@ -19,7 +19,7 @@ Open ports by going to the *Services* tab, selecting a service, and pressing *Up
 If you do not want the ports to be open to the internet you can set up VPC peering between the Hopsworks VPC and your client VPC. You then need to make sure that the ports associated with the services you want to use are open between the two VPCs. The ports associated with each of the services are indicated in the descriptions of the services below.
 
 ## Feature store
-The Feature Store is a data management system for managing machine learning features, including the feature engineering code and the feature data. The Feature Store helps ensure that features used during training and serving are consistent and that features are documented and reused within Enterprises. You can find the full feature store documentation [here](../index.md) and information about how to connect to the Feature Store from different external services [here](../setup.md)
+The Feature Store is a data management system for managing machine learning features, including the feature engineering code and the feature data. The Feature Store helps ensure that features used during training and serving are consistent and that features are documented and reused within enterprises. You can find the full feature store documentation [here](../index.md) and information about how to connect to the Feature Store from different external services [here](../setup.md)
 
 Ports: 8020, 30010, 9083 and 9085
 
