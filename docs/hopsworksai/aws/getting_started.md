@@ -422,7 +422,7 @@ As soon as the cluster has started, you will be able to log in to your new Hopsw
 
 Check out our other guides for how to get started with Hopsworks and the Feature Store:
 
-* Make opsworks services [accessible from outside services](../services.md)
+* Make Hopsworks services [accessible from outside services](../services.md)
 * Get started with the [Hopsworks Feature Store](../../quickstart.md)
 * Get started with Machine Learning on Hopsworks: [HopsML](https://hopsworks.readthedocs.io/en/stable/hopsml/index.html#hops-ml)
 * Get started with Hopsworks: [User Guide](https://hopsworks.readthedocs.io/en/stable/user_guide/user_guide.html#userguide)
