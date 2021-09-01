@@ -223,14 +223,15 @@ Once you are done with editing the configmap, save it and exit the editor. The o
 configmap/aws-auth edited
 ```
 
-##Step 4: Open Hopsworks required ports on your EKS cluster security group
+## Step 4: Setup network connectivity
 
-To keep this documentation simple will run Hopsworks in the same virtual network as the EKS cluster. For this purpose, we need to open ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
+For Hopsworks to be able to start containers in the EKS cluster and for these containers to be able to use Hopsworks we need to establish network connectivity between Hopsworks and EKS. For this, we have two solutions. The first option (*A*) is to run Hopsworks and EKS in the same virtual network and security group. The second option (*B*) is to pair the EKS and Hopsworks virtual networks. If you choose this option, make sure to create the peering before starting the Hopsworks cluster as it connects to EKS at startup.
+
+### Option *A*: run Hopsworks and EKS in the same virtual network.
+Running EKS and Hopsworks in the same security group is the simplest of the two solutions when it comes to setting up the system. All you need to do is to open the ports needed by Hopsworks in the security group created by the EKS cluster. Then you can just select this security group during the Hopsworks cluster creation. We will now see how to open the ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
 
 !!! Note
     It is possible not to open ports 80 and 443 at the cost of some features. See [Limiting permissions](restrictive_permissions.md#step-1-create-a-vpc) for more details.
-    
-    You can also use [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) to run hopsworks and EKS in two different VPCs. Make sure to create the peering before starting the hopsworks cluster as it connects to EKS at startup.
 
 First, you need to get the name of the security group of your EKS cluster by using the following eksctl command. Notice that you need to replace *my-eks-cluster* with the name of your cluster.
 
@@ -269,6 +270,32 @@ Add two rules for HTTP and HTTPS as follows:
 </p>
 
 Click *Save rules* to save the updated rules to the security group.
+
+### Option *B*: create a pairing between Hopsworks and EKS
+To establish virtual peering between the Kubernetes cluster and Hopsworks, you need to select or create a virtual network for Hopsworks. You can create the virtual network by following the [AWS documentation steps to create the virtual private network](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html#getting-started-create-vpc). Make sure to configure your subnet to use an address space that does not overlap with the address space in the Kubernetes network.
+
+You then need to select or create a security group for the Hopsworks VPC. You can create the security group by following the steps in the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#creating-security-groups). Remember to open the port for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. 
+
+!!! Note
+    It is possible not to open ports 80 and 443 at the cost of some features. See [Limiting permissions](restrictive_permissions.md#step-1-create-a-vpc) for more details.
+
+Once the Hopsworks VPC and security group are created you need to create a peering between the Hopsworks VPC and the EKS VPC. For this follow the AWS documentation [here](https://docs.aws.amazon.com/vpc/latest/peering/create-vpc-peering-connection.html).
+
+Finally, you need to edit the security groups for the EKS cluster and for Hopsworks to allow full communication between both VPC. This can be done following the instruction in the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
+
+You can get the name of the security group of your EKS cluster by using the following eksctl command. Notice that you need to replace *my-eks-cluster* with the name of your cluster.
+
+```bash
+eksctl utils describe-stacks --region=us-east-2 --cluster=my-eks-cluster | grep 'OutputKey: "ClusterSecurityGroupId"' -a1
+```
+
+Check the output for *OutputValue*, which will be the id of your EKS security group.
+
+```bash
+ExportName: "eksctl-my-eks-cluster-cluster::ClusterSecurityGroupId",
+OutputKey: "ClusterSecurityGroupId",
+OutputValue: "YOUR_EKS_SECURITY_GROUP_ID"
+```
 
 ## Step 5: Allow Hopsworks.ai to delete ECR repositories on your behalf
 
@@ -363,7 +390,9 @@ Add your EKS cluster name, then click Next:
   </figure>
 </p>
 
-Choose the VPC of your EKS cluster. It's name should have the form *eksctl-YOUR-CLUSTER-NAME-cluster*. You can also find it using the *VPC ID* you noted in [Step 4](#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group) (click on the refresh button if the VPC is not in the list). Then click Next:
+If you followed option *A* when setting up the network Choose the VPC of your EKS cluster. Its name should have the form *eksctl-YOUR-CLUSTER-NAME-cluster* (click on the refresh button if the VPC is not in the list).
+
+If you followed option *B* choose the VPC you created during [Step 4](#step-4-setup-network-connectivity).
 
 <p align="center">
   <figure>
@@ -388,10 +417,10 @@ Choose any of the subnets in the VPC, then click Next.
   </figure>
 </p>
 
-Choose the security group that you have updated in [Step 4](#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group), then click Next:
+Choose the security group that you have updated/created in [Step 4](#step-4-setup-network-connectivity), then click Next:
 
 !!! note
-    Select the Security Group with the same id as in [Step 4](#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group) and NOT the ones containing ControlPlaneSecurity or ClusterSharedNode in their name.
+    If you followed option *A* select the Security Group with the same id as in [Step 4](#step-4-setup-network-connectivity) and NOT the ones containing ControlPlaneSecurity or ClusterSharedNode in their name.
 
 <p align="center">
   <figure>
