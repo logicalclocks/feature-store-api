@@ -1446,9 +1446,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group" class="md-nav__link">
-    Step 4: Open Hopsworks required ports on your EKS cluster security group
+  <a href="#step-4-setup-network-connectivity" class="md-nav__link">
+    Step 4: Setup network connectivity
   </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Setup network connectivity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-run-hopsworks-and-eks-in-the-same-virtual-network" class="md-nav__link">
+    Option A: run Hopsworks and EKS in the same virtual network.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-create-a-pairing-between-hopsworks-and-eks" class="md-nav__link">
+    Option B: create a pairing between Hopsworks and EKS
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1857,9 +1877,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group" class="md-nav__link">
-    Step 4: Open Hopsworks required ports on your EKS cluster security group
+  <a href="#step-4-setup-network-connectivity" class="md-nav__link">
+    Step 4: Setup network connectivity
   </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Setup network connectivity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-run-hopsworks-and-eks-in-the-same-virtual-network" class="md-nav__link">
+    Option A: run Hopsworks and EKS in the same virtual network.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-create-a-pairing-between-hopsworks-and-eks" class="md-nav__link">
+    Option B: create a pairing between Hopsworks and EKS
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2078,12 +2118,13 @@ uid: c794b2d8-9f10-443d-9072-c65d0f2eb552
 <p>Once you are done with editing the configmap, save it and exit the editor. The output should be:</p>
 <div class="highlight"><pre><span></span><code>configmap/aws-auth edited
 </code></pre></div>
-<h2 id="step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group">Step 4: Open Hopsworks required ports on your EKS cluster security group<a class="headerlink" href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group" title="Permanent link">#</a></h2>
-<p>To keep this documentation simple will run Hopsworks in the same virtual network as the EKS cluster. For this purpose, we need to open ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. </p>
+<h2 id="step-4-setup-network-connectivity">Step 4: Setup network connectivity<a class="headerlink" href="#step-4-setup-network-connectivity" title="Permanent link">#</a></h2>
+<p>For Hopsworks to be able to start containers in the EKS cluster and for these containers to be able to use Hopsworks we need to establish network connectivity between Hopsworks and EKS. For this, we have two solutions. The first option (<em>A</em>) is to run Hopsworks and EKS in the same virtual network and security group. The second option (<em>B</em>) is to pair the EKS and Hopsworks virtual networks. If you choose this option, make sure to create the peering before starting the Hopsworks cluster as it connects to EKS at startup.</p>
+<h3 id="option-a-run-hopsworks-and-eks-in-the-same-virtual-network">Option <em>A</em>: run Hopsworks and EKS in the same virtual network.<a class="headerlink" href="#option-a-run-hopsworks-and-eks-in-the-same-virtual-network" title="Permanent link">#</a></h3>
+<p>Running EKS and Hopsworks in the same security group is the simplest of the two solutions when it comes to setting up the system. All you need to do is to open the ports needed by Hopsworks in the security group created by the EKS cluster. Then you can just select this security group during the Hopsworks cluster creation. We will now see how to open the ports for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. </p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It is possible not to open ports 80 and 443 at the cost of some features. See <a href="../restrictive_permissions/#step-1-create-a-vpc">Limiting permissions</a> for more details.</p>
-<p>You can also use <a href="https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html">VPC peering</a> to run hopsworks and EKS in two different VPCs. Make sure to create the peering before starting the hopsworks cluster as it connects to EKS at startup.</p>
 </div>
 <p>First, you need to get the name of the security group of your EKS cluster by using the following eksctl command. Notice that you need to replace <em>my-eks-cluster</em> with the name of your cluster.</p>
 <div class="highlight"><pre><span></span><code>eksctl utils describe-stacks --region<span class="o">=</span>us-east-2 --cluster<span class="o">=</span>my-eks-cluster <span class="p">|</span> grep <span class="s1">&#39;OutputKey: &quot;ClusterSecurityGroupId&quot;&#39;</span> -a1
@@ -2114,6 +2155,23 @@ OutputValue: <span class="s2">&quot;YOUR_EKS_SECURITY_GROUP_ID&quot;</span>
 </p>
 
 <p>Click <em>Save rules</em> to save the updated rules to the security group.</p>
+<h3 id="option-b-create-a-pairing-between-hopsworks-and-eks">Option <em>B</em>: create a pairing between Hopsworks and EKS<a class="headerlink" href="#option-b-create-a-pairing-between-hopsworks-and-eks" title="Permanent link">#</a></h3>
+<p>To establish virtual peering between the Kubernetes cluster and Hopsworks, you need to select or create a virtual network for Hopsworks. You can create the virtual network by following the <a href="https://docs.aws.amazon.com/vpc/latest/userguide/vpc-getting-started.html#getting-started-create-vpc">AWS documentation steps to create the virtual private network</a>. Make sure to configure your subnet to use an address space that does not overlap with the address space in the Kubernetes network.</p>
+<p>You then need to select or create a security group for the Hopsworks VPC. You can create the security group by following the steps in the <a href="https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#creating-security-groups">AWS documentation</a>. Remember to open the port for HTTP (80) and HTTPS (443) to allow Hopsworks to run with all its functionalities. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is possible not to open ports 80 and 443 at the cost of some features. See <a href="../restrictive_permissions/#step-1-create-a-vpc">Limiting permissions</a> for more details.</p>
+</div>
+<p>Once the Hopsworks VPC and security group are created you need to create a peering between the Hopsworks VPC and the EKS VPC. For this follow the AWS documentation <a href="https://docs.aws.amazon.com/vpc/latest/peering/create-vpc-peering-connection.html">here</a>.</p>
+<p>Finally, you need to edit the security groups for the EKS cluster and for Hopsworks to allow full communication between both VPC. This can be done following the instruction in the <a href="https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html">AWS documentation</a>.</p>
+<p>You can get the name of the security group of your EKS cluster by using the following eksctl command. Notice that you need to replace <em>my-eks-cluster</em> with the name of your cluster.</p>
+<div class="highlight"><pre><span></span><code>eksctl utils describe-stacks --region<span class="o">=</span>us-east-2 --cluster<span class="o">=</span>my-eks-cluster <span class="p">|</span> grep <span class="s1">&#39;OutputKey: &quot;ClusterSecurityGroupId&quot;&#39;</span> -a1
+</code></pre></div>
+<p>Check the output for <em>OutputValue</em>, which will be the id of your EKS security group.</p>
+<div class="highlight"><pre><span></span><code>ExportName: <span class="s2">&quot;eksctl-my-eks-cluster-cluster::ClusterSecurityGroupId&quot;</span>,
+OutputKey: <span class="s2">&quot;ClusterSecurityGroupId&quot;</span>,
+OutputValue: <span class="s2">&quot;YOUR_EKS_SECURITY_GROUP_ID&quot;</span>
+</code></pre></div>
 <h2 id="step-5-allow-hopsworksai-to-delete-ecr-repositories-on-your-behalf">Step 5: Allow Hopsworks.ai to delete ECR repositories on your behalf<a class="headerlink" href="#step-5-allow-hopsworksai-to-delete-ecr-repositories-on-your-behalf" title="Permanent link">#</a></h2>
 <p>For hopsworks.ai to be able to clean up the ECR repo when terminating your hopsworks cluster, you need to add a new inline policy to the <a href="../getting_started/#option-1-using-aws-cross-account-roles">Cross-Account role</a> or <a href="../getting_started/#option-2-using-aws-access-keys">user connected to Hopsworks.ai</a>, that you set up when <a href="../getting_started/#step-1-connecting-your-aws-account">connecting your AWS account to hopsworks.ai</a>.</p>
 <p>Navigate to <a href="https://console.aws.amazon.com/iam/home#">AWS management console</a>, then click on <em>Roles</em> or <em>Users</em> depending on which connection method you have used in Hopsworks.ai, and then search for your role or user name and click on it.  Go to the <em>Permissions</em> tab, click on <em>Add inline policy</em> and go to the <em>JSON</em> tab. Replace the existing JSON permissions with the JSON permissions below. Click on <em>Review policy</em>, name it, and click <em>Create policy</em>.</p>
@@ -2195,7 +2253,8 @@ OutputValue: <span class="s2">&quot;YOUR_EKS_SECURITY_GROUP_ID&quot;</span>
   </figure>
 </p>
 
-<p>Choose the VPC of your EKS cluster. It's name should have the form <em>eksctl-YOUR-CLUSTER-NAME-cluster</em>. You can also find it using the <em>VPC ID</em> you noted in <a href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group">Step 4</a> (click on the refresh button if the VPC is not in the list). Then click Next:</p>
+<p>If you followed option <em>A</em> when setting up the network Choose the VPC of your EKS cluster. Its name should have the form <em>eksctl-YOUR-CLUSTER-NAME-cluster</em> (click on the refresh button if the VPC is not in the list).</p>
+<p>If you followed option <em>B</em> choose the VPC you created during <a href="#step-4-setup-network-connectivity">Step 4</a>.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/hopsworksai/aws/eks-hopsworks-create-cluster-4.png">
@@ -2219,10 +2278,10 @@ OutputValue: <span class="s2">&quot;YOUR_EKS_SECURITY_GROUP_ID&quot;</span>
   </figure>
 </p>
 
-<p>Choose the security group that you have updated in <a href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group">Step 4</a>, then click Next:</p>
+<p>Choose the security group that you have updated/created in <a href="#step-4-setup-network-connectivity">Step 4</a>, then click Next:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Select the Security Group with the same id as in <a href="#step-4-open-hopsworks-required-ports-on-your-eks-cluster-security-group">Step 4</a> and NOT the ones containing ControlPlaneSecurity or ClusterSharedNode in their name.</p>
+<p>If you followed option <em>A</em> select the Security Group with the same id as in <a href="#step-4-setup-network-connectivity">Step 4</a> and NOT the ones containing ControlPlaneSecurity or ClusterSharedNode in their name.</p>
 </div>
 <p align="center">
   <figure>
