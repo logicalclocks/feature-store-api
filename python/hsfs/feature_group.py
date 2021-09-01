@@ -46,9 +46,7 @@ class FeatureGroupBase:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._code_engine = code_engine.CodeEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
+        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
         self._expectations_api = expectations_api.ExpectationsApi(
             featurestore_id, "featuregroups"
         )
@@ -358,7 +356,7 @@ class FeatureGroupBase:
                 f"Expected type `str`, got `{type(name)}`. "
                 "Features are accessible by name."
             )
-        feature = [f for f in self._features if f.name == name]
+        feature = [f for f in self.__getattribute__("_features") if f.name == name]
         if len(feature) == 1:
             return feature[0]
         else:
