@@ -1323,7 +1323,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             self.validate()
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read)
+            self._statistics_engine.compute_statistics(self, self.read())
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
