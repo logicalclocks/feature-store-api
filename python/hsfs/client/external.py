@@ -118,6 +118,8 @@ class Client(base.Client):
             )
 
     def validate_spark_configuration(self, _spark_session):
+        print("running: validate_spark_configuration")
+        
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
 
         key = "spark.hadoop.hops.ssl.trustore.name"
