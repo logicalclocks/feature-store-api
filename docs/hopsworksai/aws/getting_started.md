@@ -418,26 +418,11 @@ As soon as the cluster has started, you will be able to log in to your new Hopsw
   </figure>
 </p>
 
-## Step 6: Outside Access to the Feature Store
-
-By default, only the Hopsworks UI is made available to clients on external networks, like the Internet.
-To integrate with external platforms and access APIs for services such as the Feature Store, you have to open the service's ports.
-
-Open ports by going to the *Services* tab, selecting a service, and pressing *Update*. This will update the *Security Group* attached to the Hopsworks cluster to allow incoming traffic on the relevant ports.
-
-<p align="center">
-  <figure>
-    <a  href="../../../assets/images/hopsworksai/open-ports.png">
-      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/open-ports.png" alt="Outside Access to the Feature Store">
-    </a>
-    <figcaption>Outside Access to the Feature Store</figcaption>
-  </figure>
-</p>
-
-## Step 7: Next steps
+## Step 6: Next steps
 
 Check out our other guides for how to get started with Hopsworks and the Feature Store:
 
+* Make Hopsworks services [accessible from outside services](../services.md)
 * Get started with the [Hopsworks Feature Store](../../quickstart.md)
 * Get started with Machine Learning on Hopsworks: [HopsML](https://hopsworks.readthedocs.io/en/stable/hopsml/index.html#hops-ml)
 * Get started with Hopsworks: [User Guide](https://hopsworks.readthedocs.io/en/stable/user_guide/user_guide.html#userguide)

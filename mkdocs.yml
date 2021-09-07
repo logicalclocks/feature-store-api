@@ -80,12 +80,12 @@ nav:
       - Integration with EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
       - Azure: hopsworksai/azure/cluster_creation.md
       - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
+    - Services: hopsworksai/services.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
     - Autoscaling: hopsworksai/autoscaling.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
     - Managed RonDB: hopsworksai/rondb.md
-    - Integrations: "./setup/"
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md
       - Azure: hopsworksai/azure/upgrade.md
