@@ -93,11 +93,11 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
     // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
-
-    validateSparkConfiguration();
   }
 
-  private void validateSparkConfiguration() throws FeatureStoreException {
+  public void validateSparkConfiguration() throws FeatureStoreException {
+    System.out.println("running: validate_spark_configuration");
+
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 
     String key = "spark.hadoop.hops.ssl.trustore.name";
@@ -463,8 +463,11 @@ public class SparkEngine {
     if (histogram == null) {
       histogram = true;
     }
-    ColumnProfilerRunBuilder runner =
-        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+    //todo changed to work, but will need to be undone
+    ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
+            .onData(df)
+            .withCorrelation(correlation, 100)
+            .withHistogram(histogram, 20);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }

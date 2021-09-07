@@ -141,6 +141,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
     this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
     this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
+    SparkEngine.getInstance().validateSparkConfiguration();
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
