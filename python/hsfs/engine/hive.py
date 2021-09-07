@@ -371,11 +371,14 @@ class Engine:
         Property name should match the value in the JobConfiguration.__init__
         """
         spark_job_configuration = user_write_options.pop("spark", None)
+        read_csv_mode = user_write_options.pop("mode", "FAILFAST")
+
         return ingestion_job_conf.IngestionJobConf(
             data_format="CSV",
             data_options=[
                 {"name": "header", "value": "true"},
                 {"name": "inferSchema", "value": "true"},
+                {"name": "mode", "value": read_csv_mode},
             ],
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,
