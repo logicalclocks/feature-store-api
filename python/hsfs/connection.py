@@ -196,7 +196,6 @@ class Connection:
 
             # init client
             if client.base.Client.REST_ENDPOINT not in os.environ:
-                print("external")
                 client.init(
                     "external",
                     self._host,
@@ -212,7 +211,6 @@ class Connection:
                     self._api_key_value,
                 )
             else:
-                print("internal")
                 client.init("hopsworks")
 
             # init engine

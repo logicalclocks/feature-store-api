@@ -96,8 +96,6 @@ public class SparkEngine {
   }
 
   public void validateSparkConfiguration() throws FeatureStoreException {
-    System.out.println("running: validate_spark_configuration");
-
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 
     String key = "spark.hadoop.hops.ssl.trustore.name";
