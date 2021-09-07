@@ -336,8 +336,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-            throws FeatureStoreException {
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
@@ -367,8 +366,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-            throws FeatureStoreException {
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);

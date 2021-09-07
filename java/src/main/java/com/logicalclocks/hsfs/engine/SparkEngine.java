@@ -70,7 +70,7 @@ public class SparkEngine {
 
   private static SparkEngine INSTANCE = null;
 
-  public static synchronized SparkEngine getInstance() throws FeatureStoreException {
+  public static synchronized SparkEngine getInstance() {
     if (INSTANCE == null) {
       INSTANCE = new SparkEngine();
     }
@@ -83,7 +83,7 @@ public class SparkEngine {
   private Utils utils = new Utils();
   private HudiEngine hudiEngine = new HudiEngine();
 
-  private SparkEngine() throws FeatureStoreException {
+  private SparkEngine() {
     sparkSession = SparkSession.builder()
         .enableHiveSupport()
         .getOrCreate();
@@ -324,7 +324,7 @@ public class SparkEngine {
   // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String location) throws FeatureStoreException {
+                           Map<String, String> readOptions, String location) {
     setupConnectorHadoopConf(storageConnector);
 
     String path = "";
