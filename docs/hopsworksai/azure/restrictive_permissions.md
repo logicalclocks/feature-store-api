@@ -131,6 +131,28 @@ If you are not going to create backups or if you do not have access to this Ente
   ]
 ```
 
+### Public IP Addresses permissions
+
+The following permissions are used to create and attach a public IP Address to the head node. If you do not want to use a public IP Address for the head node, you can remove them:
+
+```json
+"actions": [
+    "Microsoft.Network/publicIPAddresses/join/action",
+    "Microsoft.Network/publicIPAddresses/read",
+    "Microsoft.Network/publicIPAddresses/write",
+    "Microsoft.Network/publicIPAddresses/delete",
+  ]
+```
+You then have to make sure that you uncheck the *Attach Public IP* check box in the *Security Group* section of the cluster creation:
+<p align="center">
+  <figure>
+    <a  href="../../../assets/images/hopsworksai/azure/attach_public_ip.png">
+      <img style="border: 1px solid #000;width:700px" src="../../../assets/images/hopsworksai/azure/attach_public_ip.png" alt="Attach Public IP">
+    </a>
+    <figcaption>Attach Public IP</figcaption>
+  </figure>
+</p>
+
 ### Other removable permissions
 
 The following permissions are used to let you close and open ports on your cluster from hopswork.ai, you can remove them if you do not want to open ports on your cluster or if you want to manually open ports in Azure.
