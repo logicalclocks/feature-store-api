@@ -210,7 +210,7 @@ Wait for the peering to show up as *Connected*. There should now be bi-direction
 
 ### Step 2: Configure the Network Security Group
 
-The virtual network peering will allow full access between the Hopsworks virtual network and the Databricks virtual network by default. However, if you have a different setup, ensure that the *Network Security Group* of the Feature Store on Azure is configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
+The virtual network peering will allow full access between the Hopsworks virtual network and the Databricks virtual network by default. However, if you have a different setup, ensure that the *Network Security Group* of the Feature Store is configured to allow traffic from your Databricks clusters.
 
 Ensure that ports *443*, *9083*, *9085*, *8020*, *50010*, and *9092* are reachable from the Databricks cluster *Network Security Group*.
 
