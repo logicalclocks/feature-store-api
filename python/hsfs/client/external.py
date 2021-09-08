@@ -103,6 +103,7 @@ class Client(base.Client):
         elif engine == "spark":
             _spark_session = SparkSession.builder.getOrCreate()
 
+            self.validate_spark_configuration(_spark_session)
             with open(
                 _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
                 "r",
@@ -115,44 +116,29 @@ class Client(base.Client):
             self._key_store_path = _spark_session.conf.get(
                 "spark.hadoop.hops.ssl.keystore.name"
             )
-            self.validate_spark_configuration(_spark_session)
 
     def validate_spark_configuration(self, _spark_session):
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
 
-        key = "spark.hadoop.hops.ssl.trustore.name"
-        if not _spark_session.conf.get(key, None):
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hops.rpc.socket.factory.class.default"
-        if not _spark_session.conf.get(key, None) == "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.serializer"
-        if not _spark_session.conf.get(key, None) == "org.apache.spark.serializer.KryoSerializer":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hops.ssl.hostname.verifier"
-        if not _spark_session.conf.get(key, None) == "ALLOW_ALL":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hops.ssl.keystore.name"
-        if not _spark_session.conf.get(key, None):
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.fs.hopsfs.impl"
-        if not _spark_session.conf.get(key, None) == "io.hops.hopsfs.client.HopsFileSystem":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hops.ssl.keystores.passwd.name"
-        if not _spark_session.conf.get(key, None):
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hops.ipc.server.ssl.enabled"
-        if not _spark_session.conf.get(key, None) == "true":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.sql.hive.metastore.jars"
-        if not _spark_session.conf.get(key, None):
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.client.rpc.ssl.enabled.protocol"
-        if not _spark_session.conf.get(key, None) == "TLSv1.2":
-            raise FeatureStoreException(exception_text + key)
-        key = "spark.hadoop.hive.metastore.uris"
-        if not _spark_session.conf.get(key, None):
-            raise FeatureStoreException(exception_text + key)
+        configuration_dict = {"spark.hadoop.hops.ssl.trustore.name": None,
+                "spark.hadoop.hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+                "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+                "spark.hadoop.hops.ssl.hostname.verifier": "ALLOW_ALL",
+                "spark.hadoop.hops.ssl.keystore.name": None,
+                "spark.hadoop.fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+                "spark.hadoop.hops.ssl.keystores.passwd.name": None,
+                "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
+                "spark.sql.hive.metastore.jars": None,
+                "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+                "spark.hadoop.hive.metastore.uris": None}
+        
+        for key, value in configuration_dict.items():
+            if value == None:
+                if not _spark_session.conf.get(key, None):
+                    raise FeatureStoreException(exception_text + key)
+            else:
+                if not _spark_session.conf.get(key, None) == value:
+                    raise FeatureStoreException(exception_text + key)
 
     def _close(self):
         """Closes a client and deletes certificates."""

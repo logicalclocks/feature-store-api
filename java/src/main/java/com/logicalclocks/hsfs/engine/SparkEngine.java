@@ -98,50 +98,30 @@ public class SparkEngine {
   public void validateSparkConfiguration() throws FeatureStoreException {
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 
-    String key = "spark.hadoop.hops.ssl.trustore.name";
-    if (sparkSession.conf().get(key, "").isEmpty()) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hops.rpc.socket.factory.class.default";
-    if (!sparkSession.conf().get(key, "")
-            .equals("io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.serializer";
-    if (!sparkSession.conf().get(key, "").equals("org.apache.spark.serializer.KryoSerializer")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hops.ssl.hostname.verifier";
-    if (!sparkSession.conf().get(key, "").equals("ALLOW_ALL")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hops.ssl.keystore.name";
-    if (sparkSession.conf().get(key, "").isEmpty()) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.fs.hopsfs.impl";
-    if (!sparkSession.conf().get(key, "").equals("io.hops.hopsfs.client.HopsFileSystem")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hops.ssl.keystores.passwd.name";
-    if (sparkSession.conf().get(key, "").isEmpty()) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hops.ipc.server.ssl.enabled";
-    if (!sparkSession.conf().get(key, "").equals("true")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.sql.hive.metastore.jars";
-    if (sparkSession.conf().get(key, "").isEmpty()) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.client.rpc.ssl.enabled.protocol";
-    if (!sparkSession.conf().get(key, "").equals("TLSv1.2")) {
-      throw new FeatureStoreException(exceptionText + key);
-    }
-    key = "spark.hadoop.hive.metastore.uris";
-    if (sparkSession.conf().get(key, "").isEmpty()) {
-      throw new FeatureStoreException(exceptionText + key);
+    Map<String, String> configurationMap = new HashMap<>();
+    configurationMap.put("spark.hadoop.hops.ssl.trustore.name", null);
+    configurationMap.put("spark.hadoop.hops.rpc.socket.factory.class.default",
+            "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+    configurationMap.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    configurationMap.put("spark.hadoop.hops.ssl.hostname.verifier", "ALLOW_ALL");
+    configurationMap.put("spark.hadoop.hops.ssl.keystore.name", null);
+    configurationMap.put("spark.hadoop.fs.hopsfs.impl", "io.hops.hopsfs.client.HopsFileSystem");
+    configurationMap.put("spark.hadoop.hops.ssl.keystores.passwd.name", null);
+    configurationMap.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
+    configurationMap.put("spark.sql.hive.metastore.jars", null);
+    configurationMap.put("spark.hadoop.client.rpc.ssl.enabled.protocol", "TLSv1.2");
+    configurationMap.put("spark.hadoop.hive.metastore.uris", null);
+
+    for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
+      if (entry.getValue() == null) {
+        if (sparkSession.conf().get(entry.getKey(), "").isEmpty()) {
+          throw new FeatureStoreException(exceptionText + entry.getKey());
+        }
+      } else {
+        if (!sparkSession.conf().get(entry.getKey(), "").equals(entry.getValue())) {
+          throw new FeatureStoreException(exceptionText + entry.getKey());
+        }
+      }
     }
   }
 
