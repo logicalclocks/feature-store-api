@@ -107,7 +107,7 @@ as the key and paste the API key created in the previous step as the value. Clic
   </figure>
 </p>
 
-As secret name, enter *hopsworks/role/[MY_DATABRICKS_ROLE]* replacing [MY_DATABRICKS_ROLE] with the AWS role you have created in [Step 1](#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters). sSelect next twice and finally store the secret.
+As secret name, enter *hopsworks/role/[MY_DATABRICKS_ROLE]* replacing [MY_DATABRICKS_ROLE] with the AWS role you have created in [Step 1](#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters). Select next twice and finally store the secret.
 Then click on the secret in the secrets list and take note of the *Secret ARN*.
 
 <p align="center">
