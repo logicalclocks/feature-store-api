@@ -1988,6 +1988,7 @@ Once the cluster is running users can establish a connection to the Hopsworks Fe
     <span class="mi">443</span><span class="p">,</span>                                <span class="c1"># Port to reach your Hopsworks instance, defaults to 443</span>
     <span class="s1">&#39;my_project&#39;</span><span class="p">,</span>                       <span class="c1"># Name of your Hopsworks Feature Store project</span>
     <span class="n">api_key_file</span><span class="o">=</span><span class="s2">&quot;featurestore.key&quot;</span><span class="p">,</span>    <span class="c1"># For Azure, store the API key locally</span>
+    <span class="n">secrets_store</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span>
     <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span>          <span class="c1"># Disable for self-signed certificates</span>
 <span class="p">)</span>
 <span class="n">fs</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">()</span>           <span class="c1"># Get the project&#39;s default feature store</span>
