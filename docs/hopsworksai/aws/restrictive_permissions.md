@@ -149,11 +149,12 @@ If you want to learn more about how this policy works check out:
         "Sid": "EC2BackupCreation",
         "Effect": "Allow",
         "Action": [
-          "ec2:CreateImage",
-	        "ec2:DescribeImages",
-	        "ec2:DeregisterImage",
-	        "ec2:DeleteSnapshot",
-	        "ec2:DescribeSnapshots"
+          "ec2:RegisterImage",
+          "ec2:DeregisterImage",
+          "ec2:DescribeImages",
+          "ec2:CreateSnapshot",
+          "ec2:DeleteSnapshot",
+          "ec2:DescribeSnapshots"
         ],
         "Resource": "*"
       }
@@ -180,11 +181,12 @@ The following permissions are only needed for the backup feature. You can remove
         "Sid": "EC2BackupCreation",
         "Effect": "Allow",
         "Action": [
-          "ec2:CreateImage",
-	        "ec2:DescribeImages",
-	        "ec2:DeregisterImage",
-	        "ec2:DeleteSnapshot",
-	        "ec2:DescribeSnapshots"
+          "ec2:RegisterImage",
+          "ec2:DeregisterImage",
+          "ec2:DescribeImages",
+          "ec2:CreateSnapshot",
+          "ec2:DeleteSnapshot",
+          "ec2:DescribeSnapshots"
         ],
         "Resource": "*",
       }
