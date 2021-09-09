@@ -155,7 +155,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online and self._online_conn is None:
-            online_conn = self._storage_connector_api.get_online_connector()
+            self._online_conn = self._storage_connector_api.get_online_connector()
+            online_conn = self._online_conn
         elif online and self._online_conn is not None:
             online_conn = self._online_conn
         else:
