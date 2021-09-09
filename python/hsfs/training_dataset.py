@@ -685,7 +685,7 @@ class TrainingDataset:
 
     @property
     def prepared_statement_engine(self):
-        """JDBC connection engine retrieve connections to online features store from."""
+        """JDBC connection engine to retrieve connections to online features store from."""
         return self._prepared_statement_engine
 
     @prepared_statement_engine.setter
