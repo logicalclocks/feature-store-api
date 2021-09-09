@@ -85,7 +85,7 @@ def create_mysql_connection(online_conn, external):
     )
 
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
-    return sql_alchemy_engine.connect()
+    return sql_alchemy_engine
 
 
 def get_timestamp_from_date_string(input_date):

@@ -22,6 +22,12 @@ from hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
+    def __init__(self, feature_store_id):
+        super().__init__(feature_store_id)
+
+        # cache online feature store connector
+        self._online_conn = None
+
     def save(self, feature_group, feature_dataframe, write_options):
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
@@ -148,8 +154,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         return hudi_engine_instance.delete_record(delete_df, write_options)
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
-        if online:
+        if online and self._online_conn is None:
             online_conn = self._storage_connector_api.get_online_connector()
+        elif online and self._online_conn is not None:
+            online_conn = self._online_conn
         else:
             online_conn = None
         return engine.get_instance().sql(
