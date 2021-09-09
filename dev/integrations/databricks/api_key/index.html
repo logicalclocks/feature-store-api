@@ -654,15 +654,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#option-1-using-the-aws-systems-manager-parameter-store" class="md-nav__link">
-    Option 1: Using the AWS Systems Manager Parameter Store
+  <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters" class="md-nav__link">
+    Step 1: Create an instance profile to attach to your Databricks clusters
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#option-2-using-the-aws-secrets-manager" class="md-nav__link">
-    Option 2: Using the AWS Secrets Manager
+  <a href="#step-2-storing-the-api-key" class="md-nav__link">
+    Step 2: Storing the API Key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-allow-databricks-to-use-the-aws-role-created-in-step-1" class="md-nav__link">
+    Step 3: Allow Databricks to use the AWS role created in Step 1
   </a>
   
 </li>
@@ -1854,15 +1861,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#option-1-using-the-aws-systems-manager-parameter-store" class="md-nav__link">
-    Option 1: Using the AWS Systems Manager Parameter Store
+  <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters" class="md-nav__link">
+    Step 1: Create an instance profile to attach to your Databricks clusters
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#option-2-using-the-aws-secrets-manager" class="md-nav__link">
-    Option 2: Using the AWS Secrets Manager
+  <a href="#step-2-storing-the-api-key" class="md-nav__link">
+    Step 2: Storing the API Key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-allow-databricks-to-use-the-aws-role-created-in-step-1" class="md-nav__link">
+    Step 3: Allow Databricks to use the AWS role created in Step 1
   </a>
   
 </li>
@@ -1915,6 +1929,7 @@
 <li>featurestore</li>
 <li>project</li>
 <li>job</li>
+<li>kafka</li>
 </ol>
 </div>
 <p align="center">
@@ -1945,11 +1960,21 @@
 </div>
 <h2 id="store-the-api-key">Store the API key<a class="headerlink" href="#store-the-api-key" title="Permanent link">#</a></h2>
 <h3 id="aws">AWS<a class="headerlink" href="#aws" title="Permanent link">#</a></h3>
-<h4 id="option-1-using-the-aws-systems-manager-parameter-store">Option 1: Using the AWS Systems Manager Parameter Store<a class="headerlink" href="#option-1-using-the-aws-systems-manager-parameter-store" title="Permanent link">#</a></h4>
-<p><strong>Store the API key in the AWS Systems Manager Parameter Store</strong></p>
+<h4 id="step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1: Create an instance profile to attach to your Databricks clusters<a class="headerlink" href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters" title="Permanent link">#</a></h4>
+<p>Go to the <em>AWS IAM</em> choose <em>Roles</em> and click on <em>Create Role</em>. Select <em>AWS Service</em> as the type of trusted entity and <em>EC2</em> as the use case as shown below:</p>
+<p align="center">
+  <figure>
+    <img src="../../../assets/images/create-instance-profile.png" alt="Create an instance profile">
+    <figcaption>Create an instance profile</figcaption>
+  </figure>
+</p>
+
+<p>Click on <em>Next: Permissions</em>, <em>Next:Tags</em>, and then <em>Next: Review</em>. Name the instance profile role and then click <em>Create role</em>.</p>
+<h4 id="step-2-storing-the-api-key">Step 2: Storing the API Key<a class="headerlink" href="#step-2-storing-the-api-key" title="Permanent link">#</a></h4>
+<p><strong>Option 1: Using the AWS Systems Manager Parameter Store</strong></p>
 <p>In the AWS Management Console, ensure that your active region is the region you use for Databricks.
 Go to the <em>AWS Systems Manager</em> choose <em>Parameter Store</em> and select <em>Create Parameter</em>.
-As name enter <code>/hopsworks/role/[MY_DATABRICKS_ROLE]/type/api-key</code> replacing <code>[MY_DATABRICKS_ROLE]</code> with the AWS role used by the Databricks cluster that should access the Feature Store. Select <em>Secure String</em> as type and create the parameter.</p>
+As name enter <code>/hopsworks/role/[MY_DATABRICKS_ROLE]/type/api-key</code> replacing <code>[MY_DATABRICKS_ROLE]</code> with the name of the AWS role you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>. Select <em>Secure String</em> as type and create the parameter.</p>
 <p align="center">
   <figure>
     <a  href="../../../assets/images/databricks/aws/databricks_parameter_store.png">
@@ -1959,8 +1984,8 @@ As name enter <code>/hopsworks/role/[MY_DATABRICKS_ROLE]/type/api-key</code> rep
   </figure>
 </p>
 
-<p><strong>Grant access to the secret to the Databricks notebook role</strong></p>
-<p>In the AWS Management Console, go to <em>IAM</em>, select <em>Roles</em> and then the role that is used when creating Databricks clusters.
+<p>Once the API Key is stored, you need to grant access to it from the AWS role that you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.
+In the AWS Management Console, go to <em>IAM</em>, select <em>Roles</em> and then search for the role that you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.
 Select <em>Add inline policy</em>. Choose <em>Systems Manager</em> as service, expand the <em>Read</em> access level and check <em>GetParameter</em>.
 Expand Resources and select <em>Add ARN</em>.
 Enter the region of the <em>Systems Manager</em> as well as the name of the parameter <strong>WITHOUT the leading slash</strong> e.g. <em>hopsworks/role/[MY_DATABRICKS_ROLE]/type/api-key</em> and click <em>Add</em>.
@@ -1974,8 +1999,7 @@ Click on <em>Review</em>, give the policy a name und click on <em>Create policy<
   </figure>
 </p>
 
-<h4 id="option-2-using-the-aws-secrets-manager">Option 2: Using the AWS Secrets Manager<a class="headerlink" href="#option-2-using-the-aws-secrets-manager" title="Permanent link">#</a></h4>
-<p><strong>Store the API key in the AWS Secrets Manager</strong></p>
+<p><strong>Option 2: Using the AWS Secrets Manager</strong></p>
 <p>In the AWS management console ensure that your active region is the region you use for Databricks.
 Go to the <em>AWS Secrets Manager</em> and select <em>Store new secret</em>. Select <em>Other type of secrets</em> and add <em>api-key</em>
 as the key and paste the API key created in the previous step as the value. Click next.</p>
@@ -1988,8 +2012,7 @@ as the key and paste the API key created in the previous step as the value. Clic
   </figure>
 </p>
 
-<p>As secret name, enter <em>hopsworks/role/[MY_DATABRICKS_ROLE]</em> replacing [MY_DATABRICKS_ROLE] with the AWS role used
-by the Databricks instance that should access the Feature Store. Select next twice and finally store the secret.
+<p>As secret name, enter <em>hopsworks/role/[MY_DATABRICKS_ROLE]</em> replacing [MY_DATABRICKS_ROLE] with the AWS role you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>. Select next twice and finally store the secret.
 Then click on the secret in the secrets list and take note of the <em>Secret ARN</em>.</p>
 <p align="center">
   <figure>
@@ -2000,8 +2023,8 @@ Then click on the secret in the secrets list and take note of the <em>Secret ARN
   </figure>
 </p>
 
-<p><strong>Grant access to the secret to the Databricks notebook role</strong></p>
-<p>In the AWS Management Console, go to <em>IAM</em>, select <em>Roles</em> and then the role that is used when creating Databricks clusters.
+<p>Once the API Key is stored, you need to grant access to it from the AWS role that you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.
+In the AWS Management Console, go to <em>IAM</em>, select <em>Roles</em> and then the role that that you have created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.
 Select <em>Add inline policy</em>. Choose <em>Secrets Manager</em> as service, expand the <em>Read</em> access level and check <em>GetSecretValue</em>.
 Expand Resources and select <em>Add ARN</em>. Paste the ARN of the secret created in the previous step.
 Click on <em>Review</em>, give the policy a name und click on <em>Create policy</em>.</p>
@@ -2014,6 +2037,21 @@ Click on <em>Review</em>, give the policy a name und click on <em>Create policy<
   </figure>
 </p>
 
+<h4 id="step-3-allow-databricks-to-use-the-aws-role-created-in-step-1">Step 3: Allow Databricks to use the AWS role created in Step 1<a class="headerlink" href="#step-3-allow-databricks-to-use-the-aws-role-created-in-step-1" title="Permanent link">#</a></h4>
+<p>First you need to get the AWS role used by Databricks for deployments as described in <a href="https://docs.databricks.com/administration-guide/cloud-configurations/aws/instance-profiles.html#step-3-note-the-iam-role-used-to-create-the-databricks-deployment">this step</a>. Once you get the role name, go to <em>AWS IAM</em>, search for the role, and click on it. Then, select the <em>Permissions</em> tab, click on <em>Add inline policy</em>, select the <em>JSON</em> tab, and paste the following snippet. Replace <em>[ACCOUNT_ID]</em> with your AWS account id, and <em>[MY_DATABRICKS_ROLE]</em> with the AWS role name created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;PassRole&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;iam:PassRole&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:iam::[ACCOUNT_ID]:role/[MY_DATABRICKS_ROLE]&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Click <em>Review Policy</em>, name the policy, and click <em>Create Policy</em>. Then, go to your Databricks workspace and follow <a href="https://docs.databricks.com/administration-guide/cloud-configurations/aws/instance-profiles.html#step-5-add-the-instance-profile-to-databricks">this step</a> to add the instance profile to your workspace. Finally, when launching Databricks clusters, select <em>Advanced</em> settings and choose the instance profile you have just added.</p>
 <h3 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">#</a></h3>
 <p>On Azure we currently do not support storing the API key in a secret storage. Instead just store the API key in a file in your Databricks workspace so you can access it when connecting to the Feature Store.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
