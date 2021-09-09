@@ -76,7 +76,7 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
-        self._prepared_statement_connection = None
+        self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
         self._transformation_functions = transformation_functions
@@ -93,9 +93,7 @@ class TrainingDataset:
             featurestore_id, self.ENTITY_TYPE
         )
 
-        self._code_engine = code_engine.CodeEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
+        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
 
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
@@ -686,13 +684,13 @@ class TrainingDataset:
         return self._feature_store_id
 
     @property
-    def prepared_statement_connection(self):
-        """JDBC connection to online features store."""
-        return self._prepared_statement_connection
+    def prepared_statement_engine(self):
+        """JDBC connection engine retrieve connections to online features store from."""
+        return self._prepared_statement_engine
 
-    @prepared_statement_connection.setter
-    def prepared_statement_connection(self, prepared_statement_connection):
-        self._prepared_statement_connection = prepared_statement_connection
+    @prepared_statement_engine.setter
+    def prepared_statement_engine(self, prepared_statement_engine):
+        self._prepared_statement_engine = prepared_statement_engine
 
     @property
     def prepared_statements(self):
