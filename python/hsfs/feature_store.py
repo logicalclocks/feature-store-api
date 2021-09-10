@@ -386,6 +386,7 @@ class FeatureStore:
         options: Optional[Dict[str, str]] = {},
         version: Optional[int] = None,
         description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         validation_type: Optional[str] = "NONE",
@@ -415,6 +416,11 @@ class FeatureStore:
             description: A string describing the contents of the on-demand feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the first column of the DataFrame will
+                be used as primary key.
             features: Optionally, define the schema of the on-demand feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
@@ -446,6 +452,7 @@ class FeatureStore:
             storage_connector=storage_connector,
             version=version,
             description=description,
+            primary_key=primary_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
