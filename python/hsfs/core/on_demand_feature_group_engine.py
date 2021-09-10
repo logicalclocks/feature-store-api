@@ -35,12 +35,5 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         for feat in feature_group.features:
             if feat.name in feature_group.primary_key:
                 feat.primary = True
-            if feat.name in feature_group.partition_key:
-                feat.partition = True
-            if (
-                feature_group.hudi_precombine_key is not None
-                and feat.name == feature_group.hudi_precombine_key
-            ):
-                feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
