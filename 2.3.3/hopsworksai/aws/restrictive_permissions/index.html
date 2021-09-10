@@ -2138,11 +2138,12 @@ Edit this role in the AWS Management Console and overwrite the existing inline p
         <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;EC2BackupCreation&quot;</span><span class="p">,</span>
         <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
         <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
-          <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
+          <span class="s2">&quot;ec2:RegisterImage&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:CreateSnapshot&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
         <span class="p">],</span>
         <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span>
       <span class="p">}</span>
@@ -2161,11 +2162,12 @@ See: <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policie
         <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;EC2BackupCreation&quot;</span><span class="p">,</span>
         <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
         <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
-          <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
+          <span class="s2">&quot;ec2:RegisterImage&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DescribeImages&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:CreateSnapshot&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;ec2:DescribeSnapshots&quot;</span>
         <span class="p">],</span>
         <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
       <span class="p">}</span>
