@@ -22,6 +22,12 @@ from hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
+    def __init__(self, feature_store_id):
+        super().__init__(feature_store_id)
+
+        # cache online feature store connector
+        self._online_conn = None
+
     def save(self, feature_group, feature_dataframe, write_options):
 
         if len(feature_group.features) == 0:
@@ -164,12 +170,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
-        if online:
-            online_conn = self._storage_connector_api.get_online_connector()
-        else:
-            online_conn = None
+        if online and self._online_conn is None:
+            self._online_conn = self._storage_connector_api.get_online_connector()
         return engine.get_instance().sql(
-            query, feature_store_name, online_conn, dataframe_type, read_options
+            query,
+            feature_store_name,
+            self._online_conn if online else None,
+            dataframe_type,
+            read_options,
         )
 
     def append_features(self, feature_group, new_features):

@@ -53,7 +53,7 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def create_mysql_connection(online_conn, external):
+def create_mysql_engine(online_conn, external):
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
     # jdbc:mysql:// with the sqlalchemy one + username and password
@@ -84,8 +84,9 @@ def create_mysql_connection(online_conn, external):
         .replace("?allowPublicKeyRetrieval=true", "")
     )
 
+    # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
-    return sql_alchemy_engine.connect()
+    return sql_alchemy_engine
 
 
 def get_timestamp_from_date_string(input_date):
