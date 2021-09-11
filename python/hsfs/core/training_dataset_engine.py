@@ -173,9 +173,8 @@ class TrainingDatasetEngine:
 
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
-            result_proxy = training_dataset.prepared_statement_connection.execute(
-                prepared_statement, entry
-            ).fetchall()
+            with training_dataset.prepared_statement_engine.connect() as mysql_conn:
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
             result_dict = {}
             for row in result_proxy:
                 result_dict = self.deserialize_complex_features(
@@ -196,7 +195,7 @@ class TrainingDatasetEngine:
 
     def init_prepared_statement(self, training_dataset, external):
         online_conn = self._storage_connector_api.get_online_connector()
-        jdbc_connection = util.create_mysql_connection(online_conn, external)
+        mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )
@@ -240,7 +239,7 @@ class TrainingDatasetEngine:
             training_dataset
         )
 
-        training_dataset.prepared_statement_connection = jdbc_connection
+        training_dataset.prepared_statement_engine = mysql_engine
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
 
