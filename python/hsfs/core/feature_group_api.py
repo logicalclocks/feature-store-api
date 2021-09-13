@@ -44,7 +44,9 @@ class FeatureGroupApi:
             "featuregroups",
         ]
         headers = {"content-type": "application/json"}
-        return feature_group_instance.update_from_response_json(
+        
+        print(feature_group_instance.json())
+        t = feature_group_instance.update_from_response_json(
             _client._send_request(
                 "POST",
                 path_params,
@@ -52,6 +54,8 @@ class FeatureGroupApi:
                 data=feature_group_instance.json(),
             ),
         )
+        print(t)
+        return t
 
     def get(self, name, version, fg_type):
         """Get the metadata of a feature group with a certain name and version.
