@@ -45,7 +45,6 @@ class FeatureGroupApi:
         ]
         headers = {"content-type": "application/json"}
         
-        print(feature_group_instance.json())
         return feature_group_instance.update_from_response_json(
             _client._send_request(
                 "POST",

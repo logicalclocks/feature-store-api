@@ -1376,7 +1376,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
-        print(json_decamelized)
         self.__init__(**json_decamelized)
         return self
 
