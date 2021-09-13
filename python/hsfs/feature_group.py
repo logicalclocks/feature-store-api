@@ -397,6 +397,7 @@ class FeatureGroupBase:
 
     @primary_key.setter
     def primary_key(self, new_primary_key):
+        print(new_primary_key)
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(self, commit_time: str = None):
