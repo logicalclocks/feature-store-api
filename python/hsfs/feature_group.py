@@ -1290,14 +1290,14 @@ class OnDemandFeatureGroup(FeatureGroupBase):
 
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
-            self.primary_key = [
-                feat.name for feat in self._features if feat.primary is True
-            ]
             self._features = (
                 [feature.Feature.from_response_json(feat) for feat in features]
                 if features
                 else None
             )
+            self.primary_key = [
+                feat.name for feat in self._features if feat.primary is True
+            ]
             self.statistics_config = statistics_config
 
             self._options = (

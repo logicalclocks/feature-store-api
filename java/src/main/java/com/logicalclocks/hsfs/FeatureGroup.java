@@ -222,7 +222,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
         writeOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {

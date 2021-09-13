@@ -110,7 +110,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   }
 
   public void save() throws FeatureStoreException, IOException {
-    onDemandFeatureGroupEngine.saveFeatureGroup(this, primaryKeys);
+    onDemandFeatureGroupEngine.saveFeatureGroup(this);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, read(), null);

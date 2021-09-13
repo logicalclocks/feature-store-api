@@ -332,8 +332,7 @@ class FeatureStore:
             primary_key: A list of feature names to be used as primary key for the
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the first column of the DataFrame will
-                be used as primary key.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -419,8 +418,7 @@ class FeatureStore:
             primary_key: A list of feature names to be used as primary key for the
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the first column of the DataFrame will
-                be used as primary key.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             features: Optionally, define the schema of the on-demand feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
