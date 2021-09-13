@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client, code
+from hsfs import client
 
 
 class CodeApi:
@@ -41,10 +41,7 @@ class CodeApi:
             "code",
         ]
         headers = {"content-type": "application/json"}
-        query_params = {
-            "kernelId": kernel_id,
-            "type": code_type
-        }
+        query_params = {"kernelId": kernel_id, "type": code_type}
         _client._send_request(
             "POST", path_params, query_params, headers=headers, data=code.json()
         )

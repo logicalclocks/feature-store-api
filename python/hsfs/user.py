@@ -21,7 +21,6 @@ from hsfs import util
 
 
 class User:
-    
     def __init__(
         self,
         username=None,
@@ -59,7 +58,7 @@ class User:
         self._user_account_type = user_account_type
         self._num_active_projects = num_active_projects
         self._num_remaining_projects = num_remaining_projects
-    
+
     @classmethod
     def from_response_json(cls, json_dict):
         if json_dict:
@@ -74,67 +73,67 @@ class User:
     @property
     def username(self):
         return self._username
-    
+
     @property
     def email(self):
         return self._email
-    
+
     @property
     def first_name(self):
         return self._first_name
-    
+
     @property
     def last_name(self):
         return self._last_name
-    
+
     @property
     def status(self):
         return self._status
-    
+
     @property
     def secret(self):
         return self._secret
-    
+
     @property
     def chosen_password(self):
         return self._chosen_password
-    
+
     @property
     def repeated_password(self):
         return self._repeated_password
-    
+
     @property
     def tos(self):
         return self._tos
-    
+
     @property
     def two_factor(self):
         return self._two_factor
-    
+
     @property
     def tours_state(self):
         return self._tours_state
-    
+
     @property
     def max_num_projects(self):
         return self._max_num_projects
-    
+
     @property
     def num_created_projects(self):
         return self._num_created_projects
-    
+
     @property
     def test_user(self):
         return self._test_user
-    
+
     @property
     def user_account_type(self):
         return self._user_account_type
-    
+
     @property
     def num_active_projects(self):
         return self._num_active_projects
-    
+
     @property
     def num_remaining_projects(self):
         return self._num_remaining_projects
