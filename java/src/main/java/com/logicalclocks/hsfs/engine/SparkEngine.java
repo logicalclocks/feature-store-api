@@ -113,14 +113,10 @@ public class SparkEngine {
     configurationMap.put("spark.hadoop.hive.metastore.uris", null);
 
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
-      if (entry.getValue() == null) {
-        if (sparkSession.conf().get(entry.getKey(), "").isEmpty()) {
-          throw new FeatureStoreException(exceptionText + entry.getKey());
-        }
-      } else {
-        if (!sparkSession.conf().get(entry.getKey(), "").equals(entry.getValue())) {
-          throw new FeatureStoreException(exceptionText + entry.getKey());
-        }
+      if (entry.getValue() == null && !sparkSession.conf().contains(entry.getKey())) {
+        throw new FeatureStoreException(exceptionText + entry.getKey());
+      } else if (!sparkSession.conf().get(entry.getKey(), "").equalsIgnoreCase(entry.getValue())) {
+        throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
   }
