@@ -1295,11 +1295,11 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 if features
                 else None
             )
-            self.primary_key = [
+            self.primary_key = (
                 [feat.name for feat in self._features if feat.primary is True]
                 if self._features
-                else []
-            ]
+                else None
+            )
             self.statistics_config = statistics_config
 
             self._options = (
