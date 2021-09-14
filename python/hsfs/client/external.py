@@ -26,6 +26,7 @@ except ImportError:
     pass
 
 from hsfs.client import base, auth, exceptions
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class Client(base.Client):
@@ -87,12 +88,10 @@ class Client(base.Client):
             os.makedirs(self._cert_folder, exist_ok=True)
             credentials = self._get_credentials(self._project_id)
             self._write_b64_cert_to_bytes(
-                str(credentials["kStore"]),
-                path=self._get_jks_key_store_path(),
+                str(credentials["kStore"]), path=self._get_jks_key_store_path(),
             )
             self._write_b64_cert_to_bytes(
-                str(credentials["tStore"]),
-                path=self._get_jks_trust_store_path(),
+                str(credentials["tStore"]), path=self._get_jks_trust_store_path(),
             )
 
             self._cert_key = str(credentials["password"])
@@ -102,6 +101,7 @@ class Client(base.Client):
         elif engine == "spark":
             _spark_session = SparkSession.builder.getOrCreate()
 
+            self.validate_spark_configuration(_spark_session)
             with open(
                 _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
                 "r",
@@ -114,6 +114,30 @@ class Client(base.Client):
             self._key_store_path = _spark_session.conf.get(
                 "spark.hadoop.hops.ssl.keystore.name"
             )
+
+    def validate_spark_configuration(self, _spark_session):
+        exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
+
+        configuration_dict = {
+            "spark.hadoop.hops.ssl.trustore.name": None,
+            "spark.hadoop.hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+            "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+            "spark.hadoop.hops.ssl.hostname.verifier": "ALLOW_ALL",
+            "spark.hadoop.hops.ssl.keystore.name": None,
+            "spark.hadoop.fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+            "spark.hadoop.hops.ssl.keystores.passwd.name": None,
+            "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
+            "spark.sql.hive.metastore.jars": None,
+            "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+            "spark.hadoop.hive.metastore.uris": None,
+        }
+
+        for key, value in configuration_dict.items():
+            if value is None and not _spark_session.conf.get(key, None):
+                raise FeatureStoreException(exception_text + key)
+            else:
+                if not _spark_session.conf.get(key, None) == value:
+                    raise FeatureStoreException(exception_text + key)
 
     def _close(self):
         """Closes a client and deletes certificates."""
