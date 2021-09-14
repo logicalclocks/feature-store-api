@@ -535,7 +535,7 @@ class SnowflakeConnector(StorageConnector):
         url=None,
         user=None,
         warehouse=None,
-        application=None, 
+        application=None,
         sf_options=None,
     ):
         super().__init__(id, name, description, featurestore_id)
