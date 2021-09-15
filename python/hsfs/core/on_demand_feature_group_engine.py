@@ -21,10 +21,8 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
     def save(self, feature_group):
         if len(feature_group.features) == 0:
             # If the user didn't specify the schema, parse it from the query
-            on_demand_dataset = (
-                engine.get_instance().register_on_demand_temporary_table(
-                    feature_group, "read_ondmd"
-                )
+            on_demand_dataset = engine.get_instance().register_on_demand_temporary_table(
+                feature_group, "read_ondmd"
             )
             feature_group._features = engine.get_instance().parse_schema_feature_group(
                 on_demand_dataset
