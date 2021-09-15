@@ -34,5 +34,5 @@ jobs:
           git config --global user.email mike@docs.hopsworks.ai
 
       - name: mike deploy docs
-        run: mike deploy ${{ env.RELEASE_VERSION }} latest -u --push
+        run: mike deploy ${{ env.RELEASE_VERSION }} --push
 
