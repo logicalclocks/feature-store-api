@@ -132,6 +132,18 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
+    def get_feature_groups(self, name: str):
+        """[summary]
+
+        [extended_summary]
+
+        Args:
+            name (str): [description]
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.CACHED
+        )
+
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
@@ -164,6 +176,18 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
 
+    def get_on_demand_feature_groups(self, name: str):
+        """[summary]
+
+        [extended_summary]
+
+        Args:
+            name (str): [description]
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+        )
+
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
 
@@ -191,6 +215,16 @@ class FeatureStore:
             )
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
+
+    def get_training_datasets(self, name: str):
+        """[summary]
+
+        [extended_summary]
+
+        Args:
+            name (str): [description]
+        """
+        return self._training_dataset_api.get(name, None)
 
     def get_storage_connector(self, name: str):
         """Get a previously created storage connector from the feature store.
