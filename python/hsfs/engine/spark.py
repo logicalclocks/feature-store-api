@@ -474,7 +474,7 @@ class Engine:
     def feature_selection(self, dataframe):
         """Run feature selection on a dataframe."""
         return (
-            self._jvm.com.amazon.deequ.featureselection.SparkEngine.getInstance().featureSelection(
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().featureSelection(
                 dataframe._jdf
             )
         )
