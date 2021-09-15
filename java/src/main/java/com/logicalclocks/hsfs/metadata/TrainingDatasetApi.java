@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
@@ -48,6 +49,31 @@ public class TrainingDatasetApi {
       TRAINING_DATASETS_PATH + "{/tdId}/transformationfunctions";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
+
+  public List<TrainingDataset> get(FeatureStore featureStore, String tdName)
+      throws IOException, FeatureStoreException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + TRAINING_DATASET_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("tdName", tdName)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    TrainingDataset[] trainingDatasets = hopsworksClient.handleRequest(new HttpGet(uri), TrainingDataset[].class);
+
+    for (TrainingDataset td : trainingDatasets) {
+      td.setFeatureStore(featureStore);
+      td.getFeatures().stream()
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+    }
+    return Arrays.asList(trainingDatasets);
+  }
 
   public TrainingDataset get(FeatureStore featureStore, String tdName, Integer tdVersion)
       throws IOException, FeatureStoreException {

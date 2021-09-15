@@ -403,7 +403,7 @@ class TrainingDataset:
         json_decamelized = humps.decamelize(json_dict)
         for td in json_decamelized:
             _ = td.pop("type")
-        return [cls(**json_decamelized) for td in json_decamelized]
+        return [cls(**td) for td in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)

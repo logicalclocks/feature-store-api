@@ -133,12 +133,21 @@ class FeatureStore:
         )
 
     def get_feature_groups(self, name: str):
-        """[summary]
+        """Get a list of all versions of a feature group entity from the feature store.
 
-        [extended_summary]
+        Getting a feature group from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame or use
+        the `Query`-API to perform joins between feature groups.
 
-        Args:
-            name (str): [description]
+        # Arguments
+            name: Name of the feature group to get.
+
+        # Returns
+            `FeatureGroup`: List of feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.CACHED
@@ -177,12 +186,20 @@ class FeatureStore:
         )
 
     def get_on_demand_feature_groups(self, name: str):
-        """[summary]
+        """Get a list of all versions of an on-demand feature group entity from the feature store.
 
-        [extended_summary]
+        Getting a on-demand feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
-        Args:
-            name (str): [description]
+        # Arguments
+            name: Name of the on-demand feature group to get.
+
+        # Returns
+            `OnDemandFeatureGroup`: List of on-demand feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.ONDEMAND
@@ -217,12 +234,19 @@ class FeatureStore:
         return self._training_dataset_api.get(name, version)
 
     def get_training_datasets(self, name: str):
-        """[summary]
+        """Get a list of all versions of a training dataset entity from the feature store.
 
-        [extended_summary]
+        Getting a training dataset from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame.
 
-        Args:
-            name (str): [description]
+        # Arguments
+            name: Name of the training dataset to get.
+
+        # Returns
+            `TrainingDataset`: List of training dataset metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._training_dataset_api.get(name, None)
 
