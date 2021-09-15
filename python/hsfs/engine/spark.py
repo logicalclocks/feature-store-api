@@ -471,6 +471,15 @@ class Engine:
             dataframe._jdf, expectations_java
         )
 
+    def feature_selection(self, dataframe):
+        """Run feature selection on a dataframe."""
+        return (
+            self._jvm.com.amazon.deequ.featureselection.SparkEngine.getInstance().featureSelection(
+                dataframe._jdf
+            )
+        )
+
+
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")

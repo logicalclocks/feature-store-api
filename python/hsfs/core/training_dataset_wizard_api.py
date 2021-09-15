@@ -66,7 +66,7 @@ class TrainingDatasetWizardApi:
             ),
         )
 
-    def featureselection(self, training_dataset_wizard_instance):
+    def feature_selection(self, training_dataset_wizard_instance):
         _client = client.get_instance()
         path_params = [
             "project",

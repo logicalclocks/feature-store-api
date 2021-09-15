@@ -16,10 +16,11 @@
 import json
 import humps
 from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.query import Query
 from hsfs.core import training_dataset_wizard_api
 from hsfs.constructor.join_suggestion import JoinSuggestion
-
+from hsfs import engine
 
 class TrainingDatasetWizard:
 
@@ -53,15 +54,23 @@ class TrainingDatasetWizard:
         self._training_dataset_wizard_api.discover(self)
         return self._new_suggestions
 
-    def add_accepted_suggestion(self, suggestion):
+    def accept_suggestion(self, suggestion):
         self._accepted_suggestions.append(suggestion)
         return self
 
-    def get_feature_query(self):
+    def get_query(self):
         return self._training_dataset_wizard_api.construct_query(self)
 
-    def run_feature_selection(self):
-        return self._training_dataset_wizard_api.featureselection(self)
+    def run_feature_selection(self, query: Query):
+        df = query.read()
+        if engine.get_type() == "spark":
+            return engine.get_instance().feature_selection(df)
+        else:
+            #return self._training_dataset_wizard_api.feature_selection(self)
+            raise Exception(
+                f"`{engine.get_type()}` engine doesn't support this operation. "
+                "Supported engine is `'spark'`."
+            )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)

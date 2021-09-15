@@ -19,6 +19,8 @@ package com.logicalclocks.hsfs.engine;
 import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
+import com.amazon.deequ.featureselection.FeatureSelectionConfig;
+import com.amazon.deequ.featureselection.FeatureSelectionHelper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.Feature;
@@ -441,6 +443,23 @@ public class SparkEngine {
 
   public String profile(Dataset<Row> df) {
     return profile(df, null, true, true);
+  }
+  
+  public Map<String, Double> featureSelection(Dataset<Row> df) {
+    FeatureSelectionConfig config = new FeatureSelectionConfig("target",
+      -1,
+      1000000,
+      df.toJavaRDD().getNumPartitions(),
+      255,
+      0.01,
+      0.9,
+      0.5,
+      0.5,
+      100,
+      1024,
+      false);
+    FeatureSelectionHelper helper = new FeatureSelectionHelper(df.schema(), config);
+    return helper.runFeatureSelectionJava(df);
   }
 
   public void setupConnectorHadoopConf(StorageConnector storageConnector) {
