@@ -1,4 +1,4 @@
-name: mkdocs
+name: mkdocs-release
 
 on:
   push:
