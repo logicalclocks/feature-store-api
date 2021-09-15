@@ -61,10 +61,10 @@ class TrainingDatasetWizard:
     def get_query(self):
         return self._training_dataset_wizard_api.construct_query(self)
 
-    def run_feature_selection(self, query: Query):
+    def run_feature_selection(self, query: Query, num_selected_features: int):
         df = query.read()
         if engine.get_type() == "spark":
-            return engine.get_instance().feature_selection(df)
+            return engine.get_instance().feature_selection(df, self._label, num_selected_features)
         else:
             #return self._training_dataset_wizard_api.feature_selection(self)
             raise Exception(

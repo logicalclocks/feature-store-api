@@ -16,11 +16,11 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.amazon.deequ.featureselection.FeatureSelectionConfig;
+import com.amazon.deequ.featureselection.FeatureSelectionHelper;
 import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
-import com.amazon.deequ.featureselection.FeatureSelectionConfig;
-import com.amazon.deequ.featureselection.FeatureSelectionHelper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.Feature;
@@ -45,28 +45,28 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.avro.functions.to_avro;
-import static org.apache.spark.sql.functions.concat;
-import static org.apache.spark.sql.functions.lit;
-import static org.apache.spark.sql.functions.struct;
-
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
 
@@ -445,19 +445,19 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
   
-  public Map<String, Double> featureSelection(Dataset<Row> df) {
-    FeatureSelectionConfig config = new FeatureSelectionConfig("target",
-      -1,
-      1000000,
-      df.toJavaRDD().getNumPartitions(),
-      255,
-      0.01,
-      0.9,
-      0.5,
-      0.5,
-      100,
-      1024,
-      false);
+  public Map<String, Double> featureSelection(Dataset<Row> df, String label, Integer numSelectedFeatures) {
+    FeatureSelectionConfig config = new FeatureSelectionConfig(label,
+        numSelectedFeatures,
+        1000000,
+        df.toJavaRDD().getNumPartitions(),
+        255,
+        0.01,
+        0.9,
+        0.5,
+        0.5,
+        100,
+        1024,
+        false);
     FeatureSelectionHelper helper = new FeatureSelectionHelper(df.schema(), config);
     return helper.runFeatureSelectionJava(df);
   }
