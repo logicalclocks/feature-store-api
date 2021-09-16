@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
@@ -49,31 +50,40 @@ public class TrainingDatasetApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetApi.class);
 
-  public TrainingDataset get(FeatureStore featureStore, String tdName, Integer tdVersion)
+  public List<TrainingDataset> get(FeatureStore featureStore, String tdName, Integer tdVersion)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TRAINING_DATASET_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
-        .set("tdName", tdName)
-        .set("version", tdVersion)
-        .expand();
+        .set("tdName", tdName);
 
-    LOGGER.info("Sending metadata request: " + uri);
-    TrainingDataset[] trainingDatasets = hopsworksClient.handleRequest(new HttpGet(uri), TrainingDataset[].class);
+    if (tdVersion != null) {
+      uri.set("version", tdVersion);
+    }
+    String uriString = uri.expand();
 
+    LOGGER.info("Sending metadata request: " + uriString);
+    TrainingDataset[] trainingDatasets = hopsworksClient.handleRequest(new HttpGet(uriString), TrainingDataset[].class);
+
+    for (TrainingDataset td : trainingDatasets) {
+      td.setFeatureStore(featureStore);
+      td.getFeatures().stream()
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+    }
+    return Arrays.asList(trainingDatasets);
+  }
+
+  public TrainingDataset getTrainingDataset(FeatureStore featureStore, String tdName, Integer tdVersion)
+      throws IOException, FeatureStoreException {
     // There can be only one single training dataset with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
-    TrainingDataset resultTd = trainingDatasets[0];
-    resultTd.setFeatureStore(featureStore);
-    resultTd.getFeatures().stream()
-        .filter(f -> f.getFeaturegroup() != null)
-        .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
-    return resultTd;
+    return get(featureStore, tdName, tdVersion).get(0);
   }
 
   public TrainingDataset createTrainingDataset(TrainingDataset trainingDataset)
