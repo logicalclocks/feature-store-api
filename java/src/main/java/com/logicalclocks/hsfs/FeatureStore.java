@@ -142,7 +142,7 @@ public class FeatureStore {
    * Get a list of all versions of an on-demand feature group from the feature store.
    *
    * @param name    the name of the feature group
-   * @return FeatureGroup
+   * @return OnDemandFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
@@ -222,7 +222,7 @@ public class FeatureStore {
    */
   public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.get(this, name, version);
+    return trainingDatasetApi.getTrainingDataset(this, name, version);
   }
 
   /**
@@ -249,7 +249,7 @@ public class FeatureStore {
    */
   public scala.collection.Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
       throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(trainingDatasetApi.get(this, name)).asScala().toSeq();
+    return JavaConverters.asScalaBufferConverter(trainingDatasetApi.get(this, name, null)).asScala().toSeq();
   }
 
   public scala.collection.Seq<Expectation> createExpectations(scala.collection.Seq<Expectation> expectations)
