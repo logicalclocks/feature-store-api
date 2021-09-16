@@ -37,7 +37,8 @@ setup(
             "mkdocs==1.1.2",
             "mkdocs-material==6.2.2",
             "mike==0.5.5",
-            "keras-autodoc",
+            "sphinx==3.5.4",
+            "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include"],
         "hive": ["pyhopshive[thrift]"]
     },
