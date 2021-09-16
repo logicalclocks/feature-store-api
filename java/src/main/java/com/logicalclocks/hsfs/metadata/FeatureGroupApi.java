@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
@@ -48,6 +49,14 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
+  public List<FeatureGroup> getFeatureGroups(FeatureStore featureStore, String fgName)
+      throws FeatureStoreException, IOException {
+    FeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, null, FeatureGroup[].class);
+
+    return Arrays.asList(offlineFeatureGroups);
+  }
+
   public FeatureGroup getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
     FeatureGroup[] offlineFeatureGroups =
@@ -58,6 +67,14 @@ public class FeatureGroupApi {
     FeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
     return resultFg;
+  }
+
+  public List<OnDemandFeatureGroup> getOnDemandFeatureGroups(FeatureStore featureStore, String fgName)
+      throws FeatureStoreException, IOException {
+    OnDemandFeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, null, OnDemandFeatureGroup[].class);
+
+    return Arrays.asList(offlineFeatureGroups);
   }
 
   public OnDemandFeatureGroup getOnDemandFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
@@ -79,15 +96,18 @@ public class FeatureGroupApi {
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
-        .set("fgName", fgName)
-        .set("version", fgVersion)
-        .expand();
+        .set("fgName", fgName);
 
-    LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), fgType);
+    if (fgVersion != null) {
+      uri.set("version", fgVersion);
+    }
+    String uriString = uri.expand();
+
+    LOGGER.info("Sending metadata request: " + uriString);
+    return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
   }
 
   public OnDemandFeatureGroup save(OnDemandFeatureGroup onDemandFeatureGroup)
