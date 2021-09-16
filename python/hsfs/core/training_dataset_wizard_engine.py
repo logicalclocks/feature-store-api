@@ -62,7 +62,8 @@ class TrainingDatasetWizardEngine:
             if n_selected_features_join > 0 or len(selected_joins) > 0:
                 selected_joins.append(join)
                 n_selected_features += n_selected_features_join
-        query._joins = selected_joins
+        # revert list of joins because they were added in reverse
+        query._joins = selected_joins[::-1]
 
         return query, n_selected_features
 
