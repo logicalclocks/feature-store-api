@@ -2495,16 +2495,16 @@ When the on-demand feature group is defined on top of an external database capab
 <input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Scala</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Connecting from Hopsworks</p>
-<div class="highlight"><pre><span></span><code><span class="k">val</span> <span class="n">redshiftConn</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">getRedshiftConnector</span><span class="o">(</span><span class="s">&quot;telco_redshift_cluster&quot;</span><span class="o">)</span>
-<span class="k">val</span> <span class="n">telcoOnDmd</span> <span class="o">=</span> <span class="o">(</span><span class="n">fs</span><span class="o">.</span><span class="n">createOnDemandFeatureGroup</span><span class="o">()</span>
-            <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;telco_redshift_scala&quot;</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">version</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">query</span><span class="o">(</span><span class="s">&quot;select * from telco&quot;</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">description</span><span class="o">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">storageConnector</span><span class="o">(</span><span class="n">redshiftConn</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">statisticsEnabled</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">build</span><span class="o">())</span>
-<span class="n">telcoOnDmd</span><span class="o">.</span><span class="n">save</span><span class="o">()</span>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span> <span class="n">redshiftConn</span> <span class="o">=</span> <span class="n">fs</span><span class="p">.</span><span class="n">getRedshiftConnector</span><span class="p">(</span><span class="s">&quot;telco_redshift_cluster&quot;</span><span class="p">)</span>
+<span class="kd">val</span> <span class="n">telcoOnDmd</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createOnDemandFeatureGroup</span><span class="p">()</span>
+            <span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;telco_redshift_scala&quot;</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;select * from telco&quot;</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">storageConnector</span><span class="p">(</span><span class="n">redshiftConn</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">statisticsEnabled</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">build</span><span class="p">())</span>
+<span class="n">telcoOnDmd</span><span class="p">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -2528,16 +2528,16 @@ When the on-demand feature group is defined on top of an external database capab
 <input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Scala</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Connecting from Hopsworks</p>
-<div class="highlight"><pre><span></span><code><span class="k">val</span> <span class="n">s3Conn</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">getS3Connector</span><span class="o">(</span><span class="s">&quot;telco_s3_bucket&quot;</span><span class="o">)</span>
-<span class="k">val</span> <span class="n">telcoOnDmd</span> <span class="o">=</span> <span class="o">(</span><span class="n">fs</span><span class="o">.</span><span class="n">createOnDemandFeatureGroup</span><span class="o">()</span>
-            <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;telco_s3&quot;</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">version</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">dataFormat</span><span class="o">(</span><span class="nc">OnDemandDataFormat</span><span class="o">.</span><span class="nc">PARQUET</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">description</span><span class="o">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">storageConnector</span><span class="o">(</span><span class="n">s3Conn</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">statisticsEnabled</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
-            <span class="o">.</span><span class="n">build</span><span class="o">())</span>
-<span class="n">telcoOnDmd</span><span class="o">.</span><span class="n">save</span><span class="o">()</span>
+<div class="highlight"><pre><span></span><code><span class="kd">val</span> <span class="n">s3Conn</span> <span class="o">=</span> <span class="n">fs</span><span class="p">.</span><span class="n">getS3Connector</span><span class="p">(</span><span class="s">&quot;telco_s3_bucket&quot;</span><span class="p">)</span>
+<span class="kd">val</span> <span class="n">telcoOnDmd</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createOnDemandFeatureGroup</span><span class="p">()</span>
+            <span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;telco_s3&quot;</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">dataFormat</span><span class="p">(</span><span class="nc">OnDemandDataFormat</span><span class="p">.</span><span class="nc">PARQUET</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">storageConnector</span><span class="p">(</span><span class="n">s3Conn</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">statisticsEnabled</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+            <span class="p">.</span><span class="n">build</span><span class="p">())</span>
+<span class="n">telcoOnDmd</span><span class="p">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
