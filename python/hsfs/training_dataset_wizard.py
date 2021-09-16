@@ -31,7 +31,7 @@ class TrainingDatasetWizard:
             feature_store_name,
             accepted_suggestions,
             new_suggestions,
-            selected_features,
+            #selected_features,
             current_round,
             min_relatedness
     ):
@@ -41,7 +41,7 @@ class TrainingDatasetWizard:
         self._feature_store_name = feature_store_name
         self._accepted_suggestions = [JoinSuggestion.from_response_json(v) for v in accepted_suggestions]
         self._new_suggestions = [JoinSuggestion.from_response_json(v) for v in new_suggestions]
-        self._selected_features = selected_features
+        #self._selected_features = selected_features
         self._current_round = current_round
         self._min_relatedness = min_relatedness
         self._training_dataset_wizard_api = training_dataset_wizard_api.TrainingDatasetWizardApi(
@@ -80,7 +80,7 @@ class TrainingDatasetWizard:
             else [],
             "newSuggestions": [v.to_dict() for v in self._new_suggestions] if self._new_suggestions
             else [],
-            "selectedFeatures": self._selected_features,
+            #"selectedFeatures": self._selected_features,
             "currentRound": self._current_round,
             "minRelatedness": self._min_relatedness
         }
