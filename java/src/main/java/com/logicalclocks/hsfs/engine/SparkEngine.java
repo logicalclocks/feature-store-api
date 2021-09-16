@@ -445,7 +445,16 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
   
-  public Map<String, Double> featureSelection(Dataset<Row> df, String label, Integer numSelectedFeatures) {
+  public Map<String, Double> featureSelection(Dataset<Row> df, String label) {
+    return featureSelection(df, label, -1, false);
+  }
+  
+  public Map<String, Double> featureSelection(Dataset<Row> df, String label, Boolean verbose) {
+    return featureSelection(df, label, -1, verbose);
+  }
+  
+  public Map<String, Double> featureSelection(Dataset<Row> df, String label, Integer numSelectedFeatures,
+      Boolean verbose) {
     FeatureSelectionConfig config = new FeatureSelectionConfig(label,
         numSelectedFeatures,
         1000000,
@@ -457,7 +466,30 @@ public class SparkEngine {
         0.5,
         100,
         1024,
-        false);
+        verbose);
+    return featureSelection(df, config);
+  }
+  
+  public Map<String, Double> featureSelection(Dataset<Row> df, String label, Integer numSelectedFeatures,
+      Integer rowLimit, Integer numPartitions, Integer numBuckets, Double normalizedVarianceThreshold,
+      Double distinctnessThresholdIntegral, Double distinctnessThresholdOther, Double completenessThreshold,
+      Integer discretizationTreshold, Integer frequentItemSketchSize, Boolean verbose) {
+    FeatureSelectionConfig config = new FeatureSelectionConfig(label,
+        numSelectedFeatures,
+        rowLimit,
+        numPartitions,
+        numBuckets,
+        normalizedVarianceThreshold,
+        distinctnessThresholdIntegral,
+        distinctnessThresholdOther,
+        completenessThreshold,
+        discretizationTreshold,
+        frequentItemSketchSize,
+        verbose);
+    return featureSelection(df, config);
+  }
+  
+  public Map<String, Double> featureSelection(Dataset<Row> df, FeatureSelectionConfig config) {
     FeatureSelectionHelper helper = new FeatureSelectionHelper(df.schema(), config);
     return helper.runFeatureSelectionJava(df);
   }

@@ -16,40 +16,43 @@
 import json
 import humps
 from hsfs import util
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.query import Query
 from hsfs.core import training_dataset_wizard_api
+from hsfs.core import training_dataset_wizard_engine
 from hsfs.constructor.join_suggestion import JoinSuggestion
-from hsfs import engine
 
 class TrainingDatasetWizard:
 
     def __init__(
             self,
-            name,
             label,
             feature_group_id,
             feature_store_id,
             feature_store_name,
             accepted_suggestions,
             new_suggestions,
+            selected_features,
             current_round,
             min_relatedness
     ):
-        self._name = name
         self._label = label
         self._feature_group_id = feature_group_id
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
         self._accepted_suggestions = [JoinSuggestion.from_response_json(v) for v in accepted_suggestions]
         self._new_suggestions = [JoinSuggestion.from_response_json(v) for v in new_suggestions]
+        self._selected_features = selected_features
         self._current_round = current_round
         self._min_relatedness = min_relatedness
         self._training_dataset_wizard_api = training_dataset_wizard_api.TrainingDatasetWizardApi(
             feature_store_id
         )
+        self._training_dataset_wizard_engine = training_dataset_wizard_engine.TrainingDatasetWizardEngine(
+            feature_store_id
+        )
 
-    def discover_related_featuregroups(self):
+    def discover_related_featuregroups(self, min_relatedness = 0.80):
+        self._min_relatedness = min_relatedness
         self._new_suggestions = []
         self._training_dataset_wizard_api.discover(self)
         return self._new_suggestions
@@ -62,23 +65,14 @@ class TrainingDatasetWizard:
         return self._training_dataset_wizard_api.construct_query(self)
 
     def run_feature_selection(self, query: Query, num_selected_features: int):
-        df = query.read()
-        if engine.get_type() == "spark":
-            return engine.get_instance().feature_selection(df, self._label, num_selected_features)
-        else:
-            #return self._training_dataset_wizard_api.feature_selection(self)
-            raise Exception(
-                f"`{engine.get_type()}` engine doesn't support this operation. "
-                "Supported engine is `'spark'`."
-            )
+        return self._training_dataset_wizard_engine.run_feature_selection(query, num_selected_features)
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
         return {
-            "name": self._name,
-            "label": self._label,
+            "label": self._label.to_dict(),
             "featureGroupId": self._feature_group_id,
             "featureStoreId": self._feature_store_id,
             "featureStoreName": self._feature_store_name,
@@ -86,6 +80,7 @@ class TrainingDatasetWizard:
             else [],
             "newSuggestions": [v.to_dict() for v in self._new_suggestions] if self._new_suggestions
             else [],
+            "selectedFeatures": self._selected_features,
             "currentRound": self._current_round,
             "minRelatedness": self._min_relatedness
         }
@@ -100,15 +95,6 @@ class TrainingDatasetWizard:
         # here we lose the information that the user set, e.g. write_options
         self.__init__(**json_decamelized)
         return self
-
-    @property
-    def name(self):
-        """Name of the training dataset."""
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
 
     @property
     def label(self):
@@ -133,33 +119,7 @@ class TrainingDatasetWizard:
         """The accepted join suggestions."""
         return self._accepted_suggestions
 
-    @accepted_suggestions.setter
-    def accepted_suggestions(self, accepted_suggestions):
-        self._accepted_suggestions = accepted_suggestions
-
-    @property
-    def new_suggestions(self):
-        """The new join suggestions."""
-        return self._new_suggestions
-
-    @new_suggestions.setter
-    def new_suggestions(self, new_suggestions):
-        self._new_suggestions = new_suggestions
-
     @property
     def current_round(self):
         """The number of times .discover() was called."""
         return self._current_round
-
-    @current_round.setter
-    def current_round(self, current_round):
-        self._current_round = current_round
-
-    @property
-    def min_relatedness(self):
-        """The minimum relatedness threshold for a join suggestion (between 0-100; higher is stricter, default: 80)."""
-        return self._min_relatedness
-
-    @min_relatedness.setter
-    def min_relatedness(self, min_relatedness):
-        self._min_relatedness = min_relatedness

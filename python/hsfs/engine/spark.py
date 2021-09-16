@@ -471,11 +471,11 @@ class Engine:
             dataframe._jdf, expectations_java
         )
 
-    def feature_selection(self, dataframe, label, num_selected_features):
+    def feature_selection(self, dataframe, label, num_selected_features, verbose):
         """Run feature selection on a dataframe."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().featureSelection(
-                dataframe._jdf, label, num_selected_features
+                dataframe._jdf, label, num_selected_features, verbose
             )
         )
 
