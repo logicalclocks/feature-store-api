@@ -51,7 +51,11 @@ class TrainingDatasetWizard:
             feature_store_id
         )
 
-    def discover_related_featuregroups(self, min_relatedness = 0.80):
+    def discover_related_featuregroups(self, min_relatedness = 66):
+        if min_relatedness < 0 or min_relatedness > 100:
+            raise ValueError(
+                "min_relatedness has to be between 0 and 100"
+            )
         self._min_relatedness = min_relatedness
         self._new_suggestions = []
         self._training_dataset_wizard_api.discover(self)
@@ -65,14 +69,14 @@ class TrainingDatasetWizard:
         return self._training_dataset_wizard_api.construct_query(self)
 
     def run_feature_selection(self, query: Query, num_selected_features: int):
-        return self._training_dataset_wizard_engine.run_feature_selection(query, num_selected_features)
+        return self._training_dataset_wizard_engine.run_feature_selection(query, num_selected_features, self._label)
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
         return {
-            "label": self._label.to_dict(),
+            "label": self._label,
             "featureGroupId": self._feature_group_id,
             "featureStoreId": self._feature_store_id,
             "featureStoreName": self._feature_store_name,

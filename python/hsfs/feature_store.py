@@ -576,9 +576,9 @@ class FeatureStore:
             feature_store_name=self._name,
             accepted_suggestions=[],
             new_suggestions=[],
-            selected_features=[],
+            #selected_features=[],
             current_round=0,
-            min_relatedness=0.80
+            min_relatedness=66
         )
 
     def create_expectation(
