@@ -1733,9 +1733,9 @@ validation rules (Rule) and expectations (Expectation) applied on a dataframe th
 </code></pre></div>
 </div>
 <input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Scala</label><div class="tabbed-content">
-<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs._</span>
-<span class="k">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="o">.</span><span class="n">builder</span><span class="o">().</span><span class="n">build</span><span class="o">();</span>
-<span class="k">val</span> <span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">getRules</span><span class="o">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
+<span class="kd">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">();</span>
+<span class="kd">val</span> <span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="p">.</span><span class="n">getRules</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -1747,9 +1747,9 @@ validation rules (Rule) and expectations (Expectation) applied on a dataframe th
 </code></pre></div>
 </div>
 <input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><label for="__tabbed_2_2">Scala</label><div class="tabbed-content">
-<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs._</span>
-<span class="k">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="o">.</span><span class="n">builder</span><span class="o">().</span><span class="n">build</span><span class="o">();</span>
-<span class="k">val</span> <span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">getRules</span><span class="o">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
+<span class="kd">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">();</span>
+<span class="kd">val</span> <span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="p">.</span><span class="n">getRules</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -1866,15 +1866,15 @@ will not be met.</p>
 </div>
 <input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><label for="__tabbed_3_2">Scala</label><div class="tabbed-content">
 <div class="highlight"><pre><span></span><code><span class="c1">// Create an expectation for the &quot;salary&quot; and &quot;commissio&quot; features so that their min value is &quot;10&quot; and their max is &quot;100&quot;</span>
-<span class="k">val</span> <span class="n">expectationSales</span> <span class="o">=</span> <span class="o">(</span><span class="n">fs</span><span class="o">.</span><span class="n">createExpectation</span><span class="o">()</span>
-                          <span class="o">.</span><span class="n">rules</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span>
-                              <span class="nc">Rule</span><span class="o">.</span><span class="n">createRule</span><span class="o">(</span><span class="nc">RuleName</span><span class="o">.</span><span class="nc">HAS_MIN</span><span class="o">).</span><span class="n">min</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="n">level</span><span class="o">(</span><span class="nc">Level</span><span class="o">.</span><span class="nc">WARNING</span><span class="o">).</span><span class="n">build</span><span class="o">(),</span> <span class="c1">//Set rule by name</span>
-                              <span class="nc">Rule</span><span class="o">.</span><span class="n">createRule</span><span class="o">(</span><span class="n">ruleMax</span><span class="o">).</span><span class="n">max</span><span class="o">(</span><span class="mi">1000000</span><span class="o">).</span><span class="n">level</span><span class="o">(</span><span class="nc">Level</span><span class="o">.</span><span class="nc">ERROR</span><span class="o">).</span><span class="n">build</span><span class="o">()))</span> <span class="c1">//Set rule by passing the RuleDefinition metadata</span>
-                          <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;sales&quot;</span><span class="o">)</span>
-                          <span class="o">.</span><span class="n">description</span><span class="o">(</span><span class="s">&quot;min and max sales limits&quot;</span><span class="o">)</span>
-                          <span class="o">.</span><span class="n">features</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">&quot;salary&quot;</span><span class="o">,</span> <span class="s">&quot;commission&quot;</span><span class="o">))</span>
-                          <span class="o">.</span><span class="n">build</span><span class="o">())</span>
-<span class="n">expectationSales</span><span class="o">.</span><span class="n">save</span><span class="o">()</span>
+<span class="kd">val</span> <span class="n">expectationSales</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createExpectation</span><span class="p">()</span>
+                          <span class="p">.</span><span class="n">rules</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span>
+                              <span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_MIN</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">WARNING</span><span class="p">).</span><span class="n">build</span><span class="p">(),</span> <span class="c1">//Set rule by name</span>
+                              <span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="n">ruleMax</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">1000000</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()))</span> <span class="c1">//Set rule by passing the RuleDefinition metadata</span>
+                          <span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span>
+                          <span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;min and max sales limits&quot;</span><span class="p">)</span>
+                          <span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;salary&quot;</span><span class="p">,</span> <span class="s">&quot;commission&quot;</span><span class="p">))</span>
+                          <span class="p">.</span><span class="n">build</span><span class="p">())</span>
+<span class="n">expectationSales</span><span class="p">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -1993,8 +1993,8 @@ The list of allowed validation types are:</p>
 </code></pre></div>
 </div>
 <input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><label for="__tabbed_4_2">Scala</label><div class="tabbed-content">
-<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs.metadata.validation._</span>
-<span class="n">fg</span><span class="o">.</span><span class="n">updateValidationType</span><span class="o">(</span><span class="nc">ValidationType</span><span class="o">.</span><span class="nc">ALL</span><span class="o">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="nn">metadata</span><span class="p">.</span><span class="nn">validation</span><span class="p">.</span><span class="n">_</span>
+<span class="n">fg</span><span class="p">.</span><span class="n">updateValidationType</span><span class="p">(</span><span class="nc">ValidationType</span><span class="p">.</span><span class="nc">ALL</span><span class="p">)</span>
 </code></pre></div>
 </div>
 </div>

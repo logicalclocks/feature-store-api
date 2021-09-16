@@ -1993,9 +1993,9 @@ file as shown in the SageMaker example above, or you provide the value directly:
 <input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">Scala</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Connecting from Hopsworks</p>
-<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com.logicalclocks.hsfs._</span>
-<span class="k">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="o">.</span><span class="n">builder</span><span class="o">().</span><span class="n">build</span><span class="o">();</span>
-<span class="k">val</span> <span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">getFeatureStore</span><span class="o">();</span>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
+<span class="kd">val</span> <span class="n">connection</span> <span class="o">=</span> <span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">();</span>
+<span class="kd">val</span> <span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="p">.</span><span class="n">getFeatureStore</span><span class="p">();</span>
 </code></pre></div>
 </div>
 <div class="admonition example">
