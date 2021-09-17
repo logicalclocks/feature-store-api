@@ -27,6 +27,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.json.JSONArray;
+
+import java.util.Collection;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -150,5 +153,10 @@ public class Feature {
 
   public Filter ge(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
+  }
+
+  public Filter in(Collection<?> collection) {
+    JSONArray jsonArray = new JSONArray(collection);
+    return new Filter(this, SqlFilterCondition.IN, jsonArray.toString());
   }
 }
