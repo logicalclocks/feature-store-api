@@ -16,7 +16,7 @@
  * based on fast-mRMR (https://github.com/sramirez/fast-mRMR)
  */
 
-package com.logicalclocks.hsfs.engine
+package com.logicalclocks.hsfs.featureselection
 
 import breeze.linalg.{DenseMatrix => BDM, DenseVector => BDV, _}
 import org.apache.spark.rdd.RDD

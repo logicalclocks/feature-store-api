@@ -16,7 +16,7 @@
  * based on org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
  */
 
-package com.logicalclocks.hsfs.engine
+package com.logicalclocks.hsfs.featureselection
 
 import org.apache.datasketches.frequencies.{ErrorType, LongsSketch}
 import org.apache.datasketches.hll.{HllSketch => jHllSketch, Union => HllUnion}
@@ -519,8 +519,8 @@ object StatisticsEngineRDD {
     Iterator.single(summarizer.toSerializable())
   }
 
-  def runStatistics(df: DataFrame,
-                    statsConfig: RDDStatisticsConfig = RDDStatisticsConfig())
+  def computeStatistics(df: DataFrame,
+                        statsConfig: RDDStatisticsConfig = RDDStatisticsConfig())
   : RDDStatistics = {
     val rows = df.rdd
     val rowSize = df.schema.length

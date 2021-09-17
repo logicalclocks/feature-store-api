@@ -15,7 +15,7 @@
  *
  */
 
-package com.logicalclocks.hsfs.engine
+package com.logicalclocks.hsfs.featureselection
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions.col
@@ -47,7 +47,7 @@ case class FeatureSelectionConfig(target: String = "target",
 }
 
 
-class FeatureSelectionEngine(schema: StructType, config: FeatureSelectionConfig =
+class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig =
   FeatureSelectionConfig()) extends Serializable {
 
   private val indexToName = ListMap(schema.zipWithIndex.map(kv => kv._2 -> kv._1.name): _*)
@@ -75,7 +75,7 @@ class FeatureSelectionEngine(schema: StructType, config: FeatureSelectionConfig 
     // compute summary stats...
     val tStats = System.nanoTime
 
-    val stats = StatisticsEngineRDD.runStatistics(dfLimited,
+    val stats = StatisticsEngineRDD.computeStatistics(dfLimited,
       RDDStatisticsConfig(maxFreqItems = config.nBuckets-2))
 
     if (config.verbose){
@@ -233,11 +233,11 @@ class FeatureSelectionEngine(schema: StructType, config: FeatureSelectionConfig 
 
 }
 
-object FeatureSelectionEngine {
+object FeatureSelectionRunner {
 
   def runFeatureSelection(df: DataFrame, config: FeatureSelectionConfig =
       FeatureSelectionConfig()): Map[String, Double] ={
-    val engine = new FeatureSelectionEngine(df.schema, config)
+    val engine = new FeatureSelectionRunner(df.schema, config)
     engine.runFeatureSelection(df)
   }
 
