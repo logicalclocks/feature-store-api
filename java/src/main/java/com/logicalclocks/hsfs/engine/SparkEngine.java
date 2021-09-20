@@ -411,7 +411,7 @@ public class SparkEngine {
   }
   
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
-      Boolean histogram, Boolean exactUniqueness) {
+      Boolean histogram, Boolean exactUniqueness, Boolean rddStatistics) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -422,7 +422,8 @@ public class SparkEngine {
     if (exactUniqueness == null) {
       exactUniqueness = true;
     }
-    if (correlation || histogram || exactUniqueness) {
+    if (!rddStatistics) {
+      // run deequ-based statistics
       ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
           .onData(df)
           .withCorrelation(correlation, 100)
@@ -435,6 +436,7 @@ public class SparkEngine {
       ColumnProfiles result = runner.run();
       return ColumnProfiles.toJson(result.profiles().values().toSeq());
     } else {
+      // run rdd-based statistics
       Dataset<Row> dfToCheck = df;
       if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
         dfToCheck =
@@ -452,6 +454,11 @@ public class SparkEngine {
       return ColumnProfiles.toJson(profiles);
     }
     
+  }
+  
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram,
+    Boolean exactUniqueness) {
+    return profile(df, restrictToColumns, correlation, histogram, exactUniqueness, false);
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
