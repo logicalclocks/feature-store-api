@@ -16,7 +16,12 @@
 
 import warnings
 import humps
-from typing import Optional, Union, List, Dict
+import numpy
+import datetime
+from typing import Optional, Union, List, Dict, TypeVar
+
+from hsfs.transformation_function import TransformationFunction
+from hsfs.core import transformation_function_engine
 
 from hsfs import (
     training_dataset,
@@ -87,6 +92,10 @@ class FeatureStore:
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
 
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(self._id)
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -123,6 +132,27 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
+    def get_feature_groups(self, name: str):
+        """Get a list of all versions of a feature group entity from the feature store.
+
+        Getting a feature group from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame or use
+        the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the feature group to get.
+
+        # Returns
+            `FeatureGroup`: List of feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.CACHED
+        )
+
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
@@ -155,6 +185,26 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
 
+    def get_on_demand_feature_groups(self, name: str):
+        """Get a list of all versions of an on-demand feature group entity from the feature store.
+
+        Getting a on-demand feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the on-demand feature group to get.
+
+        # Returns
+            `OnDemandFeatureGroup`: List of on-demand feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+        )
+
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
 
@@ -183,6 +233,23 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
+    def get_training_datasets(self, name: str):
+        """Get a list of all versions of a training dataset entity from the feature store.
+
+        Getting a training dataset from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame.
+
+        # Arguments
+            name: Name of the training dataset to get.
+
+        # Returns
+            `TrainingDataset`: List of training dataset metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+        return self._training_dataset_api.get(name, None)
+
     def get_storage_connector(self, name: str):
         """Get a previously created storage connector from the feature store.
 
@@ -210,8 +277,33 @@ class FeatureStore:
         """
         return self._storage_connector_api.get(name)
 
-    def sql(self, query, dataframe_type="default", online=False):
-        return self._feature_group_engine.sql(query, self._name, dataframe_type, online)
+    def sql(
+        self,
+        query: str,
+        dataframe_type: Optional[str] = "default",
+        online: Optional[bool] = False,
+        read_options: Optional[dict] = {},
+    ):
+        """Execute SQL command on the offline or online feature store database
+
+        Args:
+            query (str): The SQL query to execute.
+            dataframe_type (Optional[str], optional): The type of the returned dataframe. Defaults to "default"
+                which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
+            online (Optional[bool], optional): Set to true to execute the query against the online feature store.
+                Defaults to False.
+            read_options (Optional[dict], optional): Additional options to pass to the execution engine. Defaults to {}.
+                If running queries on the online feature store, users can provide an entry `{'external': True}`,
+                this instructs the library to use the `host` parameter in the [`hsfs.connection()`](project.md#connection) to establish the connection to the online feature store.
+                If not set, or set to False, the online feature store storage connector is used which relies on
+                the private ip.
+
+        Returns:
+            `DataFrame`: DataFrame depending on the chosen type.
+        """
+        return self._feature_group_engine.sql(
+            query, self._name, dataframe_type, online, read_options
+        )
 
     def get_online_storage_connector(self):
         """Get the storage connector for the Online Feature Store of the respective
@@ -310,8 +402,9 @@ class FeatureStore:
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
             validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
@@ -353,13 +446,15 @@ class FeatureStore:
         description: Optional[str] = "",
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
     ):
         """Create a on-demand feature group metadata object.
 
         !!! note "Lazy"
-            This method is lazy and does not persist any metadata or feature data in the
-            feature store on its own. To persist the feature group and save feature data
-            along the metadata in the feature store, call the `save()` method.
+            This method is lazy and does not persist any metadata in the
+            feature store on its own. To persist the feature group metadata in the feature store,
+            call the `save()` method.
 
         # Arguments
             name: Name of the on-demand feature group to create.
@@ -385,10 +480,17 @@ class FeatureStore:
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this on-demand feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
 
         # Returns
             `OnDemandFeatureGroup`. The on-demand feature group metadata object.
@@ -406,6 +508,8 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+            validation_type=validation_type,
+            expectations=expectations,
         )
 
     def create_training_dataset(
@@ -421,6 +525,7 @@ class FeatureStore:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         label: Optional[List[str]] = [],
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a training dataset metadata object.
 
@@ -500,6 +605,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             label=label,
             coalesce=coalesce,
+            transformation_functions=transformation_functions,
         )
 
     def create_expectation(
@@ -533,6 +639,100 @@ class FeatureStore:
             rules=rules,
             featurestore_id=self._id,
         )
+
+    def delete_expectation(
+        self,
+        name: str,
+    ):
+        """Delete an expectation from the feature store.
+
+        # Arguments
+            name: Name of the training dataset to create.
+        """
+        return self._expectations_api.delete(name)
+
+    def create_transformation_function(
+        self,
+        transformation_function: callable,
+        output_type: Union[
+            str,
+            TypeVar("str"),  # noqa: F821
+            TypeVar("string"),  # noqa: F821
+            bytes,
+            numpy.int8,
+            TypeVar("int8"),  # noqa: F821
+            TypeVar("byte"),  # noqa: F821
+            numpy.int16,
+            TypeVar("int16"),  # noqa: F821
+            TypeVar("short"),  # noqa: F821
+            int,
+            TypeVar("int"),  # noqa: F821
+            numpy.int,
+            numpy.int32,
+            numpy.int64,
+            TypeVar("int64"),  # noqa: F821
+            TypeVar("long"),  # noqa: F821
+            TypeVar("bigint"),  # noqa: F821
+            float,
+            TypeVar("float"),  # noqa: F821
+            numpy.float,
+            numpy.float64,
+            TypeVar("float64"),  # noqa: F821
+            TypeVar("double"),  # noqa: F821
+            datetime.datetime,
+            numpy.datetime64,
+            datetime.date,
+            bool,
+            TypeVar("boolean"),  # noqa: F821
+            TypeVar("bool"),  # noqa: F821
+            numpy.bool,
+        ],
+        version: Optional[int] = None,
+    ):
+        """Create a transformation function metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist the transformation function in the
+            feature store on its own. To materialize the transformation function and save
+            call the `save()` method of the transformation function metadata object.
+
+        # Arguments
+            transformation_function: callable object.
+            output_type: python or numpy output type that will be inferred as pyspark.sql.types type.
+
+        # Returns:
+            `TransformationFunction`: The TransformationFunction metadata object.
+        """
+        return TransformationFunction(
+            featurestore_id=self._id,
+            transformation_fn=transformation_function,
+            output_type=output_type,
+            version=version,
+        )
+
+    def get_transformation_function(
+        self,
+        name: str,
+        version: Optional[int] = None,
+    ):
+        """Get  transformation function metadata object.
+
+        # Arguments
+            name: name of transformation function.
+            version: version of transformation function. Optional, if not provided all functions that match to provided
+                name will be retrieved .
+        # Returns:
+            `TransformationFunction`: The TransformationFunction metadata object.
+        """
+        return self._transformation_function_engine.get_transformation_fn(name, version)
+
+    def get_transformation_functions(self):
+        """Get  all transformation functions metadata objects.
+
+        # Returns:
+             `List[TransformationFunction]`. List of transformation function instances.
+        """
+        return self._transformation_function_engine.get_transformation_fns()
 
     @property
     def id(self):

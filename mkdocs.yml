@@ -45,12 +45,14 @@ nav:
       - Feature Store: generated/feature_store.md
       - Feature Group: generated/feature_group.md
       - Storage Connector: generated/storage_connector.md
+      - On-demand (External) Feature Group: generated/on_demand_feature_group.md
       - Feature: generated/feature.md
       - Training Dataset: generated/training_dataset.md
       - Query vs. Dataframe: generated/query_vs_dataframe.md
       - Statistics: generated/statistics.md
       - Feature Validation: generated/feature_validation.md
       - Feature Store Tags: generated/tags.md
+      - Transformation Functions: generated/transformation_functions.md
     - API Reference:
       - Connection: generated/api/connection_api.md
       - FeatureStore: generated/api/feature_store_api.md
@@ -62,6 +64,8 @@ nav:
       - Rule: generated/api/rule_api.md
       - Expectation: generated/api/expectation_api.md
       - Validation: generated/api/validation_api.md
+      - Transformation functions: generated/api/transformation_functions_api.md
+      - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
   - Hopsworks.ai:
     - Introduction: hopsworksai/index.md
@@ -76,10 +80,12 @@ nav:
       - Integration with EKS and ECR: hopsworksai/aws/eks_ecr_integration.md
       - Azure: hopsworksai/azure/cluster_creation.md
       - Integration with AKS and ACR: hopsworksai/azure/aks_acr_integration.md
+    - Services: hopsworksai/services.md
     - Adding and Removing workers: hopsworksai/adding_removing_workers.md
+    - Autoscaling: hopsworksai/autoscaling.md
     - GPU support: hopsworksai/gpu_support.md
     - User management: hopsworksai/user_management.md
-    - Integrations: "./setup/"
+    - Managed RonDB: hopsworksai/rondb.md
     - Cluster upgrade:
       - AWS: hopsworksai/aws/upgrade.md
       - Azure: hopsworksai/azure/upgrade.md
@@ -87,6 +93,8 @@ nav:
       - Hopsworks:
         - OAuth2: hopsworksai/sso/oauth.md
       - Hopsworks.ai: hopsworksai/sso/sso.md
+    - API Key: hopsworksai/api_key.md
+    - Terraform: hopsworksai/terraform.md
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/

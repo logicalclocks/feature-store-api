@@ -80,6 +80,8 @@ public class HudiEngine {
   private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
+  private static final String HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates";
+
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
@@ -159,6 +161,9 @@ public class HudiEngine {
 
     hudiArgs.put(HUDI_KEY_GENERATOR_OPT_KEY, HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
+    // drop duplicates for insert and bulk insert
+    hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
+
     // primary keys
     Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
     hudiArgs.put(HUDI_RECORD_KEY, primaryColumns.mkString(","));
@@ -185,8 +190,7 @@ public class HudiEngine {
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");
     hudiArgs.put(HUDI_HIVE_SYNC_TABLE, tableName);
-    String jdbcUrl = utils.getHiveMetastoreConnector(featureGroup);
-    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, jdbcUrl);
+    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
 

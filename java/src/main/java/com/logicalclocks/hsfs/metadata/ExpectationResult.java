@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.metadata.validation.Level;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -63,9 +64,9 @@ public class ExpectationResult {
       return valueOf(name.toUpperCase());
     }
 
-    public static Status fromDeequStatus(Enumeration.Value status) {
+    public static Status fromDeequStatus(Enumeration.Value status, Level level) {
       if (status == com.amazon.deequ.constraints.ConstraintStatus.Failure()) {
-        return FAILURE;
+        return level == Level.WARNING ? WARNING : FAILURE;
       } else if (status == com.amazon.deequ.constraints.ConstraintStatus.Success()) {
         return SUCCESS;
       } else {

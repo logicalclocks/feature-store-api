@@ -1,4 +1,3 @@
-#
 #   Copyright 2020 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +23,14 @@ import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector
+from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
     training_dataset_api,
     training_dataset_engine,
     tfdata_engine,
     statistics_engine,
+    code_engine,
+    transformation_function_engine,
 )
 from hsfs.constructor import query
 
@@ -62,6 +63,7 @@ class TrainingDataset:
         from_query=None,
         querydto=None,
         label=None,
+        transformation_functions=None,
     ):
         self._id = id
         self._name = name
@@ -74,9 +76,10 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
-        self._prepared_statement_connection = None
+        self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
+        self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -88,6 +91,12 @@ class TrainingDataset:
 
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
+        )
+
+        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
+
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
 
         # set up depending on user initialized or coming from backend response
@@ -136,24 +145,35 @@ class TrainingDataset:
 
         # Arguments
             features: Feature data to be materialized.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `TrainingDataset`: The updated training dataset metadata object, the
-                previous `TrainingDataset` object on which you call `save` is also
-                updated.
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
 
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
         user_version = self._version
         user_stats_config = self._statistics_config
-        self._training_dataset_engine.save(self, features, write_options)
+        # td_job is used only if the hive engine is used
+        training_dataset, td_job = self._training_dataset_engine.save(
+            self, features, write_options
+        )
+        self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
+        self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
-            self._statistics_engine.compute_statistics(self, self.read())
+            self.compute_statistics()
         if user_version is None:
             warnings.warn(
                 "No version provided for creating training dataset `{}`, incremented version to `{}`.".format(
@@ -161,7 +181,8 @@ class TrainingDataset:
                 ),
                 util.VersionWarning,
             )
-        return self
+
+        return td_job
 
     def insert(
         self,
@@ -187,20 +208,32 @@ class TrainingDataset:
         # Arguments
             features: Feature data to be materialized.
             overwrite: Whether to overwrite the entire data in the training dataset.
-            write_options: Additional write options as key/value pairs.
-                Defaults to `{}`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `TrainingDataset`: The updated training dataset metadata object, the
-                previous `TrainingDataset` object on which you call `save` is also
-                updated.
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
 
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        self._training_dataset_engine.insert(self, features, write_options, overwrite)
+        # td_job is used only if the hive engine is used
+        td_job = self._training_dataset_engine.insert(
+            self, features, write_options, overwrite
+        )
 
+        self._code_engine.save_code(self)
         self.compute_statistics()
+
+        return td_job
 
     def read(self, split=None, read_options={}):
         """Read the training dataset into a dataframe.
@@ -222,7 +255,10 @@ class TrainingDataset:
         feature store.
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
-            return self._statistics_engine.compute_statistics(self, self.read())
+            if self.splits:
+                return self._statistics_engine.register_split_statistics(self)
+            else:
+                return self._statistics_engine.compute_statistics(self, self.read())
 
     def tf_data(
         self,
@@ -232,6 +268,8 @@ class TrainingDataset:
         var_len_features: Optional[list] = [],
         is_training: Optional[bool] = True,
         cycle_length: Optional[int] = 2,
+        deterministic: Optional[bool] = False,
+        file_pattern: Optional[str] = "*.tfrecord*",
     ):
         """
         Returns an object with utility methods to read training dataset as `tf.data.Dataset` object and handle it for further processing.
@@ -241,9 +279,13 @@ class TrainingDataset:
             split: Name of training dataset split. For example, `"train"`, `"test"` or `"val"`, defaults to `None`,
                 returning the full training dataset.
             feature_names: Names of training variables, defaults to `None`.
-            var_len_features: Feature names that have variable length and need to be returned as `tf.io.VarLenFeature`, defaults to `[]`.
-            is_training: Whether it is for training, testing or validation. Defaults to `True`.
+            var_len_features: Feature names that have variable length and need to be returned as `tf.io.VarLenFeature`,
+            defaults to `[]`. is_training: Whether it is for training, testing or validation. Defaults to `True`.
             cycle_length: Number of files to be read and deserialized in parallel, defaults to `2`.
+            deterministic: Controls the order in which the transformation produces elements. If set to False, the
+            transformation is allowed to yield elements out of order to trade determinism for performance.
+            Defaults to `False`.
+            file_pattern: Returns a list of files that match the given pattern Defaults to `*.tfrecord*`.
 
         # Returns
             `TFDataEngine`. An object with utility methods to generate and handle `tf.data.Dataset` object.
@@ -256,6 +298,8 @@ class TrainingDataset:
             var_len_features=var_len_features,
             is_training=is_training,
             cycle_length=cycle_length,
+            deterministic=deterministic,
+            file_pattern=file_pattern,
         )
 
     def show(self, n: int, split: str = None):
@@ -357,8 +401,9 @@ class TrainingDataset:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
-        return cls(**json_decamelized)
+        for td in json_decamelized:
+            _ = td.pop("type")
+        return [cls(**td) for td in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -478,8 +523,8 @@ class TrainingDataset:
             self._storage_connector = storage_connector
         elif storage_connector is None:
             # init empty connector, otherwise will have to handle it at serialization time
-            self._storage_connector = StorageConnector(
-                None, None, None, None, None, None, None, None
+            self._storage_connector = HopsFSConnector(
+                None, None, None, None, None, None
             )
         else:
             raise TypeError(
@@ -488,7 +533,7 @@ class TrainingDataset:
                 )
             )
         self._training_dataset_type = self._infer_training_dataset_type(
-            self._storage_connector.connector_type
+            self._storage_connector.type
         )
 
     @property
@@ -590,22 +635,38 @@ class TrainingDataset:
         """
         return self._training_dataset_engine.query(self, online, with_label)
 
-    def init_prepared_statement(self):
-        """Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store."""
-        if self.prepared_statements is None:
-            self._training_dataset_engine.init_prepared_statement(self)
+    def init_prepared_statement(self, external: Optional[bool] = False):
+        """Initialise and cache parametrized prepared statement to
+           retrieve feature vector from online feature store.
 
-    def get_serving_vector(self, entry: Dict[str, Any]):
+        # Arguments
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        """
+        if self.prepared_statements is None:
+            self._training_dataset_engine.init_prepared_statement(self, external)
+
+    def get_serving_vector(
+        self, entry: Dict[str, Any], external: Optional[bool] = False
+    ):
         """Returns assembled serving vector from online feature store.
 
         # Arguments
             entry: dictionary of training dataset feature group primary key names as keys and values provided by
-            serving application.
+                serving application.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry)
+        return self._training_dataset_engine.get_serving_vector(self, entry, external)
 
     @property
     def label(self):
@@ -624,13 +685,13 @@ class TrainingDataset:
         return self._feature_store_id
 
     @property
-    def prepared_statement_connection(self):
-        """JDBC connection to online features store."""
-        return self._prepared_statement_connection
+    def prepared_statement_engine(self):
+        """JDBC connection engine to retrieve connections to online features store from."""
+        return self._prepared_statement_engine
 
-    @prepared_statement_connection.setter
-    def prepared_statement_connection(self, prepared_statement_connection):
-        self._prepared_statement_connection = prepared_statement_connection
+    @prepared_statement_engine.setter
+    def prepared_statement_engine(self, prepared_statement_engine):
+        self._prepared_statement_engine = prepared_statement_engine
 
     @property
     def prepared_statements(self):
@@ -651,3 +712,16 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def transformation_functions(self):
+        """Set transformation functions."""
+        if self._id is not None and self._transformation_functions is None:
+            self._transformation_functions = (
+                self._transformation_function_engine.get_td_transformation_fn(self)
+            )
+        return self._transformation_functions
+
+    @transformation_functions.setter
+    def transformation_functions(self, transformation_functions):
+        self._transformation_functions = transformation_functions

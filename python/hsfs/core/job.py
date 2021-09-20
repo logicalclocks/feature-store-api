@@ -33,7 +33,9 @@ class Job:
         items=None,
         count=None,
     ):
+        self._id = id
         self._name = name
+        self._executions = executions
         self._href = href
 
     @classmethod
@@ -44,6 +46,14 @@ class Job:
     @property
     def name(self):
         return self._name
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def executions(self):
+        return self._executions
 
     @property
     def href(self):

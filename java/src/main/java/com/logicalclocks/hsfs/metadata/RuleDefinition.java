@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.metadata.validation.FeatureType;
 import com.logicalclocks.hsfs.metadata.validation.RuleName;
 import com.logicalclocks.hsfs.metadata.validation.Predicate;
 import com.logicalclocks.hsfs.metadata.validation.AcceptedType;
@@ -43,6 +44,8 @@ public class RuleDefinition extends RestDto<RuleDefinition> {
   private Predicate predicate;
   @Getter @Setter
   private AcceptedType acceptedType;
+  @Getter @Setter
+  private FeatureType featureType;
   @Getter @Setter
   private String description;
 

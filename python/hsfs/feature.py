@@ -178,6 +178,9 @@ class Feature:
     def __gt__(self, other):
         return filter.Filter(self, filter.Filter.GT, other)
 
+    def contains(self, other):
+        return filter.Filter(self, filter.Filter.IN, json.dumps(other))
+
     def __str__(self):
         return self.json()
 

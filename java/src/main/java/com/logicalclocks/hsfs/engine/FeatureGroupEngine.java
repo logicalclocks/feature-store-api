@@ -42,6 +42,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class FeatureGroupEngine {
@@ -65,7 +66,7 @@ public class FeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
+  public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
                    List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
@@ -132,6 +133,8 @@ public class FeatureGroupEngine {
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
             ? HudiOperationType.BULK_INSERT : null,
         SaveMode.Append, writeOptions);
+
+    return featureGroup;
   }
 
   public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
@@ -160,7 +163,7 @@ public class FeatureGroupEngine {
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
                                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (!featureGroup.getOnlineEnabled()) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. "
@@ -275,10 +278,5 @@ public class FeatureGroupEngine {
     config.put("kafka.ssl.key.password", client.getCertKey());
     config.put("kafka.ssl.endpoint.identification.algorithm", "");
     return config;
-  }
-
-  public void updateValidationType(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    featureGroupApi.updateMetadata(featureGroup, "validationType", featureGroup.getValidationType(),
-        FeatureGroup.class);
   }
 }

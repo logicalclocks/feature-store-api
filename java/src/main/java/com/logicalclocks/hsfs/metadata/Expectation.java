@@ -30,6 +30,7 @@ import lombok.ToString;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import com.logicalclocks.hsfs.metadata.validation.Rule;
 
@@ -45,7 +46,7 @@ public class Expectation extends RestDto<Expectation> {
   @Getter @Setter
   private String description;
   @Getter @Setter
-  private List<String> features;
+  private List<String> features = new ArrayList<>();
   @Getter @Setter
   private List<Rule> rules;
   @Getter @Setter

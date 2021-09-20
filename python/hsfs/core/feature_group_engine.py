@@ -22,8 +22,13 @@ from hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
-    def save(self, feature_group, feature_dataframe, write_options):
+    def __init__(self, feature_store_id):
+        super().__init__(feature_store_id)
 
+        # cache online feature store connector
+        self._online_conn = None
+
+    def save(self, feature_group, feature_dataframe, write_options):
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
@@ -45,14 +50,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         self._feature_group_api.save(feature_group)
         validation_id = None
-        if feature_group.validation_type != "NONE":
+        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
+            # If the engine is Hive, the validation will be executed by
+            # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe)
             validation_id = validation.validation_id
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
-        engine.get_instance().save_dataframe(
+        return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
@@ -75,7 +82,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
     ):
         validation_id = None
-        if feature_group.validation_type != "NONE":
+        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
+            # If the engine is Hive, the validation will be executed by
+            # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe)
             validation_id = validation.validation_id
 
@@ -90,7 +99,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
-        engine.get_instance().save_dataframe(
+        return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
             "bulk_insert" if overwrite else operation,
@@ -144,21 +153,15 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         return hudi_engine_instance.delete_record(delete_df, write_options)
 
-    def update_validation_type(self, feature_group):
-        self._feature_group_api.update_metadata(
-            feature_group,
-            feature_group,
-            "validationType",
-            feature_group.validation_type,
-        )
-
-    def sql(self, query, feature_store_name, dataframe_type, online):
-        if online:
-            online_conn = self._storage_connector_api.get_online_connector()
-        else:
-            online_conn = None
+    def sql(self, query, feature_store_name, dataframe_type, online, read_options):
+        if online and self._online_conn is None:
+            self._online_conn = self._storage_connector_api.get_online_connector()
         return engine.get_instance().sql(
-            query, feature_store_name, online_conn, dataframe_type
+            query,
+            feature_store_name,
+            self._online_conn if online else None,
+            dataframe_type,
+            read_options,
         )
 
     def _update_features_metadata(self, feature_group, features):
@@ -175,6 +178,28 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
+
+    def update_features(self, feature_group, updated_features):
+        """Updates features safely."""
+        self._update_features_metadata(
+            feature_group, self.new_feature_list(feature_group, updated_features)
+        )
+
+    def append_features(self, feature_group, new_features):
+        """Appends features to a feature group."""
+        # first get empty dataframe of current version and append new feature
+        # necessary to write empty df to the table in order for the parquet schema
+        # which is used by hudi to be updated
+        df = engine.get_instance().get_empty_appended_dataframe(
+            feature_group.read(), new_features
+        )
+
+        self._update_features_metadata(
+            feature_group, feature_group.features + new_features
+        )
+
+        # write empty dataframe to update parquet schema
+        engine.get_instance().save_empty_dataframe(feature_group, df)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""

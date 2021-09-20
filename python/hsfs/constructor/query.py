@@ -90,7 +90,11 @@ class Query:
             )
 
         return engine.get_instance().sql(
-            sql_query, self._feature_store_name, online_conn, dataframe_type
+            sql_query,
+            self._feature_store_name,
+            online_conn,
+            dataframe_type,
+            read_options,
         )
 
     def show(self, n: int, online: Optional[bool] = False):
@@ -131,6 +135,7 @@ class Query:
         left_on: Optional[List[str]] = [],
         right_on: Optional[List[str]] = [],
         join_type: Optional[str] = "inner",
+        prefix: Optional[str] = None,
     ):
         """Join Query with another Query.
 
@@ -148,12 +153,13 @@ class Query:
                 the join. Defaults to `[]`.
             join_type: Type of join to perform, can be `"inner"`, `"outer"`, `"left"` or
                 `"right"`. Defaults to "inner".
-
+            prefix: User provided prefix to avoid feature name clash. Prefix is applied to the right
+                feature group of the query. Defaults to `None`.
         # Returns
             `Query`: A new Query object representing the join.
         """
         self._joins.append(
-            join.Join(sub_query, on, left_on, right_on, join_type.upper())
+            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
         )
         return self
 

@@ -20,10 +20,10 @@ import com.amazon.deequ.checks.Check;
 import com.amazon.deequ.checks.CheckResult;
 import com.amazon.deequ.constraints.ConstraintResult;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationResult;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidationsApi;
 import com.logicalclocks.hsfs.metadata.ValidationResult;
@@ -59,10 +59,11 @@ public class DataValidationEngine {
   private final FeatureGroupValidationsApi featureGroupValidationsApi =
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
-  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroup featureGroup, List<Expectation> expectations)
+  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
+                                         List<Expectation> expectations)
       throws FeatureStoreException, IOException {
     List<ExpectationResult> expectationResults = validate(data, expectations);
-    return featureGroupValidationsApi.put(featureGroup,
+    return featureGroupValidationsApi.put(featureGroupBase,
       FeatureGroupValidation.builder()
         .validationTime(Instant.now().toEpochMilli())
         .expectationResults(expectationResults).build());
@@ -196,7 +197,7 @@ public class DataValidationEngine {
             for (Rule rule : expectation.getRules()) {
               if (rule.getName() == ruleName && featuresEqual) {
                 validationResults.add(ValidationResult.builder()
-                    .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status()))
+                    .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status(), rule.getLevel()))
                     .features(deequFeatures)
                     .rule(rule)
                     .message(!constraintResult.message().isEmpty() ? constraintResult.message().get() : "Success")
@@ -209,7 +210,7 @@ public class DataValidationEngine {
               for (Rule rule : expectation.getRules()) {
                 if (rule.getName() == ruleName && feature.equals(constraintInfo[2])) {
                   validationResults.add(ValidationResult.builder()
-                      .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status()))
+                      .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status(), rule.getLevel()))
                       .features(Collections.singletonList(feature))
                       .rule(rule)
                       .message(!constraintResult.message().isEmpty() ? constraintResult.message().get() : "Success")
@@ -227,14 +228,15 @@ public class DataValidationEngine {
     return expectationResults;
   }
 
-  public List<FeatureGroupValidation> getValidations(FeatureGroup featureGroup)
+  public List<FeatureGroupValidation> getValidations(FeatureGroupBase featureGroupBase)
       throws FeatureStoreException, IOException {
-    return featureGroupValidationsApi.get(featureGroup);
+    return featureGroupValidationsApi.get(featureGroupBase);
   }
 
-  public FeatureGroupValidation getValidation(FeatureGroup featureGroup, ImmutablePair<ValidationTimeType, Long> pair)
+  public FeatureGroupValidation getValidation(FeatureGroupBase featureGroupBase, ImmutablePair<ValidationTimeType,
+                                              Long> pair)
       throws FeatureStoreException, IOException {
-    return featureGroupValidationsApi.get(featureGroup, pair);
+    return featureGroupValidationsApi.get(featureGroupBase, pair);
   }
 
   public RuleName getRuleNameFromDeequ(String rule) {
@@ -257,7 +259,7 @@ public class DataValidationEngine {
         return RuleName.HAS_DISTINCTNESS;
       case "uniquevalueratio":
         return RuleName.HAS_UNIQUE_VALUE_RATIO;
-      case "countdistinct":
+      case "histogram":
         return RuleName.HAS_NUMBER_OF_DISTINCT_VALUES;
       case "entropy":
         return RuleName.HAS_ENTROPY;
@@ -273,6 +275,10 @@ public class DataValidationEngine {
         return RuleName.HAS_CORRELATION;
       case "patternmatch":
         return RuleName.HAS_PATTERN;
+      case "minlength":
+        return RuleName.HAS_MIN_LENGTH;
+      case "maxlength":
+        return RuleName.HAS_MAX_LENGTH;
       case "datatype":
         return RuleName.HAS_DATATYPE;
       case "isnonnegative":
@@ -291,7 +297,7 @@ public class DataValidationEngine {
         return RuleName.IS_CONTAINED_IN;
 
       default:
-        throw new UnsupportedOperationException("Deequ rule not supported");
+        throw new UnsupportedOperationException("Deequ rule not supported: " + rule);
     }
   }
 

@@ -14,10 +14,9 @@
 #   limitations under the License.
 #
 
-import importlib.util
-import os
 import json
 import datetime
+import importlib.util
 
 import numpy as np
 import pandas as pd
@@ -27,11 +26,11 @@ try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
     from pyspark.sql.column import Column, _to_java_column
-    from pyspark.sql.functions import struct, concat, col
+    from pyspark.sql.functions import struct, concat, col, lit
 except ImportError:
     pass
 
-from hsfs import feature, training_dataset_feature, client
+from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
@@ -40,9 +39,7 @@ from hsfs.constructor import query
 
 class Engine:
     HIVE_FORMAT = "hive"
-    JDBC_FORMAT = "jdbc"
     KAFKA_FORMAT = "kafka"
-    SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake"
 
     APPEND = "append"
     OVERWRITE = "overwrite"
@@ -58,13 +55,13 @@ class Engine:
 
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
-            self._setup_pydoop()
+            util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type):
+    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = self._jdbc(sql_query, connector)
+            result_df = connector.read(sql_query, None, {}, None)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -74,52 +71,19 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def _jdbc(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.JDBC_FORMAT).options(**options).load()
-        )
-
-    def _snowflake(self, sql_query, connector):
-        options = connector.spark_options()
-        if sql_query:
-            options["query"] = sql_query
-
-        return (
-            self._spark_session.read.format(self.SNOWFLAKE_FORMAT)
-            .options(**options)
-            .load()
-        )
-
     def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default").show(n)
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias, options={}):
-        if (
-            on_demand_fg.storage_connector.connector_type == "JDBC"
-            or on_demand_fg.storage_connector.connector_type == "REDSHIFT"
-        ):
-            # This is a JDBC on demand featuregroup
-            on_demand_dataset = self._jdbc(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        elif on_demand_fg.storage_connector.connector_type == "SNOWFLAKE":
-            on_demand_dataset = self._snowflake(
-                on_demand_fg.query, on_demand_fg.storage_connector
-            )
-        else:
-            on_demand_dataset = self.read(
-                on_demand_fg.storage_connector,
-                on_demand_fg.data_format,
-                on_demand_fg.options,
-                os.path.join(on_demand_fg.storage_connector.path, on_demand_fg.path),
-            )
+    def register_on_demand_temporary_table(self, on_demand_fg, alias):
+        on_demand_dataset = on_demand_fg.storage_connector.read(
+            on_demand_fg.query,
+            on_demand_fg.data_format,
+            on_demand_fg.options,
+            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
+        )
 
         on_demand_dataset.createOrReplaceTempView(alias)
         return on_demand_dataset
@@ -247,7 +211,6 @@ class Engine:
         query = (
             serialized_df.writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
-            .options(**write_options)
             .option(
                 "checkpointLocation",
                 "/Projects/"
@@ -256,6 +219,7 @@ class Engine:
                 + query_name
                 + "-checkpoint",
             )
+            .options(**write_options)
             .option("topic", feature_group._online_topic_name)
             .queryName(query_name)
             .start()
@@ -350,6 +314,43 @@ class Engine:
             dataset = dataset.read()
 
         dataset = self.convert_to_default_dataframe(dataset)
+
+        # generate transformation function expressions
+        transformed_feature_names = []
+        transformation_fn_expressions = []
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            fn_registration_name = (
+                transformation_fn.name + "_" + str(transformation_fn.version)
+            )
+            self._spark_session.udf.register(
+                fn_registration_name, transformation_fn.transformation_fn
+            )
+            transformation_fn_expressions.append(
+                "{fn_name:}({name:}) AS {name:}".format(
+                    fn_name=fn_registration_name, name=feature_name
+                )
+            )
+            transformed_feature_names.append(feature_name)
+
+        # generate non transformation expressions
+        no_transformation_expr = [
+            "{name:} AS {name:}".format(name=col_name)
+            for col_name in dataset.columns
+            if col_name not in transformed_feature_names
+        ]
+
+        # generate entire expression and execute it
+        transformation_fn_expressions.extend(no_transformation_expr)
+        dataset = dataset.selectExpr(*transformation_fn_expressions)
+
+        # sort feature order if it was altered by transformation functions
+        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
+        sorted_feature_names = [ft.name for ft in sorded_features]
+        dataset = dataset.select(*sorted_feature_names)
+
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
 
@@ -415,30 +416,50 @@ class Engine:
         if data_format.lower() == "tsv":
             data_format = "csv"
 
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
         ).save(path)
 
-    def read(self, storage_connector, data_format, read_options, path):
+    def read(self, storage_connector, data_format, read_options, location):
+        if isinstance(location, str):
+            if data_format.lower() in ["delta", "parquet", "hudi", "orc"]:
+                # All the above data format readers can handle partitioning
+                # by their own, they don't need /**
+                path = location
+            else:
+                path = location + "/**"
 
-        if data_format.lower() == "tsv":
-            data_format = "csv"
+            if data_format.lower() == "tsv":
+                data_format = "csv"
+        else:
+            path = None
 
-        path = self._setup_storage_connector(storage_connector, path)
+        path = self.setup_storage_connector(storage_connector, path)
 
         return (
             self._spark_session.read.format(data_format)
-            .options(**read_options)
+            .options(**(read_options if read_options else {}))
             .load(path)
         )
 
-    def profile(self, dataframe, relevant_columns, correlations, histograms):
+    def profile(
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
+    ):
         """Profile a dataframe with Deequ."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms
+                dataframe._jdf,
+                relevant_columns,
+                correlations,
+                histograms,
+                exact_uniqueness,
             )
         )
 
@@ -573,10 +594,10 @@ class Engine:
 
             i += 1
 
-    def _setup_storage_connector(self, storage_connector, path=None):
-        if storage_connector.connector_type == StorageConnector.S3:
+    def setup_storage_connector(self, storage_connector, path=None):
+        if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
-        elif storage_connector.connector_type == StorageConnector.ADLS:
+        elif storage_connector.type == StorageConnector.ADLS:
             return self._setup_adls_hadoop_conf(storage_connector, path)
         else:
             return path
@@ -609,7 +630,7 @@ class Engine:
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
-        return path.replace("s3", "s3a", 1)
+        return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
@@ -622,38 +643,23 @@ class Engine:
             return True
         return False
 
-    def _setup_pydoop(self):
-        # Import Pydoop only here, so it doesn't trigger if the execution environment
-        # does not support Pydoop. E.g. Sagemaker
-        from pydoop import hdfs
+    def get_empty_appended_dataframe(self, dataframe, new_features):
+        dataframe = dataframe.limit(0)
+        for f in new_features:
+            dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
+        return dataframe
 
-        # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
-        class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
-            @classmethod
-            def split(cls, hdfs_path, user):
-                if not hdfs_path:
-                    cls.raise_bad_path(hdfs_path, "empty")
-                scheme, netloc, path = cls.parse(hdfs_path)
-                if not scheme:
-                    scheme = "file" if hdfs.fs.default_is_local() else "hdfs"
-                if scheme == "hdfs" or scheme == "hopsfs":
-                    if not path:
-                        cls.raise_bad_path(hdfs_path, "path part is empty")
-                    if ":" in path:
-                        cls.raise_bad_path(
-                            hdfs_path, "':' not allowed outside netloc part"
-                        )
-                    hostname, port = cls.split_netloc(netloc)
-                    if not path.startswith("/"):
-                        path = "/user/%s/%s" % (user, path)
-                elif scheme == "file":
-                    hostname, port, path = "", 0, netloc + path
-                else:
-                    cls.raise_bad_path(hdfs_path, "unsupported scheme %r" % scheme)
-                return hostname, port, path
-
-        # Monkey patch the class to use the one defined above.
-        hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op in hive engine."""
+        self.save_dataframe(
+            feature_group,
+            dataframe,
+            "upsert",
+            feature_group.online_enabled,
+            "offline",
+            {},
+            {},
+        )
 
     def _print_missing_jar(self, lib_name, pkg_name, jar_name, spark_version):
         #

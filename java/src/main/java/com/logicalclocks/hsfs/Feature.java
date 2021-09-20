@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.SqlFilterCondition;
 import com.logicalclocks.hsfs.util.Constants;
@@ -26,7 +27,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.parquet.Strings;
+import org.json.JSONArray;
+
+import java.util.Collection;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -152,5 +155,10 @@ public class Feature {
 
   public Filter ge(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
+  }
+
+  public Filter in(Collection<?> collection) {
+    JSONArray jsonArray = new JSONArray(collection);
+    return new Filter(this, SqlFilterCondition.IN, jsonArray.toString());
   }
 }

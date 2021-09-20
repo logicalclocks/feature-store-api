@@ -45,6 +45,18 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             feature_group, copy_feature_group, "updateMetadata"
         )
 
+    def update_features(self, feature_group, updated_features):
+        """Updates features safely."""
+        self._update_features_metadata(
+            feature_group, self.new_feature_list(feature_group, updated_features)
+        )
+
+    def append_features(self, feature_group, new_features):
+        """Appends features to a feature group."""
+        self._update_features_metadata(
+            feature_group, feature_group.features + new_features
+        )
+
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.OnDemandFeatureGroup(

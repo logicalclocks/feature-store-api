@@ -74,13 +74,18 @@ class FeatureGroupApi:
             "featuregroups",
             name,
         ]
-        query_params = {"version": version}
-        fg_json = _client._send_request("GET", path_params, query_params)[0]
+        query_params = None if version is None else {"version": version}
+        json_list = _client._send_request("GET", path_params, query_params)
 
         if fg_type == self.CACHED:
-            return feature_group.FeatureGroup.from_response_json(fg_json)
+            fg_list = feature_group.FeatureGroup.from_response_json(json_list)
         else:
-            return feature_group.OnDemandFeatureGroup.from_response_json(fg_json)
+            fg_list = feature_group.OnDemandFeatureGroup.from_response_json(json_list)
+
+        if version is not None:
+            return fg_list[0]
+        else:
+            return fg_list
 
     def delete_content(self, feature_group_instance):
         """Delete the content of a feature group.

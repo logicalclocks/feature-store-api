@@ -22,6 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,4 +40,8 @@ public class Statistics extends RestDto<Statistics> {
   @Getter
   @Setter
   private String content;
+
+  @Getter
+  @Setter
+  private List<SplitStatistics> splitStatistics;
 }

@@ -97,6 +97,20 @@ public class FeatureStore {
   }
 
   /**
+   * Get a list of all versions of a feature group from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @return FeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
+  /**
    * Get a on-demand feature group object from the feature store.
    *
    * @param name    the name of the feature group
@@ -124,6 +138,20 @@ public class FeatureStore {
     return getOnDemandFeatureGroup(name, DEFAULT_VERSION);
   }
 
+  /**
+   * Get a list of all versions of an on-demand feature group from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @return OnDemandFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public scala.collection.Seq<OnDemandFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getOnDemandFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
   public Dataset<Row> sql(String query) {
     return SparkEngine.getInstance().sql(query);
   }
@@ -132,7 +160,33 @@ public class FeatureStore {
     return storageConnectorApi.getByName(this, name);
   }
 
-  public StorageConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
+  public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.JdbcConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.S3Connector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.HopsFsConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
+      throws FeatureStoreException, IOException {
+    return (StorageConnector.RedshiftConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
+      throws FeatureStoreException, IOException {
+    return (StorageConnector.SnowflakeConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }
 
@@ -168,7 +222,7 @@ public class FeatureStore {
    */
   public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.get(this, name, version);
+    return trainingDatasetApi.getTrainingDataset(this, name, version);
   }
 
   /**
@@ -183,6 +237,19 @@ public class FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
+  }
+
+  /**
+   * Get all versions of a training dataset object from the selected feature store.
+   *
+   * @param name    name of the training dataset
+   * @return TrainingDataset
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public scala.collection.Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(trainingDatasetApi.get(this, name, null)).asScala().toSeq();
   }
 
   public scala.collection.Seq<Expectation> createExpectations(scala.collection.Seq<Expectation> expectations)

@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -89,7 +90,7 @@ public class Utils {
         .sorted(Comparator.comparingInt(TrainingDatasetFeature::getIndex))
         .map(f -> new StructField(f.getName(),
             // What should we do about the nullables
-            new CatalystSqlParser(null).parseDataType(f.getType()), true, Metadata.empty())
+            new CatalystSqlParser().parseDataType(f.getType()), true, Metadata.empty())
         ).toArray(StructField[]::new));
 
     if (!dataset.schema().equals(tdStructType)) {
@@ -140,13 +141,20 @@ public class Utils {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  public String getHiveMetastoreConnector(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
-    StorageConnector storageConnector = storageConnectorApi.getByName(featureGroup.getFeatureStore(),
-        featureGroup.getFeatureStore().getName());
-    String connStr = storageConnector.getConnectionString();
-    String pw = HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey();
-    return connStr + "sslTrustStore=t_certificate;trustStorePassword=" + pw
-        + ";sslKeyStore=k_certificate;keyStorePassword=" + pw;
+  public String getHiveServerConnection(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
+    credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+    credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
+    credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+
+    StorageConnector.JdbcConnector storageConnector =
+        (StorageConnector.JdbcConnector) storageConnectorApi.getByName(featureGroup.getFeatureStore(),
+            featureGroup.getFeatureStore().getName());
+
+    return storageConnector.getConnectionString()
+        + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
+        .collect(Collectors.joining(";"));
   }
 
   public Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {

@@ -17,13 +17,20 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,16 +91,36 @@ public class FeatureGroupBaseEngine {
 
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
-      throws FeatureStoreException, IOException {
+      throws FeatureStoreException, IOException, ParseException {
+    Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
     featureGroup.getFeatures().addAll(features);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    if (featureGroup instanceof FeatureGroup) {
+      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
+          HudiOperationType.UPSERT, new HashMap<>(), null);
+    }
   }
 
   public <T extends FeatureGroupBase> void updateStatisticsConfig(FeatureGroupBase featureGroup, Class<T> fgClass)
       throws FeatureStoreException, IOException {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig", fgClass);
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+  }
+
+  private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
+    if (featureGroup instanceof FeatureGroup) {
+      return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    } else if (featureGroup instanceof OnDemandFeatureGroup) {
+      return new OnDemandFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    }
+    return new FeatureGroupBase();
+  }
+
+  public <T extends FeatureGroupBase> void updateValidationType(FeatureGroupBase featureGroupBase, Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    featureGroupApi.updateMetadata(
+        featureGroupBase, "validationType", featureGroupBase.getValidationType(), fgClass);
   }
 }

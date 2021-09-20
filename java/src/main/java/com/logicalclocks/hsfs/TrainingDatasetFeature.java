@@ -45,6 +45,10 @@ public class TrainingDatasetFeature {
   @Setter
   private Boolean label = false;
 
+  @Getter
+  @Setter
+  private TransformationFunction transformationFunction;
+
   @Builder
   public TrainingDatasetFeature(String name, String type) {
     setName(name);

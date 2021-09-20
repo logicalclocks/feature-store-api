@@ -65,4 +65,5 @@ public class Constants {
   public static final String SNOWFLAKE_TABLE = "dbtable";
   public static final String SNOWFLAKE_ROLE = "sfRole";
   public static final String SNOWFLAKE_WAREHOUSE = "sfWarehouse";
+  public static final String SNOWFLAKE_APPLICATION = "application";
 }

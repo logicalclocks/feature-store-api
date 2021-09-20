@@ -19,7 +19,9 @@ package com.logicalclocks.hsfs.engine;
 import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -35,8 +37,8 @@ import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.Strings;
 import org.apache.spark.sql.Column;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -44,6 +46,7 @@ import org.apache.spark.sql.SparkSession;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 import org.apache.spark.sql.streaming.DataStreamWriter;
@@ -54,12 +57,13 @@ import scala.collection.JavaConverters;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class SparkEngine {
@@ -91,6 +95,32 @@ public class SparkEngine {
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
   }
 
+  public void validateSparkConfiguration() throws FeatureStoreException {
+    String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
+
+    Map<String, String> configurationMap = new HashMap<>();
+    configurationMap.put("spark.hadoop.hops.ssl.trustore.name", null);
+    configurationMap.put("spark.hadoop.hops.rpc.socket.factory.class.default",
+            "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+    configurationMap.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    configurationMap.put("spark.hadoop.hops.ssl.hostname.verifier", "ALLOW_ALL");
+    configurationMap.put("spark.hadoop.hops.ssl.keystore.name", null);
+    configurationMap.put("spark.hadoop.fs.hopsfs.impl", "io.hops.hopsfs.client.HopsFileSystem");
+    configurationMap.put("spark.hadoop.hops.ssl.keystores.passwd.name", null);
+    configurationMap.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
+    configurationMap.put("spark.sql.hive.metastore.jars", null);
+    configurationMap.put("spark.hadoop.client.rpc.ssl.enabled.protocol", "TLSv1.2");
+    configurationMap.put("spark.hadoop.hive.metastore.uris", null);
+
+    for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
+      if (entry.getValue() == null && !sparkSession.conf().contains(entry.getKey())) {
+        throw new FeatureStoreException(exceptionText + entry.getKey());
+      } else if (!sparkSession.conf().get(entry.getKey(), "").equalsIgnoreCase(entry.getValue())) {
+        throw new FeatureStoreException(exceptionText + entry.getKey());
+      }
+    }
+  }
+
   public String getTrustStorePath() {
     return sparkSession.conf().get("spark.hadoop.hops.ssl.trustore.name");
   }
@@ -107,46 +137,13 @@ public class SparkEngine {
     return sparkSession.sql(query);
   }
 
-  public Dataset<Row> jdbc(String query, StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
-    if (!Strings.isNullOrEmpty(query)) {
-      readOptions.put("query", query);
-    }
-    return sparkSession.read()
-        .format(Constants.JDBC_FORMAT)
-        .options(readOptions)
-        .load();
-  }
-
-  public Dataset<Row> snowflake(String query, StorageConnector storageConnector) throws FeatureStoreException {
-    Map<String, String> readOptions = storageConnector.getSparkOptionsInt();
-    if (!Strings.isNullOrEmpty(query)) {
-      readOptions.put("query", query);
-    }
-    return sparkSession.read()
-        .format(Constants.SNOWFLAKE_FORMAT)
-        .options(readOptions)
-        .load();
-  }
-
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
-      throws FeatureStoreException {
-    Dataset<Row> dataset;
+      throws FeatureStoreException, IOException {
+    Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
+        onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
+        getOnDemandOptions(onDemandFeatureGroup),
+        onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
 
-    switch (onDemandFeatureGroup.getStorageConnector().getStorageConnectorType()) {
-      case REDSHIFT:
-      case JDBC:
-        dataset = jdbc(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
-        break;
-      case SNOWFLAKE:
-        dataset = snowflake(onDemandFeatureGroup.getQuery(), onDemandFeatureGroup.getStorageConnector());
-        break;
-      default:
-        dataset = read(onDemandFeatureGroup.getStorageConnector(),
-            onDemandFeatureGroup.getDataFormat().toString(),
-            getOnDemandOptions(onDemandFeatureGroup),
-            onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
-    }
     dataset.createOrReplaceTempView(alias);
     return dataset;
   }
@@ -176,7 +173,6 @@ public class SparkEngine {
    */
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                     Map<String, String> writeOptions, SaveMode saveMode) {
-
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
     if (trainingDataset.getCoalesce()) {
@@ -304,14 +300,27 @@ public class SparkEngine {
   // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String path) {
+                           Map<String, String> readOptions, String location) {
     setupConnectorHadoopConf(storageConnector);
 
-    return SparkEngine.getInstance().getSparkSession()
+    String path = "";
+    if (location != null) {
+      path = new Path(location, "**").toString();
+    } else {
+      // path is null for jdbc kind of on demand fgs
+      path = null;
+    }
+    path = SparkEngine.sparkPath(path);
+
+    DataFrameReader reader = SparkEngine.getInstance().getSparkSession()
         .read()
         .format(dataFormat)
-        .options(readOptions)
-        .load(SparkEngine.sparkPath(path));
+        .options(readOptions);
+
+    if (!Strings.isNullOrEmpty(path)) {
+      return reader.load(SparkEngine.sparkPath(path));
+    }
+    return reader.load();
   }
 
   /**
@@ -336,7 +345,7 @@ public class SparkEngine {
   public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (Strings.isNullOrEmpty(queryName)) {
       queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
@@ -347,9 +356,9 @@ public class SparkEngine {
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
+        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+            + "/Resources/" + queryName + "-checkpoint")
         .options(writeOptions)
-        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject() + "/Resources/"
-            + queryName + "-checkpoint")
         .option("topic", featureGroup.getOnlineTopicName());
 
     StreamingQuery query = writer.start();
@@ -419,8 +428,9 @@ public class SparkEngine {
         .partitionBy(utils.getPartitionColumns(featureGroup))
         .saveAsTable(utils.getTableName(featureGroup));
   }
-
-  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+  
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
+      Boolean histogram, Boolean exactUniqueness) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -428,13 +438,23 @@ public class SparkEngine {
     if (histogram == null) {
       histogram = true;
     }
-    ColumnProfilerRunBuilder runner =
-        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+    if (exactUniqueness == null) {
+      exactUniqueness = true;
+    }
+    ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
+                                            .onData(df)
+                                            .withCorrelation(correlation, 100)
+                                            .withHistogram(histogram, 20)
+                                            .withExactUniqueness(exactUniqueness);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
     return ColumnProfiles.toJson(result.profiles().values().toSeq());
+  }
+
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+    return profile(df, restrictToColumns, correlation, histogram, true);
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns) {
@@ -456,10 +476,10 @@ public class SparkEngine {
 
     switch (storageConnector.getStorageConnectorType()) {
       case S3:
-        setupS3ConnectorHadoopConf(storageConnector);
+        setupS3ConnectorHadoopConf((StorageConnector.S3Connector) storageConnector);
         break;
       case ADLS:
-        setupAdlsConnectorHadoopConf(storageConnector);
+        setupAdlsConnectorHadoopConf((StorageConnector.AdlsConnector) storageConnector);
         break;
       default:
         // No-OP
@@ -468,13 +488,15 @@ public class SparkEngine {
   }
 
   public static String sparkPath(String path) {
-    if (path.startsWith(Constants.S3_SCHEME)) {
+    if (path == null) {
+      return null;
+    } else if (path.startsWith(Constants.S3_SCHEME)) {
       return path.replaceFirst(Constants.S3_SCHEME, Constants.S3_SPARK_SCHEME);
     }
     return path;
   }
 
-  private void setupS3ConnectorHadoopConf(StorageConnector storageConnector) {
+  private void setupS3ConnectorHadoopConf(StorageConnector.S3Connector storageConnector) {
     if (!Strings.isNullOrEmpty(storageConnector.getAccessKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_ACCESS_KEY_ENV, storageConnector.getAccessKey());
@@ -491,7 +513,7 @@ public class SparkEngine {
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
-          .set("fs.s3a.server-side-encryption.key", storageConnector.getServerEncryptionKey());
+          .set("fs.s3a.server-side-encryption-key", storageConnector.getServerEncryptionKey());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
       sparkSession.sparkContext().hadoopConfiguration()
@@ -501,9 +523,17 @@ public class SparkEngine {
     }
   }
 
-  private void setupAdlsConnectorHadoopConf(StorageConnector storageConnector) {
+  private void setupAdlsConnectorHadoopConf(StorageConnector.AdlsConnector storageConnector) {
     for (Option confOption : storageConnector.getSparkOptions()) {
       sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
     }
+  }
+
+  public Dataset<Row> getEmptyAppendedDataframe(Dataset<Row> dataframe, List<Feature> newFeatures) {
+    Dataset<Row> emptyDataframe = dataframe.limit(0);
+    for (Feature f : newFeatures) {
+      emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
+    }
+    return emptyDataframe;
   }
 }

@@ -53,20 +53,21 @@ class FeatureGroupBaseEngine:
             feature_group, feature_group, "updateStatsConfig"
         )
 
-    def update_features(self, feature_group, updated_features):
-        """Updates features safely."""
+    def new_feature_list(self, feature_group, updated_features):
+        # take original schema and replaces the updated features and returns the new list
         new_features = []
         for feature in feature_group.features:
             if not any(
                 updated.name.lower() == feature.name for updated in updated_features
             ):
                 new_features.append(feature)
-        self._update_features_metadata(feature_group, new_features + updated_features)
+        return new_features + updated_features
 
-    def append_features(self, feature_group, new_features):
-        """Appends features to a feature group."""
-        # perform changes on copy in case the update fails, so we don't leave
-        # the user object in corrupted state
-        self._update_features_metadata(
-            feature_group, feature_group.features + new_features
+    def update_validation_type(self, feature_group):
+        """Update the metadata attribute specified of the feature group ."""
+        self._feature_group_api.update_metadata(
+            feature_group,
+            feature_group,
+            "validationType",
+            feature_group.validation_type,
         )

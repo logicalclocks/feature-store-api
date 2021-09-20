@@ -16,7 +16,7 @@ setup(
     name="hsfs",
     version=__version__,
     install_requires=[
-        "pyhumps",
+        "pyhumps==1.6.1",
         "requests",
         "furl",
         "boto3",
@@ -24,7 +24,9 @@ setup(
         "numpy",
         "pyjks",
         "mock",
-        "avro==1.10.1"
+        "avro==1.10.1",
+        "sqlalchemy",
+        "PyMySQL",
     ],
     extras_require={
         "dev": [
@@ -35,9 +37,10 @@ setup(
             "mkdocs==1.1.2",
             "mkdocs-material==6.2.2",
             "mike==0.5.5",
-            "keras-autodoc",
+            "sphinx==3.5.4",
+            "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include"],
-        "hive": ["pyhopshive[thrift]", "sqlalchemy", "PyMySQL"],
+        "hive": ["pyhopshive[thrift]"]
     },
     author="Logical Clocks AB",
     author_email="moritz@logicalclocks.com",

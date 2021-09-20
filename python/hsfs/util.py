@@ -20,7 +20,7 @@ import json
 from datetime import datetime
 from sqlalchemy import create_engine
 
-from hsfs import feature
+from hsfs import client, feature
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -53,7 +53,7 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def create_mysql_connection(online_conn):
+def create_mysql_engine(online_conn, external):
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
     # jdbc:mysql:// with the sqlalchemy one + username and password
@@ -61,6 +61,15 @@ def create_mysql_connection(online_conn):
     # to use SSL we'll have to something like this:
     # ssl_args = {'ssl_ca': ca_path}
     # engine = create_engine("mysql+pymysql://<user>:<pass>@<addr>/<schema>", connect_args=ssl_args)
+    if external:
+        # This only works with external clients.
+        # Hopsworks clients should use the storage connector
+        online_options["url"] = re.sub(
+            "/[0-9.]+:",
+            "/{}:".format(client.get_instance().host),
+            online_options["url"],
+        )
+
     sql_alchemy_conn_str = (
         online_options["url"]
         .replace(
@@ -75,8 +84,9 @@ def create_mysql_connection(online_conn):
         .replace("?allowPublicKeyRetrieval=true", "")
     )
 
+    # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
-    return sql_alchemy_engine.connect()
+    return sql_alchemy_engine
 
 
 def get_timestamp_from_date_string(input_date):
@@ -109,6 +119,38 @@ def get_hudi_datestr_from_timestamp(timestamp):
     date_obj = datetime.fromtimestamp(timestamp / 1000)
     date_str = date_obj.strftime("%Y%m%d%H%M%S")
     return date_str
+
+
+def setup_pydoop():
+    # Import Pydoop only here, so it doesn't trigger if the execution environment
+    # does not support Pydoop. E.g. Sagemaker
+    from pydoop import hdfs
+
+    # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
+    class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
+        @classmethod
+        def split(cls, hdfs_path, user):
+            if not hdfs_path:
+                cls.raise_bad_path(hdfs_path, "empty")
+            scheme, netloc, path = cls.parse(hdfs_path)
+            if not scheme:
+                scheme = "file" if hdfs.fs.default_is_local() else "hdfs"
+            if scheme == "hdfs" or scheme == "hopsfs":
+                if not path:
+                    cls.raise_bad_path(hdfs_path, "path part is empty")
+                if ":" in path:
+                    cls.raise_bad_path(hdfs_path, "':' not allowed outside netloc part")
+                hostname, port = cls.split_netloc(netloc)
+                if not path.startswith("/"):
+                    path = "/user/%s/%s" % (user, path)
+            elif scheme == "file":
+                hostname, port, path = "", 0, netloc + path
+            else:
+                cls.raise_bad_path(hdfs_path, "unsupported scheme %r" % scheme)
+            return hostname, port, path
+
+    # Monkey patch the class to use the one defined above.
+    hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
 
 class VersionWarning(Warning):

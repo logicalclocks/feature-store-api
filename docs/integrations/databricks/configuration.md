@@ -49,7 +49,7 @@ A cluster needs to exist before users can configure it using the Hopsworks UI. T
 
 !!! warning "Runtime limitation"
 
-    Currently Runtime 6 is suggested to be able to use the full suite of Hopsworks Feature Store capabilities.
+    Currently Runtime 8.x is suggested to be able to use the full suite of Hopsworks Feature Store capabilities.
 
 ## Configure a cluster
 
@@ -104,7 +104,9 @@ Once the cluster is running users can establish a connection to the Hopsworks Fe
         'my_instance',                      # DNS of your Feature Store instance
         443,                                # Port to reach your Hopsworks instance, defaults to 443
         'my_project',                       # Name of your Hopsworks Feature Store project
+        secrets_store='local',
         api_key_file="featurestore.key",    # For Azure, store the API key locally
+        secrets_store = "local",
         hostname_verification=True          # Disable for self-signed certificates
     )
     fs = conn.get_feature_store()           # Get the project's default feature store

@@ -21,7 +21,12 @@ import avro.io
 from sqlalchemy import sql
 
 from hsfs import engine, training_dataset_feature, util
-from hsfs.core import training_dataset_api, tags_api, storage_connector_api
+from hsfs.core import (
+    training_dataset_api,
+    tags_api,
+    storage_connector_api,
+    transformation_function_engine,
+)
 from hsfs.constructor import query
 
 
@@ -38,6 +43,11 @@ class TrainingDatasetEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(
+                feature_store_id
+            )
+        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -48,6 +58,9 @@ class TrainingDatasetEngine:
                 )
                 for label_name in training_dataset.label
             ]
+            self._transformation_function_engine.attach_transformation_fn(
+                training_dataset
+            )
         else:
             features = engine.get_instance().convert_to_default_dataframe(features)
             training_dataset._features = (
@@ -58,14 +71,21 @@ class TrainingDatasetEngine:
                     if feature.name == label_name:
                         feature.label = True
 
-        self._training_dataset_api.post(training_dataset)
+            # check if user provided transformation functions and throw error as transformation functions work only
+            # with query objects
+            if training_dataset.transformation_functions:
+                raise ValueError(
+                    "Transformation functions can only be applied to training datasets generated from Query object"
+                )
 
-        engine.get_instance().write_training_dataset(
+        updated_instance = self._training_dataset_api.post(training_dataset)
+        td_job = engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
+        return updated_instance, td_job
 
     def insert(self, training_dataset, dataset, user_write_options, overwrite):
-        engine.get_instance().write_training_dataset(
+        return engine.get_instance().write_training_dataset(
             training_dataset,
             dataset,
             user_write_options,
@@ -73,20 +93,21 @@ class TrainingDatasetEngine:
         )
 
     def read(self, training_dataset, split, user_read_options):
-        if split is None:
-            path = training_dataset.location + "/" + "**"
-        else:
-            path = training_dataset.location + "/" + str(split)
-
         read_options = engine.get_instance().read_options(
             training_dataset.data_format, user_read_options
         )
 
-        return engine.get_instance().read(
-            training_dataset.storage_connector,
-            training_dataset.data_format,
-            read_options,
-            path,
+        if split is not None:
+            path = training_dataset.location + "/" + str(split)
+        else:
+            path = training_dataset.location
+
+        return training_dataset.storage_connector.read(
+            # always read from materialized dataset, not query object
+            query=None,
+            data_format=training_dataset.data_format,
+            options=read_options,
+            path=path,
         )
 
     def query(self, training_dataset, online, with_label):
@@ -116,44 +137,6 @@ class TrainingDatasetEngine:
             training_dataset, training_dataset, "updateStatsConfig"
         )
 
-    def get_serving_vector(self, training_dataset, entry):
-        """Assembles serving vector from online feature store."""
-
-        serving_vector = []
-
-        if training_dataset.prepared_statements is None:
-            self.init_prepared_statement(training_dataset)
-
-        # check if primary key map correspond to serving_keys.
-        if not entry.keys() == training_dataset.serving_keys:
-            raise ValueError(
-                "Provided primary key map doesn't correspond to serving_keys"
-            )
-
-        prepared_statements = training_dataset.prepared_statements
-
-        # get schemas for complex features once
-        complex_features = self.get_complex_feature_schemas(training_dataset)
-
-        for prepared_statement_index in prepared_statements:
-            prepared_statement = prepared_statements[prepared_statement_index]
-            result_proxy = training_dataset.prepared_statement_connection.execute(
-                prepared_statement, entry
-            ).fetchall()
-            result_dict = {}
-            for row in result_proxy:
-                result_dict = self.deserialize_complex_features(
-                    complex_features, dict(row.items())
-                )
-                if not result_dict:
-                    raise Exception(
-                        "No data was retrieved from online feature store using input "
-                        + entry
-                    )
-            serving_vector += list(result_dict.values())
-
-        return serving_vector
-
     def get_complex_feature_schemas(self, training_dataset):
         return {
             f.name: avro.io.DatumReader(
@@ -170,9 +153,50 @@ class TrainingDatasetEngine:
             row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def init_prepared_statement(self, training_dataset):
+    def get_serving_vector(self, training_dataset, entry, external):
+        """Assembles serving vector from online feature store."""
+
+        serving_vector = []
+
+        if training_dataset.prepared_statements is None:
+            self.init_prepared_statement(training_dataset, external)
+
+        # check if primary key map correspond to serving_keys.
+        if not entry.keys() == training_dataset.serving_keys:
+            raise ValueError(
+                "Provided primary key map doesn't correspond to serving_keys"
+            )
+
+        prepared_statements = training_dataset.prepared_statements
+
+        # get schemas for complex features once
+        complex_features = self.get_complex_feature_schemas(training_dataset)
+
+        for prepared_statement_index in prepared_statements:
+            prepared_statement = prepared_statements[prepared_statement_index]
+            with training_dataset.prepared_statement_engine.connect() as mysql_conn:
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
+            result_dict = {}
+            for row in result_proxy:
+                result_dict = self.deserialize_complex_features(
+                    complex_features, dict(row.items())
+                )
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
+                # apply transformation functions
+                result_dict = self._apply_transformation(
+                    training_dataset.transformation_functions, result_dict
+                )
+            serving_vector += list(result_dict.values())
+
+        return serving_vector
+
+    def init_prepared_statement(self, training_dataset, external):
         online_conn = self._storage_connector_api.get_online_connector()
-        jdbc_connection = util.create_mysql_connection(online_conn)
+        mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )
@@ -211,6 +235,21 @@ class TrainingDatasetEngine:
                 prepared_statement.prepared_statement_index
             ] = query_online
 
-        training_dataset.prepared_statement_connection = jdbc_connection
+        # attach transformation functions
+        training_dataset.transformation_functions = (
+            self._transformation_function_engine.get_td_transformation_fn(
+                training_dataset
+            )
+        )
+
+        training_dataset.prepared_statement_engine = mysql_engine
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
+
+    @staticmethod
+    def _apply_transformation(transformation_fns, row_dict):
+        for feature_name in transformation_fns:
+            if feature_name in row_dict:
+                transformation_fn = transformation_fns[feature_name].transformation_fn
+                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
+        return row_dict

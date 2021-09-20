@@ -35,7 +35,7 @@ Identify your EMR VPC in the Summary of your EMR cluster:
     If you are performing an installation using the [Hopsworks installer script](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-installer.html), ensure that the virtual machines you install Hopsworks on are deployed in the EMR VPC.
 
 !!! info "Hopsworks.ai"
-    If you are on **Hopsworks.ai**, you can directly deploy Hopsworks to the EMR VPC, by simply selecting it at the [VPC selection step during cluster creation](../../hopsworksai/aws/cluster_creation.md#step-6-vpc-selection).
+    If you are on **Hopsworks.ai**, you can directly deploy Hopsworks to the EMR VPC, by simply selecting it at the [VPC selection step during cluster creation](../../hopsworksai/aws/cluster_creation.md#step-8-vpc-selection).
 
 **Option 2: Set up VPC peering**
 
@@ -58,7 +58,7 @@ Follow the guide [VPC Peering](https://docs.aws.amazon.com/vpc/latest/peering/cr
 The Feature Store *Security Group* needs to be configured to allow traffic from your EMR clusters to be able to connect to the Feature Store.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](../../../hopsworksai/aws/getting_started/#step-5-outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
 
 Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *3306*, *9083*, *9085*, *8020* and *30010* (443,3306,8020,30010,9083,9085) are reachable
 from the EMR Security Group:

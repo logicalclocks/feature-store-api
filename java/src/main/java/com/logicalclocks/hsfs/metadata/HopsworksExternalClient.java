@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.SecretStore;
 import com.logicalclocks.hsfs.engine.SparkEngine;
@@ -37,7 +38,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
@@ -138,6 +138,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
+    SparkEngine.getInstance().validateSparkConfiguration();
     this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
     this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
     this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());

@@ -68,6 +68,9 @@ We follow a few best practices for writing the Python documentation:
 
 We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimporter/mike/)) to build the documentation and a plugin called `keras-autodoc` to auto generate Python API documentation from docstrings.
 
+**Background about `mike`:**
+    `mike` builds the documentation and commits it as a new directory to the gh-pages branch. Each directory corresponds to one version of the documentation. Additionally, `mike` maintains a json in the root of gh-pages with the mappings of versions/aliases for each of the directories available. With aliases you can define extra names like `dev` or `latest`, to indicate stable and unstable releases.
+
 1. Currently we are using our own version of `keras-autodoc`
 
     ```bash
@@ -92,6 +95,10 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 4. Either build the docs, or serve them dynamically:
 
     Note: Links and pictures might not resolve properly later on when checking with this build.
+    The reason for that is that the docs are deployed with versioning on docs.hopsworks.ai and
+    therefore another level is added to all paths, e.g. `docs.hopsworks.ai/[version-or-alias]`.
+    Using relative links should not be affected by this, however, building the docs with version
+    (Option 2) is recommended.
 
     ```bash
     mkdocs build
@@ -101,7 +108,18 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 
 ##### Option 2 (Preferred): Build multi-version doc with `mike`
 
-4. For this you can either checkout and make a local copy of the upstream/gh-pages branch to get the current state of the docs, or just build the branch you are updating:
+###### Versioning on docs.hopsworks.ai
+
+On docs.hopsworks.ai we implement the following versioning scheme:
+
+- current master branches (e.g. of hsfs corresponding to master of Hopsworks): rendered as current Hopsworks snapshot version, e.g. **2.2.0-SNAPSHOT [dev]**, where `dev` is an alias to indicate that this is an unstable version.
+- the latest release: rendered with full current version, e.g. **2.1.5 [latest]** with `latest` alias to indicate that this is the latest stable release.
+- previous stable releases: rendered without alias, e.g. **2.1.4**.
+
+###### Build Instructions
+
+4. For this you can either checkout and make a local copy of the `upstream/gh-pages` branch, where
+`mike` maintains the current state of docs.hopsworks.ai, or just build documentation for the branch you are updating:
 
     Building *one* branch:
 
@@ -119,8 +137,15 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
     ```bash
     mike deploy [version] [alias] --update-alias
 
-    # for example, if you branch is based on master and becomes new SNAPSHOT version:
+    # for example, if you are updating documentation to be merged to master,
+    # which will become the new SNAPSHOT version:
     mike deploy 2.2.0-SNAPSHOT dev --update-alias
+
+    # if you are updating docs of the latest stable release branch
+    mike deploy [version] latest --update-alias
+
+    # if you are updating docs of a previous stable release branch
+    mike deploy [version]
     ```
 
     If no gh-pages branch existed in your local repository, this will have created it.
@@ -149,10 +174,6 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
     # or delete single version
     mike delete [version-or-alias]
     ```
-
-    **Background about `mike`:**
-    `mike` builds the documentation and commits it as a new directory to the gh-pages branch. Each directory corresponds to one version of the documentation. Additionally, `mike` maintains a json in the root of gh-pages with the mappings of versions/aliases for each of the directories available. With aliases you can define extra names like `dev` or `latest`.
-
 
 #### Adding new API documentation
 

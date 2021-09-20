@@ -31,6 +31,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Client(ABC):
     TOKEN_FILE = "token.jwt"
+    APIKEY_FILE = "api.key"
     REST_ENDPOINT = "REST_ENDPOINT"
     DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV = "DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV"
 
@@ -79,8 +80,16 @@ class Client(ABC):
 
     def _read_jwt(self):
         """Retrieve jwt from local container."""
-        with open(os.path.join(self._secrets_dir, self.TOKEN_FILE), "r") as jwt:
-            return jwt.read()
+        return self._read_file(self.TOKEN_FILE)
+
+    def _read_apikey(self):
+        """Retrieve apikey from local container."""
+        return self._read_file(self.APIKEY_FILE)
+
+    def _read_file(self, secret_file):
+        """Retrieve secret from local container."""
+        with open(os.path.join(self._secrets_dir, secret_file), "r") as secret:
+            return secret.read()
 
     @connected
     def _send_request(
