@@ -1049,6 +1049,9 @@ class FeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
@@ -1362,6 +1365,10 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("online_topic_name", None)
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("online_topic_name", None)
             _ = fg.pop("type", None)
