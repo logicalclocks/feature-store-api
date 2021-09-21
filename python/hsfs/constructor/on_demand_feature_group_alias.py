@@ -23,8 +23,8 @@ class OnDemandFeatureGroupAlias:
     def __init__(self, on_demand_feature_group, alias):
         self._on_demand_feature_group = (
             feature_group.OnDemandFeatureGroup.from_response_json(
-                [on_demand_feature_group]
-            )[0]
+                on_demand_feature_group
+            )
         )
         self._alias = alias
 

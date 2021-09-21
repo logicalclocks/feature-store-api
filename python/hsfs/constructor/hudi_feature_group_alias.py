@@ -28,8 +28,8 @@ class HudiFeatureGroupAlias:
         left_feature_group_start_timestamp=0,
     ):
         self._feature_group = feature_group_module.FeatureGroup.from_response_json(
-            [feature_group]
-        )[0]
+            feature_group
+        )
         self._alias = alias
         self._left_feature_group_start_timestamp = left_feature_group_start_timestamp
         self._left_feature_group_end_timestamp = left_feature_group_end_timestamp

@@ -35,7 +35,7 @@ class TrainingDatasetFeature:
         self._type = type
         self._index = index
         self._feature_group = (
-            FeatureGroup.from_response_json([featuregroup])[0]
+            FeatureGroup.from_response_json(featuregroup)
             if isinstance(featuregroup, dict)
             else featuregroup
         )
