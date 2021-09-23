@@ -237,8 +237,8 @@ object FeatureSelectionRunner {
 
   def runFeatureSelection(df: DataFrame, config: FeatureSelectionConfig =
       FeatureSelectionConfig()): Map[String, Double] ={
-    val engine = new FeatureSelectionRunner(df.schema, config)
-    engine.runFeatureSelection(df)
+    val runner = new FeatureSelectionRunner(df.schema, config)
+    runner.runFeatureSelection(df)
   }
 
   def runFeatureSelectionJava(df: DataFrame, config: FeatureSelectionConfig =

@@ -50,7 +50,7 @@ import scala.collection.mutable.ArrayBuffer
 class ExtendedMultivariateOnlineSummarizer extends Serializable{
 
   var dataTypes: Array[DataType] = _
-  var configuration: RDDStatisticsConfig = _
+  var config: RDDStatisticsConfig = _
   @transient
   var longsSketches: IndexedSeq[LongsSketch] = _
   var longsSketchesBin: IndexedSeq[Array[Byte]] = _
@@ -78,17 +78,18 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
     this()
 
     this.dataTypes = dataTypes
-    configuration = statsConfig
-    if (configuration.frequentItems) {
-      longsSketches = (0 to vectorSize).map( i => new LongsSketch(statsConfig.freqItemSketchSize) )
+    config = statsConfig
+    if (config.frequentItems) {
+      longsSketches = (0 until vectorSize).map( i => new LongsSketch(statsConfig
+        .freqItemSketchSize) )
     }
-    if (configuration.approxDistinctness) {
-      hllSketches = (0 to vectorSize).map( i => new jHllSketch() )
+    if (config.approxDistinctness) {
+      hllSketches = (0 until vectorSize).map( i => new jHllSketch() )
     }
-    if (configuration.approxQuantiles) {
+    if (config.approxQuantiles) {
       //kllSketches = (0 to vectorSize).map( i => new QuantileNonSample[Double](statsConfig
       //  .kllSketchSize, statsConfig.kllSketchShrinkingFactor))
-      kllSketches = (0 to vectorSize).map( i => new jKllFloatsSketch(statsConfig.kllSketchSize))
+      kllSketches = (0 until vectorSize).map( i => new jKllFloatsSketch(statsConfig.kllSketchSize))
     }
   }
 
@@ -129,19 +130,19 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
     val localNumNonzeros = nnz
     val localCurrMax = currMax
     val localCurrMin = currMin
-    val nans = if (configuration.treatInfinityAsNaN) Seq(Double.NegativeInfinity,
+    val nans = if (config.treatInfinityAsNaN) Seq(Double.NegativeInfinity,
       Double.PositiveInfinity, Double.NaN) else Seq(Double.NaN)
     (0 until n).foreach { index =>
       if (!instance.isNullAt(index)) {
         val value = NumerizationHelper.numerize(instance, index, dataTypes(index))
         if (!nans.contains(value)) {
-          if (configuration.frequentItems) {
+          if (config.frequentItems) {
             longsSketches(index).update(value.toLong)
           }
-          if (configuration.approxDistinctness) {
+          if (config.approxDistinctness) {
             hllSketches(index).update(value)
           }
-          if (configuration.approxQuantiles) {
+          if (config.approxQuantiles) {
             //kllSketches(index).update(value)
             kllSketches(index).update(value.toFloat)
           }
@@ -224,11 +225,11 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
       currMax = other.currMax.clone()
       currMin = other.currMin.clone()
     }
-    if (configuration.frequentItems) {
+    if (config.frequentItems) {
       longsSketches.zipWithIndex.foreach( kv =>
         kv._1.merge(other.longsSketches(kv._2)) )
     }
-    if (configuration.approxDistinctness) {
+    if (config.approxDistinctness) {
       hllSketches = hllSketches.zipWithIndex.map( kv => {
         val union = new HllUnion()
         union.update(kv._1)
@@ -236,7 +237,7 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
         union.getResult
       })
     }
-    if (configuration.approxQuantiles) {
+    if (config.approxQuantiles) {
       kllSketches.zipWithIndex.foreach( kv =>
         kv._1.merge(other.kllSketches(kv._2)) )
     }
@@ -371,26 +372,26 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
   }
 
   def fromSerialized(): this.type = {
-    if (configuration.frequentItems) {
+    if (config.frequentItems) {
       longsSketches = longsSketchesBin.map( sketch => LongsSketch.getInstance(Memory.wrap(sketch)) )
     }
-    if (configuration.approxDistinctness) {
+    if (config.approxDistinctness) {
       hllSketches = hllSketchesBin.map( sketch => jHllSketch.heapify(Memory.wrap(sketch)) )
     }
-    if (configuration.approxQuantiles) {
+    if (config.approxQuantiles) {
       kllSketches = kllSketchesBin.map( sketch => jKllFloatsSketch.heapify(Memory.wrap(sketch)) )
     }
     this
   }
 
   def toSerializable(): this.type = {
-    if (configuration.frequentItems) {
+    if (config.frequentItems) {
       longsSketchesBin = longsSketches.map( sketch => sketch.toByteArray )
     }
-    if (configuration.approxDistinctness) {
+    if (config.approxDistinctness) {
       hllSketchesBin = hllSketches.map( sketch => sketch.toUpdatableByteArray )
     }
-    if (configuration.approxQuantiles) {
+    if (config.approxQuantiles) {
       kllSketchesBin = kllSketches.map( sketch => sketch.toByteArray )
     }
     this
@@ -398,17 +399,42 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
 
   def getStats(columnNames: Array[String],
                dataTypes: Array[DataType]): RDDStatistics = {
-    val hashingColumnsLookups = configuration.frequentItems match {
+    val hashingColumnsLookups = config.frequentItems match {
       case true => Some(longsSketches.map( sketch => {
         val items = sketch.getFrequentItems(ErrorType.NO_FALSE_POSITIVES)
-        val items_lookup = items.take(Math.min(items.length, configuration.maxFreqItems))
+        val items_lookup = items.take(Math.min(items.length, config.maxFreqItems))
           .zipWithIndex.map(kv => (kv._1.getItem, kv._2)).toMap
         items_lookup
       }))
       case false => None
     }
-    val distinctCounts = configuration.approxDistinctness match {
+    val distinctCounts = config.approxDistinctness match {
       case true => Some(hllSketches.map( sketch => sketch.getEstimate ).toArray)
+      case false => None
+    }
+    val histogram = config.approxQuantiles match {
+      case true => Some(kllSketches.zipWithIndex.map( {
+        kv =>
+          val stepSize = (max(kv._2)-min(kv._2)).toFloat/config.kllHistogramNumBuckets
+          val splitPoints = for {step <- 0 until config.kllHistogramNumBuckets} yield {
+            (min(kv._2) + stepSize * (step + 1)).toFloat
+          }
+          val buckets = kv._1.getPMF(splitPoints.toArray)
+          (0 until 20).map({
+            i =>
+              val from = (min(kv._2)+stepSize*i).toFloat
+              val to = (min(kv._2)+stepSize*(i+1)).toFloat
+              f"${from}-${to}" -> buckets(i)
+          }).toArray
+      } ).toArray)
+      case false => None
+    }
+    val percentiles = config.approxQuantiles match {
+      case true => Some(kllSketches.map( {
+        sketch =>
+          val percentiles = 1 to 99
+          percentiles.map(i => sketch.getQuantile(i/100.0).toDouble).toArray
+      } ).toArray)
       case false => None
     }
 
@@ -424,7 +450,9 @@ class ExtendedMultivariateOnlineSummarizer extends Serializable{
       normL2,
       normL1,
       distinctCounts,
-      hashingColumnsLookups)
+      hashingColumnsLookups,
+      histogram,
+      percentiles)
   }
 
 }
@@ -441,9 +469,9 @@ case class RDDStatistics(columnNames: Array[String],
                          normL2: Array[Double],
                          normL1: Array[Double],
                          approxDistinct: Option[Array[Double]],
-                         freqItems: Option[IndexedSeq[Map[Long, Int]]]
-                         ) extends
-  Serializable
+                         freqItems: Option[IndexedSeq[Map[Long, Int]]],
+                         histograms: Option[Array[Array[(String, Double)]]],
+                         percentiles: Option[Array[Array[Double]]]) extends Serializable
 
 case class RDDStatisticsConfig(approxDistinctness: Boolean = true,
                                frequentItems: Boolean = true, maxFreqItems: Int = 253,
@@ -451,7 +479,8 @@ case class RDDStatisticsConfig(approxDistinctness: Boolean = true,
                                treatInfinityAsNaN: Boolean = true,
                                approxQuantiles: Boolean = false,
                                kllSketchSize: Int = 2048,
-                               kllSketchShrinkingFactor: Double = 0.64)
+                               kllSketchShrinkingFactor: Double = 0.64,
+                               kllHistogramNumBuckets: Int = 20)
 
 object NumerizationHelper {
   def numerize(instance: Row, index: Int, dataType: DataType): Double = {
@@ -555,6 +584,7 @@ object StatisticsEngineRDD {
             case FloatType | DoubleType => Fractional
             case DecimalType() => Decimal
           }
+          // TODO: set histograms and percentiles based on kll sketches
           NumericColumnProfile(
             stats.columnNames(i),
             (stats.count - stats.numNonzeros(i)) / stats.count,
@@ -574,7 +604,9 @@ object StatisticsEngineRDD {
             Some(Math.sqrt(stats.variance(i))),
             None,
             None,
-            None
+            None,
+            Some(stats.count),
+            Some(stats.dataTypes(i).typeName)
           )
         }
         case _ => {
@@ -583,6 +615,7 @@ object StatisticsEngineRDD {
             case StringType | TimestampType | DateType | BinaryType => String
             case _ => Unknown
           }
+          // TODO: set histograms based on frequentItemSketches
           StandardColumnProfile(
             stats.columnNames(i),
             (stats.count - stats.numNonzeros(i)) / stats.count,
@@ -594,7 +627,9 @@ object StatisticsEngineRDD {
             false,
             new HashMap[String, Long](),
             None,
-            None)
+            None,
+            Some(stats.count),
+            Some(stats.dataTypes(i).typeName))
         }
 
       }

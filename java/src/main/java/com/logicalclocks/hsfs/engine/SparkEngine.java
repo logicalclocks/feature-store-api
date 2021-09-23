@@ -426,7 +426,7 @@ public class SparkEngine {
       // run deequ-based statistics
       ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
           .onData(df)
-          .withCorrelation(correlation, 100)
+          .withCorrelation(correlation, 50)
           .withHistogram(histogram, 20)
           .withExactUniqueness(exactUniqueness);
       if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
@@ -449,7 +449,8 @@ public class SparkEngine {
           false,
           false,
           2048,
-          0.64));
+          0.64,
+          20));
       Seq<ColumnProfile> profiles = StatisticsEngineRDD.toDeequProfiles(statistics);
       return ColumnProfiles.toJson(profiles);
     }
@@ -457,7 +458,7 @@ public class SparkEngine {
   }
   
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram,
-    Boolean exactUniqueness) {
+      Boolean exactUniqueness) {
     return profile(df, restrictToColumns, correlation, histogram, exactUniqueness, false);
   }
 

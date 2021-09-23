@@ -13,7 +13,7 @@
  *
  * See the License for the specific language governing permissions and limitations under the License.
  *
- * based on fast-mRMR (https://github.com/sramirez/fast-mRMR)
+ * Based on fast-mRMR (https://github.com/sramirez/fast-mRMR).
  */
 
 package com.logicalclocks.hsfs.featureselection
@@ -174,7 +174,8 @@ class MrmrCriterion(var relevance: Double) extends Serializable {
 
   def score = {
     if (selectedSize != 0) {
-      relevance - redundance / selectedSize
+      // based on https://arxiv.org/pdf/1908.05376.pdf, changed from MID to MIQ
+      relevance / (redundance / selectedSize)
     } else {
       relevance
     }
