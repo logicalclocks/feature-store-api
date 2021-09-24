@@ -47,20 +47,20 @@ case class FeatureSelectionConfig(target: String = "target",
 }
 
 
-class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig =
-  FeatureSelectionConfig()) extends Serializable {
+class FeatureSelectionEngine(schema: StructType, config: FeatureSelectionConfig =
+FeatureSelectionConfig()) extends Serializable {
 
   private val indexToName = ListMap(schema.zipWithIndex.map(kv => kv._2 -> kv._1.name): _*)
   private val nameToIndex = schema.zipWithIndex.map(kv => kv._1.name -> kv._2).toMap
   private val nameToType = schema.map(kv => kv.name -> kv.dataType).toMap
-  private val fractionalColumns = schema.filter( kv => {
+  private val fractionalColumns = schema.filter(kv => {
     kv.dataType match {
       case FloatType | DoubleType | DecimalType() => true
       case _ =>
         false
     }
   }).map(kv => kv.name).toSet
-  private val integralColumns = schema.filter( kv => {
+  private val integralColumns = schema.filter(kv => {
     kv.dataType match {
       case BooleanType | ByteType | ShortType | IntegerType | LongType |
            TimestampType | DateType => true
@@ -69,23 +69,19 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
     }
   }).map(kv => kv.name).toSet
 
-  def runFeatureSelection(df: DataFrame): Map[String, Double] ={
+  def runFeatureSelection(df: DataFrame): Map[String, Double] = {
     val dfLimited = df.limit(config.rowLimit)
 
     // compute summary stats...
     val tStats = System.nanoTime
 
-    val stats = StatisticsEngineRDD.computeStatistics(dfLimited,
-      RDDStatisticsConfig(maxFreqItems = config.nBuckets-2))
+    val stats = FeatureSelectionStatisticsEngine.computeStatistics(dfLimited,
+      RDDStatisticsConfig(maxFreqItems = config.nBuckets - 2))
 
-    if (config.verbose){
+    if (config.verbose) {
       val durationStats = (System.nanoTime - tStats) / 1e9d
       println(f"summary stats x $durationStats")
     }
-
-    //println(stats.min.toArray.mkString(" "))
-    //println(stats.max.toArray.mkString(" "))
-    //println(stats.freqItems.get.map(seq => seq.mkString(", ")).mkString("\n"))
 
     // pre-filter columns...
     val tFilter = System.nanoTime
@@ -99,8 +95,8 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
     }
 
     // TODO: broadcasting seems to be suboptimal here, but check on larger cluster/data
-    //val sc = subSelectedDf.rdd.context
-    //val bStats = sc.broadcast(stats)
+    // val sc = subSelectedDf.rdd.context
+    // val bStats = sc.broadcast(stats)
 
     // transform values...
     val tTransform = System.nanoTime
@@ -119,10 +115,10 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
 
     val indexToFeatures = ListMap(selectedColumns.zipWithIndex.map(kv => kv._2 -> kv._1): _*)
     val selectedFeatures = FeatureSelectorMRMR.selectFeatures(transformedColumns,
-                               config.nSelectFeatures,
-                               selectedColumns.length,
-                               indexToFeatures,
-                               config.verbose)
+      config.nSelectFeatures,
+      selectedColumns.length,
+      indexToFeatures,
+      config.verbose)
 
     if (config.verbose) {
       val durationSelect = (System.nanoTime - tSelect) / 1e9d
@@ -133,7 +129,7 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
   }
 
   // feature pre-filter (except target)
-  private def preFilterColumns(stats: RDDStatistics)
+  private def preFilterColumns(stats: FeatureSelectionStatistics)
   : Array[String] = {
     val selectedColumns = indexToName.filter(kv => kv._2 != config.target).filterNot(kv => {
       val index = kv._1
@@ -171,13 +167,17 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
         val reasons = ArrayBuffer[String]()
         if (noVariance) reasons += f"variance is 0"
         if (lowCompleteness) reasons += f"completeness $completeness < ${
-          config.completenessThreshold  }"
+          config.completenessThreshold
+        }"
         if (lowVariance) reasons += f"variance $normVariance < ${
-          config.normalizedVarianceThreshold }"
+          config.normalizedVarianceThreshold
+        }"
         if (highDistinctnessIntegral) reasons += f"integral distinctness $distinctness > ${
-          config.distinctnessThresholdIntegral }"
+          config.distinctnessThresholdIntegral
+        }"
         if (highDistinctness) reasons += f"distinctness $distinctness > ${
-          config.distinctnessThresholdOther }"
+          config.distinctnessThresholdOther
+        }"
         if (noFrequentItems) reasons += f"less than two most frequent items"
         println(f"Column $name was pre-filtered, because ${reasons.mkString(", ")}")
       }
@@ -190,15 +190,14 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
 
 
   private def transformColumns(rdd: RDD[Row], selectedColumns: Array[String],
-                               stats: RDDStatistics): RDD[(Long, Byte)]
-  = {
+                               stats: FeatureSelectionStatistics): RDD[(Long, Byte)] = {
     val nAllFeatures = selectedColumns.length
 
-    val columnarData: RDD[(Long, Byte)] = rdd.zipWithIndex().flatMap ({ kv =>
+    val columnarData: RDD[(Long, Byte)] = rdd.zipWithIndex().flatMap({ kv =>
       val values = kv._1
       val r = kv._2
       val rindex = r * nAllFeatures
-      val inputs = for(i <- 0 until nAllFeatures) yield {
+      val inputs = for (i <- 0 until nAllFeatures) yield {
         val name = selectedColumns(i)
         val statsIndex = nameToIndex(name)
         val index = rindex + i
@@ -207,8 +206,8 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
           val value = NumerizationHelper.numerize(values, i, nameToType(name))
           if (Seq(Double.PositiveInfinity, Double.NegativeInfinity, Double.NaN).contains(value)) {
             byte = 0.toByte
-          } else if(fractionalColumns.contains(name) || (integralColumns.contains(name) &&
-            stats.approxDistinct.get(statsIndex) > config.discretizationTreshold )) {
+          } else if (fractionalColumns.contains(name) || (integralColumns.contains(name) &&
+            stats.approxDistinct.get(statsIndex) > config.discretizationTreshold)) {
             val mn = stats.min(statsIndex)
             val range = stats.max(statsIndex) - stats.min(statsIndex)
             val scaled = ((value - mn) / range) * (config.nBuckets - 2) + 1
@@ -224,7 +223,7 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
       inputs
     })
 
-    val nPart = if(config.numPartitions == 0) rdd.context.getConf.getInt(
+    val nPart = if (config.numPartitions == 0) rdd.context.getConf.getInt(
       "spark.default.parallelism", 500) else config.numPartitions
 
     columnarData.sortByKey(numPartitions = nPart)
@@ -233,16 +232,16 @@ class FeatureSelectionRunner(schema: StructType, config: FeatureSelectionConfig 
 
 }
 
-object FeatureSelectionRunner {
+object FeatureSelectionEngine {
 
   def runFeatureSelection(df: DataFrame, config: FeatureSelectionConfig =
-      FeatureSelectionConfig()): Map[String, Double] ={
-    val runner = new FeatureSelectionRunner(df.schema, config)
-    runner.runFeatureSelection(df)
+  FeatureSelectionConfig()): Map[String, Double] = {
+    val engine = new FeatureSelectionEngine(df.schema, config)
+    engine.runFeatureSelection(df)
   }
 
   def runFeatureSelectionJava(df: DataFrame, config: FeatureSelectionConfig =
-      FeatureSelectionConfig()): java.util.Map[java.lang.String, java.lang.Double] = {
+  FeatureSelectionConfig()): java.util.Map[java.lang.String, java.lang.Double] = {
     val selectedFeatures = runFeatureSelection(df, config)
     JavaConverters.mapAsJavaMapConverter(selectedFeatures.map(kv => kv._1 -> double2Double(kv._2))).asJava
   }

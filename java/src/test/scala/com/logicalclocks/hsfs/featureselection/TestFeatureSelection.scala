@@ -48,8 +48,8 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
         val durationc = (System.nanoTime - tc) / 1e9d
         println(f"read data x $durationc")
 
-        val selectedFeatures = FeatureSelectionRunner.runFeatureSelection(df,
-          config=FeatureSelectionConfig(nSelectFeatures = 1,
+        val selectedFeatures = FeatureSelectionEngine.runFeatureSelection(df,
+          config = FeatureSelectionConfig(nSelectFeatures = 1,
             numPartitions = df.rdd.getNumPartitions,
             verbose = true))
       }
@@ -71,11 +71,11 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
         println(f"read data x $durationc")
 
 
-        val selectedFeatures = FeatureSelectionRunner.runFeatureSelection(df,
-                                            config=FeatureSelectionConfig(nSelectFeatures = -1,
-                                              target = "Survived",
-                                              numPartitions = df.rdd.getNumPartitions,
-                                              verbose = true))
+        val selectedFeatures = FeatureSelectionEngine.runFeatureSelection(df,
+          config = FeatureSelectionConfig(nSelectFeatures = -1,
+            target = "Survived",
+            numPartitions = df.rdd.getNumPartitions,
+            verbose = true))
       }
 
     "FeatureSelectionHelper on different data types should not crash" in
@@ -89,7 +89,7 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
             StructField("long", LongType, true) ::
             StructField("float", FloatType, true) ::
             StructField("dbl", DoubleType, true) ::
-            StructField("dec", DecimalType(38,28), true) ::
+            StructField("dec", DecimalType(38, 28), true) ::
             StructField("ts", TimestampType, true) ::
             StructField("dt", DateType, true) ::
             StructField("str", StringType, true) ::
@@ -233,13 +233,13 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
           schema
         )
 
-        val statsrow = StatisticsEngineRDD.computeStatistics(df,
+        val statsrow = FeatureSelectionStatisticsEngine.computeStatistics(df,
           RDDStatisticsConfig(frequentItems = false))
 
         println(statsrow.min.mkString(" "))
         println(statsrow.max.mkString(" "))
 
-        val selectedFeatures = FeatureSelectionRunner.runFeatureSelection(df,
+        val selectedFeatures = FeatureSelectionEngine.runFeatureSelection(df,
           FeatureSelectionConfig(nSelectFeatures = -1,
             numPartitions = df.rdd.getNumPartitions,
             target = "bool",
@@ -256,7 +256,7 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
         df.persist(StorageLevel.MEMORY_AND_DISK_SER)
         df.count()
 
-        val numericColumns = df.schema.filter( kv => {
+        val numericColumns = df.schema.filter(kv => {
           kv.dataType match {
             case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
                  DoubleType | TimestampType | DateType | DecimalType() => true
@@ -265,7 +265,7 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
           }
         })
 
-        val otherColumns = df.schema.filterNot( kv => {
+        val otherColumns = df.schema.filterNot(kv => {
           kv.dataType match {
             case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
                  DoubleType | TimestampType | DateType | DecimalType() => true
@@ -277,17 +277,17 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
         val numStatsAggs = numericColumns.flatMap(c => {
           val withoutNullAndNan = when(!col(c.name).isNull && !col(c.name).isNaN, col(c.name))
           Seq(
-            min(withoutNullAndNan).cast(DoubleType).alias(c.name+"_min"),
-            max(withoutNullAndNan).cast(DoubleType).alias(c.name+"_max"),
-            approx_count_distinct(col(c.name)).alias(c.name+"_dist"),
+            min(withoutNullAndNan).cast(DoubleType).alias(c.name + "_min"),
+            max(withoutNullAndNan).cast(DoubleType).alias(c.name + "_max"),
+            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
             count(when(col(c.name).isNull || col(c.name).isNaN, lit(1)))
               .alias(c.name + "_count_null"),
-            stddev(withoutNullAndNan).alias(c.name+"_stddev"),
-            mean(withoutNullAndNan).alias(c.name+"_mean"))
+            stddev(withoutNullAndNan).alias(c.name + "_stddev"),
+            mean(withoutNullAndNan).alias(c.name + "_mean"))
         })
         val otherStatsAggs = otherColumns
-          .flatMap (c => Seq(
-            approx_count_distinct(col(c.name)).alias(c.name+"_dist"),
+          .flatMap(c => Seq(
+            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
             count(when(col(c.name).isNull, lit(1))).alias(c.name + "_count_null")))
         val generalCount = Seq(count(lit(1)).alias("_count"))
 
@@ -295,7 +295,7 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
           generalCount: _*)
         stats.show()
 
-        val statsrow = StatisticsEngineRDD.computeStatistics(df,
+        val statsrow = FeatureSelectionStatisticsEngine.computeStatistics(df,
           RDDStatisticsConfig(frequentItems = false))
 
         println(statsrow.min.mkString(" "))

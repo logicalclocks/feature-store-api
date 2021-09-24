@@ -37,12 +37,12 @@ object MutualInformation {
    * Calculate entropy for the given frequencies.
    *
    * @param freqs Frequencies of each different class
-   * @param n Number of elements
+   * @param n     Number of elements
    *
    */
   private def entropy(freqs: Seq[Long], n: Long) = {
     freqs.aggregate(0.0)({ case (h, q) =>
-      h + (if (q == 0) 0  else (q.toDouble / n) * (math.log(q.toDouble / n) / math.log(2)))
+      h + (if (q == 0) 0 else (q.toDouble / n) * (math.log(q.toDouble / n) / math.log(2)))
     }, { case (h1, h2) => h1 + h2 }) * -1
   }
 
@@ -59,12 +59,12 @@ object MutualInformation {
    * Method that calculates mutual information (MI) and conditional mutual information (CMI)
    * simultaneously for several variables. Indexes must be disjoint.
    *
-   * @param rawData RDD of data (first element is the class attribute)
-   * @param varX Indexes of primary variables (must be disjoint with Y and Z)
-   * @param varY Indexes of secondary variable (must be disjoint with X and Z)
-   * @param nInstances    Number of instances
-   * @param nFeatures Number of features (including output ones)
-   * @return  RDD of (primary var, (MI, CMI))
+   * @param rawData    RDD of data (first element is the class attribute)
+   * @param varX       Indexes of primary variables (must be disjoint with Y and Z)
+   * @param varY       Indexes of secondary variable (must be disjoint with X and Z)
+   * @param nInstances Number of instances
+   * @param nFeatures  Number of features (including output ones)
+   * @return RDD of (primary var, (MI, CMI))
    *
    */
   def computeMI(
@@ -73,7 +73,7 @@ object MutualInformation {
                  varY: Int,
                  nInstances: Long,
                  nFeatures: Int,
-                 counter: Map[Int, Int]) = {
+                 counter: Map[Int, Int]): RDD[(Int, Double)] = {
 
     // Pre-requisites
     require(varX.size > 0)
@@ -88,15 +88,15 @@ object MutualInformation {
     val bFeatSelected = sc.broadcast(fselected)
     val getFeat = (k: Long) => (k % nFeatures).toInt
     // Filter data by these variables
-    val data = rawData.filter({ case (k, _) => bFeatSelected.value(getFeat(k))})
+    val data = rawData.filter({ case (k, _) => bFeatSelected.value(getFeat(k)) })
 
     // Broadcast Y vector
-    val yCol: Array[Byte] = if(varY == label){
+    val yCol: Array[Byte] = if (varY == label) {
       // classCol corresponds with output attribute, which is re-used in the iteration
-      classCol = data.filter({ case (k, _) => getFeat(k) == varY}).values.collect()
+      classCol = data.filter({ case (k, _) => getFeat(k) == varY }).values.collect()
       classCol
-    }  else {
-      data.filter({ case (k, _) => getFeat(k) == varY}).values.collect()
+    } else {
+      data.filter({ case (k, _) => getFeat(k) == varY }).values.collect()
     }
 
     val histograms = computeHistograms(data, (varY, yCol), nFeatures, counter)
@@ -104,14 +104,14 @@ object MutualInformation {
     val marginalTable = jointTable.mapValues(h => sum(h(*, ::)).toDenseVector)
 
     // If y corresponds with output feature, we save for CMI computation
-    if(varY == label) {
+    if (varY == label) {
       marginalProb = marginalTable.cache()
       jointProb = jointTable.cache()
     }
 
     val yProb = marginalTable.lookup(varY)(0)
     // Remove output feature from the computations
-    val fdata = histograms.filter{case (k, _) => k != label}
+    val fdata = histograms.filter { case (k, _) => k != label }
     computeMutualInfo(fdata, yProb, nInstances)
   }
 
@@ -128,7 +128,7 @@ object MutualInformation {
 
     data.mapPartitions({ it =>
       var result = Map.empty[Int, BDM[Long]]
-      for((k, x) <- it) {
+      for ((k, x) <- it) {
         val feat = (k % nFeatures).toInt; val inst = (k / nFeatures).toInt
         val xs = bCounter.value.getOrElse(feat, maxSize).toInt
         val m = result.getOrElse(feat, BDM.zeros[Long](xs, ys))
@@ -144,19 +144,20 @@ object MutualInformation {
   private def computeMutualInfo(
                                  data: RDD[(Int, BDM[Long])],
                                  yProb: BDV[Float],
-                                 n: Long) = {
+                                 n: Long): RDD[(Int, Double)] = {
 
     val byProb = data.context.broadcast(yProb)
     data.mapValues({ m =>
       var mi = 0.0d
       // Aggregate by row (x)
       val xProb = sum(m(*, ::)).map(_.toFloat / n)
-      for(i <- 0 until m.rows){
-        for(j <- 0 until m.cols){
+      for (i <- 0 until m.rows) {
+        for (j <- 0 until m.cols) {
           val pxy = m(i, j).toFloat / n
           val py = byProb.value(j); val px = xProb(i)
-          if(pxy != 0 && px != 0 && py != 0) // To avoid NaNs
+          if (pxy != 0 && px != 0 && py != 0) { // To avoid NaNs
             mi += pxy * (math.log(pxy / (px * py)) / math.log(2))
+          }
         }
       }
       mi
@@ -172,7 +173,7 @@ class MrmrCriterion(var relevance: Double) extends Serializable {
   var redundance: Double = 0.0
   var selectedSize: Int = 0
 
-  def score = {
+  def score: Double = {
     if (selectedSize != 0) {
       // based on https://arxiv.org/pdf/1908.05376.pdf, changed from MID to MIQ
       relevance / (redundance / selectedSize)
@@ -197,47 +198,48 @@ class FeatureSelectorMRMR protected extends Serializable {
 
   // Pool of criterions
   private type Pool = RDD[(Int, MrmrCriterion)]
+
   // Case class for criterions by feature
-  protected case class F(feat: Int, crit: Double)
+  protected case class SelectedFeature(feat: Int, crit: Double)
 
   /**
    * Perform a info-theory selection process.
    *
-   * @param data Columnar data (last element is the class attribute).
+   * @param data      Columnar data (last element is the class attribute).
    * @param nToSelect Number of features to select.
    * @param nFeatures Number of total features in the dataset.
    * @return A list with the most relevant features and its scores.
    *
    */
   private def selectFeatures(
-                                       data: RDD[(Long, Byte)],
-                                       nToSelect: Int,
-                                       nFeatures: Int,
-                                       verbose: Boolean) = {
+                              data: RDD[(Long, Byte)],
+                              nToSelect: Int,
+                              nFeatures: Int,
+                              verbose: Boolean): Seq[SelectedFeature] = {
 
     val label = nFeatures - 1
     val nInstances = data.count() / nFeatures
     // extract max values from bytes, while accounting for scala's singed byte type.
-    val counterByKey = data.map({ case (k, v) => (k % nFeatures).toInt -> (v & 0xff)}).distinct().groupByKey()
+    val counterByKey = data.map({ case (k, v) => (k % nFeatures).toInt -> (v & 0xff) }).distinct().groupByKey()
       .mapValues(_.max
-      + 1).collectAsMap().toMap
+        + 1).collectAsMap().toMap
 
     // calculate relevance
     val MiAndCmi = MutualInformation.computeMI(
       data, 0 until label, label, nInstances, nFeatures, counterByKey)
-    var pool = MiAndCmi.map{case (x, mi) => (x, new MrmrCriterion(mi))}
+    var pool = MiAndCmi.map { case (x, mi) => (x, new MrmrCriterion(mi)) }
       .collectAsMap()
     if (verbose) {
       // Print most relevant features
       val strRels = MiAndCmi.collect().sortBy(-_._2)
         .take(nToSelect)
-        .map({case (f, mi) => (f + 1) + "\t" + "%.4f" format mi})
+        .map({ case (f, mi) => (f + 1) + "\t" + "%.4f" format mi })
         .mkString("\n")
       println("\n*** MaxRel features ***\nFeature\tScore\n" + strRels)
     }
     // get maximum and select it
     val firstMax = pool.maxBy(_._2.score)
-    var selected = Seq(F(firstMax._1, firstMax._2.score))
+    var selected = Seq(SelectedFeature(firstMax._1, firstMax._2.score))
     pool = pool - firstMax._1
 
     while (selected.size < nToSelect) {
@@ -258,17 +260,17 @@ class FeatureSelectorMRMR protected extends Serializable {
       // TODO: takes lowest feature index if scores are equal
       val max = pool.maxBy(_._2.score)
       // select the best feature and remove from the whole set of features
-      selected = F(max._1, max._2.score) +: selected
+      selected = SelectedFeature(max._1, max._2.score) +: selected
       pool = pool - max._1
     }
     selected.reverse
   }
 
   private def runColumnar(
-                            columnarData: RDD[(Long, Byte)],
-                            nToSelect: Int,
-                            nAllFeatures: Int,
-                            verbose: Boolean = true): Seq[(Int, Double)] = {
+                           columnarData: RDD[(Long, Byte)],
+                           nToSelect: Int,
+                           nAllFeatures: Int,
+                           verbose: Boolean = true): Seq[(Int, Double)] = {
     columnarData.persist(StorageLevel.MEMORY_AND_DISK_SER)
 
     require(nToSelect < nAllFeatures)
@@ -276,7 +278,7 @@ class FeatureSelectorMRMR protected extends Serializable {
 
     columnarData.unpersist()
 
-    selected.map{case F(feat, rel) => feat -> rel}
+    selected.map { case SelectedFeature(feat, rel) => feat -> rel }
   }
 }
 
@@ -286,35 +288,36 @@ object FeatureSelectorMRMR {
    * Train a mRMR selection model according to a given criterion
    * and return a subset of data.
    *
-   * @param   data RDD of LabeledPoint (discrete data as integers in range [0, 255]).
-   * @param   nToSelect maximum number of features to select
-   * @param   nAllFeatures number of features to select.
-   * @param   indexToFeatures map of df-indexes and corresponding column names.
-   * @param   verbose whether messages should be printed or not.
-   * @return  A mRMR selector that selects a subset of features from the original dataset.
+   * @param data            RDD of LabeledPoint (discrete data as integers in range [0, 255]).
+   * @param nToSelect       maximum number of features to select
+   * @param nAllFeatures    number of features to select.
+   * @param indexToFeatures map of df-indexes and corresponding column names.
+   * @param verbose         whether messages should be printed or not.
+   * @return A mRMR selector that selects a subset of features from the original dataset.
    *
    *
    */
   def selectFeatures(
-             data: RDD[(Long, Byte)],
-             nToSelect: Int = -1,
-             nAllFeatures: Int,
-             indexToFeatures: Map[Int, String],
-             verbose: Boolean = false): Map[String, Double] = {
+                      data: RDD[(Long, Byte)],
+                      nToSelect: Int = -1,
+                      nAllFeatures: Int,
+                      indexToFeatures: Map[Int, String],
+                      verbose: Boolean = false): Map[String, Double] = {
     // if nToSelect -1 or larger than nAllFeatures, clamp to nAllFeatures-1
-    val nSelect = if(nToSelect < 0 || nToSelect > nAllFeatures-1) nAllFeatures-1 else nToSelect
+    val nSelect = if (nToSelect < 0 || nToSelect > nAllFeatures - 1) nAllFeatures - 1 else nToSelect
 
     val selected = new FeatureSelectorMRMR().runColumnar(data, nSelect, nAllFeatures, verbose)
 
     if (verbose) {
       // Print best features according to the mRMR measure
       val out = selected.map { case (feat, rel) => (indexToFeatures(feat)) + "\t" + "%.4f"
-        .format(rel) }.mkString("\n")
+        .format(rel)
+      }.mkString("\n")
       println("\n*** mRMR features ***\nFeature\tScore\n" + out)
     }
 
     // Return best features and mRMR measure
-    ListMap(selected.map( kv => indexToFeatures(kv._1) -> kv._2 ): _*)
+    ListMap(selected.map(kv => indexToFeatures(kv._1) -> kv._2): _*)
   }
 
 }

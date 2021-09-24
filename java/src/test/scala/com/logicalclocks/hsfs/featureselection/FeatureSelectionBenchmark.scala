@@ -40,21 +40,21 @@ class FeatureSelectionBenchmark extends WordSpec with Matchers with SparkContext
 
         val tStatsRdd = System.nanoTime
 
-        val statsrow = StatisticsEngineRDD.computeStatistics(df,
+        val statsrow = FeatureSelectionStatisticsEngine.computeStatistics(df,
           RDDStatisticsConfig(frequentItems = false, approxQuantiles = true))
 
         println(statsrow.min.mkString(" "))
         println(statsrow.max.mkString(" "))
         println(statsrow.approxDistinct.get.mkString(" "))
-        println(statsrow.histograms.get.map({ kv => kv.mkString(" ")}).mkString(" "))
-        println(statsrow.percentiles.get.map({ kv => kv.mkString(" ")}).mkString(" "))
+        println(statsrow.histograms.get.map({ kv => kv.mkString(" ") }).mkString(" "))
+        println(statsrow.percentiles.get.map({ kv => kv.mkString(" ") }).mkString(" "))
 
         val durationStatsRdd = (System.nanoTime - tStatsRdd) / 1e9d
         println(f"summary stats rdd x $durationStatsRdd")
 
         val tStats = System.nanoTime
 
-        val numericColumns = df.schema.filter( kv => {
+        val numericColumns = df.schema.filter(kv => {
           kv.dataType match {
             case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
                  DoubleType | TimestampType | DateType | DecimalType() => true
@@ -63,7 +63,7 @@ class FeatureSelectionBenchmark extends WordSpec with Matchers with SparkContext
           }
         })
 
-        val otherColumns = df.schema.filterNot( kv => {
+        val otherColumns = df.schema.filterNot(kv => {
           kv.dataType match {
             case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
                  DoubleType | TimestampType | DateType | DecimalType() => true
@@ -75,17 +75,17 @@ class FeatureSelectionBenchmark extends WordSpec with Matchers with SparkContext
         val numStatsAggs = numericColumns.flatMap(c => {
           val withoutNullAndNan = when(!col(c.name).isNull && !col(c.name).isNaN, col(c.name))
           Seq(
-            min(withoutNullAndNan).cast(DoubleType).alias(c.name+"_min"),
-            max(withoutNullAndNan).cast(DoubleType).alias(c.name+"_max"),
-            approx_count_distinct(col(c.name)).alias(c.name+"_dist"),
+            min(withoutNullAndNan).cast(DoubleType).alias(c.name + "_min"),
+            max(withoutNullAndNan).cast(DoubleType).alias(c.name + "_max"),
+            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
             count(when(col(c.name).isNull || col(c.name).isNaN, lit(1)))
               .alias(c.name + "_count_null"),
-            stddev(withoutNullAndNan).alias(c.name+"_stddev"),
-            mean(withoutNullAndNan).alias(c.name+"_mean"))
+            stddev(withoutNullAndNan).alias(c.name + "_stddev"),
+            mean(withoutNullAndNan).alias(c.name + "_mean"))
         })
         val otherStatsAggs = otherColumns
-          .flatMap (c => Seq(
-            approx_count_distinct(col(c.name)).alias(c.name+"_dist"),
+          .flatMap(c => Seq(
+            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
             count(when(col(c.name).isNull, lit(1))).alias(c.name + "_count_null")))
         val generalCount = Seq(count(lit(1)).alias("_count"))
 

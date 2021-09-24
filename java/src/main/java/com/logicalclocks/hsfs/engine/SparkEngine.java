@@ -32,10 +32,10 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.featureselection.FeatureSelectionConfig;
-import com.logicalclocks.hsfs.featureselection.FeatureSelectionRunner;
-import com.logicalclocks.hsfs.featureselection.RDDStatistics;
+import com.logicalclocks.hsfs.featureselection.FeatureSelectionEngine;
+import com.logicalclocks.hsfs.featureselection.FeatureSelectionStatistics;
 import com.logicalclocks.hsfs.featureselection.RDDStatisticsConfig;
-import com.logicalclocks.hsfs.featureselection.StatisticsEngineRDD;
+import com.logicalclocks.hsfs.featureselection.FeatureSelectionStatisticsEngine;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -411,7 +411,7 @@ public class SparkEngine {
   }
   
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
-      Boolean histogram, Boolean exactUniqueness, Boolean rddStatistics) {
+      Boolean histogram, Boolean exactUniqueness, Boolean alternativeEngine) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -422,7 +422,7 @@ public class SparkEngine {
     if (exactUniqueness == null) {
       exactUniqueness = true;
     }
-    if (!rddStatistics) {
+    if (!alternativeEngine) {
       // run deequ-based statistics
       ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
           .onData(df)
@@ -436,13 +436,14 @@ public class SparkEngine {
       ColumnProfiles result = runner.run();
       return ColumnProfiles.toJson(result.profiles().values().toSeq());
     } else {
-      // run rdd-based statistics
+      // run feature selection statistics engine instead
       Dataset<Row> dfToCheck = df;
       if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
         dfToCheck =
           df.selectExpr(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
       }
-      RDDStatistics statistics = StatisticsEngineRDD.computeStatistics(dfToCheck, new RDDStatisticsConfig(true,
+      FeatureSelectionStatistics statistics =
+          FeatureSelectionStatisticsEngine.computeStatistics(dfToCheck, new RDDStatisticsConfig(true,
           false,
           253,
           1024,
@@ -451,7 +452,7 @@ public class SparkEngine {
           2048,
           0.64,
           20));
-      Seq<ColumnProfile> profiles = StatisticsEngineRDD.toDeequProfiles(statistics);
+      Seq<ColumnProfile> profiles = FeatureSelectionStatisticsEngine.toDeequProfiles(statistics);
       return ColumnProfiles.toJson(profiles);
     }
     
@@ -523,7 +524,7 @@ public class SparkEngine {
   }
   
   public Map<String, Double> featureSelection(Dataset<Row> df, FeatureSelectionConfig config) {
-    return FeatureSelectionRunner.runFeatureSelectionJava(df, config);
+    return FeatureSelectionEngine.runFeatureSelectionJava(df, config);
   }
 
   public void setupConnectorHadoopConf(StorageConnector storageConnector) {
