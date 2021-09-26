@@ -77,10 +77,6 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> primaryKeys;
-
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
   @JsonIgnore
@@ -226,7 +222,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
         writeOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
@@ -432,14 +428,6 @@ public class FeatureGroup extends FeatureGroupBase {
     } catch (SchemaParseException e) {
       throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
     }
-  }
-
-  @JsonIgnore
-  public List<String> getPrimaryKeys() {
-    if (primaryKeys == null) {
-      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
-    }
-    return primaryKeys;
   }
 
   /**
