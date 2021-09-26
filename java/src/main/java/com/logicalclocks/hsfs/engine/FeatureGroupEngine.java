@@ -60,14 +60,13 @@ public class FeatureGroupEngine {
    *
    * @param featureGroup
    * @param dataset
-   * @param primaryKeys
    * @param partitionKeys
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> primaryKeys,
-                   List<String> partitionKeys, String hudiPrecombineKey, Map<String, String> writeOptions)
+  public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
+                           String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
@@ -78,8 +77,8 @@ public class FeatureGroupEngine {
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     /* set primary features */
-    if (primaryKeys != null) {
-      primaryKeys.forEach(pk ->
+    if (featureGroup.getPrimaryKeys() != null) {
+      featureGroup.getPrimaryKeys().forEach(pk ->
           featureGroup.getFeatures().forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPrimary(true);
