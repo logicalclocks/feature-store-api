@@ -26,11 +26,14 @@ class HudiEngine:
     HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field"
     HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field"
     HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field"
+
     HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable"
     HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table"
     HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database"
     HUDI_HIVE_SYNC_JDBC_URL = "hoodie.datasource.hive_sync.jdbcurl"
     HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields"
+    HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP = "hoodie.datasource.hive_sync.support_timestamp"
+
     HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class"
     HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator"
     HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY = (
@@ -155,6 +158,7 @@ class HudiEngine:
             self.HUDI_HIVE_SYNC_PARTITION_FIELDS: self._partition_key,
             self.HUDI_TABLE_OPERATION: operation,
             self.HUDI_WRITE_INSERT_DROP_DUPLICATES: "true",
+            self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
 
         if write_options:

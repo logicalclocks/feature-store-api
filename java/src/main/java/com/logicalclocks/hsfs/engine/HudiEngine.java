@@ -65,6 +65,9 @@ public class HudiEngine {
       "hoodie.datasource.hive_sync.jdbcurl";
   private static final String HUDI_HIVE_SYNC_PARTITION_FIELDS =
       "hoodie.datasource.hive_sync.partition_fields";
+  private static final String HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP =
+      "hoodie.datasource.hive_sync.support_timestamp";
+
   private static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
       "hoodie.datasource.hive_sync.partition_extractor_class";
   private static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
@@ -193,6 +196,7 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
+    hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
 
