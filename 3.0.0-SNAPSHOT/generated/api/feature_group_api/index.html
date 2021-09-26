@@ -2669,7 +2669,7 @@
                 
                 
                 <h1 id="featuregroup">FeatureGroup<a class="headerlink" href="#featuregroup" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L437">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L446">[source]</a></span></p>
 <h3 id="featuregroup_1">FeatureGroup<a class="headerlink" href="#featuregroup_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">feature_group</span><span class="o">.</span><span class="n">FeatureGroup</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2739,8 +2739,7 @@ DataFrame.</p>
 <li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
     feature group. This primary key can be a composite key of multiple
     features and will be used as joining key, if not specified otherwise.
-    Defaults to empty list <code>[]</code>, and the first column of the DataFrame will
-    be used as primary key.</li>
+    Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
 <li><strong>hudi_precombine_key</strong> <code>Optional[str]</code>: A feature name to be used as a precombine key for the <code>"HUDI"</code>
     feature group. Defaults to <code>None</code>. If feature group has time travel format
     <code>"HUDI"</code> and hudi precombine key was not specified then the first primary key of
@@ -2789,61 +2788,61 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 </ul>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1189">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1185">[source]</a></span></p>
 <h3 id="avro_schema">avro_schema<a class="headerlink" href="#avro_schema" title="Permanent link">#</a></h3>
 <p>Avro schema representation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1184">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1180">[source]</a></span></p>
 <h3 id="created">created<a class="headerlink" href="#created" title="Permanent link">#</a></h3>
 <p>Timestamp when the feature group was created.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1179">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1175">[source]</a></span></p>
 <h3 id="creator">creator<a class="headerlink" href="#creator" title="Permanent link">#</a></h3>
 <p>Username of the creator.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1131">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1132">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <p>Description of the feature group contents.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1202">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1198">[source]</a></span></p>
 <h3 id="expectations_names">expectations_names<a class="headerlink" href="#expectations_names" title="Permanent link">#</a></h3>
 <p>The names of expectations attached to this feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1170">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1166">[source]</a></span></p>
 <h3 id="feature_store_id">feature_store_id<a class="headerlink" href="#feature_store_id" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1174">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1170">[source]</a></span></p>
 <h3 id="feature_store_name">feature_store_name<a class="headerlink" href="#feature_store_name" title="Permanent link">#</a></h3>
 <p>Name of the feature store in which the feature group is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1136">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1137">[source]</a></span></p>
 <h3 id="features">features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
 <p>Schema information.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1165">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1161">[source]</a></span></p>
 <h3 id="hudi_precombine_key">hudi_precombine_key<a class="headerlink" href="#hudi_precombine_key" title="Permanent link">#</a></h3>
 <p>Feature name that is the hudi precombine key.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1116">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1117">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Feature group id.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1141">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1142">[source]</a></span></p>
 <h3 id="location">location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1121">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1122">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1150">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1146">[source]</a></span></p>
 <h3 id="online_enabled">online_enabled<a class="headerlink" href="#online_enabled" title="Permanent link">#</a></h3>
 <p>Setting if the feature group is available in online storage.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1160">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1156">[source]</a></span></p>
 <h3 id="partition_key">partition_key<a class="headerlink" href="#partition_key" title="Permanent link">#</a></h3>
 <p>List of features building the partition key.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1145">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L393">[source]</a></span></p>
 <h3 id="primary_key">primary_key<a class="headerlink" href="#primary_key" title="Permanent link">#</a></h3>
 <p>List of features building the primary key.</p>
 <hr />
@@ -2856,15 +2855,15 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <p>Statistics configuration object defining the settings for statistics
 computation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1155">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1151">[source]</a></span></p>
 <h3 id="time_travel_format">time_travel_format<a class="headerlink" href="#time_travel_format" title="Permanent link">#</a></h3>
 <p>Setting of the feature group time travel format.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1197">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1193">[source]</a></span></p>
 <h3 id="validation_type">validation_type<a class="headerlink" href="#validation_type" title="Permanent link">#</a></h3>
 <p>Validation type, one of "STRICT", "WARNING", "ALL", "NONE".</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1126">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1127">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <p>Version number of the feature group.</p>
 <hr />
@@ -2884,7 +2883,7 @@ The value of a tag can be any valid json - primitives, arrays or json objects.</
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to add the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L948">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L949">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
@@ -2912,7 +2911,7 @@ and set to the stricter setting.</p>
 <p><strong>Returns</strong></p>
 <p><code>Expectation</code>. The expectation metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L912">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L913">[source]</a></span></p>
 <h3 id="commit_delete_record">commit_delete_record<a class="headerlink" href="#commit_delete_record" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">commit_delete_record</span><span class="p">(</span><span class="n">delete_df</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -2926,7 +2925,7 @@ Feature group. This method can only be used on time travel enabled feature group
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L892">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L893">[source]</a></span></p>
 <h3 id="commit_details">commit_details<a class="headerlink" href="#commit_details" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">commit_details</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2944,7 +2943,7 @@ is <code>Dict[str, str]</code> with key value pairs of date committed on, number
 <p><code>RestAPIError</code>.
 <code>FeatureStoreException</code>. If the feature group does not have <code>HUDI</code> time travel format</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L999">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1000">[source]</a></span></p>
 <h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -3027,12 +3026,12 @@ respective feature group:
 <p><strong>Returns</strong></p>
 <p><code>Query</code>. The query object with the applied filter.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1049">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1050">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1090">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1091">[source]</a></span></p>
 <h3 id="get_complex_features">get_complex_features<a class="headerlink" href="#get_complex_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_complex_features</span><span class="p">()</span>
 </code></pre></div>
@@ -3085,7 +3084,7 @@ the <code>get_feature</code> method.</p>
 <p>Returns:
     [type]: [description]</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L393">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L402">[source]</a></span></p>
 <h3 id="get_statistics">get_statistics<a class="headerlink" href="#get_statistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -3137,7 +3136,7 @@ the <code>get_feature</code> method.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L731">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L732">[source]</a></span></p>
 <h3 id="insert">insert<a class="headerlink" href="#insert" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
     <span class="n">features</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;upsert&quot;</span><span class="p">,</span> <span class="n">storage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{}</span>
@@ -3191,7 +3190,7 @@ either <code>insert</code> or <code>upsert</code>.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. Updated feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L812">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L813">[source]</a></span></p>
 <h3 id="insert_stream">insert_stream<a class="headerlink" href="#insert_stream" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">insert_stream</span><span class="p">(</span>
     <span class="n">features</span><span class="p">,</span>
@@ -3239,12 +3238,12 @@ status with <code>.isActive</code>.</p>
 <p><strong>Returns</strong></p>
 <p><code>StreamingQuery</code>: Spark Structured Streaming Query object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1065">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1066">[source]</a></span></p>
 <h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L531">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L540">[source]</a></span></p>
 <h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -3288,7 +3287,7 @@ Python environments.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>. No data is available for feature group with this commit date, If time travel enabled.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L603">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L604">[source]</a></span></p>
 <h3 id="read_changes">read_changes<a class="headerlink" href="#read_changes" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">read_changes</span><span class="p">(</span><span class="n">start_wallclock_time</span><span class="p">,</span> <span class="n">end_wallclock_time</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -3316,7 +3315,7 @@ feature data.</p>
 <p><code>RestAPIError</code>.  No data is available for feature group with this commit date.
 <code>FeatureStoreException</code>. If the feature group does not have <code>HUDI</code> time travel format</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L665">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L666">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -3393,7 +3392,7 @@ dataset with a subset of features of the feature group.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>: A query object with the selected features of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L649">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L650">[source]</a></span></p>
 <h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
@@ -3405,12 +3404,12 @@ dataset with a subset of features of the feature group.</p>
     to <code>False</code>.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1068">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1069">[source]</a></span></p>
 <h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L936">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L937">[source]</a></span></p>
 <h3 id="update_description">update_description<a class="headerlink" href="#update_description" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">update_description</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 </code></pre></div>
@@ -3422,7 +3421,7 @@ dataset with a subset of features of the feature group.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1059">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1060">[source]</a></span></p>
 <h3 id="update_from_response_json">update_from_response_json<a class="headerlink" href="#update_from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
@@ -3439,7 +3438,7 @@ this method.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L983">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L984">[source]</a></span></p>
 <h3 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
