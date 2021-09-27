@@ -135,9 +135,7 @@ class Client(base.Client):
         for key, value in configuration_dict.items():
             if not (
                 key in _spark_session.conf.keys()
-                and (
-                    value is None
-                    or _spark_session.conf.get(key, None) == value)
+                and (value is None or _spark_session.conf.get(key, None) == value)
             ):
                 raise FeatureStoreException(exception_text + key)
 
