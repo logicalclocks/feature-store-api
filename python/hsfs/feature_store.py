@@ -92,8 +92,8 @@ class FeatureStore:
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
 
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(self._id)
+        self._transformation_function_engine = transformation_function_engine.TransformationFunctionEngine(
+            self._id
         )
 
     @classmethod
@@ -132,6 +132,27 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
+    def get_feature_groups(self, name: str):
+        """Get a list of all versions of a feature group entity from the feature store.
+
+        Getting a feature group from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame or use
+        the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the feature group to get.
+
+        # Returns
+            `FeatureGroup`: List of feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.CACHED
+        )
+
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
@@ -164,6 +185,26 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
 
+    def get_on_demand_feature_groups(self, name: str):
+        """Get a list of all versions of an on-demand feature group entity from the feature store.
+
+        Getting a on-demand feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the on-demand feature group to get.
+
+        # Returns
+            `OnDemandFeatureGroup`: List of on-demand feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+        )
+
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
 
@@ -191,6 +232,23 @@ class FeatureStore:
             )
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
+
+    def get_training_datasets(self, name: str):
+        """Get a list of all versions of a training dataset entity from the feature store.
+
+        Getting a training dataset from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame.
+
+        # Arguments
+            name: Name of the training dataset to get.
+
+        # Returns
+            `TrainingDataset`: List of training dataset metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+        return self._training_dataset_api.get(name, None)
 
     def get_storage_connector(self, name: str):
         """Get a previously created storage connector from the feature store.
@@ -332,8 +390,7 @@ class FeatureStore:
             primary_key: A list of feature names to be used as primary key for the
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the first column of the DataFrame will
-                be used as primary key.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -386,6 +443,7 @@ class FeatureStore:
         options: Optional[Dict[str, str]] = {},
         version: Optional[int] = None,
         description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         validation_type: Optional[str] = "NONE",
@@ -415,6 +473,10 @@ class FeatureStore:
             description: A string describing the contents of the on-demand feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             features: Optionally, define the schema of the on-demand feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
@@ -446,6 +508,7 @@ class FeatureStore:
             storage_connector=storage_connector,
             version=version,
             description=description,
+            primary_key=primary_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
@@ -583,8 +646,7 @@ class FeatureStore:
         )
 
     def delete_expectation(
-        self,
-        name: str,
+        self, name: str,
     ):
         """Delete an expectation from the feature store.
 
@@ -653,9 +715,7 @@ class FeatureStore:
         )
 
     def get_transformation_function(
-        self,
-        name: str,
-        version: Optional[int] = None,
+        self, name: str, version: Optional[int] = None,
     ):
         """Get  transformation function metadata object.
 

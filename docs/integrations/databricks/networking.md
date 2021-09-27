@@ -51,9 +51,9 @@ Follow the guide [VPC Peering](https://docs.databricks.com/administration-guide/
 The Feature Store *Security Group* needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store, Online Feature Store, and Kafka services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
 
-Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *3306*, *9083*, *9085*, *8020* and *30010* are reachable from the Databricks Security Group:
+Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *3306*, *9083*, *9085*, *8020*, *50010*, and *9092* are reachable from the Databricks Security Group:
 
 <p align="center">
   <figure>
@@ -210,12 +210,12 @@ Wait for the peering to show up as *Connected*. There should now be bi-direction
 
 ### Step 2: Configure the Network Security Group
 
-The *Network Security Group* of the Feature Store on Azure needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.
+The virtual network peering will allow full access between the Hopsworks virtual network and the Databricks virtual network by default. However, if you have a different setup, ensure that the *Network Security Group* of the Feature Store is configured to allow traffic from your Databricks clusters.
 
-Ensure that ports *443*, *9083*, *9085*, *8020* and *50010* are reachable from the Databricks cluster *Network Security Group*.
+Ensure that ports *443*, *9083*, *9085*, *8020*, *50010*, and *9092* are reachable from the Databricks cluster *Network Security Group*.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store and Online Feature Store services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable [outside access of the Feature Store, Online Feature Store, and Kafka services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
 
 ## Next Steps
 
