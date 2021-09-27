@@ -133,11 +133,8 @@ class Client(base.Client):
         }
 
         for key, value in configuration_dict.items():
-            if not key in _spark_session.conf.keys():
+            if not key in _spark_session.conf.keys() or not _spark_session.conf.get(key, None) == value:
                 raise FeatureStoreException(exception_text + key)
-            else:
-                if not _spark_session.conf.get(key, None) == value:
-                    raise FeatureStoreException(exception_text + key)
 
     def _close(self):
         """Closes a client and deletes certificates."""
