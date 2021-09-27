@@ -114,7 +114,11 @@ public class SparkEngine {
 
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
       if (!(sparkSession.conf().contains(entry.getKey())
-              && sparkSession.conf().get(entry.getKey(), null).equalsIgnoreCase(entry.getValue()))) {
+        && (
+          entry.getValue() == null
+          || sparkSession.conf().get(entry.getKey(), "").equalsIgnoreCase(entry.getValue())
+        )
+      )) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
