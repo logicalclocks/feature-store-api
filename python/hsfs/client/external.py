@@ -133,7 +133,10 @@ class Client(base.Client):
         }
 
         for key, value in configuration_dict.items():
-            if not (key in _spark_session.conf.keys() and _spark_session.conf.get(key, None) == value):
+            if not (
+                key in _spark_session.conf.keys()
+                and _spark_session.conf.get(key, None) == value
+            ):
                 raise FeatureStoreException(exception_text + key)
 
     def _close(self):
