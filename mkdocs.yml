@@ -67,7 +67,7 @@ nav:
       - Transformation functions: generated/api/transformation_functions_api.md
       - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
-  - Hopsworks.ai: https://robzor92.github.io/hopsworks-cloud/latest/
+  - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
