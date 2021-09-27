@@ -113,8 +113,8 @@ public class SparkEngine {
     configurationMap.put("spark.hadoop.hive.metastore.uris", null);
 
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
-      if (!(sparkSession.conf().contains(entry.getKey()) &&
-              sparkSession.conf().get(entry.getKey(), null).equalsIgnoreCase(entry.getValue()))) {
+      if (!(sparkSession.conf().contains(entry.getKey())
+              && sparkSession.conf().get(entry.getKey(), null).equalsIgnoreCase(entry.getValue()))) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
