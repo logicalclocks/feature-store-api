@@ -40,8 +40,8 @@ from hsfs.client.exceptions import FeatureStoreException
 class FeatureGroupBase:
     def __init__(self, featurestore_id, validation_type):
         self._validation_type = validation_type.upper()
-        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
-            featurestore_id
+        self._feature_group_base_engine = (
+            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -596,10 +596,18 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(online, dataframe_type, read_options,)
+                .read(
+                    online,
+                    dataframe_type,
+                    read_options,
+                )
             )
         else:
-            return self.select_all().read(online, dataframe_type, read_options,)
+            return self.select_all().read(
+                online,
+                dataframe_type,
+                read_options,
+            )
 
     def read_changes(
         self,
@@ -1280,8 +1288,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
 
-        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
-            featurestore_id
+        self._feature_group_engine = (
+            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:

@@ -92,8 +92,8 @@ class FeatureStore:
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
 
-        self._transformation_function_engine = transformation_function_engine.TransformationFunctionEngine(
-            self._id
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(self._id)
         )
 
     @classmethod
@@ -646,7 +646,8 @@ class FeatureStore:
         )
 
     def delete_expectation(
-        self, name: str,
+        self,
+        name: str,
     ):
         """Delete an expectation from the feature store.
 
@@ -715,7 +716,9 @@ class FeatureStore:
         )
 
     def get_transformation_function(
-        self, name: str, version: Optional[int] = None,
+        self,
+        name: str,
+        version: Optional[int] = None,
     ):
         """Get  transformation function metadata object.
 
