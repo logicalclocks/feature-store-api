@@ -30,7 +30,7 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
 
   "Feature Selection" should {
 
-    "FeatureSelectionHelper on generated data" in
+    "FeatureSelectionHelper on synthetic data" in
       withSparkSession { sparkSession =>
 
         val tc = System.nanoTime
@@ -49,9 +49,14 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
         println(f"read data x $durationc")
 
         val selectedFeatures = FeatureSelectionEngine.runFeatureSelection(df,
-          config = FeatureSelectionConfig(nSelectFeatures = 1,
+          config = FeatureSelectionConfig(nSelectFeatures = 3,
             numPartitions = df.rdd.getNumPartitions,
             verbose = true))
+
+        val groundTruth = Array("att10", "att8", "att7")
+        val actual = selectedFeatures.map(kv => kv._1).toArray
+
+        groundTruth should contain theSameElementsInOrderAs actual
       }
 
     "FeatureSelectionHelper on titanic" in
@@ -76,6 +81,11 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
             target = "Survived",
             numPartitions = df.rdd.getNumPartitions,
             verbose = true))
+
+        val groundTruth = Array("Sex", "Fare", "Age", "Pclass", "SibSp", "Embarked", "Parch")
+        val actual = selectedFeatures.map(kv => kv._1).toArray
+
+        groundTruth should contain theSameElementsInOrderAs actual
       }
 
     "FeatureSelectionHelper on different data types should not crash" in
@@ -95,62 +105,6 @@ class TestFeatureSelection extends WordSpec with Matchers with SparkContextSpec
             target = "bool",
             verbose = true,
             nBuckets = 200))
-      }
-
-    "DataFrame-based stats equal ExtendedMultivariateOnlineSummarize stats" in
-      withSparkSession { sparkSession =>
-
-        val nVal = 10
-        val df = sparkSession.read.format("parquet").load(f"test-data/features_int_10k_$nVal" +
-          f".parquet")
-        df.persist(StorageLevel.MEMORY_AND_DISK_SER)
-        df.count()
-
-        val numericColumns = df.schema.filter(kv => {
-          kv.dataType match {
-            case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
-                 DoubleType | TimestampType | DateType | DecimalType() => true
-            case _ =>
-              false
-          }
-        })
-
-        val otherColumns = df.schema.filterNot(kv => {
-          kv.dataType match {
-            case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType |
-                 DoubleType | TimestampType | DateType | DecimalType() => true
-            case _ =>
-              false
-          }
-        })
-
-        val numStatsAggs = numericColumns.flatMap(c => {
-          val withoutNullAndNan = when(!col(c.name).isNull && !col(c.name).isNaN, col(c.name))
-          Seq(
-            min(withoutNullAndNan).cast(DoubleType).alias(c.name + "_min"),
-            max(withoutNullAndNan).cast(DoubleType).alias(c.name + "_max"),
-            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
-            count(when(col(c.name).isNull || col(c.name).isNaN, lit(1)))
-              .alias(c.name + "_count_null"),
-            stddev(withoutNullAndNan).alias(c.name + "_stddev"),
-            mean(withoutNullAndNan).alias(c.name + "_mean"))
-        })
-        val otherStatsAggs = otherColumns
-          .flatMap(c => Seq(
-            approx_count_distinct(col(c.name)).alias(c.name + "_dist"),
-            count(when(col(c.name).isNull, lit(1))).alias(c.name + "_count_null")))
-        val generalCount = Seq(count(lit(1)).alias("_count"))
-
-        val stats = df.select(numStatsAggs ++ otherStatsAggs ++
-          generalCount: _*)
-        stats.show()
-
-        val statsrow = FeatureSelectionStatisticsEngine.computeStatistics(df,
-          RDDStatisticsConfig(frequentItems = false))
-
-        println(statsrow.min.mkString(" "))
-        println(statsrow.max.mkString(" "))
-        println(statsrow.approxDistinct.get.mkString(" "))
       }
   }
 }

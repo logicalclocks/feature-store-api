@@ -24,7 +24,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.storage.StorageLevel
 import org.scalatest.{Matchers, WordSpec}
 
-class FeatureSelectionBenchmark extends WordSpec with Matchers with SparkContextSpec
+class TestFeatureSelectionStats extends WordSpec with Matchers with SparkContextSpec
   with FixtureSupport {
 
   "Feature Selection Benchmark" should {

@@ -52,7 +52,7 @@ object MutualInformation {
    * @param freqs Frequencies of each different class
    */
   private def entropy(freqs: Seq[Long]): Double = {
-    entropy(freqs, freqs.reduce(_ + _))
+    entropy(freqs, freqs.sum)
   }
 
   /**
@@ -76,7 +76,7 @@ object MutualInformation {
                  counter: Map[Int, Int]): RDD[(Int, Double)] = {
 
     // Pre-requisites
-    require(varX.size > 0)
+    require(varX.nonEmpty)
 
     // Broadcast variables
     val sc = rawData.context
@@ -84,7 +84,7 @@ object MutualInformation {
     // A boolean vector that indicates the variables involved on this computation
     val fselected = Array.ofDim[Boolean](nFeatures)
     fselected(varY) = true // output feature
-    varX.map(fselected(_) = true)
+    varX.foreach(fselected(_) = true)
     val bFeatSelected = sc.broadcast(fselected)
     val getFeat = (k: Long) => (k % nFeatures).toInt
     // Filter data by these variables
@@ -109,7 +109,7 @@ object MutualInformation {
       jointProb = jointTable.cache()
     }
 
-    val yProb = marginalTable.lookup(varY)(0)
+    val yProb = marginalTable.lookup(varY).head
     // Remove output feature from the computations
     val fdata = histograms.filter { case (k, _) => k != label }
     computeMutualInfo(fdata, yProb, nInstances)
