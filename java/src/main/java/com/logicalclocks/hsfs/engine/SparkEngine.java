@@ -115,7 +115,7 @@ public class SparkEngine {
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
       if (!(sparkSession.conf().contains(entry.getKey())
               && (entry.getValue() == null
-              || sparkSession.conf().get(entry.getKey()) == entry.getValue()))) {
+              || sparkSession.conf().get(entry.getKey(), null) == entry.getValue()))) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
