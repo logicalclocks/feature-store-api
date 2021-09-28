@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine.hudi;
 
 
 import org.apache.hudi.common.model.WriteOperationType;
-import org.apache.hudi.utilities.deltastreamer.DeltaSync;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
