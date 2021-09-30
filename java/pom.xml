@@ -106,6 +106,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.scalanlp</groupId>
             <artifactId>breeze_${scala-short.version}</artifactId>
             <version>0.13.2</version>
@@ -256,9 +262,11 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.4.0</version>
                 <configuration>
+                    <scalaCompatVersion>${scala-short.version}</scalaCompatVersion>
                     <scalaVersion>${scala.version}</scalaVersion>
                 </configuration>
                 <executions>
