@@ -315,14 +315,41 @@ class Engine:
 
         dataset = self.convert_to_default_dataframe(dataset)
 
-        # apply transformation functions
+        # generate transformation function expressions
+        transformed_feature_names = []
+        transformation_fn_expressions = []
         for (
             feature_name,
             transformation_fn,
         ) in training_dataset.transformation_functions.items():
-            dataset = dataset.withColumn(
-                feature_name, transformation_fn.transformation_fn(col(feature_name))
+            fn_registration_name = (
+                transformation_fn.name + "_" + str(transformation_fn.version)
             )
+            self._spark_session.udf.register(
+                fn_registration_name, transformation_fn.transformation_fn
+            )
+            transformation_fn_expressions.append(
+                "{fn_name:}({name:}) AS {name:}".format(
+                    fn_name=fn_registration_name, name=feature_name
+                )
+            )
+            transformed_feature_names.append(feature_name)
+
+        # generate non transformation expressions
+        no_transformation_expr = [
+            "{name:} AS {name:}".format(name=col_name)
+            for col_name in dataset.columns
+            if col_name not in transformed_feature_names
+        ]
+
+        # generate entire expression and execute it
+        transformation_fn_expressions.extend(no_transformation_expr)
+        dataset = dataset.selectExpr(*transformation_fn_expressions)
+
+        # sort feature order if it was altered by transformation functions
+        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
+        sorted_feature_names = [ft.name for ft in sorded_features]
+        dataset = dataset.select(*sorted_feature_names)
 
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
@@ -417,11 +444,22 @@ class Engine:
             .load(path)
         )
 
-    def profile(self, dataframe, relevant_columns, correlations, histograms, exact_uniqueness=True):
+    def profile(
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
+    ):
         """Profile a dataframe with Deequ."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf, relevant_columns, correlations, histograms, exact_uniqueness
+                dataframe._jdf,
+                relevant_columns,
+                correlations,
+                histograms,
+                exact_uniqueness,
             )
         )
 

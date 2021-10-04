@@ -30,4 +30,10 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
                 on_demand_dataset
             )
 
+        # set primary and partition key columns
+        # we should move this to the backend
+        for feat in feature_group.features:
+            if feat.name in feature_group.primary_key:
+                feat.primary = True
+
         self._feature_group_api.save(feature_group)

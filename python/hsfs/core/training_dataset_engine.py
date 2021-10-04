@@ -178,9 +178,8 @@ class TrainingDatasetEngine:
 
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
-            result_proxy = training_dataset.prepared_statement_connection.execute(
-                prepared_statement, entry
-            ).fetchall()
+            with training_dataset.prepared_statement_engine.connect() as mysql_conn:
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
             result_dict = {}
             for row in result_proxy:
                 result_dict = self.deserialize_complex_features(
@@ -201,7 +200,7 @@ class TrainingDatasetEngine:
 
     def init_prepared_statement(self, training_dataset, external):
         online_conn = self._storage_connector_api.get_online_connector()
-        jdbc_connection = util.create_mysql_connection(online_conn, external)
+        mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )
@@ -241,27 +240,15 @@ class TrainingDatasetEngine:
             ] = query_online
 
         # attach transformation functions
-        training_dataset.transformation_functions = self._get_transformation_fns(
-            training_dataset
+        training_dataset.transformation_functions = (
+            self._transformation_function_engine.get_td_transformation_fn(
+                training_dataset
+            )
         )
 
-        training_dataset.prepared_statement_connection = jdbc_connection
+        training_dataset.prepared_statement_engine = mysql_engine
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
-
-    @staticmethod
-    def _get_transformation_fns(training_dataset):
-        transformation_fns = training_dataset.transformation_functions
-        # users may initiate get serving vector within Pyspark application. In this case transformation function will
-        # be decorated with spark udf. However, here we want to apply this function to python type and not
-        # spark dataframe. Reload source code without decorator.
-        if engine.get_type() == "spark":
-            for feature_name in transformation_fns:
-                transformation_fn = transformation_fns[feature_name]
-                transformation_fn._load_source_code(
-                    transformation_fn._source_code_content, False
-                )
-        return transformation_fns
 
     @staticmethod
     def _apply_transformation(transformation_fns, row_dict):

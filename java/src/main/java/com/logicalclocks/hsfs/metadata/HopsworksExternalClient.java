@@ -138,6 +138,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
+    SparkEngine.getInstance().validateSparkConfiguration();
     this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
     this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
     this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());

@@ -159,8 +159,10 @@ class HudiEngine:
             self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
             self.HUDI_HIVE_SYNC_PARTITION_FIELDS: self._partition_key,
             self.HUDI_TABLE_OPERATION: operation,
-            self.HUDI_WRITE_INSERT_DROP_DUPLICATES: "true",
         }
+
+        if operation.lower() in [self.HUDI_BULK_INSERT, self.HUDI_INSERT]:
+            hudi_options[self.HUDI_WRITE_INSERT_DROP_DUPLICATES] = "true"
 
         if write_options:
             hudi_options.update(write_options)

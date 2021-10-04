@@ -106,6 +106,8 @@ class StatisticsConfig:
         return self.json()
 
     def __repr__(self):
-        return f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms}," \
-               f" {self._exact_uniqueness}," \
-               f" {self._columns})"
+        return (
+            f"StatisticsConfig({self._enabled}, {self._correlations}, {self._histograms},"
+            f" {self._exact_uniqueness},"
+            f" {self._columns})"
+        )

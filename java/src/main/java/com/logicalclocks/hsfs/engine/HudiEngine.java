@@ -162,9 +162,6 @@ public class HudiEngine {
 
     hudiArgs.put(HUDI_KEY_GENERATOR_OPT_KEY, HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
-    // drop duplicates for insert and bulk insert
-    hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
-
     // primary keys
     String primaryColumns = utils.getPrimaryColumns(featureGroup).mkString(",");
     if (!Strings.isNullOrEmpty(featureGroup.getEventTime())) {
@@ -199,6 +196,11 @@ public class HudiEngine {
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
+
+    // drop duplicates for insert and bulk insert only
+    if (HudiOperationType.BULK_INSERT == operation || HudiOperationType.INSERT == operation) {
+      hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
+    }
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {

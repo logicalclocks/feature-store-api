@@ -70,9 +70,14 @@ class TransformationFunctionEngine:
                 feature_name,
                 transformation_fn,
             ) in training_dataset._transformation_functions.items():
+                if feature_name in training_dataset.label:
+                    raise ValueError(
+                        "Online transformations for training dataset labels are not supported."
+                    )
                 training_dataset._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature_name,
+                        type=transformation_fn.output_type,
                         label=False,
                         transformation_function=transformation_fn,
                     )

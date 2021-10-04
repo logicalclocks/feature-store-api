@@ -71,6 +71,9 @@ public class FeatureGroupBase {
   @Setter
   protected String description;
 
+  @JsonIgnore
+  protected List<String> primaryKeys;
+
   @Getter
   @Setter
   protected List<Feature> features;
@@ -321,6 +324,14 @@ public class FeatureGroupBase {
         .findFirst()
         .orElseThrow(() -> new FeatureStoreException("Feature with name `" + name
             + "` not found in feature group `" + this.name + "`."));
+  }
+
+  @JsonIgnore
+  public List<String> getPrimaryKeys() {
+    if (primaryKeys == null) {
+      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
+    }
+    return primaryKeys;
   }
 
   public Expectation getExpectation(String name) throws FeatureStoreException, IOException {

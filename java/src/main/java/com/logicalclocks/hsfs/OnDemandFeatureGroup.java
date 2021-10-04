@@ -73,8 +73,9 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   @Builder
   public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               OnDemandDataFormat dataFormat, String path, Map<String, String> options,
-                              @NonNull StorageConnector storageConnector, String description, List<Feature> features,
-                              StatisticsConfig statisticsConfig, scala.collection.Seq<Expectation> expectations,
+                              @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
+                              List<Feature> features, StatisticsConfig statisticsConfig,
+                              scala.collection.Seq<Expectation> expectations,
                               ValidationType validationType, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
@@ -87,6 +88,8 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
         .collect(Collectors.toList())
         : null;
     this.description = description;
+    this.primaryKeys = primaryKeys != null
+            ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.storageConnector = storageConnector;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
