@@ -28,5 +28,4 @@ class ExpectationsEngine:
         self._expectations_api = expectations_api.ExpectationsApi(feature_store_id)
 
     def save(self, expectation):
-        print("expectation.rules[0].to_dict()" + str(expectation.rules[0].to_dict()))
         self._expectations_api.create(expectation)

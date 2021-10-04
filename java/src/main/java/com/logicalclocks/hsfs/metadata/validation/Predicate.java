@@ -17,8 +17,8 @@
 package com.logicalclocks.hsfs.metadata.validation;
 
 public enum Predicate {
-  VALUE,
   LEGAL_VALUES,
   ACCEPTED_TYPE,
-  PATTERN
+  PATTERN,
+  FEATURE
 }
