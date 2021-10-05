@@ -442,6 +442,15 @@ class FeatureGroupBase:
                 util.StorageWarning,
             )
 
+    @property
+    def event_time(self):
+        """Event time feature in the feature group."""
+        return self._event_time
+
+    @event_time.setter
+    def event_time(self, feature_name):
+        self._event_time = feature_name
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -468,6 +477,7 @@ class FeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
         online_topic_name=None,
+        event_time=None,
     ):
         super().__init__(featurestore_id, validation_type)
 
@@ -492,6 +502,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
+        self._event_time = event_time
 
         if self._id:
             # initialized by backend
@@ -1088,6 +1099,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
         }
 
     def _get_table_name(self):
@@ -1271,6 +1283,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         statistics_config=None,
+        event_time=None,
         validation_type="NONE",
         expectations=None,
     ):
@@ -1287,6 +1300,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
+        self._event_time = event_time
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
@@ -1408,6 +1422,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
         }

@@ -111,9 +111,13 @@ class TrainingDatasetEngine:
         )
 
     def query(self, training_dataset, online, with_label):
-        return self._training_dataset_api.get_query(training_dataset, with_label)[
-            "queryOnline" if online else "query"
-        ]
+        fs_query = self._training_dataset_api.get_query(training_dataset, with_label)
+
+        if online:
+            return fs_query["queryOnline"]
+        if fs_query["pitQuery"] is not None:
+            return fs_query["pitQuery"]
+        return fs_query["query"]
 
     def add_tag(self, training_dataset, name, value):
         """Attach a name/value tag to a training dataset."""

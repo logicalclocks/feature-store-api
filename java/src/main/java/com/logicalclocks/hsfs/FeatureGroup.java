@@ -23,7 +23,6 @@ import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
@@ -101,7 +100,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -123,6 +122,7 @@ public class FeatureGroup extends FeatureGroupBase {
       this.expectations.forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
     this.onlineTopicName = onlineTopicName;
+    this.eventTime = eventTime;
   }
 
   public FeatureGroup() {
@@ -450,9 +450,5 @@ public class FeatureGroup extends FeatureGroupBase {
           + version + "`. No statistics computed.");
     }
     return null;
-  }
-
-  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return super.validate(data);
   }
 }
