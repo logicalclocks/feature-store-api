@@ -22,7 +22,7 @@ import numpy as np
 import avro.schema
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
-from hsfs import util, engine, feature, storage_connector as sc
+from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
@@ -46,9 +46,7 @@ class FeatureGroupBase:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._code_engine = code_engine.CodeEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
+        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
         self._expectations_api = expectations_api.ExpectationsApi(
             featurestore_id, "featuregroups"
         )
@@ -358,7 +356,7 @@ class FeatureGroupBase:
                 f"Expected type `str`, got `{type(name)}`. "
                 "Features are accessible by name."
             )
-        feature = [f for f in self._features if f.name == name]
+        feature = [f for f in self.__getattribute__("_features") if f.name == name]
         if len(feature) == 1:
             return feature[0]
         else:
@@ -391,6 +389,15 @@ class FeatureGroupBase:
     def statistics(self):
         """Get the latest computed statistics for the feature group."""
         return self._statistics_engine.get_last(self)
+
+    @property
+    def primary_key(self):
+        """List of features building the primary key."""
+        return self._primary_key
+
+    @primary_key.setter
+    def primary_key(self, new_primary_key):
+        self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(self, commit_time: str = None):
         """Returns the statistics for this feature group at a specific time.
@@ -435,6 +442,15 @@ class FeatureGroupBase:
                 util.StorageWarning,
             )
 
+    @property
+    def event_time(self):
+        """Event time feature in the feature group."""
+        return self._event_time
+
+    @event_time.setter
+    def event_time(self, feature_name):
+        self._event_time = feature_name
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -461,6 +477,7 @@ class FeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
         online_topic_name=None,
+        event_time=None,
     ):
         super().__init__(featurestore_id, validation_type)
 
@@ -468,7 +485,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = creator
+        self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
         self._id = id
@@ -485,10 +502,11 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
+        self._event_time = event_time
 
-        if id is not None:
+        if self._id:
             # initialized by backend
-            self._primary_key = [
+            self.primary_key = [
                 feat.name for feat in self._features if feat.primary is True
             ]
             self._partition_key = [
@@ -699,6 +717,8 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `mode` instruct the ingestion job on how to deal with corrupted
+                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
 
 
         # Returns
@@ -786,6 +806,8 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `mode` instruct the ingestion job on how to deal with corrupted
+                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
@@ -1047,8 +1069,12 @@ class FeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type", None)
-        return cls(**json_decamelized)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -1073,6 +1099,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
         }
 
     def _get_table_name(self):
@@ -1135,11 +1162,6 @@ class FeatureGroup(FeatureGroupBase):
     @property
     def location(self):
         return self._location
-
-    @property
-    def primary_key(self):
-        """List of features building the primary key."""
-        return self._primary_key
 
     @property
     def online_enabled(self):
@@ -1214,10 +1236,6 @@ class FeatureGroup(FeatureGroupBase):
     def time_travel_format(self, new_time_travel_format):
         self._time_travel_format = new_time_travel_format
 
-    @primary_key.setter
-    def primary_key(self, new_primary_key):
-        self._primary_key = [pk.lower() for pk in new_primary_key]
-
     @partition_key.setter
     def partition_key(self, new_partition_key):
         self._partition_key = [pk.lower() for pk in new_partition_key]
@@ -1257,6 +1275,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         name=None,
         version=None,
         description=None,
+        primary_key=None,
         featurestore_id=None,
         featurestore_name=None,
         created=None,
@@ -1264,6 +1283,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         statistics_config=None,
+        event_time=None,
         validation_type="NONE",
         expectations=None,
     ):
@@ -1273,13 +1293,14 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
-        self._creator = creator
+        self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
+        self._event_time = event_time
 
         self._feature_group_engine = (
             on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
@@ -1292,6 +1313,11 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 if features
                 else None
             )
+            self.primary_key = (
+                [feat.name for feat in self._features if feat.primary is True]
+                if self._features
+                else []
+            )
             self.statistics_config = statistics_config
 
             self._options = (
@@ -1300,6 +1326,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 else None
             )
         else:
+            self.primary_key = primary_key
             self.statistics_config = statistics_config
             self._features = features
             self._options = options
@@ -1325,7 +1352,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             self.validate()
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read)
+            self._statistics_engine.compute_statistics(self, self.read())
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame."""
@@ -1359,9 +1386,14 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("online_topic_name", None)
-        _ = json_decamelized.pop("type", None)
-        return cls(**json_decamelized)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("online_topic_name", None)
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("online_topic_name", None)
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -1390,6 +1422,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
         }

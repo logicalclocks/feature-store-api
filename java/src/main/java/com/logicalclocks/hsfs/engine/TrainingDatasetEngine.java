@@ -185,10 +185,12 @@ public class TrainingDatasetEngine {
     TrainingDataset apiTD = trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
     trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
+    trainingDataset.getStatisticsConfig().setExactUniqueness(apiTD.getStatisticsConfig().getExactUniqueness());
   }
 
   public void initPreparedStatement(TrainingDataset trainingDataset, boolean external)
-      throws FeatureStoreException, IOException, SQLException {
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    Class.forName("com.mysql.jdbc.Driver");
 
     // check if this training dataset has transformation functions attached and throw exception if any
     if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
@@ -234,7 +236,7 @@ public class TrainingDatasetEngine {
   }
 
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException {
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
 
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {

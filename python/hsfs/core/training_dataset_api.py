@@ -52,10 +52,14 @@ class TrainingDatasetApi:
             "trainingdatasets",
             name,
         ]
-        query_params = {"version": version}
-        return training_dataset.TrainingDataset.from_response_json(
-            _client._send_request("GET", path_params, query_params)[0],
+        query_params = None if version is None else {"version": version}
+        td_list = training_dataset.TrainingDataset.from_response_json(
+            _client._send_request("GET", path_params, query_params),
         )
+        if version is not None:
+            return td_list[0]
+        else:
+            return td_list
 
     def get_query(self, training_dataset_instance, with_label):
         _client = client.get_instance()

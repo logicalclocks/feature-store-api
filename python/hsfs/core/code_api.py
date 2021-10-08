@@ -41,10 +41,7 @@ class CodeApi:
             "code",
         ]
         headers = {"content-type": "application/json"}
-        query_params = {
-            "entityId": entity_id,
-            "type": code_type
-        }
+        query_params = {"entityId": entity_id, "type": code_type}
         _client._send_request(
             "POST", path_params, query_params, headers=headers, data=code.json()
         )

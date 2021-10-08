@@ -51,6 +51,7 @@ public class StatisticsEngine {
         trainingDataset.getStatisticsConfig().getColumns(),
         trainingDataset.getStatisticsConfig().getHistograms(),
         trainingDataset.getStatisticsConfig().getCorrelations(),
+        trainingDataset.getStatisticsConfig().getExactUniqueness(),
         null));
   }
 
@@ -60,17 +61,20 @@ public class StatisticsEngine {
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),
         featureGroup.getStatisticsConfig().getCorrelations(),
+        featureGroup.getStatisticsConfig().getExactUniqueness(),
         commitId));
   }
 
-  public Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
-                                       Boolean correlations, Long commitId) throws FeatureStoreException {
+  private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
+                                       Boolean correlations, Boolean exactUniqueness, Long commitId)
+      throws FeatureStoreException {
     if (dataFrame.isEmpty()) {
       throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations);
+    String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations,
+                                                       exactUniqueness);
     return new Statistics(commitTime, commitId, content, null);
   }
 
@@ -83,10 +87,11 @@ public class StatisticsEngine {
               trainingDataset.getStatisticsConfig().getColumns(),
               trainingDataset.getStatisticsConfig().getHistograms(),
               trainingDataset.getStatisticsConfig().getCorrelations(),
+              trainingDataset.getStatisticsConfig().getExactUniqueness(),
               null).getContent()));
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    Statistics statistics = new Statistics(commitTime,null,null, splitStatistics);
+    Statistics statistics = new Statistics(commitTime, null, null, splitStatistics);
     return statisticsApi.post(trainingDataset, statistics);
   }
 

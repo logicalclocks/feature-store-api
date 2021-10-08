@@ -57,9 +57,9 @@ import scala.collection.JavaConverters;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +93,32 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
     // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+  }
+
+  public void validateSparkConfiguration() throws FeatureStoreException {
+    String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
+
+    Map<String, String> configurationMap = new HashMap<>();
+    configurationMap.put("spark.hadoop.hops.ssl.trustore.name", null);
+    configurationMap.put("spark.hadoop.hops.rpc.socket.factory.class.default",
+            "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+    configurationMap.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    configurationMap.put("spark.hadoop.hops.ssl.hostname.verifier", "ALLOW_ALL");
+    configurationMap.put("spark.hadoop.hops.ssl.keystore.name", null);
+    configurationMap.put("spark.hadoop.fs.hopsfs.impl", "io.hops.hopsfs.client.HopsFileSystem");
+    configurationMap.put("spark.hadoop.hops.ssl.keystores.passwd.name", null);
+    configurationMap.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
+    configurationMap.put("spark.sql.hive.metastore.jars", null);
+    configurationMap.put("spark.hadoop.client.rpc.ssl.enabled.protocol", "TLSv1.2");
+    configurationMap.put("spark.hadoop.hive.metastore.uris", null);
+
+    for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
+      if (!(sparkSession.conf().contains(entry.getKey())
+              && (entry.getValue() == null
+              || sparkSession.conf().get(entry.getKey(), null) == entry.getValue()))) {
+        throw new FeatureStoreException(exceptionText + entry.getKey());
+      }
+    }
   }
 
   public String getTrustStorePath() {
@@ -330,9 +356,9 @@ public class SparkEngine {
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
-        .options(writeOptions)
         .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
             + "/Resources/" + queryName + "-checkpoint")
+        .options(writeOptions)
         .option("topic", featureGroup.getOnlineTopicName());
 
     StreamingQuery query = writer.start();
@@ -402,8 +428,9 @@ public class SparkEngine {
         .partitionBy(utils.getPartitionColumns(featureGroup))
         .saveAsTable(utils.getTableName(featureGroup));
   }
-
-  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+  
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
+      Boolean histogram, Boolean exactUniqueness) {
     // only needed for training datasets, as the backend is not setting the defaults
     if (correlation == null) {
       correlation = true;
@@ -411,13 +438,23 @@ public class SparkEngine {
     if (histogram == null) {
       histogram = true;
     }
-    ColumnProfilerRunBuilder runner =
-        new ColumnProfilerRunner().onData(df).withCorrelation(correlation).withHistogram(histogram);
+    if (exactUniqueness == null) {
+      exactUniqueness = true;
+    }
+    ColumnProfilerRunBuilder runner = new ColumnProfilerRunner()
+                                            .onData(df)
+                                            .withCorrelation(correlation, 100)
+                                            .withHistogram(histogram, 20)
+                                            .withExactUniqueness(exactUniqueness);
     if (restrictToColumns != null && !restrictToColumns.isEmpty()) {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
     return ColumnProfiles.toJson(result.profiles().values().toSeq());
+  }
+
+  public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
+    return profile(df, restrictToColumns, correlation, histogram, true);
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns) {

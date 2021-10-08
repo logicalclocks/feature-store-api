@@ -535,6 +535,7 @@ class SnowflakeConnector(StorageConnector):
         url=None,
         user=None,
         warehouse=None,
+        application=None,
         sf_options=None,
     ):
         super().__init__(id, name, description, featurestore_id)
@@ -549,6 +550,7 @@ class SnowflakeConnector(StorageConnector):
         self._schema = schema
         self._table = table
         self._role = role
+        self._application = application
 
         self._options = (
             {opt["name"]: opt["value"] for opt in sf_options} if sf_options else {}
@@ -605,6 +607,11 @@ class SnowflakeConnector(StorageConnector):
         return self._url.replace("https://", "").replace(".snowflakecomputing.com", "")
 
     @property
+    def application(self):
+        """Application of the Snowflake storage connector"""
+        return self._application
+
+    @property
     def options(self):
         """Additional options for the Snowflake storage connector"""
         return self._options
@@ -627,13 +634,15 @@ class SnowflakeConnector(StorageConnector):
             "database": self._database,
             "schema": self._schema,
         }
-        if self._password is not None:
+        if self._password:
             props["password"] = self._password
         else:
             props["authenticator"] = "oauth"
             props["token"] = self._token
-        if self._warehouse is not None:
+        if self._warehouse:
             props["warehouse"] = self._warehouse
+        if self._application:
+            props["application"] = self._application
         return props
 
     def spark_options(self):
@@ -645,16 +654,18 @@ class SnowflakeConnector(StorageConnector):
         props["sfSchema"] = self._schema
         props["sfDatabase"] = self._database
         props["sfUser"] = self._user
-        if self._password is not None:
+        if self._password:
             props["sfPassword"] = self._password
         else:
             props["sfAuthenticator"] = "oauth"
             props["sfToken"] = self._token
-        if self._warehouse is not None:
+        if self._warehouse:
             props["sfWarehouse"] = self._warehouse
-        if self._role is not None:
+        if self._application:
+            props["application"] = self._application
+        if self._role:
             props["sfRole"] = self._role
-        if self._table is not None:
+        if self._table:
             props["dbtable"] = self._table
 
         return props
