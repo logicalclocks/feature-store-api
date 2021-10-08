@@ -85,7 +85,8 @@ class Engine:
             on_demand_fg.storage_connector._get_path(on_demand_fg.path),
         )
         rdd_from_file = self._spark_session.sparkContext.textFile(
-            f"/apps/hive/warehouse/{on_demand_fg._feature_store_name}.db/{on_demand_fg.name}_{on_demand_fg.version}")
+            f"/apps/hive/warehouse/{on_demand_fg._feature_store_name}.db/{on_demand_fg.name}_{on_demand_fg.version}"
+        )
         rdd_from_file.collect()
 
         on_demand_dataset.createOrReplaceTempView(alias)
@@ -179,10 +180,7 @@ class Engine:
             self._save_online_dataframe(feature_group, dataframe, online_write_options)
         elif online_enabled and storage is None:
             self._save_offline_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                offline_write_options,
+                feature_group, dataframe, operation, offline_write_options,
             )
             self._save_online_dataframe(feature_group, dataframe, online_write_options)
         else:
@@ -234,12 +232,7 @@ class Engine:
         return query
 
     def _save_offline_dataframe(
-        self,
-        feature_group,
-        dataframe,
-        operation,
-        write_options,
-        validation_id=None,
+        self, feature_group, dataframe, operation, write_options, validation_id=None,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -456,14 +449,12 @@ class Engine:
         exact_uniqueness=True,
     ):
         """Profile a dataframe with Deequ."""
-        return (
-            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf,
-                relevant_columns,
-                correlations,
-                histograms,
-                exact_uniqueness,
-            )
+        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf,
+            relevant_columns,
+            correlations,
+            histograms,
+            exact_uniqueness,
         )
 
     def validate(self, dataframe, expectations):
@@ -630,8 +621,7 @@ class Engine:
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token",
-                storage_connector.session_token,
+                "fs.s3a.session.token", storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1) if path is not None else None
 
