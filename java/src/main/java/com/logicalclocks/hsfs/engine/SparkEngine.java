@@ -37,6 +37,7 @@ import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -143,6 +144,9 @@ public class SparkEngine {
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
+    String path = String.format("/apps/hive/warehouse/%s.db/%s_%s", onDemandFeatureGroup.getFeatureStore().getName(), onDemandFeatureGroup.getName(), onDemandFeatureGroup.getVersion());
+    RDD rddFromFile = sparkSession.sparkContext().textFile(path,0);
+    rddFromFile.collect();
 
     dataset.createOrReplaceTempView(alias);
     return dataset;
