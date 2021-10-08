@@ -27,13 +27,13 @@ class CodeEngine:
 
     WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE"
 
-    #JUPYTER
+    # JUPYTER
     KERNEL_ENV = "HOPSWORKS_KERNEL_ID"
 
-    #JOB
+    # JOB
     JOB_ENV = "HOPSWORKS_JOB_NAME"
 
-    #DATABRICKS
+    # DATABRICKS
     EXTRA_CONTEXT = "extraContext"
     NOTEBOOK_PATH = "notebook_path"
     TAGS = "tags"
@@ -45,11 +45,11 @@ class CodeEngine:
     def save_code(self, metadata_instance):
         """Compute code for a dataframe and send the result json to Hopsworks."""
 
-        #JUPYTER
+        # JUPYTER
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
-        #JOB
+        # JOB
         job_name = os.environ.get(CodeEngine.JOB_ENV)
-        #DATABRICKS
+        # DATABRICKS
         dbutils = IPython.get_ipython().user_ns.get("dbutils")
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
@@ -59,40 +59,59 @@ class CodeEngine:
         )
 
         if kernel_id:
-            self._code_api.post(metadata_instance=metadata_instance,
-                                code=code_entity,
-                                entity_id=kernel_id,
-                                code_type=RunType.JUPYTER,
-                                export_format=ExportFormat.JUPYTER)
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=kernel_id,
+                code_type=RunType.JUPYTER,
+                export_format=ExportFormat.JUPYTER,
+            )
         elif job_name:
-            self._code_api.post(metadata_instance=metadata_instance,
-                                code=code_entity,
-                                entity_id=job_name,
-                                code_type=RunType.JOB,
-                                export_format=ExportFormat.JUPYTER)
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=job_name,
+                code_type=RunType.JOB,
+                export_format=ExportFormat.JUPYTER,
+            )
         elif dbutils:
-            context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
-            notebook_path = context[CodeEngine.EXTRA_CONTEXT].get(CodeEngine.NOTEBOOK_PATH)
-            browser_host_name = context[CodeEngine.TAGS].get(CodeEngine.BROWSER_HOST_NAME)
-            #Save Databricks archive
-            self._code_api.post(metadata_instance=metadata_instance,
-                                code=code_entity,
-                                entity_id=notebook_path,
-                                code_type=RunType.DATABRICKS,
-                                browser_host_name=browser_host_name,
-                                export_format=ExportFormat.DBC)
-            #Save HTML
-            self._code_api.post(metadata_instance=metadata_instance,
-                                code=code_entity,
-                                entity_id=notebook_path,
-                                code_type=RunType.DATABRICKS,
-                                browser_host_name=browser_host_name,
-                                export_format=ExportFormat.HTML)
+            context = json.loads(
+                dbutils.notebook.entry_point.getDbutils()
+                .notebook()
+                .getContext()
+                .toJson()
+            )
+            notebook_path = context[CodeEngine.EXTRA_CONTEXT].get(
+                CodeEngine.NOTEBOOK_PATH
+            )
+            browser_host_name = context[CodeEngine.TAGS].get(
+                CodeEngine.BROWSER_HOST_NAME
+            )
+            # Save Databricks archive
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=notebook_path,
+                code_type=RunType.DATABRICKS,
+                browser_host_name=browser_host_name,
+                export_format=ExportFormat.DBC,
+            )
+            # Save HTML
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=notebook_path,
+                code_type=RunType.DATABRICKS,
+                browser_host_name=browser_host_name,
+                export_format=ExportFormat.HTML,
+            )
+
 
 class RunType:
     JUPYTER = "JUPYTER"
     JOB = "JOB"
     DATABRICKS = "DATABRICKS"
+
 
 class ExportFormat:
     JAVA = "JAVA"
