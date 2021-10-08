@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,27 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs.constructor;
+package com.logicalclocks.hsfs.metadata;
 
-public enum SqlFilterCondition {
-  GREATER_THAN_OR_EQUAL,
-  GREATER_THAN,
-  NOT_EQUALS,
-  EQUALS,
-  LESS_THAN_OR_EQUAL,
-  LESS_THAN,
-  IN;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
+public class User {
+
+  @Getter
+  @Setter
+  private String email;
+
+  @Getter
+  @Setter
+  private String firstName;
+
+  @Getter
+  @Setter
+  private String lastName;
+
 }

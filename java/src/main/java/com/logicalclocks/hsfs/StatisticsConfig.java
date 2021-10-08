@@ -40,14 +40,20 @@ public class StatisticsConfig {
   @Getter
   @Setter
   private Boolean correlations = false;
+  
+  @Getter
+  @Setter
+  private Boolean exactUniqueness = false;
 
   @Getter
   @Setter
   private List<String> columns = new ArrayList<>();
 
-  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations) {
+  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
+      Boolean exactUniqueness) {
     this.enabled = enabled;
     this.histograms = histograms;
     this.correlations = correlations;
+    this.exactUniqueness = exactUniqueness;
   }
 }

@@ -77,6 +77,7 @@ class StatisticsEngine:
             metadata_instance.statistics_config.columns,
             metadata_instance.statistics_config.correlations,
             metadata_instance.statistics_config.histograms,
+            metadata_instance.statistics_config.exact_uniqueness,
         )
         return content_str
 

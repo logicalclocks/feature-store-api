@@ -17,17 +17,11 @@ import json
 import inspect
 import ast
 
-from hsfs import util, engine
+from hsfs import util
 from hsfs.core import transformation_function_engine
 
 
 class TransformationFunction:
-    UDF = "@udf"
-    PANDAS_UDF = "@pandas_udf"
-    PYSPARK_TYPE_IMPORT = (
-        "from pyspark.sql.functions import udf\nfrom pyspark.sql.types import *"
-    )
-
     def __init__(
         self,
         featurestore_id,
@@ -66,9 +60,7 @@ class TransformationFunction:
         else:
             # load original source code
             self._output_type = output_type
-            self._load_source_code(
-                self._source_code_content, engine.get_type() == "spark"
-            )
+            self._load_source_code(self._source_code_content)
 
     def save(self):
         """Persist transformation function in backend."""
@@ -136,23 +128,11 @@ class TransformationFunction:
                 imports.append(import_line)
         return imports
 
-    def _load_source_code(self, source_code_content, decorate_udf):
+    def _load_source_code(self, source_code_content):
         source_code_content = json.loads(source_code_content)
         module_imports = source_code_content["module_imports"]
         transformer_code = source_code_content["transformer_code"]
-        # add udf decorator here if its spark engine
-        if decorate_udf:
-            module_imports = module_imports + "\n" + self.PYSPARK_TYPE_IMPORT
-            self._transformer_code = (
-                module_imports
-                + "\n" * 2
-                + self.UDF
-                + "(%s)" % self._output_type
-                + "\n"
-                + transformer_code
-            )
-        else:
-            self._transformer_code = module_imports + "\n" * 2 + transformer_code
+        self._transformer_code = module_imports + "\n" * 2 + transformer_code
 
         scope = __import__("__main__").__dict__
         exec(self._transformer_code, scope)

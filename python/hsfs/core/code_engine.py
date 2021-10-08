@@ -40,9 +40,7 @@ class CodeEngine:
     BROWSER_HOST_NAME = "browserHostName"
 
     def __init__(self, feature_store_id, entity_type):
-        self._code_api = code_api.CodeApi(
-            feature_store_id, entity_type
-        )
+        self._code_api = code_api.CodeApi(feature_store_id, entity_type)
 
     def save_code(self, metadata_instance):
         """Compute code for a dataframe and send the result json to Hopsworks."""

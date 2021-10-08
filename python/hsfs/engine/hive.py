@@ -45,6 +45,9 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
 
+        # cache the sql engine which contains the connection pool
+        self._mysql_online_fs_engine = None
+
     def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
@@ -57,9 +60,11 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
-        with util.create_mysql_connection(
-            connector, "external" in read_options and read_options["external"]
-        ) as mysql_conn:
+        if self._mysql_online_fs_engine is None:
+            self._mysql_online_fs_engine = util.create_mysql_engine(
+                connector, "external" in read_options and read_options["external"]
+            )
+        with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
@@ -371,11 +376,14 @@ class Engine:
         Property name should match the value in the JobConfiguration.__init__
         """
         spark_job_configuration = user_write_options.pop("spark", None)
+        read_csv_mode = user_write_options.pop("mode", "FAILFAST")
+
         return ingestion_job_conf.IngestionJobConf(
             data_format="CSV",
             data_options=[
                 {"name": "header", "value": "true"},
                 {"name": "inferSchema", "value": "true"},
+                {"name": "mode", "value": read_csv_mode},
             ],
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,

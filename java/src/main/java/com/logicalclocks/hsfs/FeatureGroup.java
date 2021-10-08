@@ -23,7 +23,6 @@ import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
@@ -77,10 +76,6 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> primaryKeys;
-
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
   private List<String> partitionKeys;
 
   @JsonIgnore
@@ -105,7 +100,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -127,6 +122,7 @@ public class FeatureGroup extends FeatureGroupBase {
       this.expectations.forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
     this.onlineTopicName = onlineTopicName;
+    this.eventTime = eventTime;
   }
 
   public FeatureGroup() {
@@ -226,7 +222,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
         writeOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
@@ -434,14 +430,6 @@ public class FeatureGroup extends FeatureGroupBase {
     }
   }
 
-  @JsonIgnore
-  public List<String> getPrimaryKeys() {
-    if (primaryKeys == null) {
-      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
-    }
-    return primaryKeys;
-  }
-
   /**
    * Recompute the statistics for the feature group and save them to the feature store.
    *
@@ -462,9 +450,5 @@ public class FeatureGroup extends FeatureGroupBase {
           + version + "`. No statistics computed.");
     }
     return null;
-  }
-
-  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return super.validate(data);
   }
 }

@@ -26,6 +26,7 @@ except ImportError:
     pass
 
 from hsfs.client import base, auth, exceptions
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class Client(base.Client):
@@ -102,6 +103,7 @@ class Client(base.Client):
         elif engine == "spark":
             _spark_session = SparkSession.builder.getOrCreate()
 
+            self.validate_spark_configuration(_spark_session)
             with open(
                 _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
                 "r",
@@ -114,6 +116,30 @@ class Client(base.Client):
             self._key_store_path = _spark_session.conf.get(
                 "spark.hadoop.hops.ssl.keystore.name"
             )
+
+    def validate_spark_configuration(self, _spark_session):
+        exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
+
+        configuration_dict = {
+            "spark.hadoop.hops.ssl.trustore.name": None,
+            "spark.hadoop.hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+            "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+            "spark.hadoop.hops.ssl.hostname.verifier": "ALLOW_ALL",
+            "spark.hadoop.hops.ssl.keystore.name": None,
+            "spark.hadoop.fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+            "spark.hadoop.hops.ssl.keystores.passwd.name": None,
+            "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
+            "spark.sql.hive.metastore.jars": None,
+            "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+            "spark.hadoop.hive.metastore.uris": None,
+        }
+
+        for key, value in configuration_dict.items():
+            if not (
+                _spark_session.conf.get(key, "not_found") != "not_found"
+                and (value is None or _spark_session.conf.get(key, None) == value)
+            ):
+                raise FeatureStoreException(exception_text + key)
 
     def _close(self):
         """Closes a client and deletes certificates."""
