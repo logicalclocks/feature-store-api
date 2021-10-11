@@ -1282,6 +1282,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         creator=None,
         id=None,
         features=None,
+        location=None,
         statistics_config=None,
         event_time=None,
         validation_type="NONE",
@@ -1300,6 +1301,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
+        self._location = location
         self._event_time = event_time
 
         self._feature_group_engine = (
@@ -1446,6 +1448,10 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @property
     def features(self):
         return self._features
+
+    @property
+    def location(self):
+        return self._location
 
     @property
     def query(self):

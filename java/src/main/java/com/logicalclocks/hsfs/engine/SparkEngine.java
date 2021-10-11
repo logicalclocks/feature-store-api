@@ -144,8 +144,7 @@ public class SparkEngine {
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
-    String path = String.format("/apps/hive/warehouse/%s.db/%s_%s", onDemandFeatureGroup.getFeatureStore().getName(), onDemandFeatureGroup.getName(), onDemandFeatureGroup.getVersion());
-    RDD rddFromFile = sparkSession.sparkContext().textFile(path,0);
+    RDD rddFromFile = sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(),0);
     rddFromFile.collect();
 
     dataset.createOrReplaceTempView(alias);

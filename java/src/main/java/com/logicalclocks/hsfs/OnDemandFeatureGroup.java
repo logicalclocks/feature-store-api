@@ -66,6 +66,10 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "onDemandFeaturegroupDTO";
 
+  @Getter
+  @Setter
+  protected String location;
+
 
   private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
