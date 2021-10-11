@@ -84,9 +84,7 @@ class Engine:
             on_demand_fg.options,
             on_demand_fg.storage_connector._get_path(on_demand_fg.path),
         )
-        rdd_from_file = self._spark_session.sparkContext.textFile(
-            on_demand_fg.location
-        )
+        rdd_from_file = self._spark_session.sparkContext.textFile(on_demand_fg.location)
         rdd_from_file.collect()
 
         on_demand_dataset.createOrReplaceTempView(alias)
