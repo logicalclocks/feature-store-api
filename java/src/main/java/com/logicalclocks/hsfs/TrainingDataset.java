@@ -472,10 +472,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(boolean external)
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    // init prepared statement if it has not already
-    if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this,null, external);
-    }
+    trainingDatasetEngine.initPreparedStatement(this,null, external);
   }
 
   /**
@@ -487,10 +484,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(Integer batchSize) throws SQLException, IOException, FeatureStoreException,
           ClassNotFoundException {
-    // init prepared statement if it has not already
-    if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this, batchSize, false);
-    }
+    trainingDatasetEngine.initPreparedStatement(this, batchSize, false);
   }
 
   /**
@@ -502,10 +496,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(Integer batchSize, boolean external) throws SQLException, IOException,
           FeatureStoreException, ClassNotFoundException {
-    // init prepared statement if it has not already
-    if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this,batchSize, external);
-    }
+    trainingDatasetEngine.initPreparedStatement(this,batchSize, external);
   }
 
   /**

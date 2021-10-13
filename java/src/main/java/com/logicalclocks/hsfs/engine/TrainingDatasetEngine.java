@@ -305,7 +305,7 @@ public class TrainingDatasetEngine {
 
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
-      // size of batch of primary keys are required to be equal. Thus we take size of batch for the 1st primary key if
+      // size of batch of primary keys are required to be equal. Thus, we take size of batch for the 1st primary key if
       // it was not initialized from initPreparedStatement(batchSize)
       initPreparedStatement(trainingDataset, entry.get(0).size(), external);
     }
