@@ -651,10 +651,9 @@ class TrainingDataset:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        if self.prepared_statements is None:
-            self._training_dataset_engine.init_prepared_statement(
-                self, batch_size, external
-            )
+        self._training_dataset_engine.init_prepared_statement(
+            self, batch_size, external
+        )
 
     def get_serving_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False

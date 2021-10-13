@@ -163,8 +163,8 @@ class TrainingDatasetEngine:
 
         # initialize prepared statements
         if training_dataset.prepared_statements is None:
-            if hasattr(entry.values(), "__iter__") and isinstance(
-                list(entry.values()), list
+            if hasattr(list(entry.values())[0], "__iter__") and isinstance(
+                list(list(entry.values())[0]), list
             ):
                 self.init_prepared_statement(
                     training_dataset, len(list(entry.values())[0]), external
@@ -177,11 +177,13 @@ class TrainingDatasetEngine:
             training_dataset.serving_batch_size is not None
             and training_dataset.serving_batch_size > 1
         ):
-            if not hasattr(entry.values(), "__iter__") and not isinstance(
-                list(entry.values()), list
+            if not hasattr(list(entry.values())[0], "__iter__") and not isinstance(
+                list(entry.values())[0], list
             ):
                 raise ValueError(
-                    "entry is expected expected to be list of primary key values"
+                    "Entry is expected to be list of primary key values. "
+                    "If you have already initialised for batch serving and now want to retrieve single vector "
+                    "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
                 )
             # check if size of batch of keys corresponds to one that was used during initialisation.
             batch_sizes = list(set([len(x) for x in entry.values()]))
@@ -199,6 +201,15 @@ class TrainingDatasetEngine:
             batch_dicts = {}
             batch = True
         else:
+            if hasattr(list(entry.values())[0], "__iter__") and isinstance(
+                list(entry.values())[0], list
+            ):
+                raise ValueError(
+                    "Entry is expected to be single value per primary key. "
+                    "If you have already initialised prepared statements for single vector and now want to retrieve "
+                    "batch vector please reinitialise prepared statements with  "
+                    "`training_dataset.init_prepared_statement(batch_size=n)`"
+                )
             batch = False
             serving_vector = []
 
@@ -251,6 +262,13 @@ class TrainingDatasetEngine:
             return serving_vector
 
     def init_prepared_statement(self, training_dataset, batch_size, external):
+
+        # reset values to default, as user may be re-initialising with different parameters
+        training_dataset.prepared_statement_engine = None
+        training_dataset.prepared_statements = None
+        training_dataset.serving_keys = None
+        training_dataset.serving_batch_size = None
+
         if batch_size is not None and batch_size > 1:
             batch = True
             training_dataset.serving_batch_size = batch_size

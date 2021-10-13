@@ -485,7 +485,8 @@ public class TrainingDataset {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public void initPreparedStatement(Integer batchSize) throws SQLException, IOException, FeatureStoreException {
+  public void initPreparedStatement(Integer batchSize) throws SQLException, IOException, FeatureStoreException,
+          ClassNotFoundException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
       trainingDatasetEngine.initPreparedStatement(this, batchSize, false);
@@ -500,7 +501,7 @@ public class TrainingDataset {
    * @throws FeatureStoreException
    */
   public void initPreparedStatement(Integer batchSize, boolean external) throws SQLException, IOException,
-      FeatureStoreException {
+          FeatureStoreException, ClassNotFoundException {
     // init prepared statement if it has not already
     if (this.getPreparedStatements() == null) {
       trainingDatasetEngine.initPreparedStatement(this,batchSize, external);
@@ -539,13 +540,13 @@ public class TrainingDataset {
 
   @JsonIgnore
   public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException {
+          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return getServingVectors(entry, false);
   }
 
   @JsonIgnore
   public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException {
+          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return trainingDatasetEngine.getServingVectors(this, entry, external);
   }
 
