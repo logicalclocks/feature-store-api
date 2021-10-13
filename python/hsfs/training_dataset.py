@@ -644,7 +644,7 @@ class TrainingDataset:
 
         # Arguments
             batch_size: integer, optional. If provided, prepared statements will be
-                initialised for retrieving serving vectors as a  batch of size `batch_size`.
+                initialised for retrieving serving vectors as a batch of size `batch_size`.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
