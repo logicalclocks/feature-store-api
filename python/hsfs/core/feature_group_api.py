@@ -106,7 +106,9 @@ class FeatureGroupApi:
             feature_group_instance.id,
             "clear",
         ]
-        _client._send_request("POST", path_params)
+        feature_group_instance.update_from_response_json(
+            _client._send_request("POST", path_params)
+        )
 
     def delete(self, feature_group_instance):
         """Drop a feature group from the feature store.
