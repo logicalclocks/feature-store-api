@@ -54,7 +54,7 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     onDemandFeatureGroup.setId(apiFg.getId());
 
     if (onDemandFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
-      onDemandFeatureGroup.validate(onDemandDataset, true);
+      DataValidationEngine.getInstance().validate(onDemandFeatureGroup, onDemandDataset, true);
     }
 
     return onDemandFeatureGroup;

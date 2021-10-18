@@ -22,6 +22,7 @@ import com.amazon.deequ.constraints.ConstraintResult;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.ExpectationResult;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -33,6 +34,8 @@ import com.logicalclocks.hsfs.metadata.validation.RuleName;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConverters;
 
@@ -63,6 +66,10 @@ public class DataValidationEngine {
   private final FeatureGroupValidationsApi featureGroupValidationsApi =
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
+  private final ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataValidationEngine.class);
+
   public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
                                          List<Expectation> expectations,
                                          Boolean logActivity)
@@ -75,7 +82,7 @@ public class DataValidationEngine {
       logActivity);
   }
 
-  public List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {
+  private List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {
     // Loop through all feature group expectations, then loop all features and rules of the expectation and
     // create constraints for Deequ.
     List<ExpectationResult> expectationResults = new ArrayList<>();
@@ -216,6 +223,26 @@ public class DataValidationEngine {
     return expectationResults;
   }
 
+  public FeatureGroupValidation validate(FeatureGroupBase featureGroupBase,
+                                         Dataset<Row> data) throws FeatureStoreException, IOException {
+    // Check if an expectation contains features. If it does not, try to use all the current FG features
+    List<Expectation> expectations = expectationsApi.get(featureGroupBase);
+    final List<String> features = new ArrayList<>();
+    LOGGER.debug("validate :: expectations = " + expectations);
+    for (Expectation expectation : expectations) {
+      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
+        // Get all feature names from FG
+        LOGGER.debug("validate :: getFeatures = " + featureGroupBase.getFeatures());
+        if (features.isEmpty()) {
+          featureGroupBase.getFeatures().stream().forEach(x -> features.add(x.getName()));
+        }
+        expectation.setFeatures(features);
+        LOGGER.debug("validate :: expectation = " + expectation);
+      }
+    }
+    return validate(data, featureGroupBase, expectations);
+  }
+
   public List<FeatureGroupValidation> getValidations(FeatureGroupBase featureGroupBase)
       throws FeatureStoreException, IOException {
     return featureGroupValidationsApi.get(featureGroupBase);
@@ -312,5 +339,4 @@ public class DataValidationEngine {
     VALIDATION_TIME,
     COMMIT_TIME
   }
-
 }

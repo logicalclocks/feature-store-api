@@ -33,8 +33,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -147,7 +145,7 @@ public class FeatureGroupBase {
     featureGroupBaseEngine.delete(this);
   }
 
-  public Dataset<Row> read() throws FeatureStoreException, IOException {
+  public <T> T read() throws FeatureStoreException, IOException {
     // This method should be overridden by the FeatureGroup/OnDeamandFeatureGroup classes
     return null;
   }
@@ -442,31 +440,7 @@ public class FeatureGroupBase {
 
   public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
     // Run data validation for entire feature group
-    return validate(this.read(), true);
-  }
-
-  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return validate(data, false);
-  }
-
-  public FeatureGroupValidation validate(Dataset<Row> data, Boolean logActivity) throws FeatureStoreException,
-      IOException {
-    // Check if an expectation contains features. If it does not, try to use all the current FG features
-    List<Expectation> expectations = expectationsApi.get(this);
-    final List<String> features = new ArrayList<>();
-    LOGGER.debug("validate :: expectations = " + expectations);
-    for (Expectation expectation : expectations) {
-      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
-        // Get all feature names from FG
-        LOGGER.debug("validate :: getFeatures = " + getFeatures());
-        if (features.isEmpty()) {
-          getFeatures().stream().forEach(x -> features.add(x.getName()));
-        }
-        expectation.setFeatures(features);
-        LOGGER.debug("validate :: expectation = " + expectation);
-      }
-    }
-    return DataValidationEngine.getInstance().validate(data, this, expectations, logActivity);
+    return DataValidationEngine.getInstance().validate(this, this.read(), expectations, logActivity);
   }
 
   @JsonIgnore

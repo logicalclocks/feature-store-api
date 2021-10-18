@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs.engine.hudi;
 
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
+import com.logicalclocks.hsfs.engine.DataValidationEngine;
 import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -53,7 +54,7 @@ public class DeltaStreamerTransformer implements Transformer {
 
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       // TODO (davit): get this validation id after sync completes
-      FeatureGroupValidation validation = featureGroup.validate(dataset);
+      FeatureGroupValidation validation = DataValidationEngine.getInstance().validate(featureGroup, dataset);
     }
 
     return utils.sanitizeFeatureNames(dataset);
