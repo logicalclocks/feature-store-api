@@ -1469,7 +1469,7 @@ Identify your Databricks VPC by searching for VPCs containing Databricks in thei
 <p>The Feature Store <em>Security Group</em> needs to be configured to allow traffic from your Databricks clusters to be able to connect to the Feature Store.</p>
 <div class="admonition note">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="../../../hopsworksai/services/#outside-access-to-the-feature-store">outside access of the Feature Store, Online Feature Store, and Kafka services</a>.</p>
+<p>If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/services/#outside-access-to-the-feature-store">outside access of the Feature Store, Online Feature Store, and Kafka services</a>.</p>
 </div>
 <p>Open your feature store instance under EC2 in the AWS Management Console and ensure that ports <em>443</em>, <em>3306</em>, <em>9083</em>, <em>9085</em>, <em>8020</em>, <em>50010</em>, and <em>9092</em> are reachable from the Databricks Security Group:</p>
 <p align="center">
@@ -1615,7 +1615,7 @@ network used by Databricks and press <em>OK</em> to create the peering:</p>
 <p>Ensure that ports <em>443</em>, <em>9083</em>, <em>9085</em>, <em>8020</em>, <em>50010</em>, and <em>9092</em> are reachable from the Databricks cluster <em>Network Security Group</em>.</p>
 <div class="admonition note">
 <p class="admonition-title">Hopsworks.ai</p>
-<p>If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable <a href="../../../hopsworksai/services/#outside-access-to-the-feature-store">outside access of the Feature Store, Online Feature Store, and Kafka services</a>.</p>
+<p>If you deployed your Hopsworks Feature Store instance with Hopsworks.ai, it suffices to enable <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/services/#outside-access-to-the-feature-store">outside access of the Feature Store, Online Feature Store, and Kafka services</a>.</p>
 </div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
 <p>Continue with the <a href="../api_key/">Hopsworks API key guide</a> to setup access to a Hopsworks API key from the Databricks Cluster, in order to be able to use the Hopsworks Feature Store.</p>
