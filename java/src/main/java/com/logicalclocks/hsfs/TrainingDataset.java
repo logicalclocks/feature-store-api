@@ -472,7 +472,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(boolean external)
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this, false, external);
+    trainingDatasetEngine.initPreparedStatement(this,false, external);
   }
 
   /**

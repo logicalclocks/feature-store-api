@@ -46,15 +46,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import java.sql.DriverManager;
-import java.util.TreeMap;
 
 public class TrainingDatasetEngine {
 
@@ -244,10 +238,8 @@ public class TrainingDatasetEngine {
     if (trainingDataset.getPreparedStatements() == null) {
       initPreparedStatement(trainingDataset, false, external);
     }
-    //check if primary key map correspond to serving_keys.
-    if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
-      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
-    }
+
+    checkPrimaryKeys(trainingDataset, entry.keySet());
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
@@ -287,7 +279,6 @@ public class TrainingDatasetEngine {
       }
       results.close();
     }
-    trainingDataset.getPreparedStatementConnection().commit();
     return servingVector;
   }
 
@@ -299,13 +290,10 @@ public class TrainingDatasetEngine {
     if (trainingDataset.getPreparedStatements() == null) {
       // size of batch of primary keys are required to be equal. Thus, we take size of batch for the 1st primary key if
       // it was not initialized from initPreparedStatement(batchSize)
-      initPreparedStatement(trainingDataset, false, external);
+      initPreparedStatement(trainingDataset, true, external);
     }
 
-    //check if primary key map correspond to serving_keys.
-    if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
-      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
-    }
+    checkPrimaryKeys(trainingDataset, entry.keySet());
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
@@ -389,5 +377,12 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
+  }
+
+  private void checkPrimaryKeys(TrainingDataset trainingDataset, Set<String> primaryKeys){
+    //check if primary key map correspond to serving_keys.
+    if (!trainingDataset.getServingKeys().equals(primaryKeys)) {
+      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
+    }
   }
 }
