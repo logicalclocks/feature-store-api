@@ -79,7 +79,7 @@ class TrainingDataset:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
-        self._serving_batch_size = None
+        self._batch_serving = False
         self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -637,23 +637,21 @@ class TrainingDataset:
         return self._training_dataset_engine.query(self, online, with_label)
 
     def init_prepared_statement(
-        self, batch_size: Optional[int] = None, external: Optional[bool] = False
+        self, batch: Optional[bool] = None, external: Optional[bool] = False
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
 
         # Arguments
-            batch_size: integer, optional. If provided, prepared statements will be
-                initialised for retrieving serving vectors as a batch of size `batch_size`.
+            batch: boolean, optional. If set to True, prepared statements will be
+                initialised for retrieving serving vectors as a batch.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        self._training_dataset_engine.init_prepared_statement(
-            self, batch_size, external
-        )
+        self._training_dataset_engine.init_prepared_statement(self, batch, external)
 
     def get_serving_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False
@@ -739,13 +737,13 @@ class TrainingDataset:
         self._serving_keys = serving_vector_keys
 
     @property
-    def serving_batch_size(self):
+    def batch_serving(self):
         """Set size of batch of primary keys for `get_serving_vectors` method."""
-        return self._serving_batch_size
+        return self._batch_serving
 
-    @serving_batch_size.setter
-    def serving_batch_size(self, serving_batch_size):
-        self._serving_batch_size = serving_batch_size
+    @batch_serving.setter
+    def batch_serving(self, batch_serving):
+        self._batch_serving = batch_serving
 
     @property
     def transformation_functions(self):
