@@ -166,17 +166,12 @@ class TrainingDatasetEngine:
             if hasattr(list(entry.values())[0], "__iter__") and isinstance(
                 list(list(entry.values())[0]), list
             ):
-                self.init_prepared_statement(
-                    training_dataset, len(list(entry.values())[0]), external
-                )
+                self.init_prepared_statement(training_dataset, True, external)
             else:
-                self.init_prepared_statement(training_dataset, None, external)
+                self.init_prepared_statement(training_dataset, False, external)
 
-        # if serving_batch_size is set then its batch lookup.
-        if (
-            training_dataset.serving_batch_size is not None
-            and training_dataset.serving_batch_size > 1
-        ):
+        # if batch_serving is set then its batch lookup.
+        if training_dataset.batch_serving:
             if not hasattr(list(entry.values())[0], "__iter__") and not isinstance(
                 list(entry.values())[0], list
             ):
@@ -185,21 +180,11 @@ class TrainingDatasetEngine:
                     "If you have already initialised for batch serving and now want to retrieve single vector "
                     "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
                 )
-            # check if size of batch of keys corresponds to one that was used during initialisation.
-            batch_sizes = list(set([len(x) for x in entry.values()]))
-            if (
-                len(batch_sizes) != 1
-                and batch_sizes != training_dataset.serving_batch_size
-            ):
-                raise ValueError(
-                    "Size of provided batch of primary keys doesn't correspond to "
-                    + "size used during initialisation"
-                )
+
             # create dict object that will have of order of the vector as key and values as
             # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
             # expect that backend will return correctly ordered vectors.
             batch_dicts = {}
-            batch = True
         else:
             if hasattr(list(entry.values())[0], "__iter__") and isinstance(
                 list(entry.values())[0], list
@@ -210,7 +195,6 @@ class TrainingDatasetEngine:
                     "batch vector please reinitialise prepared statements with  "
                     "`training_dataset.init_prepared_statement(batch_size=n)`"
                 )
-            batch = False
             serving_vector = []
 
         # check if primary key map correspond to serving_keys.
@@ -245,39 +229,37 @@ class TrainingDatasetEngine:
                 )
 
                 # if this is batch serving then get vector by order and update with vector from other feature group(s)
-                if batch:
+                if training_dataset.batch_serving:
                     if order_in_batch in batch_dicts:
                         batch_dicts[order_in_batch] += list(result_dict.values())
                     else:
                         batch_dicts[order_in_batch] = list(result_dict.values())
                 order_in_batch += 1
 
-            if not batch:
+            if not training_dataset.batch_serving:
                 serving_vector += list(result_dict.values())
 
         # if this is batch serving then return batch of vectors, otherwise return single serving vector
-        if batch:
+        if training_dataset.batch_serving:
             return list(batch_dicts.values())
         else:
             return serving_vector
 
-    def init_prepared_statement(self, training_dataset, batch_size, external):
+    def init_prepared_statement(self, training_dataset, batch, external):
 
         # reset values to default, as user may be re-initialising with different parameters
         training_dataset.prepared_statement_engine = None
         training_dataset.prepared_statements = None
         training_dataset.serving_keys = None
-        training_dataset.serving_batch_size = None
+        training_dataset.batch_serving = False
 
-        if batch_size is not None and batch_size > 1:
-            batch = True
-            training_dataset.serving_batch_size = batch_size
-        else:
-            batch = False
+        if batch:
+            training_dataset.batch_serving = True
+
         online_conn = self._storage_connector_api.get_online_connector()
         mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
-            training_dataset, batch
+            training_dataset, training_dataset.batch_serving
         )
 
         prepared_statements_dict = {}
@@ -311,7 +293,7 @@ class TrainingDatasetEngine:
                 )
             query_online = sql.text(query_online)
             # in case of batch serving vector bind parameters to the prepared statement.
-            if batch:
+            if training_dataset.batch_serving:
                 bind_params = [
                     bindparam(pk_name, expanding=True) for pk_name in pk_names
                 ]
