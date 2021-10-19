@@ -133,7 +133,7 @@ public class TrainingDataset {
   @Getter
   @Setter
   @JsonIgnore
-  private Integer servingBatchSize;
+  private boolean batchServing;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -472,7 +472,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(boolean external)
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this,null, external);
+    trainingDatasetEngine.initPreparedStatement(this,false, external);
   }
 
   /**
@@ -482,21 +482,9 @@ public class TrainingDataset {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public void initPreparedStatement(Integer batchSize) throws SQLException, IOException, FeatureStoreException,
-          ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this, batchSize, false);
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
-   *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   */
-  public void initPreparedStatement(Integer batchSize, boolean external) throws SQLException, IOException,
+  public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
           FeatureStoreException, ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this,batchSize, external);
+    trainingDatasetEngine.initPreparedStatement(this, batch, external);
   }
 
   /**
