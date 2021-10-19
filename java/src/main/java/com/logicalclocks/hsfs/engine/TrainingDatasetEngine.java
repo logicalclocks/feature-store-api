@@ -47,7 +47,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -189,17 +188,11 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setExactUniqueness(apiTD.getStatisticsConfig().getExactUniqueness());
   }
 
-  public void initPreparedStatement(TrainingDataset trainingDataset, Integer batchSize, boolean external)
+  public void initPreparedStatement(TrainingDataset trainingDataset, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
 
-    boolean batch;
-    if (batchSize != null && batchSize > 1) {
-      batch = true;
-      trainingDataset.setServingBatchSize(batchSize);
-    } else {
-      batch = false;
-    }
+    trainingDataset.setBatchServing(batch);
 
     // check if this training dataset has transformation functions attached and throw exception if any
     if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
@@ -231,8 +224,7 @@ public class TrainingDatasetEngine {
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-          jdbcConnection.prepareStatement(prepareParametersIfBatch(servingPreparedStatement.getQueryOnline(), batch,
-              batchSize)));
+          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
       HashMap<String, Integer> parameterIndices = new HashMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
@@ -250,7 +242,7 @@ public class TrainingDatasetEngine {
 
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
-      initPreparedStatement(trainingDataset, null, external);
+      initPreparedStatement(trainingDataset, false, external);
     }
     //check if primary key map correspond to serving_keys.
     if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
@@ -307,7 +299,7 @@ public class TrainingDatasetEngine {
     if (trainingDataset.getPreparedStatements() == null) {
       // size of batch of primary keys are required to be equal. Thus, we take size of batch for the 1st primary key if
       // it was not initialized from initPreparedStatement(batchSize)
-      initPreparedStatement(trainingDataset, entry.get(0).size(), external);
+      initPreparedStatement(trainingDataset, false, external);
     }
 
     //check if primary key map correspond to serving_keys.
@@ -324,17 +316,10 @@ public class TrainingDatasetEngine {
       Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(fgId);
       for (Object name : entry.keySet()) {
         if (parameterIndexInStatement.containsKey(name)) {
-          //check if size of batch of keys corresponds to one that was used during initialisation
-          if (entry.get(name).size() != trainingDataset.getServingBatchSize()) {
-            throw new IllegalArgumentException("Size of provided batch of primary keys doesn't correspond to "
-                + "size used during initialisation");
-          }
-          // As MySQL doesn't support setting array type on prepared statement we will iterate over batch and set
-          // values individually. each values parameter position will be fg index + position index in batch array
-          for (int i = 0; i < entry.get(name).size(); i++) {
-            preparedStatements.get(fgId).setObject(parameterIndexInStatement.get(name) + i,
-                entry.get(name).get(i));
-          }
+          // As MySQL doesn't support setting array type on prepared statement. This is the hack to 1st concatenate
+          // list of primary keys as string and then set the values replace
+          preparedStatements.get(fgId).setObject(parameterIndexInStatement.get(name),
+                  "(" + String.join(", ", entry.get(name) + ")"));
         }
       }
     }
@@ -404,16 +389,5 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
-  }
-
-  private String prepareParametersIfBatch(String query, boolean batch, Integer batchSize) {
-    // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
-    // replace the ? with ? times batchSize.
-    if (batch) {
-      String inParameters = "(" + String.join(", ", Collections.nCopies(batchSize, "?")) + ")";
-      return query.replaceAll("\\?", inParameters);
-    } else {
-      return query;
-    }
   }
 }
