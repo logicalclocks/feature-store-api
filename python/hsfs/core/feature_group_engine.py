@@ -15,10 +15,11 @@
 
 import warnings
 
-from hsfs import engine, client, util
+from hsfs import engine, feature, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.constructor import query
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -28,25 +29,39 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
-    def save(self, feature_group, feature_dataframe, write_options):
-        if len(feature_group.features) == 0:
-            # User didn't provide a schema. extract it from the dataframe
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
+    def save(self, feature_group, features, write_options):
+        if isinstance(features, query.Query):
+            feature_dataframe = features.read()
+            feature_group._querydto = features
+            feature_group._features = [
+                feature.Feature(
+                    name=label_name, label=True
+                )
+                for label_name in feature_group.label
+            ]
+            self._transformation_function_engine.attach_transformation_fn(
+                feature_group
             )
-
-        # set primary and partition key columns
-        # we should move this to the backend
-        for feat in feature_group.features:
-            if feat.name in feature_group.primary_key:
-                feat.primary = True
-            if feat.name in feature_group.partition_key:
-                feat.partition = True
-            if (
-                feature_group.hudi_precombine_key is not None
-                and feat.name == feature_group.hudi_precombine_key
-            ):
-                feat.hudi_precombine_key = True
+        else:
+            feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+            if len(feature_group.features) == 0:
+                # User didn't provide a schema. extract it from the dataframe
+                feature_group._features = engine.get_instance().parse_schema_feature_group(
+                    feature_dataframe
+                )
+            
+            # set primary and partition key columns
+            # we should move this to the backend
+            for feat in feature_group.features:
+                if feat.name in feature_group.primary_key:
+                    feat.primary = True
+                if feat.name in feature_group.partition_key:
+                    feat.partition = True
+                if (
+                    feature_group.hudi_precombine_key is not None
+                    and feat.name == feature_group.hudi_precombine_key
+                ):
+                    feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
         validation_id = None
@@ -58,8 +73,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
-
-        return engine.get_instance().save_dataframe(
+        fg_job = engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
             hudi_engine.HudiEngine.HUDI_BULK_INSERT
@@ -71,6 +85,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             online_write_options,
             validation_id,
         )
+        return feature_dataframe, fg_job
 
     def insert(
         self,

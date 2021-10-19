@@ -18,6 +18,8 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -88,6 +90,11 @@ public class FeatureGroup extends FeatureGroupBase {
   @Getter
   @Setter
   private String onlineTopicName;
+
+  @Getter
+  @Setter
+  @JsonProperty("queryDTO")
+  private Query queryInt;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -214,6 +221,19 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
     read(online).show(numRows);
+  }
+
+  /**
+   * Create the feature group dataset based on the content of the feature group query.
+   *
+   * @param query the query to save as feature group dataset
+   * @throws FeatureStoreException
+   * @throws IOException
+   * @throws ParseException
+   */
+  public void save(Query query) throws FeatureStoreException, IOException, ParseException {
+    this.queryInt = query;
+    save(query.read());
   }
 
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {

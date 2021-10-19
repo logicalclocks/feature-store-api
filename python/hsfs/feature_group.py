@@ -478,6 +478,8 @@ class FeatureGroup(FeatureGroupBase):
         expectations=None,
         online_topic_name=None,
         event_time=None,
+        querydto=None,
+        label=None,
     ):
         super().__init__(featurestore_id, validation_type)
 
@@ -493,8 +495,10 @@ class FeatureGroup(FeatureGroupBase):
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
         ]
+        self._label = [feat.name.lower() for feat in self._features if feat.label]
 
         self._location = location
+        self._querydto = querydto
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -685,6 +689,7 @@ class FeatureGroup(FeatureGroupBase):
     def save(
         self,
         features: Union[
+            query.Query,
             pd.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
@@ -728,12 +733,10 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
-
         user_version = self._version
 
         # fg_job is used only if the hive engine is used
-        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
+        feature_dataframe, fg_job = self._feature_group_engine.save(self, features, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
@@ -1094,6 +1097,7 @@ class FeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "timeTravelFormat": self._time_travel_format,
             "features": self._features,
+            "queryDTO": self._querydto.to_dict() if self._querydto else None,
             "featurestoreId": self._feature_store_id,
             "type": "cachedFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
@@ -1162,6 +1166,18 @@ class FeatureGroup(FeatureGroupBase):
     @property
     def location(self):
         return self._location
+    
+    @property
+    def label(self):
+        """The label/prediction feature of the feature group dataset.
+
+        Can be a composite of multiple features.
+        """
+        return self._label
+
+    @label.setter
+    def label(self, label):
+        self._label = [lb.lower() for lb in label]
 
     @property
     def online_enabled(self):
