@@ -675,7 +675,7 @@ class TrainingDataset:
     def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
     ):
-        """Returns assembled serving vector from online feature store.
+        """Returns assembled serving vectors in batches from online feature store.
 
         # Arguments
             entry: dict of feature group primary key names as keys and value as list of primary keys provided by
