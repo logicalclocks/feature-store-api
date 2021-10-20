@@ -154,6 +154,19 @@ class Query:
         return self
 
     def as_of(self, wallclock_time):
+        """Perform time travel on the given Query.
+
+        This method returns a new Query object at the specified point in time.
+        This can then either be read into a Dataframe or used further to perform joins
+        or construct a training dataset.
+
+        # Arguments
+            wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+
+        # Returns
+            `Query`. The query object with the applied time travel condition.
+        """
         wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
         for join in self._joins:
             join.query.left_feature_group_end_time = wallclock_timestamp
