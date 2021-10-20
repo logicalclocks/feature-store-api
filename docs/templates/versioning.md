@@ -41,7 +41,7 @@ It is also possible to retrieve the metadata of all the versions of a feature gr
 
 Data versioning captures the different commits of data that are inserted into a feature group.
 The data, as it belongs to the same schema version, is homogeneous in terms of schema structure and feature definition. Hopsworks provides data versioning capabilities only for the offline feature groups. The online version of the feature groups only store the most recent values for any given primary key.
-Data versioning is also not critical for training dataset, which are point in time snapshots of a set of features.
+Data versioning is also not critical for training datasets, which are point in time snapshots of a set of features.
 
 Data stored on the offline feature store is stored as [Apache Hudi](http://hudi.apache.org/) files. Apache Hudi provides the Upsert and Time Travel capabilities that powers the Hopsworks offline feature store.
 
