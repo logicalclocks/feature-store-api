@@ -130,11 +130,6 @@ public class TrainingDataset {
   @JsonIgnore
   private HashSet<String> servingKeys;
 
-  @Getter
-  @Setter
-  @JsonIgnore
-  private boolean batchServing;
-
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
