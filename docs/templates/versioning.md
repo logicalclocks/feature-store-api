@@ -6,7 +6,7 @@ The concept of versioning in Hopsworks works on two dimensions: metadata version
 
 Every entity in the Hopsworks feature store has a version number. As an example, every feature group is uniquely identified within the platform based on the feature store (Project) it belongs to, its name and version.
 
-The version allows users to identify breaking changes in the schema or computation of features. For example, if a user decides to remove a feature or change the way that feature is computed, that is considered a breaking change and require a version increase.
+The version allows users to identify breaking changes in the schema or computation of features. For example, if a user decides to remove a feature or change the way a feature is computed, that is considered a breaking change and requires a version increase.
 
 Increasing the version number will allow existing pipelines and models to keep using the old version of the feature(s) up until the pipeline is adapted to the new feature group version or the model is re-trained. This allow users to progressively rollout and test new features.
 
