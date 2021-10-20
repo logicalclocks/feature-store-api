@@ -353,6 +353,13 @@ PAGES = {
     "api/job_configuration.md": {
         "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
     },
+    "versioning.md": {
+        "fg_append": ["hsfs.feature_group.FeatureGroup.append_features"],
+        "fg_get_all": ["hsfs.feature_store.FeatureStore.get_feature_groups"],
+        "td_get_all": ["hsfs.feature_store.FeatureStore.get_training_datasets"],
+        "as_of": ["hsfs.constructor.query.Query.as_of"],
+        "commit_details": ["hsfs.feature_group.FeatureGroup.commit_details"],
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
