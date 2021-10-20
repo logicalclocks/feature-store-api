@@ -45,7 +45,7 @@ Data versioning is also not critical for training datasets, which are point in t
 
 Data stored on the offline feature store is stored as [Apache Hudi](http://hudi.apache.org/) files. Apache Hudi provides the Upsert and Time Travel capabilities that powers the Hopsworks offline feature store.
 
-Using Apache Hudi users on Hopsworks are able to track what data was inserted at which commit. Information regarding the commits made on a feature group, the amount of new rows written, updated and deleted is available in the Activity UI of a feature group.
+Using Apache Hudi, users on Hopsworks are able to track what data was inserted at which commit. Information regarding the commits made on a feature group, the amount of new rows written, updated and deleted, is available in the Activity UI of a feature group.
 
 <p align="center">
   <img src="../../assets/images/activities.png" width="600" alt="Feature group activities">
