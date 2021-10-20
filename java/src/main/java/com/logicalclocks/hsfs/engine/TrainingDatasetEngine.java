@@ -46,7 +46,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.Set;
 
 import java.sql.DriverManager;
 
@@ -185,8 +193,6 @@ public class TrainingDatasetEngine {
   public void initPreparedStatement(TrainingDataset trainingDataset, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
-
-    trainingDataset.setBatchServing(batch);
 
     // check if this training dataset has transformation functions attached and throw exception if any
     if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
@@ -379,7 +385,7 @@ public class TrainingDatasetEngine {
     trainingDatasetApi.delete(trainingDataset);
   }
 
-  private void checkPrimaryKeys(TrainingDataset trainingDataset, Set<String> primaryKeys){
+  private void checkPrimaryKeys(TrainingDataset trainingDataset, Set<String> primaryKeys) {
     //check if primary key map correspond to serving_keys.
     if (!trainingDataset.getServingKeys().equals(primaryKeys)) {
       throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");

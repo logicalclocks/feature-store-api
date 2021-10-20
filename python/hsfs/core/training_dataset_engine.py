@@ -163,18 +163,14 @@ class TrainingDatasetEngine:
 
         # initialize prepared statements
         if training_dataset.prepared_statements is None:
-            if hasattr(list(entry.values())[0], "__iter__") and isinstance(
-                list(list(entry.values())[0]), list
-            ):
+            if all([isinstance(val, list) for val in entry.values()]):
                 self.init_prepared_statement(training_dataset, True, external)
             else:
                 self.init_prepared_statement(training_dataset, False, external)
 
         # if batch_serving is set then its batch lookup.
         if training_dataset.batch_serving:
-            if not hasattr(list(entry.values())[0], "__iter__") and not isinstance(
-                list(entry.values())[0], list
-            ):
+            if not all([isinstance(val, list) for val in entry.values()]):
                 raise ValueError(
                     "Entry is expected to be list of primary key values. "
                     "If you have already initialised for batch serving and now want to retrieve single vector "
@@ -186,9 +182,7 @@ class TrainingDatasetEngine:
             # expect that backend will return correctly ordered vectors.
             batch_dicts = {}
         else:
-            if hasattr(list(entry.values())[0], "__iter__") and isinstance(
-                list(entry.values())[0], list
-            ):
+            if all([isinstance(val, list) for val in entry.values()]):
                 raise ValueError(
                     "Entry is expected to be single value per primary key. "
                     "If you have already initialised prepared statements for single vector and now want to retrieve "
