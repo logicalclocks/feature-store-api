@@ -50,6 +50,7 @@ nav:
       - Training Dataset: generated/training_dataset.md
       - Query vs. Dataframe: generated/query_vs_dataframe.md
       - Statistics: generated/statistics.md
+      - Versioning: generated/versioning.md
       - Feature Validation: generated/feature_validation.md
       - Feature Store Tags: generated/tags.md
       - Transformation Functions: generated/transformation_functions.md
