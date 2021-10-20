@@ -2,7 +2,7 @@
 
 The concept of versioning in Hopsworks works on two dimensions: metadata versioning (e.g. schemas) and data versioning.
 
-## Schema versioning
+## Metadata versioning
 
 Every entity in the Hopsworks feature store has a version number. As an example, every feature group is uniquely identified within the platform based on the feature store (Project) it belongs to, its name and version.
 
