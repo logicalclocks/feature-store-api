@@ -51,6 +51,10 @@ Using Apache Hudi, users on Hopsworks are able to track what data was inserted a
   <img src="../../assets/images/activities.png" width="600" alt="Feature group activities">
 </p>
 
+It is also possible to retrieve the same information programmatically, using the `commit_details()` method of a feature group object:
+
+{{commit_details}}
+
 Users can also use the APIs to read the feature group data at a specific point in time using the `as_of` method of the query object:
 
 {{as_of}}
