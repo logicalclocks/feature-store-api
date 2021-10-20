@@ -1,6 +1,6 @@
 # Versioning
 
-The concept of versioning in Hopsworks works on two dimensions: schema versioning and data versioning.
+The concept of versioning in Hopsworks works on two dimensions: metadata versioning (e.g. schemas) and data versioning.
 
 ## Schema versioning
 
