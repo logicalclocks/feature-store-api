@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.StreamingFeatureGroupOptions;
+import com.logicalclocks.hsfs.metadata.StreamFeatureGroupOptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,7 +28,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class StreamingFeatureGroup  extends FeatureGroupBase {
+public class StreamFeatureGroup extends FeatureGroupBase {
     @Getter
     @Setter
     private StorageConnector onlineStorageConnector;
@@ -39,7 +39,7 @@ public class StreamingFeatureGroup  extends FeatureGroupBase {
 
     @Getter
     @Setter
-    private String type = "streamingFeaturegroupDTO";
+    private String type = "streamFeaturegroupDTO";
 
     @Getter
     @Setter
@@ -70,5 +70,5 @@ public class StreamingFeatureGroup  extends FeatureGroupBase {
 
     @Getter
     @Setter
-    private List<StreamingFeatureGroupOptions> options;
+    private List<StreamFeatureGroupOptions> options;
 }

@@ -23,7 +23,7 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class StreamingFeatureGroupOptions {
+public class StreamFeatureGroupOptions {
     @Getter
     @Setter
     private String name;
