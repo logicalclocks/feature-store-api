@@ -1,4 +1,4 @@
-Snowflake is a popular cloud-native data warehouse service, and supports scalable feature computation with SQL. However, Snowflake is not viable as an online feature store that serves features to models in production - columnar databases have too high latency compared to OLTP databases or key-value stores.
+Snowflake is a popular cloud-native data warehouse service, and supports scalable feature computation with SQL. However, Snowflake is not viable as an online feature store that serves features to models in production, with its columnar database layout its latency is too high compared to OLTP databases or key-value stores.
 
 To interact with Snowflake to register and read [external feature groups](../../../generated/on_demand_feature_group) users need to define a storage connector using the UI:
 
