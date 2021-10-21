@@ -953,6 +953,22 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def as_of(self, wallclock_time):
+        """Get Query object to retrieve all features of the group at a point in the past.
+
+        This method selects all features in the feature group and returns a Query object
+        at the specified point in time. This can then either be read into a Dataframe
+        or used further to perform joins or construct a training dataset.
+
+        # Arguments
+            wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+
+        # Returns
+            `Query`. The query object with the applied time travel condition.
+        """
+        return self.select_all().as_of(wallclock_time)
+
     def update_description(self, description: str):
         """Update the description of the feature gorup.
 
