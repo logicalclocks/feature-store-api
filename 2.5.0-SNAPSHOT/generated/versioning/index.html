@@ -1501,7 +1501,7 @@
 The <code>version</code> parameter is not mandatory. If not provided and no feature group (or training dataset) with that name exists, then the version is going to be set to 1. If the <code>version</code> parameter is not provided, and a feature group (or training dataset) already exist, then the version number will be increased by one.</p>
 <h3 id="appending-features-to-an-existing-version">Appending features to an existing version<a class="headerlink" href="#appending-features-to-an-existing-version" title="Permanent link">#</a></h3>
 <p>For feature groups, it is possible to append new features to existing feature groups. This is not considered a breaking change. To append new features users can either use the UI or the following <code>append_features</code> method:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L968">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L984">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
@@ -1593,6 +1593,17 @@ is <code>Dict[str, str]</code> with key value pairs of date committed on, number
 <h3 id="as_of">as_of<a class="headerlink" href="#as_of" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="n">wallclock_time</span><span class="p">)</span>
 </code></pre></div>
+<p>Perform time travel on the given Query.</p>
+<p>This method returns a new Query object at the specified point in time.
+This can then either be read into a Dataframe or used further to perform joins
+or construct a training dataset.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>wallclock_time</strong>: Datetime string. The String should be formatted in one of the
+    following formats <code>%Y%m%d</code>, <code>%Y%m%d%H</code>, <code>%Y%m%d%H%M</code>, or <code>%Y%m%d%H%M%S</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Query</code>. The query object with the applied time travel condition.</p>
 <hr />
 <p>Data versioning is critical for reproducibility and debugging. As an example, if a data scientist is debugging why a new model is performing poorly compared to the same model trained six months ago, they can leverage the time travel capabilities of the Hopsworks feature store to build a training dataset with the data as it was six months ago. From there, using <a href="../statistics">statistics</a> and <a href="../feature_validation">data validation</a>, further debugging can be made to determine what is the root cause of the new model degraded performances.</p>
                 
