@@ -24,4 +24,4 @@ The role field can be used to specify which [Snowflake security role](https://do
 
 The application field can also be specified to have better observability in Snowflake with regards to which application is running which query. The application field can be a simple string like “Hopsworks” or, for instance, the project name, to track usage and queries from each Hopsworks project.
 
-Additional key/value options can also be specified to control the behavior of the Snowflake Spark connector. The available options are listed in the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/spark-connector-use.html)
+Additional key/value options can also be specified to control the behavior of the Snowflake Spark connector. The available options are listed in the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/spark-connector-use.html).
