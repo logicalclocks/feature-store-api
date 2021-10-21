@@ -211,7 +211,6 @@ public class TrainingDatasetEngine {
     }
     Connection jdbcConnection =
         DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    jdbcConnection.setAutoCommit(false);
     trainingDataset.setPreparedStatementConnection(jdbcConnection);
 
     List<ServingPreparedStatement> servingPreparedStatements =
