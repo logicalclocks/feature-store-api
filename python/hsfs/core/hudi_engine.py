@@ -75,6 +75,11 @@ class HudiEngine:
         self._table_name = feature_group._get_online_table_name()
 
         self._primary_key = ",".join(feature_group.primary_key)
+
+        # add event time to primary key for upserts
+        if feature_group.event_time is not None:
+            self._primary_key = self._primary_key + "," + feature_group.event_time
+
         self._partition_key = (
             ",".join(feature_group.partition_key)
             if len(feature_group.partition_key) >= 1
@@ -157,9 +162,11 @@ class HudiEngine:
             self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
             self.HUDI_HIVE_SYNC_PARTITION_FIELDS: self._partition_key,
             self.HUDI_TABLE_OPERATION: operation,
-            self.HUDI_WRITE_INSERT_DROP_DUPLICATES: "true",
             self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
+
+        if operation.lower() in [self.HUDI_BULK_INSERT, self.HUDI_INSERT]:
+            hudi_options[self.HUDI_WRITE_INSERT_DROP_DUPLICATES] = "true"
 
         if write_options:
             hudi_options.update(write_options)

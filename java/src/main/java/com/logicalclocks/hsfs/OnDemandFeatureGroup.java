@@ -76,7 +76,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig,
                               scala.collection.Seq<Expectation> expectations,
-                              ValidationType validationType) {
+                              ValidationType validationType, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -93,6 +93,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
     this.storageConnector = storageConnector;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
+    this.eventTime = eventTime;
     this.validationType = validationType != null ? validationType : ValidationType.NONE;
     if (expectations != null && !expectations.isEmpty()) {
       this.expectationsNames = new ArrayList<>();

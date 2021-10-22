@@ -79,6 +79,10 @@ public class FeatureGroupBase {
   protected List<Feature> features;
 
   @Getter
+  @Setter
+  protected String eventTime;
+
+  @Getter
   protected Date created;
 
   @Getter
@@ -398,7 +402,7 @@ public class FeatureGroupBase {
     return validate(this.read());
   }
 
-  protected FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
+  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
     // Check if an expectation contains features. If it does not, try to use all the current FG features
     List<Expectation> expectations = expectationsApi.get(this);
     final List<String> features = new ArrayList<>();
@@ -420,7 +424,6 @@ public class FeatureGroupBase {
   public FeatureGroupValidation validateOnDemand(Dataset<Row> data) throws FeatureStoreException, IOException {
     return validate(data);
   }
-
 
   @JsonIgnore
   public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {

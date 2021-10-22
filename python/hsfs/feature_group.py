@@ -40,8 +40,8 @@ from hsfs.client.exceptions import FeatureStoreException
 class FeatureGroupBase:
     def __init__(self, featurestore_id, validation_type):
         self._validation_type = validation_type.upper()
-        self._feature_group_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
-            featurestore_id
+        self._feature_group_base_engine = (
+            feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -442,6 +442,15 @@ class FeatureGroupBase:
                 util.StorageWarning,
             )
 
+    @property
+    def event_time(self):
+        """Event time feature in the feature group."""
+        return self._event_time
+
+    @event_time.setter
+    def event_time(self, feature_name):
+        self._event_time = feature_name
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -468,6 +477,7 @@ class FeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
         online_topic_name=None,
+        event_time=None,
     ):
         super().__init__(featurestore_id, validation_type)
 
@@ -492,6 +502,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
+        self._event_time = event_time
 
         if self._id:
             # initialized by backend
@@ -596,10 +607,18 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(online, dataframe_type, read_options,)
+                .read(
+                    online,
+                    dataframe_type,
+                    read_options,
+                )
             )
         else:
-            return self.select_all().read(online, dataframe_type, read_options,)
+            return self.select_all().read(
+                online,
+                dataframe_type,
+                read_options,
+            )
 
     def read_changes(
         self,
@@ -934,6 +953,22 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def as_of(self, wallclock_time):
+        """Get Query object to retrieve all features of the group at a point in the past.
+
+        This method selects all features in the feature group and returns a Query object
+        at the specified point in time. This can then either be read into a Dataframe
+        or used further to perform joins or construct a training dataset.
+
+        # Arguments
+            wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+
+        # Returns
+            `Query`. The query object with the applied time travel condition.
+        """
+        return self.select_all().as_of(wallclock_time)
+
     def update_description(self, description: str):
         """Update the description of the feature gorup.
 
@@ -1080,6 +1115,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
         }
 
     def _get_table_name(self):
@@ -1263,6 +1299,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         id=None,
         features=None,
         statistics_config=None,
+        event_time=None,
         validation_type="NONE",
         expectations=None,
     ):
@@ -1279,9 +1316,10 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
+        self._event_time = event_time
 
-        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
-            featurestore_id
+        self._feature_group_engine = (
+            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
@@ -1400,6 +1438,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
         }
