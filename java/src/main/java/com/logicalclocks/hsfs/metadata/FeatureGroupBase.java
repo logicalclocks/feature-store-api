@@ -100,6 +100,10 @@ public class FeatureGroupBase {
   @Setter
   protected List<String> expectationsNames;
 
+  @Getter
+  @Setter
+  protected String location;
+
   @JsonIgnore
   protected List<Expectation> expectations;
 

@@ -37,7 +37,6 @@ import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.Path;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -144,8 +143,7 @@ public class SparkEngine {
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
-    RDD rddFromFile = sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(),0);
-    rddFromFile.collect();
+    sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(),0).collect();
 
     dataset.createOrReplaceTempView(alias);
     return dataset;
