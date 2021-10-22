@@ -1288,49 +1288,25 @@
                 
                   <h1>Snowflake</h1>
                 
-                <p>Snowflake is a popular managed data warehouse on AWS, Azure, and GCP.</p>
-<!--
+                <p>Snowflake is a popular cloud-native data warehouse service, and supports scalable feature computation with SQL. However, Snowflake is not viable as an online feature store that serves features to models in production, with its columnar database layout its latency is too high compared to OLTP databases or key-value stores.</p>
+<p>To interact with Snowflake and to register and read <a href="../../../generated/on_demand_feature_group">external feature groups</a> users need to define a storage connector using the UI:</p>
 <p align="center">
   <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake.png" alt="Setup a Snowflake storage connector">
-    <figcaption>Configure the Snowflake storage connector in the Hopsworks UI.</figcaption>    
-  </figure>
-</p>
--->
-
-<p>In the UI for the Snowflake connector, you should enter the following:</p>
-<p>The following options are required to create a snowflake connector:</p>
-<ul>
-<li>url: the hostname for your account in the following format: <account_name>.snowflakecomputing.com.</li>
-<li>user: login name for the Snowflake user.</li>
-<li>password: password of the Snowflake user. (required if token is not set)</li>
-<li>token: OAuth token that can be used to access snowflake. (required if password is not set)</li>
-<li>database: the database to use for the session after connecting.</li>
-<li>schema: the schema to use for the session after connecting.</li>
-</ul>
-<p>The remaining options are not required, but are optional:</p>
-<ul>
-<li>warehouse: the default virtual warehouse to use for the session after connecting.</li>
-<li>role: the default security role to use for the session after connecting.</li>
-<li>table: the table to which data is written to or read from. </li>
-</ul>
-<p>Additional snowflake options can be added as a list of key-value pair in sfOptions</p>
-<p>There are two options available for authentication. The first option is to configure a username and a password. The second option is to use an OAuth token. See <a href="https://docs.snowflake.com/en/user-guide/oauth-custom.html">Configure Snowflake OAuth</a> for instruction on how to configure OAuth support for snowflake, and <a href="https://docs.snowflake.com/en/user-guide/spark-connector-use.html#using-external-oauth">Using External OAuth</a> on how you can use External OAuth to authenticate to Snowflake.</p>
-<p>With regards to the database driver, the library to interact with Snowflake <em>is not</em> included in Hopsworks - you need to upload the driver yourself. First, you need to <a href="https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc">download the jdbc driver</a> and to use snowflake as the data source in spark <a href="https://docs.snowflake.com/en/user-guide/spark-connector-install.html">the snowflake spark connector</a>.</p>
-<p align="center">
-  <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake-upload-driver.png" alt="Upload the Snowflake the driver.">
-    <figcaption>Upload the JDBC driver and Snowflake Spark connector to Hopsworks.</figcaption>
+    <img src="../../../assets/images/storage-connectors/snowflake.png" alt="Snowflake connector UI">
+    <figcaption>Snowflake connector UI</figcaption>
   </figure>
 </p>
 
-<p>Then, you add the file to your notebook or job before launching it, as shown in the screenshots below.</p>
-<p align="center">
-  <figure>
-    <img src="../../../assets/images/storage-connectors/snowflake-add-driver-jupyter.png" alt="When you start a Jupyter notebook, you need to add the driver so it can be accessed in programs.">
-    <figcaption>When you start a Jupyter notebook for Snowflake, you need to add both the JDBC driver and the Snowflake Spark Connector.</figcaption>
-  </figure>
-</p>
+<p>To configure the connector users need to provide the <code>Connection URL</code> of the cluster.</p>
+<p>The Snowflake storage connector supports both username and password authentication as well as token-based authentication.</p>
+<div class="admonition warning">
+<p class="admonition-title">Token-based authentication Beta</p>
+<p>Currently token-based authentication is in beta phase. Users are advised to use username/password and/or create a service account for accessing Snowflake from Hopsworks.</p>
+</div>
+<p>The Hopsworks Snowflake storage connector allows users to specify several additional fields, though only two are mandatory: the database field and the schema field.</p>
+<p>The role field can be used to specify which <a href="https://docs.snowflake.com/en/user-guide/security-access-control-overview.html#system-defined-roles">Snowflake security role</a> to assume for the session after the connection is established.</p>
+<p>The application field can also be specified to have better observability in Snowflake with regards to which application is running which query. The application field can be a simple string like “Hopsworks” or, for instance, the project name, to track usage and queries from each Hopsworks project.</p>
+<p>Additional key/value options can also be specified to control the behavior of the Snowflake Spark connector. The available options are listed in the <a href="https://docs.snowflake.com/en/user-guide/spark-connector-use.html">Snowflake documentation</a>.</p>
                 
               
               
