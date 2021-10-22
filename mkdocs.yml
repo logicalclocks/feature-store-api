@@ -64,6 +64,7 @@ nav:
       - Validation: generated/api/validation_api.md
       - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
+  - Model Management: https://docs.hopsworks.ai/machine-learning-api/latest/
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
