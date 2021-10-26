@@ -118,12 +118,17 @@ public class TrainingDataset {
   @Getter
   @Setter
   @JsonIgnore
-  private Map<Integer, Map<String, Integer>> preparedStatementParameters;
+  private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
 
   @Getter
   @Setter
   @JsonIgnore
   private TreeMap<Integer, PreparedStatement> preparedStatements;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private TreeMap<Integer, String> preparedQueryString;
 
   @Getter
   @Setter

@@ -79,7 +79,6 @@ class TrainingDataset:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
-        self._batch_serving = False
         self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -689,7 +688,7 @@ class TrainingDataset:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry, external)
+        return self._training_dataset_engine.get_serving_vectors(self, entry, external)
 
     @property
     def label(self):
@@ -735,15 +734,6 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
-
-    @property
-    def batch_serving(self):
-        """Set size of batch of primary keys for `get_serving_vectors` method."""
-        return self._batch_serving
-
-    @batch_serving.setter
-    def batch_serving(self, batch_serving):
-        self._batch_serving = batch_serving
 
     @property
     def transformation_functions(self):
