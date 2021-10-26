@@ -161,35 +161,70 @@ class TrainingDatasetEngine:
     def get_serving_vector(self, training_dataset, entry, external):
         """Assembles serving vector from online feature store."""
 
+        if all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be single value per primary key. "
+                "If you have already initialised prepared statements for single vector and now want to retrieve "
+                "batch vector please reinitialise prepared statements with  "
+                "`training_dataset.init_prepared_statement(batch_size=n)`"
+            )
+
+        serving_vector = []
+
+        if training_dataset.prepared_statements is None:
+            self.init_prepared_statement(training_dataset, False, external)
+
+        # check if primary key map correspond to serving_keys.
+        if not entry.keys() == training_dataset.serving_keys:
+            raise ValueError(
+                "Provided primary key map doesn't correspond to serving_keys"
+            )
+
+        prepared_statements = training_dataset.prepared_statements
+
+        # get schemas for complex features once
+        complex_features = self.get_complex_feature_schemas(training_dataset)
+
+        for prepared_statement_index in prepared_statements:
+            prepared_statement = prepared_statements[prepared_statement_index]
+            with training_dataset.prepared_statement_engine.connect() as mysql_conn:
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
+            result_dict = {}
+            for row in result_proxy:
+                result_dict = self.deserialize_complex_features(
+                    complex_features, dict(row.items())
+                )
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
+                # apply transformation functions
+                result_dict = self._apply_transformation(
+                    training_dataset.transformation_functions, result_dict
+                )
+            serving_vector += list(result_dict.values())
+
+        return serving_vector
+
+    def get_serving_vectors(self, training_dataset, entry, external):
+        """Assembles serving vector from online feature store."""
+
         # initialize prepared statements
         if training_dataset.prepared_statements is None:
-            if all([isinstance(val, list) for val in entry.values()]):
-                self.init_prepared_statement(training_dataset, True, external)
-            else:
-                self.init_prepared_statement(training_dataset, False, external)
+            self.init_prepared_statement(training_dataset, True, external)
 
-        # if batch_serving is set then its batch lookup.
-        if training_dataset.batch_serving:
-            if not all([isinstance(val, list) for val in entry.values()]):
-                raise ValueError(
-                    "Entry is expected to be list of primary key values. "
-                    "If you have already initialised for batch serving and now want to retrieve single vector "
-                    "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
-                )
+        if not all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be list of primary key values. "
+                "If you have already initialised for batch serving and now want to retrieve single vector "
+                "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
+            )
 
-            # create dict object that will have of order of the vector as key and values as
-            # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
-            # expect that backend will return correctly ordered vectors.
-            batch_dicts = {}
-        else:
-            if all([isinstance(val, list) for val in entry.values()]):
-                raise ValueError(
-                    "Entry is expected to be single value per primary key. "
-                    "If you have already initialised prepared statements for single vector and now want to retrieve "
-                    "batch vector please reinitialise prepared statements with  "
-                    "`training_dataset.init_prepared_statement(batch_size=n)`"
-                )
-            serving_vector = []
+        # create dict object that will have of order of the vector as key and values as
+        # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+        # expect that backend will return correctly ordered vectors.
+        batch_dicts = {}
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
@@ -223,21 +258,13 @@ class TrainingDatasetEngine:
                 )
 
                 # if this is batch serving then get vector by order and update with vector from other feature group(s)
-                if training_dataset.batch_serving:
-                    if order_in_batch in batch_dicts:
-                        batch_dicts[order_in_batch] += list(result_dict.values())
-                    else:
-                        batch_dicts[order_in_batch] = list(result_dict.values())
+                if order_in_batch in batch_dicts:
+                    batch_dicts[order_in_batch] += list(result_dict.values())
+                else:
+                    batch_dicts[order_in_batch] = list(result_dict.values())
                 order_in_batch += 1
 
-            if not training_dataset.batch_serving:
-                serving_vector += list(result_dict.values())
-
-        # if this is batch serving then return batch of vectors, otherwise return single serving vector
-        if training_dataset.batch_serving:
-            return list(batch_dicts.values())
-        else:
-            return serving_vector
+        return list(batch_dicts.values())
 
     def init_prepared_statement(self, training_dataset, batch, external):
 

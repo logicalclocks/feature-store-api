@@ -46,6 +46,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.DriverManager;
+import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,8 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.Set;
-
-import java.sql.DriverManager;
+import java.util.stream.Collectors;
 
 public class TrainingDatasetEngine {
 
@@ -216,15 +217,24 @@ public class TrainingDatasetEngine {
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDataset, batch);
     // map of prepared statement index and its corresponding parameter indices
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters = new HashMap<>();
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
+
+    // in case its batch serving then we need to save sql string only
+    TreeMap<Integer, String> preparedQueryString =  new TreeMap<>();
+
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
-      preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
-      HashMap<String, Integer> parameterIndices = new HashMap<>();
+      if (batch) {
+        preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
+                servingPreparedStatement.getQueryOnline());
+      } else {
+        preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
+                jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
+      }
+      TreeMap<String, Integer> parameterIndices = new TreeMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
         parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex());
@@ -234,6 +244,7 @@ public class TrainingDatasetEngine {
     trainingDataset.setServingKeys(servingVectorKeys);
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
+    trainingDataset.setPreparedQueryString(preparedQueryString);
   }
 
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
@@ -246,7 +257,8 @@ public class TrainingDatasetEngine {
 
     checkPrimaryKeys(trainingDataset, entry.keySet());
 
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
+            trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
     Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
 
@@ -300,34 +312,32 @@ public class TrainingDatasetEngine {
 
     checkPrimaryKeys(trainingDataset, entry.keySet());
 
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
-    TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
+            trainingDataset.getPreparedStatementParameters();
+    TreeMap<Integer, String> preparedQueryString = trainingDataset.getPreparedQueryString();
     Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
 
-    // Iterate over entry map of preparedStatements and set values to them
-    for (Integer fgId : trainingDataset.getPreparedStatements().keySet()) {
-      Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(fgId);
-      for (Object name : entry.keySet()) {
-        if (parameterIndexInStatement.containsKey(name)) {
-          // As MySQL doesn't support setting array type on prepared statement. This is the hack to 1st concatenate
-          // list of primary keys as string and then set the values replace
-          preparedStatements.get(fgId).setObject(parameterIndexInStatement.get(name),
-                  "(" + String.join(", ", entry.get(name) + ")"));
-        }
-      }
-    }
-
     // construct batch of serving vectors
-
     // Create map object that will have of order of the vector as key and values as
     // vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
     // expect that backend will return correctly ordered vectors.
     Map<Integer, List<Object>> servingVectorsMap = new HashMap<>();
 
-    for (Integer preparedStatementIndex : preparedStatements.keySet()) {
+    Statement stmt = trainingDataset.getPreparedStatementConnection().createStatement();
+    for (Integer fgId : preparedQueryString.keySet()) {
       int orderInBatch = 0;
       ArrayList<Object> servingVector = new ArrayList<>();
-      ResultSet results = preparedStatements.get(preparedStatementIndex).executeQuery();
+      String query = preparedQueryString.get(fgId);
+
+      for (String parameterNames: preparedStatementParameters.get(fgId).keySet()) {
+        // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
+        // the ? with array joined as comma separated array.
+        query = query.replaceFirst("\\?",
+                "(" + entry.get(parameterNames).stream().map(Object::toString)
+                        .collect(Collectors.joining(", ")) + ")");
+      }
+      ResultSet results = stmt.executeQuery(query);
+
       // check if results contain any data at all and throw exception if not
       if (!results.isBeforeFirst()) {
         throw new FeatureStoreException("No data was retrieved from online feature store using input " + entry);
@@ -357,7 +367,6 @@ public class TrainingDatasetEngine {
       }
       results.close();
     }
-    trainingDataset.getPreparedStatementConnection().commit();
     return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
 
