@@ -24,7 +24,7 @@ setup(
         "numpy",
         "pyjks",
         "mock",
-        "avro==1.10.1",
+        "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL",
     ],
