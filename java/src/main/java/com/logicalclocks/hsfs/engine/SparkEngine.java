@@ -143,6 +143,7 @@ public class SparkEngine {
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
+    sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(),0).collect();
 
     dataset.createOrReplaceTempView(alias);
     return dataset;

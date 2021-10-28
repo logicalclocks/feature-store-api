@@ -69,10 +69,6 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  protected String location;
-
-  @Getter
-  @Setter
   private List<String> statisticColumns;
 
   @JsonIgnore
