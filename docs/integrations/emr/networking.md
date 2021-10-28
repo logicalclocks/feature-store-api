@@ -58,7 +58,7 @@ Follow the guide [VPC Peering](https://docs.aws.amazon.com/vpc/latest/peering/cr
 The Feature Store *Security Group* needs to be configured to allow traffic from your EMR clusters to be able to connect to the Feature Store.
 
 !!! note "Hopsworks.ai"
-    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](../../../hopsworksai/services/#outside-access-to-the-feature-store).
+    If you deployed your Hopsworks Feature Store with Hopsworks.ai, you only need to enable [outside access of the Feature Store services](https://docs.hopsworks.ai/hopsworks-cloud/latest/services/#outside-access-to-the-feature-store).
 
 Open your feature store instance under EC2 in the AWS Management Console and ensure that ports *443*, *3306*, *9083*, *9085*, *8020* and *30010* (443,3306,8020,30010,9083,9085) are reachable
 from the EMR Security Group:
