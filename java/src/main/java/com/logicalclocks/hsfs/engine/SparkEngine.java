@@ -143,7 +143,7 @@ public class SparkEngine {
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
-    if (onDemandFeatureGroup.getLocation() != null && !onDemandFeatureGroup.getLocation().isEmpty()) {
+    if (!Strings.isNullOrEmpty(onDemandFeatureGroup.getLocation())) {
       sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(), 0).collect();
     }
 
