@@ -353,6 +353,15 @@ PAGES = {
     "api/job_configuration.md": {
         "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
     },
+    "api/query_api.md": {
+        "query_methods": keras_autodoc.get_methods(
+            "hsfs.constructor.query.Query",
+            exclude=["json", "to_dict"],
+        ),
+        "query_properties": keras_autodoc.get_properties(
+            "hsfs.constructor.query.Query"
+        ),
+    },
     "versioning.md": {
         "fg_append": ["hsfs.feature_group.FeatureGroup.append_features"],
         "fg_get_all": ["hsfs.feature_store.FeatureStore.get_feature_groups"],
