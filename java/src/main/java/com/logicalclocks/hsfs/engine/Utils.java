@@ -24,10 +24,7 @@ import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetType;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.*;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -85,7 +82,8 @@ public class Utils {
     return features;
   }
 
-  public Dataset<Row> sanitizeFeatureNames(Dataset<Row> dataset) {
+  public <T> Dataset<Row> sanitizeFeatureNames(T datasetGeneric) {
+    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
         Column[]::new));
   }
@@ -204,7 +202,7 @@ public class Utils {
         + "/Resources/" + queryName + "-checkpoint";
   }
 
-  public Map<String, String> getKafkaConfig(FeatureGroup featureGroup, Map<String, String> writeOptions)
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
     if (writeOptions != null) {

@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
@@ -345,7 +346,7 @@ public class SparkEngine {
         .save();
   }
 
-  public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
+  public StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
@@ -396,7 +397,7 @@ public class SparkEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroup featureGroup, Dataset<Row> dataset)
+  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
     Collections.sort(featureGroup.getPrimaryKeys());
     return dataset.select(
