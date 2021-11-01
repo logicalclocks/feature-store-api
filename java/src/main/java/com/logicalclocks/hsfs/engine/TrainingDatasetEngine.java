@@ -300,7 +300,7 @@ public class TrainingDatasetEngine {
   }
 
   public List<List<Object>> getServingVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
-                                        boolean external) throws SQLException, FeatureStoreException, IOException,
+                                              boolean external) throws SQLException, FeatureStoreException, IOException,
           ClassNotFoundException {
 
     // init prepared statement if it has not already
