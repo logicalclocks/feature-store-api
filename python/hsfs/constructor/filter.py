@@ -99,6 +99,19 @@ class Logic:
         }
 
     @classmethod
+    def from_response_json(cls, json_dict):
+        if json_dict is None:
+            return None
+
+        return cls(
+            type=json_dict["type"] if "type" in json_dict else None,
+            left_f=json_dict["left_filter"] if "left_filter" in json_dict else None,
+            right_f=json_dict["right_filter"] if "right_filter" in json_dict else None,
+            left_l=json_dict["left_logic"] if "left_logic" in json_dict else None,
+            right_l=json_dict["right_logic"] if "right_logic" in json_dict else None,
+        )
+
+    @classmethod
     def And(cls, left_f=None, right_f=None, left_l=None, right_l=None):
         return cls(cls.AND, left_f, right_f, left_l, right_l)
 
