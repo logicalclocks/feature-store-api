@@ -146,7 +146,7 @@ public class FeatureGroupBase {
   }
 
   public <T> T read() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/OnDeamandFeatureGroup classes
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup/OnDeamandFeatureGroup classes
     return null;
   }
 

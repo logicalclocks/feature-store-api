@@ -20,16 +20,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.DataFormat;
-import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
-import com.logicalclocks.hsfs.Split;
-import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.*;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
@@ -346,19 +337,35 @@ public class SparkEngine {
         .save();
   }
 
-  public StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset, String queryName,
+  public <T> StreamingQuery writeStreamDataframe(T genericFeatureGroup, Dataset<Row> dataset, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-    DataStreamWriter<Row> writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
-        .writeStream()
-        .format(Constants.KAFKA_FORMAT)
-        .outputMode(outputMode)
-        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-            + "/Resources/" + queryName + "-checkpoint")
-        .options(writeOptions)
-        .option("topic", featureGroup.getOnlineTopicName());
+    DataStreamWriter<Row> writer;
+    if (genericFeatureGroup instanceof StreamFeatureGroup){
+      StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
+      writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+              .writeStream()
+              .format(Constants.KAFKA_FORMAT)
+              .outputMode(outputMode)
+              .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+                      + "/Resources/" + queryName + "-checkpoint")
+              .options(writeOptions)
+              .option("topic", featureGroup.getOnlineTopicName());
+
+    } else {
+      FeatureGroup featureGroup = (FeatureGroup) genericFeatureGroup;
+      writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+              .writeStream()
+              .format(Constants.KAFKA_FORMAT)
+              .outputMode(outputMode)
+              .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+                      + "/Resources/" + queryName + "-checkpoint")
+              .options(writeOptions)
+              .option("topic", featureGroup.getOnlineTopicName());
+    }
+
 
     // start streaming to online feature group topic
     StreamingQuery query = writer.start();
@@ -371,18 +378,32 @@ public class SparkEngine {
   /**
    * Encodes all complex type features to binary using their avro type as schema.
    *
-   * @param featureGroup
+   * @param genericFeatureGroup
    * @param dataset
    * @return
    */
-  public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
-      throws FeatureStoreException, IOException {
+  public <T> Dataset<Row> encodeComplexFeatures(T genericFeatureGroup, Dataset<Row> dataset)
+          throws FeatureStoreException, IOException {
+
     List<Column> select = new ArrayList<>();
-    for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
-      if (featureGroup.getComplexFeatures().contains(f.name())) {
-        select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
-      } else {
-        select.add(col(f.name()));
+    // TODO (davit): duplicated code
+    if (genericFeatureGroup instanceof StreamFeatureGroup){
+      StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
+      for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
+        if (featureGroup.getComplexFeatures().contains(f.name())) {
+          select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
+        } else {
+          select.add(col(f.name()));
+        }
+      }
+    } else {
+      FeatureGroup featureGroup = (FeatureGroup) genericFeatureGroup;
+      for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
+        if (featureGroup.getComplexFeatures().contains(f.name())) {
+          select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
+        } else {
+          select.add(col(f.name()));
+        }
       }
     }
     return dataset.select(select.stream().toArray(Column[]::new));
@@ -391,20 +412,34 @@ public class SparkEngine {
   /**
    * Serializes dataframe to two binary columns, one avro serialized key and one avro serialized value column.
    *
-   * @param featureGroup
+   * @param genericFeatureGroup
    * @param dataset
    * @return dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
-  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroup, Dataset<Row> dataset)
+  private <T> Dataset<Row> onlineFeatureGroupToAvro(T genericFeatureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
-    Collections.sort(featureGroup.getPrimaryKeys());
-    return dataset.select(
-        to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
-            .toArray(Column[]::new))).alias("key"),
-        to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
-                .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
+    // TODO (davit): duplicated code
+    if (genericFeatureGroup instanceof StreamFeatureGroup){
+      StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
+      Collections.sort(featureGroup.getPrimaryKeys());
+      return dataset.select(
+              to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+                      .toArray(Column[]::new))).alias("key"),
+              to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
+                      .map(f -> col(f.name())).toArray(Column[]::new)),
+                      featureGroup.getEncodedAvroSchema()).alias("value"));
+    } else {
+      FeatureGroup featureGroup = (FeatureGroup) genericFeatureGroup;
+      Collections.sort(featureGroup.getPrimaryKeys());
+      return dataset.select(
+              to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+                      .toArray(Column[]::new))).alias("key"),
+              to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
+                      .map(f -> col(f.name())).toArray(Column[]::new)),
+                      featureGroup.getEncodedAvroSchema()).alias("value"));
+    }
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,

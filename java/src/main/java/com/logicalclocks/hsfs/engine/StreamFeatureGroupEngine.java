@@ -41,7 +41,7 @@ public class StreamFeatureGroupEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
 
-    public <T,C> C insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
+    public <T> Object insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
                               String outputMode, boolean awaitTermination, Long timeout,
                               Map<String, String> writeOptions)
             throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
@@ -65,7 +65,7 @@ public class StreamFeatureGroupEngine {
                 utils.getKafkaConfig(streamFeatureGroup, writeOptions));
     }
 
-    public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
         return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
     }
 }
