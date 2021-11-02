@@ -107,8 +107,8 @@ class Logic:
             type=json_dict["type"] if "type" in json_dict else None,
             left_f=json_dict["left_filter"] if "left_filter" in json_dict else None,
             right_f=json_dict["right_filter"] if "right_filter" in json_dict else None,
-            left_l=json_dict["left_logic"] if "left_logic" in json_dict else None,
-            right_l=json_dict["right_logic"] if "right_logic" in json_dict else None,
+            left_l=Logic.from_response_json(json_dict["left_logic"]),
+            right_l=Logic.from_response_json(json_dict["right_logic"]),
         )
 
     @classmethod
