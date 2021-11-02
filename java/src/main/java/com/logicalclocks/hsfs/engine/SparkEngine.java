@@ -20,10 +20,19 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.*;
-import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.Split;
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -343,7 +352,7 @@ public class SparkEngine {
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     DataStreamWriter<Row> writer;
-    if (genericFeatureGroup instanceof StreamFeatureGroup){
+    if (genericFeatureGroup instanceof StreamFeatureGroup) {
       StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
       writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
               .writeStream()
@@ -387,7 +396,7 @@ public class SparkEngine {
 
     List<Column> select = new ArrayList<>();
     // TODO (davit): duplicated code
-    if (genericFeatureGroup instanceof StreamFeatureGroup){
+    if (genericFeatureGroup instanceof StreamFeatureGroup) {
       StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
       for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
         if (featureGroup.getComplexFeatures().contains(f.name())) {
@@ -421,7 +430,7 @@ public class SparkEngine {
   private <T> Dataset<Row> onlineFeatureGroupToAvro(T genericFeatureGroup, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
     // TODO (davit): duplicated code
-    if (genericFeatureGroup instanceof StreamFeatureGroup){
+    if (genericFeatureGroup instanceof StreamFeatureGroup) {
       StreamFeatureGroup featureGroup = (StreamFeatureGroup) genericFeatureGroup;
       Collections.sort(featureGroup.getPrimaryKeys());
       return dataset.select(

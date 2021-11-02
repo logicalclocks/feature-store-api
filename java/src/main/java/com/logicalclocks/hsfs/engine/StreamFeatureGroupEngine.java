@@ -16,7 +16,6 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
@@ -34,38 +33,38 @@ import java.util.concurrent.TimeoutException;
 
 public class StreamFeatureGroupEngine {
 
-    private Utils utils = new Utils();
-    private KafkaApi kafkaApi = new KafkaApi();
-    private StreamFeatureGroupApi streamFeatureGroupApi = new StreamFeatureGroupApi();
+  private Utils utils = new Utils();
+  private KafkaApi kafkaApi = new KafkaApi();
+  private StreamFeatureGroupApi streamFeatureGroupApi = new StreamFeatureGroupApi();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
 
-    public <T> Object insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
+  public <T> Object insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
                               String outputMode, boolean awaitTermination, Long timeout,
                               Map<String, String> writeOptions)
             throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-        if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
-            LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
+    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
                     + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
-        }
+    }
 
-        // start streaming to hudi table from online feature group topic
-        if (streamFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-            writeOptions.put("functionType", "streamingQuery");
-            streamFeatureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
-        } else {
-            throw new FeatureStoreException("Hudi DeltaStreamer is only supported for Hudi time travel enabled feature "
+    // start streaming to hudi table from online feature group topic
+    if (streamFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      writeOptions.put("functionType", "streamingQuery");
+      streamFeatureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
+    } else {
+      throw new FeatureStoreException("Hudi DeltaStreamer is only supported for Hudi time travel enabled feature "
                     + "groups");
-        }
-
-        return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-                utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-                utils.getKafkaConfig(streamFeatureGroup, writeOptions));
     }
 
-    public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-        return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
-    }
+    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
+      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+  }
+
+  public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
+  }
 }

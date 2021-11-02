@@ -176,40 +176,25 @@ public class FeatureGroupEngine {
         utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
         utils.getKafkaConfig(featureGroup, writeOptions));
 
-    // start streaming to hudi table from online feature group topic
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      writeOptions.put("functionType", "streamingQuery");
-      featureGroupApi.deltaStreamerJob(featureGroup, writeOptions);
-    } else {
-      throw new FeatureStoreException("Hudi DeltaStreamer is only supported for Hudi time travel enabled feature "
-          + "groups");
-    }
-
     return streamingQuery;
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
                             HudiOperationType operation, Map<String, String> offlineWriteOptions,
                             Map<String, String> onlineWriteOptions, Integer validationId)
-      throws IOException, FeatureStoreException, ParseException {
+          throws IOException, FeatureStoreException, ParseException {
     if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
-          + "write to the offline storage.");
+              + "write to the offline storage.");
     } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
       SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
-          offlineWriteOptions, validationId);
+              offlineWriteOptions, validationId);
     } else if (storage == Storage.ONLINE) {
       SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      if (featureGroup.getTimeTravelFormat().equals(TimeTravelFormat.HUDI)
-          && !operation.equals(HudiOperationType.BULK_INSERT)) {
-        SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
-        featureGroupApi.deltaStreamerJob(featureGroup, offlineWriteOptions);
-      } else {
-        SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
-            offlineWriteOptions, validationId);
-        SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
-      }
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+              offlineWriteOptions, validationId);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
     }

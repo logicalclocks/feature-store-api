@@ -24,11 +24,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StreamFeatureGroupOptions {
-    @Getter
-    @Setter
-    private String name;
+  @Getter
+  @Setter
+  private String name;
 
-    @Getter
-    @Setter
-    private String value;
+  @Getter
+  @Setter
+  private String value;
 }

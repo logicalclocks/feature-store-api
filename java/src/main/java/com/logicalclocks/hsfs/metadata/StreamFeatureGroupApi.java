@@ -34,51 +34,50 @@ import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
 public class StreamFeatureGroupApi {
 
-    public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
-    public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
-    public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
+  public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
+  public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
+  public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
             + "updateMetadata,validationType}";
-    public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
+  public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
             + "/commits{?filter_by,sort_by,offset,limit}";
-    public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
-    public static final String FEATURE_GROUP_DELTASTREAMER_PATH = FEATURE_GROUP_ID_PATH + "/deltastreamer";
+  public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
+  public static final String FEATURE_GROUP_DELTASTREAMER_PATH = FEATURE_GROUP_ID_PATH + "/deltastreamer";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-    public void deltaStreamerJob(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
+  public void deltaStreamerJob(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
             throws IOException, FeatureStoreException {
-        HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-        String pathTemplate = PROJECT_PATH
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
                 + FeatureStoreApi.FEATURE_STORE_PATH
                 + FEATURE_GROUP_DELTASTREAMER_PATH;
 
-        UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
                 .set("projectId", streamFeatureGroup.getFeatureStore().getProjectId())
                 .set("fsId", streamFeatureGroup.getFeatureStore().getId())
                 .set("fgId", streamFeatureGroup.getId());
 
-        String uri = uriTemplate.expand();
+    String uri = uriTemplate.expand();
 
-        List<Option> options = new ArrayList<>();
-        for (String key: writeOptions.keySet()) {
-            Option option = new Option();
-            option.setName(key);
-            option.setValue(writeOptions.get(key));
-            options.add(option);
-        }
-        HsfsUtilJobConf hsfsUtilJobConf = new HsfsUtilJobConf();
-        hsfsUtilJobConf.setWriteOptions(options);
-
-        String hsfsUtilJobConftJson = hopsworksClient.getObjectMapper().writeValueAsString(hsfsUtilJobConf);
-        HttpPost postRequest = new HttpPost(uri);
-        postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        postRequest.setEntity(new StringEntity(hsfsUtilJobConftJson));
-
-        LOGGER.info("Sending metadata request: " + uri);
-        LOGGER.info(hsfsUtilJobConftJson);
-
-        LOGGER.info("Sending metadata request: " + uri);
-        hopsworksClient.handleRequest(postRequest);
+    List<Option> options = new ArrayList<>();
+    for (String key: writeOptions.keySet()) {
+      Option option = new Option();
+      option.setName(key);
+      option.setValue(writeOptions.get(key));
+      options.add(option);
     }
+    HsfsUtilJobConf hsfsUtilJobConf = new HsfsUtilJobConf();
+    hsfsUtilJobConf.setWriteOptions(options);
 
+    String hsfsUtilJobConftJson = hopsworksClient.getObjectMapper().writeValueAsString(hsfsUtilJobConf);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(new StringEntity(hsfsUtilJobConftJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(hsfsUtilJobConftJson);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    hopsworksClient.handleRequest(postRequest);
+  }
 }
