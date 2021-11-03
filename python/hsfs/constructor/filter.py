@@ -16,7 +16,7 @@
 
 import json
 
-from hsfs import util
+from hsfs import util, feature
 
 
 class Filter:
@@ -31,6 +31,17 @@ class Filter:
         self._feature = feature
         self._condition = condition
         self._value = value
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        if json_dict is None:
+            return None
+
+        return cls(
+            feature=feature.Feature.from_response_json(json_dict["feature"]),
+            condition=json_dict["condition"],
+            value=json_dict["value"],
+        )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -96,6 +107,19 @@ class Logic:
             "leftLogic": self._left_l,
             "rightLogic": self._right_l,
         }
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        if json_dict is None:
+            return None
+
+        return cls(
+            type=json_dict["type"] if "type" in json_dict else None,
+            left_f=Filter.from_response_json(json_dict["left_filter"]),
+            right_f=Filter.from_response_json(json_dict["right_filter"]),
+            left_l=Logic.from_response_json(json_dict["left_logic"]),
+            right_l=Logic.from_response_json(json_dict["right_logic"]),
+        )
 
     @classmethod
     def And(cls, left_f=None, right_f=None, left_l=None, right_l=None):
