@@ -74,6 +74,9 @@ class Feature:
 
     @classmethod
     def from_response_json(cls, json_dict):
+        if json_dict is None:
+            return None
+
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 

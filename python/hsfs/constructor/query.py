@@ -20,7 +20,8 @@ from typing import Optional, List, Union
 
 from hsfs import util, engine
 from hsfs.core import query_constructor_api, storage_connector_api
-from hsfs.constructor import join, filter
+from hsfs.constructor import join
+from hsfs.constructor.filter import Filter, Logic
 
 
 class Query:
@@ -42,7 +43,7 @@ class Query:
         self._left_feature_group_start_time = left_feature_group_start_time
         self._left_feature_group_end_time = left_feature_group_end_time
         self._joins = joins or []
-        self._filter = filter
+        self._filter = Logic.from_response_json(filter)
         self._hive_engine = True if engine.get_type() == "hive" else False
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
@@ -179,7 +180,7 @@ class Query:
         )
         return self
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]):
+    def filter(self, f: Union[Filter, Logic]):
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -209,9 +210,9 @@ class Query:
             `Query`. The query object with the applied filter.
         """
         if self._filter is None:
-            if isinstance(f, filter.Filter):
-                self._filter = filter.Logic.Single(left_f=f)
-            elif isinstance(f, filter.Logic):
+            if isinstance(f, Filter):
+                self._filter = Logic.Single(left_f=f)
+            elif isinstance(f, Logic):
                 self._filter = f
             else:
                 raise TypeError(
