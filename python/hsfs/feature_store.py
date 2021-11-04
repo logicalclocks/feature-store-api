@@ -286,19 +286,19 @@ class FeatureStore:
     ):
         """Execute SQL command on the offline or online feature store database
 
-        Args:
-            query (str): The SQL query to execute.
-            dataframe_type (Optional[str], optional): The type of the returned dataframe. Defaults to "default"
+        # Arguments
+            query: The SQL query to execute.
+            dataframe_type: The type of the returned dataframe. Defaults to "default".
                 which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
-            online (Optional[bool], optional): Set to true to execute the query against the online feature store.
+            online: Set to true to execute the query against the online feature store.
                 Defaults to False.
-            read_options (Optional[dict], optional): Additional options to pass to the execution engine. Defaults to {}.
+            read_options: Additional options to pass to the execution engine. Defaults to {}.
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
                 this instructs the library to use the `host` parameter in the [`hsfs.connection()`](project.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on
                 the private ip.
 
-        Returns:
+        # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
         return self._feature_group_engine.sql(
