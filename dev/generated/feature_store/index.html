@@ -2399,19 +2399,21 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
 <p>Execute SQL command on the offline or online feature store database</p>
-<p>Args:
-    query (str): The SQL query to execute.
-    dataframe_type (Optional[str], optional): The type of the returned dataframe. Defaults to "default"
-        which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
-    online (Optional[bool], optional): Set to true to execute the query against the online feature store.
-        Defaults to False.
-    read_options (Optional[dict], optional): Additional options to pass to the execution engine. Defaults to {}.
-        If running queries on the online feature store, users can provide an entry <code>{'external': True}</code>,
-        this instructs the library to use the <code>host</code> parameter in the <a href="../project/#connection"><code>hsfs.connection()</code></a> to establish the connection to the online feature store.
-        If not set, or set to False, the online feature store storage connector is used which relies on
-        the private ip.</p>
-<p>Returns:
-    <code>DataFrame</code>: DataFrame depending on the chosen type.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>str</code>: The SQL query to execute.</li>
+<li><strong>dataframe_type</strong> <code>Optional[str]</code>: The type of the returned dataframe. Defaults to "default".
+    which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.</li>
+<li><strong>online</strong> <code>Optional[bool]</code>: Set to true to execute the query against the online feature store.
+    Defaults to False.</li>
+<li><strong>read_options</strong> <code>Optional[dict]</code>: Additional options to pass to the execution engine. Defaults to {}.
+    If running queries on the online feature store, users can provide an entry <code>{'external': True}</code>,
+    this instructs the library to use the <code>host</code> parameter in the <a href="../project/#connection"><code>hsfs.connection()</code></a> to establish the connection to the online feature store.
+    If not set, or set to False, the online feature store storage connector is used which relies on
+    the private ip.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>: DataFrame depending on the chosen type.</p>
 <hr />
                 
               
