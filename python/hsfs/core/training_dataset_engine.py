@@ -116,7 +116,7 @@ class TrainingDatasetEngine:
 
         if online:
             return fs_query["queryOnline"]
-        if fs_query["pitQuery"] is not None:
+        if "pitQuery" in fs_query:
             return fs_query["pitQuery"]
         return fs_query["query"]
 
