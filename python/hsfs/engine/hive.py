@@ -229,6 +229,8 @@ class Engine:
             return "float"
         elif dtype == np.dtype("float64"):
             return "double"
+        elif dtype == np.dtype("datetime64[ns]"):
+            return "timestamp"
 
         return "string"
 
