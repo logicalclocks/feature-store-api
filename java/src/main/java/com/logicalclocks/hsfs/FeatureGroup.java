@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -65,10 +66,6 @@ public class FeatureGroup extends FeatureGroupBase {
   @Getter
   @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
-
-  @Getter
-  @Setter
-  protected String location;
 
   @Getter
   @Setter
@@ -207,6 +204,21 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
+  /**
+   * Get Query object to retrieve all features of the group at a point in the past.
+   * This method selects all features in the feature group and returns a Query object
+   * at the specified point in time. This can then either be read into a Dataframe
+   * or used further to perform joins or construct a training dataset.
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @return Query. The query object with the applied time travel condition
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return selectAll().asOf(wallclockTime);
+  }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, false);

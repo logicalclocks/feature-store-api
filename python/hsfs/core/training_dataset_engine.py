@@ -16,9 +16,10 @@
 
 import re
 import io
+
 import avro.schema
 import avro.io
-from sqlalchemy import sql
+from sqlalchemy import sql, bindparam
 
 from hsfs import engine, training_dataset_feature, util
 from hsfs.core import (
@@ -115,7 +116,7 @@ class TrainingDatasetEngine:
 
         if online:
             return fs_query["queryOnline"]
-        if fs_query["pitQuery"] is not None:
+        if "pitQuery" in fs_query:
             return fs_query["pitQuery"]
         return fs_query["query"]
 
@@ -160,10 +161,18 @@ class TrainingDatasetEngine:
     def get_serving_vector(self, training_dataset, entry, external):
         """Assembles serving vector from online feature store."""
 
+        if all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be single value per primary key. "
+                "If you have already initialised prepared statements for single vector and now want to retrieve "
+                "batch vector please reinitialise prepared statements with  "
+                "`training_dataset.init_prepared_statement(batch_size=n)`"
+            )
+
         serving_vector = []
 
         if training_dataset.prepared_statements is None:
-            self.init_prepared_statement(training_dataset, external)
+            self.init_prepared_statement(training_dataset, False, external)
 
         # check if primary key map correspond to serving_keys.
         if not entry.keys() == training_dataset.serving_keys:
@@ -198,11 +207,80 @@ class TrainingDatasetEngine:
 
         return serving_vector
 
-    def init_prepared_statement(self, training_dataset, external):
+    def get_serving_vectors(self, training_dataset, entry, external):
+        """Assembles serving vector from online feature store."""
+
+        # initialize prepared statements
+        if training_dataset.prepared_statements is None:
+            self.init_prepared_statement(training_dataset, True, external)
+
+        if not all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be list of primary key values. "
+                "If you have already initialised for batch serving and now want to retrieve single vector "
+                "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
+            )
+
+        # create dict object that will have of order of the vector as key and values as
+        # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+        # expect that backend will return correctly ordered vectors.
+        batch_dicts = {}
+
+        # check if primary key map correspond to serving_keys.
+        if not entry.keys() == training_dataset.serving_keys:
+            raise ValueError(
+                "Provided primary key map doesn't correspond to serving_keys"
+            )
+
+        prepared_statements = training_dataset.prepared_statements
+
+        # get schemas for complex features once
+        complex_features = self.get_complex_feature_schemas(training_dataset)
+
+        for prepared_statement_index in training_dataset.prepared_statements:
+            order_in_batch = 0
+            prepared_statement = prepared_statements[prepared_statement_index]
+            with training_dataset.prepared_statement_engine.connect() as mysql_conn:
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
+            result_dict = {}
+            for row in result_proxy:
+                result_dict = self.deserialize_complex_features(
+                    complex_features, dict(row.items())
+                )
+                if not result_dict:
+                    raise Exception(
+                        "No data was retrieved from online feature store using input "
+                        + entry
+                    )
+                # apply transformation functions
+                result_dict = self._apply_transformation(
+                    training_dataset.transformation_functions, result_dict
+                )
+
+                # if this is batch serving then get vector by order and update with vector from other feature group(s)
+                if order_in_batch in batch_dicts:
+                    batch_dicts[order_in_batch] += list(result_dict.values())
+                else:
+                    batch_dicts[order_in_batch] = list(result_dict.values())
+                order_in_batch += 1
+
+        return list(batch_dicts.values())
+
+    def init_prepared_statement(self, training_dataset, batch, external):
+
+        # reset values to default, as user may be re-initialising with different parameters
+        training_dataset.prepared_statement_engine = None
+        training_dataset.prepared_statements = None
+        training_dataset.serving_keys = None
+        training_dataset.batch_serving = False
+
+        if batch:
+            training_dataset.batch_serving = True
+
         online_conn = self._storage_connector_api.get_online_connector()
         mysql_engine = util.create_mysql_engine(online_conn, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
-            training_dataset
+            training_dataset, training_dataset.batch_serving
         )
 
         prepared_statements_dict = {}
@@ -235,6 +313,12 @@ class TrainingDatasetEngine:
                     query_online,
                 )
             query_online = sql.text(query_online)
+            # in case of batch serving vector bind parameters to the prepared statement.
+            if training_dataset.batch_serving:
+                bind_params = [
+                    bindparam(pk_name, expanding=True) for pk_name in pk_names
+                ]
+                query_online = query_online.bindparams(*bind_params)
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online

@@ -38,8 +38,9 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, validation_type):
+    def __init__(self, featurestore_id, validation_type, location):
         self._validation_type = validation_type.upper()
+        self._location = location
         self._feature_group_base_engine = (
             feature_group_base_engine.FeatureGroupBaseEngine(featurestore_id)
         )
@@ -451,6 +452,10 @@ class FeatureGroupBase:
     def event_time(self, feature_name):
         self._event_time = feature_name
 
+    @property
+    def location(self):
+        return self._location
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -479,7 +484,7 @@ class FeatureGroup(FeatureGroupBase):
         online_topic_name=None,
         event_time=None,
     ):
-        super().__init__(featurestore_id, validation_type)
+        super().__init__(featurestore_id, validation_type, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -494,7 +499,6 @@ class FeatureGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._location = location
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -953,6 +957,22 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def as_of(self, wallclock_time):
+        """Get Query object to retrieve all features of the group at a point in the past.
+
+        This method selects all features in the feature group and returns a Query object
+        at the specified point in time. This can then either be read into a Dataframe
+        or used further to perform joins or construct a training dataset.
+
+        # Arguments
+            wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+
+        # Returns
+            `Query`. The query object with the applied time travel condition.
+        """
+        return self.select_all().as_of(wallclock_time)
+
     def update_description(self, description: str):
         """Update the description of the feature gorup.
 
@@ -1160,10 +1180,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._features
 
     @property
-    def location(self):
-        return self._location
-
-    @property
     def online_enabled(self):
         """Setting if the feature group is available in online storage."""
         return self._online_enabled
@@ -1282,12 +1298,13 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         creator=None,
         id=None,
         features=None,
+        location=None,
         statistics_config=None,
         event_time=None,
         validation_type="NONE",
         expectations=None,
     ):
-        super().__init__(featurestore_id, validation_type)
+        super().__init__(featurestore_id, validation_type, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
