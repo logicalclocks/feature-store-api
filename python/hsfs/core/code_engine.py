@@ -48,8 +48,6 @@ class CodeEngine:
         elif job_name:
             self._code_api.post(metadata_instance, code_entity, job_name, RunType.JOB)
 
-        self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
-
 
 class RunType:
     JUPYTER = "JUPYTER"
