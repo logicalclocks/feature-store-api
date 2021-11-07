@@ -34,8 +34,6 @@ class CodeEngine:
         """Compute code for a dataframe and send the result json to Hopsworks."""
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
         job_name = os.environ.get(CodeEngine.JOB_ENV)
-        if not kernel_id:
-            return
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
