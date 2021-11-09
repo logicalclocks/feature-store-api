@@ -195,6 +195,11 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+    return StreamFeatureGroup.builder()
+            .featureStore(this);
+  }
+
   public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
     return OnDemandFeatureGroup.builder()
         .featureStore(this);

@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
@@ -35,12 +36,13 @@ import lombok.Setter;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaParseException;
-import org.apache.spark.sql.streaming.StreamingQueryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -132,30 +134,65 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
+  public <T> void save(T featureData, Map<String, String> writeOptions)
+          throws FeatureStoreException, IOException, ParseException {
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions);
+    codeEngine.saveCode(this);
+    /* TODO (davit):
+    if (statisticsConfig.getEnabled()) {
+      statisticsEngine.computeStatistics(this, featureData, null);
+    }
+     */
+  }
+
+  public <T> void insert(T featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+                     Map<String, String> writeOptions)
+          throws FeatureStoreException, IOException, ParseException {
+
+    // operation is only valid for time travel enabled feature group
+    if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
+    }
+
+    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+      if (overwrite) {
+        operation = HudiOperationType.BULK_INSERT;
+      } else {
+        operation = HudiOperationType.UPSERT;
+      }
+    }
+
+    // TODO (davit): overwrite ? SaveMode.Overwrite : SaveMode.Append,
+    streamFeatureGroupEngine.insert(this, featureData, storage, operation, writeOptions);
+    codeEngine.saveCode(this);
+    computeStatistics();
+  }
+
   public <T> Object insertStream(T featureData)
-          throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+          throws IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, null);
   }
 
   public <T> Object insertStream(T featureData, String queryName)
-          throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+          throws IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, "append");
   }
 
   public <T> Object insertStream(T featureData, String queryName, String outputMode)
-            throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+            throws IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, false, null);
   }
 
   public <T> Object insertStream(T featureData, String queryName, String outputMode,
                                        boolean awaitTermination, Long timeout)
-          throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+          throws IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
   public <T> Object insertStream(T featureData, String queryName, String outputMode,
                               boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
-          throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+          throws FeatureStoreException, IOException, TimeoutException {
+    // TODO (davit):
     /*
         if (!featureData.isStreaming()) {
             throw new FeatureStoreException(

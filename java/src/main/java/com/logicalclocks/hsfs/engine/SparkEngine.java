@@ -330,19 +330,20 @@ public class SparkEngine {
   /**
    * Writes feature group dataframe to kafka for online-fs ingestion.
    *
-   * @param featureGroup
+   * @param genericFeatureGroup
    * @param dataset
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void writeOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions)
+  public <T,C> void writeOnlineDataframe(T genericFeatureGroup, C dataset, String onlineTopicName,
+                                         Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+    onlineFeatureGroupToAvro(genericFeatureGroup, encodeComplexFeatures(genericFeatureGroup, (Dataset<Row>) dataset))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
-        .option("topic", featureGroup.getOnlineTopicName())
+        .option("topic", onlineTopicName)
         .save();
   }
 

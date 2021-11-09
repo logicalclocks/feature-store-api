@@ -223,8 +223,8 @@ public class DataValidationEngine {
     return expectationResults;
   }
 
-  public FeatureGroupValidation validate(FeatureGroupBase featureGroupBase,
-                                         Dataset<Row> data) throws FeatureStoreException, IOException {
+  public <T> FeatureGroupValidation validate(FeatureGroupBase featureGroupBase,
+                                         T data) throws FeatureStoreException, IOException {
     // Check if an expectation contains features. If it does not, try to use all the current FG features
     List<Expectation> expectations = expectationsApi.get(featureGroupBase);
     final List<String> features = new ArrayList<>();
@@ -240,7 +240,7 @@ public class DataValidationEngine {
         LOGGER.debug("validate :: expectation = " + expectation);
       }
     }
-    return validate(data, featureGroupBase, expectations);
+    return validate((Dataset<Row>) data, featureGroupBase, expectations);
   }
 
   public List<FeatureGroupValidation> getValidations(FeatureGroupBase featureGroupBase)

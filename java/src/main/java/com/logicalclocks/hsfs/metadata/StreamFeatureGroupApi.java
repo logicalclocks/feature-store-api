@@ -43,7 +43,36 @@ public class StreamFeatureGroupApi {
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
   public static final String FEATURE_GROUP_DELTASTREAMER_PATH = FEATURE_GROUP_ID_PATH + "/deltastreamer";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);
+
+  // TODO (davit): duplicated code with FeatureGroupApi
+  public StreamFeatureGroup save(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+
+    return saveInternal(featureGroup, new StringEntity(featureGroupJson), StreamFeatureGroup.class);
+  }
+
+  // TODO (davit): duplicated code with FeatureGroupApi
+  private <T> T saveInternal(FeatureGroupBase featureGroupBase,
+                             StringEntity entity, Class<T> fgType) throws FeatureStoreException, IOException {
+    String pathTemplate = PROJECT_PATH
+            + FeatureStoreApi.FEATURE_STORE_PATH
+            + FEATURE_GROUP_ROOT_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+            .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+            .set("fsId", featureGroupBase.getFeatureStore().getId())
+            .expand();
+
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(entity);
+
+    LOGGER.info("Sending metadata request: " + uri);
+
+    return HopsworksClient.getInstance().handleRequest(postRequest, fgType);
+  }
 
   public void deltaStreamerJob(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
             throws IOException, FeatureStoreException {

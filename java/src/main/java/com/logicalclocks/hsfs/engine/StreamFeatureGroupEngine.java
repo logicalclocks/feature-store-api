@@ -16,20 +16,25 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.StreamFeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
-import org.apache.spark.sql.streaming.StreamingQueryException;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 public class StreamFeatureGroupEngine {
 
@@ -39,11 +44,92 @@ public class StreamFeatureGroupEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
+  /**
+   * Create the metadata and write the data to the online/offline feature store.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @param partitionKeys
+   * @param writeOptions
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public <T> StreamFeatureGroup save(StreamFeatureGroup featureGroup, T dataset, List<String> partitionKeys,
+                                     String hudiPrecombineKey, Map<String, String> writeOptions)
+          throws FeatureStoreException, IOException, ParseException {
 
+    // TODO (davit):
+    //dataset = utils.sanitizeFeatureNames(dataset);
+
+    if (featureGroup.getFeatures() == null) {
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(dataset)));
+    }
+
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
+    /* set primary features */
+    if (featureGroup.getPrimaryKeys() != null) {
+      featureGroup.getPrimaryKeys().forEach(pk ->
+              featureGroup.getFeatures().forEach(f -> {
+                if (f.getName().equals(pk)) {
+                  f.setPrimary(true);
+                }
+              }));
+    }
+
+    /* set partition key features */
+    if (partitionKeys != null) {
+      partitionKeys.forEach(pk ->
+              featureGroup.getFeatures().forEach(f -> {
+                if (f.getName().equals(pk)) {
+                  f.setPartition(true);
+                }
+              }));
+    }
+
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
+
+    // Send Hopsworks the request to create a new feature group
+    StreamFeatureGroup apiFG = streamFeatureGroupApi.save(featureGroup);
+
+    if (featureGroup.getVersion() == null) {
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+              + "`, incremented version to `" + apiFG.getVersion() + "`.");
+    }
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+      List<Feature> features = apiFG.getFeatures();
+      featureGroup.setFeatures(features);
+    }
+
+    // Write the dataframe
+    insert(featureGroup, utils.sanitizeFeatureNames(dataset), null,
+            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI ? HudiOperationType.BULK_INSERT : null,
+            writeOptions);
+
+    return featureGroup;
+  }
+
+  @SneakyThrows
   public <T> Object insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
-                              String outputMode, boolean awaitTermination, Long timeout,
-                              Map<String, String> writeOptions)
-            throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+                                 String outputMode, boolean awaitTermination, Long timeout,
+                                 Map<String, String> writeOptions) {
 
     if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
       LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
@@ -66,5 +152,33 @@ public class StreamFeatureGroupEngine {
 
   public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
+  }
+
+  // TODO (davit): SaveMode saveMode,
+  public <T> void insert(StreamFeatureGroup featureGroup, T featureData, Storage storage,
+                     HudiOperationType operation, Map<String, String> writeOptions)
+          throws FeatureStoreException, IOException, ParseException {
+
+    // TODO (davit): what happens with validationId here?
+    Integer validationId = null;
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      FeatureGroupValidation validation = DataValidationEngine.getInstance().validate(featureGroup, featureData);
+      if (validation != null) {
+        validationId = validation.getValidationId();
+      }
+    }
+
+    /* TODO (davit):
+    if (saveMode == SaveMode.Overwrite) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(featureGroup);
+    }
+    */
+
+    SparkEngine.getInstance().writeOnlineDataframe(featureGroup, featureData, featureGroup.getOnlineTopicName(),
+            writeOptions);
   }
 }

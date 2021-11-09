@@ -190,11 +190,13 @@ public class FeatureGroupEngine {
       SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
               offlineWriteOptions, validationId);
     } else if (storage == Storage.ONLINE) {
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
+              onlineWriteOptions);
     } else if (featureGroup.getOnlineEnabled() && storage == null) {
       SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
               offlineWriteOptions, validationId);
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, onlineWriteOptions);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
+              onlineWriteOptions);
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
     }
