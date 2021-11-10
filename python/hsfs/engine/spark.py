@@ -494,6 +494,7 @@ class Engine:
                         if rule.get("accepted_type") is not None
                         else None
                     )
+                    .feature((rule.get("feature", None)))
                     .legalValues(rule.get("legal_values", None))
                     .build()
                 )
