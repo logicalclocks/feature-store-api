@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 
@@ -49,13 +50,10 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamFeatureGroup extends FeatureGroupBase {
-
-  @Getter
-  @Setter
-  private Boolean onlineEnabled = true;
 
   @Getter
   @Setter
@@ -67,11 +65,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  private String type = "streamFeaturegroupDTO";
-
-  @Getter
-  @Setter
-  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+  private String type = "streamFeatureGroupDTO";
 
   @Getter
   @Setter
@@ -120,8 +114,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
                 ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.partitionKeys = partitionKeys != null
                 ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
-    this.hudiPrecombineKey = timeTravelFormat == TimeTravelFormat.HUDI && hudiPrecombineKey != null
-                ? hudiPrecombineKey.toLowerCase() : null;
+    this.hudiPrecombineKey = hudiPrecombineKey != null ? hudiPrecombineKey.toLowerCase() : null;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.validationType = validationType != null ? validationType : ValidationType.NONE;
@@ -149,12 +142,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
                      Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
-    // operation is only valid for time travel enabled feature group
-    if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
-    }
-
-    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+    if (operation == null) {
       if (overwrite) {
         operation = HudiOperationType.BULK_INSERT;
       } else {

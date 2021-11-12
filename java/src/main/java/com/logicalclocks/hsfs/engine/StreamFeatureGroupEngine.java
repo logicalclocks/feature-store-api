@@ -21,7 +21,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.StreamFeatureGroupApi;
@@ -113,15 +112,14 @@ public class StreamFeatureGroupEngine {
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+    if (hudiPrecombineKey == null) {
       List<Feature> features = apiFG.getFeatures();
       featureGroup.setFeatures(features);
     }
 
     // Write the dataframe
-    insert(featureGroup, utils.sanitizeFeatureNames(dataset), null,
-            featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI ? HudiOperationType.BULK_INSERT : null,
-            writeOptions);
+    insert(featureGroup, utils.sanitizeFeatureNames(dataset), null, HudiOperationType.BULK_INSERT,
+        writeOptions);
 
     return featureGroup;
   }
@@ -137,13 +135,8 @@ public class StreamFeatureGroupEngine {
     }
 
     // start streaming to hudi table from online feature group topic
-    if (streamFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      writeOptions.put("functionType", "streamingQuery");
-      streamFeatureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
-    } else {
-      throw new FeatureStoreException("Hudi DeltaStreamer is only supported for Hudi time travel enabled feature "
-                    + "groups");
-    }
+    writeOptions.put("functionType", "streamingQuery");
+    streamFeatureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
@@ -179,6 +172,6 @@ public class StreamFeatureGroupEngine {
     */
 
     SparkEngine.getInstance().writeOnlineDataframe(featureGroup, featureData, featureGroup.getOnlineTopicName(),
-            writeOptions);
+        utils.getKafkaConfig(featureGroup, writeOptions));
   }
 }
