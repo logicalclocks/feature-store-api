@@ -86,7 +86,7 @@ public class Utils {
     return features;
   }
 
-  public <T> Dataset<Row> sanitizeFeatureNames(T datasetGeneric) {
+  public <S> Dataset<Row> sanitizeFeatureNames(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
         Column[]::new));
@@ -127,7 +127,7 @@ public class Utils {
     return offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
-  public Seq<String> getPartitionColumns(FeatureGroup offlineFeatureGroup) {
+  public Seq<String> getPartitionColumns(FeatureGroupBase offlineFeatureGroup) {
     List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPartition)
         .map(Feature::getName)
@@ -136,7 +136,7 @@ public class Utils {
     return JavaConverters.asScalaIteratorConverter(partitionCols.iterator()).asScala().toSeq();
   }
 
-  public Seq<String> getPrimaryColumns(FeatureGroup offlineFeatureGroup) {
+  public Seq<String> getPrimaryColumns(FeatureGroupBase offlineFeatureGroup) {
     List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
         .filter(Feature::getPrimary)
         .map(Feature::getName)
@@ -145,11 +145,11 @@ public class Utils {
     return JavaConverters.asScalaIteratorConverter(primaryCols.iterator()).asScala().toSeq();
   }
 
-  public String getFgName(FeatureGroup featureGroup) {
+  public String getFgName(FeatureGroupBase featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  public String getHiveServerConnection(FeatureGroup featureGroup) throws IOException, FeatureStoreException {
+  public String getHiveServerConnection(FeatureGroupBase featureGroup) throws IOException, FeatureStoreException {
     Map<String, String> credentials = new HashMap<>();
     credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
     credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());

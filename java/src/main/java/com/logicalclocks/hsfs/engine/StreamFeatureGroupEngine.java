@@ -23,7 +23,7 @@ import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.StreamFeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.SneakyThrows;
@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class StreamFeatureGroupEngine {
 
   private Utils utils = new Utils();
   private KafkaApi kafkaApi = new KafkaApi();
-  private StreamFeatureGroupApi streamFeatureGroupApi = new StreamFeatureGroupApi();
+  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -53,12 +54,9 @@ public class StreamFeatureGroupEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public <T> StreamFeatureGroup save(StreamFeatureGroup featureGroup, T dataset, List<String> partitionKeys,
+  public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
-
-    // TODO (davit):
-    //dataset = utils.sanitizeFeatureNames(dataset);
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(dataset)));
@@ -96,7 +94,7 @@ public class StreamFeatureGroupEngine {
     }
 
     // Send Hopsworks the request to create a new feature group
-    StreamFeatureGroup apiFG = streamFeatureGroupApi.save(featureGroup);
+    StreamFeatureGroup apiFG = featureGroupApi.save(featureGroup);
 
     if (featureGroup.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
@@ -125,7 +123,7 @@ public class StreamFeatureGroupEngine {
   }
 
   @SneakyThrows
-  public <T> Object insertStream(StreamFeatureGroup streamFeatureGroup, T featureData, String queryName,
+  public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
                                  String outputMode, boolean awaitTermination, Long timeout,
                                  Map<String, String> writeOptions) {
 
@@ -134,9 +132,14 @@ public class StreamFeatureGroupEngine {
                     + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
     }
 
+    //TODO (davit):
+    if (writeOptions == null) {
+      writeOptions = new HashMap<>();
+    }
+
     // start streaming to hudi table from online feature group topic
     writeOptions.put("functionType", "streamingQuery");
-    streamFeatureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
+    featureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
@@ -147,12 +150,11 @@ public class StreamFeatureGroupEngine {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
-  // TODO (davit): SaveMode saveMode,
+  // TODO (davit): create our Enum to avoid spark SaveMode
   public <T> void insert(StreamFeatureGroup featureGroup, T featureData, Storage storage,
                      HudiOperationType operation, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
-    // TODO (davit): what happens with validationId here?
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       FeatureGroupValidation validation = DataValidationEngine.getInstance().validate(featureGroup, featureData);
@@ -161,7 +163,7 @@ public class StreamFeatureGroupEngine {
       }
     }
 
-    /* TODO (davit):
+    /*
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
@@ -170,6 +172,11 @@ public class StreamFeatureGroupEngine {
       featureGroupApi.deleteContent(featureGroup);
     }
     */
+
+    if (operation.equals(HudiOperationType.BULK_INSERT)) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, featureData, operation,
+          writeOptions, validationId);
+    }
 
     SparkEngine.getInstance().writeOnlineDataframe(featureGroup, featureData, featureGroup.getOnlineTopicName(),
         utils.getKafkaConfig(featureGroup, writeOptions));

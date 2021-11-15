@@ -336,7 +336,7 @@ public class SparkEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public <T,C> void writeOnlineDataframe(T genericFeatureGroup, C dataset, String onlineTopicName,
+  public <T,S> void writeOnlineDataframe(T genericFeatureGroup, S dataset, String onlineTopicName,
                                          Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     onlineFeatureGroupToAvro(genericFeatureGroup, encodeComplexFeatures(genericFeatureGroup, (Dataset<Row>) dataset))
@@ -450,6 +450,16 @@ public class SparkEngine {
                       .map(f -> col(f.name())).toArray(Column[]::new)),
                       featureGroup.getEncodedAvroSchema()).alias("value"));
     }
+  }
+
+  // TODO (davit): for now I keep both but writeOfflineDataframe should be one function. Also I need to come up with
+  // the system how do I name types
+  public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
+      HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
+      throws IOException, FeatureStoreException, ParseException {
+
+    Dataset<Row> dataset = (Dataset<Row>) genericDataset;
+    hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
@@ -582,9 +592,9 @@ public class SparkEngine {
     return emptyDataframe;
   }
 
-  public void streamToHudiTable(FeatureGroup featureGroup, Map<String, String> writeOptions)
+  public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
-    writeOptions = utils.getKafkaConfig(featureGroup, writeOptions);
-    hudiEngine.streamToHoodieTable(sparkSession, featureGroup, writeOptions);
+    writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
+    hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
 }

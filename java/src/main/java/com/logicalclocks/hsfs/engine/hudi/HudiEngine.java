@@ -21,9 +21,11 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.Utils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
@@ -109,7 +111,7 @@ public class HudiEngine {
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
 
-  public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroup featureGroup,
+  public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroupBase featureGroup,
                                    Dataset<Row> dataset, HudiOperationType operation,
                                    Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
@@ -124,7 +126,9 @@ public class HudiEngine {
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
     fgCommit.setValidationId(validationId);
-    featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+
+    // TODO (davit): decide about the commit here for StreamFeatureGroup
+    // featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
   }
 
   public FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> deleteDF,
@@ -170,7 +174,7 @@ public class HudiEngine {
     return fgCommitMetadata;
   }
 
-  private Map<String, String> setupHudiWriteOpts(FeatureGroup featureGroup, HudiOperationType operation,
+  private Map<String, String> setupHudiWriteOpts(FeatureGroupBase featureGroup, HudiOperationType operation,
                                                  Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
@@ -253,31 +257,31 @@ public class HudiEngine {
     return dateFormat.format(commitedOnDate);
   }
 
-  public void streamToHoodieTable(SparkSession sparkSession, FeatureGroup featureGroup,
+  public void streamToHoodieTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup,
                                   Map<String, String> writeOptions) throws Exception {
 
-    Map<String, String> hudiWriteOpts = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
-    hudiWriteOpts.put("projectId", String.valueOf(featureGroup.getFeatureStore().getProjectId()));
-    hudiWriteOpts.put("featureStoreName", featureGroup.getFeatureStore().getName());
-    hudiWriteOpts.put("featureGroupName", featureGroup.getName());
-    hudiWriteOpts.put("featureGroupVersion", String.valueOf(featureGroup.getVersion()));
-    hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(featureGroup));
-    hudiWriteOpts.put(HUDI_BASE_PATH, featureGroup.getLocation());
-    hudiWriteOpts.put(CHECKPOINT_PROVIDER_PATH_PROP, featureGroup.getLocation());
-    hudiWriteOpts.put(HUDI_KAFKA_TOPIC, featureGroup.getOnlineTopicName());
-    hudiWriteOpts.put(FEATURE_GROUP_SCHEMA, featureGroup.getAvroSchema());
+    Map<String, String> hudiWriteOpts = setupHudiWriteOpts(streamFeatureGroup, HudiOperationType.UPSERT, writeOptions);
+    hudiWriteOpts.put("projectId", String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
+    hudiWriteOpts.put("featureStoreName", streamFeatureGroup.getFeatureStore().getName());
+    hudiWriteOpts.put("featureGroupName", streamFeatureGroup.getName());
+    hudiWriteOpts.put("featureGroupVersion", String.valueOf(streamFeatureGroup.getVersion()));
+    hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));
+    hudiWriteOpts.put(HUDI_BASE_PATH, streamFeatureGroup.getLocation());
+    hudiWriteOpts.put(CHECKPOINT_PROVIDER_PATH_PROP, streamFeatureGroup.getLocation());
+    hudiWriteOpts.put(HUDI_KAFKA_TOPIC, streamFeatureGroup.getOnlineTopicName());
+    hudiWriteOpts.put(FEATURE_GROUP_SCHEMA, streamFeatureGroup.getAvroSchema());
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY, hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
 
     writeOptions.putAll(hudiWriteOpts);
     deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
 
-    FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
+    FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
     // TODO (davit): how this can be set from transformer?
     //fgCommit.setValidationId(validationId);
-    featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
 
     if (writeOptions.containsKey("functionType") && writeOptions.get("functionType").equals("streamingQuery")) {
-      featureGroup.computeStatistics();
+      streamFeatureGroup.computeStatistics();
     }
   }
 }

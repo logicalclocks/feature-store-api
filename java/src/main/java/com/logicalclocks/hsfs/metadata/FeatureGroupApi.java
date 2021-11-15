@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
@@ -32,8 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -70,6 +73,26 @@ public class FeatureGroupApi {
     return resultFg;
   }
 
+  public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
+      throws IOException, FeatureStoreException {
+    StreamFeatureGroup[] streamFeatureGroups =
+      getInternal(featureStore, fgName, fgVersion, StreamFeatureGroup[].class);
+
+    // There can be only one single feature group with a specific name and version in a feature store
+    // There has to be one otherwise an exception would have been thrown.
+    StreamFeatureGroup resultFg = streamFeatureGroups[0];
+    resultFg.setFeatureStore(featureStore);
+    return resultFg;
+  }
+
+  public List<StreamFeatureGroup> getStreamFeatureGroups(FeatureStore featureStore, String fgName)
+      throws FeatureStoreException, IOException {
+    StreamFeatureGroup[] streamFeatureGroups =
+      getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
+
+    return Arrays.asList(streamFeatureGroups);
+  }
+
   public List<OnDemandFeatureGroup> getOnDemandFeatureGroups(FeatureStore featureStore, String fgName)
       throws FeatureStoreException, IOException {
     OnDemandFeatureGroup[] offlineFeatureGroups =
@@ -90,7 +113,7 @@ public class FeatureGroupApi {
     return resultFg;
   }
 
-  private <T> T getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<T> fgType)
+  private <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -126,8 +149,15 @@ public class FeatureGroupApi {
     return saveInternal(featureGroup, new StringEntity(featureGroupJson), FeatureGroup.class);
   }
 
-  private <T> T saveInternal(FeatureGroupBase featureGroupBase,
-                             StringEntity entity, Class<T> fgType) throws FeatureStoreException, IOException {
+  public StreamFeatureGroup save(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+
+    return saveInternal(featureGroup, new StringEntity(featureGroupJson), StreamFeatureGroup.class);
+  }
+
+  private <U> U saveInternal(FeatureGroupBase featureGroupBase,
+                             StringEntity entity, Class<U> fgType) throws FeatureStoreException, IOException {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
@@ -213,7 +243,7 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(putRequest, fgType);
   }
 
-  public FeatureGroupCommit featureGroupCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)
+  public FeatureGroupCommit featureGroupCommit(FeatureGroupBase featureGroup, FeatureGroupCommit featureGroupCommit)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -235,7 +265,7 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
-  public List<FeatureGroupCommit> getCommitDetails(FeatureGroup featureGroupBase, Long wallclockTimestamp,
+  public List<FeatureGroupCommit> getCommitDetails(FeatureGroupBase featureGroupBase, Long wallclockTimestamp,
                                                    Integer limit) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -260,4 +290,41 @@ public class FeatureGroupApi {
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
   }
+
+  public void deltaStreamerJob(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_DELTASTREAMER_PATH;
+
+    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", streamFeatureGroup.getFeatureStore().getProjectId())
+        .set("fsId", streamFeatureGroup.getFeatureStore().getId())
+        .set("fgId", streamFeatureGroup.getId());
+
+    String uri = uriTemplate.expand();
+
+    List<Option> options = new ArrayList<>();
+    for (String key: writeOptions.keySet()) {
+      Option option = new Option();
+      option.setName(key);
+      option.setValue(writeOptions.get(key));
+      options.add(option);
+    }
+    HsfsUtilJobConf hsfsUtilJobConf = new HsfsUtilJobConf();
+    hsfsUtilJobConf.setWriteOptions(options);
+
+    String hsfsUtilJobConftJson = hopsworksClient.getObjectMapper().writeValueAsString(hsfsUtilJobConf);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(new StringEntity(hsfsUtilJobConftJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(hsfsUtilJobConftJson);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    hopsworksClient.handleRequest(postRequest);
+  }
+
 }

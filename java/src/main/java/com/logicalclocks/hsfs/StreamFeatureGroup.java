@@ -47,7 +47,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -127,18 +126,16 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
-  public <T> void save(T featureData, Map<String, String> writeOptions)
+  public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions);
     codeEngine.saveCode(this);
-    /* TODO (davit):
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
-     */
   }
 
-  public <T> void insert(T featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+  public <S> void insert(S featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
@@ -156,39 +153,25 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     computeStatistics();
   }
 
-  public <T> Object insertStream(T featureData)
-          throws IOException, FeatureStoreException, TimeoutException {
+  public <S> Object insertStream(S featureData) {
     return insertStream(featureData, null);
   }
 
-  public <T> Object insertStream(T featureData, String queryName)
-          throws IOException, FeatureStoreException, TimeoutException {
+  public <S> Object insertStream(S featureData, String queryName) {
     return insertStream(featureData, queryName, "append");
   }
 
-  public <T> Object insertStream(T featureData, String queryName, String outputMode)
-            throws IOException, FeatureStoreException, TimeoutException {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode) {
     return insertStream(featureData, queryName, outputMode, false, null);
   }
 
-  public <T> Object insertStream(T featureData, String queryName, String outputMode,
-                                       boolean awaitTermination, Long timeout)
-          throws IOException, FeatureStoreException, TimeoutException {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode,
+                                       boolean awaitTermination, Long timeout) {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
-  public <T> Object insertStream(T featureData, String queryName, String outputMode,
-                              boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
-          throws FeatureStoreException, IOException, TimeoutException {
-    // TODO (davit):
-    /*
-        if (!featureData.isStreaming()) {
-            throw new FeatureStoreException(
-                    "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
-        }
-        LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
-                + "` will not compute statistics.");
-    */
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+      Long timeout, Map<String, String> writeOptions)  {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
               awaitTermination, timeout, writeOptions);
   }
