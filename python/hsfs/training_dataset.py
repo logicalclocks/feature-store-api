@@ -79,6 +79,7 @@ class TrainingDataset:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
+        self._pkname_by_serving_index = None
         self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -742,6 +743,15 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def pkname_by_serving_index(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        return self._pkname_by_serving_index
+
+    @pkname_by_serving_index.setter
+    def pkname_by_serving_index(self, pkname_by_serving_index):
+        self._pkname_by_serving_index = pkname_by_serving_index
 
     @property
     def transformation_functions(self):
