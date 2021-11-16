@@ -376,7 +376,6 @@ public class SparkEngine {
               .option("topic", featureGroup.getOnlineTopicName());
     }
 
-
     // start streaming to online feature group topic
     StreamingQuery query = writer.start();
     if (awaitTermination) {

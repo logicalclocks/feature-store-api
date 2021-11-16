@@ -135,7 +135,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     }
   }
 
-  public <S> void insert(S featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
@@ -148,7 +148,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     }
 
     // TODO (davit): overwrite ? SaveMode.Overwrite : SaveMode.Append,
-    streamFeatureGroupEngine.insert(this, featureData, storage, operation, writeOptions);
+    streamFeatureGroupEngine.insert(this, featureData, operation, writeOptions);
     codeEngine.saveCode(this);
     computeStatistics();
   }

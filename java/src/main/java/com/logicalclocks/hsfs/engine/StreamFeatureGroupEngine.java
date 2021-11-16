@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
@@ -116,7 +115,7 @@ public class StreamFeatureGroupEngine {
     }
 
     // Write the dataframe
-    insert(featureGroup, utils.sanitizeFeatureNames(dataset), null, HudiOperationType.BULK_INSERT,
+    insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
         writeOptions);
 
     return featureGroup;
@@ -151,9 +150,8 @@ public class StreamFeatureGroupEngine {
   }
 
   // TODO (davit): create our Enum to avoid spark SaveMode
-  public <T> void insert(StreamFeatureGroup featureGroup, T featureData, Storage storage,
-                     HudiOperationType operation, Map<String, String> writeOptions)
-          throws FeatureStoreException, IOException, ParseException {
+  public <S> void insert(StreamFeatureGroup featureGroup, S featureData, HudiOperationType operation,
+      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
 
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
