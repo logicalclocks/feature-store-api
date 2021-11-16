@@ -31,6 +31,7 @@ class StorageConnector(ABC):
     REDSHIFT = "REDSHIFT"
     ADLS = "ADLS"
     SNOWFLAKE = "SNOWFLAKE"
+    KAFKA = "KAFKA"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -752,3 +753,117 @@ class JdbcConnector(StorageConnector):
             options["query"] = query
 
         return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+
+
+class KafkaConnector(StorageConnector):
+    type = StorageConnector.Kafka
+
+    def __init__(
+        self,
+        id,
+        name,
+        featurestore_id,
+        description=None,
+        # members specific to type of connector
+        bootstrap_servers=None,
+        security_protocol=None,
+        ssl_truststore_location=None,
+        ssl_truststore_password=None,
+        ssl_keystore_location=None,
+        ssl_keystore_password=None,
+        ssl_key_password=None,
+        ssl_endpoint_identification_algorithm=None,
+        options=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+
+        # KAFKA
+        self._bootstrap_servers = (
+            bootstrap_servers.split(";")
+            if isinstance(bootstrap_servers, str)
+            else bootstrap_servers
+        )
+        self._security_protocol = security_protocol
+        self._ssl_truststore_location = ssl_truststore_location
+        self._ssl_truststore_password = ssl_truststore_password
+        self._ssl_keystore_location = ssl_keystore_location
+        self._ssl_keystore_password = ssl_keystore_password
+        self._ssl_key_password = ssl_key_password
+        self._ssl_endpoint_identification_algorithm = (
+            ssl_endpoint_identification_algorithm
+        )
+        self._options = (
+            {option["name"]: option["value"] for option in options}
+            if options is not None
+            else None
+        )
+
+    @property
+    def boostrap_servers(self):
+        """Bootstrap servers string."""
+        return self._bootstrap_servers
+
+    @property
+    def security_protocol(self):
+        """Bootstrap servers string."""
+        return self._security_protocol
+
+    @property
+    def ssl_truststore_location(self):
+        """Bootstrap servers string."""
+        return self._ssl_truststore_location
+
+    @property
+    def ssl_keystore_location(self):
+        """Bootstrap servers string."""
+        return self._ssl_keystore_location
+
+    @property
+    def ssl_endpoint_identification_algorithm(self):
+        """Bootstrap servers string."""
+        return self._ssl_endpoint_identification_algorithm
+
+    @property
+    def options(self):
+        """Bootstrap servers string."""
+        return self._options
+
+    def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional
+        arguments.
+        """
+        mapping = {
+            "_ssl_truststore_location": "kafka.ssl.truststore.location",
+            "_ssl_truststore_password": "kafka.ssl.truststore.password",
+            "_ssl_keystore_location": "kafka.ssl.keystore.location",
+            "_ssl_keystore_password": "kafka.ssl.keystore.password",
+            "_ssl_key_password": "kafka.ssl.key.password",
+            "_ssl_endpoint_identification_algorithm": "kafka.ssl.endpoint.identification.algorithm",
+        }
+
+        config = {
+            "kafka.bootstrap.servers": ",".join(self._bootstrap_servers),
+            "kafka.security.protocol": self._security_protocol,
+        }
+
+        ssl_config = {
+            v: getattr(self, k)
+            for k, v in mapping.items()
+            if getattr(self, k) is not None
+        }
+
+        return {**self._options, **config, **ssl_config}
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        """Reads a query or a path into a dataframe using the storage connector.
+
+        Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
+        queries are meant for JDBC or databases like Redshift and Snowflake.
+        """
+        return engine.get_instance().read(self, data_format, options, path)
