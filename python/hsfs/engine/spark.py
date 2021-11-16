@@ -45,7 +45,7 @@ class Engine:
     OVERWRITE = "overwrite"
 
     def __init__(self):
-        self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
         self._jvm = self._spark_context._jvm
 
