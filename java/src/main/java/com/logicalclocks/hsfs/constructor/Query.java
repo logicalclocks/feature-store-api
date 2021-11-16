@@ -171,7 +171,10 @@ public class Query {
   }
 
   /**
-   * Reads Feature group data at a specific point in time.
+   * Perform time travel on the given Query.
+   * This method returns a new Query object at the specified point in time.
+   * This can then either be read into a Dataframe or used further to perform joins
+   * or construct a training dataset.
    *
    * @param wallclockTime point in time
    * @return Query

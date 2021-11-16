@@ -286,19 +286,19 @@ class FeatureStore:
     ):
         """Execute SQL command on the offline or online feature store database
 
-        Args:
-            query (str): The SQL query to execute.
-            dataframe_type (Optional[str], optional): The type of the returned dataframe. Defaults to "default"
+        # Arguments
+            query: The SQL query to execute.
+            dataframe_type: The type of the returned dataframe. Defaults to "default".
                 which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
-            online (Optional[bool], optional): Set to true to execute the query against the online feature store.
+            online: Set to true to execute the query against the online feature store.
                 Defaults to False.
-            read_options (Optional[dict], optional): Additional options to pass to the execution engine. Defaults to {}.
+            read_options: Additional options to pass to the execution engine. Defaults to {}.
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
                 this instructs the library to use the `host` parameter in the [`hsfs.connection()`](project.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on
                 the private ip.
 
-        Returns:
+        # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
         return self._feature_group_engine.sql(
@@ -363,6 +363,7 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
+        event_time: Optional[str] = None,
     ):
         """Create a feature group metadata object.
 
@@ -390,8 +391,7 @@ class FeatureStore:
             primary_key: A list of feature names to be used as primary key for the
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the first column of the DataFrame will
-                be used as primary key.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -413,6 +413,9 @@ class FeatureStore:
             expectations: Optionally, a list of expectations to be attached to the feature group.
                 The expectations list contains Expectation metadata objects which can be retrieved with
                 the `get_expectation()` and `get_expectations()` functions.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -432,6 +435,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             validation_type=validation_type,
             expectations=expectations,
+            event_time=event_time,
         )
 
     def create_on_demand_feature_group(
@@ -444,8 +448,10 @@ class FeatureStore:
         options: Optional[Dict[str, str]] = {},
         version: Optional[int] = None,
         description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        event_time: Optional[str] = None,
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
     ):
@@ -473,6 +479,10 @@ class FeatureStore:
             description: A string describing the contents of the on-demand feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
             features: Optionally, define the schema of the on-demand feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
@@ -485,6 +495,9 @@ class FeatureStore:
                 The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
             validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
                 "WARNING", "ALL". Determines the mode in which data validation is applied on
                  ingested or already existing feature group data.
@@ -504,10 +517,12 @@ class FeatureStore:
             storage_connector=storage_connector,
             version=version,
             description=description,
+            primary_key=primary_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
+            event_time=event_time,
             validation_type=validation_type,
             expectations=expectations,
         )

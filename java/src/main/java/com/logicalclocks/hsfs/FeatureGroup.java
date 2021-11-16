@@ -18,12 +18,12 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
@@ -69,15 +69,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  protected String location;
-
-  @Getter
-  @Setter
   private List<String> statisticColumns;
-
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> primaryKeys;
 
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
@@ -105,7 +97,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig,  ValidationType validationType,
-                      scala.collection.Seq<Expectation> expectations, String onlineTopicName) {
+                      scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -127,6 +119,7 @@ public class FeatureGroup extends FeatureGroupBase {
       this.expectations.forEach(expectation -> this.expectationsNames.add(expectation.getName()));
     }
     this.onlineTopicName = onlineTopicName;
+    this.eventTime = eventTime;
   }
 
   public FeatureGroup() {
@@ -218,6 +211,21 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
+  /**
+   * Get Query object to retrieve all features of the group at a point in the past.
+   * This method selects all features in the feature group and returns a Query object
+   * at the specified point in time. This can then either be read into a Dataframe
+   * or used further to perform joins or construct a training dataset.
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @return Query. The query object with the applied time travel condition
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return selectAll().asOf(wallclockTime);
+  }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, false);
@@ -233,7 +241,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.save(this, featureData, primaryKeys, partitionKeys, hudiPrecombineKey,
+    featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
         writeOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
@@ -441,14 +449,6 @@ public class FeatureGroup extends FeatureGroupBase {
     }
   }
 
-  @JsonIgnore
-  public List<String> getPrimaryKeys() {
-    if (primaryKeys == null) {
-      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
-    }
-    return primaryKeys;
-  }
-
   /**
    * Recompute the statistics for the feature group and save them to the feature store.
    *
@@ -469,9 +469,5 @@ public class FeatureGroup extends FeatureGroupBase {
           + version + "`. No statistics computed.");
     }
     return null;
-  }
-
-  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
-    return super.validate(data);
   }
 }

@@ -88,10 +88,12 @@ class Client(base.Client):
             os.makedirs(self._cert_folder, exist_ok=True)
             credentials = self._get_credentials(self._project_id)
             self._write_b64_cert_to_bytes(
-                str(credentials["kStore"]), path=self._get_jks_key_store_path(),
+                str(credentials["kStore"]),
+                path=self._get_jks_key_store_path(),
             )
             self._write_b64_cert_to_bytes(
-                str(credentials["tStore"]), path=self._get_jks_trust_store_path(),
+                str(credentials["tStore"]),
+                path=self._get_jks_trust_store_path(),
             )
 
             self._cert_key = str(credentials["password"])
@@ -133,11 +135,11 @@ class Client(base.Client):
         }
 
         for key, value in configuration_dict.items():
-            if value is None and not _spark_session.conf.get(key, None):
+            if not (
+                _spark_session.conf.get(key, "not_found") != "not_found"
+                and (value is None or _spark_session.conf.get(key, None) == value)
+            ):
                 raise FeatureStoreException(exception_text + key)
-            else:
-                if not _spark_session.conf.get(key, None) == value:
-                    raise FeatureStoreException(exception_text + key)
 
     def _close(self):
         """Closes a client and deletes certificates."""

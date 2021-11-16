@@ -118,12 +118,17 @@ public class TrainingDataset {
   @Getter
   @Setter
   @JsonIgnore
-  private Map<Integer, Map<String, Integer>> preparedStatementParameters;
+  private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
 
   @Getter
   @Setter
   @JsonIgnore
   private TreeMap<Integer, PreparedStatement> preparedStatements;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private TreeMap<Integer, String> preparedQueryString;
 
   @Getter
   @Setter
@@ -454,7 +459,7 @@ public class TrainingDataset {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException {
+  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
     initPreparedStatement(false);
   }
 
@@ -465,11 +470,21 @@ public class TrainingDataset {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public void initPreparedStatement(boolean external) throws SQLException, IOException, FeatureStoreException {
-    // init prepared statement if it has not already
-    if (this.getPreparedStatements() == null) {
-      trainingDatasetEngine.initPreparedStatement(this, external);
-    }
+  public void initPreparedStatement(boolean external)
+      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
+    trainingDatasetEngine.initPreparedStatement(this, false, external);
+  }
+
+  /**
+   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
+   *
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   */
+  public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
+          FeatureStoreException, ClassNotFoundException {
+    trainingDatasetEngine.initPreparedStatement(this, batch, external);
   }
 
   /**
@@ -482,7 +497,7 @@ public class TrainingDataset {
    */
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
-      IOException {
+      IOException, ClassNotFoundException {
     return getServingVector(entry, false);
   }
 
@@ -498,8 +513,20 @@ public class TrainingDataset {
    */
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException {
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return trainingDatasetEngine.getServingVector(this, entry, external);
+  }
+
+  @JsonIgnore
+  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
+          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return getServingVectors(entry, false);
+  }
+
+  @JsonIgnore
+  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
+          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return trainingDatasetEngine.getServingVectors(this, entry, external);
   }
 
   /**

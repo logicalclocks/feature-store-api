@@ -34,9 +34,9 @@ import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
 public class CodeApi {
 
-  public static final String ENTITY_ROOT_PATH = "{/entityType}";
-  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?kernelId,type}";
+  public static final String ENTITY_ROOT_PATH = "{/dataSetType}";
+  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/dataSetId}";
+  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeApi.class);
 
@@ -58,8 +58,8 @@ public class CodeApi {
             trainingDataset.getId(), code, kernelId, type);
   }
 
-  private Code post(Integer projectId, Integer featureStoreId, Integer entityId, Code code,
-                    String kernelId, Code.RunType type)
+  private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
+                    String entityId, Code.RunType type)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
@@ -67,9 +67,9 @@ public class CodeApi {
     String uri = UriTemplate.fromTemplate(pathTemplate)
             .set("projectId", projectId)
             .set("fsId", featureStoreId)
-            .set("entityType", entityType.getValue())
+            .set("dataSetType", entityType.getValue())
+            .set("dataSetId", dataSetId)
             .set("entityId", entityId)
-            .set("kernelId", kernelId)
             .set("type", type)
             .expand();
 

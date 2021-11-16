@@ -71,9 +71,16 @@ public class FeatureGroupBase {
   @Setter
   protected String description;
 
+  @JsonIgnore
+  protected List<String> primaryKeys;
+
   @Getter
   @Setter
   protected List<Feature> features;
+
+  @Getter
+  @Setter
+  protected String eventTime;
 
   @Getter
   protected Date created;
@@ -92,6 +99,10 @@ public class FeatureGroupBase {
   @Getter
   @Setter
   protected List<String> expectationsNames;
+
+  @Getter
+  @Setter
+  protected String location;
 
   @JsonIgnore
   protected List<Expectation> expectations;
@@ -358,6 +369,14 @@ public class FeatureGroupBase {
             + "` not found in feature group `" + this.name + "`."));
   }
 
+  @JsonIgnore
+  public List<String> getPrimaryKeys() {
+    if (primaryKeys == null) {
+      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
+    }
+    return primaryKeys;
+  }
+
   public Expectation getExpectation(String name) throws FeatureStoreException, IOException {
     return expectationsApi.get(this, name);
   }
@@ -426,7 +445,7 @@ public class FeatureGroupBase {
     return validate(this.read());
   }
 
-  protected FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
+  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
     // Check if an expectation contains features. If it does not, try to use all the current FG features
     List<Expectation> expectations = expectationsApi.get(this);
     final List<String> features = new ArrayList<>();
@@ -448,7 +467,6 @@ public class FeatureGroupBase {
   public FeatureGroupValidation validateOnDemand(Dataset<Row> data) throws FeatureStoreException, IOException {
     return validate(data);
   }
-
 
   @JsonIgnore
   public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {

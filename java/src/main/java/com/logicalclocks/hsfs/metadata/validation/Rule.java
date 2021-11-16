@@ -39,6 +39,8 @@ public class Rule {
   @Getter @Setter
   private AcceptedType acceptedType;
   @Getter @Setter
+  private String feature;
+  @Getter @Setter
   private List<String> legalValues;
 
   public static Rule.RuleBuilder createRule(RuleDefinition rule) {
@@ -50,8 +52,8 @@ public class Rule {
   }
 
   @Builder
-  public Rule(RuleName name, RuleDefinition rule, Level level, Double min, Double max, String pattern,
-      AcceptedType acceptedType, scala.collection.Seq<String> legalValues) {
+  public Rule(RuleName name, RuleDefinition rule, Level level, Double min, Double max, String value, String pattern,
+      AcceptedType acceptedType, String feature, scala.collection.Seq<String> legalValues) {
     if (rule != null) {
       this.name = rule.getName();
     } else {
@@ -60,10 +62,12 @@ public class Rule {
     this.level = level;
     this.min = min;
     this.max = max;
+    this.value = value;
     this.pattern = pattern;
     this.acceptedType = acceptedType;
+    this.feature = feature;
     if (legalValues != null) {
-      this.legalValues = (List<String>) JavaConverters.seqAsJavaListConverter(legalValues).asJava();
+      this.legalValues = JavaConverters.seqAsJavaListConverter(legalValues).asJava();
     }
   }
 

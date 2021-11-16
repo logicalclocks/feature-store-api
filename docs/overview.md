@@ -4,7 +4,6 @@
 
 Hopsworks implements a dynamic role-based access control model through a [project-based multi-tenant security model](https://www.logicalclocks.com/blog/how-we-secure-your-data-with-hopsworks). Inspired by GDPR, in Hopsworks a Project is a sandboxed set of users, data, and programs (where data can be shared in a controlled manner between projects). Every Project has an owner with full read-write privileges and zero or more members.
 
-%% change to github link
 <p align="center">
   <img src="../assets/images/hw-concepts.png" width="600" alt="Hopsworks Concepts">
 </p>

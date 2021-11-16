@@ -40,6 +40,16 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
       onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
     }
 
+    /* set primary features */
+    if (onDemandFeatureGroup.getPrimaryKeys() != null) {
+      onDemandFeatureGroup.getPrimaryKeys().forEach(pk ->
+              onDemandFeatureGroup.getFeatures().forEach(f -> {
+                if (f.getName().equals(pk)) {
+                  f.setPrimary(true);
+                }
+              }));
+    }
+
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);
     onDemandFeatureGroup.setId(apiFg.getId());
 

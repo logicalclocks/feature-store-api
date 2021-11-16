@@ -26,11 +26,14 @@ class HudiEngine:
     HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field"
     HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field"
     HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field"
+
     HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable"
     HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table"
     HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database"
     HUDI_HIVE_SYNC_JDBC_URL = "hoodie.datasource.hive_sync.jdbcurl"
     HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields"
+    HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP = "hoodie.datasource.hive_sync.support_timestamp"
+
     HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class"
     HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator"
     HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY = (
@@ -72,6 +75,11 @@ class HudiEngine:
         self._table_name = feature_group._get_online_table_name()
 
         self._primary_key = ",".join(feature_group.primary_key)
+
+        # add event time to primary key for upserts
+        if feature_group.event_time is not None:
+            self._primary_key = self._primary_key + "," + feature_group.event_time
+
         self._partition_key = (
             ",".join(feature_group.partition_key)
             if len(feature_group.partition_key) >= 1
@@ -154,8 +162,11 @@ class HudiEngine:
             self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
             self.HUDI_HIVE_SYNC_PARTITION_FIELDS: self._partition_key,
             self.HUDI_TABLE_OPERATION: operation,
-            self.HUDI_WRITE_INSERT_DROP_DUPLICATES: "true",
+            self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
+
+        if operation.lower() in [self.HUDI_BULK_INSERT, self.HUDI_INSERT]:
+            hudi_options[self.HUDI_WRITE_INSERT_DROP_DUPLICATES] = "true"
 
         if write_options:
             hudi_options.update(write_options)

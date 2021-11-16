@@ -38,7 +38,7 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, validation_type):
+    def __init__(self, featurestore_id, validation_type, location):
         self._validation_type = validation_type.upper()
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -489,6 +489,15 @@ class FeatureGroupBase:
         """Get the latest computed statistics for the feature group."""
         return self._statistics_engine.get_last(self)
 
+    @property
+    def primary_key(self):
+        """List of features building the primary key."""
+        return self._primary_key
+
+    @primary_key.setter
+    def primary_key(self, new_primary_key):
+        self._primary_key = [pk.lower() for pk in new_primary_key]
+
     def get_statistics(self, commit_time: str = None):
         """Returns the statistics for this feature group at a specific time.
 
@@ -532,6 +541,19 @@ class FeatureGroupBase:
                 util.StorageWarning,
             )
 
+    @property
+    def event_time(self):
+        """Event time feature in the feature group."""
+        return self._event_time
+
+    @event_time.setter
+    def event_time(self, feature_name):
+        self._event_time = feature_name
+
+    @property
+    def location(self):
+        return self._location
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -558,8 +580,9 @@ class FeatureGroup(FeatureGroupBase):
         validation_type="NONE",
         expectations=None,
         online_topic_name=None,
+        event_time=None,
     ):
-        super().__init__(featurestore_id, validation_type)
+        super().__init__(featurestore_id, validation_type, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -574,7 +597,6 @@ class FeatureGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._location = location
         self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
@@ -582,10 +604,11 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
+        self._event_time = event_time
 
-        if id is not None:
+        if self._id:
             # initialized by backend
-            self._primary_key = [
+            self.primary_key = [
                 feat.name for feat in self._features if feat.primary is True
             ]
             self._partition_key = [
@@ -1032,6 +1055,22 @@ class FeatureGroup(FeatureGroupBase):
             )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
+    def as_of(self, wallclock_time):
+        """Get Query object to retrieve all features of the group at a point in the past.
+
+        This method selects all features in the feature group and returns a Query object
+        at the specified point in time. This can then either be read into a Dataframe
+        or used further to perform joins or construct a training dataset.
+
+        # Arguments
+            wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+
+        # Returns
+            `Query`. The query object with the applied time travel condition.
+        """
+        return self.select_all().as_of(wallclock_time)
+
     def validate(
         self, dataframe: TypeVar("pyspark.sql.DataFrame") = None  # noqa: F821
     ):
@@ -1101,6 +1140,9 @@ class FeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
@@ -1128,6 +1170,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
         }
 
     def _get_table_name(self):
@@ -1186,15 +1229,6 @@ class FeatureGroup(FeatureGroupBase):
     def features(self):
         """Schema information."""
         return self._features
-
-    @property
-    def location(self):
-        return self._location
-
-    @property
-    def primary_key(self):
-        """List of features building the primary key."""
-        return self._primary_key
 
     @property
     def online_enabled(self):
@@ -1269,10 +1303,6 @@ class FeatureGroup(FeatureGroupBase):
     def time_travel_format(self, new_time_travel_format):
         self._time_travel_format = new_time_travel_format
 
-    @primary_key.setter
-    def primary_key(self, new_primary_key):
-        self._primary_key = [pk.lower() for pk in new_primary_key]
-
     @partition_key.setter
     def partition_key(self, new_partition_key):
         self._partition_key = [pk.lower() for pk in new_partition_key]
@@ -1312,17 +1342,20 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         name=None,
         version=None,
         description=None,
+        primary_key=None,
         featurestore_id=None,
         featurestore_name=None,
         created=None,
         creator=None,
         id=None,
         features=None,
+        location=None,
         statistics_config=None,
+        event_time=None,
         validation_type="NONE",
         expectations=None,
     ):
-        super().__init__(featurestore_id, validation_type)
+        super().__init__(featurestore_id, validation_type, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -1335,6 +1368,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
+        self._event_time = event_time
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -1346,7 +1380,17 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         )
 
         if self._id:
-            # Got from Hopsworks, deserialize storage connector
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = (
+                [feature.Feature.from_response_json(feat) for feat in features]
+                if features
+                else None
+            )
+            self.primary_key = (
+                [feat.name for feat in self._features if feat.primary is True]
+                if self._features
+                else []
+            )
             self.statistics_config = statistics_config
 
             self._options = (
@@ -1355,6 +1399,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
                 else None
             )
         else:
+            self.primary_key = primary_key
             self.statistics_config = statistics_config
             self._features = features
             self._options = options
@@ -1414,6 +1459,10 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("online_topic_name", None)
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("online_topic_name", None)
             _ = fg.pop("type", None)
@@ -1446,6 +1495,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
         }

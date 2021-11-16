@@ -26,6 +26,7 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
+import org.apache.parquet.Strings;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -65,6 +66,9 @@ public class HudiEngine {
       "hoodie.datasource.hive_sync.jdbcurl";
   private static final String HUDI_HIVE_SYNC_PARTITION_FIELDS =
       "hoodie.datasource.hive_sync.partition_fields";
+  private static final String HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP =
+      "hoodie.datasource.hive_sync.support_timestamp";
+
   private static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
       "hoodie.datasource.hive_sync.partition_extractor_class";
   private static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
@@ -161,12 +165,12 @@ public class HudiEngine {
 
     hudiArgs.put(HUDI_KEY_GENERATOR_OPT_KEY, HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
 
-    // drop duplicates for insert and bulk insert
-    hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
-
     // primary keys
-    Seq<String> primaryColumns = utils.getPrimaryColumns(featureGroup);
-    hudiArgs.put(HUDI_RECORD_KEY, primaryColumns.mkString(","));
+    String primaryColumns = utils.getPrimaryColumns(featureGroup).mkString(",");
+    if (!Strings.isNullOrEmpty(featureGroup.getEventTime())) {
+      primaryColumns = primaryColumns + "," + featureGroup.getEventTime();
+    }
+    hudiArgs.put(HUDI_RECORD_KEY, primaryColumns);
 
     // table name
     String tableName = utils.getFgName(featureGroup);
@@ -193,8 +197,14 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
+    hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
+
+    // drop duplicates for insert and bulk insert only
+    if (HudiOperationType.BULK_INSERT == operation || HudiOperationType.INSERT == operation) {
+      hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
+    }
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {

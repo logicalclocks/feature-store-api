@@ -29,7 +29,7 @@ class CodeApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def post(self, metadata_instance, code, kernel_id, code_type):
+    def post(self, metadata_instance, code, entity_id, code_type):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -41,7 +41,7 @@ class CodeApi:
             "code",
         ]
         headers = {"content-type": "application/json"}
-        query_params = {"kernelId": kernel_id, "type": code_type}
+        query_params = {"entityId": entity_id, "type": code_type}
         _client._send_request(
             "POST", path_params, query_params, headers=headers, data=code.json()
         )

@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,10 @@ public class FsQuery {
 
   @Getter
   @Setter
+  private String pitQuery;
+
+  @Getter
+  @Setter
   private List<OnDemandFeatureGroupAlias> onDemandFeatureGroups;
 
   @Getter
@@ -54,6 +59,9 @@ public class FsQuery {
   public String getStorageQuery(Storage storage) throws FeatureStoreException {
     switch (storage) {
       case OFFLINE:
+        if (!Strings.isNullOrEmpty(pitQuery)) {
+          return pitQuery;
+        }
         return query;
       case ONLINE:
         return queryOnline;

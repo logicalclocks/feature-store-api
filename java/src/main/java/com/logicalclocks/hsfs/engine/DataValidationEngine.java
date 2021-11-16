@@ -44,6 +44,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.google.common.base.Strings;
 
 public class DataValidationEngine {
 
@@ -77,51 +81,36 @@ public class DataValidationEngine {
       List<ConstraintGroup> constraintGroups = new ArrayList<>();
       Map<Level, List<Constraint>> constraintGroupLevels = new HashMap<>();
       List<ValidationResult> validationResults = new ArrayList<>();
-
-      // An expectation contains all the features its rules are applied on but not every rule is applied on all features
-      // Certain rules are applied on pairs of features which means the rule will be applied on the first two features
-      // of the expectation. Therefore we treat them differently in the code below when creating the Deequ constraint.
+      // An expectation contains all the features its rules are applied to but not every rule is applied to all features
+      // Certain Compliance rules are applied on pairs of features which means the rule will be applied on all possible
+      // combinations between the expectations features and the rule's "feature" (rule.getFeature().
       for (Rule rule : expectation.getRules()) {
-        boolean pair = isRuleAppliedToFeaturePairs(rule);
-        if (pair) {
-          // If constraint with same name and predicate exists, then
+        boolean comparativeRule = isRuleAppliedToFeaturePairs(rule);
+        for (String feature : expectation.getFeatures()) {
+          String[] legalValues = null;
+          if (rule.getLegalValues() != null && !rule.getLegalValues().isEmpty()) {
+            legalValues = rule.getLegalValues().toArray(new String[0]);
+          }
+
+          List<String> featuresToEval = comparativeRule && !feature.equals(rule.getFeature())
+                                        ? Arrays.asList(feature, rule.getFeature())
+                                        : Collections.singletonList(feature);
+
           Constraint constraint =
               new Constraint(rule.getName().name(),
               Option.apply(rule.getName().name()),
-              Option.apply(
-                JavaConverters.asScalaBufferConverter(expectation.getFeatures().subList(0, 2)).asScala().toSeq()),
+              Option
+                .apply(JavaConverters.asScalaBufferConverter(featuresToEval).asScala().toSeq()),
               Option.apply(rule.getMin()),
               Option.apply(rule.getMax()),
-              Option.apply(null),
-              Option.apply(null),
-              Option.apply(null),
-              Option.apply(null));
+              Option.apply(rule.getValue()),
+              Option.apply(rule.getPattern()),
+              Option.apply(rule.getAcceptedType()),
+              Option.apply(legalValues));
           if (!constraintGroupLevels.containsKey(rule.getLevel())) {
             constraintGroupLevels.put(rule.getLevel(), new ArrayList<>());
           }
           constraintGroupLevels.get(rule.getLevel()).add(constraint);
-        } else {
-          for (String feature : expectation.getFeatures()) {
-            String[] legalValues = null;
-            if (rule.getLegalValues() != null && !rule.getLegalValues().isEmpty()) {
-              legalValues = rule.getLegalValues().toArray(new String[0]);
-            }
-            Constraint constraint =
-                new Constraint(rule.getName().name(),
-                Option.apply(rule.getName().name()),
-                Option
-                  .apply(JavaConverters.asScalaBufferConverter(Collections.singletonList(feature)).asScala().toSeq()),
-                Option.apply(rule.getMin()),
-                Option.apply(rule.getMax()),
-                Option.apply(rule.getValue()),
-                Option.apply(rule.getPattern()),
-                Option.apply(rule.getAcceptedType()),
-                Option.apply(legalValues));
-            if (!constraintGroupLevels.containsKey(rule.getLevel())) {
-              constraintGroupLevels.put(rule.getLevel(), new ArrayList<>());
-            }
-            constraintGroupLevels.get(rule.getLevel()).add(constraint);
-          }
         }
       }
       if (!constraintGroupLevels.isEmpty()) {
@@ -146,9 +135,8 @@ public class DataValidationEngine {
           String[] constraintInfo = constraintResult.constraint().toString().split("\\W+");
           String constraintType = constraintInfo[1];
           List<String> deequFeatures = new ArrayList<>();
-          String deequRule;
+          String deequRule = null;
           boolean constraintTypeComplex = false;
-          boolean featuresEqual;
           if (constraintType.equals("Compliance")) { //IS_LESS_THAN etc.
             // ComplianceConstraint(Compliance(year is less than salary,year < salary,None))
             constraintTypeComplex = true;
@@ -156,19 +144,19 @@ public class DataValidationEngine {
               // ComplianceConstraint(Compliance(car contained in car15,car20,`car` IS NULL OR `car` ...
               deequRule = "iscontainedin";
               deequFeatures.add(constraintInfo[2]);
-              featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
             } else if (constraintResult.constraint().toString().contains("is positive")) {
               // ComplianceConstraint(Compliance(age is positive,COALESCE(car, 1.0) > 0,None))
               deequRule = "ispositive";
               deequFeatures.add(constraintInfo[2]);
-              featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
             } else {
-              deequRule = String.join("", Arrays.stream(constraintInfo, 3, 5 + 1).toArray(String[]::new));
               deequFeatures.addAll(Arrays.asList(
-                  Arrays.stream(constraintInfo, constraintInfo.length - 3, constraintInfo.length - 2 + 1)
-                  .toArray(String[]::new)));
-              featuresEqual =
-                new ArrayList<>(deequFeatures).equals(new ArrayList<>(expectation.getFeatures()).subList(0, 2));
+                      Arrays.stream(constraintInfo, constraintInfo.length - 3, constraintInfo.length - 2 + 1)
+                              .toArray(String[]::new)));
+              Pattern pattern = Pattern.compile(deequFeatures.get(0) + "(.*?)" + deequFeatures.get(1), Pattern.DOTALL);
+              Matcher matcher = pattern.matcher(constraintResult.constraint().toString());
+              if (matcher.find()) {
+                deequRule = matcher.group(1).replaceAll(" ", "");
+              }
             }
           } else {
             deequRule = constraintInfo[1];
@@ -183,19 +171,17 @@ public class DataValidationEngine {
                 deequFeatures.add(constraintInfo[2]);
                 deequFeatures.add(constraintInfo[3]);
               }
-              featuresEqual =
-                  new ArrayList<>(deequFeatures).equals(new ArrayList<>(expectation.getFeatures()).subList(0, 2));
             } else {
               // MinimumConstraint(Minimum(commission,None))...
               deequFeatures.add(constraintInfo[2]);
-              featuresEqual = deequFeatures.stream().anyMatch(expectation.getFeatures()::contains);
             }
           }
+
           RuleName ruleName = getRuleNameFromDeequ(deequRule);
           // Find rule from list of rules that Deequ used for validation
           if (constraintTypeComplex) {
             for (Rule rule : expectation.getRules()) {
-              if (rule.getName() == ruleName && featuresEqual) {
+              if (rule.getName() == ruleName) {
                 validationResults.add(ValidationResult.builder()
                     .status(ExpectationResult.Status.fromDeequStatus(constraintResult.status(), rule.getLevel()))
                     .features(deequFeatures)
@@ -240,6 +226,9 @@ public class DataValidationEngine {
   }
 
   public RuleName getRuleNameFromDeequ(String rule) {
+    if (Strings.isNullOrEmpty(rule)) {
+      throw new IllegalArgumentException("Rule name cannot be null or empty");
+    }
     switch (rule.toLowerCase()) {
       case "maximum":
         return RuleName.HAS_MAX;
@@ -295,19 +284,26 @@ public class DataValidationEngine {
         return RuleName.IS_GREATER_THAN_OR_EQUAL_TO;
       case "iscontainedin":
         return RuleName.IS_CONTAINED_IN;
-
       default:
         throw new UnsupportedOperationException("Deequ rule not supported: " + rule);
     }
   }
 
-  public boolean isRuleAppliedToFeaturePairs(Rule rule) {
-    return rule.getName() == RuleName.IS_GREATER_THAN_OR_EQUAL_TO
-      || rule.getName() == RuleName.IS_GREATER_THAN
-      || rule.getName() == RuleName.IS_LESS_THAN
-      || rule.getName() == RuleName.IS_LESS_THAN_OR_EQUAL_TO
-      || rule.getName() == RuleName.HAS_MUTUAL_INFORMATION
-      || rule.getName() == RuleName.HAS_CORRELATION;
+  public static boolean isRuleAppliedToFeaturePairs(Rule rule) {
+    return isRuleAppliedToFeaturePairs(rule.getName());
+  }
+
+  public static boolean isRuleAppliedToFeaturePairs(RuleName ruleName) {
+    return isRuleAppliedToFeaturePairs(ruleName.name());
+  }
+
+  public static boolean isRuleAppliedToFeaturePairs(String ruleName) {
+    return ruleName.equals(RuleName.IS_GREATER_THAN_OR_EQUAL_TO.name())
+      || ruleName.equals(RuleName.IS_GREATER_THAN.name())
+      || ruleName.equals(RuleName.IS_LESS_THAN.name())
+      || ruleName.equals(RuleName.IS_LESS_THAN_OR_EQUAL_TO.name())
+      || ruleName.equals(RuleName.HAS_MUTUAL_INFORMATION.name())
+      || ruleName.equals(RuleName.HAS_CORRELATION.name());
   }
 
   public enum ValidationTimeType {
