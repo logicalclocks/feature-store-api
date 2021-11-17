@@ -211,6 +211,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             id=feature_group.id,
             features=feature_group.features,
         )
+        print("update description in engine: {}".format(copy_feature_group.json()))
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
