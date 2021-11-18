@@ -94,6 +94,15 @@ class Feature:
         self._name = name
 
     @property
+    def description(self):
+        """Description of the feature."""
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        self._description = description
+
+    @property
     def type(self):
         """Data type of the feature in the offline feature store.
 

@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StatisticsConfig;
@@ -43,6 +42,7 @@ import scala.collection.JavaConverters;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -208,7 +208,46 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateDescription(this, description);
+    featureGroupBaseEngine.updateDescription(this, description, this.getClass());
+  }
+
+  /**
+   * Update the description of a single feature.
+   *
+   * @param featureName
+   * @param description
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateFeatureDescription(String featureName, String description)
+      throws FeatureStoreException, IOException {
+    featureGroupBaseEngine.updateFeatures(this,
+        Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
+        this.getClass());
+  }
+
+  /**
+   * Update the metadata of multiple features.
+   * Currently only feature description updates are supported.
+   *
+   * @param features
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+    featureGroupBaseEngine.appendFeatures(this, features, this.getClass());
+  }
+
+  /**
+   * Update the metadata of multiple features.
+   * Currently only feature description updates are supported.
+   *
+   * @param feature
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+    featureGroupBaseEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
 
   /**
@@ -220,7 +259,7 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-    featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features));
+    featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
 
   /**
@@ -234,7 +273,7 @@ public class FeatureGroupBase {
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
-    featureGroupBaseEngine.appendFeatures(this, featureList);
+    featureGroupBaseEngine.appendFeatures(this, featureList, this.getClass());
   }
 
   /**
@@ -246,7 +285,7 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateStatisticsConfig((FeatureGroup) this);
+    featureGroupBaseEngine.updateStatisticsConfig(this, this.getClass());
   }
 
   /**
@@ -391,7 +430,7 @@ public class FeatureGroupBase {
    */
   public void updateValidationType(ValidationType validationType) throws FeatureStoreException, IOException {
     this.validationType = validationType;
-    featureGroupBaseEngine.updateValidationType(this);
+    featureGroupBaseEngine.updateValidationType(this, this.getClass());
   }
 
   @JsonIgnore
