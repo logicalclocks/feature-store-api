@@ -154,9 +154,11 @@ public class TrainingDatasetEngine {
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
 
-    String path = trainingDataset.getLocation();
+    String path = null;
     if (!com.google.common.base.Strings.isNullOrEmpty(split)) {
       path = new Path(trainingDataset.getLocation(), split).toString();
+    } else {
+      path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
     return trainingDataset.getStorageConnector()
         .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
