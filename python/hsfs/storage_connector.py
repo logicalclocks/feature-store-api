@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
+from pyhive.exc import NotSupportedError
 
 from hsfs import engine
 from hsfs.core import storage_connector_api
@@ -756,7 +757,7 @@ class JdbcConnector(StorageConnector):
 
 
 class KafkaConnector(StorageConnector):
-    type = StorageConnector.Kafka
+    type = StorageConnector.KAFKA
 
     def __init__(
         self,
@@ -795,7 +796,7 @@ class KafkaConnector(StorageConnector):
         self._options = (
             {option["name"]: option["value"] for option in options}
             if options is not None
-            else None
+            else {}
         )
 
     @property
@@ -861,9 +862,49 @@ class KafkaConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        """Reads a query or a path into a dataframe using the storage connector.
+        """NOT SUPPORTED."""
+        raise NotSupportedError(
+            "Reading a Kafka Stream into a static Spark Dataframe is not supported."
+        )
 
-        Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
-        queries are meant for JDBC or databases like Redshift and Snowflake.
+    def read_stream(
+        self,
+        topic: str,
+        topic_pattern: bool = False,
+        data_format: str = "avro",
+        schema: str = None,
+        options: dict = {},
+        include_metadata: bool = False,
+        include_headers: bool = False,
+    ):
+        """[summary]
+
+        [extended_summary]
+
+        # Arguments
+            topic (str): [description]
+            topic_pattern (bool, optional): [description]. Defaults to False.
+            data_format (str, optional): [description]. Defaults to "avro".
+            schema (str, optional): [description]. Defaults to None.
+            options (dict, optional): [description]. Defaults to {}.
+            include_metadata (bool, optional): [description]. Defaults to False.
+            include_headers (bool, optional): [description]. Defaults to False.
+
+        # Raises
+            Exception: [description]
+
+        # Returns
+            [type]: [description]
         """
-        return engine.get_instance().read(self, data_format, options, path)
+        if data_format.lower() not in ["avro", "json", None]:
+            raise Exception("Can only read JSON and AVRO encoded records from Kafka.")
+        return engine.get_instance().read_stream(
+            self,
+            topic,
+            topic_pattern,
+            data_format.lower(),
+            schema,
+            options,
+            include_metadata,
+            include_headers,
+        )
