@@ -179,9 +179,9 @@ public class TrainingDatasetEngine {
     tagsApi.deleteTag(trainingDataset, name);
   }
 
-  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel)
+  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getQuery(trainingDataset, withLabel).getStorageQuery(storage);
+    return trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery).getStorageQuery(storage);
   }
 
   public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {

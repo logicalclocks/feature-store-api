@@ -108,18 +108,19 @@ public class TrainingDatasetApi {
     return hopsworksClient.handleRequest(postRequest, TrainingDataset.class);
   }
 
-  public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel)
+  public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TRAINING_QUERY_PATH;
-
+  
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", trainingDataset.getFeatureStore().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .set("withLabel", withLabel)
+        .set("hiveQuery", isHiveQuery)
         .expand();
 
     HttpGet getRequest = new HttpGet(uri);
