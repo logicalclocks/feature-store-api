@@ -437,7 +437,8 @@ public class TrainingDataset {
   }
 
   @JsonIgnore
-  public String getQuery(Storage storage, boolean withLabel, boolean isHiveQuery) throws FeatureStoreException, IOException {
+  public String getQuery(Storage storage, boolean withLabel, boolean isHiveQuery)
+      throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getQuery(this, storage, withLabel, isHiveQuery);
   }
 
