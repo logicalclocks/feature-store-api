@@ -63,12 +63,12 @@ public class Expectation extends RestDto<Expectation> {
     }
 
     public ExpectationBuilder features(scala.collection.Seq<String> features) {
-      this.features = (List<String>) JavaConverters.seqAsJavaListConverter(features).asJava();
+      this.features = JavaConverters.seqAsJavaListConverter(features).asJava();
       return this;
     }
 
     public ExpectationBuilder rules(scala.collection.Seq<Rule> rules) {
-      this.rules = (List<Rule>) JavaConverters.seqAsJavaListConverter(rules).asJava();
+      this.rules = JavaConverters.seqAsJavaListConverter(rules).asJava();
       return this;
     }
 

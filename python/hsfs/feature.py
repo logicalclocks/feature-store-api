@@ -74,6 +74,9 @@ class Feature:
 
     @classmethod
     def from_response_json(cls, json_dict):
+        if json_dict is None:
+            return None
+
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
@@ -89,6 +92,15 @@ class Feature:
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def description(self):
+        """Description of the feature."""
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        self._description = description
 
     @property
     def type(self):

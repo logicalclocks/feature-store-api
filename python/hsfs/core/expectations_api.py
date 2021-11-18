@@ -45,13 +45,7 @@ class ExpectationsApi:
         ]
 
         headers = {"content-type": "application/json"}
-        print("ExpectationsApi.expectation.to_dict()" + str(expectation.to_dict()))
-        print(
-            "ExpectationsApi.expectation.rules[0].to_dict()"
-            + str(expectation.rules[0].to_dict())
-        )
         payload = expectation.json() if expectation else None
-        print("ExpectationsApi.expectation.payload" + str(payload))
         _client._send_request("PUT", path_params, headers=headers, data=payload)
 
     def attach(self, feature_group, name):

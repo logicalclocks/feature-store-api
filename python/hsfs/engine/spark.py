@@ -45,7 +45,7 @@ class Engine:
     OVERWRITE = "overwrite"
 
     def __init__(self):
-        self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
         self._jvm = self._spark_context._jvm
 
@@ -84,6 +84,8 @@ class Engine:
             on_demand_fg.options,
             on_demand_fg.storage_connector._get_path(on_demand_fg.path),
         )
+        if on_demand_fg.location:
+            self._spark_session.sparkContext.textFile(on_demand_fg.location).collect()
 
         on_demand_dataset.createOrReplaceTempView(alias)
         return on_demand_dataset
@@ -492,6 +494,7 @@ class Engine:
                         if rule.get("accepted_type") is not None
                         else None
                     )
+                    .feature((rule.get("feature", None)))
                     .legalValues(rule.get("legal_values", None))
                     .build()
                 )
@@ -550,7 +553,7 @@ class Engine:
             feature.Feature(
                 feat.name.lower(),
                 feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
+                feat.metadata.get("description", None),
             )
             for feat in dataframe.schema
         ]

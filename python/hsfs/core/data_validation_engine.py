@@ -74,11 +74,11 @@ class DataValidationEngine:
                         level=exp_rule.getLevel().name(),
                         min=exp_rule.getMin(),
                         max=exp_rule.getMax(),
-                        value=exp_rule.getValue(),
                         pattern=exp_rule.getPattern(),
                         accepted_type=exp_rule.getAcceptedType().name()
                         if exp_rule.getAcceptedType() is not None
                         else None,
+                        feature=exp_rule.getFeature(),
                         legal_values=legal_values,
                     )
                 )
@@ -107,13 +107,13 @@ class DataValidationEngine:
                     level=validation_result_java.getRule().getLevel().name(),
                     min=validation_result_java.getRule().getMin(),
                     max=validation_result_java.getRule().getMax(),
-                    value=validation_result_java.getRule().getValue(),
                     pattern=validation_result_java.getRule().getPattern(),
                     accepted_type=validation_result_java.getRule()
                     .getAcceptedType()
                     .name()
                     if validation_result_java.getRule().getAcceptedType() is not None
                     else None,
+                    feature=validation_result_java.getRule().getFeature(),
                     legal_values=legal_values,
                 )
 

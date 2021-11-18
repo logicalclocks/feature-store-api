@@ -67,7 +67,7 @@ methods are called on training dataset object.
     methods are called on this training dataset from scala client hsfs will throw an exception.
 
 
-# Transfromation Function
+# Transformation Function
 
 {{transformation_function}}
 

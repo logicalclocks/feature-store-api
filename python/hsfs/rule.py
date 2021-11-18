@@ -32,9 +32,9 @@ class Rule:
         level,
         min=None,
         max=None,
-        value=None,
         pattern=None,
         accepted_type=None,
+        feature=None,
         legal_values=None,
         href=None,
         expand=None,
@@ -46,9 +46,9 @@ class Rule:
         self._level = level
         self._min = min
         self._max = max
-        self._value = value
         self._pattern = pattern
         self._accepted_type = accepted_type
+        self._feature = feature
         self._legal_values = legal_values
 
     @classmethod
@@ -67,9 +67,9 @@ class Rule:
             "level": self._level,
             "min": self._min,
             "max": self._max,
-            "value": self._value,
             "pattern": self._pattern,
             "acceptedType": self._accepted_type,
+            "feature": self._feature,
             "legalValues": self._legal_values,
         }
 
@@ -110,15 +110,6 @@ class Rule:
         self._max = max
 
     @property
-    def value(self):
-        """The upper bound of the value range this feature should fall into."""
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        self._value = value
-
-    @property
     def pattern(self):
         """Pattern to check for a feature's pattern compliance. Applicable only to the HAS_PATTERN rule."""
         return self._pattern
@@ -126,6 +117,15 @@ class Rule:
     @pattern.setter
     def pattern(self, pattern):
         self._pattern = pattern
+
+    @property
+    def feature(self):
+        """Feature to compare the expectation's features to, applied only to Compliance rules."""
+        return self._feature
+
+    @feature.setter
+    def feature(self, feature):
+        self._feature = feature
 
     @property
     def accepted_type(self):

@@ -46,15 +46,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import java.sql.DriverManager;
 import java.util.TreeMap;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TrainingDatasetEngine {
 
@@ -188,7 +191,7 @@ public class TrainingDatasetEngine {
     trainingDataset.getStatisticsConfig().setExactUniqueness(apiTD.getStatisticsConfig().getExactUniqueness());
   }
 
-  public void initPreparedStatement(TrainingDataset trainingDataset, boolean external)
+  public void initPreparedStatement(TrainingDataset trainingDataset, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
 
@@ -209,21 +212,29 @@ public class TrainingDatasetEngine {
     }
     Connection jdbcConnection =
         DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    jdbcConnection.setAutoCommit(false);
     trainingDataset.setPreparedStatementConnection(jdbcConnection);
 
     List<ServingPreparedStatement> servingPreparedStatements =
-        trainingDatasetApi.getServingPreparedStatement(trainingDataset);
+        trainingDatasetApi.getServingPreparedStatement(trainingDataset, batch);
     // map of prepared statement index and its corresponding parameter indices
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = new HashMap<>();
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters = new HashMap<>();
     // save map of fg index and its prepared statement
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
+
+    // in case its batch serving then we need to save sql string only
+    TreeMap<Integer, String> preparedQueryString =  new TreeMap<>();
+
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
-      preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
-      HashMap<String, Integer> parameterIndices = new HashMap<>();
+      if (batch) {
+        preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
+                servingPreparedStatement.getQueryOnline());
+      } else {
+        preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
+                jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
+      }
+      TreeMap<String, Integer> parameterIndices = new TreeMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
         parameterIndices.put(preparedStatementParameter.getName(), preparedStatementParameter.getIndex());
@@ -233,6 +244,7 @@ public class TrainingDatasetEngine {
     trainingDataset.setServingKeys(servingVectorKeys);
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
+    trainingDataset.setPreparedQueryString(preparedQueryString);
   }
 
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
@@ -240,14 +252,13 @@ public class TrainingDatasetEngine {
 
     // init prepared statement if it has not already
     if (trainingDataset.getPreparedStatements() == null) {
-      initPreparedStatement(trainingDataset, external);
-    }
-    //check if primary key map correspond to serving_keys.
-    if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
-      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
+      initPreparedStatement(trainingDataset, false, external);
     }
 
-    Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
+    checkPrimaryKeys(trainingDataset, entry.keySet());
+
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
+            trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
     Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
 
@@ -285,8 +296,78 @@ public class TrainingDatasetEngine {
       }
       results.close();
     }
-    trainingDataset.getPreparedStatementConnection().commit();
     return servingVector;
+  }
+
+  public List<List<Object>> getServingVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
+                                              boolean external) throws SQLException, FeatureStoreException, IOException,
+          ClassNotFoundException {
+
+    // init prepared statement if it has not already
+    if (trainingDataset.getPreparedStatements() == null) {
+      // size of batch of primary keys are required to be equal. Thus, we take size of batch for the 1st primary key if
+      // it was not initialized from initPreparedStatement(batchSize)
+      initPreparedStatement(trainingDataset, true, external);
+    }
+
+    checkPrimaryKeys(trainingDataset, entry.keySet());
+
+    Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
+            trainingDataset.getPreparedStatementParameters();
+    TreeMap<Integer, String> preparedQueryString = trainingDataset.getPreparedQueryString();
+    Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(trainingDataset);
+
+    // construct batch of serving vectors
+    // Create map object that will have of order of the vector as key and values as
+    // vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+    // expect that backend will return correctly ordered vectors.
+    Map<Integer, List<Object>> servingVectorsMap = new HashMap<>();
+
+    Statement stmt = trainingDataset.getPreparedStatementConnection().createStatement();
+    for (Integer fgId : preparedQueryString.keySet()) {
+      int orderInBatch = 0;
+      ArrayList<Object> servingVector = new ArrayList<>();
+      String query = preparedQueryString.get(fgId);
+
+      for (String parameterNames: preparedStatementParameters.get(fgId).keySet()) {
+        // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
+        // the ? with array joined as comma separated array.
+        query = query.replaceFirst("\\?",
+                "(" + entry.get(parameterNames).stream().map(Object::toString)
+                        .collect(Collectors.joining(", ")) + ")");
+      }
+      ResultSet results = stmt.executeQuery(query);
+
+      // check if results contain any data at all and throw exception if not
+      if (!results.isBeforeFirst()) {
+        throw new FeatureStoreException("No data was retrieved from online feature store using input " + entry);
+      }
+      //Get column count
+      int columnCount = results.getMetaData().getColumnCount();
+      //append results to servingVector
+      while (results.next()) {
+        int index = 1;
+        while (index <= columnCount) {
+          if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
+            servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
+          } else {
+            servingVector.add(results.getObject(index));
+          }
+          index++;
+        }
+        // get vector by order and update with vector from other feature group(s)
+        if (servingVectorsMap.containsKey(orderInBatch)) {
+          servingVectorsMap.get(orderInBatch).addAll(servingVector);
+        } else {
+          servingVectorsMap.put(orderInBatch, servingVector);
+        }
+        // empty servingVector for new primary key
+        servingVector = new ArrayList<>();
+        orderInBatch++;
+      }
+      results.close();
+    }
+    return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
 
   private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
@@ -310,5 +391,12 @@ public class TrainingDatasetEngine {
 
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
+  }
+
+  private void checkPrimaryKeys(TrainingDataset trainingDataset, Set<String> primaryKeys) {
+    //check if primary key map correspond to serving_keys.
+    if (!trainingDataset.getServingKeys().equals(primaryKeys)) {
+      throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
+    }
   }
 }

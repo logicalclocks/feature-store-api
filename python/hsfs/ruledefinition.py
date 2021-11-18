@@ -29,8 +29,8 @@ class RuleDefinition:
     def __init__(
         self,
         name,
-        predicate,
         accepted_type,
+        predicate=None,
         feature_type=None,
         description=None,
         href=None,
@@ -76,7 +76,7 @@ class RuleDefinition:
 
     @property
     def predicate(self):
-        """Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN"."""
+        """Predicate of the rule definition, one of "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN"."""
         return self._predicate
 
     @property
