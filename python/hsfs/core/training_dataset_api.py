@@ -72,7 +72,7 @@ class TrainingDatasetApi:
             training_dataset_instance.id,
             "query",
         ]
-        query_params = {"withLabel": with_label, "isHiveQuery": is_hive_query}
+        query_params = {"withLabel": with_label, "hiveQuery": is_hive_query}
         return _client._send_request("GET", path_params, query_params)
 
     def compute(self, training_dataset_instance, td_app_conf):
