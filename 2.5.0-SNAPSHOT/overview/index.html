@@ -1463,7 +1463,9 @@
 <div class="admonition quote">
 <p>The Feature Store is a central and unified API between Data Engineers and Data Scientists.</p>
 </div>
-<details class="info" open="open"><summary>Benefits of the Feature Store</summary><ol>
+<details class="info" open="open">
+<summary>Benefits of the Feature Store</summary>
+<ol>
 <li>Manage feature data to profive unified access to machine learning features from small teams to large enterprises.</li>
 <li>Enable discovery, documentation, sharing and insights into your features through rich metadata.</li>
 <li>Make feature data available in a performant and scalable way for model training and model inference.</li>
@@ -1483,7 +1485,9 @@
 </p>
 
 <p>Entities within the Feature Store are organized hierarchically. On the most granular level are the <strong>features</strong> itself. Data Engineers ingest the feature data within their organization through the creation of <strong>feature groups</strong>. Data Scientists are then able to read selected features from the feature groups to create training datasets for model training, run batch inference with deployed models or perform inference from online models by scoring single <strong>feature vectors</strong>.</p>
-<details class="info"><summary>Feature Vector</summary><p>A Feature Vector is a single row of feature values associated with a primary key.</p>
+<details class="info">
+<summary>Feature Vector</summary>
+<p>A Feature Vector is a single row of feature values associated with a primary key.</p>
 </details>
 <h3 id="feature-groups">Feature Groups<a class="headerlink" href="#feature-groups" title="Permanent link">#</a></h3>
 <p><a href="../generated/feature_group/"><strong>Feature Groups</strong></a> are entities that contain both metadata about the grouped features, as well as information of the jobs used to ingest the data contained in a feature group and also the actual location of the data (HopsFS or externally, such as S3). Typically, feature groups represent a logical set of features coming from the same data source sharing a common primary key. Feature groups also contain the schema and type information of the features, for the user to know how to interpret the data.</p>
