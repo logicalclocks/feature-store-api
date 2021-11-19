@@ -435,6 +435,11 @@ public class TrainingDataset {
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
     return getQuery(storage, false, false);
   }
+  
+  @JsonIgnore
+  public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
+    return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
+  }
 
   @JsonIgnore
   public String getQuery(Storage storage, boolean withLabel, boolean isHiveQuery)
