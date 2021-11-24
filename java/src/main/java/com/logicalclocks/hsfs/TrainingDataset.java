@@ -272,8 +272,8 @@ public class TrainingDataset {
   /**
    * Read the content of the training dataset.
    *
-   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read("");
@@ -283,8 +283,8 @@ public class TrainingDataset {
    * Read the content of the training dataset.
    *
    * @param readOptions options to pass to the Spark read operation
-   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read("", readOptions);
@@ -306,8 +306,8 @@ public class TrainingDataset {
    *
    * @param split       the split name
    * @param readOptions options to pass to the Spark read operation
-   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read(String split, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     if (this.splits != null && !this.splits.isEmpty() && Strings.isNullOrEmpty(split)) {
