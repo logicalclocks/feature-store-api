@@ -40,6 +40,7 @@ from hsfs.client.exceptions import FeatureStoreException
 class FeatureGroupBase:
     def __init__(self, featurestore_id, validation_type, location):
         self._validation_type = validation_type.upper()
+        self._location = location
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
