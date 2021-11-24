@@ -249,7 +249,7 @@ class TrainingDatasetEngine:
                         zip(
                             *[
                                 entry.get(key)
-                                for key in training_dataset.pkname_by_serving_index[
+                                for key in training_dataset._pkname_by_serving_index[
                                     prepared_statement_index
                                 ]
                             ]
@@ -324,7 +324,7 @@ class TrainingDatasetEngine:
                 query_online = self._parametrize_query("batch_ids", query_online)
                 query_online = sql.text(query_online)
                 query_online = query_online.bindparams(
-                    tuple_values=bindparam("batch_ids", expanding=True)
+                    batch_ids=bindparam("batch_ids", expanding=True)
                 )
                 pkname_by_serving_index[
                     prepared_statement.prepared_statement_index
@@ -345,7 +345,7 @@ class TrainingDatasetEngine:
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
         if batch:
-            training_dataset.pkname_by_serving_index = pkname_by_serving_index
+            training_dataset._pkname_by_serving_index = pkname_by_serving_index
 
     @staticmethod
     def _apply_transformation(transformation_fns, row_dict):

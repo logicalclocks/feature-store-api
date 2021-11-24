@@ -745,15 +745,6 @@ class TrainingDataset:
         self._serving_keys = serving_vector_keys
 
     @property
-    def pkname_by_serving_index(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        return self._pkname_by_serving_index
-
-    @pkname_by_serving_index.setter
-    def pkname_by_serving_index(self, pkname_by_serving_index):
-        self._pkname_by_serving_index = pkname_by_serving_index
-
-    @property
     def transformation_functions(self):
         """Set transformation functions."""
         if self._id is not None and self._transformation_functions is None:
