@@ -242,12 +242,18 @@ class TrainingDataset:
 
         # Arguments
             split: Name of the split to read, defaults to `None`, reading the entire
-                training dataset.
+                training dataset. If the training dataset has split, the `split` parameter
+                is mandatory.
             read_options: Additional read options as key/value pairs, defaults to `{}`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data of the
                 training dataset.
         """
+        if self.splits and split is None:
+            raise ValueError(
+                "The training dataset has splits, please specify the split you want to read"
+            )
+
         return self._training_dataset_engine.read(self, split, read_options)
 
     def compute_statistics(self):

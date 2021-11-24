@@ -100,7 +100,7 @@ class TrainingDatasetEngine:
         if split is not None:
             path = training_dataset.location + "/" + str(split)
         else:
-            path = training_dataset.location
+            path = training_dataset.location + "/" + training_dataset.name
 
         return training_dataset.storage_connector.read(
             # always read from materialized dataset, not query object
