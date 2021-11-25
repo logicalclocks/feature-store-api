@@ -634,7 +634,7 @@ class TrainingDataset:
                 dataset.
         """
         return self._training_dataset_engine.query(
-            self, online, with_label, engine.get_type()
+            self, online, with_label, engine.get_type() == "hive"
         )
 
     def init_prepared_statement(
