@@ -623,7 +623,7 @@ class TrainingDataset:
     @property
     def query(self):
         """Query to generate this training dataset from online feature store."""
-        return self._training_dataset_engine.query(self, True, True)
+        return self._training_dataset_engine.query(self, True, True, False)
 
     def get_query(self, online: bool = True, with_label: bool = False):
         """Returns the query used to generate this training dataset
@@ -639,7 +639,9 @@ class TrainingDataset:
             `str`. Query string for the chosen storage used to generate this training
                 dataset.
         """
-        return self._training_dataset_engine.query(self, online, with_label)
+        return self._training_dataset_engine.query(
+            self, online, with_label, engine.get_type() == "hive"
+        )
 
     def init_prepared_statement(
         self, batch: Optional[bool] = None, external: Optional[bool] = False

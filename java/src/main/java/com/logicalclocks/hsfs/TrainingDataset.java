@@ -442,10 +442,10 @@ public class TrainingDataset {
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
     return getQuery(storage, false);
   }
-
+  
   @JsonIgnore
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getQuery(this, storage, withLabel);
+    return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
   }
 
   @JsonIgnore

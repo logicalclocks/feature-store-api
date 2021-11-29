@@ -61,7 +61,7 @@ class TrainingDatasetApi:
         else:
             return td_list
 
-    def get_query(self, training_dataset_instance, with_label):
+    def get_query(self, training_dataset_instance, with_label, is_hive_query):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -72,7 +72,7 @@ class TrainingDatasetApi:
             training_dataset_instance.id,
             "query",
         ]
-        query_params = {"withLabel": with_label}
+        query_params = {"withLabel": with_label, "hiveQuery": is_hive_query}
         return _client._send_request("GET", path_params, query_params)
 
     def compute(self, training_dataset_instance, td_app_conf):
