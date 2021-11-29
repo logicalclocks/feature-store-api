@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import os
 import json
 import datetime
 import importlib.util
@@ -24,6 +25,7 @@ import avro
 
 # in case importing in %%local
 try:
+    from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
@@ -458,6 +460,9 @@ class Engine:
         include_metadata,
         include_headers,
     ):
+        # ideally all this logic should be in the storage connector in case we add more
+        # streaming storage connectors...
+
         kafka_cols = [
             col("key"),
             col("topic"),
@@ -506,6 +511,10 @@ class Engine:
         if include_metadata is True:
             return stream.load()
         return stream.load().select("key", "value")
+
+    def add_file(self, file):
+        self._spark_context.addFile("hdfs://" + file)
+        return SparkFiles.get(os.path.basename(file))
 
     def profile(
         self,
