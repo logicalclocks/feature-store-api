@@ -23,6 +23,8 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
+from pyhive.exc import NotSupportedError
+
 from hsfs import client, feature, util
 from hsfs.core import (
     feature_group_api,
@@ -166,6 +168,18 @@ class Engine:
 
     def read_options(self, data_format, provided_options):
         return {}
+
+    def read_stream(
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
+    ):
+        raise NotSupportedError(
+            "Streaming Sources are not supported for pure Python Environments."
+        )
 
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)

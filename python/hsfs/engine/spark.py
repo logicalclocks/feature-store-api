@@ -452,17 +452,24 @@ class Engine:
     def read_stream(
         self,
         storage_connector,
-        topic,
-        topic_pattern,
-        data_format,
+        message_format,
         schema,
         options,
         include_metadata,
-        include_headers,
     ):
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
+        stream = self._spark_session.readStream.format(storage_connector.SPARK_FORMAT)
 
+        # set user options last so that they overwrite any default options
+        stream = stream.options(**storage_connector.spark_options(), **options)
+
+        if storage_connector.type == StorageConnector.KAFKA:
+            return self._prep_stream_kafka(
+                stream, message_format, schema, include_metadata
+            )
+
+    def _prep_stream_kafka(self, stream, message_format, schema, include_metadata):
         kafka_cols = [
             col("key"),
             col("topic"),
@@ -472,21 +479,7 @@ class Engine:
             col("timestampType"),
         ]
 
-        stream = self._spark_session.readStream.format("kafka")
-
-        if topic_pattern is True:
-            stream = stream.option("subscribePattern", topic)
-        else:
-            stream = stream.option("subscribe", topic)
-
-        if include_headers is True:
-            stream = stream.option("includeHeaders", "true")
-            kafka_cols.append(col("headers"))
-
-        # set user options last so that they overwrite any default options
-        stream = stream.options(**storage_connector.spark_options(), **options)
-
-        if data_format == "avro" and schema is not None:
+        if message_format == "avro" and schema is not None:
             # check if vallid avro schema
             avro.schema.parse(schema)
             df = stream.load()
@@ -497,7 +490,7 @@ class Engine:
             return df.select(from_avro(df.value, schema).alias("value")).select(
                 col("value.*")
             )
-        elif data_format == "json" and schema is not None:
+        elif message_format == "json" and schema is not None:
             df = stream.load()
             if include_metadata is True:
                 return df.select(
