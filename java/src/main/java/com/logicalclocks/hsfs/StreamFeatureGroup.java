@@ -19,7 +19,9 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
@@ -38,6 +40,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaParseException;
 
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -96,6 +100,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private final StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -126,6 +131,57 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
+  // ------------------------------------------------------------------------------------------------------------------
+  // TODO: (davit) Duplicated
+  public Query read() throws FeatureStoreException, IOException {
+    return selectAll();
+  }
+
+  /**
+   * Reads Feature group data at a specific point in time.
+   *
+   * @param wallclockTime
+   * @return DataFrame.
+   * @throws FeatureStoreException
+   * @throws IOException
+   * @throws ParseException
+   */
+  public Query read(String wallclockTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return selectAll().asOf(wallclockTime);
+  }
+
+  /**
+   * Reads changes that occurred between specified points in time.
+   *
+   * @param wallclockStartTime start date.
+   * @param wallclockEndTime   end date.
+   * @return DataFrame.
+   * @throws FeatureStoreException
+   * @throws IOException
+   * @throws ParseException
+   */
+  public Query readChanges(String wallclockStartTime, String wallclockEndTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime);
+  }
+
+  /**
+   * Get Query object to retrieve all features of the group at a point in the past.
+   * This method selects all features in the feature group and returns a Query object
+   * at the specified point in time. This can then either be read into a Dataframe
+   * or used further to perform joins or construct a training dataset.
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @return Query. The query object with the applied time travel condition
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return selectAll().asOf(wallclockTime);
+  }
+
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions);
@@ -134,9 +190,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
+  // ------------------------------------------------------------------------------------------------------------------
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation,
-                     Map<String, String> writeOptions)
+                         SaveMode saveMode, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
     if (operation == null) {
@@ -147,8 +204,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
       }
     }
 
-    // TODO (davit): overwrite ? SaveMode.Overwrite : SaveMode.Append,
-    streamFeatureGroupEngine.insert(this, featureData, operation, writeOptions);
+    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
     codeEngine.saveCode(this);
     computeStatistics();
   }
@@ -175,6 +231,65 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
               awaitTermination, timeout, writeOptions);
   }
+
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // TODO: (davit) Duplicated
+  public void commitDeleteRecord(Dataset<Row> featureData)
+      throws FeatureStoreException, IOException, ParseException {
+    utils.commitDelete(this, featureData, null);
+  }
+
+  public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    utils.commitDelete(this, featureData, writeOptions);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
+    return utils.commitDetails(this, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return utils.commitDetails(this, limit);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
+      throws IOException, FeatureStoreException, ParseException {
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @param limit number of commits to return.
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
+  }
+  // ------------------------------------------------------------------------------------------------------------------
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {

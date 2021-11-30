@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 

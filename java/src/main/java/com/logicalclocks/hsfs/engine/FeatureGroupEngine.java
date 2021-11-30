@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
@@ -38,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -49,7 +47,7 @@ public class FeatureGroupEngine {
   private HudiEngine hudiEngine = new HudiEngine();
   protected KafkaApi kafkaApi = new KafkaApi();
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -200,63 +198,5 @@ public class FeatureGroupEngine {
     } else {
       throw new FeatureStoreException("Error writing to offline and online feature store.");
     }
-  }
-
-  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroup featureGroup, String wallclockTime,
-                                                           Integer limit)
-      throws FeatureStoreException, IOException, ParseException {
-
-    Long wallclockTimestamp =  wallclockTime != null ? utils.getTimeStampFromDateString(wallclockTime) : null;
-    List<FeatureGroupCommit> featureGroupCommits =
-        featureGroupApi.getCommitDetails(featureGroup, wallclockTimestamp, limit);
-    if (featureGroupCommits == null) {
-      throw new FeatureStoreException("There are no commit details available for this Feature group");
-    }
-    Map<Long, Map<String, String>> commitDetails = new HashMap<>();
-    for (FeatureGroupCommit featureGroupCommit : featureGroupCommits) {
-      commitDetails.put(featureGroupCommit.getCommitID(), new HashMap<String, String>() {{
-            put("committedOn", hudiEngine.timeStampToHudiFormat(featureGroupCommit.getCommitID()));
-            put("rowsUpdated", featureGroupCommit.getRowsUpdated() != null
-                ? featureGroupCommit.getRowsUpdated().toString() : "0");
-            put("rowsInserted", featureGroupCommit.getRowsInserted() != null
-                ? featureGroupCommit.getRowsInserted().toString() : "0");
-            put("rowsDeleted", featureGroupCommit.getRowsDeleted() != null
-                ? featureGroupCommit.getRowsDeleted().toString() : "0");
-          }}
-      );
-    }
-    return commitDetails;
-  }
-
-  public Map<Long, Map<String, String>> commitDetails(FeatureGroup featureGroup, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    // operation is only valid for time travel enabled feature group
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("commitDetails function is only valid for "
-          + "time travel enabled feature group");
-    }
-    return getCommitDetails(featureGroup, null, limit);
-  }
-
-  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroup featureGroup,
-                                                                     String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return getCommitDetails(featureGroup, wallclockTime, limit);
-  }
-
-  public FeatureGroupCommit commitDelete(FeatureGroup featureGroup, Dataset<Row> dataset,
-                                         Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
-    // operation is only valid for time travel enabled feature group
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
-      throw new FeatureStoreException("delete function is only valid for "
-          + "time travel enabled feature group");
-    }
-
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroup, dataset, writeOptions);
-  }
-
-  public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 }

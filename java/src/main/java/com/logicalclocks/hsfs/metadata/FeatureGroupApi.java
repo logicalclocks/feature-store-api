@@ -194,7 +194,7 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(deleteRequest);
   }
 
-  public void deleteContent(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public void deleteContent(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH

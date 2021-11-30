@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
@@ -37,9 +38,9 @@ import java.util.Map;
 
 public class StreamFeatureGroupEngine {
 
-  private Utils utils = new Utils();
   private KafkaApi kafkaApi = new KafkaApi();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
@@ -116,7 +117,7 @@ public class StreamFeatureGroupEngine {
 
     // Write the dataframe
     insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
-        writeOptions);
+        SaveMode.APPEND, writeOptions);
 
     return featureGroup;
   }
@@ -131,7 +132,6 @@ public class StreamFeatureGroupEngine {
                     + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
     }
 
-    //TODO (davit):
     if (writeOptions == null) {
       writeOptions = new HashMap<>();
     }
@@ -149,9 +149,9 @@ public class StreamFeatureGroupEngine {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
-  // TODO (davit): create our Enum to avoid spark SaveMode
   public <S> void insert(StreamFeatureGroup featureGroup, S featureData, HudiOperationType operation,
-      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
+                         SaveMode saveMode, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
+      ParseException {
 
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
@@ -161,15 +161,13 @@ public class StreamFeatureGroupEngine {
       }
     }
 
-    /*
-    if (saveMode == SaveMode.Overwrite) {
+    if (saveMode == SaveMode.OVERWRITE) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
       // After that it's going to be just a normal append
       featureGroupApi.deleteContent(featureGroup);
     }
-    */
 
     if (operation.equals(HudiOperationType.BULK_INSERT)) {
       SparkEngine.getInstance().writeOfflineDataframe(featureGroup, featureData, operation,

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
@@ -89,6 +90,7 @@ public class FeatureGroup extends FeatureGroupBase {
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -350,12 +352,12 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, null);
+    utils.commitDelete(this, featureData, null);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, writeOptions);
+    utils.commitDelete(this, featureData, writeOptions);
   }
 
   /**
@@ -365,7 +367,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, null);
+    return utils.commitDetails(this, null);
   }
 
   /**
@@ -377,7 +379,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, limit);
+    return utils.commitDetails(this, limit);
   }
 
   /**
@@ -389,7 +391,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, null);
   }
 
   /**
@@ -402,13 +404,13 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
     if (avroSchema == null) {
-      avroSchema = featureGroupEngine.getAvroSchema(this);
+      avroSchema = utils.getAvroSchema(this);
     }
     return avroSchema;
   }
@@ -460,7 +462,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
-          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
+          utils.commitDetailsByWallclockTime(this, wallclockTime, 1);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
       return statisticsEngine.computeStatistics(this, featureData, commitId);

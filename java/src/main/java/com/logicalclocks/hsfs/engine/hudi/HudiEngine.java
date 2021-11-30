@@ -22,7 +22,7 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.engine.Utils;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -37,15 +37,10 @@ import org.apache.spark.sql.SaveMode;
 
 import org.apache.hadoop.fs.FileSystem;
 
-import lombok.SneakyThrows;
-
 import scala.collection.Seq;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,9 +100,8 @@ public class HudiEngine {
       "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerTransformer";
   protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
 
@@ -131,10 +125,12 @@ public class HudiEngine {
     // featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
   }
 
-  public FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroup featureGroup, Dataset<Row> deleteDF,
-                                         Map<String, String> writeOptions) throws IOException, FeatureStoreException,
+  public <S> FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroupBase featureGroup,
+                                             S genericDeleteDF, Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException,
       ParseException {
 
+    Dataset<Row> deleteDF = (Dataset<Row>) genericDeleteDF;
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, HudiOperationType.UPSERT, writeOptions);
     hudiArgs.put(PAYLOAD_CLASS_OPT_KEY, PAYLOAD_CLASS_OPT_VAL);
 
@@ -236,12 +232,12 @@ public class HudiEngine {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
     if (startTimestamp != null) {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
     } else {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(0L));
     }
 
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
@@ -249,12 +245,6 @@ public class HudiEngine {
       hudiArgs.putAll(readOptions);
     }
     return hudiArgs;
-  }
-
-  @SneakyThrows
-  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    return dateFormat.format(commitedOnDate);
   }
 
   public void streamToHoodieTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup,

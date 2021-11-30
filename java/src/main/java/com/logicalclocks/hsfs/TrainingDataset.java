@@ -23,7 +23,7 @@ import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
-import com.logicalclocks.hsfs.engine.Utils;
+import com.logicalclocks.hsfs.engine.TrainingDatasetUtils;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -139,7 +139,7 @@ public class TrainingDataset {
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
-  private Utils utils = new Utils();
+  private TrainingDatasetUtils utils = new TrainingDatasetUtils();
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,

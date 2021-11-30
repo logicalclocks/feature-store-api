@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs.engine.hudi;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.engine.DataValidationEngine;
-import com.logicalclocks.hsfs.engine.Utils;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
@@ -38,7 +38,7 @@ public class DeltaStreamerTransformer implements Transformer {
 
   private final FeatureStoreApi featureStoreApi = new FeatureStoreApi();
   private final FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public DeltaStreamerTransformer() {
   }
