@@ -253,7 +253,7 @@ public class FeatureGroupUtils {
   }
 
   private String engine() throws FeatureStoreException {
-    if (checkIfClassExists("org.apache.spark")) {
+    if (checkIfClassExists("org.apache.spark.sql.SparkSession")) {
       return "spark";
     } else {
       throw new FeatureStoreException("Unknown engine. Currently for java client only Spark engine is implemented.");
