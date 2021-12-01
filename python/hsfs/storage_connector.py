@@ -877,31 +877,38 @@ class KafkaConnector(StorageConnector):
         self,
         topic: str,
         topic_pattern: bool = False,
-        data_format: str = "avro",
+        message_format: str = "avro",
         schema: str = None,
         options: dict = {},
         include_metadata: bool = False,
     ):
-        """[summary]
+        """Reads a Kafka stream from a topic or multiple topics into a Dataframe.
 
-        [extended_summary]
+        Currently, this method is only supported for Spark engines.
 
         # Arguments
-            topic (str): [description]
-            topic_pattern (bool, optional): [description]. Defaults to False.
-            data_format (str, optional): [description]. Defaults to "avro".
-            schema (str, optional): [description]. Defaults to None.
-            options (dict, optional): [description]. Defaults to {}.
-            include_metadata (bool, optional): [description]. Defaults to False.
+            topic: Name or pattern of the topic(s) to subscribe to.
+            topic_pattern: Flag to indicate if `topic` string is a pattern.
+                Defaults to `False`.
+            message_format: The format of the messages to use for decoding.
+                Can be `"avro"` or `"json"`. Defaults to `"avro"`.
+            schema: Optional schema, to use for decoding, can be an Avro schema string for
+                `"avro"` message format, or for JSON encoding a Spark StructType schema,
+                or a DDL formatted string. Defaults to `None`.
+            options: Additional options as key/value string pairs to be passed to Spark.
+                Defaults to `{}`.
+            include_metadata: Indicate whether to return additional metadata fields from
+                messages in the stream. Otherwise only the decoded value fields are
+                returned. Defaults to `False`.
 
         # Raises
-            Exception: [description]
+            `ValueError`: Malformed arguments.
 
         # Returns
-            [type]: [description]
+            `StreamingDataframe`: A Spark streaming dataframe.
         """
-        if data_format.lower() not in ["avro", "json", None]:
-            raise Exception("Can only read JSON and AVRO encoded records from Kafka.")
+        if message_format.lower() not in ["avro", "json", None]:
+            raise ValueError("Can only read JSON and AVRO encoded records from Kafka.")
 
         if topic_pattern is True:
             options["subscribePattern"] = topic
@@ -914,9 +921,7 @@ class KafkaConnector(StorageConnector):
 
         return engine.get_instance().read_stream(
             self,
-            topic,
-            topic_pattern,
-            data_format.lower(),
+            message_format.lower(),
             schema,
             options,
             include_metadata,
