@@ -427,3 +427,8 @@ class Engine:
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
+
+    def add_file(self, file):
+        # if streaming connectors are implemented in the future, this method
+        # can be used to materialize certificates locally
+        return file
