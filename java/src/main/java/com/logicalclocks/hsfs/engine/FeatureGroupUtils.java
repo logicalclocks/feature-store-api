@@ -40,7 +40,7 @@ public class FeatureGroupUtils {
 
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric)
       throws FeatureStoreException {
-    if (engine().equals("Spark")) {
+    if (engine().equals("spark")) {
       return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric);
     } else {
       throw new FeatureStoreException("This operation is only allowed from Spark engine.");
@@ -48,7 +48,7 @@ public class FeatureGroupUtils {
   }
 
   public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
-    if (engine().equals("Spark")) {
+    if (engine().equals("spark")) {
       return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
     } else {
       throw new FeatureStoreException("This operation is only allowed from Spark engine.");
@@ -245,7 +245,7 @@ public class FeatureGroupUtils {
 
   private boolean checkIfClassExists(String className) {
     try  {
-      Class.forName(className);
+      Class.forName(className, true, this.getClass().getClassLoader());
       return true;
     }  catch (ClassNotFoundException e) {
       return false;
@@ -253,7 +253,7 @@ public class FeatureGroupUtils {
   }
 
   private String engine() throws FeatureStoreException {
-    if (checkIfClassExists("org.apache.spark.sql.SparkSession")) {
+    if (checkIfClassExists("org.apache.spark.sql.Dataset")) {
       return "spark";
     } else {
       throw new FeatureStoreException("Unknown engine. Currently for java client only Spark engine is implemented.");
