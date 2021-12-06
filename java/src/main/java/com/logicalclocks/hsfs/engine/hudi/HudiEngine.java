@@ -121,8 +121,7 @@ public class HudiEngine {
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
     fgCommit.setValidationId(validationId);
 
-    // TODO (davit): decide about the commit here for StreamFeatureGroup
-    // featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
   }
 
   public <S> FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroupBase featureGroup,

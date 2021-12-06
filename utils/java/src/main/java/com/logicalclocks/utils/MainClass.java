@@ -2,9 +2,9 @@ package com.logicalclocks.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.HopsworksConnection;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -70,13 +70,14 @@ public class MainClass {
     FeatureStore fs = connection.getFeatureStore();
 
     // get feature group handle
-    FeatureGroup featureGroup = fs.getFeatureGroup((String) jobConf.get("name"), Integer.parseInt((String)
+    StreamFeatureGroup streamFeatureGroup = fs.getStreamFeatureGroup((String) jobConf.get("name"),
+        Integer.parseInt((String)
         jobConf.get("version")));
 
     Map<String, String> writeOptions = (Map<String, String>) jobConf.get("write_options");
 
     if (op.equals("stream_to_hudi_table")) {
-      SparkEngine.getInstance().streamToHudiTable(featureGroup, writeOptions);
+      SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);
     }
   }
 }
