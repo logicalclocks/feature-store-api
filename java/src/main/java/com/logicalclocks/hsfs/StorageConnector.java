@@ -31,7 +31,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.StructType;
 
+import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -383,19 +385,103 @@ public abstract class StorageConnector {
 
   public static class KafkaConnector extends StorageConnector {
 
+    public static final String sparkFormat = "kafka";
+
     @Getter @Setter
     private String bootstrapServers;
 
     @Getter @Setter
     private SecurityProtocol securityProtocol;
 
+    @Getter
+    private String sslTruststoreLocation;
+
+    @Getter @Setter
+    private String sslTruststorePassword;
+
+    @Getter
+    private String sslKeystoreLocation;
+
+    @Getter @Setter
+    private String sslKeystorePassword;
+
+    @Getter @Setter
+    private String sslKeyPassword;
+
+    @Getter @Setter
+    private SslEndpointIdentificationAlgorithm sslEndpointIdentificationAlgorithm;
+
+    @Getter @Setter
+    private List<Option> options;
+
+    public void setSslTruststoreLocation(String sslTruststoreLocation) {
+      this.sslTruststoreLocation = SparkEngine.getInstance().addFile(sslTruststoreLocation);
+    }
+
+    public void setSslKeystoreLocation(String sslKeystoreLocation) {
+      this.sslKeystoreLocation = SparkEngine.getInstance().addFile(sslKeystoreLocation);
+    }
+
     public Map<String, String> sparkOptions() {
-      return null;
+      Map<String, String> options = new HashMap<>();
+      options.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
+      options.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
+      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
+        options.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+      }
+      if (!Strings.isNullOrEmpty(sslTruststorePassword)) {
+        options.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
+        options.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+      }
+      if (!Strings.isNullOrEmpty(sslKeystorePassword)) {
+        options.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
+        options.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
+      // can be empty string
+      if (sslEndpointIdentificationAlgorithm != null) {
+        options.put(
+            Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
+      }
+      if (this.options != null && !this.options.isEmpty()) {
+        Map<String, String> argOptions = this.options.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(argOptions);
+      }
+      return options;
     }
 
     @JsonIgnore
     public String getPath(String subPath) {
       return null;
+    }
+
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+      throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
+    }
+
+    public Dataset<Row> readStream(String topic, boolean topicPattern, String messageFormat, StructType schema,
+        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
+      return readStream(topic, topicPattern, messageFormat, schema.toDDL(), options, includeMetadata);
+    }
+
+    public Dataset<Row> readStream(String topic, boolean topicPattern, String messageFormat, String schema,
+        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
+      if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
+        throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
+      }
+
+      if (topicPattern) {
+        options.put("subscribePattern", topic);
+      } else {
+        options.put("subscribe", topic);
+      }
+
+      return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(), schema, options,
+        includeMetadata);
     }
   }
 }

@@ -761,6 +761,8 @@ class KafkaConnector(StorageConnector):
     SPARK_FORMAT = "kafka"
 
     CONFIG_MAPPING = {
+        "_bootstrap_servers": "kafka.bootstrap.servers",
+        "_security_protocol": "kafka.security.protocol",
         "_ssl_truststore_location": "kafka.ssl.truststore.location",
         "_ssl_truststore_password": "kafka.ssl.truststore.password",
         "_ssl_keystore_location": "kafka.ssl.keystore.location",
@@ -789,11 +791,7 @@ class KafkaConnector(StorageConnector):
         super().__init__(id, name, description, featurestore_id)
 
         # KAFKA
-        self._bootstrap_servers = (
-            bootstrap_servers.split(";")
-            if isinstance(bootstrap_servers, str)
-            else bootstrap_servers
-        )
+        self._bootstrap_servers = bootstrap_servers
         self._security_protocol = security_protocol
         self._ssl_truststore_location = engine.get_instance().add_file(
             ssl_truststore_location
@@ -847,19 +845,13 @@ class KafkaConnector(StorageConnector):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-
         config = {
-            "kafka.bootstrap.servers": ",".join(self._bootstrap_servers),
-            "kafka.security.protocol": self._security_protocol,
-        }
-
-        ssl_config = {
             v: getattr(self, k)
             for k, v in self.CONFIG_MAPPING.items()
             if getattr(self, k) is not None
         }
 
-        return {**self._options, **config, **ssl_config}
+        return {**self._options, **config}
 
     def read(
         self,
