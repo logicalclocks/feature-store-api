@@ -33,7 +33,6 @@ import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -358,15 +357,14 @@ public class SparkEngine {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     DataStreamWriter<Row> writer;
     if (featureGroupBase instanceof StreamFeatureGroup) {
-      StreamFeatureGroup featureGroup = (StreamFeatureGroup) featureGroupBase;
-      writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+      StreamFeatureGroup streamFeatureGroup = (StreamFeatureGroup) featureGroupBase;
+      writer = onlineFeatureGroupToAvro(streamFeatureGroup, encodeComplexFeatures(streamFeatureGroup, dataset))
               .writeStream()
               .format(Constants.KAFKA_FORMAT)
               .outputMode(outputMode)
-              .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-                      + "/Resources/" + queryName + "-checkpoint")
+              .option("checkpointLocation", utils.checkpointDirPath(queryName, streamFeatureGroup.getOnlineTopicName()))
               .options(writeOptions)
-              .option("topic", featureGroup.getOnlineTopicName());
+              .option("topic", streamFeatureGroup.getOnlineTopicName());
 
     } else {
       FeatureGroup featureGroup = (FeatureGroup) featureGroupBase;
@@ -374,8 +372,7 @@ public class SparkEngine {
               .writeStream()
               .format(Constants.KAFKA_FORMAT)
               .outputMode(outputMode)
-              .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-                      + "/Resources/" + queryName + "-checkpoint")
+              .option("checkpointLocation", utils.checkpointDirPath(queryName, featureGroup.getOnlineTopicName()))
               .options(writeOptions)
               .option("topic", featureGroup.getOnlineTopicName());
     }

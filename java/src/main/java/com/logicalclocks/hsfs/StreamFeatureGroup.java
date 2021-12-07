@@ -210,28 +210,35 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> Object insertStream(S featureData) {
-    return insertStream(featureData, null);
+    return insertStream(featureData, null, null, false, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName) {
-    return insertStream(featureData, queryName, "append");
+    return insertStream(featureData, queryName, null, false, null, null);
+  }
+
+  public <S> Object insertStream(S featureData, Map<String, String> writeOptions) {
+    return insertStream(featureData, null, null, false, null, writeOptions);
+  }
+
+  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
+    return insertStream(featureData, queryName, "append", false, null, writeOptions);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode) {
-    return insertStream(featureData, queryName, outputMode, false, null);
+    return insertStream(featureData, queryName, outputMode, false, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode,
-                                       boolean awaitTermination, Long timeout) {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+                                 Long timeout) {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-      Long timeout, Map<String, String> writeOptions)  {
+                                 Long timeout, Map<String, String> writeOptions)  {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
-              awaitTermination, timeout, writeOptions);
+        awaitTermination, timeout, writeOptions);
   }
-
 
   // ------------------------------------------------------------------------------------------------------------------
   // TODO: (davit) Duplicated

@@ -259,4 +259,14 @@ public class FeatureGroupUtils {
       throw new FeatureStoreException("Unknown engine. Currently for java client only Spark engine is implemented.");
     }
   }
+
+  public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = "insert_stream_" + onlineTopicName + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+        + "/Resources/" + queryName + "-checkpoint";
+
+  }
 }
