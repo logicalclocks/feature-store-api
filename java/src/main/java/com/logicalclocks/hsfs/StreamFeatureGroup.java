@@ -210,7 +210,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> Object insertStream(S featureData) {
-    return insertStream(featureData, null, null, false, null, null);
+    return insertStream(featureData, null, "append", false, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName) {
