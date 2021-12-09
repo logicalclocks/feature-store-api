@@ -1082,6 +1082,8 @@ class FeatureGroup(FeatureGroupBase):
         # Arguments
             dataframe: The PySpark dataframe to run the data validation expectations against.
             log_activity: Whether to log the validation as a feature group activity.
+                If a dataframe is now provided (None),
+                the validation will be logged as a feature store activity.
 
         # Returns
             `FeatureGroupValidation`. The feature group validation metadata object.
