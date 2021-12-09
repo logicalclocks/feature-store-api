@@ -34,6 +34,7 @@ class FeatureGroupValidation:
         status=None,
         validation_path=None,
         commit_time=None,
+        log_activity=True,
         href=None,
         expand=None,
         items=None,
@@ -46,6 +47,7 @@ class FeatureGroupValidation:
         self._expectation_results = expectation_results
         self._validation_path = validation_path
         self._commit_time = commit_time
+        self._log_activity = log_activity
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -68,6 +70,7 @@ class FeatureGroupValidation:
             "validationId": self._validation_id,
             "validationTime": self._validation_time,
             "expectationResults": self._expectation_results,
+            "logActivity": self._log_activity,
         }
 
     @property
@@ -123,3 +126,12 @@ class FeatureGroupValidation:
     @commit_time.setter
     def commit_time(self, commit_time):
         self._commit_time = commit_time
+
+    @property
+    def log_activity(self):
+        """Whether to log the validation as a feature group activity. Default to True. Used internally in hsfs"""
+        return self._log_activity
+
+    @log_activity.setter
+    def log_activity(self, log_activity):
+        self._log_activity = log_activity

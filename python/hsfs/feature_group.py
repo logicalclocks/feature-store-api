@@ -1073,20 +1073,27 @@ class FeatureGroup(FeatureGroupBase):
         return self.select_all().as_of(wallclock_time)
 
     def validate(
-        self, dataframe: TypeVar("pyspark.sql.DataFrame") = None  # noqa: F821
+        self,
+        dataframe: TypeVar("pyspark.sql.DataFrame") = None,
+        log_activity=False,  # noqa: F821
     ):
         """Run validation based on the attached expectations
 
         # Arguments
             dataframe: The PySpark dataframe to run the data validation expectations against.
+            log_activity: Whether to log the validation as a feature group activity.
+                If a dataframe is not provided (None),
+                the validation will be logged as a feature store activity.
 
         # Returns
             `FeatureGroupValidation`. The feature group validation metadata object.
 
         """
+        # Activity is logged only if a the validation concerts the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
-        return self._data_validation_engine.validate(self, dataframe)
+            log_activity = True
+        return self._data_validation_engine.validate(self, dataframe, log_activity)
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the
@@ -1455,7 +1462,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             `FeatureGroupValidation`. The feature group validation metadata object.
 
         """
-        return self._data_validation_engine.validate(self, self.read())
+        return self._data_validation_engine.validate(self, self.read(), True)
 
     @classmethod
     def from_response_json(cls, json_dict):
