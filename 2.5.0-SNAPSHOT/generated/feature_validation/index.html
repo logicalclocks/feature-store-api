@@ -1911,12 +1911,15 @@ The list of allowed validation types are:</p>
 <p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
 <span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1075">[source]</a></span></p>
 <h3 id="validate_1">validate<a class="headerlink" href="#validate_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_activity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 <p>Run validation based on the attached expectations</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>dataframe</strong> <code>Optional[pyspark.sql.DataFrame]</code>: The PySpark dataframe to run the data validation expectations against.</li>
+<li><strong>log_activity</strong>: Whether to log the validation as a feature group activity.
+    If a dataframe is not provided (None),
+    the validation will be logged as a feature store activity.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
