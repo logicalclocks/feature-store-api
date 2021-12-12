@@ -70,19 +70,19 @@ public class DataValidationEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataValidationEngine.class);
 
-  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
+  public <S> FeatureGroupValidation validate(S data, FeatureGroupBase featureGroupBase,
                                          List<Expectation> expectations,
                                          Boolean logActivity)
       throws FeatureStoreException, IOException {
     List<ExpectationResult> expectationResults = validate(data, expectations);
     return featureGroupValidationsApi.put(featureGroupBase,
-      FeatureGroupValidation.builder()
-        .validationTime(Instant.now().toEpochMilli())
-        .expectationResults(expectationResults).build(),
-      logActivity);
+        FeatureGroupValidation.builder()
+            .validationTime(Instant.now().toEpochMilli())
+            .expectationResults(expectationResults).build(),
+        logActivity);
   }
 
-  private List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {
+  private <S> List<ExpectationResult> validate(S data, List<Expectation> expectations) {
     // Loop through all feature group expectations, then loop all features and rules of the expectation and
     // create constraints for Deequ.
     List<ExpectationResult> expectationResults = new ArrayList<>();
@@ -131,7 +131,7 @@ public class DataValidationEngine {
       }
 
       // Run Deequ verification suite and return results
-      Map<Check, CheckResult> deequResults = DeequEngine.runVerification(data,
+      Map<Check, CheckResult> deequResults = DeequEngine.runVerification((Dataset<Row>) data,
           JavaConverters.asScalaIteratorConverter(constraintGroups.iterator()).asScala().toSeq());
       // Parse Deequ results and convert to Feature Group validation results. Unfortunately we don't have a way of
       // getting the features and the constraint type directly from the ConstraintResult object so we need to parse
@@ -221,26 +221,6 @@ public class DataValidationEngine {
       expectationResults.add(ExpectationResult.builder().expectation(expectation).results(validationResults).build());
     }
     return expectationResults;
-  }
-
-  public <S> FeatureGroupValidation validate(FeatureGroupBase featureGroupBase,
-                                         S data) throws FeatureStoreException, IOException {
-    // Check if an expectation contains features. If it does not, try to use all the current FG features
-    List<Expectation> expectations = expectationsApi.get(featureGroupBase);
-    final List<String> features = new ArrayList<>();
-    LOGGER.debug("validate :: expectations = " + expectations);
-    for (Expectation expectation : expectations) {
-      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
-        // Get all feature names from FG
-        LOGGER.debug("validate :: getFeatures = " + featureGroupBase.getFeatures());
-        if (features.isEmpty()) {
-          featureGroupBase.getFeatures().stream().forEach(x -> features.add(x.getName()));
-        }
-        expectation.setFeatures(features);
-        LOGGER.debug("validate :: expectation = " + expectation);
-      }
-    }
-    return validate((Dataset<Row>) data, featureGroupBase, expectations);
   }
 
   public List<FeatureGroupValidation> getValidations(FeatureGroupBase featureGroupBase)

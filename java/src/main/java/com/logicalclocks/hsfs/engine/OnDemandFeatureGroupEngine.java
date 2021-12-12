@@ -43,18 +43,18 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     /* set primary features */
     if (onDemandFeatureGroup.getPrimaryKeys() != null) {
       onDemandFeatureGroup.getPrimaryKeys().forEach(pk ->
-              onDemandFeatureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPrimary(true);
-                }
-              }));
+          onDemandFeatureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
     }
 
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);
     onDemandFeatureGroup.setId(apiFg.getId());
 
     if (onDemandFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
-      DataValidationEngine.getInstance().validate(onDemandFeatureGroup, onDemandDataset, true);
+      onDemandFeatureGroup.validate(onDemandDataset, true);
     }
 
     return onDemandFeatureGroup;

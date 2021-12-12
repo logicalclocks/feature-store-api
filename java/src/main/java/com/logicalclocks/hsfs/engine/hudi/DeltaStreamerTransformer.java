@@ -16,9 +16,8 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.engine.DataValidationEngine;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -34,7 +33,7 @@ import org.apache.spark.sql.SparkSession;
 
 public class DeltaStreamerTransformer implements Transformer {
   private FeatureStore featureStore;
-  private FeatureGroup featureGroup;
+  private StreamFeatureGroup featureGroup;
 
   private final FeatureStoreApi featureStoreApi = new FeatureStoreApi();
   private final FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -49,12 +48,12 @@ public class DeltaStreamerTransformer implements Transformer {
                             TypedProperties props) {
     featureStore = featureStoreApi.get(Integer.parseInt(props.getString("projectId")),
         props.getString("featureStoreName"));
-    featureGroup = featureGroupApi.getFeatureGroup(this.featureStore, props.getString("featureGroupName"),
+    featureGroup = featureGroupApi.getStreamFeatureGroup(this.featureStore, props.getString("featureGroupName"),
         Integer.parseInt(props.getString("featureGroupVersion")));
 
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       // TODO (davit): get this validation id after sync completes
-      FeatureGroupValidation validation = DataValidationEngine.getInstance().validate(featureGroup, dataset);
+      FeatureGroupValidation validation = featureGroup.validate(dataset, true);
     }
 
     return utils.sanitizeFeatureNames(dataset);

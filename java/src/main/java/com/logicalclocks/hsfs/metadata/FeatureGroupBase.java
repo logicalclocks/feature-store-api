@@ -440,7 +440,31 @@ public class FeatureGroupBase {
 
   public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
     // Run data validation for entire feature group
-    return DataValidationEngine.getInstance().validate(this, this.read(), expectations, logActivity);
+    return DataValidationEngine.getInstance().validate(this, this.read(), expectations, true);
+  }
+
+  public <S> FeatureGroupValidation validate(S data) throws FeatureStoreException, IOException {
+    return validate(data, false);
+  }
+
+  public <S> FeatureGroupValidation validate(S data, Boolean logActivity) throws FeatureStoreException,
+      IOException {
+    // Check if an expectation contains features. If it does not, try to use all the current FG features
+    List<Expectation> expectations = expectationsApi.get(this);
+    final List<String> features = new ArrayList<>();
+    LOGGER.debug("validate :: expectations = " + expectations);
+    for (Expectation expectation : expectations) {
+      if (expectation.getFeatures() == null || expectation.getFeatures().isEmpty()) {
+        // Get all feature names from FG
+        LOGGER.debug("validate :: getFeatures = " + getFeatures());
+        if (features.isEmpty()) {
+          getFeatures().stream().forEach(x -> features.add(x.getName()));
+        }
+        expectation.setFeatures(features);
+        LOGGER.debug("validate :: expectation = " + expectation);
+      }
+    }
+    return DataValidationEngine.getInstance().validate(data, this, expectations, logActivity);
   }
 
   @JsonIgnore

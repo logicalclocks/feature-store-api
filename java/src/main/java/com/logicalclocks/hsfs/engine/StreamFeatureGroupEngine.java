@@ -155,7 +155,7 @@ public class StreamFeatureGroupEngine {
 
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = DataValidationEngine.getInstance().validate(featureGroup, featureData);
+      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
       if (validation != null) {
         validationId = validation.getValidationId();
       }
