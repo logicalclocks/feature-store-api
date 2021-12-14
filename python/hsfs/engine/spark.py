@@ -465,11 +465,11 @@ class Engine:
         stream = stream.options(**storage_connector.spark_options(), **options)
 
         if storage_connector.type == StorageConnector.KAFKA:
-            return self._prep_stream_kafka(
+            return self._read_stream_kafka(
                 stream, message_format, schema, include_metadata
             )
 
-    def _prep_stream_kafka(self, stream, message_format, schema, include_metadata):
+    def _read_stream_kafka(self, stream, message_format, schema, include_metadata):
         kafka_cols = [
             col("key"),
             col("topic"),
