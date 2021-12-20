@@ -35,8 +35,8 @@ class CodeApi:
         code,
         entity_id,
         code_type,
-        browser_host_name=None,
-        export_format=None,
+        databricks_cluster_id=None,
+        databricks_format=None,
     ):
         _client = client.get_instance()
         path_params = [
@@ -54,8 +54,8 @@ class CodeApi:
         query_params = {
             "entityId": entity_id,
             "type": code_type,
-            "clusterId": browser_host_name,
-            "format": export_format,
+            "databricksClusterId": databricks_cluster_id,
+            "databricksFormat": databricks_format,
         }
 
         _client._send_request(

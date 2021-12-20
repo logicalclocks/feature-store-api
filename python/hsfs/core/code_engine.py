@@ -15,12 +15,12 @@
 #
 
 import datetime
+import importlib.util
 
 from hsfs import code
 from hsfs.core import code_api
 import json
 import os
-import IPython
 
 
 class CodeEngine:
@@ -34,10 +34,10 @@ class CodeEngine:
     JOB_ENV = "HOPSWORKS_JOB_NAME"
 
     # DATABRICKS
-    EXTRA_CONTEXT = "extraContext"
-    NOTEBOOK_PATH = "notebook_path"
-    TAGS = "tags"
-    BROWSER_HOST_NAME = "browserHostName"
+    DATABRICKS_EXTRA_CONTEXT = "extraContext"
+    DATABRICKS_NOTEBOOK_PATH = "notebook_path"
+    DATABRICKS_TAGS = "tags"
+    DATABRICKS_BROWSER_HOST_NAME = "browserHostName"
 
     def __init__(self, feature_store_id, entity_type):
         self._code_api = code_api.CodeApi(feature_store_id, entity_type)
@@ -50,7 +50,7 @@ class CodeEngine:
         # JOB
         job_name = os.environ.get(CodeEngine.JOB_ENV)
         # DATABRICKS
-        dbutils = IPython.get_ipython().user_ns.get("dbutils")
+        databricks = importlib.util.find_spec("pyspark.dbutils")
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
@@ -64,7 +64,6 @@ class CodeEngine:
                 code=code_entity,
                 entity_id=kernel_id,
                 code_type=RunType.JUPYTER,
-                export_format=ExportFormat.JUPYTER,
             )
         elif job_name:
             self._code_api.post(
@@ -72,29 +71,30 @@ class CodeEngine:
                 code=code_entity,
                 entity_id=job_name,
                 code_type=RunType.JOB,
-                export_format=ExportFormat.JUPYTER,
             )
-        elif dbutils:
+        elif databricks:
+            from pyspark.dbutils import DBUtils
+
+            dbuts = DBUtils()
+
             context = json.loads(
-                dbutils.notebook.entry_point.getDbutils()
-                .notebook()
-                .getContext()
-                .toJson()
+                dbuts.notebook.entry_point.getDbutils().notebook().getContext().toJson()
             )
-            notebook_path = context[CodeEngine.EXTRA_CONTEXT].get(
-                CodeEngine.NOTEBOOK_PATH
+            notebook_path = context[CodeEngine.DATABRICKS_EXTRA_CONTEXT].get(
+                CodeEngine.DATABRICKS_NOTEBOOK_PATH
             )
-            browser_host_name = context[CodeEngine.TAGS].get(
-                CodeEngine.BROWSER_HOST_NAME
+            browser_host_name = context[CodeEngine.DATABRICKS_TAGS].get(
+                CodeEngine.DATABRICKS_BROWSER_HOST_NAME
             )
+
             # Save Databricks archive
             self._code_api.post(
                 metadata_instance=metadata_instance,
                 code=code_entity,
                 entity_id=notebook_path,
                 code_type=RunType.DATABRICKS,
-                browser_host_name=browser_host_name,
-                export_format=ExportFormat.DBC,
+                databricks_cluster_id=browser_host_name,
+                databricks_format=DatabricksFormat.DBC,
             )
             # Save HTML
             self._code_api.post(
@@ -102,8 +102,8 @@ class CodeEngine:
                 code=code_entity,
                 entity_id=notebook_path,
                 code_type=RunType.DATABRICKS,
-                browser_host_name=browser_host_name,
-                export_format=ExportFormat.HTML,
+                databricks_cluster_id=browser_host_name,
+                databricks_format=DatabricksFormat.HTML,
             )
 
 
@@ -113,8 +113,6 @@ class RunType:
     DATABRICKS = "DATABRICKS"
 
 
-class ExportFormat:
-    JAVA = "JAVA"
+class DatabricksFormat:
     HTML = "HTML"
-    JUPYTER = "JUPYTER"
     DBC = "DBC"

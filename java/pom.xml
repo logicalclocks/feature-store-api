@@ -25,6 +25,7 @@
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
+        <dbutils.version>0.0.5</dbutils.version>
     </properties>
 
     <dependencies>
@@ -193,6 +194,13 @@
         </dependency>
 
         <dependency>
+            <groupId>com.databricks</groupId>
+            <artifactId>dbutils-api_${scala-short.version}</artifactId>
+            <version>${dbutils.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>io.specto</groupId>
             <artifactId>hoverfly-java</artifactId>
             <version>0.12.2</version>
@@ -204,12 +212,6 @@
             <artifactId>junit</artifactId>
             <version>4.13.1</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.databricks</groupId>
-            <artifactId>dbutils-api_2.12</artifactId>
-            <version>0.0.5</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.hudi/hudi-spark-bundle -->
