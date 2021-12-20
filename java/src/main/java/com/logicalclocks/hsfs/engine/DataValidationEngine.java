@@ -64,13 +64,15 @@ public class DataValidationEngine {
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
   public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
-                                         List<Expectation> expectations)
+                                         List<Expectation> expectations,
+                                         Boolean logActivity)
       throws FeatureStoreException, IOException {
     List<ExpectationResult> expectationResults = validate(data, expectations);
     return featureGroupValidationsApi.put(featureGroupBase,
       FeatureGroupValidation.builder()
         .validationTime(Instant.now().toEpochMilli())
-        .expectationResults(expectationResults).build());
+        .expectationResults(expectationResults).build(),
+      logActivity);
   }
 
   public List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {

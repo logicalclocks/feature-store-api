@@ -465,7 +465,7 @@ class Engine:
             )
         )
 
-    def validate(self, dataframe, expectations):
+    def validate(self, dataframe, expectations, log_activity=True):
         """Run data validation on the dataframe with Deequ."""
 
         expectations_java = []

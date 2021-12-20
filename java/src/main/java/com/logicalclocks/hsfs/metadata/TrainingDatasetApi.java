@@ -41,7 +41,7 @@ public class TrainingDatasetApi {
 
   private static final String TRAINING_DATASETS_PATH = "/trainingdatasets";
   private static final String TRAINING_DATASET_PATH = TRAINING_DATASETS_PATH + "{/tdName}{?version}";
-  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}";
+  private static final String TRAINING_QUERY_PATH = TRAINING_DATASETS_PATH + "{/tdId}/query{?withLabel}{&hiveQuery}";
   public static final String TRAINING_DATASET_ID_PATH = TRAINING_DATASETS_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata}";
   private static final String PREP_STATEMENT_PATH = TRAINING_DATASETS_PATH + "{/tdId}/preparedstatements{?batch}";
@@ -108,18 +108,19 @@ public class TrainingDatasetApi {
     return hopsworksClient.handleRequest(postRequest, TrainingDataset.class);
   }
 
-  public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel)
+  public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TRAINING_QUERY_PATH;
-
+  
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", trainingDataset.getFeatureStore().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .set("withLabel", withLabel)
+        .set("hiveQuery", isHiveQuery)
         .expand();
 
     HttpGet getRequest = new HttpGet(uri);

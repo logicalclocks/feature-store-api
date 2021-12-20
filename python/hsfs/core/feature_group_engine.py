@@ -53,7 +53,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Hive, the validation will be executed by
             # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe)
+            validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
 
         offline_write_options = write_options
@@ -85,7 +85,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Hive, the validation will be executed by
             # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe)
+            validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
 
         offline_write_options = write_options

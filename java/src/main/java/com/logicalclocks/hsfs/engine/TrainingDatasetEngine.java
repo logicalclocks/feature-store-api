@@ -154,9 +154,11 @@ public class TrainingDatasetEngine {
     Map<String, String> readOptions =
         SparkEngine.getInstance().getReadOptions(providedOptions, trainingDataset.getDataFormat());
 
-    String path = trainingDataset.getLocation();
+    String path = null;
     if (!com.google.common.base.Strings.isNullOrEmpty(split)) {
       path = new Path(trainingDataset.getLocation(), split).toString();
+    } else {
+      path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
     return trainingDataset.getStorageConnector()
         .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
@@ -179,9 +181,9 @@ public class TrainingDatasetEngine {
     tagsApi.deleteTag(trainingDataset, name);
   }
 
-  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel)
+  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getQuery(trainingDataset, withLabel).getStorageQuery(storage);
+    return trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery).getStorageQuery(storage);
   }
 
   public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
@@ -329,14 +331,13 @@ public class TrainingDatasetEngine {
       ArrayList<Object> servingVector = new ArrayList<>();
       String query = preparedQueryString.get(fgId);
 
-      for (String parameterNames: preparedStatementParameters.get(fgId).keySet()) {
-        // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
-        // the ? with array joined as comma separated array.
-        query = query.replaceFirst("\\?",
-                "(" + entry.get(parameterNames).stream().map(Object::toString)
-                        .collect(Collectors.joining(", ")) + ")");
-      }
-      ResultSet results = stmt.executeQuery(query);
+      String zippedTupleString =
+          zipArraysToTupleString(preparedStatementParameters.get(fgId).keySet().stream().map(entry::get)
+          .collect(Collectors.toList()));
+
+      // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
+      // the ? with array joined as comma separated array.
+      ResultSet results = stmt.executeQuery(query.replaceFirst("\\?", zippedTupleString));
 
       // check if results contain any data at all and throw exception if not
       if (!results.isBeforeFirst()) {
@@ -398,5 +399,17 @@ public class TrainingDatasetEngine {
     if (!trainingDataset.getServingKeys().equals(primaryKeys)) {
       throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
     }
+  }
+
+  private String zipArraysToTupleString(List<List<Object>> lists) {
+    List<String> zippedTuples = new ArrayList<>();
+    for (int i = 0; i < lists.get(0).size(); i++) {
+      List<String> zippedArray = new ArrayList<String>();
+      for (List<Object> in : lists) {
+        zippedArray.add(in.get(i).toString());
+      }
+      zippedTuples.add("(" + String.join(",", zippedArray) + ")");
+    }
+    return "(" + String.join(",", zippedTuples) + ")";
   }
 }
