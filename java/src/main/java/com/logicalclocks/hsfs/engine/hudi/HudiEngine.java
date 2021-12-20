@@ -26,6 +26,7 @@ import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
@@ -262,11 +263,10 @@ public class HudiEngine {
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY, hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
 
     writeOptions.putAll(hudiWriteOpts);
-    deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
+    TypedProperties typedProperties = deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
-    // TODO (davit): how this can be set from transformer?
-    //fgCommit.setValidationId(validationId);
+    fgCommit.setValidationId((Integer) typedProperties.get("validationId"));
     featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
 
     if (writeOptions.containsKey("functionType") && writeOptions.get("functionType").equals("streamingQuery")) {

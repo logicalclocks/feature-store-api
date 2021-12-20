@@ -53,7 +53,8 @@ public class DeltaStreamerKafkaSource extends AvroSource {
                                   SchemaProvider schemaProvider) {
     super(props, sparkContext, sparkSession, schemaProvider);
     props.put(NATIVE_KAFKA_KEY_DESERIALIZER_PROP, StringDeserializer.class);
-    String deserializerClassName = props.getString(DataSourceWriteOptions.KAFKA_AVRO_VALUE_DESERIALIZER(), "");
+    String deserializerClassName =
+        props.getString(DataSourceWriteOptions.KAFKA_AVRO_VALUE_DESERIALIZER_CLASS().key(), "");
     if (deserializerClassName.isEmpty()) {
       props.put(NATIVE_KAFKA_VALUE_DESERIALIZER_PROP, DeltaStreamerAvroDeserializer.class);
     } else {
