@@ -326,5 +326,4 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     hopsworksClient.handleRequest(postRequest);
   }
-
 }

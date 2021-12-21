@@ -240,8 +240,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         awaitTermination, timeout, writeOptions);
   }
 
-  // ------------------------------------------------------------------------------------------------------------------
-  // TODO: (davit) Duplicated
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
     utils.commitDelete(this, featureData, null);
@@ -296,7 +294,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
       throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
-  // ------------------------------------------------------------------------------------------------------------------
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
