@@ -115,7 +115,7 @@ public class SparkEngine {
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
       if (!(sparkSession.conf().contains(entry.getKey())
               && (entry.getValue() == null
-              || sparkSession.conf().get(entry.getKey(), null) == entry.getValue()))) {
+              || sparkSession.conf().get(entry.getKey(), null).equals(entry.getValue())))) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
@@ -431,7 +431,7 @@ public class SparkEngine {
         .partitionBy(utils.getPartitionColumns(featureGroup))
         .saveAsTable(utils.getTableName(featureGroup));
   }
-  
+
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
       Boolean histogram, Boolean exactUniqueness) {
     // only needed for training datasets, as the backend is not setting the defaults
