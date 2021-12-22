@@ -36,7 +36,7 @@ public class CodeApi {
 
   public static final String ENTITY_ROOT_PATH = "{/dataSetType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/dataSetId}";
-  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type,clusterId,format}";
+  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type,databricksClusterId}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeApi.class);
 
@@ -46,20 +46,20 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
+  public void post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
-    return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+    post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
             featureGroup.getId(), code, entityId, type, browserHostName);
   }
 
-  public Code post(TrainingDataset trainingDataset, Code code, String entityId, Code.RunType type,
+  public void post(TrainingDataset trainingDataset, Code code, String entityId, Code.RunType type,
                    String browserHostName)
           throws FeatureStoreException, IOException {
-    return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+    post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
             trainingDataset.getId(), code, entityId, type, browserHostName);
   }
 
-  private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
+  private void post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
                     String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
@@ -83,6 +83,6 @@ public class CodeApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info(codeJson);
 
-    return hopsworksClient.handleRequest(postRequest, Code.class);
+    hopsworksClient.handleRequest(postRequest);
   }
 }
