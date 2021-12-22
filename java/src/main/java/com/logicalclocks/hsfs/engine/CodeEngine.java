@@ -25,8 +25,6 @@ import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.Code;
 import com.logicalclocks.hsfs.metadata.CodeApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -44,57 +42,49 @@ public class CodeEngine {
   //JOB
   private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
-
   public CodeEngine(EntityEndpointType entityType) {
     this.codeApi = new CodeApi(entityType);
   }
 
-  public Code saveCode(TrainingDataset trainingDataset)
-          throws FeatureStoreException, IOException {
+  public void saveCode(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
-    DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null,
-              CodeApi.ExportFormat.JUPYTER);
+      codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null,
-              CodeApi.ExportFormat.JUPYTER);
-    } else if (dbutils != null) {
-      String notebookPath = dbutils.notebook().getContext().notebookPath().get();
-      String browserHostName = dbutils.notebook().getContext().browserHostName().get();
-      codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
-              CodeApi.ExportFormat.DBC);
-      return codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
-              CodeApi.ExportFormat.HTML);
+      codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null);
     } else {
-      return null;
+      try {
+        DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
+        String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+        String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+        codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      } catch (Exception e) {
+        // ignore the exception - the code might be running on a third party platform where databricks
+        // library is not available
+      }
     }
   }
 
-  public Code saveCode(FeatureGroupBase featureGroup)
-          throws FeatureStoreException, IOException {
+  public void saveCode(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
-    DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null,
-              CodeApi.ExportFormat.JUPYTER);
+      codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null,
-              CodeApi.ExportFormat.JUPYTER);
-    } else if (dbutils != null) {
-      String notebookPath = dbutils.notebook().getContext().notebookPath().get();
-      String browserHostName = dbutils.notebook().getContext().browserHostName().get();
-      codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
-              CodeApi.ExportFormat.DBC);
-      return codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName,
-              CodeApi.ExportFormat.HTML);
+      codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null);
     } else {
-      return null;
+      try {
+        DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
+        String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+        String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+        codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      } catch (Exception e) {
+        // ignore the exception - the code might be running on a third party platform where databricks
+        // library is not available
+      }
     }
   }
 

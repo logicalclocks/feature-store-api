@@ -46,22 +46,21 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName,
-                   ExportFormat format)
+  public Code post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-            featureGroup.getId(), code, entityId, type, browserHostName, format);
+            featureGroup.getId(), code, entityId, type, browserHostName);
   }
 
   public Code post(TrainingDataset trainingDataset, Code code, String entityId, Code.RunType type,
-                   String browserHostName, ExportFormat format)
+                   String browserHostName)
           throws FeatureStoreException, IOException {
     return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-            trainingDataset.getId(), code, entityId, type, browserHostName, format);
+            trainingDataset.getId(), code, entityId, type, browserHostName);
   }
 
   private Code post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
-                    String entityId, Code.RunType type, String browserHostName, ExportFormat format)
+                    String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
@@ -73,8 +72,7 @@ public class CodeApi {
             .set("dataSetId", dataSetId)
             .set("entityId", entityId)
             .set("type", type)
-            .set("clusterId", browserHostName)
-            .set("format", format.toString())
+            .set("databricksClusterId", browserHostName)
             .expand();
 
     String codeJson = hopsworksClient.getObjectMapper().writeValueAsString(code);
@@ -86,12 +84,5 @@ public class CodeApi {
     LOGGER.info(codeJson);
 
     return hopsworksClient.handleRequest(postRequest, Code.class);
-  }
-
-  public enum ExportFormat {
-    JAVA,
-    HTML,
-    JUPYTER,
-    DBC;
   }
 }
