@@ -87,15 +87,6 @@ class CodeEngine:
                 CodeEngine.DATABRICKS_BROWSER_HOST_NAME
             )
 
-            # Save Databricks archive
-            self._code_api.post(
-                metadata_instance=metadata_instance,
-                code=code_entity,
-                entity_id=notebook_path,
-                code_type=RunType.DATABRICKS,
-                databricks_cluster_id=browser_host_name,
-                databricks_format=DatabricksFormat.DBC,
-            )
             # Save HTML
             self._code_api.post(
                 metadata_instance=metadata_instance,
@@ -103,7 +94,6 @@ class CodeEngine:
                 entity_id=notebook_path,
                 code_type=RunType.DATABRICKS,
                 databricks_cluster_id=browser_host_name,
-                databricks_format=DatabricksFormat.HTML,
             )
 
 
@@ -111,8 +101,3 @@ class RunType:
     JUPYTER = "JUPYTER"
     JOB = "JOB"
     DATABRICKS = "DATABRICKS"
-
-
-class DatabricksFormat:
-    HTML = "HTML"
-    DBC = "DBC"
