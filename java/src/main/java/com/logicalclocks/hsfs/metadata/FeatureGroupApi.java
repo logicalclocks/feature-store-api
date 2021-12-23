@@ -312,6 +312,7 @@ public class FeatureGroupApi {
       option.setValue(writeOptions.get(key));
       options.add(option);
     }
+
     HsfsUtilJobConf hsfsUtilJobConf = new HsfsUtilJobConf();
     hsfsUtilJobConf.setWriteOptions(options);
 

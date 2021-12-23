@@ -136,10 +136,6 @@ public class StreamFeatureGroupEngine {
       writeOptions = new HashMap<>();
     }
 
-    // start streaming to hudi table from online feature group topic
-    writeOptions.put("functionType", "streamingQuery");
-    featureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
-
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
@@ -149,13 +145,13 @@ public class StreamFeatureGroupEngine {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
-  public <S> void insert(StreamFeatureGroup featureGroup, S featureData, HudiOperationType operation,
+  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData, HudiOperationType operation,
                          SaveMode saveMode, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
       ParseException {
 
     Integer validationId = null;
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
+    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
+      FeatureGroupValidation validation = streamFeatureGroup.validate(featureData, true);
       if (validation != null) {
         validationId = validation.getValidationId();
       }
@@ -166,15 +162,18 @@ public class StreamFeatureGroupEngine {
       // related to the feature group will be lost. We need to keep them.
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
       // After that it's going to be just a normal append
-      featureGroupApi.deleteContent(featureGroup);
+      featureGroupApi.deleteContent(streamFeatureGroup);
     }
 
     if (operation.equals(HudiOperationType.BULK_INSERT)) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, featureData, operation,
+      SparkEngine.getInstance().writeOfflineDataframe(streamFeatureGroup, featureData, operation,
           writeOptions, validationId);
     }
 
-    SparkEngine.getInstance().writeOnlineDataframe(featureGroup, featureData, featureGroup.getOnlineTopicName(),
-        utils.getKafkaConfig(featureGroup, writeOptions));
+    // create job for HUDI Deltastreamer
+    featureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
+
+    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
+        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 }
