@@ -16,6 +16,8 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.databricks.dbutils_v1.DBUtilsV1;
+import com.databricks.dbutils_v1.DBUtilsHolder;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -23,8 +25,6 @@ import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.metadata.Code;
 import com.logicalclocks.hsfs.metadata.CodeApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -33,45 +33,58 @@ import java.time.LocalDateTime;
 public class CodeEngine {
 
   private CodeApi codeApi;
-  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
-  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
+
   private static final String WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CodeEngine.class);
+  //JUPYTER
+  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
+
+  //JOB
+  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
 
   public CodeEngine(EntityEndpointType entityType) {
     this.codeApi = new CodeApi(entityType);
   }
 
-  public Code saveCode(TrainingDataset trainingDataset)
-          throws FeatureStoreException, IOException {
+  public void saveCode(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(trainingDataset, saveCode(),
-              kernelId, Code.RunType.JUPYTER);
+      codeApi.post(trainingDataset, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(trainingDataset, saveCode(),
-              jobName, Code.RunType.JOB);
+      codeApi.post(trainingDataset, saveCode(), jobName, Code.RunType.JOB, null);
     } else {
-      return null;
+      try {
+        DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
+        String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+        String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+        codeApi.post(trainingDataset, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      } catch (Exception e) {
+        // ignore the exception - the code might be running on a third party platform where databricks
+        // library is not available
+      }
     }
   }
 
-  public Code saveCode(FeatureGroupBase featureGroup)
-          throws FeatureStoreException, IOException {
+  public void saveCode(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
 
     if (!Strings.isNullOrEmpty(kernelId)) {
-      return codeApi.post(featureGroup, saveCode(),
-              kernelId, Code.RunType.JUPYTER);
+      codeApi.post(featureGroup, saveCode(), kernelId, Code.RunType.JUPYTER, null);
     } else if (!Strings.isNullOrEmpty(jobName)) {
-      return codeApi.post(featureGroup, saveCode(),
-              jobName, Code.RunType.JOB);
+      codeApi.post(featureGroup, saveCode(), jobName, Code.RunType.JOB, null);
     } else {
-      return null;
+      try {
+        DBUtilsV1 dbutils = DBUtilsHolder.dbutils();
+        String notebookPath = dbutils.notebook().getContext().notebookPath().get();
+        String browserHostName = dbutils.notebook().getContext().browserHostName().get();
+        codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
+      } catch (Exception e) {
+        // ignore the exception - the code might be running on a third party platform where databricks
+        // library is not available
+      }
     }
   }
 

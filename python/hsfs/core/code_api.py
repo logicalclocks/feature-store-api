@@ -29,7 +29,14 @@ class CodeApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def post(self, metadata_instance, code, entity_id, code_type):
+    def post(
+        self,
+        metadata_instance,
+        code,
+        entity_id,
+        code_type,
+        databricks_cluster_id=None,
+    ):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -40,8 +47,15 @@ class CodeApi:
             metadata_instance.id,
             "code",
         ]
+
         headers = {"content-type": "application/json"}
-        query_params = {"entityId": entity_id, "type": code_type}
+
+        query_params = {
+            "entityId": entity_id,
+            "type": code_type,
+            "databricksClusterId": databricks_cluster_id,
+        }
+
         _client._send_request(
             "POST", path_params, query_params, headers=headers, data=code.json()
         )

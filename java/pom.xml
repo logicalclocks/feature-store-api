@@ -25,6 +25,7 @@
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
+        <dbutils.version>0.0.5</dbutils.version>
     </properties>
 
     <dependencies>
@@ -190,6 +191,13 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.databricks</groupId>
+            <artifactId>dbutils-api_${scala-short.version}</artifactId>
+            <version>${dbutils.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
