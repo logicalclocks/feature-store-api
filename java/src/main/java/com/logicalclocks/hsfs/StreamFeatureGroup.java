@@ -131,8 +131,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
-  // ------------------------------------------------------------------------------------------------------------------
-  // TODO: (davit) Duplicated
   public Query read() throws FeatureStoreException, IOException {
     return selectAll();
   }
@@ -190,7 +188,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
-  // ------------------------------------------------------------------------------------------------------------------
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation,
                          SaveMode saveMode, Map<String, String> writeOptions)
