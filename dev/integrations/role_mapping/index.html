@@ -13,7 +13,7 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/integrations/role_mapping/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/integrations/role_mapping/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
@@ -85,7 +85,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../assets/images/hops-logo.png" alt="logo">
 
@@ -266,7 +266,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../assets/images/hops-logo.png" alt="logo">
 
@@ -1335,39 +1335,39 @@ you could have your users use AWS credentials directly in their programs which i
  In the example below, we define 4 different resource roles: test-role, s3-role, dev-s3-role, and redshift -
  and later we will define which users will be allowed to assume which of these resources roles.</li>
 </ol>
-<p><div class="highlight"><pre><span></span><code>    <span class="p">{</span>
-        <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="p">{</span>
-                <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;AssumeDataRoles&quot;</span><span class="p">,</span>
-                <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-                <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;sts:AssumeRole&quot;</span><span class="p">,</span>
-                <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="s2">&quot;arn:aws:iam::123456789011:role/test-role&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/s3-role&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/dev-s3-role&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/redshift&quot;</span>
-                <span class="p">]</span>
-            <span class="p">}</span>
-        <span class="p">]</span>
-    <span class="p">}</span>
+<p><div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Statement&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AssumeDataRoles&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sts:AssumeRole&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                    </span><span class="s2">&quot;arn:aws:iam::123456789011:role/test-role&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/s3-role&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/dev-s3-role&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">                    </span><span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/redshift&quot;</span><span class="w"></span>
+<span class="w">                </span><span class="p">]</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">]</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 </code></pre></div>
 Example policy for assuming four roles.</p>
 <ol>
 <li>Create the resource roles and edit the trust relationship and add a policy document that will allow the instance profile to assume the resource roles.</li>
 </ol>
-<p><div class="highlight"><pre><span></span><code>    <span class="p">{</span>
-        <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="p">{</span>
-            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;Principal&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="nt">&quot;AWS&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/instance-profile&quot;</span>
-            <span class="p">},</span>
-            <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;sts:AssumeRole&quot;</span>
-            <span class="p">}</span>
-        <span class="p">]</span>
-    <span class="p">}</span>
+<p><div class="highlight"><pre><span></span><code><span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Statement&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Principal&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="nt">&quot;AWS&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arn:aws:iam::xxxxxxxxxxxx:role/instance-profile&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sts:AssumeRole&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">]</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 </code></pre></div>
 Example policy document.</p>
 <ol>

@@ -13,7 +13,7 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/integrations/databricks/api_key/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/integrations/databricks/api_key/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
@@ -85,7 +85,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../../assets/images/hops-logo.png" alt="logo">
 
@@ -266,7 +266,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../../assets/images/hops-logo.png" alt="logo">
 
@@ -1623,17 +1623,17 @@ Click on <em>Review</em>, give the policy a name und click on <em>Create policy<
 
 <h4 id="step-3-allow-databricks-to-use-the-aws-role-created-in-step-1">Step 3: Allow Databricks to use the AWS role created in Step 1<a class="headerlink" href="#step-3-allow-databricks-to-use-the-aws-role-created-in-step-1" title="Permanent link">#</a></h4>
 <p>First you need to get the AWS role used by Databricks for deployments as described in <a href="https://docs.databricks.com/administration-guide/cloud-configurations/aws/instance-profiles.html#step-3-note-the-iam-role-used-to-create-the-databricks-deployment">this step</a>. Once you get the role name, go to <em>AWS IAM</em>, search for the role, and click on it. Then, select the <em>Permissions</em> tab, click on <em>Add inline policy</em>, select the <em>JSON</em> tab, and paste the following snippet. Replace <em>[ACCOUNT_ID]</em> with your AWS account id, and <em>[MY_DATABRICKS_ROLE]</em> with the AWS role name created in <a href="#step-1-create-an-instance-profile-to-attach-to-your-databricks-clusters">Step 1</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-    <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;Sid&quot;</span><span class="p">:</span> <span class="s2">&quot;PassRole&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;iam:PassRole&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:iam::[ACCOUNT_ID]:role/[MY_DATABRICKS_ROLE]&quot;</span>
-        <span class="p">}</span>
-    <span class="p">]</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Statement&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PassRole&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;iam:PassRole&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arn:aws:iam::[ACCOUNT_ID]:role/[MY_DATABRICKS_ROLE]&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">]</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </code></pre></div>
 <p>Click <em>Review Policy</em>, name the policy, and click <em>Create Policy</em>. Then, go to your Databricks workspace and follow <a href="https://docs.databricks.com/administration-guide/cloud-configurations/aws/instance-profiles.html#step-5-add-the-instance-profile-to-databricks">this step</a> to add the instance profile to your workspace. Finally, when launching Databricks clusters, select <em>Advanced</em> settings and choose the instance profile you have just added.</p>
 <h3 id="azure">Azure<a class="headerlink" href="#azure" title="Permanent link">#</a></h3>

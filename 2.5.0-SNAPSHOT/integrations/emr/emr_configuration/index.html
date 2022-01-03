@@ -13,7 +13,7 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/integrations/emr/emr_configuration/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/integrations/emr/emr_configuration/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
@@ -85,7 +85,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-header-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../../assets/images/hops-logo.png" alt="logo">
 
@@ -266,7 +266,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://docs.hopsworks.ai" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
+    <a href="https://docs.hopsworks.ai/feature-store-api/latest" title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation">
       
   <img src="../../../assets/images/hops-logo.png" alt="logo">
 
@@ -1568,52 +1568,52 @@ Click on <em>Review</em>, give the policy a name und click on <em>Create policy<
 <h3 id="add-the-hopsworks-feature-store-configuration-to-your-emr-cluster">Add the Hopsworks Feature Store configuration to your EMR cluster<a class="headerlink" href="#add-the-hopsworks-feature-store-configuration-to-your-emr-cluster" title="Permanent link">#</a></h3>
 <p>In order for EMR to be able to talk to the Feature Store, you need to update the Hadoop and Spark configurations.
 Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal with the private DNS name of your Hopsworks master node.</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;hadoop-env&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hadoop-env&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
-    <span class="p">},</span>
-    <span class="nt">&quot;Configurations&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="p">{</span>
-        <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;export&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-          <span class="nt">&quot;HADOOP_CLASSPATH&quot;</span><span class="p">:</span> <span class="s2">&quot;$HADOOP_CLASSPATH:/usr/lib/hopsworks/client/*&quot;</span>
-        <span class="p">},</span>
-        <span class="nt">&quot;Configurations&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">      </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;export&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">          </span><span class="nt">&quot;HADOOP_CLASSPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;$HADOOP_CLASSPATH:/usr/lib/hopsworks/client/*&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
 
-        <span class="p">]</span>
-      <span class="p">}</span>
-    <span class="p">]</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;core-site&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;fs.hopsfs.impl&quot;</span><span class="p">:</span> <span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.hostname.verifier&quot;</span><span class="p">:</span> <span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span> <span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.keystore.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;hops.ssl.trustore.name&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span> <span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;Classification&quot;</span><span class="p">:</span> <span class="s2">&quot;spark-hive-site&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;hive.metastore.uris&quot;</span><span class="p">:</span> <span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">]</span>
+<span class="w">        </span><span class="p">]</span><span class="w"></span>
+<span class="w">      </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">]</span><span class="w"></span>
+<span class="w">  </span><span class="p">},</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;core-site&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;fs.hopsfs.impl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.ssl.hostname.verifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.ssl.keystore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hops.ssl.trustore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">},</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">},</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-hive-site&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;hive.metastore.uris&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">]</span><span class="w"></span>
 </code></pre></div>
 <p>When you create your EMR cluster, add the configuration:</p>
 <div class="admonition note">
