@@ -27,8 +27,8 @@ from hsfs.core import (
     tags_api,
     storage_connector_api,
     transformation_function_engine,
-    FeatureStoreException,
 )
+from hsfs.client import exceptions
 from hsfs.constructor import query
 
 
@@ -83,7 +83,7 @@ class TrainingDatasetEngine:
                 len(training_dataset.splits) > 0
                 and training_dataset.train_split is None
             ):
-                raise FeatureStoreException(
+                raise exceptions.FeatureStoreException(
                     "`train_split` the name of the split that is going to be used for training must be provided."
                     "The statistics of this split will be used for transformation functions."
                 )
