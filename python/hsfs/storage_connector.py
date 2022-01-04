@@ -366,7 +366,7 @@ class RedshiftConnector(StorageConnector):
     def arguments(self):
         """Additional JDBC, REDSHIFT, or Snowflake arguments."""
         if isinstance(self._arguments, dict):
-            return "".join([k + "+" + v for k, v in self._arguments.items()])
+            return ",".join([k + "=" + v for k, v in self._arguments.items()])
         return self._arguments
 
     def spark_options(self):
