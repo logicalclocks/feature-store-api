@@ -116,7 +116,6 @@ class BuiltInTransformationFunction:
             if col["column"] == feature_name:
                 if col["dataType"] not in ["Integral", "Fractional", "Decimal"]:
                     raise ValueError("Can't compute robust_scaler for this type")
-                print("dataType" in col)
                 if "approxPercentiles" in col and len(col["approxPercentiles"]) > 0:
                     percentiles = col["approxPercentiles"]
 
