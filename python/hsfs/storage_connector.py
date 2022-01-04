@@ -295,7 +295,11 @@ class RedshiftConnector(StorageConnector):
         self._database_password = database_password
         self._database_group = database_group
         self._iam_role = iam_role
-        self._arguments = arguments
+        self._arguments = (
+            {arg["name"]: arg.get("value", "") for arg in arguments}
+            if isinstance(arguments, list)
+            else arguments
+        )
         self._expiration = expiration
 
     @property
@@ -361,6 +365,8 @@ class RedshiftConnector(StorageConnector):
     @property
     def arguments(self):
         """Additional JDBC, REDSHIFT, or Snowflake arguments."""
+        if isinstance(self._arguments, dict):
+            return "".join([k + "+" + v for k, v in self._arguments.items()])
         return self._arguments
 
     def spark_options(self):
@@ -377,7 +383,7 @@ class RedshiftConnector(StorageConnector):
             + "/"
             + self._database_name
         )
-        if self._arguments is not None:
+        if isinstance(self._arguments, str):
             connstr = connstr + "?" + self._arguments
         props = {
             "url": connstr,
