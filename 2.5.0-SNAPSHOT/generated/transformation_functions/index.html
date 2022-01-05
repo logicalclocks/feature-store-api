@@ -1371,11 +1371,15 @@
 or attached when starting a <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter">Jupyter notebook</a>
 or <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html">Hopsworks job</a>.</p>
 <div class="admonition warning">
-<p class="admonition-title">Pyspark decorators.</p>
-<p>Don't decorate transformation function with Pyspark <code>@udf</code> or <code>@pandas_udf</code>, as well as don't use any Pyspark dependencies.
+<p class="admonition-title">Pyspark decorators</p>
+<p>Don't decorate transformation functions with Pyspark <code>@udf</code> or <code>@pandas_udf</code>, as well as don't use any Pyspark dependencies.
 HSFS will decorate transformation function only if it is used inside Pyspark application.</p>
 </div>
+<p>HSFS also comes with built-in transformation functions such as <code>min_max_scaler</code>, <code>standard_scaler</code>, <code>robust_scaler</code>
+and <code>label_encoder</code>.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h2>
+<p>Transformation functions need to be registered in the Feature Store to make them accessible for training dataset creation.
+Assume you have a Python library called <code>hsfs_transformers</code> containing your transformation function <code>plus_one</code>.</p>
 <div class="tabbed-set" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Python</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Register transformation function  <code>plus_one</code> in the Hopsworks feature store.</p>
@@ -1389,10 +1393,20 @@ HSFS will decorate transformation function only if it is used inside Pyspark app
 </div>
 </div>
 </div>
-<p>To retrieve all transformation functions from the feature store use <code>get_transformation_functions</code> that will return list of <code>TransformatioFunction</code> objects.
-Specific transformation function can be retrieved by <code>get_transformation_function</code> method where user can provide name and version of the transformation function.
-If only name is provided then it will default to version 1.</p>
+<p>Built-in transformation functions can be registered by calling <code>register_builtin_transformation_functions</code> method on the
+feature store handle.</p>
 <div class="tabbed-set" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><label for="__tabbed_2_1">Python</label><div class="tabbed-content">
+<div class="admonition example">
+<p class="admonition-title">Register built-in transformation functions in the Hopsworks feature store.</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span><span class="o">.</span><span class="n">register_builtin_transformation_functions</span><span class="p">()</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>To retrieve all transformation functions from the feature store use <code>get_transformation_functions</code> which will return list of <code>TransformationFunction</code> objects.
+A specific transformation function can be retrieved by <code>get_transformation_function</code> method where the user can provide a name and a version of the transformation function.
+If only the name is provided then it will default to version 1.</p>
+<div class="tabbed-set" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><label for="__tabbed_3_1">Python</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Retrieving transformation functions from the feature store</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># get all transformation functions</span>
@@ -1400,6 +1414,9 @@ If only name is provided then it will default to version 1.</p>
 
 <span class="c1"># get transformation function by name. This will default to version 1</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;plus_one&quot;</span><span class="p">)</span>
+
+<span class="c1"># get built-in transformation function min max scaler</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;min_max_scaler&quot;</span><span class="p">)</span>
 
 <span class="c1"># get transformation function by name and version.</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;plus_one&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -1410,7 +1427,7 @@ If only name is provided then it will default to version 1.</p>
 <p>To attach transformation function to training dataset provide transformation functions as dict, where key is feature name and value is online transformation function name.
 Also training dataset must be created from the <a href="../query_vs_dataframe/">Query</a> object. Once attached transformation function will be applied on whenever <code>save</code>, <code>insert</code> and <code>get_serving_vector</code>
 methods are called on training dataset object.</p>
-<div class="tabbed-set" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><label for="__tabbed_3_1">Python</label><div class="tabbed-content">
+<div class="tabbed-set" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><label for="__tabbed_4_1">Python</label><div class="tabbed-content">
 <div class="admonition example">
 <p class="admonition-title">Attaching transformation functions to the training dataset</p>
 <div class="highlight"><pre><span></span><code><span class="n">plus_one_meta</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;plus_one&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -1425,6 +1442,28 @@ methods are called on training dataset object.</p>
 </div>
 </div>
 </div>
+<p>Built-in transformation functions are attached in the same way. The only difference is that it will compute the necessary statistics
+for the specific function in the background. For example min and max values for <code>min_max_scaler</code>; mean and standard deviation
+for <code>standard_scaler</code> etc.</p>
+<div class="codehilite"><pre><span></span><code>!!! example &quot;Attaching built-in transformation functions to the training dataset&quot;
+    ```python
+    min_max_scaler = fs.get_transformation_function(name=&quot;min_max_scaler&quot;)
+    standard_scaler = fs.get_transformation_function(name=&quot;standard_scaler&quot;)
+    robust_scaler = fs.get_transformation_function(name=&quot;robust_scaler&quot;)
+    label_encoder = fs.get_transformation_function(name=&quot;label_encoder&quot;)
+    fs.create_training_dataset(name=&quot;td_demo&quot;,
+                               description=&quot;Dataset to train the demo model&quot;,
+                               data_format=&quot;csv&quot;,
+                               transformation_functions={&quot;feature_name&quot;:min_max_scaler,
+                                                         &quot;feature_name&quot;:standard_scaler,
+                                                         &quot;feature_name&quot;:robust_scaler,
+                                                         &quot;feature_name&quot;:label_encoder},
+                               statistics_config=None,
+                               version=1)
+    td.save(join_query)
+    ```
+</code></pre></div>
+
 <div class="admonition warning">
 <p class="admonition-title">Scala support</p>
 <p>Creating and attaching Transformation functions to training datasets are not supported for hsfs scala client.
@@ -1432,7 +1471,7 @@ If training dataset with transformation function was created using python client
 methods are called on this training dataset from scala client hsfs will throw an exception.</p>
 </div>
 <h1 id="transformation-function">Transformation Function<a class="headerlink" href="#transformation-function" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L24">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L25">[source]</a></span></p>
 <h3 id="transformationfunction">TransformationFunction<a class="headerlink" href="#transformationfunction" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">transformation_function</span><span class="o">.</span><span class="n">TransformationFunction</span><span class="p">(</span>
     <span class="n">featurestore_id</span><span class="p">,</span>
@@ -1440,6 +1479,7 @@ methods are called on this training dataset from scala client hsfs will throw an
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">source_code_content</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">builtin_source_code</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1450,43 +1490,43 @@ methods are called on this training dataset from scala client hsfs will throw an
 </code></pre></div>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L170">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L186">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Training dataset id.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L179">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L195">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L199">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L215">[source]</a></span></p>
 <h3 id="output_type">output_type<a class="headerlink" href="#output_type" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L195">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L211">[source]</a></span></p>
 <h3 id="source_code_content">source_code_content<a class="headerlink" href="#source_code_content" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L191">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L207">[source]</a></span></p>
 <h3 id="transformation_fn">transformation_fn<a class="headerlink" href="#transformation_fn" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L187">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L203">[source]</a></span></p>
 <h3 id="transformer_code">transformer_code<a class="headerlink" href="#transformer_code" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L183">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L199">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L69">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L85">[source]</a></span></p>
 <h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </code></pre></div>
 <p>Delete transformation function from backend.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L65">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L81">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>Persist transformation function in backend.</p>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L669">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L678">[source]</a></span></p>
 <h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1506,7 +1546,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L728">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L737">[source]</a></span></p>
 <h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1520,7 +1560,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L744">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L753">[source]</a></span></p>
 <h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
 </code></pre></div>
