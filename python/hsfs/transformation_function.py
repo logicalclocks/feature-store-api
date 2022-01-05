@@ -1,3 +1,4 @@
+#
 #  Copyright 2021. Logical Clocks AB
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -29,6 +30,7 @@ class TransformationFunction:
         version=None,
         name=None,
         source_code_content=None,
+        builtin_source_code=None,
         output_type=None,
         id=None,
         type=None,
@@ -57,10 +59,24 @@ class TransformationFunction:
             self._output_type = self._transformation_function_engine.infer_spark_type(
                 output_type
             )
+        elif builtin_source_code is not None:
+            # user triggered to register built-in transformation function
+            self._output_type = self._transformation_function_engine.infer_spark_type(
+                output_type
+            )
+            self._source_code_content = json.dumps(
+                {
+                    "module_imports": "",
+                    "transformer_code": builtin_source_code,
+                }
+            )
         else:
             # load original source code
             self._output_type = output_type
             self._load_source_code(self._source_code_content)
+
+        self._feature_group_feature_name = None
+        self._feature_group_id = None
 
     def save(self):
         """Persist transformation function in backend."""

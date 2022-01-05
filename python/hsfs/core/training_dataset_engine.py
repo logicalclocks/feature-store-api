@@ -28,6 +28,7 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
 )
+from hsfs.client import exceptions
 from hsfs.constructor import query
 
 
@@ -77,6 +78,14 @@ class TrainingDatasetEngine:
             if training_dataset.transformation_functions:
                 raise ValueError(
                     "Transformation functions can only be applied to training datasets generated from Query object"
+                )
+            if (
+                len(training_dataset.splits) > 0
+                and training_dataset.train_split is None
+            ):
+                raise exceptions.FeatureStoreException(
+                    "`train_split` the name of the split that is going to be used for training must be provided."
+                    "The statistics of this split will be used for transformation functions."
                 )
 
         updated_instance = self._training_dataset_api.post(training_dataset)
@@ -334,18 +343,39 @@ class TrainingDatasetEngine:
                 prepared_statement.prepared_statement_index
             ] = query_online
 
+        training_dataset.prepared_statement_engine = mysql_engine
+        training_dataset.prepared_statements = prepared_statements_dict
+        training_dataset.serving_keys = serving_vector_keys
+
+        if batch:
+            training_dataset._pkname_by_serving_index = pkname_by_serving_index
+
         # attach transformation functions
-        training_dataset.transformation_functions = (
+        training_dataset.transformation_functions = self._get_transformation_fns(
+            training_dataset
+        )
+
+    def _get_transformation_fns(self, training_dataset):
+        # get attached transformation functions
+        transformation_functions = (
             self._transformation_function_engine.get_td_transformation_fn(
                 training_dataset
             )
         )
 
-        training_dataset.prepared_statement_engine = mysql_engine
-        training_dataset.prepared_statements = prepared_statements_dict
-        training_dataset.serving_keys = serving_vector_keys
-        if batch:
-            training_dataset._pkname_by_serving_index = pkname_by_serving_index
+        # if there are any built-in transformation functions get related statistics and
+        # populate with relevant arguments
+        # there should be only one statistics object with for_transformation=true
+        td_tffn_stats = training_dataset._statistics_engine.get_last(
+            training_dataset, for_transformation=True
+        )
+
+        transformation_fns = (
+            self._transformation_function_engine.populate_builtin_attached_fns(
+                transformation_functions, td_tffn_stats.content
+            )
+        )
+        return transformation_fns
 
     @staticmethod
     def _apply_transformation(transformation_fns, row_dict):
