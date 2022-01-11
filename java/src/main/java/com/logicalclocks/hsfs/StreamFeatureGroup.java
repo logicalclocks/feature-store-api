@@ -40,8 +40,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaParseException;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -237,12 +235,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         awaitTermination, timeout, writeOptions);
   }
 
-  public void commitDeleteRecord(Dataset<Row> featureData)
+  public <S> void commitDeleteRecord(S featureData)
       throws FeatureStoreException, IOException, ParseException {
     utils.commitDelete(this, featureData, null);
   }
 
-  public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
+  public <S> void commitDeleteRecord(S featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     utils.commitDelete(this, featureData, writeOptions);
   }

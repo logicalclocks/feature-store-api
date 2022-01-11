@@ -1074,8 +1074,8 @@ class FeatureGroup(FeatureGroupBase):
 
     def validate(
         self,
-        dataframe: TypeVar("pyspark.sql.DataFrame") = None,
-        log_activity=False,  # noqa: F821
+        dataframe: TypeVar("pyspark.sql.DataFrame") = None,  # noqa: F821
+        log_activity=False,
     ):
         """Run validation based on the attached expectations
 
@@ -1212,6 +1212,245 @@ class FeatureGroup(FeatureGroupBase):
         for field in json.loads(self.avro_schema)["fields"]:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
+
+    @property
+    def id(self):
+        """Feature group id."""
+        return self._id
+
+    @property
+    def name(self):
+        """Name of the feature group."""
+        return self._name
+
+    @property
+    def version(self):
+        """Version number of the feature group."""
+        return self._version
+
+    @property
+    def description(self):
+        """Description of the feature group contents."""
+        return self._description
+
+    @property
+    def features(self):
+        """Schema information."""
+        return self._features
+
+    @property
+    def online_enabled(self):
+        """Setting if the feature group is available in online storage."""
+        return self._online_enabled
+
+    @property
+    def time_travel_format(self):
+        """Setting of the feature group time travel format."""
+        return self._time_travel_format
+
+    @property
+    def partition_key(self):
+        """List of features building the partition key."""
+        return self._partition_key
+
+    @property
+    def hudi_precombine_key(self):
+        """Feature name that is the hudi precombine key."""
+        return self._hudi_precombine_key
+
+    @property
+    def feature_store_id(self):
+        return self._feature_store_id
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name
+
+    @property
+    def creator(self):
+        """Username of the creator."""
+        return self._creator
+
+    @property
+    def created(self):
+        """Timestamp when the feature group was created."""
+        return self._created
+
+    @property
+    def avro_schema(self):
+        """Avro schema representation of the feature group."""
+        if self._avro_schema is None:
+            # cache the schema
+            self._avro_schema = self._feature_group_engine.get_avro_schema(self)
+        return self._avro_schema
+
+    @property
+    def validation_type(self):
+        """Validation type, one of "STRICT", "WARNING", "ALL", "NONE"."""
+        return self._validation_type
+
+    @property
+    def expectations_names(self):
+        """The names of expectations attached to this feature group."""
+        return self._expectations_names
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @description.setter
+    def description(self, new_description):
+        self._description = new_description
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
+
+    @time_travel_format.setter
+    def time_travel_format(self, new_time_travel_format):
+        self._time_travel_format = new_time_travel_format
+
+    @partition_key.setter
+    def partition_key(self, new_partition_key):
+        self._partition_key = [pk.lower() for pk in new_partition_key]
+
+    @hudi_precombine_key.setter
+    def hudi_precombine_key(self, hudi_precombine_key):
+        self._hudi_precombine_key = hudi_precombine_key.lower()
+
+    @online_enabled.setter
+    def online_enabled(self, new_online_enabled):
+        self._online_enabled = new_online_enabled
+
+    @validation_type.setter
+    def validation_type(self, new_validation_type):
+        if new_validation_type is None:
+            self._validation_type = "NONE"
+        else:
+            self._validation_type = new_validation_type.upper()
+        self._feature_group_engine.update_validation_type(self)
+
+    @expectations_names.setter
+    def expectations_names(self, new_expectations_names):
+        self._expectations_names = new_expectations_names
+
+
+class StreamFeatureGroup(FeatureGroup):
+    STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
+
+    def __init__(
+        self,
+        name,
+        version,
+        featurestore_id,
+        description="",
+        partition_key=None,
+        primary_key=None,
+        hudi_precombine_key=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        id=None,
+        features=None,
+        location=None,
+        statistics_config=None,
+        validation_type="NONE",
+        expectations=None,
+        online_topic_name=None,
+        event_time=None,
+    ):
+        super().__init__(featurestore_id, validation_type, location)
+
+        self._feature_store_id = featurestore_id
+        self._feature_store_name = featurestore_name
+        self._description = description
+        self._created = created
+        self._creator = user.User.from_response_json(creator)
+        self._version = version
+        self._name = name
+        self._id = id
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
+        self._online_enabled = True
+        self._time_travel_format = "HUDI"
+
+        self._avro_schema = None
+        self._online_topic_name = online_topic_name
+        self._event_time = event_time
+
+        if self._id:
+            # initialized by backend
+            self.primary_key = [
+                feat.name for feat in self._features if feat.primary is True
+            ]
+            self._partition_key = [
+                feat.name for feat in self._features if feat.partition is True
+            ]
+            # hudi precombine key is always a single feature
+            self._hudi_precombine_key = [
+                feat.name for feat in self._features if feat.hudi_precombine_key is True
+            ][0]
+
+            self.statistics_config = statistics_config
+
+        else:
+            # initialized by user
+            self.primary_key = primary_key
+            self.partition_key = partition_key
+            self._hudi_precombine_key = hudi_precombine_key.lower()
+            self.statistics_config = statistics_config
+
+        if expectations is not None:
+            self._expectations_names = [
+                expectation.name for expectation in expectations
+            ]
+        else:
+            self._expectations_names = []
+
+        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
+            featurestore_id
+        )
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "version": self._version,
+            "description": self._description,
+            "onlineEnabled": self._online_enabled,
+            "timeTravelFormat": self._time_travel_format,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "type": "streamFeaturegroupDTO",
+            "statisticsConfig": self._statistics_config,
+            "validationType": self._validation_type,
+            "expectationsNames": self._expectations_names,
+            "eventTime": self._event_time,
+        }
 
     @property
     def id(self):
