@@ -441,10 +441,10 @@ class FeatureStore:
     def create_stream_feature_group(
         self,
         name: str,
+        primary_key: List[str],
         version: Optional[int] = None,
         description: Optional[str] = "",
         partition_key: Optional[List[str]] = [],
-        primary_key: Optional[List[str]] = [],
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -462,6 +462,9 @@ class FeatureStore:
 
         # Arguments
             name: Name of the feature group to create.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key.
             version: Version of the feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.
@@ -471,10 +474,6 @@ class FeatureStore:
             partition_key: A list of feature names to be used as partition key when
                 writing the feature data to the offline storage, defaults to empty list
                 `[]`.
-            primary_key: A list of feature names to be used as primary key for the
-                feature group. This primary key can be a composite key of multiple
-                features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the feature group won't have any primary key.
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
