@@ -31,7 +31,6 @@ from hsfs.core import (
     data_validation_engine,
     on_demand_feature_group_engine,
     expectations_api,
-    stream_feature_group_engine,
 )
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
@@ -1383,10 +1382,6 @@ class StreamFeatureGroup(FeatureGroup):
             expectations,
             online_topic_name,
             event_time,
-        )
-
-        self._feature_group_engine = (
-            stream_feature_group_engine.StreamFeatureGroupEngine(featurestore_id)
         )
 
     def save(
