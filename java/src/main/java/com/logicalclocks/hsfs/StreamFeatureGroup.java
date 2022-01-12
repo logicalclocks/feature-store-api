@@ -100,7 +100,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);
 
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,

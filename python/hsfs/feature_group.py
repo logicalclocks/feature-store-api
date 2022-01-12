@@ -31,6 +31,7 @@ from hsfs.core import (
     data_validation_engine,
     on_demand_feature_group_engine,
     expectations_api,
+    stream_feature_group_engine,
 )
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
@@ -1384,6 +1385,76 @@ class StreamFeatureGroup(FeatureGroup):
             event_time,
         )
 
+        self._feature_group_engine = (
+            stream_feature_group_engine.StreamFeatureGroupEngine(featurestore_id)
+        )
+
+    def save(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Persist the metadata and materialize the feature group to the feature store.
+
+        Calling `save` creates the metadata for the feature group in the feature store
+        and writes the specified `features` dataframe as feature group to the
+        online/offline feature store as specified.
+
+        By default, this writes the feature group to the offline storage, and if
+        `online_enabled` for the feature group, also to the online feature store.
+
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        or a two-dimensional Numpy array or a two-dimensional Python nested list.
+
+        # Arguments
+            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                * key `mode` instruct the ingestion job on how to deal with corrupted
+                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
+
+
+        # Returns
+            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+                that was launched to ingest the feature group data.
+
+        # Raises
+            `RestAPIError`. Unable to create feature group.
+        """
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        user_version = self._version
+
+        # fg_job is used only if the hive engine is used
+        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
+        self._code_engine.save_code(self)
+        if self.statistics_config.enabled and engine.get_type() == "spark":
+            # Only compute statistics if the engine is Spark.
+            # For Hive engine, the computation happens in the Hopsworks application
+            self._statistics_engine.compute_statistics(self, feature_dataframe)
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
+                    self._name, self._version
+                ),
+                util.VersionWarning,
+            )
+        return fg_job
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -1413,7 +1484,7 @@ class StreamFeatureGroup(FeatureGroup):
             "timeTravelFormat": self._time_travel_format,
             "features": self._features,
             "featurestoreId": self._feature_store_id,
-            "type": "streamFeaturegroupDTO",
+            "type": "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
