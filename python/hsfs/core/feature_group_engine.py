@@ -59,6 +59,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
+        if isinstance(feature_group, fg.StreamFeatureGroup):
+            self._feature_group_api.deltastreamer_job(feature_group, write_options)
+
         return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
