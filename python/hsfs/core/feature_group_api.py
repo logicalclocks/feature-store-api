@@ -265,7 +265,7 @@ class FeatureGroupApi:
             ),
         )
 
-    def deltastreamer_job(self, feature_group_instance, write_options):
+    def delta_streamer_job(self, feature_group_instance, write_options):
         """
         Setup a Hopsworks job for deltastreamer job
         Args:
