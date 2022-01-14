@@ -19,7 +19,7 @@ import io
 
 import avro.schema
 import avro.io
-from sqlalchemy import sql, bindparam
+from sqlalchemy import sql, bindparam, exc
 
 from hsfs import engine, training_dataset_feature, util
 from hsfs.core import (
@@ -196,6 +196,7 @@ class TrainingDatasetEngine:
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
 
+        self.refresh_sql_connection(training_dataset, external)
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
             with training_dataset.prepared_statement_engine.connect() as mysql_conn:
@@ -248,6 +249,7 @@ class TrainingDatasetEngine:
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
 
+        self.refresh_sql_connection(training_dataset, external)
         for prepared_statement_index in training_dataset.prepared_statements:
             order_in_batch = 0
             prepared_statement = prepared_statements[prepared_statement_index]
@@ -293,6 +295,18 @@ class TrainingDatasetEngine:
 
         return list(batch_dicts.values())
 
+    def refresh_sql_connection(self, training_dataset, external):
+        try:
+            with training_dataset.prepared_statement_engine.connect():
+                pass
+        except exc.OperationalError:
+            self._set_sql_connection(training_dataset, external)
+
+    def _set_sql_connection(self, training_dataset, external):
+        online_conn = self._storage_connector_api.get_online_connector()
+        mysql_engine = util.create_mysql_engine(online_conn, external)
+        training_dataset.prepared_statement_engine = mysql_engine
+
     def init_prepared_statement(self, training_dataset, batch, external):
 
         # reset values to default, as user may be re-initialising with different parameters
@@ -300,8 +314,7 @@ class TrainingDatasetEngine:
         training_dataset.prepared_statements = None
         training_dataset.serving_keys = None
 
-        online_conn = self._storage_connector_api.get_online_connector()
-        mysql_engine = util.create_mysql_engine(online_conn, external)
+        self._set_sql_connection(training_dataset, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset, batch
         )
@@ -343,7 +356,6 @@ class TrainingDatasetEngine:
                 prepared_statement.prepared_statement_index
             ] = query_online
 
-        training_dataset.prepared_statement_engine = mysql_engine
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
 
