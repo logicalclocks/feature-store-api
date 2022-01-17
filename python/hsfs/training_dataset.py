@@ -145,6 +145,7 @@ class TrainingDataset:
         This method materializes the training dataset either from a Feature Store
         `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
         lists or Numpy ndarrays.
+        From v2.5 onward, filters are saved along with the `Query`.
 
         # Arguments
             features: Feature data to be materialized.
