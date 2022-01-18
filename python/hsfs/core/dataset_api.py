@@ -30,12 +30,13 @@ class DatasetApi:
 
         base_params = self._get_flow_base_params(feature_group, num_chunks, csv_length)
 
+        chunk_number = 1
         for i in range(0, csv_length, self.DEFAULT_FLOW_CHUNK_SIZE):
             query_params = base_params
             query_params["flowCurrentChunkSize"] = len(
                 df_csv[i : i + self.DEFAULT_FLOW_CHUNK_SIZE]
             )
-            query_params["flowChunkNumber"] = i + 1
+            query_params["flowChunkNumber"] = chunk_number
 
             self._upload_request(
                 query_params,
@@ -43,6 +44,8 @@ class DatasetApi:
                 util.feature_group_name(feature_group),
                 df_csv[i : i + self.DEFAULT_FLOW_CHUNK_SIZE],
             )
+
+            chunk_number += 1
 
     def _get_flow_base_params(self, feature_group, num_chunks, size):
         # TODO(fabio): flow identifier is not unique
