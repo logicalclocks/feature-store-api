@@ -211,7 +211,6 @@ class TrainingDatasetEngine:
         mysql_engine = util.create_mysql_engine(online_conn, external)
         training_dataset.prepared_statement_engine = mysql_engine
 
-
     def init_prepared_statement(self, training_dataset, external):
         self._set_mysql_connection(training_dataset, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
