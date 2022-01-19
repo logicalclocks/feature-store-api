@@ -16,6 +16,7 @@
 
 import os
 import importlib.util
+import util
 
 from requests.exceptions import ConnectionError
 
@@ -153,8 +154,9 @@ class Connection:
             `FeatureStore`. A feature store handle object to perform operations on.
         """
         if not name:
-            name = client.get_instance()._project_name.lower() + "_featurestore"
-        return self._feature_store_api.get(name)
+            name = client.get_instance()._project_name
+        return self._feature_store_api.get(
+            util.rewrite_feature_store_name(name))
 
     @not_connected
     def connect(self):

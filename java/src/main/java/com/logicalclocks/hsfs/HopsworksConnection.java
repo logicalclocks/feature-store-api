@@ -103,7 +103,7 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
-    return getFeatureStore(project.toLowerCase() + Constants.FEATURESTORE_SUFFIX);
+    return getFeatureStore(rewriteFeatureStoreName(project));
   }
 
   /**
@@ -116,7 +116,16 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), name);
+    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name));
+  }
+
+  private String rewriteFeatureStoreName(String name) {
+    name = name.toLowerCase();
+    if (name.endsWith(Constants.FEATURESTORE_SUFFIX)) {
+      return name;
+    } else {
+      return name + Constants.FEATURESTORE_SUFFIX;
+    }
   }
 
   /**
