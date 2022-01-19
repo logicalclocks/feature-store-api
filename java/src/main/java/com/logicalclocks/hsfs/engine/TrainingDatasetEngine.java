@@ -203,18 +203,7 @@ public class TrainingDatasetEngine {
           + "serving must performed from a Python application");
     }
 
-    StorageConnector storageConnector =
-        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
-    String url = jdbcOptions.get(Constants.JDBC_URL);
-    if (external) {
-      // if external is true, replace the IP coming from the storage connector with the host
-      // used during the connection setup
-      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
-    }
-    Connection jdbcConnection =
-        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    trainingDataset.setPreparedStatementConnection(jdbcConnection);
+    setupJdbcConnection(trainingDataset, external);
 
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDataset, batch);
@@ -234,7 +223,8 @@ public class TrainingDatasetEngine {
                 servingPreparedStatement.getQueryOnline());
       } else {
         preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-                jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
+                trainingDataset.getPreparedStatementConnection()
+                    .prepareStatement(servingPreparedStatement.getQueryOnline()));
       }
       TreeMap<String, Integer> parameterIndices = new TreeMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
@@ -249,6 +239,22 @@ public class TrainingDatasetEngine {
     trainingDataset.setPreparedQueryString(preparedQueryString);
   }
 
+  private void setupJdbcConnection(TrainingDataset trainingDataset, Boolean external) throws FeatureStoreException,
+      IOException, SQLException {
+    StorageConnector storageConnector =
+        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
+    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
+    String url = jdbcOptions.get(Constants.JDBC_URL);
+    if (external) {
+      // if external is true, replace the IP coming from the storage connector with the host
+      // used during the connection setup
+      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
+    }
+    Connection jdbcConnection =
+        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
+    trainingDataset.setPreparedStatementConnection(jdbcConnection);
+  }
+
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
 
@@ -258,6 +264,7 @@ public class TrainingDatasetEngine {
     }
 
     checkPrimaryKeys(trainingDataset, entry.keySet());
+    refreshJdbcConnection(trainingDataset, external);
 
     Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
             trainingDataset.getPreparedStatementParameters();
@@ -313,6 +320,7 @@ public class TrainingDatasetEngine {
     }
 
     checkPrimaryKeys(trainingDataset, entry.keySet());
+    refreshJdbcConnection(trainingDataset, external);
 
     Map<Integer, TreeMap<String, Integer>> preparedStatementParameters =
             trainingDataset.getPreparedStatementParameters();
@@ -369,6 +377,13 @@ public class TrainingDatasetEngine {
       results.close();
     }
     return new ArrayList<List<Object>>(servingVectorsMap.values());
+  }
+
+  private void refreshJdbcConnection(TrainingDataset trainingDataset, Boolean external) throws FeatureStoreException,
+      IOException, SQLException {
+    if (!trainingDataset.getPreparedStatementConnection().isValid(1)) {
+      setupJdbcConnection(trainingDataset, external);
+    }
   }
 
   private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
