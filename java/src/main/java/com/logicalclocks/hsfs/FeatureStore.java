@@ -26,8 +26,6 @@ import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -180,7 +178,9 @@ public class FeatureStore {
         .asScala().toSeq();
   }
 
-  public Dataset<Row> sql(String query) {
+  // TODO (davit): returning object instead of DataSet<Raw> because of Flink. I need to decide how to
+  //  handle this better
+  public Object sql(String query) {
     return SparkEngine.getInstance().sql(query);
   }
 
