@@ -18,7 +18,7 @@ import re
 import io
 import avro.schema
 import avro.io
-from sqlalchemy import sql
+from sqlalchemy import sql, exc
 
 from hsfs import engine, training_dataset_feature, util
 from hsfs.core import (
@@ -176,6 +176,7 @@ class TrainingDatasetEngine:
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(training_dataset)
 
+        self.refresh_mysql_connection(training_dataset, external)
         for prepared_statement_index in prepared_statements:
             prepared_statement = prepared_statements[prepared_statement_index]
             with training_dataset.prepared_statement_engine.connect() as mysql_conn:
@@ -198,9 +199,20 @@ class TrainingDatasetEngine:
 
         return serving_vector
 
-    def init_prepared_statement(self, training_dataset, external):
+    def refresh_mysql_connection(self, training_dataset, external):
+        try:
+            with training_dataset.prepared_statement_engine.connect():
+                pass
+        except exc.OperationalError:
+            self._set_mysql_connection(training_dataset, external)
+
+    def _set_mysql_connection(self, training_dataset, external):
         online_conn = self._storage_connector_api.get_online_connector()
         mysql_engine = util.create_mysql_engine(online_conn, external)
+        training_dataset.prepared_statement_engine = mysql_engine
+
+    def init_prepared_statement(self, training_dataset, external):
+        self._set_mysql_connection(training_dataset, external)
         prepared_statements = self._training_dataset_api.get_serving_prepared_statement(
             training_dataset
         )
@@ -246,7 +258,6 @@ class TrainingDatasetEngine:
             )
         )
 
-        training_dataset.prepared_statement_engine = mysql_engine
         training_dataset.prepared_statements = prepared_statements_dict
         training_dataset.serving_keys = serving_vector_keys
 

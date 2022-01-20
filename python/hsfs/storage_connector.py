@@ -105,6 +105,12 @@ class StorageConnector(ABC):
         """
         return engine.get_instance().read(self, data_format, options, path)
 
+    def refetch(self):
+        """
+        Refetch storage connector.
+        """
+        self._storage_connector_api.refetch(self)
+
     def _get_path(self, sub_path: str):
         return None
 
@@ -244,12 +250,6 @@ class S3Connector(StorageConnector):
         """
         self.refetch()
         return engine.get_instance().read(self, data_format, options, path)
-
-    def refetch(self):
-        """
-        Refetch storage connector in order to retrieve updated temporary credentials.
-        """
-        self._storage_connector_api.refetch(self)
 
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
@@ -743,6 +743,7 @@ class JdbcConnector(StorageConnector):
         path: str = None,
     ):
         """Reads a query into a dataframe using the storage connector."""
+        self.refetch()
         options = (
             {**self.spark_options(), **options}
             if options is not None

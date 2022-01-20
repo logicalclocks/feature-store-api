@@ -200,19 +200,8 @@ public class TrainingDatasetEngine {
           + "serving must performed from a Python application");
     }
 
-    StorageConnector storageConnector =
-        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
-    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
-    String url = jdbcOptions.get(Constants.JDBC_URL);
-    if (external) {
-      // if external is true, replace the IP coming from the storage connector with the host
-      // used during the connection setup
-      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
-    }
-    Connection jdbcConnection =
-        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    jdbcConnection.setAutoCommit(false);
-    trainingDataset.setPreparedStatementConnection(jdbcConnection);
+    setupJdbcConnection(trainingDataset, external);
+    trainingDataset.getPreparedStatementConnection().setAutoCommit(false);
 
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDataset);
@@ -224,7 +213,7 @@ public class TrainingDatasetEngine {
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
       preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-          jdbcConnection.prepareStatement(servingPreparedStatement.getQueryOnline()));
+          trainingDataset.getPreparedStatementConnection().prepareStatement(servingPreparedStatement.getQueryOnline()));
       HashMap<String, Integer> parameterIndices = new HashMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
@@ -235,6 +224,22 @@ public class TrainingDatasetEngine {
     trainingDataset.setServingKeys(servingVectorKeys);
     trainingDataset.setPreparedStatementParameters(preparedStatementParameters);
     trainingDataset.setPreparedStatements(preparedStatements);
+  }
+
+  private void setupJdbcConnection(TrainingDataset trainingDataset, Boolean external) throws FeatureStoreException,
+      IOException, SQLException {
+    StorageConnector storageConnector =
+        storageConnectorApi.getOnlineStorageConnector(trainingDataset.getFeatureStore());
+    Map<String, String> jdbcOptions = storageConnector.sparkOptions();
+    String url = jdbcOptions.get(Constants.JDBC_URL);
+    if (external) {
+      // if external is true, replace the IP coming from the storage connector with the host
+      // used during the connection setup
+      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
+    }
+    Connection jdbcConnection =
+        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
+    trainingDataset.setPreparedStatementConnection(jdbcConnection);
   }
 
   public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
@@ -248,6 +253,7 @@ public class TrainingDatasetEngine {
     if (!trainingDataset.getServingKeys().equals(entry.keySet())) {
       throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
     }
+    refreshJdbcConnection(trainingDataset, external);
 
     Map<Integer, Map<String, Integer>> preparedStatementParameters = trainingDataset.getPreparedStatementParameters();
     TreeMap<Integer, PreparedStatement> preparedStatements = trainingDataset.getPreparedStatements();
@@ -289,6 +295,13 @@ public class TrainingDatasetEngine {
     }
     trainingDataset.getPreparedStatementConnection().commit();
     return servingVector;
+  }
+
+  private void refreshJdbcConnection(TrainingDataset trainingDataset, Boolean external) throws FeatureStoreException,
+      IOException, SQLException {
+    if (!trainingDataset.getPreparedStatementConnection().isValid(1)) {
+      setupJdbcConnection(trainingDataset, external);
+    }
   }
 
   private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
