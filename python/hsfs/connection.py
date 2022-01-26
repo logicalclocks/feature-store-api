@@ -144,8 +144,8 @@ class Connection:
     def get_feature_store(self, name: str = None):
         """Get a reference to a feature store to perform operations on.
 
-        Defaulting to the project's default feature store. Shared feature stores can be
-        retrieved by passing the `name` argument.
+        Defaulting to the project name of default feature store. To get a
+        Shared feature stores, the project name of the feature store is required.
 
         # Arguments
             name: The name of the feature store, defaults to `None`.

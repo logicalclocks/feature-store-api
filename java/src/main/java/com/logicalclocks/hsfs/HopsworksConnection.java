@@ -108,7 +108,7 @@ public class HopsworksConnection implements Closeable {
 
   /**
    * Retrieve a feature store based on name. The feature store needs to be shared with
-   * the connection's project.
+   * the connection's project. The name is the project name of the feature store.
    *
    * @param name the name of the feature store to get the handle for
    * @return FeatureStore
