@@ -1869,8 +1869,8 @@
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Get a reference to a feature store to perform operations on.</p>
-<p>Defaulting to the project's default feature store. Shared feature stores can be
-retrieved by passing the <code>name</code> argument.</p>
+<p>Defaulting to the project name of default feature store. To get a
+Shared feature stores, the project name of the feature store is required.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>name</strong> <code>str</code>: The name of the feature store, defaults to <code>None</code>.</li>
