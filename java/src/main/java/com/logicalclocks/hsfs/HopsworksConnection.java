@@ -103,12 +103,12 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
-    return getFeatureStore(project.toLowerCase() + Constants.FEATURESTORE_SUFFIX);
+    return getFeatureStore(rewriteFeatureStoreName(project));
   }
 
   /**
    * Retrieve a feature store based on name. The feature store needs to be shared with
-   * the connection's project.
+   * the connection's project. The name is the project name of the feature store.
    *
    * @param name the name of the feature store to get the handle for
    * @return FeatureStore
@@ -116,7 +116,16 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), name);
+    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name));
+  }
+
+  private String rewriteFeatureStoreName(String name) {
+    name = name.toLowerCase();
+    if (name.endsWith(Constants.FEATURESTORE_SUFFIX)) {
+      return name;
+    } else {
+      return name + Constants.FEATURESTORE_SUFFIX;
+    }
   }
 
   /**

@@ -53,6 +53,15 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
+def rewrite_feature_store_name(name):
+    FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+    name = name.lower()
+    if name.endswith(FEATURE_STORE_NAME_SUFFIX):
+        return name
+    else:
+        return name + FEATURE_STORE_NAME_SUFFIX
+
+
 def create_mysql_engine(online_conn, external):
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
