@@ -74,6 +74,7 @@ nav:
   - Hopsworks Platform: https://hopsworks.readthedocs.io/en/stable/index.html
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
+  - Old Documentation: https://hopsworks.readthedocs.io/en/stable/index.html
 
 theme:
   name: material
