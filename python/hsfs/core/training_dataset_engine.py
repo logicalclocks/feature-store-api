@@ -16,6 +16,7 @@
 
 import re
 import io
+import warnings
 
 import avro.schema
 import avro.io
@@ -28,7 +29,6 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
 )
-from hsfs.client import exceptions
 from hsfs.constructor import query
 
 
@@ -79,14 +79,14 @@ class TrainingDatasetEngine:
                 raise ValueError(
                     "Transformation functions can only be applied to training datasets generated from Query object"
                 )
-            if (
-                len(training_dataset.splits) > 0
-                and training_dataset.train_split is None
-            ):
-                raise exceptions.FeatureStoreException(
-                    "`train_split` the name of the split that is going to be used for training must be provided."
-                    "The statistics of this split will be used for transformation functions."
-                )
+
+        if len(training_dataset.splits) > 0 and training_dataset.train_split is None:
+            training_dataset.train_split = "train"
+            warnings.warn(
+                "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
+                "used for training) was provided. Setting this property to `train`. The statistics of this "
+                "split will be used for transformation functions."
+            )
 
         updated_instance = self._training_dataset_api.post(training_dataset)
         td_job = engine.get_instance().write_training_dataset(
