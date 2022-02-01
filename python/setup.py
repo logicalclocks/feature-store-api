@@ -26,7 +26,7 @@ setup(
         "mock",
         "avro==1.10.2",
         "sqlalchemy",
-        "PyMySQL",
+        "PyMySQL[rsa]",
     ],
     extras_require={
         "dev": [
