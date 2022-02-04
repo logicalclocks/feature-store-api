@@ -33,7 +33,7 @@ except ImportError:
 from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine, feature_group_api
+from hsfs.core import hudi_engine
 from hsfs.constructor import query
 
 
@@ -183,12 +183,6 @@ class Engine:
             ):
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
-                )
-                _feature_group_api = feature_group_api.FeatureGroupApi(
-                    feature_group.feature_store_id
-                )
-                _feature_group_api.deltastreamer_job(
-                    feature_group, offline_write_options
                 )
             else:
                 self._save_offline_dataframe(
