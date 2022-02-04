@@ -542,6 +542,7 @@ class FeatureStore:
         label: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         train_split: str = None,
+        split_type: str = None,
     ):
         """Create a training dataset metadata object.
 
@@ -604,13 +605,15 @@ class FeatureStore:
                 the training dataset. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
-            transformation_functions: A dictionary mapping tansformation functions to
+            transformation_functions: A dictionary mapping transformation functions to
                 to the features they should be applied to before writing out the
                 training data and at inference time. Defaults to `{}`, no
                 transformations.
             train_split: If `splits` is set, provide the name of the split that is going
                 to be used for training. The statistics of this split will be used for
                 transformation functions if necessary. Defaults to `None`.
+            split_type: If `splits` is set, provide the type of the method to split datasets. Currently `random` and
+            `time_series` types are supported. Defaults to `random`.
 
         # Returns:
             `TrainingDataset`: The training dataset metadata object.
@@ -630,6 +633,7 @@ class FeatureStore:
             coalesce=coalesce,
             transformation_functions=transformation_functions,
             train_split=train_split,
+            split_type=split_type,
         )
 
     def create_expectation(

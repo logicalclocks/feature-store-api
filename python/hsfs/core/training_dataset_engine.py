@@ -87,8 +87,15 @@ class TrainingDatasetEngine:
                 "used for training) was provided. Setting this property to `train`. The statistics of this "
                 "split will be used for transformation functions."
             )
-
         updated_instance = self._training_dataset_api.post(training_dataset)
+
+        # after update _querydto becomes null but this is necessary if split_type is "time_series"
+        if (
+            isinstance(features, query.Query)
+            and training_dataset.split_type == "time_series"
+        ):
+            training_dataset._querydto = features
+
         td_job = engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )

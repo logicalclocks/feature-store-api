@@ -65,6 +65,7 @@ class TrainingDataset:
         label=None,
         transformation_functions=None,
         train_split=None,
+        split_type=None,
     ):
         self._id = id
         self._name = name
@@ -83,6 +84,7 @@ class TrainingDataset:
         self._pkname_by_serving_index = None
         self._transformation_functions = transformation_functions
         self._train_split = train_split
+        self._split_type = split_type
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -456,6 +458,7 @@ class TrainingDataset:
             "queryDTO": self._querydto.to_dict() if self._querydto else None,
             "statisticsConfig": self._statistics_config,
             "trainSplit": self._train_split,
+            "splitType": self._split_type,
         }
 
     @property
@@ -756,6 +759,15 @@ class TrainingDataset:
     @train_split.setter
     def train_split(self, train_split):
         self._train_split = train_split
+
+    @property
+    def split_type(self):
+        """Set type of splitting training dataset."""
+        return self._split_type
+
+    @split_type.setter
+    def split_type(self, split_type):
+        self._split_type = split_type
 
     @property
     def transformation_functions(self):

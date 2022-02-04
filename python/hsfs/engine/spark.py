@@ -26,7 +26,7 @@ try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
     from pyspark.sql.column import Column, _to_java_column
-    from pyspark.sql.functions import struct, concat, col, lit
+    from pyspark.sql.functions import struct, concat, col, lit, window, percent_rank
 except ImportError:
     pass
 
@@ -363,7 +363,9 @@ class Engine:
             split_weights = [training_dataset.splits[i] for i in split_names]
             self._write_training_dataset_splits(
                 training_dataset,
-                dataset.randomSplit(split_weights, training_dataset.seed),
+                dataset.randomSplit(split_weights, training_dataset.seed)
+                if training_dataset.split_type == "random"
+                else self._time_series_split(training_dataset, dataset, split_weights),
                 write_options,
                 save_mode,
                 split_names,
@@ -868,6 +870,22 @@ class Engine:
         sorted_feature_names = [ft.name for ft in sorded_features]
         dataset = dataset.select(*sorted_feature_names)
         return dataset
+
+    def _time_series_split(self, training_dataset, dataset, split_weights):
+        feature_dataframe_list = []
+        dataset = dataset.withColumn(
+            "rank",
+            percent_rank().over(
+                window.Window.partitionBy().orderBy(
+                    training_dataset._querydto._left_feature_group.event_time
+                )
+            ),
+        )
+        for split_weight in split_weights:
+            feature_dataframe_list.append(
+                dataset.where("rank <= {:.2f}".format(split_weight)).drop("rank")
+            )
+        return feature_dataframe_list
 
 
 class SchemaError(Exception):
