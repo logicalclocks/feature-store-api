@@ -20,6 +20,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
+        run: pip3 install pip==22.0.3
 
       - name: install deps
         working-directory: ./python
@@ -35,4 +36,3 @@ jobs:
 
       - name: mike deploy docs
         run: mike deploy ${{ env.RELEASE_VERSION }} latest -u --push
-
