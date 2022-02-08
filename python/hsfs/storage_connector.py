@@ -955,7 +955,7 @@ class GcsConnector(StorageConnector):
 
     @property
     def key_path(self):
-        """GCS key file HDFS path"""
+        """JSON keyfile for service account"""
         return self._key_path
 
     @property
