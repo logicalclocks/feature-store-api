@@ -686,6 +686,8 @@ class Engine:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
             return self._setup_adls_hadoop_conf(storage_connector, path)
+        elif storage_connector.type == StorageConnector.GCS:
+            return self._setup_gcp_hadoop_conf(storage_connector, path)
         else:
             return path
 
@@ -785,6 +787,43 @@ class Engine:
         sorted_feature_names = [ft.name for ft in sorded_features]
         dataset = dataset.select(*sorted_feature_names)
         return dataset
+
+    def _setup_gcp_hadoop_conf(self, storage_connector, path):
+
+        if storage_connector.key_path:
+            # The AbstractFileSystem for 'gs:' URIs
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.AbstractFileSystem.gs.impl=com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
+                "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
+            )
+            # Whether to use a service account for GCS authorization. Setting this
+            # property to `false` will disable use of service accounts for authentication.
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "google.cloud.auth.service.account.enable", "true"
+            )
+
+            local_path = self.add_file(
+                storage_connector.key_path.replace("hdfs://", "")
+            )
+            # The JSON key file of the service account used for GCS
+            # access when google.cloud.auth.service.account.enable is true.
+            self._spark_context._jsc.hadoopConfiguration().set(
+                "fs.gs.auth.service.account.json.keyfile", local_path
+            )
+
+            if storage_connector.encryption_key:  # if encryption fields present
+
+                self._spark_context._jsc.hadoopConfiguration().set(
+                    "fs.gs.encryption.algorithm", storage_connector.algorithm
+                )
+                self._spark_context._jsc.hadoopConfiguration().set(
+                    "fs.gs.encryption.key", storage_connector.encryption_key
+                )
+                self._spark_context._jsc.hadoopConfiguration().set(
+                    "fs.gs.encryption.key.hash", storage_connector.encryption_key_hash
+                )
+
+        return path
 
 
 class SchemaError(Exception):

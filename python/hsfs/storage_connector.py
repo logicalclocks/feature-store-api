@@ -32,6 +32,7 @@ class StorageConnector(ABC):
     ADLS = "ADLS"
     SNOWFLAKE = "SNOWFLAKE"
     KAFKA = "KAFKA"
+    GCS = "GCS"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -926,3 +927,76 @@ class KafkaConnector(StorageConnector):
             options,
             include_metadata,
         )
+
+
+class GcsConnector(StorageConnector):
+    type = StorageConnector.GCS
+
+    def __init__(
+        self,
+        id,
+        name,
+        description,
+        featurestore_id,
+        # members specific to type of connector
+        key_path=None,
+        algorithm=None,
+        encryption_key=None,
+        encryption_key_hash=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+
+        self._key_path = key_path
+        self._algorithm = algorithm
+        self._encryption_key = encryption_key
+        self._encryption_key_hash = encryption_key_hash
+
+    @property
+    def key_path(self):
+        """hdfs key path"""
+        return self._key_path
+
+    @property
+    def algorithm(self):
+        return self._algorithm
+
+    @property
+    def encryption_key(self):
+        return self._encryption_key
+
+    @property
+    def encryption_key_hash(self):
+        return self._encryption_key_hash
+
+    def spark_options(self):
+        return super().spark_options
+
+    def _get_path(self, sub_path: str):
+        super()._get_path(sub_path)
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        self.refetch()
+        return engine.get_instance().read(self, data_format, options, path)
+
+    def prepare_spark(self, path: Optional[str] = None):
+        """Prepare Spark to use this Storage Connector.
+
+        ```python
+        conn.prepare_spark()
+
+        spark.read.f    ormat("json").load("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]")
+
+        # or
+        spark.read.format("json").load(conn.prepare_spark("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]"))
+        ```
+
+        # Arguments
+            path: Path to prepare for reading from cloud storage. Defaults to `None`.
+        """
+        return engine.get_instance().setup_storage_connector(self, path)

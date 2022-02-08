@@ -220,6 +220,10 @@ public class FeatureStore {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }
 
+  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.GcsConnector) storageConnectorApi.getByName(this, name);
+  }
+
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
         .featureStore(this);

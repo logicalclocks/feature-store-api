@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
     @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
     @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC"),
-    @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA")
+    @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA"),
+    @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS")
 })
 public abstract class StorageConnector {
 
@@ -491,4 +492,53 @@ public abstract class StorageConnector {
           schema, options, includeMetadata);
     }
   }
+
+  public static class GcsConnector extends StorageConnector {
+    private String keyPath;
+    private String algorithm;
+    private String encryptionKey;
+    private String encryptionKeyHash;
+
+    public GcsConnector() {
+    }
+
+    public String getPath(String subPath) throws FeatureStoreException {
+      return null;
+    }
+
+    public Map<String, String> sparkOptions() {
+      return new HashMap();
+    }
+
+    public Dataset<Row> read(String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
+
+      this.refetch();
+      return SparkEngine.getInstance().read(this, dataFormat, options, path);
+    }
+
+    public void prepareSpark() {
+      SparkEngine.getInstance().setupConnectorHadoopConf(this);
+    }
+
+    public String getKeyPath() {
+      return this.keyPath;
+    }
+
+    public String getAlgorithm() {
+      return algorithm;
+    }
+
+    public String getEncryptionKey() {
+      return encryptionKey;
+    }
+
+    public String getEncryptionKeyHash() {
+      return encryptionKeyHash;
+    }
+
+  }
+
+
+
 }
