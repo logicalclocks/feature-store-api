@@ -49,6 +49,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.hudi_precombine_key = True
 
         self._feature_group_api.save(feature_group)
+        execution_env = util.get_execution_environment()
+        self._feature_group_api.save_git_repository(
+            feature_group, execution_env.entity_id, execution_env.execution_type
+        )
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Hive, the validation will be executed by

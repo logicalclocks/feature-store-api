@@ -16,6 +16,7 @@
 
 import re
 import json
+import os
 
 from datetime import datetime
 from sqlalchemy import create_engine
@@ -160,6 +161,33 @@ def setup_pydoop():
 
     # Monkey patch the class to use the one defined above.
     hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+
+
+class ExecutionType:
+    JUPYTER = "JUPYTER"
+    JOB = "JOB"
+    DATABRICKS = "DATABRICKS"
+
+
+class ExecutionEnvironment:
+    def __init__(self, execution_type, entity_id):
+        self.execution_type = execution_type
+        self.entity_id = entity_id
+
+
+def get_execution_environment():
+    # JUPYTER
+    KERNEL_ENV = "HOPSWORKS_KERNEL_ID"
+    # JOB
+    JOB_ENV = "HOPSWORKS_JOB_NAME"
+    # JUPYTER
+    kernel_id = os.environ.get(KERNEL_ENV)
+    # JOB
+    job_name = os.environ.get(JOB_ENV)
+    if kernel_id:
+        return ExecutionEnvironment(ExecutionType.JUPYTER, kernel_id)
+    elif job_name:
+        return ExecutionEnvironment(ExecutionType.JOB, job_name)
 
 
 class VersionWarning(Warning):

@@ -264,3 +264,51 @@ class FeatureGroupApi:
                 "POST", path_params, headers=headers, data=ingestion_conf.json()
             ),
         )
+
+    def save_git_repository(self, feature_group_instance, entity_id, code_type):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.name,
+            "version",
+            feature_group_instance.version,
+            "gitrepo"
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "entityId": entity_id,
+            "type": code_type,
+        }
+        return ingestion_job.IngestionJob.from_response_json(
+            _client._send_request(
+                "POST", path_params, query_params, headers=headers
+            )
+        )
+
+    def get_latest_git_commit(self, feature_group_instance, entity_id, code_type):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.name,
+            "version",
+            feature_group_instance.version,
+            "latestgitcommit"
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "entityId": entity_id,
+            "type": code_type,
+        }
+        return ingestion_job.IngestionJob.from_response_json(
+            _client._send_request(
+                "GET", path_params, query_params, headers=headers
+            )
+        )
