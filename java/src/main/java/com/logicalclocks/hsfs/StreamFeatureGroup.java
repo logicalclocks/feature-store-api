@@ -91,7 +91,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @Setter
   private String onlineTopicName;
 
-  @Getter
   @Setter
   private List<StreamFeatureGroupOptions> options;
 

@@ -24,6 +24,7 @@ import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.StreamFeatureGroupOptions;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.SneakyThrows;
@@ -35,6 +36,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StreamFeatureGroupEngine {
 
@@ -92,6 +94,12 @@ public class StreamFeatureGroupEngine {
         }
       });
     }
+
+    // set write options for delta streamer job
+    featureGroup.setOptions(writeOptions != null ? writeOptions.entrySet().stream()
+        .map(e -> new StreamFeatureGroupOptions(e.getKey(), e.getValue()))
+        .collect(Collectors.toList())
+        : null);
 
     // Send Hopsworks the request to create a new feature group
     StreamFeatureGroup apiFG = featureGroupApi.save(featureGroup);
@@ -169,9 +177,6 @@ public class StreamFeatureGroupEngine {
       SparkEngine.getInstance().writeOfflineDataframe(streamFeatureGroup, featureData, operation,
           writeOptions, validationId);
     }
-
-    // create job for HUDI Deltastreamer
-    featureGroupApi.deltaStreamerJob(streamFeatureGroup, writeOptions);
 
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
         streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));

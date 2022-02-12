@@ -33,10 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -289,42 +287,5 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
-  }
-
-  public void deltaStreamerJob(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_DELTASTREAMER_PATH;
-
-    UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", streamFeatureGroup.getFeatureStore().getProjectId())
-        .set("fsId", streamFeatureGroup.getFeatureStore().getId())
-        .set("fgId", streamFeatureGroup.getId());
-
-    String uri = uriTemplate.expand();
-
-    List<Option> options = new ArrayList<>();
-    for (String key: writeOptions.keySet()) {
-      Option option = new Option();
-      option.setName(key);
-      option.setValue(writeOptions.get(key));
-      options.add(option);
-    }
-
-    HsfsUtilJobConf hsfsUtilJobConf = new HsfsUtilJobConf();
-    hsfsUtilJobConf.setWriteOptions(options);
-
-    String hsfsUtilJobConftJson = hopsworksClient.getObjectMapper().writeValueAsString(hsfsUtilJobConf);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(hsfsUtilJobConftJson));
-
-    LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(hsfsUtilJobConftJson);
-
-    LOGGER.info("Sending metadata request: " + uri);
-    hopsworksClient.handleRequest(postRequest);
   }
 }
