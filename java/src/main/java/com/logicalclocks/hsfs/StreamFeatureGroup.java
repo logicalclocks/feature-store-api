@@ -103,7 +103,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-                        List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
+                            List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                             List<Feature> features,
                             StatisticsConfig statisticsConfig, ValidationType validationType,
                             scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
