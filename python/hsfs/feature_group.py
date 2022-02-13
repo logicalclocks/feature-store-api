@@ -1384,6 +1384,8 @@ class StreamFeatureGroup(FeatureGroup):
             event_time,
         )
 
+        self._options = None
+
     def save(
         self,
         features: Union[
@@ -1484,6 +1486,9 @@ class StreamFeatureGroup(FeatureGroup):
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
+            "options": [{"name": k, "value": v} for k, v in self._options.items()]
+            if self._options
+            else None,
         }
 
 

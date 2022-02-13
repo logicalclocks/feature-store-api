@@ -48,6 +48,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             ):
                 feat.hudi_precombine_key = True
 
+        if isinstance(feature_group, fg.StreamFeatureGroup):
+            feature_group._options = write_options
+
         self._feature_group_api.save(feature_group)
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
@@ -58,9 +61,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
-
-        if isinstance(feature_group, fg.StreamFeatureGroup):
-            self._feature_group_api.delta_streamer_job(feature_group, write_options)
 
         return engine.get_instance().save_dataframe(
             feature_group,
