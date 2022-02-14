@@ -22,9 +22,10 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.engine.Utils;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
@@ -41,6 +42,7 @@ public class FeatureGroupApi {
 
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
+  public static final String FEATURE_GROUP_NAME_VERSION_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{/version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
       + "updateMetadata,validationType}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
@@ -258,5 +260,57 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
+  }
+
+  public <T> void saveGitRepository(FeatureGroupBase featureGroup, Utils.ExecutionType executionType,
+      String entityId,
+      Class<T> fgType)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_NAME_VERSION_PATH
+        + "/gitrepo"
+        + "{?entityId,type}";
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("entityId", entityId)
+        .set("type", executionType)
+        .expand();
+
+    HttpPost putRequest = new HttpPost(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
+    LOGGER.info("Sending metadata request: " + uri);
+
+    hopsworksClient.handleRequest(putRequest, fgType);
+  }
+
+  public GitCommit getLatestGitCommit(FeatureGroupBase featureGroup, Utils.ExecutionType executionType, String entityId)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
+        + FEATURE_GROUP_NAME_VERSION_PATH
+        + "/latestgitcommit"
+        + "{?entityId,type}";
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("fsId", featureGroup.getFeatureStore().getId())
+        .set("fgId", featureGroup.getId())
+        .set("entityId", entityId)
+        .set("type", executionType)
+        .expand();
+
+    HttpGet putRequest = new HttpGet(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
+    LOGGER.info("Sending metadata request: " + uri);
+
+    return hopsworksClient.handleRequest(putRequest, GitCommit.class);
   }
 }

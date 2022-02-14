@@ -23,11 +23,11 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -107,6 +107,11 @@ public class FeatureGroupEngine {
 
     // Send Hopsworks the request to create a new feature group
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+    Utils.ExecutionEnvironment executionEnvironment = Utils.getExecutionEnvironment();
+    if (executionEnvironment != null) {
+      featureGroupApi.saveGitRepository(featureGroup, executionEnvironment.executionType,
+          executionEnvironment.entityId, FeatureGroup.class);
+    }
 
     if (featureGroup.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
