@@ -52,7 +52,7 @@ class CodeEngine:
         # DATABRICKS
         try:
             databricks = importlib.util.find_spec("pyspark.dbutils")
-        except:
+        except ModuleNotFoundError:
             pass
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
