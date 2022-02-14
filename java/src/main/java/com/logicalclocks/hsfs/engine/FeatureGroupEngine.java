@@ -107,11 +107,6 @@ public class FeatureGroupEngine {
 
     // Send Hopsworks the request to create a new feature group
     FeatureGroup apiFG = featureGroupApi.save(featureGroup);
-    Utils.ExecutionEnvironment executionEnvironment = Utils.getExecutionEnvironment();
-    if (executionEnvironment != null) {
-      featureGroupApi.saveGitRepository(featureGroup, executionEnvironment.executionType,
-          executionEnvironment.entityId, FeatureGroup.class);
-    }
 
     if (featureGroup.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
@@ -125,6 +120,13 @@ public class FeatureGroupEngine {
     featureGroup.setId(apiFG.getId());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+    Utils.ExecutionEnvironment executionEnvironment = Utils.getExecutionEnvironment();
+    if (executionEnvironment != null) {
+      // featureGroup require updated feature group version from apiFG
+      featureGroupApi.saveGitRepository(featureGroup, executionEnvironment.executionType,
+          executionEnvironment.entityId);
+    }
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
