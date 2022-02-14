@@ -53,6 +53,10 @@ import static org.apache.spark.sql.functions.col;
 public class Utils {
 
   StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  //JUPYTER
+  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
+  //JOB
+  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -222,10 +226,6 @@ public class Utils {
   }
 
   public static ExecutionEnvironment getExecutionEnvironment() {
-    //JUPYTER
-    final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
-    //JOB
-    final String JOB_ENV = "HOPSWORKS_JOB_NAME";
     String kernelId = System.getenv(KERNEL_ENV);
     String jobName = System.getenv(JOB_ENV);
     if (!Strings.isNullOrEmpty(kernelId)) {

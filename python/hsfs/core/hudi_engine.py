@@ -135,9 +135,7 @@ class HudiEngine:
         # Get git commit here to avoid new commit while running a job
         execution_env = util.get_execution_environment()
         latest_git_commit = self._feature_group_api.get_latest_git_commit(
-            self._feature_group,
-            execution_env.entity_id,
-            execution_env.execution_type
+            self._feature_group
         )["commitId"]
 
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
