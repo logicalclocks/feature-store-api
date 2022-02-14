@@ -138,7 +138,7 @@ class HudiEngine:
             self._feature_group,
             execution_env.entity_id,
             execution_env.execution_type
-        )
+        )["commitId"]
 
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
         dataset.write.format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
