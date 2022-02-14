@@ -287,7 +287,7 @@ class FeatureGroupApi:
             "POST", path_params, query_params, headers=headers
         )
 
-    def get_latest_git_commit(self, feature_group_instance, entity_id, code_type):
+    def get_latest_git_commit(self, feature_group_instance):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -301,10 +301,6 @@ class FeatureGroupApi:
             "latestgitcommit"
         ]
         headers = {"content-type": "application/json"}
-        query_params = {
-            "entityId": entity_id,
-            "type": code_type,
-        }
         return _client._send_request(
-                "GET", path_params, query_params, headers=headers
-        )
+                "GET", path_params, headers=headers
+        )["commitId"]
