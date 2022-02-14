@@ -47,7 +47,6 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
       + "/commits{?filter_by,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
-  public static final String FEATURE_GROUP_DELTASTREAMER_PATH = FEATURE_GROUP_ID_PATH + "/deltastreamer";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
