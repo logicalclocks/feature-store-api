@@ -133,7 +133,6 @@ class HudiEngine:
 
     def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
         # Get git commit here to avoid new commit while running a job
-        execution_env = util.get_execution_environment()
         latest_git_commit = self._feature_group_api.get_latest_git_commit(
             self._feature_group
         )["commitId"]

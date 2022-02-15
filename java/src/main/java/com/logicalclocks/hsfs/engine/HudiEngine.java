@@ -99,14 +99,10 @@ public class HudiEngine {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
 
-    Utils.ExecutionEnvironment executionEnvironment = Utils.getExecutionEnvironment();
     String gitCommitId = null;
-    if (executionEnvironment != null) {
-      GitCommit gitCommit = featureGroupApi.getLatestGitCommit(featureGroup, executionEnvironment.executionType,
-          executionEnvironment.entityId);
-      if (gitCommit != null) {
-        gitCommitId = gitCommit.getCommitId();
-      }
+    GitCommit gitCommit = featureGroupApi.getLatestGitCommit(featureGroup);
+    if (gitCommit != null) {
+      gitCommitId = gitCommit.getCommitId();
     }
 
     dataset.write()

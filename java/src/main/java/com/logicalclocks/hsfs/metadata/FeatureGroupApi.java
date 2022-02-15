@@ -287,22 +287,19 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(putRequest);
   }
 
-  public GitCommit getLatestGitCommit(FeatureGroupBase featureGroup, Utils.ExecutionType executionType, String entityId)
+  public GitCommit getLatestGitCommit(FeatureGroupBase featureGroup)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_NAME_VERSION_PATH
-        + "/latestgitcommit"
-        + "{?entityId,type}";
+        + "/latestgitcommit";
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureGroup.getFeatureStore().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgName", featureGroup.getName())
         .set("version", featureGroup.getVersion())
-        .set("entityId", entityId)
-        .set("type", executionType)
         .expand();
 
     HttpGet putRequest = new HttpGet(uri);
