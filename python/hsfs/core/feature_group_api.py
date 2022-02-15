@@ -276,16 +276,14 @@ class FeatureGroupApi:
             feature_group_instance.name,
             "version",
             feature_group_instance.version,
-            "gitrepo"
+            "gitrepo",
         ]
         headers = {"content-type": "application/json"}
         query_params = {
             "entityId": entity_id,
             "type": code_type,
         }
-        return _client._send_request(
-            "POST", path_params, query_params, headers=headers
-        )
+        return _client._send_request("POST", path_params, query_params, headers=headers)
 
     def get_latest_git_commit(self, feature_group_instance):
         _client = client.get_instance()
@@ -298,9 +296,7 @@ class FeatureGroupApi:
             feature_group_instance.name,
             "version",
             feature_group_instance.version,
-            "latestgitcommit"
+            "latestgitcommit",
         ]
         headers = {"content-type": "application/json"}
-        return _client._send_request(
-                "GET", path_params, headers=headers
-        )
+        return _client._send_request("GET", path_params, headers=headers)
