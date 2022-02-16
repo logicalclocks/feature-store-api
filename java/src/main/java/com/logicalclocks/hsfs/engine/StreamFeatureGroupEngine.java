@@ -24,7 +24,7 @@ import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.StreamFeatureGroupOptions;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.SneakyThrows;
@@ -53,11 +53,13 @@ public class StreamFeatureGroupEngine {
    * @param dataset
    * @param partitionKeys
    * @param writeOptions
+   * @param sparkOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
-                                     String hudiPrecombineKey, Map<String, String> writeOptions)
+                                     String hudiPrecombineKey, Map<String, String> writeOptions,
+                                     Map<String, String> sparkOptions)
           throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
@@ -96,8 +98,8 @@ public class StreamFeatureGroupEngine {
     }
 
     // set write options for delta streamer job
-    featureGroup.setOptions(writeOptions != null ? writeOptions.entrySet().stream()
-        .map(e -> new StreamFeatureGroupOptions(e.getKey(), e.getValue()))
+    featureGroup.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+        .map(e -> new Option(e.getKey(), e.getValue()))
         .collect(Collectors.toList())
         : null);
 

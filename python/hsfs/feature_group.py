@@ -1385,6 +1385,7 @@ class StreamFeatureGroup(FeatureGroup):
         )
 
         self._options = None
+        self._spark_options = None
 
     def save(
         self,
@@ -1412,22 +1413,11 @@ class StreamFeatureGroup(FeatureGroup):
         # Arguments
             features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
-                following entries:
+                Write_options can contain the following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to write data into the
                   feature group.
-                * key `wait_for_job` and value `True` or `False` to configure
-                  whether or not to the save call should return only
-                  after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
-
-
-        # Returns
-            `Job`: When using the `hive` engine, it returns the Hopsworks Job
-                that was launched to ingest the feature group data.
 
         # Raises
             `RestAPIError`. Unable to create feature group.
@@ -1436,8 +1426,10 @@ class StreamFeatureGroup(FeatureGroup):
 
         user_version = self._version
 
-        # fg_job is used only if the hive engine is used
-        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
+        # when creating a stream feature group, users have the possibility of passing
+        # a spark_job_configuration object as part of the write_options with the key "spark"
+        self._spark_options = write_options.pop("spark", None)
+        self._feature_group_engine.save(self, feature_dataframe, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
@@ -1450,7 +1442,6 @@ class StreamFeatureGroup(FeatureGroup):
                 ),
                 util.VersionWarning,
             )
-        return fg_job
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -1486,9 +1477,10 @@ class StreamFeatureGroup(FeatureGroup):
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
-            "options": [{"name": k, "value": v} for k, v in self._options.items()]
+            "writeOptions": [{"name": k, "value": v} for k, v in self._options.items()]
             if self._options
             else None,
+            "sparkOptions": self._spark_options,
         }
 
 

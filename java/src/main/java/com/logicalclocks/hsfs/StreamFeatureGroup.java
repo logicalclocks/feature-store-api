@@ -26,7 +26,7 @@ import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.StreamFeatureGroupOptions;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.AllArgsConstructor;
@@ -92,7 +92,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private String onlineTopicName;
 
   @Setter
-  private List<StreamFeatureGroupOptions> options;
+  private List<Option> writeOptions;
+
+  @Setter
+  private JobConfiguration sparkOptions;
 
   private final StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -179,7 +182,16 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions);
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
+    codeEngine.saveCode(this);
+    if (statisticsConfig.getEnabled()) {
+      statisticsEngine.computeStatistics(this, featureData, null);
+    }
+  }
+
+  public <S> void save(S featureData, Map<String, String> writeOptions, Map<String, String> sparkOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
