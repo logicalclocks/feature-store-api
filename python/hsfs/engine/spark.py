@@ -881,10 +881,31 @@ class Engine:
                 )
             ),
         )
+        new_split_weights = []
+        cumsum = 0
         for split_weight in split_weights:
-            feature_dataframe_list.append(
-                dataset.where("rank <= {:.2f}".format(split_weight)).drop("rank")
-            )
+            cumsum += split_weight
+            new_split_weights.append(cumsum)
+
+        if round(cumsum) > 1.0:
+            raise ValueError(" Sum of split weights should not exceed 1.0")
+
+        split_weight_index = 0
+        for split_weight in new_split_weights:
+            if split_weight_index == 0:
+                feature_dataframe_list.append(
+                    dataset.where("rank <= {:.2f}".format(split_weight)).drop("rank")
+                )
+            else:
+                feature_dataframe_list.append(
+                    dataset.where(
+                        "rank > {:.2f} and rank <= {:.2f}".format(
+                            new_split_weights[split_weight_index - 1], split_weight
+                        )
+                    )
+                )
+            split_weight_index += 1
+
         return feature_dataframe_list
 
 
