@@ -23,10 +23,10 @@ import pandas as pd
 
 # in case importing in %%local
 try:
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import SparkSession, DataFrame, window
     from pyspark.rdd import RDD
     from pyspark.sql.column import Column, _to_java_column
-    from pyspark.sql.functions import struct, concat, col, lit, window, percent_rank
+    from pyspark.sql.functions import struct, concat, col, lit, percent_rank
 except ImportError:
     pass
 
