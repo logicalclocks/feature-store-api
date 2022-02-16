@@ -953,22 +953,28 @@ class GcsConnector(StorageConnector):
 
     @property
     def key_path(self):
-        """hdfs key path"""
+        """GCS key file HDFS path"""
         return self._key_path
 
     @property
     def algorithm(self):
+        """Encryption Algorithm"""
         return self._algorithm
 
     @property
     def encryption_key(self):
+        """Encryption Key"""
         return self._encryption_key
 
     @property
     def encryption_key_hash(self):
+        """Encryption Key Hash"""
         return self._encryption_key_hash
 
     def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional
+        arguments.
+        """
         return super().spark_options
 
     def _get_path(self, sub_path: str):
@@ -981,6 +987,23 @@ class GcsConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
+        """Reads GCS path into a dataframe using the storage connector.
+
+        ```python
+        conn.read(path='gs://bucket/path')
+        ```
+
+        # Arguments
+            data_format: Spark data format. Defaults to `None`.
+            options: Spark options. Defaults to `None`.
+            path: GCS path to data
+
+        # Raises
+            `ValueError`: Malformed arguments.
+
+        # Returns
+            `StreamingDataframe`: A Spark streaming dataframe.
+        """
         self.refetch()
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -990,13 +1013,13 @@ class GcsConnector(StorageConnector):
         ```python
         conn.prepare_spark()
 
-        spark.read.f    ormat("json").load("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]")
+        spark.read.format("json").load("gs://bucket/path")
 
         # or
-        spark.read.format("json").load(conn.prepare_spark("abfss://[container-name]@[account_name].dfs.core.windows.net/[path]"))
+        spark.read.format("json").load("gs://bucket/path")
         ```
 
         # Arguments
-            path: Path to prepare for reading from cloud storage. Defaults to `None`.
+            path: Path to prepare for reading from Google cloud storage. Defaults to `None`.
         """
         return engine.get_instance().setup_storage_connector(self, path)
