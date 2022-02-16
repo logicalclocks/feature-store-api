@@ -53,7 +53,7 @@ class CodeEngine:
         try:
             databricks = importlib.util.find_spec("pyspark.dbutils")
         except ModuleNotFoundError:
-            pass
+            databricks = False
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
