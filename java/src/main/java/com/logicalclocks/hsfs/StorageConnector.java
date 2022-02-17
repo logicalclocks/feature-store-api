@@ -187,7 +187,7 @@ public abstract class StorageConnector {
     private String iamRole;
 
     @Getter @Setter
-    private List<Option> arguments;
+    private String arguments;
 
     @Getter @Setter
     private Instant expiration;
@@ -195,10 +195,8 @@ public abstract class StorageConnector {
     public Map<String, String> sparkOptions() {
       String constr =
           "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
-      if (arguments != null && !arguments.isEmpty()) {
-        constr += "?" + arguments.stream()
-          .map(arg -> arg.getName() + (arg.getValue() != null ? "=" + arg.getValue() : ""))
-          .collect(Collectors.joining(","));
+      if (!Strings.isNullOrEmpty(arguments)) {
+        constr += "?" + arguments;
       }
       Map<String, String> options = new HashMap<>();
       options.put(Constants.JDBC_DRIVER, databaseDriver);
