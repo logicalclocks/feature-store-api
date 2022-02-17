@@ -50,7 +50,10 @@ class CodeEngine:
         # JOB
         job_name = os.environ.get(CodeEngine.JOB_ENV)
         # DATABRICKS
-        databricks = importlib.util.find_spec("pyspark.dbutils")
+        try:
+            databricks = importlib.util.find_spec("pyspark.dbutils")
+        except ModuleNotFoundError:
+            databricks = False
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
