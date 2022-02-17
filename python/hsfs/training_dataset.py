@@ -84,7 +84,7 @@ class TrainingDataset:
         self._pkname_by_serving_index = None
         self._transformation_functions = transformation_functions
         self._train_split = train_split
-        self._split_type = split_type
+        self._split_type = split_type.upper() if split_type is not None else None
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id

@@ -136,6 +136,16 @@ public class TrainingDataset {
   @JsonIgnore
   private HashSet<String> servingKeys;
 
+  @Getter
+  @Setter
+  @JsonIgnore
+  private String trainSplit;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  private SplitType splitType;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
@@ -144,7 +154,8 @@ public class TrainingDataset {
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
                          Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
-                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
+                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
+                         String trainSplit, SplitType splitType) {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -159,6 +170,8 @@ public class TrainingDataset {
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.trainSplit = trainSplit != null ? trainSplit : "train";
+    this.splitType = splitType != null ? splitType : SplitType.RANDOM;
   }
 
   /**
@@ -442,7 +455,7 @@ public class TrainingDataset {
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
     return getQuery(storage, false);
   }
-  
+
   @JsonIgnore
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getQuery(this, storage, withLabel, false);

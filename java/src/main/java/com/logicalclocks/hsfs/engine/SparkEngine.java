@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Split;
+import com.logicalclocks.hsfs.SplitType;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
@@ -43,10 +44,12 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.expressions.Window;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.percent_rank;
 import static org.apache.spark.sql.functions.struct;
 
 import org.apache.spark.sql.streaming.DataStreamWriter;
@@ -59,6 +62,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -175,7 +179,7 @@ public class SparkEngine {
    * @param saveMode
    */
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                    Map<String, String> writeOptions, SaveMode saveMode) {
+                    Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException {
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
     if (trainingDataset.getCoalesce()) {
@@ -198,11 +202,15 @@ public class SparkEngine {
 
       // The actual data will be stored in training_ds_version/split_name
       Dataset<Row>[] datasetSplits = null;
-      if (trainingDataset.getSeed() != null) {
-        datasetSplits = dataset.randomSplit(
-            splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
+      if (trainingDataset.getSplitType().equals(SplitType.TIME_SERIES)) {
+        datasetSplits = timeSeriesSplit(trainingDataset, dataset, splitFactors);
       } else {
-        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
+        if (trainingDataset.getSeed() != null) {
+          datasetSplits = dataset.randomSplit(
+              splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
+        } else {
+          datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
+        }
       }
 
       writeSplits(datasetSplits,
@@ -538,5 +546,35 @@ public class SparkEngine {
       emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
     }
     return emptyDataframe;
+  }
+
+  private Dataset<Row>[] timeSeriesSplit(TrainingDataset trainingDataset, Dataset<Row> dataset,
+                                         List<Float> splitFactors) throws FeatureStoreException {
+
+    Float[] newSplitFactors = splitFactors.toArray(new Float[0]);
+    Arrays.parallelPrefix(newSplitFactors, Float::sum);
+
+    dataset = dataset.withColumn("rank",
+        percent_rank().over(Window.partitionBy()
+            .orderBy(trainingDataset.getQueryInt().getLeftFeatureGroup().getEventTime())));
+
+    List<Dataset<Row>> datasetSplits = new ArrayList<>();
+    int splitWeightIndex = 0;
+    for (Float splitFactor: newSplitFactors) {
+      if (splitFactor > 1.0) {
+        throw new FeatureStoreException("Sum of split weights should not exceed 1.0");
+      }
+      if (splitWeightIndex == 0) {
+        datasetSplits.add(dataset.where(String.format("rank <= %f", splitFactor))
+            .drop("rank"));
+      } else {
+        datasetSplits.add(dataset.where(
+            String.format("rank > %f and rank <= %f", newSplitFactors[splitWeightIndex - 1], splitFactor))
+            .drop("rank"));
+      }
+      splitWeightIndex++;
+    }
+
+    return datasetSplits.toArray(new Dataset[0]);
   }
 }

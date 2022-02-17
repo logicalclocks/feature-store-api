@@ -92,7 +92,7 @@ class TrainingDatasetEngine:
         # after update _querydto becomes null but this is necessary if split_type is "time_series"
         if (
             isinstance(features, query.Query)
-            and training_dataset.split_type == "time_series"
+            and training_dataset.split_type == "TIME_SERIES"
         ):
             training_dataset._querydto = features
 

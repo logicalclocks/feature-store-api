@@ -364,7 +364,7 @@ class Engine:
             self._write_training_dataset_splits(
                 training_dataset,
                 dataset.randomSplit(split_weights, training_dataset.seed)
-                if training_dataset.split_type == "random"
+                if training_dataset.split_type == "RANDOM"
                 else self._time_series_split(training_dataset, dataset, split_weights),
                 write_options,
                 save_mode,
@@ -888,7 +888,7 @@ class Engine:
             new_split_weights.append(cumsum)
 
         if round(cumsum) > 1.0:
-            raise ValueError(" Sum of split weights should not exceed 1.0")
+            raise ValueError("Sum of split weights should not exceed 1.0")
 
         split_weight_index = 0
         for split_weight in new_split_weights:
@@ -902,7 +902,7 @@ class Engine:
                         "rank > {:.2f} and rank <= {:.2f}".format(
                             new_split_weights[split_weight_index - 1], split_weight
                         )
-                    )
+                    ).drop("rank")
                 )
             split_weight_index += 1
 
