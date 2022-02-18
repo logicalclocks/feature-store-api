@@ -669,15 +669,20 @@ public class SparkEngine {
       sparkSession.sparkContext().hadoopConfiguration().set(
           "fs.gs.auth.service.account.json.keyfile", localPath
       );
-    }
 
-    if (!Strings.isNullOrEmpty(storageConnector.getEncryptionKey())) {
-      sparkSession.sparkContext().hadoopConfiguration().set(
-          "fs.gs.encryption.algorithm", storageConnector.getAlgorithm());
-      sparkSession.sparkContext().hadoopConfiguration().set(
-          "fs.gs.encryption.key", storageConnector.getEncryptionKey());
-      sparkSession.sparkContext().hadoopConfiguration().set(
-          "fs.gs.encryption.key.hash", storageConnector.getEncryptionKeyHash());
+      // if encryption fields present
+      if (!Strings.isNullOrEmpty(storageConnector.getEncryptionKey())) {
+        sparkSession.sparkContext().hadoopConfiguration().set(
+            "fs.gs.encryption.key", storageConnector.getEncryptionKey());
+      }
+      if (!Strings.isNullOrEmpty(storageConnector.getEncryptionKeyHash())) {
+        sparkSession.sparkContext().hadoopConfiguration().set(
+            "fs.gs.encryption.key.hash", storageConnector.getEncryptionKeyHash());
+      }
+      if (!Strings.isNullOrEmpty(storageConnector.getAlgorithm())) {
+        sparkSession.sparkContext().hadoopConfiguration().set(
+            "fs.gs.encryption.algorithm", storageConnector.getAlgorithm());
+      }
     }
 
   }
