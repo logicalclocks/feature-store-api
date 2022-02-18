@@ -1012,11 +1012,9 @@ class GcsConnector(StorageConnector):
 
         ```python
         conn.prepare_spark()
-
         spark.read.format("json").load("gs://bucket/path")
-
         # or
-        spark.read.format("json").load("gs://bucket/path")
+        spark.read.format("json").load(conn.prepare_spark("gs://bucket/path"))
         ```
 
         # Arguments
