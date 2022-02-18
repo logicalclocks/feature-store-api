@@ -18,9 +18,8 @@ import numpy
 import datetime
 from functools import partial
 
-from hsfs import training_dataset, training_dataset_feature, transformation_function
+from hsfs import training_dataset, training_dataset_feature
 from hsfs.core import transformation_function_api, statistics_api
-from hsfs.client.exceptions import RestAPIError
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
 
 
@@ -105,38 +104,6 @@ class TransformationFunctionEngine:
                         transformation_function=transformation_fn,
                     )
                 )
-
-    def register_builtin_transformation_fns(self):
-        for name in self.BUILTIN_FN_NAMES:
-            try:
-                self._transformation_function_api.get_transformation_fn(name, 1)[0]
-            except RestAPIError as e:
-                if (
-                    e.response.json().get("errorMsg")
-                    == "Transformation function does not exist"
-                ):
-                    builtin_fn = BuiltInTransformationFunction(name)
-                    (
-                        builtin_source_code,
-                        output_type,
-                    ) = builtin_fn.generate_source_code()
-                    transformation_fn_instance = (
-                        transformation_function.TransformationFunction(
-                            featurestore_id=self._feature_store_id,
-                            name=name,
-                            version=1,
-                            output_type=output_type,
-                            builtin_source_code=builtin_source_code,
-                        )
-                    )
-                    self._transformation_function_api.register_transformation_fn(
-                        transformation_fn_instance
-                    )
-                elif (
-                    e.response.json().get("errorMsg")
-                    == "The provided transformation function name and version already exists"
-                ):
-                    Warning(e.response.json().get("errorMsg"))
 
     def is_builtin(self, transformation_fn_instance):
         return (
