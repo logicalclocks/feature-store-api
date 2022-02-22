@@ -793,7 +793,7 @@ class Engine:
         if storage_connector.key_path:
             # The AbstractFileSystem for 'gs:' URIs
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.AbstractFileSystem.gs.impl=com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
+                "fs.AbstractFileSystem.gs.impl",
                 "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS",
             )
             # Whether to use a service account for GCS authorization. Setting this
