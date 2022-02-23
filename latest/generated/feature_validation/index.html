@@ -202,8 +202,8 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-tabs__link">
+      Compute Management
     </a>
   </li>
 
@@ -214,8 +214,20 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-tabs__link">
+      Administration
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -240,6 +252,18 @@
   <li class="md-tabs__item">
     <a href="https://community.hopsworks.ai/" class="md-tabs__link">
       Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1119,6 +1143,19 @@
 
 
   <li class="md-nav__item">
+    <a href="../api/query_api/" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../api/rule_definition_api/" class="md-nav__link">
       Rule Definiton
     </a>
@@ -1172,7 +1209,7 @@
 
   <li class="md-nav__item">
     <a href="../api/transformation_functions_api/" class="md-nav__link">
-      Transformation functions
+      Transformation Functions
     </a>
   </li>
 
@@ -1233,8 +1270,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-nav__link">
+      Compute Management
     </a>
   </li>
 
@@ -1246,8 +1283,21 @@
 
 
   <li class="md-nav__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-nav__link">
+      Administration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -1274,6 +1324,19 @@
   <li class="md-nav__item">
     <a href="https://community.hopsworks.ai/" class="md-nav__link">
       Community
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1323,17 +1386,26 @@ validation is part of the HSFS Java/Scala and Python API for working with Featur
 <p>Rule definitions is a set of pre-defined and immutable rules  (<code>RuleDefiniton</code>) that are unique by name and are used for
 creating validation rules (<code>Rule</code>) and expectations (<code>Expectation</code>) applied on a dataframe that is ingested into a
 Feature Group.</p>
-<p>The following table describes all the supported rule definitions (code examples are shown in the section below).</p>
-<ul>
-<li>Name: The name of the rule.</li>
-<li>Predicate: The type of value this rule accepts. For example, when using <code>HAS_MIN</code> you need to set the value with the <code>value</code> parameter.</li>
-<li>Accepted type: The data type of the value users set for this rule. For example, the value of the <code>HAS_MIN</code> predicate must be a fractional number.</li>
-<li>Feature type: The data type of the feature this rule can be applied to. For example, the <code>HAS_MIN</code> rule can only be applied on numerical features.
-  If a rule is to be applied to an incompatible feature type, an error will be thrown when the expectation is attached on the feature group.
-  If a rule does not have a feature type, then it can be applied on both numerical and categorical features.</li>
-<li>Description: A short description of what the rule validates.</li>
-</ul>
-<p>If an expectation contains a rule that can be applied</p>
+<p>All rules are asserted based on a value provided by the users which can be set using the <code>min</code> and <code>max</code> rule properties. 
+That means users must provide an exact value, or a range of values, that the rule's computed value needs to match in order for the rule to be asserted as successful. For example:
+- <code>min(10)</code> and <code>max(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful only if the minimum value of a feature is exactly <code>10</code>.
+- <code>min(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful if the minimum value of a feature is at least <code>10</code>.
+- <code>max(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful if the maximum value of a feature is at most <code>10</code>.</p>
+<p>Default value for min/max is <code>0.0</code>, except for compliance rules which is <code>1.0</code>.</p>
+<p>The following table describes all the supported rule definitions along with their properties (code examples are shown in the section below).
+- Name: The name of the rule.
+- Predicate: The type of the predicate type of value this rule expects. 
+    - Example: 
+      - <code>IS_CONTAINED_IN</code> expects the <code>LEGAL_VALUES</code> property to be set.
+      - Compliance rules such as <code>IS_LESS_THAN</code> expect the <code>feature</code> property to be set. That means all the expectation's features will be evaluated against the provided feature. 
+- Accepted type: The data type of value set for the rules predicate or min/max properties.
+    - Examples: 
+      - <code>HAS_MIN</code> uses min() and max() with fractional values like min(2.5) max (5.0).
+      - <code>HAS_SIZE</code> uses min() and max() with integral values like min(10) max(10)
+      - <code>HAS_DATATYPE</code> expects <code>String</code> values to be provided as input to the <code>ACCEPTED_TYPE</code> predicate, <code>ACCEPTED_TYPE="Boolean"</code>.
+- Feature type: The data type of the feature this rule is evaluated against. If a rule is to be applied to an incompatible feature type, an error will be thrown when the expectation is attached on the feature group.
+    - Example, <code>HAS_MIN</code> can only be applied on numerical features but <code>HAS_DISTINCTNESS</code> can be applied on both numerical and categorical features.
+- Description: A short description of what the rule validates.</p>
 <table>
 <thead>
 <tr>
@@ -1347,31 +1419,31 @@ Feature Group.</p>
 <tbody>
 <tr>
 <td>HAS_APPROX_COUNT_DISTINCT</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on the approximate count distinct of a feature.</td>
 </tr>
 <tr>
 <td>HAS_APPROX_QUANTILE</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the approximate quantile of a feature.</td>
 </tr>
 <tr>
 <td>HAS_COMPLETENESS</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on the uniqueness of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>HAS_CORRELATION</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
-<td>Assert on the pearson correleation between two features.</td>
+<td>Assert on the pearson correlation between two features.</td>
 </tr>
 <tr>
 <td>HAS_DATATYPE</td>
@@ -1382,108 +1454,108 @@ Feature Group.</p>
 </tr>
 <tr>
 <td>HAS_DISTINCTNESS</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
-<td>Assert on the distincness of a single or combined set of features.</td>
+<td>Assert on the distinctness of a single or combined set of features.</td>
 </tr>
 <tr>
 <td>HAS_ENTROPY</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on the entropy of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MAX</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the max of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MAX_LENGTH</td>
-<td>VALUE</td>
+<td></td>
 <td>String</td>
 <td>Categorical</td>
 <td>Assert on the maximum length of the feature value.</td>
 </tr>
 <tr>
 <td>HAS_MEAN</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the mean of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MIN</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the min of a feature.</td>
 </tr>
 <tr>
 <td>HAS_MIN_LENGTH</td>
-<td>VALUE</td>
+<td></td>
 <td>String</td>
 <td>Categorical</td>
 <td>Assert on the minimum length of the feature value.</td>
 </tr>
 <tr>
 <td>HAS_MUTUAL_INFORMATION</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on the mutual information between two features.</td>
 </tr>
 <tr>
 <td>HAS_NUMBER_OF_DISTINCT_VALUES</td>
-<td>VALUE</td>
+<td></td>
 <td>Integral</td>
 <td></td>
 <td>Assert on the number of distinct values of a feature.</td>
 </tr>
 <tr>
 <td>HAS_PATTERN</td>
-<td>PATTERN</td>
+<td></td>
 <td>String</td>
 <td>Categorical</td>
 <td>Assert on the average compliance of the feature to the regular expression.</td>
 </tr>
 <tr>
 <td>HAS_SIZE</td>
-<td>VALUE</td>
+<td></td>
 <td>Integral</td>
 <td></td>
 <td>Assert on the number of rows of the dataframe.</td>
 </tr>
 <tr>
 <td>HAS_STANDARD_DEVIATION</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the standard deviation of a feature.</td>
 </tr>
 <tr>
 <td>HAS_SUM</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td>Numerical</td>
 <td>Assert on the sum of a feature.</td>
 </tr>
 <tr>
 <td>HAS_UNIQUENESS</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
-<td>Assert on the uniqueness of a single or combined set of features.</td>
+<td>Assert on the uniqueness of a feature, that is the fraction of unique values over the number of all its values.</td>
 </tr>
 <tr>
 <td>HAS_UNIQUE_VALUE_RATIO</td>
-<td>VALUE</td>
+<td></td>
 <td>Fractional</td>
 <td></td>
-<td>Assert on the unique value ratio of of a single or combined set of features.</td>
+<td>Assert on the unique value ratio of a feature, that is the fraction of unique values over the number of all distinct values.</td>
 </tr>
 <tr>
 <td>IS_CONTAINED_IN</td>
@@ -1494,44 +1566,44 @@ Feature Group.</p>
 </tr>
 <tr>
 <td>IS_GREATER_THAN</td>
-<td>VALUE</td>
+<td>feature</td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on feature A values being greater than feature B.</td>
 </tr>
 <tr>
 <td>IS_GREATER_THAN_OR_EQUAL_TO</td>
-<td>VALUE</td>
+<td>feature</td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on feature A values being greater than or equal to those of feature B.</td>
 </tr>
 <tr>
 <td>IS_LESS_THAN</td>
-<td>VALUE</td>
+<td>feature</td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on feature A values being less that feature B.</td>
 </tr>
 <tr>
 <td>IS_LESS_THAN_OR_EQUAL_TO</td>
-<td>VALUE</td>
+<td>feature</td>
 <td>Fractional</td>
 <td></td>
 <td>Assert on feature A values being less or equal to those of feature B.</td>
 </tr>
 <tr>
 <td>IS_NON_NEGATIVE</td>
-<td>VALUE</td>
-<td>Fractional</td>
 <td></td>
+<td>Fractional</td>
+<td>Numerical</td>
 <td>Assert on feature containing non negative values.</td>
 </tr>
 <tr>
 <td>IS_POSITIVE</td>
-<td>VALUE</td>
-<td>Boolean</td>
 <td></td>
+<td>Fractional</td>
+<td>Numerical</td>
 <td>Assert on a feature containing non negative values.</td>
 </tr>
 </tbody>
@@ -1582,8 +1654,8 @@ Feature Group.</p>
 <h3 id="ruledefinition">RuleDefinition<a class="headerlink" href="#ruledefinition" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">ruledefinition</span><span class="o">.</span><span class="n">RuleDefinition</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
-    <span class="n">predicate</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="p">,</span>
+    <span class="n">predicate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">feature_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1613,7 +1685,7 @@ Feature Group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L77">[source]</a></span></p>
 <h3 id="predicate">predicate<a class="headerlink" href="#predicate" title="Permanent link">#</a></h3>
-<p>Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
+<p>Predicate of the rule definition, one of "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
 <hr />
 <h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">#</a></h1>
 <p>Used as part of expectations that are applied on ingested features. Rule names correspond to the names of the
@@ -1628,7 +1700,7 @@ defined in the expectation (as ordered within the expectation).</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h2>
 <div class="tabbed-set" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><label for="__tabbed_3_1">Python</label><div class="tabbed-content"></div>
 </div>
-<div class="highlight"><pre><span></span><code><span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the mininum value of the feature needs to be at least 10</span>
+<div class="highlight"><pre><span></span><code><span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be at least 10</span>
 <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be at most 10</span>
 <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be between 0 and 10</span>
 
@@ -1639,6 +1711,9 @@ defined in the expectation (as ordered within the expectation).</p>
 <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_CONTAINED_IN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">legal_values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># Exactly 10% of all instances of the feature need to be contained in the legal_values list</span>
 
 <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_PATTERN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;a+&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># Exactly 10% of all instances of the feature need to match the given pattern</span>
+
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_LESS_THAN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="s2">&quot;graduation_date&quot;</span><span class="p">)]</span> <span class="c1"># All values of the expectation&#39;s features must be less than the graduation_date feature values (comparison is done on a per-row basis) </span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_LESS_THAN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="s2">&quot;graduation_date&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)]</span> <span class="c1"># Same as above but only 50% of the expectation&#39;s feature values need to be less that the graduation_date feature values</span>
 </code></pre></div>
 <div class="tabbed-set" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><label for="__tabbed_4_1">Scala</label><div class="tabbed-content"></div>
 </div>
@@ -1653,6 +1728,9 @@ defined in the expectation (as ordered within the expectation).</p>
 <span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_CONTAINED_IN</span><span class="p">).</span><span class="n">legalValues</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">)).</span><span class="n">min</span><span class="p">(</span><span class="mf">0.1</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mf">0.1</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span> <span class="c1">// # Exactly 10% of all instances of the feature need to be contained in the legal_values list</span>
 
 <span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_PATTERN</span><span class="p">).</span><span class="n">pattern</span><span class="p">(</span><span class="s">&quot;a+&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span> <span class="c1">// Exactly 10% of all instances of the feature need to match the given pattern</span>
+
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_LESS_THAN</span><span class="p">).</span><span class="n">feature</span><span class="p">(</span><span class="s">&quot;graduation_date&quot;</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span> <span class="c1">// All values of the expectation&#39;s features must be less than the graduation_date feature values (comparison is done on a per-row basis)</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_LESS_THAN</span><span class="p">).</span><span class="n">feature</span><span class="p">(</span><span class="s">&quot;graduation_date&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mf">0.5</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mf">0.5</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span> <span class="c1">// Same as above but only 50% of the expectation&#39;s feature values need to be less that the graduation_date feature values</span>
 </code></pre></div>
 <h2 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">#</a></h2>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L23">[source]</a></span></p>
@@ -1662,9 +1740,9 @@ defined in the expectation (as ordered within the expectation).</p>
     <span class="n">level</span><span class="p">,</span>
     <span class="nb">min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">pattern</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">legal_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1680,6 +1758,10 @@ defined in the expectation (as ordered within the expectation).</p>
 <h3 id="accepted_type_1">accepted_type<a class="headerlink" href="#accepted_type_1" title="Permanent link">#</a></h3>
 <p>Data type accepted for a feature. Applicable only to the HAS_DATATYPE rule.
 Accepted types are: Null, Fractional, Integral, Boolean, String</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L121">[source]</a></span></p>
+<h3 id="feature">feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h3>
+<p>Feature to compare the expectation's features to, applied only to Compliance rules.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L140">[source]</a></span></p>
 <h3 id="legal_values">legal_values<a class="headerlink" href="#legal_values" title="Permanent link">#</a></h3>
@@ -1701,18 +1783,14 @@ Accepted types are: Null, Fractional, Integral, Boolean, String</p>
 <h3 id="name_1">name<a class="headerlink" href="#name_1" title="Permanent link">#</a></h3>
 <p>Name of the rule as found in rule definitions.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L121">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L112">[source]</a></span></p>
 <h3 id="pattern">pattern<a class="headerlink" href="#pattern" title="Permanent link">#</a></h3>
 <p>Pattern to check for a feature's pattern compliance. Applicable only to the HAS_PATTERN rule.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/rule.py#L112">[source]</a></span></p>
-<h3 id="value">value<a class="headerlink" href="#value" title="Permanent link">#</a></h3>
-<p>The upper bound of the value range this feature should fall into.</p>
 <hr />
 <h1 id="expectations">Expectations<a class="headerlink" href="#expectations" title="Permanent link">#</a></h1>
 <p>A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
 and can be attached to multiple feature groups. If an expectation contains no features, it will be applied to all the
-features of the feature group when the validation is done An expectation contains a list of featues it is applied to.
+features of the feature group when the validation is done An expectation contains a list of features it is applied to.
 If the feature group the expectation is attached to, does not contain all the expectations features, the expectation
 will not be met.</p>
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
@@ -1758,7 +1836,7 @@ will not be met.</p>
 </code></pre></div>
 </div>
 </div>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L626">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L635">[source]</a></span></p>
 <h3 id="create_expectation">create_expectation<a class="headerlink" href="#create_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">rules</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -1881,20 +1959,23 @@ The list of allowed validation types are:</p>
 </div>
 <h2 id="validate">Validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h2>
 <p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
-<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1019">[source]</a></span></p>
+<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1075">[source]</a></span></p>
 <h3 id="validate_1">validate<a class="headerlink" href="#validate_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_activity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 <p>Run validation based on the attached expectations</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>dataframe</strong> <code>Optional[pyspark.sql.DataFrame]</code>: The PySpark dataframe to run the data validation expectations against.</li>
+<li><strong>log_activity</strong>: Whether to log the validation as a feature group activity.
+    If a dataframe is not provided (None),
+    the validation will be logged as a feature store activity.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
 <hr />
 <h2 id="retrieval_2">Retrieval<a class="headerlink" href="#retrieval_2" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L328">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L428">[source]</a></span></p>
 <h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1941,7 +2022,7 @@ The list of allowed validation types are:</p>
 <h3 id="status">status<a class="headerlink" href="#status" title="Permanent link">#</a></h3>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_result.py#L84">[source]</a></span></p>
-<h3 id="value_1">value<a class="headerlink" href="#value_1" title="Permanent link">#</a></h3>
+<h3 id="value">value<a class="headerlink" href="#value" title="Permanent link">#</a></h3>
 <p>The computed value of the feature according to the rule.</p>
 <hr />
                 

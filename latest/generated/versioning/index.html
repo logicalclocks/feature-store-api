@@ -202,8 +202,8 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-tabs__link">
+      Compute Management
     </a>
   </li>
 
@@ -214,8 +214,20 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-tabs__link">
+      Administration
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -240,6 +252,18 @@
   <li class="md-tabs__item">
     <a href="https://community.hopsworks.ai/" class="md-tabs__link">
       Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1230,6 +1254,19 @@
 
 
   <li class="md-nav__item">
+    <a href="../api/query_api/" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../api/rule_definition_api/" class="md-nav__link">
       Rule Definiton
     </a>
@@ -1283,7 +1320,7 @@
 
   <li class="md-nav__item">
     <a href="../api/transformation_functions_api/" class="md-nav__link">
-      Transformation functions
+      Transformation Functions
     </a>
   </li>
 
@@ -1344,8 +1381,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-nav__link">
+      Compute Management
     </a>
   </li>
 
@@ -1357,8 +1394,21 @@
 
 
   <li class="md-nav__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-nav__link">
+      Administration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -1385,6 +1435,19 @@
   <li class="md-nav__item">
     <a href="https://community.hopsworks.ai/" class="md-nav__link">
       Community
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1526,20 +1589,26 @@
 The <code>version</code> parameter is not mandatory. If not provided and no feature group (or training dataset) with that name exists, then the version is going to be set to 1. If the <code>version</code> parameter is not provided, and a feature group (or training dataset) already exist, then the version number will be increased by one.</p>
 <h3 id="appending-features-to-an-existing-version">Appending features to an existing version<a class="headerlink" href="#appending-features-to-an-existing-version" title="Permanent link">#</a></h3>
 <p>For feature groups, it is possible to append new features to existing feature groups. This is not considered a breaking change. To append new features users can either use the UI or the following <code>append_features</code> method:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L984">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L335">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
 <p>Append features to the schema of the feature group.</p>
+<div class="admonition info">
+<p class="admonition-title">Safe append</p>
+<p>This method appends the features to the feature group description safely.
+In case of failure your local metadata object will contain the correct
+schema.</p>
+</div>
 <p>It is only possible to append features to a feature group. Removing
 features is considered a breaking change.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>features</strong>: Feature or list. A feature object or list thereof to append to
+<li><strong>features</strong> <code>Union[hsfs.feature.Feature, List[hsfs.feature.Feature]]</code>: Feature or list. A feature object or list thereof to append to
     the schema of the feature group.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p>FeatureGroup. The updated feature group object.</p>
+<p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
 <p>Appended features can also define a default value as placeholder for the feature data that is already present in the feature group. When setting a default value, the value is going to be attached as metadata, the existing data does not need to be rewritten. The default value is going to be used by the <a href="../query_vs_dataframe/#the-query-abstraction">query APIs</a>.</p>
 <h3 id="retrieving-a-specific-version">Retrieving a specific version<a class="headerlink" href="#retrieving-a-specific-version" title="Permanent link">#</a></h3>
@@ -1595,7 +1664,7 @@ Data versioning is also not critical for training datasets, which are point in t
 </p>
 
 <p>It is also possible to retrieve the same information programmatically, using the <code>commit_details()</code> method of a feature group object:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L912">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1015">[source]</a></span></p>
 <h3 id="commit_details">commit_details<a class="headerlink" href="#commit_details" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">commit_details</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>

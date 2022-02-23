@@ -202,8 +202,8 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-tabs__link">
+      Compute Management
     </a>
   </li>
 
@@ -214,8 +214,20 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-tabs__link">
+      Administration
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -240,6 +252,18 @@
   <li class="md-tabs__item">
     <a href="https://community.hopsworks.ai/" class="md-tabs__link">
       Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1108,6 +1132,19 @@
           
 
 
+
+  <li class="md-nav__item">
+    <a href="../query_api/" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
   
 
 
@@ -1276,7 +1313,7 @@
 
   <li class="md-nav__item">
     <a href="../transformation_functions_api/" class="md-nav__link">
-      Transformation functions
+      Transformation Functions
     </a>
   </li>
 
@@ -1337,8 +1374,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-nav__link">
+      Compute Management
     </a>
   </li>
 
@@ -1350,8 +1387,21 @@
 
 
   <li class="md-nav__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-nav__link">
+      Administration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -1378,6 +1428,19 @@
   <li class="md-nav__item">
     <a href="https://community.hopsworks.ai/" class="md-nav__link">
       Community
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1506,8 +1569,8 @@
 <h3 id="ruledefinition">RuleDefinition<a class="headerlink" href="#ruledefinition" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">ruledefinition</span><span class="o">.</span><span class="n">RuleDefinition</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
-    <span class="n">predicate</span><span class="p">,</span>
     <span class="n">accepted_type</span><span class="p">,</span>
+    <span class="n">predicate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">feature_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1538,7 +1601,7 @@
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/ruledefinition.py#L77">[source]</a></span></p>
 <h3 id="predicate">predicate<a class="headerlink" href="#predicate" title="Permanent link">#</a></h3>
-<p>Predicate of the rule definition, one of "VALUE", "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
+<p>Predicate of the rule definition, one of "LEGAL_VALUES", "ACCEPTED_TYPE", "PATTERN".</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L489">[source]</a></span></p>
@@ -1571,7 +1634,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../feature_api/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../query_api/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1580,7 +1643,7 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Feature
+                Query
               </div>
             </div>
           </a>
