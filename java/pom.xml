@@ -21,7 +21,7 @@
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <spark.version>3.1.1.0</spark.version>
         <deequ.version>1.1.0.4-SNAPSHOT</deequ.version>
-        <hudi.version>0.7.0</hudi.version>
+        <hudi.version>0.10.0.1</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
