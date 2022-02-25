@@ -152,7 +152,7 @@ class TFDataEngine:
         )
 
         def _de_serialize(serialized_example):
-            example = tf.io.parse_single_example(
+            example = tf.io.parse_example(
                 serialized_example, tfrecord_feature_description
             )
             return example

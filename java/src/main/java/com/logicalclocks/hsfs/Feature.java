@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.SqlFilterCondition;
@@ -29,6 +30,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.json.JSONArray;
 
+import java.io.IOException;
 import java.util.Collection;
 
 @AllArgsConstructor
@@ -69,6 +71,8 @@ public class Feature {
   @Setter
   private Integer featureGroupId;
 
+  private static ObjectMapper mapper = new ObjectMapper();
+
   public Feature(@NonNull String name) {
     setName(name);
   }
@@ -105,7 +109,8 @@ public class Feature {
   }
 
   @Builder
-  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue)
+  public Feature(String name, String type, String onlineType, Boolean primary, Boolean partition, String defaultValue,
+                 String description)
       throws FeatureStoreException {
     if (Strings.isNullOrEmpty(name)) {
       throw new FeatureStoreException("Name is required when creating a feature");
@@ -120,6 +125,7 @@ public class Feature {
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+    this.description = description;
   }
 
   @JsonIgnore
@@ -135,28 +141,62 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
   }
 
+  public Filter lt(Feature value) {
+    return new Filter(this, SqlFilterCondition.LESS_THAN, value.toString());
+  }
+
   public Filter le(Object value) {
     return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value.toString());
+  }
+
+  public Filter le(Feature value) {
+    return new Filter(this, SqlFilterCondition.LESS_THAN_OR_EQUAL, value.toJson());
   }
 
   public Filter eq(Object value) {
     return new Filter(this, SqlFilterCondition.EQUALS, value.toString());
   }
 
+  public Filter eq(Feature value) {
+    return new Filter(this, SqlFilterCondition.EQUALS, value.toJson());
+  }
+
   public Filter ne(Object value) {
     return new Filter(this, SqlFilterCondition.NOT_EQUALS, value.toString());
   }
 
+  public Filter ne(Feature value) {
+    return new Filter(this, SqlFilterCondition.NOT_EQUALS, value.toJson());
+  }
+
+
   public Filter gt(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toString());
+  }
+
+  public Filter gt(Feature value) {
+    return new Filter(this, SqlFilterCondition.GREATER_THAN, value.toJson());
   }
 
   public Filter ge(Object value) {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toString());
   }
 
+  public Filter ge(Feature value) {
+    return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toJson());
+  }
+
   public Filter in(Collection<?> collection) {
     JSONArray jsonArray = new JSONArray(collection);
     return new Filter(this, SqlFilterCondition.IN, jsonArray.toString());
   }
+
+  public String toJson() {
+    try {
+      return mapper.writeValueAsString(this);
+    } catch (IOException e) {
+      throw new RuntimeException("Cannot serialize Feature object.");
+    }
+  }
+
 }

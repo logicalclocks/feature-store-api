@@ -28,10 +28,12 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
   protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
@@ -59,21 +61,41 @@ public class FeatureGroupBaseEngine {
     tagsApi.deleteTag(featureGroupBase, name);
   }
 
-  public void updateDescription(FeatureGroupBase featureGroup, String description)
+  public <T extends FeatureGroupBase> void updateDescription(FeatureGroupBase featureGroup, String description,
+                                                             Class<T> fgClass)
       throws FeatureStoreException, IOException {
-    FeatureGroupBase fgBaseSend = initFeatureGroupBase(featureGroup);
-    fgBaseSend.setDescription(description);
-    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    featureGroup.setDescription(description);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setDescription(apiFG.getDescription());
   }
 
-  public void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features)
+  public <T extends FeatureGroupBase> void updateFeatures(FeatureGroupBase featureGroup, List<Feature> features,
+                                                          Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    List<Feature> newFeatures = new ArrayList<>();
+    for (Feature feature : featureGroup.getFeatures()) {
+      Optional<Feature> match =
+          features.stream().filter(updated -> updated.getName().equalsIgnoreCase(feature.getName())).findAny();
+      if (!match.isPresent()) {
+        newFeatures.add(feature);
+      } else {
+        match.get().setType(feature.getType());
+        newFeatures.add(match.get());
+      }
+    }
+    newFeatures.addAll(features);
+    featureGroup.setFeatures(newFeatures);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
+    featureGroup.setFeatures(apiFG.getFeatures());
+  }
+
+  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
+                                                          Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
     Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
-    FeatureGroupBase fgBaseSend = initFeatureGroupBase(featureGroup);
-    features.addAll(featureGroup.getFeatures());
-    fgBaseSend.setFeatures(features);
-    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(fgBaseSend, "updateMetadata");
+    featureGroup.getFeatures().addAll(features);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
+        fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
     if (featureGroup instanceof FeatureGroup) {
       SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
@@ -81,10 +103,10 @@ public class FeatureGroupBaseEngine {
     }
   }
 
-  public void updateStatisticsConfig(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    FeatureGroupBase apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig");
-    featureGroup.getStatisticsConfig().setCorrelations(apiFG.getStatisticsConfig().getCorrelations());
-    featureGroup.getStatisticsConfig().setHistograms(apiFG.getStatisticsConfig().getHistograms());
+  public <T extends FeatureGroupBase> void updateStatisticsConfig(FeatureGroupBase featureGroup, Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig", fgClass);
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
   }
 
   private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
@@ -96,7 +118,9 @@ public class FeatureGroupBaseEngine {
     return new FeatureGroupBase();
   }
 
-  public void updateValidationType(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
-    featureGroupApi.updateMetadata(featureGroupBase, "validationType", featureGroupBase.getValidationType());
+  public <T extends FeatureGroupBase> void updateValidationType(FeatureGroupBase featureGroupBase, Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    featureGroupApi.updateMetadata(
+        featureGroupBase, "validationType", featureGroupBase.getValidationType(), fgClass);
   }
 }

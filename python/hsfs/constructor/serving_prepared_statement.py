@@ -66,6 +66,10 @@ class ServingPreparedStatement:
         }
 
     @property
+    def feature_group_id(self):
+        return self._feature_group_id
+
+    @property
     def prepared_statement_index(self):
         return self._prepared_statement_index
 
@@ -76,6 +80,10 @@ class ServingPreparedStatement:
     @property
     def query_online(self):
         return self._query_online
+
+    @feature_group_id.setter
+    def feature_group_id(self, feature_group_id):
+        self._feature_group_id = feature_group_id
 
     @prepared_statement_index.setter
     def prepared_statement_index(self, prepared_statement_index):

@@ -81,6 +81,19 @@ class StatisticsEngine:
         )
         return content_str
 
+    @staticmethod
+    def profile_transformation_fn_statistics(feature_dataframe, columns):
+        if len(feature_dataframe.select(*columns).head(1)) == 0:
+            raise exceptions.FeatureStoreException(
+                "There is no data in the entity that you are trying to compute "
+                "statistics for. A possible cause might be that you inserted only data "
+                "to the online storage of a feature group."
+            )
+        content_str = engine.get_instance().profile(
+            feature_dataframe, columns, False, True, False
+        )
+        return content_str
+
     def register_split_statistics(self, td_metadata_instance):
         statistics_of_splits = []
         for split_name in td_metadata_instance.splits:
@@ -100,11 +113,32 @@ class StatisticsEngine:
         self._statistics_api.post(td_metadata_instance, stats)
         return stats
 
-    def get_last(self, metadata_instance):
-        """Get the most recent Statistics of an entity."""
-        return self._statistics_api.get_last(metadata_instance)
+    def compute_transformation_fn_statistics(
+        self,
+        td_metadata_instance,
+        columns,
+        feature_dataframe=None,
+    ):
+        commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
+        content_str = self.profile_transformation_fn_statistics(
+            feature_dataframe, columns
+        )
 
-    def get(self, metadata_instance, commit_time):
+        stats = statistics.Statistics(
+            commit_time=commit_time,
+            content=content_str,
+            for_transformation=True,
+        )
+        self._statistics_api.post(td_metadata_instance, stats)
+        return stats
+
+    def get_last(self, metadata_instance, for_transformation=False):
+        """Get the most recent Statistics of an entity."""
+        return self._statistics_api.get_last(metadata_instance, for_transformation)
+
+    def get(self, metadata_instance, commit_time, for_transformation=False):
         """Get Statistics with the specified commit time of an entity."""
         commit_timestamp = util.get_timestamp_from_date_string(commit_time)
-        return self._statistics_api.get(metadata_instance, commit_timestamp)
+        return self._statistics_api.get(
+            metadata_instance, commit_timestamp, for_transformation
+        )

@@ -7,11 +7,17 @@ To be able to attach a transformation function to a training dataset it has to b
 or attached when starting a [Jupyter notebook](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter)
 or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html).
 
-!!! warning "Pyspark decorators."
-    Don't decorate transformation function with Pyspark `@udf` or `@pandas_udf`, as well as don't use any Pyspark dependencies.
+!!! warning "Pyspark decorators"
+    Don't decorate transformation functions with Pyspark `@udf` or `@pandas_udf`, as well as don't use any Pyspark dependencies.
     HSFS will decorate transformation function only if it is used inside Pyspark application.
 
+HSFS also comes with built-in transformation functions such as `min_max_scaler`, `standard_scaler`, `robust_scaler`
+and `label_encoder`.
+
 ## Examples
+
+Transformation functions need to be registered in the Feature Store to make them accessible for training dataset creation.
+Assume you have a Python library called `hsfs_transformers` containing your transformation function `plus_one`.
 
 === "Python"
 
@@ -25,9 +31,19 @@ or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopswor
         plus_one_meta.save()
         ```
 
-To retrieve all transformation functions from the feature store use `get_transformation_functions` that will return list of `TransformatioFunction` objects.
-Specific transformation function can be retrieved by `get_transformation_function` method where user can provide name and version of the transformation function.
-If only name is provided then it will default to version 1.
+Built-in transformation functions can be registered by calling `register_builtin_transformation_functions` method on the
+feature store handle.
+
+=== "Python"
+
+    !!! example "Register built-in transformation functions in the Hopsworks feature store."
+        ```python
+        fs.register_builtin_transformation_functions()
+        ```
+
+To retrieve all transformation functions from the feature store use `get_transformation_functions` which will return list of `TransformationFunction` objects.
+A specific transformation function can be retrieved by `get_transformation_function` method where the user can provide a name and a version of the transformation function.
+If only the name is provided then it will default to version 1.
 
 === "Python"
 
@@ -38,6 +54,9 @@ If only name is provided then it will default to version 1.
 
         # get transformation function by name. This will default to version 1
         fs.get_transformation_function(name="plus_one")
+
+        # get built-in transformation function min max scaler
+        fs.get_transformation_function(name="min_max_scaler")
 
         # get transformation function by name and version.
         fs.get_transformation_function(name="plus_one", version=2)
@@ -56,6 +75,28 @@ methods are called on training dataset object.
                                    description="Dataset to train the demo model",
                                    data_format="csv",
                                    transformation_functions={"feature_name":plus_one_meta}
+                                   statistics_config=None,
+                                   version=1)
+        td.save(join_query)
+        ```
+
+Built-in transformation functions are attached in the same way. The only difference is that it will compute the necessary statistics
+for the specific function in the background. For example min and max values for `min_max_scaler`; mean and standard deviation
+for `standard_scaler` etc.
+
+    !!! example "Attaching built-in transformation functions to the training dataset"
+        ```python
+        min_max_scaler = fs.get_transformation_function(name="min_max_scaler")
+        standard_scaler = fs.get_transformation_function(name="standard_scaler")
+        robust_scaler = fs.get_transformation_function(name="robust_scaler")
+        label_encoder = fs.get_transformation_function(name="label_encoder")
+        fs.create_training_dataset(name="td_demo",
+                                   description="Dataset to train the demo model",
+                                   data_format="csv",
+                                   transformation_functions={"feature_name":min_max_scaler,
+                                                             "feature_name":standard_scaler,
+                                                             "feature_name":robust_scaler,
+                                                             "feature_name":label_encoder},
                                    statistics_config=None,
                                    version=1)
         td.save(join_query)

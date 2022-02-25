@@ -64,6 +64,7 @@ class TrainingDataset:
         querydto=None,
         label=None,
         transformation_functions=None,
+        train_split=None,
     ):
         self._id = id
         self._name = name
@@ -79,7 +80,9 @@ class TrainingDataset:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
+        self._pkname_by_serving_index = None
         self._transformation_functions = transformation_functions
+        self._train_split = train_split
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -142,6 +145,7 @@ class TrainingDataset:
         This method materializes the training dataset either from a Feature Store
         `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
         lists or Numpy ndarrays.
+        From v2.5 onward, filters are saved along with the `Query`.
 
         # Arguments
             features: Feature data to be materialized.
@@ -242,12 +246,18 @@ class TrainingDataset:
 
         # Arguments
             split: Name of the split to read, defaults to `None`, reading the entire
-                training dataset.
+                training dataset. If the training dataset has split, the `split` parameter
+                is mandatory.
             read_options: Additional read options as key/value pairs, defaults to `{}`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data of the
                 training dataset.
         """
+        if self.splits and split is None:
+            raise ValueError(
+                "The training dataset has splits, please specify the split you want to read"
+            )
+
         return self._training_dataset_engine.read(self, split, read_options)
 
     def compute_statistics(self):
@@ -445,6 +455,7 @@ class TrainingDataset:
             "seed": self._seed,
             "queryDTO": self._querydto.to_dict() if self._querydto else None,
             "statisticsConfig": self._statistics_config,
+            "trainSplit": self._train_split,
         }
 
     @property
@@ -617,7 +628,7 @@ class TrainingDataset:
     @property
     def query(self):
         """Query to generate this training dataset from online feature store."""
-        return self._training_dataset_engine.query(self, True, True)
+        return self._training_dataset_engine.query(self, True, True, False)
 
     def get_query(self, online: bool = True, with_label: bool = False):
         """Returns the query used to generate this training dataset
@@ -633,7 +644,9 @@ class TrainingDataset:
             `str`. Query string for the chosen storage used to generate this training
                 dataset.
         """
-        return self._training_dataset_engine.query(self, online, with_label)
+        return self._training_dataset_engine.query(
+            self, online, with_label, engine.get_type() == "hive"
+        )
 
     def init_prepared_statement(
         self, batch: Optional[bool] = None, external: Optional[bool] = False
@@ -734,6 +747,15 @@ class TrainingDataset:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def train_split(self):
+        """Set name of training dataset split that is used for training."""
+        return self._train_split
+
+    @train_split.setter
+    def train_split(self, train_split):
+        self._train_split = train_split
 
     @property
     def transformation_functions(self):

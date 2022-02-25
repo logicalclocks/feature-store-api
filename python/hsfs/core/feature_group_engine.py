@@ -53,7 +53,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Hive, the validation will be executed by
             # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe)
+            validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
 
         offline_write_options = write_options
@@ -85,7 +85,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Hive, the validation will be executed by
             # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe)
+            validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
 
         offline_write_options = write_options
@@ -164,6 +164,27 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             read_options,
         )
 
+    def _update_features_metadata(self, feature_group, features):
+        # perform changes on copy in case the update fails, so we don't leave
+        # the user object in corrupted state
+        copy_feature_group = fg.FeatureGroup(
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=None,
+            id=feature_group.id,
+            features=features,
+        )
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_features(self, feature_group, updated_features):
+        """Updates features safely."""
+        self._update_features_metadata(
+            feature_group, self.new_feature_list(feature_group, updated_features)
+        )
+
     def append_features(self, feature_group, new_features):
         """Appends features to a feature group."""
         # first get empty dataframe of current version and append new feature
@@ -173,18 +194,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group.read(), new_features
         )
 
-        # perform changes on copy in case the update fails, so we don't leave
-        # the user object in corrupted state
-        copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            None,
-            None,
-            id=feature_group.id,
-            features=feature_group.features + new_features,
-        )
-        self._feature_group_api.update_metadata(
-            feature_group, copy_feature_group, "updateMetadata"
+        self._update_features_metadata(
+            feature_group, feature_group.features + new_features
         )
 
         # write empty dataframe to update parquet schema
@@ -193,10 +204,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup(
-            None,
-            None,
-            description,
-            None,
+            name=None,
+            version=None,
+            featurestore_id=None,
+            description=description,
             id=feature_group.id,
             features=feature_group.features,
         )

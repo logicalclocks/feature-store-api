@@ -15,32 +15,89 @@
 #
 
 import datetime
+import importlib.util
 
 from hsfs import code
 from hsfs.core import code_api
+import json
 import os
 
 
 class CodeEngine:
 
-    KERNEL_ENV = "HOPSWORKS_KERNEL_ID"
     WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE"
+
+    # JUPYTER
+    KERNEL_ENV = "HOPSWORKS_KERNEL_ID"
+
+    # JOB
+    JOB_ENV = "HOPSWORKS_JOB_NAME"
+
+    # DATABRICKS
+    DATABRICKS_EXTRA_CONTEXT = "extraContext"
+    DATABRICKS_NOTEBOOK_PATH = "notebook_path"
+    DATABRICKS_TAGS = "tags"
+    DATABRICKS_BROWSER_HOST_NAME = "browserHostName"
 
     def __init__(self, feature_store_id, entity_type):
         self._code_api = code_api.CodeApi(feature_store_id, entity_type)
 
     def save_code(self, metadata_instance):
         """Compute code for a dataframe and send the result json to Hopsworks."""
+
+        # JUPYTER
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
-        if not kernel_id:
-            return
+        # JOB
+        job_name = os.environ.get(CodeEngine.JOB_ENV)
+        # DATABRICKS
+        try:
+            databricks = importlib.util.find_spec("pyspark.dbutils")
+        except ModuleNotFoundError:
+            databricks = False
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
             application_id=web_proxy[7:] if web_proxy else None,
         )
-        self._code_api.post(metadata_instance, code_entity, kernel_id, RunType.JUPYTER)
+
+        if kernel_id:
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=kernel_id,
+                code_type=RunType.JUPYTER,
+            )
+        elif job_name:
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=job_name,
+                code_type=RunType.JOB,
+            )
+        elif databricks:
+            from pyspark.dbutils import DBUtils
+
+            dbuts = DBUtils()
+
+            context = json.loads(
+                dbuts.notebook.entry_point.getDbutils().notebook().getContext().toJson()
+            )
+            notebook_path = context[CodeEngine.DATABRICKS_EXTRA_CONTEXT].get(
+                CodeEngine.DATABRICKS_NOTEBOOK_PATH
+            )
+            browser_host_name = context[CodeEngine.DATABRICKS_TAGS].get(
+                CodeEngine.DATABRICKS_BROWSER_HOST_NAME
+            )
+
+            # Save HTML
+            self._code_api.post(
+                metadata_instance=metadata_instance,
+                code=code_entity,
+                entity_id=notebook_path,
+                code_type=RunType.DATABRICKS,
+                databricks_cluster_id=browser_host_name,
+            )
 
 
 class RunType:

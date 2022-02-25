@@ -48,7 +48,7 @@ class Engine:
     OVERWRITE = "overwrite"
 
     def __init__(self):
-        self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
         self._jvm = self._spark_context._jvm
 
@@ -320,42 +320,6 @@ class Engine:
 
         dataset = self.convert_to_default_dataframe(dataset)
 
-        # generate transformation function expressions
-        transformed_feature_names = []
-        transformation_fn_expressions = []
-        for (
-            feature_name,
-            transformation_fn,
-        ) in training_dataset.transformation_functions.items():
-            fn_registration_name = (
-                transformation_fn.name + "_" + str(transformation_fn.version)
-            )
-            self._spark_session.udf.register(
-                fn_registration_name, transformation_fn.transformation_fn
-            )
-            transformation_fn_expressions.append(
-                "{fn_name:}({name:}) AS {name:}".format(
-                    fn_name=fn_registration_name, name=feature_name
-                )
-            )
-            transformed_feature_names.append(feature_name)
-
-        # generate non transformation expressions
-        no_transformation_expr = [
-            "{name:} AS {name:}".format(name=col_name)
-            for col_name in dataset.columns
-            if col_name not in transformed_feature_names
-        ]
-
-        # generate entire expression and execute it
-        transformation_fn_expressions.extend(no_transformation_expr)
-        dataset = dataset.selectExpr(*transformation_fn_expressions)
-
-        # sort feature order if it was altered by transformation functions
-        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
-        sorted_feature_names = [ft.name for ft in sorded_features]
-        dataset = dataset.select(*sorted_feature_names)
-
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
 
@@ -364,7 +328,30 @@ class Engine:
             training_dataset.data_format, user_write_options
         )
 
+        # check if there any transformation functions that require statistics attached to td features
+        builtin_tffn_features = [
+            ft_name
+            for ft_name in training_dataset.transformation_functions
+            if training_dataset._transformation_function_engine.is_builtin(
+                training_dataset.transformation_functions[ft_name]
+            )
+        ]
+
         if len(training_dataset.splits) == 0:
+            if builtin_tffn_features:
+                # compute statistics before transformations are applied
+                stats = training_dataset._statistics_engine.compute_transformation_fn_statistics(
+                    td_metadata_instance=training_dataset,
+                    columns=builtin_tffn_features,
+                    feature_dataframe=dataset,
+                )
+                # Populate builtin transformations (if any) with respective arguments
+                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                    training_dataset.transformation_functions, stats.content
+                )
+            # apply transformation functions (they are applied separately if there are splits)
+            dataset = self._apply_transformation_function(training_dataset, dataset)
+
             path = training_dataset.location + "/" + training_dataset.name
             self._write_training_dataset_single(
                 dataset,
@@ -378,31 +365,53 @@ class Engine:
             split_names = sorted([*training_dataset.splits])
             split_weights = [training_dataset.splits[i] for i in split_names]
             self._write_training_dataset_splits(
+                training_dataset,
                 dataset.randomSplit(split_weights, training_dataset.seed),
-                training_dataset.storage_connector,
-                training_dataset.data_format,
                 write_options,
                 save_mode,
-                training_dataset.location,
                 split_names,
+                builtin_tffn_features=builtin_tffn_features,
             )
 
     def _write_training_dataset_splits(
         self,
+        training_dataset,
         feature_dataframe_list,
-        storage_connector,
-        data_format,
         write_options,
         save_mode,
-        path,
         split_names,
+        builtin_tffn_features,
     ):
+        stats = None
+        if builtin_tffn_features:
+            # compute statistics before transformations are applied
+            i = [
+                i
+                for i, name in enumerate(split_names)
+                if name == training_dataset.train_split
+            ][0]
+            stats = training_dataset._statistics_engine.compute_transformation_fn_statistics(
+                td_metadata_instance=training_dataset,
+                columns=builtin_tffn_features,
+                feature_dataframe=feature_dataframe_list[i],
+            )
+
         for i in range(len(feature_dataframe_list)):
-            split_path = path + "/" + str(split_names[i])
+            # Populate builtin transformations (if any) with respective arguments for each split
+            if stats is not None:
+                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                    training_dataset.transformation_functions, stats.content
+                )
+            # apply transformation functions (they are applied separately to each split)
+            dataset = self._apply_transformation_function(
+                training_dataset, dataset=feature_dataframe_list[i]
+            )
+
+            split_path = training_dataset.location + "/" + str(split_names[i])
             self._write_training_dataset_single(
-                feature_dataframe_list[i],
-                storage_connector,
-                data_format,
+                dataset,
+                training_dataset.storage_connector,
+                training_dataset.data_format,
                 write_options,
                 save_mode,
                 split_path,
@@ -528,7 +537,7 @@ class Engine:
             )
         )
 
-    def validate(self, dataframe, expectations):
+    def validate(self, dataframe, expectations, log_activity=True):
         """Run data validation on the dataframe with Deequ."""
 
         expectations_java = []
@@ -616,7 +625,7 @@ class Engine:
             feature.Feature(
                 feat.name.lower(),
                 feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
+                feat.metadata.get("description", None),
             )
             for feat in dataframe.schema
         ]
@@ -661,6 +670,9 @@ class Engine:
             i += 1
 
     def setup_storage_connector(self, storage_connector, path=None):
+        # update storage connector to get new session token
+        storage_connector.refetch()
+
         if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
@@ -726,6 +738,44 @@ class Engine:
             {},
             {},
         )
+
+    def _apply_transformation_function(self, training_dataset, dataset):
+        # generate transformation function expressions
+        transformed_feature_names = []
+        transformation_fn_expressions = []
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            fn_registration_name = (
+                transformation_fn.name + "_" + str(transformation_fn.version)
+            )
+            self._spark_session.udf.register(
+                fn_registration_name, transformation_fn.transformation_fn
+            )
+            transformation_fn_expressions.append(
+                "{fn_name:}({name:}) AS {name:}".format(
+                    fn_name=fn_registration_name, name=feature_name
+                )
+            )
+            transformed_feature_names.append(feature_name)
+
+        # generate non transformation expressions
+        no_transformation_expr = [
+            "{name:} AS {name:}".format(name=col_name)
+            for col_name in dataset.columns
+            if col_name not in transformed_feature_names
+        ]
+
+        # generate entire expression and execute it
+        transformation_fn_expressions.extend(no_transformation_expr)
+        dataset = dataset.selectExpr(*transformation_fn_expressions)
+
+        # sort feature order if it was altered by transformation functions
+        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
+        sorted_feature_names = [ft.name for ft in sorded_features]
+        dataset = dataset.select(*sorted_feature_names)
+        return dataset
 
 
 class SchemaError(Exception):

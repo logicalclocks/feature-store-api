@@ -122,7 +122,7 @@ public class SparkEngine {
     for (Map.Entry<String, String> entry : configurationMap.entrySet()) {
       if (!(sparkSession.conf().contains(entry.getKey())
               && (entry.getValue() == null
-              || sparkSession.conf().get(entry.getKey(), null) == entry.getValue()))) {
+              || sparkSession.conf().get(entry.getKey(), null).equals(entry.getValue())))) {
         throw new FeatureStoreException(exceptionText + entry.getKey());
       }
     }
@@ -182,7 +182,7 @@ public class SparkEngine {
    * @param saveMode
    */
   public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                    Map<String, String> writeOptions, SaveMode saveMode) {
+                    Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
     if (trainingDataset.getCoalesce()) {
@@ -310,7 +310,7 @@ public class SparkEngine {
   // Training Dataset. They use 2 different enumerators for dataFormat, as for instance, we don't allow
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
-                           Map<String, String> readOptions, String location) {
+                           Map<String, String> readOptions, String location) throws FeatureStoreException, IOException {
     setupConnectorHadoopConf(storageConnector);
 
     String path = "";
@@ -479,10 +479,13 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
 
-  public void setupConnectorHadoopConf(StorageConnector storageConnector) {
+  public void setupConnectorHadoopConf(StorageConnector storageConnector) throws FeatureStoreException, IOException {
     if (storageConnector == null) {
       return;
     }
+
+    // update connector to get new session token
+    storageConnector.refetch();
 
     switch (storageConnector.getStorageConnectorType()) {
       case S3:

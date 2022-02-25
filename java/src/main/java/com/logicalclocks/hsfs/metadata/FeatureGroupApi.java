@@ -180,12 +180,14 @@ public class FeatureGroupApi {
     hopsworksClient.handleRequest(postRequest);
   }
 
-  public FeatureGroupBase updateMetadata(FeatureGroupBase featureGroup, String queryParameter)
+  public <T extends FeatureGroupBase> T updateMetadata(FeatureGroupBase featureGroup, String queryParameter,
+                                                       Class<T> fgType)
       throws FeatureStoreException, IOException {
-    return updateMetadata(featureGroup, queryParameter, true);
+    return updateMetadata(featureGroup, queryParameter, true, fgType);
   }
 
-  public FeatureGroupBase updateMetadata(FeatureGroupBase featureGroup, String queryParameter, Object value)
+  public <T extends FeatureGroupBase> T updateMetadata(FeatureGroupBase featureGroup, String queryParameter,
+                                                       Object value, Class<T> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -207,7 +209,7 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info(featureGroupJson);
 
-    return hopsworksClient.handleRequest(putRequest, FeatureGroupBase.class);
+    return hopsworksClient.handleRequest(putRequest, fgType);
   }
 
   public FeatureGroupCommit featureGroupCommit(FeatureGroup featureGroup, FeatureGroupCommit featureGroupCommit)

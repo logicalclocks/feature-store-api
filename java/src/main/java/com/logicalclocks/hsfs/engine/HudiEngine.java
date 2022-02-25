@@ -84,8 +84,6 @@ public class HudiEngine {
   private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
-  private static final String HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates";
-
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
@@ -200,11 +198,6 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
-
-    // drop duplicates for insert and bulk insert only
-    if (HudiOperationType.BULK_INSERT == operation || HudiOperationType.INSERT == operation) {
-      hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
-    }
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {

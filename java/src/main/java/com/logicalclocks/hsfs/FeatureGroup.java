@@ -125,6 +125,13 @@ public class FeatureGroup extends FeatureGroupBase {
   public FeatureGroup() {
   }
 
+  // used for updates
+  public FeatureGroup(Integer id, String description, List<Feature> features) {
+    this.id = id;
+    this.description = description;
+    this.features = features;
+  }
+
   public FeatureGroup(FeatureStore featureStore, int id) {
     this.featureStore = featureStore;
     this.id = id;

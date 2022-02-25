@@ -35,12 +35,15 @@ public class FeatureGroupValidations {
   private Long validationTime;
   @Getter @Setter
   private List<ExpectationResult> expectationResults;
+  @Getter @Setter
+  private Boolean logActivity = true;
 
   @Override
   public String toString() {
     return "DataValidationResults{"
       + "validationTime=" + validationTime
       + ", expectationResults='" + expectationResults + '\''
+      + ", logActivity='" + logActivity + '\''
       + '}';
   }
 }

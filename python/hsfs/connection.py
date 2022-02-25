@@ -20,7 +20,7 @@ import importlib.util
 from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
-from hsfs import engine, client
+from hsfs import engine, client, util
 from hsfs.core import feature_store_api, project_api, hosts_api, services_api, rules_api
 
 AWS_DEFAULT_REGION = "default"
@@ -143,8 +143,8 @@ class Connection:
     def get_feature_store(self, name: str = None):
         """Get a reference to a feature store to perform operations on.
 
-        Defaulting to the project's default feature store. Shared feature stores can be
-        retrieved by passing the `name` argument.
+        Defaulting to the project name of default feature store. To get a
+        Shared feature stores, the project name of the feature store is required.
 
         # Arguments
             name: The name of the feature store, defaults to `None`.
@@ -153,8 +153,8 @@ class Connection:
             `FeatureStore`. A feature store handle object to perform operations on.
         """
         if not name:
-            name = client.get_instance()._project_name.lower() + "_featurestore"
-        return self._feature_store_api.get(name)
+            name = client.get_instance()._project_name
+        return self._feature_store_api.get(util.rewrite_feature_store_name(name))
 
     @not_connected
     def connect(self):

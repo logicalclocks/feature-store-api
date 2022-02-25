@@ -100,14 +100,14 @@ public class FeatureGroupValidationsApi {
 
 
   public FeatureGroupValidation put(FeatureGroupBase featureGroupBase,
-      FeatureGroupValidation featureGroupValidation)
+      FeatureGroupValidation featureGroupValidation, Boolean logActivity)
       throws FeatureStoreException, IOException {
     return put(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
-            featureGroupBase.getId(), featureGroupValidation);
+            featureGroupBase.getId(), featureGroupValidation, logActivity);
   }
 
   private FeatureGroupValidation put(Integer projectId, Integer featurestoreId, Integer entityId,
-      FeatureGroupValidation featureGroupValidation)
+      FeatureGroupValidation featureGroupValidation, Boolean logActivity)
       throws FeatureStoreException, IOException {
 
     HopsworksClient hopsworksClient = getInstance();
@@ -123,6 +123,10 @@ public class FeatureGroupValidationsApi {
     FeatureGroupValidations validations =
         FeatureGroupValidations.builder().expectationResults(featureGroupValidation.getExpectationResults())
         .validationTime(featureGroupValidation.getValidationTime()).build();
+    if (logActivity != null) {
+      validations.setLogActivity(logActivity);
+    }
+
     String results = hopsworksClient.getObjectMapper().writeValueAsString(validations);
     HttpPut putRequest = new HttpPut(uri);
     putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");

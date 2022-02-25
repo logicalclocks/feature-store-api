@@ -18,6 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
@@ -269,29 +270,31 @@ public class TrainingDataset {
   }
 
   /**
-   * Read the content (all splits if multiple available) of the training dataset.
+   * Read the content of the training dataset.
    *
-   * @return
+   * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read("");
   }
 
   /**
-   * Read the content (all splits if multiple available) of the training dataset.
+   * Read the content of the training dataset.
    *
    * @param readOptions options to pass to the Spark read operation
-   * @return
+   * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.read(this, "", readOptions);
+    return read("", readOptions);
   }
 
   /**
    * Read all a single split from the training dataset.
    *
    * @param split the split name
-   * @return
+   * @return Spark Dataset containing the training dataset data
    */
   public Dataset<Row> read(String split) throws FeatureStoreException, IOException {
     return read(split, null);
@@ -303,9 +306,13 @@ public class TrainingDataset {
    *
    * @param split       the split name
    * @param readOptions options to pass to the Spark read operation
-   * @return
+   * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
    */
   public Dataset<Row> read(String split, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+    if (this.splits != null && !this.splits.isEmpty() && Strings.isNullOrEmpty(split)) {
+      throw new FeatureStoreException("The training dataset has splits, please specify the split you want to read");
+    }
     return trainingDatasetEngine.read(this, split, readOptions);
   }
 
@@ -435,10 +442,10 @@ public class TrainingDataset {
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
     return getQuery(storage, false);
   }
-
+  
   @JsonIgnore
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getQuery(this, storage, withLabel);
+    return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
   }
 
   @JsonIgnore

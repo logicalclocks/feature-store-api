@@ -141,7 +141,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
     if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(featureData);
+      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
       if (validation != null) {
         validationId = validation.getValidationId();
       }

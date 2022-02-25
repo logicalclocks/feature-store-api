@@ -37,7 +37,7 @@ class DataValidationEngine:
             feature_store_id, entity_type
         )
 
-    def validate(self, feature_group, feature_dataframe):
+    def validate(self, feature_group, feature_dataframe, log_activity):
         """Perform data validation for a dataframe and send the result json to Hopsworks."""
 
         validation_time = int(round(time.time() * 1000))
@@ -136,6 +136,7 @@ class DataValidationEngine:
         validation_python = feature_group_validation.FeatureGroupValidation(
             validation_time=validation_time,
             expectation_results=expectation_results,
+            log_activity=log_activity,
         )
         return self._feature_group_validation_api.put(feature_group, validation_python)
 

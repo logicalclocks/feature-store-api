@@ -34,9 +34,9 @@ import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
 public class CodeApi {
 
-  public static final String ENTITY_ROOT_PATH = "{/entityType}";
-  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?kernelId,type}";
+  public static final String ENTITY_ROOT_PATH = "{/dataSetType}";
+  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/dataSetId}";
+  public static final String CODE_PATH = ENTITY_ID_PATH + "/code{?entityId,type,databricksClusterId}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CodeApi.class);
 
@@ -46,20 +46,21 @@ public class CodeApi {
     this.entityType = entityType;
   }
 
-  public Code post(FeatureGroupBase featureGroup, Code code, String kernelId, Code.RunType type)
+  public void post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
-    return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-            featureGroup.getId(), code, kernelId, type);
+    post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+            featureGroup.getId(), code, entityId, type, browserHostName);
   }
 
-  public Code post(TrainingDataset trainingDataset, Code code, String kernelId, Code.RunType type)
+  public void post(TrainingDataset trainingDataset, Code code, String entityId, Code.RunType type,
+                   String browserHostName)
           throws FeatureStoreException, IOException {
-    return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-            trainingDataset.getId(), code, kernelId, type);
+    post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+            trainingDataset.getId(), code, entityId, type, browserHostName);
   }
 
-  private Code post(Integer projectId, Integer featureStoreId, Integer entityId, Code code,
-                    String kernelId, Code.RunType type)
+  private void post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
+                    String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
@@ -67,10 +68,11 @@ public class CodeApi {
     String uri = UriTemplate.fromTemplate(pathTemplate)
             .set("projectId", projectId)
             .set("fsId", featureStoreId)
-            .set("entityType", entityType.getValue())
+            .set("dataSetType", entityType.getValue())
+            .set("dataSetId", dataSetId)
             .set("entityId", entityId)
-            .set("kernelId", kernelId)
             .set("type", type)
+            .set("databricksClusterId", browserHostName)
             .expand();
 
     String codeJson = hopsworksClient.getObjectMapper().writeValueAsString(code);
@@ -81,6 +83,6 @@ public class CodeApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info(codeJson);
 
-    return hopsworksClient.handleRequest(postRequest, Code.class);
+    hopsworksClient.handleRequest(postRequest);
   }
 }
