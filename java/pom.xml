@@ -217,7 +217,7 @@
         <!-- https://mvnrepository.com/artifact/org.apache.hudi/hudi-spark-bundle -->
         <dependency>
             <groupId>io.hops.hudi</groupId>
-            <artifactId>hudi-spark-bundle</artifactId>
+            <artifactId>hudi-spark3-bundle_${scala-short.version}</artifactId>
             <version>${hudi.version}</version>
             <scope>provided</scope>
             <exclusions>
