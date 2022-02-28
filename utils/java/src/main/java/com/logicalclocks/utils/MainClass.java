@@ -6,6 +6,7 @@ import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.HopsworksConnection;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

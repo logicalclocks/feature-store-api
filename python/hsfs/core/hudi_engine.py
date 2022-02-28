@@ -56,7 +56,6 @@ class HudiEngine:
     HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime"
     PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
     PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload"
-    HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates"
 
     def __init__(
         self,
@@ -164,9 +163,6 @@ class HudiEngine:
             self.HUDI_TABLE_OPERATION: operation,
             self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
-
-        if operation.lower() in [self.HUDI_BULK_INSERT, self.HUDI_INSERT]:
-            hudi_options[self.HUDI_WRITE_INSERT_DROP_DUPLICATES] = "true"
 
         if write_options:
             hudi_options.update(write_options)

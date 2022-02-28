@@ -890,10 +890,6 @@ class FeatureStore:
         """
         return self._transformation_function_engine.get_transformation_fns()
 
-    def register_builtin_transformation_functions(self):
-        """Register hsfs built-in transformation functions."""
-        self._transformation_function_engine.register_builtin_transformation_fns()
-
     @property
     def id(self):
         """Id of the feature store."""

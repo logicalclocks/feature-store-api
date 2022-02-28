@@ -102,6 +102,7 @@ public class HudiEngine {
   protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
+
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
@@ -214,11 +215,6 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
-
-    // drop duplicates for insert and bulk insert only
-    if (HudiOperationType.BULK_INSERT == operation || HudiOperationType.INSERT == operation) {
-      hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
-    }
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {
