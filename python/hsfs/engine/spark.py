@@ -22,6 +22,8 @@ import numpy as np
 import pandas as pd
 
 # in case importing in %%local
+from hsfs.feature_group import StreamFeatureGroup
+
 try:
     from pyspark.sql import SparkSession, DataFrame
     from pyspark.rdd import RDD
@@ -165,36 +167,43 @@ class Engine:
         online_write_options,
         validation_id=None,
     ):
-
-        if storage == "offline" or not online_enabled:
-            self._save_offline_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                offline_write_options,
-                validation_id,
-            )
-        elif storage == "online":
-            self._save_online_dataframe(feature_group, dataframe, online_write_options)
-        elif online_enabled and storage is None:
-            if (
-                feature_group.time_travel_format == "HUDI"
-                and operation != "bulk_insert"
-            ):
+        try:
+            if isinstance(feature_group, StreamFeatureGroup):
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
                 )
             else:
-                self._save_offline_dataframe(
-                    feature_group,
-                    dataframe,
-                    operation,
-                    offline_write_options,
-                )
-                self._save_online_dataframe(
-                    feature_group, dataframe, online_write_options
-                )
-        else:
+                if storage == "offline" or not online_enabled:
+                    self._save_offline_dataframe(
+                        feature_group,
+                        dataframe,
+                        operation,
+                        offline_write_options,
+                        validation_id,
+                    )
+                elif storage == "online":
+                    self._save_online_dataframe(
+                        feature_group, dataframe, online_write_options
+                    )
+                elif online_enabled and storage is None:
+                    if (
+                        feature_group.time_travel_format == "HUDI"
+                        and operation != "bulk_insert"
+                    ):
+                        self._save_online_dataframe(
+                            feature_group, dataframe, online_write_options
+                        )
+                    else:
+                        self._save_offline_dataframe(
+                            feature_group,
+                            dataframe,
+                            operation,
+                            offline_write_options,
+                        )
+                        self._save_online_dataframe(
+                            feature_group, dataframe, online_write_options
+                        )
+        except Exception:
             raise FeatureStoreException(
                 "Error writing to offline and online feature store."
             )

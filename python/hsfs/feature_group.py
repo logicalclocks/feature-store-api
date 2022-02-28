@@ -32,6 +32,7 @@ from hsfs.core import (
     on_demand_feature_group_engine,
     expectations_api,
 )
+from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
@@ -1362,30 +1363,29 @@ class StreamFeatureGroup(FeatureGroup):
         event_time=None,
     ):
         super().__init__(
-            name,
-            version,
-            featurestore_id,
-            description,
-            partition_key,
-            primary_key,
-            hudi_precombine_key,
-            featurestore_name,
-            created,
-            creator,
-            id,
-            features,
-            location,
-            True,
-            "HUDI",
-            statistics_config,
-            validation_type,
-            expectations,
-            online_topic_name,
-            event_time,
+            name=name,
+            version=version,
+            featurestore_id=featurestore_id,
+            description=description,
+            partition_key=partition_key,
+            primary_key=primary_key,
+            hudi_precombine_key=hudi_precombine_key,
+            featurestore_name=featurestore_name,
+            created=created,
+            creator=creator,
+            id=id,
+            features=features,
+            location=location,
+            online_enabled=True,
+            time_travel_format="HUDI",
+            statistics_config=statistics_config,
+            validation_type=validation_type,
+            expectations=expectations,
+            online_topic_name=online_topic_name,
+            event_time=event_time,
         )
 
-        self._options = None
-        self._spark_options = None
+        self._deltastreamer_jobconf = None
 
     def save(
         self,
@@ -1428,7 +1428,16 @@ class StreamFeatureGroup(FeatureGroup):
 
         # when creating a stream feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the write_options with the key "spark"
-        self._spark_options = write_options.pop("spark", None)
+        _spark_options = write_options.pop("spark", None)
+        _write_options = (
+            [{"name": k, "value": v} for k, v in write_options.items()]
+            if write_options
+            else None
+        )
+        self._deltastreamer_jobconf = DeltaStreamerJobConf(
+            _spark_options, _write_options
+        )
+
         self._feature_group_engine.save(self, feature_dataframe, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
@@ -1477,10 +1486,7 @@ class StreamFeatureGroup(FeatureGroup):
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
-            "writeOptions": [{"name": k, "value": v} for k, v in self._options.items()]
-            if self._options
-            else None,
-            "sparkOptions": self._spark_options,
+            "deltaStreamerJobConf": self._deltastreamer_jobconf,
         }
 
 

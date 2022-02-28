@@ -32,8 +32,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.SchemaParseException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -417,38 +415,22 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public List<String> getComplexFeatures() {
-    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+    return utils.getComplexFeatures(features);
   }
 
   @JsonIgnore
   public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    Schema.Field complexField = schema.getFields().stream().filter(field ->
-        field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
-            new FeatureStoreException(
-                "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
-
-    return complexField.schema().toString(true);
+    return utils.getFeatureAvroSchema(featureName, utils.getDeserializedAvroSchema(getAvroSchema()));
   }
 
   @JsonIgnore
   public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    List<Schema.Field> fields = schema.getFields().stream()
-        .map(field -> getComplexFeatures().contains(field.name())
-            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
-            : new Schema.Field(field.name(), field.schema(), null, null))
-        .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+    return utils.getEncodedAvroSchema(getDeserializedAvroSchema(), utils.getComplexFeatures(features));
   }
 
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
-    try {
-      return new Schema.Parser().parse(getAvroSchema());
-    } catch (SchemaParseException e) {
-      throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
-    }
+    return utils.getDeserializedAvroSchema(getAvroSchema());
   }
 
   /**

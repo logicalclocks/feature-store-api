@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2022 Logical Clocks AB
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.logicalclocks.hsfs.engine;
 
 import com.google.common.base.Strings;
@@ -6,6 +22,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -15,6 +32,9 @@ import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.SneakyThrows;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParseException;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -245,6 +265,11 @@ public class FeatureGroupUtils {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
+  // TODO (davit): getOnlineTopicName should be FeatreGroup base and then overwritten here
+  public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
+  }
+
   private boolean checkIfClassExists(String className) {
     try  {
       Class.forName(className, true, this.getClass().getClassLoader());
@@ -270,5 +295,35 @@ public class FeatureGroupUtils {
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";
 
+  }
+
+  public List<String> getComplexFeatures(List<Feature> features) {
+    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+  }
+
+  public String getFeatureAvroSchema(String featureName, Schema schema) throws FeatureStoreException, IOException {
+    Schema.Field complexField = schema.getFields().stream().filter(field ->
+        field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
+        new FeatureStoreException(
+            "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
+    return complexField.schema().toString(true);
+  }
+
+  public String getEncodedAvroSchema(Schema schema, List<String> complexFeatures)
+      throws FeatureStoreException, IOException {
+    List<Schema.Field> fields = schema.getFields().stream()
+        .map(field -> complexFeatures.contains(field.name())
+            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
+            : new Schema.Field(field.name(), field.schema(), null, null))
+        .collect(Collectors.toList());
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+  }
+
+  public Schema getDeserializedAvroSchema(String avroSchema) throws FeatureStoreException, IOException {
+    try {
+      return new Schema.Parser().parse(avroSchema);
+    } catch (SchemaParseException e) {
+      throw new FeatureStoreException("Failed to deserialize online feature group schema" + avroSchema + ".");
+    }
   }
 }

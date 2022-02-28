@@ -76,7 +76,7 @@ public class MainClass {
 
     Map<String, String> writeOptions = (Map<String, String>) jobConf.get("write_options");
 
-    if (op.equals("stream_to_hudi_table")) {
+    if (op.equals("offline_fg_backfill")) {
       SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);
     }
   }

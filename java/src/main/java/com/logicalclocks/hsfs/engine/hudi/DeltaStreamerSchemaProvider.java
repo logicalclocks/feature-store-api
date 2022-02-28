@@ -32,13 +32,13 @@ public class DeltaStreamerSchemaProvider extends SchemaProvider {
   public DeltaStreamerSchemaProvider(TypedProperties props, JavaSparkContext jssc) {
     super(props, jssc);
     DataSourceUtils.checkRequiredProperties(props,
-        Collections.singletonList("com.logicalclocks.hsfs.FeatureGroup.schema"));
+        Collections.singletonList(HudiEngine.FEATURE_GROUP_SCHEMA));
   }
 
   @SneakyThrows
   @Override
   public Schema getSourceSchema() {
-    String featureGroupSchema = this.config.getString("com.logicalclocks.hsfs.FeatureGroup.schema");
+    String featureGroupSchema = this.config.getString(HudiEngine.FEATURE_GROUP_SCHEMA);
     try {
       return new Schema.Parser().parse(featureGroupSchema);
     } catch (SchemaParseException e) {

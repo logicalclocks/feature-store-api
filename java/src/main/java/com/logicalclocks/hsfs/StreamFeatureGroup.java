@@ -26,7 +26,6 @@ import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.AllArgsConstructor;
@@ -37,9 +36,6 @@ import lombok.NonNull;
 import lombok.Setter;
 
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.SchemaParseException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -92,10 +88,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private String onlineTopicName;
 
   @Setter
-  private List<Option> writeOptions;
-
-  @Setter
-  private JobConfiguration sparkOptions;
+  private DeltaStreamerJobConf deltaStreamerJobConf;
 
   private final StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -189,7 +182,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     }
   }
 
-  public <S> void save(S featureData, Map<String, String> writeOptions, Map<String, String> sparkOptions)
+  public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration sparkOptions)
       throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
     codeEngine.saveCode(this);
@@ -304,44 +297,28 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
     if (avroSchema == null) {
-      avroSchema = streamFeatureGroupEngine.getAvroSchema(this);
+      avroSchema = utils.getAvroSchema(this);
     }
     return avroSchema;
   }
 
   @JsonIgnore
   public List<String> getComplexFeatures() {
-    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+    return utils.getComplexFeatures(features);
   }
 
   @JsonIgnore
   public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    Schema.Field complexField = schema.getFields().stream().filter(field ->
-            field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
-            new FeatureStoreException(
-                    "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
-    return complexField.schema().toString(true);
+    return utils.getFeatureAvroSchema(featureName, utils.getDeserializedAvroSchema(getAvroSchema()));
   }
 
   @JsonIgnore
   public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    List<Schema.Field> fields = schema.getFields().stream()
-            .map(field -> getComplexFeatures().contains(field.name())
-                    ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
-                    : new Schema.Field(field.name(), field.schema(), null, null))
-            .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(),
-                schema.isError(), fields).toString(true);
+    return utils.getEncodedAvroSchema(getDeserializedAvroSchema(), utils.getComplexFeatures(features));
   }
 
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
-    try {
-      return new Schema.Parser().parse(getAvroSchema());
-    } catch (SchemaParseException e) {
-      throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
-    }
+    return utils.getDeserializedAvroSchema(getAvroSchema());
   }
 }

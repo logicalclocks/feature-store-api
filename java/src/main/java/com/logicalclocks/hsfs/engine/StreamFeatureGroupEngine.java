@@ -16,9 +16,11 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.logicalclocks.hsfs.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -53,13 +55,13 @@ public class StreamFeatureGroupEngine {
    * @param dataset
    * @param partitionKeys
    * @param writeOptions
-   * @param sparkOptions
+   * @param sparkJobConfiguration
    * @throws FeatureStoreException
    * @throws IOException
    */
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions,
-                                     Map<String, String> sparkOptions)
+                                     JobConfiguration sparkJobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
@@ -98,10 +100,14 @@ public class StreamFeatureGroupEngine {
     }
 
     // set write options for delta streamer job
-    featureGroup.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+    DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
+    deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
         .map(e -> new Option(e.getKey(), e.getValue()))
         .collect(Collectors.toList())
         : null);
+    deltaStreamerJobConf.setSparkJobConfiguration(sparkJobConfiguration);
+
+    featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
 
     // Send Hopsworks the request to create a new feature group
     StreamFeatureGroup apiFG = featureGroupApi.save(featureGroup);
@@ -149,10 +155,6 @@ public class StreamFeatureGroupEngine {
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
-  }
-
-  public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 
   public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData, HudiOperationType operation,
