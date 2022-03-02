@@ -99,9 +99,15 @@ class HudiEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             self._feature_store_id
         )
-        self._connstr = self._storage_connector_api.get(
-            self._feature_store_name
-        ).connection_string
+
+        if self._feature_store_name:
+            # For read operations we don't actually need the connector
+            # Only to sync write operations
+            self._connstr = self._storage_connector_api.get(
+                self._feature_store_name
+            ).connection_string
+        else:
+            self._connstr = None
 
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
@@ -212,6 +218,9 @@ class HudiEngine:
         )
 
     def _get_conn_str(self):
+        if not self._connstr:
+            return ""
+
         credentials = {
             "sslTrustStore": client.get_instance()._get_jks_trust_store_path(),
             "trustStorePassword": client.get_instance()._cert_key,

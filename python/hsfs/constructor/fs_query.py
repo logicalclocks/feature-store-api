@@ -15,6 +15,7 @@
 #
 
 import humps
+from hsfs import engine
 from hsfs.constructor import hudi_feature_group_alias, on_demand_feature_group_alias
 
 
@@ -77,3 +78,19 @@ class FsQuery:
     @property
     def hudi_cached_feature_groups(self):
         return self._hudi_cached_feature_groups
+
+    def register_on_demand(self):
+        if self._on_demand_fg_aliases is None:
+            return
+
+        for on_demand_fg_alias in self._on_demand_fg_aliases:
+            engine.get_instance().register_on_demand_temporary_table(
+                on_demand_fg_alias.on_demand_feature_group,
+                on_demand_fg_alias.alias,
+            )
+
+    def register_hudi_tables(self, feature_store_id, feature_store_name, read_options):
+        for hudi_fg in self._hudi_cached_feature_groups:
+            engine.get_instance().register_hudi_temporary_table(
+                hudi_fg, feature_store_id, feature_store_name, read_options
+            )
