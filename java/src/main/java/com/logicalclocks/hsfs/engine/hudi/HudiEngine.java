@@ -287,7 +287,7 @@ public class HudiEngine {
     // check if table was initiated and if not initiate
     Path basePath = new Path(streamFeatureGroup.getLocation());
     FileSystem fs = basePath.getFileSystem(sparkSession.sparkContext().hadoopConfiguration());
-    if (fs.exists(new Path(basePath, HoodieTableMetaClient.METAFOLDER_NAME))) {
+    if (!fs.exists(new Path(basePath, HoodieTableMetaClient.METAFOLDER_NAME))) {
       createEmptyTable(streamFeatureGroup);
     }
 
