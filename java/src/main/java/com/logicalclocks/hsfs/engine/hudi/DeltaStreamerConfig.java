@@ -53,9 +53,9 @@ public class DeltaStreamerConfig implements Serializable {
     // subclass of org.apache.hudi.utilities.schema.SchemaProvider to attach schemas to input & target table data,
     cfg.schemaProviderClassName = HudiEngine.SCHEMA_PROVIDER;
 
-    if (writeOptions.get("minSyncIntervalSeconds") != null) {
+    if (writeOptions.get(HudiEngine.MIN_SYNC_INTERVAL_SECONDS) != null) {
       // the min sync interval of each sync in continuous mode
-      cfg.minSyncIntervalSeconds = Integer.parseInt(writeOptions.get("minSyncIntervalSeconds"));
+      cfg.minSyncIntervalSeconds = Integer.parseInt(writeOptions.get(HudiEngine.MIN_SYNC_INTERVAL_SECONDS));
       // Delta Streamer runs in continuous mode running source-fetch -> Transform -> Hudi Write in loop
       cfg.continuousMode = true;
     }
@@ -65,7 +65,7 @@ public class DeltaStreamerConfig implements Serializable {
     cfg.checkpoint = writeOptions.get(HudiEngine.CHECKPOINT_PROVIDER_PATH_PROP);
     cfg.initialCheckpointProvider = HudiEngine.INITIAL_CHECKPOINT_PROVIDER;
 
-    cfg.sparkMaster = "yarn";
+    cfg.sparkMaster = HudiEngine.SPARK_MASTER;
 
     // A subclass or a list of subclasses of org.apache.hudi.utilities.transform.Transformer. Allows transforming raw
     // source Dataset to a target Dataset (conforming to target schema) before writing. Default : Not set.

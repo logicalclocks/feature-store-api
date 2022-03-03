@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.SneakyThrows;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +132,7 @@ public class StreamFeatureGroupEngine {
       featureGroup.setFeatures(features);
     }
 
-    // Write the dataframe
+    // Write the online dataframe
     insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
         SaveMode.APPEND, writeOptions);
 
@@ -175,11 +176,6 @@ public class StreamFeatureGroupEngine {
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
       // After that it's going to be just a normal append
       featureGroupApi.deleteContent(streamFeatureGroup);
-    }
-
-    if (operation.equals(HudiOperationType.BULK_INSERT)) {
-      SparkEngine.getInstance().writeOfflineDataframe(streamFeatureGroup, featureData, operation,
-          writeOptions, validationId);
     }
 
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,

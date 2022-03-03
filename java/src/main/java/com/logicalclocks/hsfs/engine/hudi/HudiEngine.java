@@ -23,13 +23,18 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
+import org.apache.hudi.common.table.HoodieTableMetaClient;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
+
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
@@ -37,13 +42,13 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import org.apache.hadoop.fs.FileSystem;
-
 import scala.collection.Seq;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class HudiEngine {
 
@@ -69,7 +74,7 @@ public class HudiEngine {
   protected static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
       "hoodie.datasource.hive_sync.partition_extractor_class";
   private static final String HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP =
-          "hoodie.datasource.hive_sync.support_timestamp";
+      "hoodie.datasource.hive_sync.support_timestamp";
   protected static final String DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
       "org.apache.hudi.hive.MultiPartKeysValueExtractor";
   protected static final String HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL =
@@ -100,6 +105,16 @@ public class HudiEngine {
   protected static final String DELTA_STREAMER_TRANSFORMER =
       "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerTransformer";
   protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
+
+  protected static final String MIN_SYNC_INTERVAL_SECONDS = "minSyncIntervalSeconds";
+  protected static final String SPARK_MASTER = "yarn";
+  protected static final String PROJECT_ID = "projectId";
+  protected static final String FEATURE_STORE_NAME = "featureStoreName";
+  protected static final String FEATURE_GROUP_NAME = "featureGroupName";
+  protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
+  protected static final String VALIDATION_ID = "validationId";
+  protected static final String FUNCTION_TYPE = "functionType";
+  protected static final String STREAMING_QUERY = "streamingQuery";
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
@@ -172,7 +187,7 @@ public class HudiEngine {
   }
 
   private Map<String, String> setupHudiWriteOpts(FeatureGroupBase featureGroup, HudiOperationType operation,
-                                                 Map<String, String> writeOptions)
+                                                Map<String, String> writeOptions)
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
@@ -243,29 +258,46 @@ public class HudiEngine {
     return hudiArgs;
   }
 
+  private void createEmptyTable(StreamFeatureGroup streamFeatureGroup) throws IOException, FeatureStoreException {
+    Configuration configuration = SparkEngine.getInstance().getSparkSession().sparkContext().hadoopConfiguration();
+    Properties properties = new Properties();
+    properties.putAll(setupHudiWriteOpts((FeatureGroupBase) streamFeatureGroup,
+        HudiOperationType.BULK_INSERT, null));
+    HoodieTableMetaClient.initTableAndGetMetaClient(configuration, streamFeatureGroup.getLocation(), properties);
+  }
+
   public void streamToHoodieTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup,
                                   Map<String, String> writeOptions) throws Exception {
 
-    Map<String, String> hudiWriteOpts = setupHudiWriteOpts(streamFeatureGroup, HudiOperationType.UPSERT, writeOptions);
-    hudiWriteOpts.put("projectId", String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
-    hudiWriteOpts.put("featureStoreName", streamFeatureGroup.getFeatureStore().getName());
-    hudiWriteOpts.put("featureGroupName", streamFeatureGroup.getName());
-    hudiWriteOpts.put("featureGroupVersion", String.valueOf(streamFeatureGroup.getVersion()));
+    Map<String, String> hudiWriteOpts = setupHudiWriteOpts(streamFeatureGroup, HudiOperationType.UPSERT,
+        writeOptions);
+    hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
+    hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStore().getName());
+    hudiWriteOpts.put(FEATURE_GROUP_NAME, streamFeatureGroup.getName());
+    hudiWriteOpts.put(FEATURE_GROUP_VERSION, String.valueOf(streamFeatureGroup.getVersion()));
     hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));
     hudiWriteOpts.put(HUDI_BASE_PATH, streamFeatureGroup.getLocation());
     hudiWriteOpts.put(CHECKPOINT_PROVIDER_PATH_PROP, streamFeatureGroup.getLocation());
     hudiWriteOpts.put(HUDI_KAFKA_TOPIC, streamFeatureGroup.getOnlineTopicName());
     hudiWriteOpts.put(FEATURE_GROUP_SCHEMA, streamFeatureGroup.getAvroSchema());
-    hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY, hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
-
+    hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY,
+        hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
     writeOptions.putAll(hudiWriteOpts);
-    TypedProperties typedProperties = deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
 
+    // check if table was initiated and if not initiate
+    Path basePath = new Path(streamFeatureGroup.getLocation());
+    FileSystem fs = basePath.getFileSystem(sparkSession.sparkContext().hadoopConfiguration());
+    if (fs.exists(new Path(basePath, HoodieTableMetaClient.METAFOLDER_NAME))) {
+      createEmptyTable(streamFeatureGroup);
+    }
+
+    TypedProperties typedProperties = deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
-    fgCommit.setValidationId((Integer) typedProperties.get("validationId"));
+    fgCommit.setValidationId((Integer) typedProperties.get(VALIDATION_ID));
     featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
 
-    if (writeOptions.containsKey("functionType") && writeOptions.get("functionType").equals("streamingQuery")) {
+    if (writeOptions.containsKey(FUNCTION_TYPE) && writeOptions.get(FUNCTION_TYPE)
+        .equals(STREAMING_QUERY)) {
       streamFeatureGroup.computeStatistics();
     }
   }
