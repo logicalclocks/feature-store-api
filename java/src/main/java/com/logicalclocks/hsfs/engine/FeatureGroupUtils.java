@@ -223,13 +223,11 @@ public class FeatureGroupUtils {
   public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
-    if (featureGroupBase instanceof FeatureGroup) {
-      FeatureGroup featureGroup = (FeatureGroup) featureGroupBase;
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.NONE)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
       // operation is only valid for time travel enabled feature group
-      if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
-        throw new FeatureStoreException("delete function is only valid for "
+      throw new FeatureStoreException("delete function is only valid for "
             + "time travel enabled feature group");
-      }
     }
     return getCommitDetails(featureGroupBase, null, limit);
   }
@@ -243,13 +241,11 @@ public class FeatureGroupUtils {
   public <S> FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, S genericDataset,
                                          Map<String, String> writeOptions)
       throws IOException, FeatureStoreException, ParseException {
-    if (featureGroupBase instanceof FeatureGroup) {
-      FeatureGroup featureGroup = (FeatureGroup) featureGroupBase;
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.NONE)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
       // operation is only valid for time travel enabled feature group
-      if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.NONE) {
-        throw new FeatureStoreException("delete function is only valid for "
+      throw new FeatureStoreException("delete function is only valid for "
             + "time travel enabled feature group");
-      }
     }
 
     if (engine().equals("Spark")) {
@@ -261,12 +257,7 @@ public class FeatureGroupUtils {
     }
   }
 
-  public String getAvroSchema(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
-  }
-
-  // TODO (davit): getOnlineTopicName should be FeatreGroup base and then overwritten here
-  public String getAvroSchema(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
+  public String getAvroSchema(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
   }
 

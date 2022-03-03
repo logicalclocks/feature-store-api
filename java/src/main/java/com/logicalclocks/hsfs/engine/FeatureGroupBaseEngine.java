@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
@@ -110,6 +111,8 @@ public class FeatureGroupBaseEngine {
   private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
     if (featureGroup instanceof FeatureGroup) {
       return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    } else if (featureGroup instanceof StreamFeatureGroup) {
+      return new StreamFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     } else if (featureGroup instanceof OnDemandFeatureGroup) {
       return new OnDemandFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     }

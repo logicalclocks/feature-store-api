@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -32,6 +33,7 @@ import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.avro.Schema;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -470,5 +472,41 @@ public class FeatureGroupBase {
   @JsonIgnore
   public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {
     return DataValidationEngine.getInstance().getValidations(this);
+  }
+
+  @JsonIgnore
+  public String getOnlineTopicName() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public List<String> getComplexFeatures() {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public TimeTravelFormat getTimeTravelFormat() {
+    // This method should be overridden by the FeatureGroup classes
+    return null;
   }
 }

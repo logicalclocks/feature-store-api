@@ -756,18 +756,8 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.  No data is available for feature group with this commit date.
             `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "read_changes can only be used on time travel enabled feature groups"
-            )
-
-        return (
-            self.select_all()
-            .pull_changes(start_wallclock_time, end_wallclock_time)
-            .read(False, "default", read_options)
+        return self._feature_group_engine.read_changes(
+            self, start_wallclock_time, end_wallclock_time, read_options
         )
 
     def show(self, n: int, online: Optional[bool] = False):
@@ -1048,13 +1038,6 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`.
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "commit_delete_record can only be used on time travel enabled feature groups"
-            )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
     def as_of(self, wallclock_time):

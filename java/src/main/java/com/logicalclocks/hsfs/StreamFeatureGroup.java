@@ -124,6 +124,18 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
+  // used for updates
+  public StreamFeatureGroup(Integer id, String description, List<Feature> features) {
+    this.id = id;
+    this.description = description;
+    this.features = features;
+  }
+
+  public StreamFeatureGroup(FeatureStore featureStore, int id) {
+    this.featureStore = featureStore;
+    this.id = id;
+  }
+
   public Query read() throws FeatureStoreException, IOException {
     return selectAll();
   }
