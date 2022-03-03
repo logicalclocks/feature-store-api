@@ -16,7 +16,7 @@
 
 from hsfs import client, training_dataset
 from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement
+from hsfs.constructor import serving_prepared_statement, fs_query
 
 
 class TrainingDatasetApi:
@@ -73,7 +73,10 @@ class TrainingDatasetApi:
             "query",
         ]
         query_params = {"withLabel": with_label}
-        return _client._send_request("GET", path_params, query_params)
+
+        return fs_query.FsQuery.from_response_json(
+            _client._send_request("GET", path_params, query_params)
+        )
 
     def compute(self, training_dataset_instance, td_app_conf):
         """

@@ -171,7 +171,8 @@ class Engine:
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
     def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        raise NotImplementedError
+        # No op to avoid query failure
+        pass
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
