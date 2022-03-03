@@ -83,7 +83,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   private String avroSchema;
 
-  @Getter
+  @Getter(onMethod = @__(@Override))
   @Setter
   private String onlineTopicName;
 

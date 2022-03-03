@@ -62,7 +62,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "cachedFeaturegroupDTO";
 
-  @Getter
+  @Getter(onMethod = @__(@Override))
   @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
@@ -81,7 +81,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   private String avroSchema;
 
-  @Getter
+  @Getter(onMethod = @__(@Override))
   @Setter
   private String onlineTopicName;
 

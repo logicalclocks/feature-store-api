@@ -474,7 +474,6 @@ public class FeatureGroupBase {
     return DataValidationEngine.getInstance().getValidations(this);
   }
 
-  @JsonIgnore
   public String getOnlineTopicName() throws FeatureStoreException, IOException {
     // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
     return null;
@@ -504,7 +503,6 @@ public class FeatureGroupBase {
     return null;
   }
 
-  @JsonIgnore
   public TimeTravelFormat getTimeTravelFormat() {
     // This method should be overridden by the FeatureGroup classes
     return null;
