@@ -125,9 +125,7 @@ def get_timestamp_from_date_string(input_date):
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
-    date_obj = datetime.fromtimestamp(timestamp / 1000)
-    date_str = date_obj.strftime("%Y%m%d%H%M%S")
-    return date_str
+    return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S")
 
 
 def setup_pydoop():
