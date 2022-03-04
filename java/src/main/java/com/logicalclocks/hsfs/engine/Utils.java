@@ -166,7 +166,7 @@ public class Utils {
           put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmmss");
           put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$"),
               "yyyyMMddHHmmssSSS");
-    }};
+        }};
 
     String tempDate = inputDate.replace("/", "")
         .replace("-", "").replace(" ", "")
