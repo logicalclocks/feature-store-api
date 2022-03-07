@@ -216,6 +216,11 @@ public class FeatureStore {
     return (StorageConnector.KafkaConnector) storageConnectorApi.getByName(this, name);
   }
 
+  public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
+      IOException {
+    return (StorageConnector.BigqueryConnector) storageConnectorApi.getByName(this, name);
+  }
+
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }

@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 import os
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -33,6 +32,7 @@ class StorageConnector(ABC):
     SNOWFLAKE = "SNOWFLAKE"
     KAFKA = "KAFKA"
     GCS = "GCS"
+    BIGQUERY = "BIGQUERY"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -928,7 +928,6 @@ class KafkaConnector(StorageConnector):
             include_metadata,
         )
 
-
 class GcsConnector(StorageConnector):
     type = StorageConnector.GCS
 
@@ -1035,3 +1034,102 @@ class GcsConnector(StorageConnector):
             path: Path to prepare for reading from Google cloud storage. Defaults to `None`.
         """
         return engine.get_instance().setup_storage_connector(self, path)
+
+
+class BigQueryConnector(StorageConnector):
+    type = StorageConnector.BIGQUERY
+    BIGQUERY_FORMAT = "bigquery"
+    BIGQ_CREDENTIALS_FILE = "credentialsFile"
+    BIGQ_PARENT_PROJECT = "parentProject"
+    BIGQ_MATERIAL_DATASET = "materializationDataset"
+    BIGQ_VIEWS_ENABLED = "viewsEnabled"
+    BIGQ_PROJECT = "project"
+    BIGQ_DATASET = "dataset"
+
+    def __init__(
+        self,
+        id,
+        name,
+        featurestore_id,
+        description=None,
+        # members specific to type of connector
+        key_path=None,
+        parent_project=None,
+        dataset=None,
+        query_table=None,
+        query_project=None,
+        materialization_dataset=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+        self._key_path = key_path
+        self._parent_project = parent_project
+        self._dataset = dataset
+        self._query_table = query_table
+        self._query_project = query_project
+        self._materialization_dataset = materialization_dataset
+
+    @property
+    def key_path(self):
+        return self._key_path
+
+    @property
+    def parent_project(self):
+        return self._parent_project
+
+    @property
+    def dataset(self):
+        return self._dataset
+
+    @property
+    def query_table(self):
+        return self._query_table
+
+    @property
+    def query_project(self):
+        return self._query_project
+
+    @property
+    def materialization_dataset(self):
+        return self._materialization_dataset
+
+    def spark_options(self):
+        properties = {}
+        local_key_path = engine.get_instance().add_file(self._key_path)
+        properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
+        properties[self.BIGQ_PARENT_PROJECT] = self._parent_project
+        if self._materialization_dataset:
+            properties[self.BIGQ_MATERIAL_DATASET] = self._materialization_dataset
+            properties[self.BIGQ_VIEWS_ENABLED] = "true"
+
+        if self._query_project:
+            properties[self.BIGQ_PROJECT] = self._query_project
+
+        if self._dataset:
+            properties[self.BIGQ_DATASET] = self._dataset
+
+        return properties
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        self.refetch()
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
+        if self._query_table:
+            path = self._query_table
+        elif query:
+            path = query
+        else:
+            raise ValueError(
+                "Either query should be provided "
+                "or Query Project,Dataset and Table should be set"
+            )
+
+        return engine.get_instance().read(self, self.BIGQUERY_FORMAT, options, path)
