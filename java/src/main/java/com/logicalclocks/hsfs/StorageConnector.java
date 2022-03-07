@@ -34,7 +34,6 @@ import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -361,14 +360,13 @@ public abstract class StorageConnector {
     private String connectionString;
 
     @Getter @Setter
-    private String arguments;
+    private List<Option> arguments;
 
     public Map<String, String> sparkOptions() {
-      Map<String, String> options = Arrays.stream(arguments.split(","))
-          .map(arg -> arg.split("="))
-          .collect(Collectors.toMap(a -> a[0], a -> a[1]));
-      options.put(Constants.JDBC_URL, connectionString);
-      return options;
+      Map<String, String> readOptions = arguments.stream()
+              .collect(Collectors.toMap(arg -> arg.getName(), arg -> arg.getValue()));
+      readOptions.put(Constants.JDBC_URL, connectionString);
+      return readOptions;
     }
 
     @Override

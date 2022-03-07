@@ -726,7 +726,7 @@ class JdbcConnector(StorageConnector):
         arguments.
         """
         options = (
-            {a[0]: a[1] for a in [arg.split("=") for arg in self._arguments.split(",")]}
+            {arg.get("name"): arg.get("value") for arg in self._arguments}
             if self._arguments
             else {}
         )
