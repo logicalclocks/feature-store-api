@@ -186,6 +186,10 @@ public class FeatureStore {
     return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
   }
 
+  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.KafkaConnector) storageConnectorApi.getByName(this, name);
+  }
+
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
   }

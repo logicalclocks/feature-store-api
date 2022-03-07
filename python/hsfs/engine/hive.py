@@ -23,6 +23,8 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
+from pyhive.exc import NotSupportedError
+
 from hsfs import client, feature, util
 from hsfs.core import (
     feature_group_api,
@@ -166,6 +168,18 @@ class Engine:
 
     def read_options(self, data_format, provided_options):
         return {}
+
+    def read_stream(
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
+    ):
+        raise NotSupportedError(
+            "Streaming Sources are not supported for pure Python Environments."
+        )
 
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
@@ -414,3 +428,8 @@ class Engine:
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
+
+    def add_file(self, file):
+        # if streaming connectors are implemented in the future, this method
+        # can be used to materialize certificates locally
+        return file

@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
+from pyhive.exc import NotSupportedError
 
 from hsfs import engine
 from hsfs.core import storage_connector_api
@@ -31,6 +32,7 @@ class StorageConnector(ABC):
     REDSHIFT = "REDSHIFT"
     ADLS = "ADLS"
     SNOWFLAKE = "SNOWFLAKE"
+    KAFKA = "KAFKA"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -293,7 +295,11 @@ class RedshiftConnector(StorageConnector):
         self._database_password = database_password
         self._database_group = database_group
         self._iam_role = iam_role
-        self._arguments = arguments
+        self._arguments = (
+            {arg["name"]: arg.get("value", None) for arg in arguments}
+            if isinstance(arguments, list)
+            else arguments
+        )
         self._expiration = expiration
 
     @property
@@ -359,6 +365,10 @@ class RedshiftConnector(StorageConnector):
     @property
     def arguments(self):
         """Additional JDBC, REDSHIFT, or Snowflake arguments."""
+        if isinstance(self._arguments, dict):
+            return ",".join(
+                [k + ("" if v is None else "=" + v) for k, v in self._arguments.items()]
+            )
         return self._arguments
 
     def spark_options(self):
@@ -375,8 +385,8 @@ class RedshiftConnector(StorageConnector):
             + "/"
             + self._database_name
         )
-        if self._arguments is not None:
-            connstr = connstr + "?" + self._arguments
+        if isinstance(self.arguments, str):
+            connstr = connstr + "?" + self.arguments
         props = {
             "url": connstr,
             "driver": self._database_driver,
@@ -753,3 +763,167 @@ class JdbcConnector(StorageConnector):
             options["query"] = query
 
         return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+
+
+class KafkaConnector(StorageConnector):
+    type = StorageConnector.KAFKA
+    SPARK_FORMAT = "kafka"
+
+    CONFIG_MAPPING = {
+        "_bootstrap_servers": "kafka.bootstrap.servers",
+        "_security_protocol": "kafka.security.protocol",
+        "_ssl_truststore_location": "kafka.ssl.truststore.location",
+        "_ssl_truststore_password": "kafka.ssl.truststore.password",
+        "_ssl_keystore_location": "kafka.ssl.keystore.location",
+        "_ssl_keystore_password": "kafka.ssl.keystore.password",
+        "_ssl_key_password": "kafka.ssl.key.password",
+        "_ssl_endpoint_identification_algorithm": "kafka.ssl.endpoint.identification.algorithm",
+    }
+
+    def __init__(
+        self,
+        id,
+        name,
+        featurestore_id,
+        description=None,
+        # members specific to type of connector
+        bootstrap_servers=None,
+        security_protocol=None,
+        ssl_truststore_location=None,
+        ssl_truststore_password=None,
+        ssl_keystore_location=None,
+        ssl_keystore_password=None,
+        ssl_key_password=None,
+        ssl_endpoint_identification_algorithm=None,
+        options=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+
+        # KAFKA
+        self._bootstrap_servers = bootstrap_servers
+        self._security_protocol = security_protocol
+        self._ssl_truststore_location = engine.get_instance().add_file(
+            ssl_truststore_location
+        )
+        self._ssl_truststore_password = ssl_truststore_password
+        self._ssl_keystore_location = engine.get_instance().add_file(
+            ssl_keystore_location
+        )
+        self._ssl_keystore_password = ssl_keystore_password
+        self._ssl_key_password = ssl_key_password
+        self._ssl_endpoint_identification_algorithm = (
+            ssl_endpoint_identification_algorithm
+        )
+        self._options = (
+            {option["name"]: option["value"] for option in options}
+            if options is not None
+            else {}
+        )
+
+    @property
+    def boostrap_servers(self):
+        """Bootstrap servers string."""
+        return self._bootstrap_servers
+
+    @property
+    def security_protocol(self):
+        """Bootstrap servers string."""
+        return self._security_protocol
+
+    @property
+    def ssl_truststore_location(self):
+        """Bootstrap servers string."""
+        return self._ssl_truststore_location
+
+    @property
+    def ssl_keystore_location(self):
+        """Bootstrap servers string."""
+        return self._ssl_keystore_location
+
+    @property
+    def ssl_endpoint_identification_algorithm(self):
+        """Bootstrap servers string."""
+        return self._ssl_endpoint_identification_algorithm
+
+    @property
+    def options(self):
+        """Bootstrap servers string."""
+        return self._options
+
+    def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional
+        arguments.
+        """
+        config = {
+            v: getattr(self, k)
+            for k, v in self.CONFIG_MAPPING.items()
+            if getattr(self, k) is not None
+        }
+
+        return {**self._options, **config}
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        """NOT SUPPORTED."""
+        raise NotSupportedError(
+            "Reading a Kafka Stream into a static Spark Dataframe is not supported."
+        )
+
+    def read_stream(
+        self,
+        topic: str,
+        topic_pattern: bool = False,
+        message_format: str = "avro",
+        schema: str = None,
+        options: dict = {},
+        include_metadata: bool = False,
+    ):
+        """Reads a Kafka stream from a topic or multiple topics into a Dataframe.
+
+        Currently, this method is only supported for Spark engines.
+
+        # Arguments
+            topic: Name or pattern of the topic(s) to subscribe to.
+            topic_pattern: Flag to indicate if `topic` string is a pattern.
+                Defaults to `False`.
+            message_format: The format of the messages to use for decoding.
+                Can be `"avro"` or `"json"`. Defaults to `"avro"`.
+            schema: Optional schema, to use for decoding, can be an Avro schema string for
+                `"avro"` message format, or for JSON encoding a Spark StructType schema,
+                or a DDL formatted string. Defaults to `None`.
+            options: Additional options as key/value string pairs to be passed to Spark.
+                Defaults to `{}`.
+            include_metadata: Indicate whether to return additional metadata fields from
+                messages in the stream. Otherwise only the decoded value fields are
+                returned. Defaults to `False`.
+
+        # Raises
+            `ValueError`: Malformed arguments.
+
+        # Returns
+            `StreamingDataframe`: A Spark streaming dataframe.
+        """
+        if message_format.lower() not in ["avro", "json", None]:
+            raise ValueError("Can only read JSON and AVRO encoded records from Kafka.")
+
+        if topic_pattern is True:
+            options["subscribePattern"] = topic
+        else:
+            options["subscribe"] = topic
+
+        # if include_headers is True:
+        #    stream = stream.option("includeHeaders", "true")
+        #    kafka_cols.append(col("headers"))
+
+        return engine.get_instance().read_stream(
+            self,
+            message_format.lower(),
+            schema,
+            options,
+            include_metadata,
+        )
