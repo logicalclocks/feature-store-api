@@ -89,7 +89,7 @@ public class HudiEngine {
 
   private Utils utils = new Utils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
 
 

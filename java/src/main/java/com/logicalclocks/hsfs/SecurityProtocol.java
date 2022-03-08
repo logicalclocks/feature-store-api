@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ * Copyright (c) 2021 Logical Clocks AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,17 @@
 
 package com.logicalclocks.hsfs;
 
-public enum StorageConnectorType {
-  HOPSFS,
-  S3,
-  JDBC,
-  REDSHIFT,
-  ADLS,
-  SNOWFLAKE,
-  KAFKA
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
+
+@XmlEnum
+public enum SecurityProtocol {
+  @XmlEnumValue("PLAINTEXT")
+  PLAINTEXT,
+  @XmlEnumValue("SASL_PLAINTEXT")
+  SASL_PLAINTEXT,
+  @XmlEnumValue("SASL_SSL")
+  SASL_SSL,
+  @XmlEnumValue("SSL")
+  SSL;
 }

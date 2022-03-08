@@ -36,19 +36,25 @@ import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParseException;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.SparkFiles;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+
+import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.from_json;
 import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
+import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
@@ -59,6 +65,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -541,5 +548,64 @@ public class SparkEngine {
       emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
     }
     return emptyDataframe;
+  }
+
+  public String addFile(String filePath) {
+    sparkSession.sparkContext().addFile("hdfs://" + filePath);
+    return SparkFiles.get((new Path(filePath)).getName());
+  }
+
+  public Dataset<Row> readStream(StorageConnector storageConnector, String dataFormat, String messageFormat,
+                                 String schema, Map<String, String> options, boolean includeMetadata)
+      throws FeatureStoreException {
+    DataStreamReader stream = sparkSession.readStream().format(dataFormat);
+
+    // set user options last so that they overwrite any default options
+    stream = stream.options(storageConnector.sparkOptions()).options(options);
+
+    if (storageConnector instanceof StorageConnector.KafkaConnector) {
+      return readStreamKafka(stream, messageFormat, schema, includeMetadata);
+    }
+    throw new FeatureStoreException("Connector does not support reading data into stream.");
+  }
+
+  private Dataset<Row> readStreamKafka(DataStreamReader stream, String messageFormat, String schema,
+      boolean includeMetadata) throws SchemaParseException, FeatureStoreException {
+    Column[] kafkaMetadataColumns = Arrays.asList(
+        col("key"),
+        col("topic"),
+        col("partition"),
+        col("offset"),
+        col("timestamp"),
+        col("timestampType"),
+        col("value.*")
+    ).toArray(new Column[7]);
+
+    if (messageFormat.equals("avro") && !Strings.isNullOrEmpty(schema)) {
+      Schema.Parser parser = new Schema.Parser();
+      parser.parse(schema);
+      Dataset<Row> df = stream.load();
+
+      if (includeMetadata) {
+        return df.withColumn("value", from_avro(df.col("value"), schema))
+          .select(kafkaMetadataColumns);
+      }
+      return df.withColumn("value", from_avro(df.col("value"), schema)).select(col("value.*"));
+    } else if (messageFormat.equals("json") && !Strings.isNullOrEmpty(schema)) {
+      Dataset<Row> df = stream.load();
+
+      if (includeMetadata) {
+        return df.withColumn("value", from_json(df.col("value").cast("string"),
+          schema, new HashMap<>()))
+          .select(kafkaMetadataColumns);
+      }
+      return df.withColumn("value", from_json(df.col("value").cast("string"), schema, new HashMap<>()))
+        .select(col("value.*"));
+    }
+
+    if (includeMetadata) {
+      return stream.load();
+    }
+    return stream.load().select("key", "value");
   }
 }
