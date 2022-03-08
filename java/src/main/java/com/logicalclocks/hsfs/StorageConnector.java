@@ -36,6 +36,7 @@ import org.apache.spark.sql.types.StructType;
 import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
