@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.constructor;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
@@ -226,8 +225,8 @@ public class Query {
           storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
       return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
     } else {
-      registerOnDemandFeatureGroups(fsQuery.getOnDemandFeatureGroups());
-      registerHudiFeatureGroups(fsQuery.getHudiCachedFeatureGroups(), readOptions);
+      fsQuery.registerOnDemandFeatureGroups();
+      fsQuery.registerHudiFeatureGroups(readOptions);
 
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
@@ -253,33 +252,6 @@ public class Query {
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
-    }
-  }
-
-  private void registerOnDemandFeatureGroups(List<OnDemandFeatureGroupAlias> onDemandFeatureGroups)
-      throws FeatureStoreException, IOException {
-    if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
-      return;
-    }
-
-    for (OnDemandFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroups) {
-      String alias = onDemandFeatureGroupAlias.getAlias();
-      OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
-
-      SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
-    }
-  }
-
-  private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> hudiFeatureGroups,
-                                         Map<String, String> readOptions) {
-    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiFeatureGroups) {
-      String alias = hudiFeatureGroupAlias.getAlias();
-      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
-
-      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
-          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
-          readOptions);
     }
   }
 
