@@ -29,8 +29,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -72,9 +70,9 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+  public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
-    return SparkEngine.getInstance().read(this, dataFormat, options, path);
+    return (S) SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
@@ -136,10 +134,10 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
-      return SparkEngine.getInstance().read(this, dataFormat, options, path);
+      return (S) SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -208,14 +206,14 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return (S) SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -340,13 +338,13 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
+      return (S) SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -372,14 +370,14 @@ public abstract class StorageConnector {
     }
 
     @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return (S) SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     public void update() throws FeatureStoreException, IOException {
