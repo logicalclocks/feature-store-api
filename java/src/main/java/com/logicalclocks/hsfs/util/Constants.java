@@ -66,4 +66,14 @@ public class Constants {
   public static final String SNOWFLAKE_ROLE = "sfRole";
   public static final String SNOWFLAKE_WAREHOUSE = "sfWarehouse";
   public static final String SNOWFLAKE_APPLICATION = "application";
+
+  public static final String KAFKA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
+  public static final String KAFKA_SECURITY_PROTOCOL = "kafka.security.protocol";
+  public static final String KAFKA_SSL_TRUSTSTORE_LOCATION = "kafka.ssl.truststore.location";
+  public static final String KAFKA_SSL_TRUSTSTORE_PASSWORD = "kafka.ssl.truststore.password";
+  public static final String KAFKA_SSL_KEYSTORE_LOCATION = "kafka.ssl.keystore.location";
+  public static final String KAFKA_SSL_KEYSTORE_PASSWORD = "kafka.ssl.keystore.password";
+  public static final String KAFKA_SSL_KEY_PASSWORD = "kafka.ssl.key.password";
+  public static final String KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM =
+      "kafka.ssl.endpoint.identification.algorithm";
 }
