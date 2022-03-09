@@ -515,7 +515,7 @@ public abstract class StorageConnector {
       return SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
 
-    public void prepareSpark() {
+    public void prepareSpark() throws FeatureStoreException, IOException {
       SparkEngine.getInstance().setupConnectorHadoopConf(this);
     }
 
