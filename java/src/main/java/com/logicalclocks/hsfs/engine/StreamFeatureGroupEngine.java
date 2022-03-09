@@ -122,7 +122,6 @@ public class StreamFeatureGroupEngine {
     featureGroup.setId(apiFG.getId());
     featureGroup.setVersion(apiFG.getVersion());
     featureGroup.setLocation(apiFG.getLocation());
-    featureGroup.setId(apiFG.getId());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 

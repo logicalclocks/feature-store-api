@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.engine.hudi;
 
 
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.WriteOperationType;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
@@ -42,7 +43,12 @@ public class DeltaStreamerConfig implements Serializable {
     cfg.tableType = writeOptions.get(HudiEngine.HUDI_TABLE_STORAGE_TYPE);
 
     // Takes one of these values : UPSERT (default), INSERT
-    cfg.operation = WriteOperationType.UPSERT;
+    if (writeOptions.containsKey("operation") &&
+        EnumUtils.isValidEnum(WriteOperationType.class, writeOptions.get("operation"))) {
+      cfg.operation = WriteOperationType.valueOf(writeOptions.get("operation"));
+    } else {
+      cfg.operation = WriteOperationType.UPSERT;
+    }
 
     // Enable syncing to hive metastore
     cfg.enableHiveSync = true;

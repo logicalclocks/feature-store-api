@@ -20,16 +20,13 @@ import lombok.SneakyThrows;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hudi.HoodieDataSourceHelpers;
 import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.HoodieTableMetaClient;
-import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.exception.HoodieException;
 import org.apache.hudi.utilities.checkpointing.InitialCheckPointProvider;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class InitialCheckpointFromAnotherHoodieTimelineProvider extends InitialCheckPointProvider {
   private HoodieTableMetaClient anotherDsHoodieMetaclient;
@@ -51,8 +48,6 @@ public class InitialCheckpointFromAnotherHoodieTimelineProvider extends InitialC
     Configuration conf = new Configuration();
     Path filepath = new Path(this.path.toString());
     FileSystem fileSystem = FileSystem.get(filepath.toUri(), conf);
-    HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(
-        fileSystem, this.path.toString());
 
     return this.anotherDsHoodieMetaclient.getCommitsTimeline().filterCompletedInstants()
         .getReverseOrderedInstants().map((instant) -> {
@@ -68,10 +63,10 @@ public class InitialCheckpointFromAnotherHoodieTimelineProvider extends InitialC
               return props.get(HudiEngine.HUDI_KAFKA_TOPIC) + "";
             }
           } catch (IOException var3) {
-            return null;
+            throw new RuntimeException("Can't get any checkpoint information from topic "
+                + HudiEngine.HUDI_KAFKA_TOPIC);
           }
         })
-        .filter(Objects::nonNull)
         .findFirst()
         .get();
   }
