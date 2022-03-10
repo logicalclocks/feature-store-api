@@ -43,8 +43,8 @@ public class DeltaStreamerConfig implements Serializable {
     cfg.tableType = writeOptions.get(HudiEngine.HUDI_TABLE_STORAGE_TYPE);
 
     // Takes one of these values : UPSERT (default), INSERT
-    if (writeOptions.containsKey("operation") &&
-        EnumUtils.isValidEnum(WriteOperationType.class, writeOptions.get("operation"))) {
+    if (writeOptions.containsKey("operation")
+        && EnumUtils.isValidEnum(WriteOperationType.class, writeOptions.get("operation"))) {
       cfg.operation = WriteOperationType.valueOf(writeOptions.get("operation"));
     } else {
       cfg.operation = WriteOperationType.UPSERT;
