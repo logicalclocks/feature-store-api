@@ -1434,6 +1434,74 @@ class StreamFeatureGroup(FeatureGroup):
                 util.VersionWarning,
             )
 
+    def insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        overwrite: Optional[bool] = False,
+        operation: Optional[str] = "upsert",
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Insert data from a dataframe into the stream feature group.
+
+        Incrementally insert data to a feature group or overwrite all data contained
+        in the feature group. By default, the data is inserted into the offline storage
+        as well as the online storage if the feature group is `online_enabled=True`. To
+        insert only into the online storage, set `storage="online"`, or oppositely
+        `storage="offline"`.
+
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        or a two-dimensional Numpy array or a two-dimensional Python nested list.
+
+        If statistics are enabled, statistics are recomputed for the entire feature
+        group.
+
+        If feature group's time travel format is `HUDI` then `operation` argument can be
+        either `insert` or `upsert`.
+
+        !!! example "Upsert new feature data with time travel format `HUDI`:"
+            ```python
+            fs = conn.get_feature_store();
+            fg = fs.get_stream_feature_group("example_feature_group", 1)
+            upsert_df = ...
+            fg.insert(upsert_df)
+            ```
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            overwrite: Drop all data in the feature group before
+                inserting new data. This does not affect metadata, defaults to False.
+            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
+                Defaults to `"upsert"`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `hive` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                * key `mode` instruct the ingestion job on how to deal with corrupted
+                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
+
+        # Returns
+            `FeatureGroup`. Updated feature group metadata object.
+        """
+        super().insert(
+            features=features,
+            overwrite=overwrite,
+            operation=operation,
+            storage=None,
+            write_options=write_options,
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

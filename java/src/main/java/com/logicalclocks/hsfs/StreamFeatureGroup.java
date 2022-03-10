@@ -203,8 +203,17 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     }
   }
 
-  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation,
-                         SaveMode saveMode, Map<String, String> writeOptions)
+  public <S> void insert(S featureData) throws FeatureStoreException, IOException, ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null);
+  }
+
+  public <S> void insert(S featureData, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
+      ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions);
+  }
+
+  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+                         Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
 
     if (operation == null) {
