@@ -1387,8 +1387,7 @@ class StreamFeatureGroup(FeatureGroup):
         and writes the specified `features` dataframe as feature group to the
         online/offline feature store as specified.
 
-        By default, this writes the feature group to the offline storage, and if
-        `online_enabled` for the feature group, also to the online feature store.
+        This writes the feature group to the both online and offline storage.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
