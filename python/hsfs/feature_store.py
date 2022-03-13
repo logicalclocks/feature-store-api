@@ -500,8 +500,6 @@ class FeatureStore:
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        validation_type: Optional[str] = "NONE",
-        expectations: Optional[List[expectation.Expectation]] = [],
         event_time: Optional[str] = None,
     ):
         """Create a stream feature group metadata object.
@@ -541,12 +539,6 @@ class FeatureStore:
                 The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
-                "WARNING", "ALL". Determines the mode in which data validation is applied on
-                 ingested or already existing feature group data.
-            expectations: Optionally, a list of expectations to be attached to the feature group.
-                The expectations list contains Expectation metadata objects which can be retrieved with
-                the `get_expectation()` and `get_expectations()` functions.
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
@@ -565,8 +557,6 @@ class FeatureStore:
             featurestore_name=self._name,
             features=features,
             statistics_config=statistics_config,
-            validation_type=validation_type,
-            expectations=expectations,
             event_time=event_time,
         )
 

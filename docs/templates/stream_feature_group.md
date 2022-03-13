@@ -1,12 +1,16 @@
 # Stream Feature Group
 
 Stream Feature Groups are Feature Groups that have unified single API for writing streaming features transparently
-to both online and offline feature store. It is also compute framework independent, for example other types of Feature
+to both online and offline store. It is also compute framework independent, for example other types of Feature
 Groups support only Apache Spark and/or Python while with Stream Feature Group other frameworks, such as Apache Flink
 can be also used.
 
-From an API perspective, Stream Feature Groups can be used in the same way as regular feature groups. Users can pick
-features create training datasets.
+From an API perspective, Stream Feature Groups are an extension of regular Feature Groups. can be used in the same way.
+For example users can pick features create and training datasets.
+
+## Limitations
+
+Stream Feature Group does not support validations.
 
 === "Python"
 
