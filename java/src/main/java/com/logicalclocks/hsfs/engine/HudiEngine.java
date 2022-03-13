@@ -22,20 +22,17 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-
+import com.logicalclocks.hsfs.metadata.GitCommit;
+import lombok.SneakyThrows;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hudi.HoodieDataSourceHelpers;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
-import org.apache.hudi.HoodieDataSourceHelpers;
 import org.apache.parquet.Strings;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-
-import org.apache.hadoop.fs.FileSystem;
-
-import lombok.SneakyThrows;
-
+import org.apache.spark.sql.SparkSession;
 import scala.collection.Seq;
 
 import java.io.IOException;
@@ -100,6 +97,12 @@ public class HudiEngine {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
 
+    String gitCommitId = null;
+    GitCommit gitCommit = featureGroupApi.getLatestGitCommit(featureGroup);
+    if (gitCommit != null) {
+      gitCommitId = gitCommit.getCommitId();
+    }
+
     dataset.write()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
@@ -108,6 +111,7 @@ public class HudiEngine {
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
     fgCommit.setValidationId(validationId);
+    fgCommit.setGitCommit(gitCommitId);
     featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
   }
 

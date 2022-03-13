@@ -137,6 +137,11 @@ class HudiEngine:
         ).load(self._base_path).createOrReplaceTempView(alias)
 
     def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
+        # Get git commit here to avoid new commit while running a job
+        latest_git_commit = self._feature_group_api.get_latest_git_commit(
+            self._feature_group
+        )["commitId"]
+
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
         dataset.write.format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
             save_mode
@@ -145,6 +150,7 @@ class HudiEngine:
         feature_group_commit = self._get_last_commit_metadata(
             self._spark_context, self._base_path
         )
+        feature_group_commit.git_commit = latest_git_commit
 
         return feature_group_commit
 

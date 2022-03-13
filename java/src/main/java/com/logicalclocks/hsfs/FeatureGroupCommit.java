@@ -18,10 +18,10 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.metadata.RestDto;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.Setter;
 
 @Builder
@@ -50,4 +50,7 @@ public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
   @Getter
   @Setter
   private Integer validationId;
+  @Getter
+  @Setter
+  private String gitCommit;
 }

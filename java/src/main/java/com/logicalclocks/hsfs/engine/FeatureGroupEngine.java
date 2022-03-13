@@ -23,11 +23,11 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -120,6 +120,13 @@ public class FeatureGroupEngine {
     featureGroup.setId(apiFG.getId());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+    Utils.ExecutionEnvironment executionEnvironment = Utils.getExecutionEnvironment();
+    if (executionEnvironment != null) {
+      // featureGroup require updated feature group version from apiFG
+      featureGroupApi.saveGitRepository(featureGroup, executionEnvironment.executionType,
+          executionEnvironment.entityId);
+    }
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {

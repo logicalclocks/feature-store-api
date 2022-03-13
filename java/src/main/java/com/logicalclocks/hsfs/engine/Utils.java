@@ -16,12 +16,13 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StorageConnectorType;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetType;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -32,7 +33,6 @@ import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import static org.apache.spark.sql.functions.col;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -48,9 +48,15 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.apache.spark.sql.functions.col;
+
 public class Utils {
 
   StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  //JUPYTER
+  private static final String KERNEL_ENV = "HOPSWORKS_KERNEL_ID";
+  //JOB
+  private static final String JOB_ENV = "HOPSWORKS_JOB_NAME";
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -188,5 +194,47 @@ public class Utils {
     Long commitTimeStamp = dateFormat.parse(tempDate).getTime();;
 
     return commitTimeStamp;
+  }
+
+  public enum ExecutionType {
+    JUPYTER,
+    JOB;
+  }
+
+  public static class ExecutionEnvironment {
+    public ExecutionType executionType;
+    public String entityId;
+
+    public ExecutionEnvironment(ExecutionType executionType, String entityId) {
+      this.executionType = executionType;
+      this.entityId = entityId;
+    }
+
+    public ExecutionType getExecutionType() {
+      return executionType;
+    }
+
+    public void setExecutionType(ExecutionType executionType) {
+      this.executionType = executionType;
+    }
+
+    public String getEntityId() {
+      return entityId;
+    }
+
+    public void setEntityId(String entityId) {
+      this.entityId = entityId;
+    }
+  }
+
+  public static ExecutionEnvironment getExecutionEnvironment() {
+    String kernelId = System.getenv(KERNEL_ENV);
+    String jobName = System.getenv(JOB_ENV);
+    if (!Strings.isNullOrEmpty(kernelId)) {
+      return new ExecutionEnvironment(ExecutionType.JUPYTER, kernelId);
+    } else if (!Strings.isNullOrEmpty(jobName)) {
+      return new ExecutionEnvironment(ExecutionType.JOB, jobName);
+    }
+    return null;
   }
 }
