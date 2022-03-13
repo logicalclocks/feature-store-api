@@ -756,8 +756,10 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.  No data is available for feature group with this commit date.
             `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        return self._feature_group_engine.read_changes(
-            self, start_wallclock_time, end_wallclock_time, read_options
+        return (
+            self.select_all()
+            .pull_changes(start_wallclock_time, end_wallclock_time)
+            .read(False, "default", read_options)
         )
 
     def show(self, n: int, online: Optional[bool] = False):
@@ -1446,6 +1448,7 @@ class StreamFeatureGroup(FeatureGroup):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         write_options: Optional[Dict[Any, Any]] = {},
+        **kwargs,
     ):
         """Insert data from a dataframe into the stream feature group.
 
@@ -1494,13 +1497,18 @@ class StreamFeatureGroup(FeatureGroup):
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
         """
-        super().insert(
-            features=features,
-            overwrite=overwrite,
-            operation=operation,
-            storage=None,
-            write_options=write_options,
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        self._feature_group_engine.insert(
+            self,
+            feature_dataframe,
+            overwrite,
+            operation,
+            None,
+            write_options,
         )
+
+        self._code_engine.save_code(self)
 
     @classmethod
     def from_response_json(cls, json_dict):

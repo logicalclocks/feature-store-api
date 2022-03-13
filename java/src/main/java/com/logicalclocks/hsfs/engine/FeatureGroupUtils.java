@@ -56,23 +56,15 @@ public class FeatureGroupUtils {
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private KafkaApi kafkaApi = new KafkaApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric)
       throws FeatureStoreException {
-    if (engine().equals("spark")) {
-      return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric);
-    } else {
-      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
-    }
+    return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric);
   }
 
   public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
-    if (engine().equals("spark")) {
-      return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
-    } else {
-      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
-    }
+    return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
   }
 
   // TODO(Fabio): this should be moved in the backend
@@ -223,10 +215,10 @@ public class FeatureGroupUtils {
   public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     // operation is only valid for time travel enabled feature group
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.NONE)
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
         || featureGroupBase instanceof StreamFeatureGroup)) {
       // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("delete function is only valid for "
+      throw new FeatureStoreException("commitDetails function is only valid for "
             + "time travel enabled feature group");
     }
     return getCommitDetails(featureGroupBase, null, limit);
@@ -248,13 +240,9 @@ public class FeatureGroupUtils {
             + "time travel enabled feature group");
     }
 
-    if (engine().equals("Spark")) {
-      HudiEngine hudiEngine = new HudiEngine();
-      return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
-          writeOptions);
-    } else {
-      throw new FeatureStoreException("This operation is only allowed from Spark engine.");
-    }
+    HudiEngine hudiEngine = new HudiEngine();
+    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
+        writeOptions);
   }
 
   public String getAvroSchema(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
@@ -267,14 +255,6 @@ public class FeatureGroupUtils {
       return true;
     }  catch (ClassNotFoundException e) {
       return false;
-    }
-  }
-
-  private String engine() throws FeatureStoreException {
-    if (checkIfClassExists("org.apache.spark.sql.Dataset")) {
-      return "spark";
-    } else {
-      throw new FeatureStoreException("Unknown engine. Currently for java client only Spark engine is implemented.");
     }
   }
 
@@ -297,7 +277,7 @@ public class FeatureGroupUtils {
         field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
         new FeatureStoreException(
             "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
-    return complexField.schema().toString(true);
+    return complexField.schema().toString(false);
   }
 
   public String getEncodedAvroSchema(Schema schema, List<String> complexFeatures)
@@ -307,7 +287,7 @@ public class FeatureGroupUtils {
             ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
             : new Schema.Field(field.name(), field.schema(), null, null))
         .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(false);
   }
 
   public Schema getDeserializedAvroSchema(String avroSchema) throws FeatureStoreException, IOException {

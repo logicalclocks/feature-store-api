@@ -66,10 +66,11 @@ public class DeltaStreamerConfig implements Serializable {
       cfg.continuousMode = true;
     }
 
-    // 1st time feature group was created by batch write, not DeltaStreamer. Thus, we need to provide initial
-    // checkpoint
+    // Resume Delta Streamer from this checkpoint
     cfg.checkpoint = writeOptions.get(HudiEngine.CHECKPOINT_PROVIDER_PATH_PROP);
-    cfg.initialCheckpointProvider = HudiEngine.INITIAL_CHECKPOINT_PROVIDER;
+
+    // Initial checkpoint is not used any more as everything is written in stream feature group
+    //cfg.initialCheckpointProvider = HudiEngine.INITIAL_CHECKPOINT_PROVIDER;
 
     cfg.sparkMaster = HudiEngine.SPARK_MASTER;
 
@@ -77,9 +78,11 @@ public class DeltaStreamerConfig implements Serializable {
     // source Dataset to a target Dataset (conforming to target schema) before writing. Default : Not set.
     // E:g - org.apache.hudi.utilities.transform.SqlQueryBasedTransformer (which allows a SQL query templated to be
     // passed as a transformation function). Pass a comma-separated list of subclass names to chain the transformations
-    cfg.transformerClassNames = new ArrayList<String>() {{
-        add(HudiEngine.DELTA_STREAMER_TRANSFORMER);
-      }};
+
+    // at the moment this is not supported in StreamFeatureGroup
+    // cfg.transformerClassNames = new ArrayList<String>() {{
+    //     add(HudiEngine.DELTA_STREAMER_TRANSFORMER);
+    //  }};
 
     // Field within source record to decide how to break ties between records with same key in input data.
     cfg.sourceOrderingField =  writeOptions.get(HudiEngine.DELTA_SOURCE_ORDERING_FIELD_OPT_KEY);

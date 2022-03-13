@@ -169,7 +169,8 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
+  public void registerHudiTemporaryTable(FeatureGroupBase featureGroup, String alias,
+                                         Long leftFeaturegroupStartTimestamp,
                                          Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
     hudiEngine.registerTemporaryTable(sparkSession, featureGroup, alias,
         leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
@@ -418,8 +419,6 @@ public class SparkEngine {
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }
 
-  // TODO (davit): for now I keep both but writeOfflineDataframe should be one function. Also I need to come up with
-  // the system how do I name types
   public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
       HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {

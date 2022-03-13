@@ -189,28 +189,18 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
                 elif online_enabled and storage is None:
-                    if (
-                        feature_group.time_travel_format == "HUDI"
-                        and operation != "bulk_insert"
-                    ):
-                        self._save_online_dataframe(
-                            feature_group, dataframe, online_write_options
-                        )
-                    else:
-                        self._save_offline_dataframe(
-                            feature_group,
-                            dataframe,
-                            operation,
-                            offline_write_options,
-                        )
-                        self._save_online_dataframe(
-                            feature_group, dataframe, online_write_options
-                        )
-        except Exception as e:
+                    self._save_offline_dataframe(
+                        feature_group,
+                        dataframe,
+                        operation,
+                        offline_write_options,
+                    )
+                    self._save_online_dataframe(
+                        feature_group, dataframe, online_write_options
+                    )
+        except Exception:
             raise FeatureStoreException(
-                "Error writing to offline and online feature store: {0}".format(
-                    str(e.args[0])
-                ).encode("utf-8")
+                "Error writing to offline and online feature store"
             )
 
     def save_stream_dataframe(

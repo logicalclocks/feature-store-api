@@ -136,8 +136,25 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.id = id;
   }
 
-  public Query read() throws FeatureStoreException, IOException {
-    return selectAll();
+  /**
+   * Reads Feature group data.
+   *
+   * @return DataFrame.
+   * @throws FeatureStoreException
+   * @throws IOException
+   * @throws ParseException
+   */
+
+  public Object read() throws FeatureStoreException, IOException {
+    return read(false, null);
+  }
+
+  public Object read(boolean online) throws FeatureStoreException, IOException {
+    return read(online, null);
+  }
+
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+    return selectAll().read(online, readOptions);
   }
 
   /**
@@ -149,11 +166,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws IOException
    * @throws ParseException
    */
-  public Query read(String wallclockTime)
+  public Object read(String wallclockTime)
       throws FeatureStoreException, IOException, ParseException {
-    return selectAll().asOf(wallclockTime);
+    return selectAll().asOf(wallclockTime).read(false, null);
   }
 
+  public Object read(String wallclockTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    return selectAll().asOf(wallclockTime).read(false, readOptions);
+  }
   /**
    * Reads changes that occurred between specified points in time.
    *
@@ -164,9 +185,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws IOException
    * @throws ParseException
    */
-  public Query readChanges(String wallclockStartTime, String wallclockEndTime)
+
+  public Object readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime);
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
+  }
+
+  public Object readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
   /**
@@ -226,7 +253,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
     streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
     codeEngine.saveCode(this);
-    computeStatistics();
   }
 
   public <S> Object insertStream(S featureData) {
