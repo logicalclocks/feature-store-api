@@ -178,8 +178,6 @@ public class FeatureStore {
         .asScala().toSeq();
   }
 
-  // TODO (davit): returning object instead of DataSet<Raw> because of Flink. I need to decide how to
-  //  handle this better
   public Object sql(String query) {
     return SparkEngine.getInstance().sql(query);
   }

@@ -20,9 +20,7 @@ import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.SneakyThrows;
 import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.utilities.transform.Transformer;
@@ -51,9 +49,6 @@ public class DeltaStreamerTransformer implements Transformer {
     featureGroup = featureGroupApi.getStreamFeatureGroup(this.featureStore, props.getString("featureGroupName"),
         Integer.parseInt(props.getString("featureGroupVersion")));
 
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(dataset, true);
-    }
     return utils.sanitizeFeatureNames(dataset);
   }
 }

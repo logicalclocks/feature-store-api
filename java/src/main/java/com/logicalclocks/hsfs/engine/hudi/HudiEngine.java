@@ -17,7 +17,6 @@
 package com.logicalclocks.hsfs.engine.hudi;
 
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -42,6 +41,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import org.apache.hadoop.fs.FileSystem;
+import org.json.JSONArray;
 import scala.collection.Seq;
 
 import java.io.IOException;
@@ -97,9 +97,9 @@ public class HudiEngine {
   protected static final String COMMIT_METADATA_KEYPREFIX_OPT_KEY = "hoodie.datasource.write.commitmeta.key.prefix";
   protected static final String DELTASTREAMER_CHECKPOINT_KEY = "deltastreamer.checkpoint.key";
   protected static final String CHECKPOINT_PROVIDER_PATH_PROP = "hoodie.deltastreamer.checkpoint.provider.path";
-  protected static final String INITIAL_CHECKPOINT_PROVIDER =
-      "com.logicalclocks.hsfs.engine.hudi.InitialCheckpointFromAnotherHoodieTimelineProvider";
   protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.FeatureGroup.schema";
+  protected static final String FEATURE_GROUP_ENCODED_SCHEMA = "com.logicalclocks.hsfs.FeatureGroup.encodedSchema";
+  protected static final String FEATURE_GROUP_COMPLEX_FEATURES = "com.logicalclocks.hsfs.FeatureGroup.complexFeatures";
   protected static final String KAFKA_SOURCE = "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerKafkaSource";
   protected static final String SCHEMA_PROVIDER = "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerSchemaProvider";
   protected static final String DELTA_STREAMER_TRANSFORMER =
@@ -162,7 +162,7 @@ public class HudiEngine {
     return apiFgCommit;
   }
 
-  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
+  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroupBase featureGroup, String alias,
                                      Long startTimestamp, Long endTimestamp, Map<String, String> readOptions) {
     Map<String, String> hudiArgs = setupHudiReadOpts(startTimestamp, endTimestamp, readOptions);
     sparkSession.read()
@@ -280,6 +280,9 @@ public class HudiEngine {
     hudiWriteOpts.put(CHECKPOINT_PROVIDER_PATH_PROP, streamFeatureGroup.getLocation());
     hudiWriteOpts.put(HUDI_KAFKA_TOPIC, streamFeatureGroup.getOnlineTopicName());
     hudiWriteOpts.put(FEATURE_GROUP_SCHEMA, streamFeatureGroup.getAvroSchema());
+    hudiWriteOpts.put(FEATURE_GROUP_ENCODED_SCHEMA, streamFeatureGroup.getEncodedAvroSchema());
+    hudiWriteOpts.put(FEATURE_GROUP_COMPLEX_FEATURES,
+        new JSONArray(streamFeatureGroup.getComplexFeatures()).toString());
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY,
         hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
     writeOptions.putAll(hudiWriteOpts);
@@ -295,10 +298,6 @@ public class HudiEngine {
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
     fgCommit.setValidationId((Integer) typedProperties.get(VALIDATION_ID));
     featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
-
-    if (writeOptions.containsKey(FUNCTION_TYPE) && writeOptions.get(FUNCTION_TYPE)
-        .equals(STREAMING_QUERY)) {
-      streamFeatureGroup.computeStatistics();
-    }
+    streamFeatureGroup.computeStatistics();
   }
 }
