@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
@@ -31,8 +32,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.SchemaParseException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -63,7 +62,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "cachedFeaturegroupDTO";
 
-  @Getter
+  @Getter(onMethod = @__(@Override))
   @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
@@ -82,13 +81,14 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   private String avroSchema;
 
-  @Getter
+  @Getter(onMethod = @__(@Override))
   @Setter
   private String onlineTopicName;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -350,12 +350,12 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, null);
+    utils.commitDelete(this, featureData, null);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, writeOptions);
+    utils.commitDelete(this, featureData, writeOptions);
   }
 
   /**
@@ -365,7 +365,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, null);
+    return utils.commitDetails(this, null);
   }
 
   /**
@@ -377,7 +377,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, limit);
+    return utils.commitDetails(this, limit);
   }
 
   /**
@@ -389,7 +389,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, null);
   }
 
   /**
@@ -402,51 +402,35 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
+    return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
     if (avroSchema == null) {
-      avroSchema = featureGroupEngine.getAvroSchema(this);
+      avroSchema = utils.getAvroSchema(this);
     }
     return avroSchema;
   }
 
   @JsonIgnore
   public List<String> getComplexFeatures() {
-    return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
+    return utils.getComplexFeatures(features);
   }
 
   @JsonIgnore
   public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    Schema.Field complexField = schema.getFields().stream().filter(field ->
-        field.name().equalsIgnoreCase(featureName)).findFirst().orElseThrow(() ->
-            new FeatureStoreException(
-                "Complex feature `" + featureName + "` not found in AVRO schema of online feature group."));
-
-    return complexField.schema().toString(true);
+    return utils.getFeatureAvroSchema(featureName, utils.getDeserializedAvroSchema(getAvroSchema()));
   }
 
   @JsonIgnore
   public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    Schema schema = getDeserializedAvroSchema();
-    List<Schema.Field> fields = schema.getFields().stream()
-        .map(field -> getComplexFeatures().contains(field.name())
-            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
-            : new Schema.Field(field.name(), field.schema(), null, null))
-        .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(true);
+    return utils.getEncodedAvroSchema(getDeserializedAvroSchema(), utils.getComplexFeatures(features));
   }
 
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
-    try {
-      return new Schema.Parser().parse(getAvroSchema());
-    } catch (SchemaParseException e) {
-      throw new FeatureStoreException("Failed to deserialize online feature group schema" + getAvroSchema() + ".");
-    }
+    return utils.getDeserializedAvroSchema(getAvroSchema());
   }
 
   /**
@@ -460,7 +444,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
-          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
+          utils.commitDetailsByWallclockTime(this, wallclockTime, 1);
       Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
       return statisticsEngine.computeStatistics(this, featureData, commitId);

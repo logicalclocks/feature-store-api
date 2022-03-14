@@ -22,6 +22,7 @@ import com.amazon.deequ.constraints.ConstraintResult;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.Expectation;
+import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.ExpectationResult;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
@@ -33,6 +34,8 @@ import com.logicalclocks.hsfs.metadata.validation.RuleName;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConverters;
 
@@ -63,19 +66,23 @@ public class DataValidationEngine {
   private final FeatureGroupValidationsApi featureGroupValidationsApi =
       new FeatureGroupValidationsApi(EntityEndpointType.FEATURE_GROUP);
 
-  public FeatureGroupValidation validate(Dataset<Row> data, FeatureGroupBase featureGroupBase,
+  private final ExpectationsApi expectationsApi = new ExpectationsApi(EntityEndpointType.FEATURE_GROUP);
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataValidationEngine.class);
+
+  public <S> FeatureGroupValidation validate(S data, FeatureGroupBase featureGroupBase,
                                          List<Expectation> expectations,
                                          Boolean logActivity)
       throws FeatureStoreException, IOException {
     List<ExpectationResult> expectationResults = validate(data, expectations);
     return featureGroupValidationsApi.put(featureGroupBase,
-      FeatureGroupValidation.builder()
-        .validationTime(Instant.now().toEpochMilli())
-        .expectationResults(expectationResults).build(),
-      logActivity);
+        FeatureGroupValidation.builder()
+            .validationTime(Instant.now().toEpochMilli())
+            .expectationResults(expectationResults).build(),
+        logActivity);
   }
 
-  public List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {
+  private <S> List<ExpectationResult> validate(S data, List<Expectation> expectations) {
     // Loop through all feature group expectations, then loop all features and rules of the expectation and
     // create constraints for Deequ.
     List<ExpectationResult> expectationResults = new ArrayList<>();
@@ -124,7 +131,7 @@ public class DataValidationEngine {
       }
 
       // Run Deequ verification suite and return results
-      Map<Check, CheckResult> deequResults = DeequEngine.runVerification(data,
+      Map<Check, CheckResult> deequResults = DeequEngine.runVerification((Dataset<Row>) data,
           JavaConverters.asScalaIteratorConverter(constraintGroups.iterator()).asScala().toSeq());
       // Parse Deequ results and convert to Feature Group validation results. Unfortunately we don't have a way of
       // getting the features and the constraint type directly from the ConstraintResult object so we need to parse
@@ -312,5 +319,4 @@ public class DataValidationEngine {
     VALIDATION_TIME,
     COMMIT_TIME
   }
-
 }

@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
@@ -43,11 +43,11 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     /* set primary features */
     if (onDemandFeatureGroup.getPrimaryKeys() != null) {
       onDemandFeatureGroup.getPrimaryKeys().forEach(pk ->
-              onDemandFeatureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPrimary(true);
-                }
-              }));
+          onDemandFeatureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
     }
 
     OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);

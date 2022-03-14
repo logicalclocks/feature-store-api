@@ -48,6 +48,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             ):
                 feat.hudi_precombine_key = True
 
+        if isinstance(feature_group, fg.StreamFeatureGroup):
+            feature_group._options = write_options
+
         self._feature_group_api.save(feature_group)
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
@@ -260,7 +263,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 util.ValidationWarning,
             )
 
-        return engine.get_instance().save_stream_dataframe(
+        streaming_query = engine.get_instance().save_stream_dataframe(
             feature_group,
             dataframe,
             query_name,
@@ -269,3 +272,5 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             timeout,
             self.get_kafka_config(write_options),
         )
+
+        return streaming_query

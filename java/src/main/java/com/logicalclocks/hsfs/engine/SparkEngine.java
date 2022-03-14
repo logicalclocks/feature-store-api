@@ -28,9 +28,11 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -58,15 +60,15 @@ import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
+import org.apache.spark.sql.types.StructField;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +89,7 @@ public class SparkEngine {
   @Getter
   private SparkSession sparkSession;
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
   private HudiEngine hudiEngine = new HudiEngine();
 
   private SparkEngine() {
@@ -167,7 +169,8 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(FeatureGroup featureGroup, String alias, Long leftFeaturegroupStartTimestamp,
+  public void registerHudiTemporaryTable(FeatureGroupBase featureGroup, String alias,
+                                         Long leftFeaturegroupStartTimestamp,
                                          Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
     hudiEngine.registerTemporaryTable(sparkSession, featureGroup, alias,
         leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
@@ -336,41 +339,39 @@ public class SparkEngine {
   /**
    * Writes feature group dataframe to kafka for online-fs ingestion.
    *
-   * @param featureGroup
+   * @param featureGroupBase
    * @param dataset
    * @param writeOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void writeOnlineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions)
+  public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
+                                         Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+    onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, (Dataset<Row>) dataset))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
-        .option("topic", featureGroup.getOnlineTopicName())
+        .option("topic", onlineTopicName)
         .save();
   }
 
-  public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
+  public <S> StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, S datasetGeneric, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-    if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
-          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    }
-
-    DataStreamWriter<Row> writer = onlineFeatureGroupToAvro(featureGroup, encodeComplexFeatures(featureGroup, dataset))
+    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    DataStreamWriter<Row> writer =
+        onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
-        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-            + "/Resources/" + queryName + "-checkpoint")
+        .option("checkpointLocation", utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName()))
         .options(writeOptions)
-        .option("topic", featureGroup.getOnlineTopicName());
+        .option("topic", featureGroupBase.getOnlineTopicName());
 
+    // start streaming to online feature group topic
     StreamingQuery query = writer.start();
     if (awaitTermination) {
       query.awaitTermination(timeout);
@@ -381,16 +382,17 @@ public class SparkEngine {
   /**
    * Encodes all complex type features to binary using their avro type as schema.
    *
-   * @param featureGroup
+   * @param featureGroupBase
    * @param dataset
    * @return
    */
-  public Dataset<Row> encodeComplexFeatures(FeatureGroup featureGroup, Dataset<Row> dataset)
-      throws FeatureStoreException, IOException {
+  public Dataset<Row> encodeComplexFeatures(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
+          throws FeatureStoreException, IOException {
+
     List<Column> select = new ArrayList<>();
-    for (Schema.Field f : featureGroup.getDeserializedAvroSchema().getFields()) {
-      if (featureGroup.getComplexFeatures().contains(f.name())) {
-        select.add(to_avro(col(f.name()), featureGroup.getFeatureAvroSchema(f.name())).alias(f.name()));
+    for (Schema.Field f : featureGroupBase.getDeserializedAvroSchema().getFields()) {
+      if (featureGroupBase.getComplexFeatures().contains(f.name())) {
+        select.add(to_avro(col(f.name()), featureGroupBase.getFeatureAvroSchema(f.name())).alias(f.name()));
       } else {
         select.add(col(f.name()));
       }
@@ -401,20 +403,28 @@ public class SparkEngine {
   /**
    * Serializes dataframe to two binary columns, one avro serialized key and one avro serialized value column.
    *
-   * @param featureGroup
+   * @param featureGroupBase
    * @param dataset
    * @return dataset
    * @throws FeatureStoreException
    * @throws IOException
    */
-  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroup featureGroup, Dataset<Row> dataset)
+  private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
-    Collections.sort(featureGroup.getPrimaryKeys());
     return dataset.select(
-        to_avro(concat(featureGroup.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+        to_avro(concat(featureGroupBase.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
             .toArray(Column[]::new))).alias("key"),
-        to_avro(struct(featureGroup.getDeserializedAvroSchema().getFields().stream()
-                .map(f -> col(f.name())).toArray(Column[]::new)), featureGroup.getEncodedAvroSchema()).alias("value"));
+        to_avro(struct(featureGroupBase.getDeserializedAvroSchema().getFields().stream()
+                .map(f -> col(f.name())).toArray(Column[]::new)),
+            featureGroupBase.getEncodedAvroSchema()).alias("value"));
+  }
+
+  public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
+      HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
+      throws IOException, FeatureStoreException, ParseException {
+
+    Dataset<Row> dataset = (Dataset<Row>) genericDataset;
+    hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
   public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
@@ -548,6 +558,33 @@ public class SparkEngine {
       emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
     }
     return emptyDataframe;
+  }
+
+  public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
+      throws Exception {
+    writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
+    hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
+  }
+
+  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric) throws FeatureStoreException {
+    List<Feature> features = new ArrayList<>();
+    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    for (StructField structField : dataset.schema().fields()) {
+      // TODO(Fabio): unit test this one for complext types
+      Feature f = new Feature(structField.name().toLowerCase(), structField.dataType().catalogString(), false, false);
+      if (structField.metadata().contains("description")) {
+        f.setDescription(structField.metadata().getString("description"));
+      }
+      features.add(f);
+    }
+
+    return features;
+  }
+
+  public <S> S sanitizeFeatureNames(S datasetGeneric) {
+    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    return (S) dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
+        Column[]::new));
   }
 
   public String addFile(String filePath) {

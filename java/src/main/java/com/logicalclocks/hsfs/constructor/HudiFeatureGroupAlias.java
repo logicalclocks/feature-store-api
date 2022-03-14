@@ -16,7 +16,7 @@
 
 package com.logicalclocks.hsfs.constructor;
 
-import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +32,7 @@ public class HudiFeatureGroupAlias {
 
   @Getter
   @Setter
-  private FeatureGroup featureGroup;
+  private FeatureGroupBase featureGroup;
 
   @Getter
   @Setter

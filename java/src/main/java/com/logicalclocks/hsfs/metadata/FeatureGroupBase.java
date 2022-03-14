@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -32,9 +33,8 @@ import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.avro.Schema;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -147,8 +147,8 @@ public class FeatureGroupBase {
     featureGroupBaseEngine.delete(this);
   }
 
-  public Dataset<Row> read() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/OnDeamandFeatureGroup classes
+  public <T> T read() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup/OnDeamandFeatureGroup classes
     return null;
   }
 
@@ -442,14 +442,14 @@ public class FeatureGroupBase {
 
   public FeatureGroupValidation validate() throws FeatureStoreException, IOException {
     // Run data validation for entire feature group
-    return validate(this.read(), true);
+    return DataValidationEngine.getInstance().validate(this, this.read(), expectations, true);
   }
 
-  public FeatureGroupValidation validate(Dataset<Row> data) throws FeatureStoreException, IOException {
+  public <S> FeatureGroupValidation validate(S data) throws FeatureStoreException, IOException {
     return validate(data, false);
   }
 
-  public FeatureGroupValidation validate(Dataset<Row> data, Boolean logActivity) throws FeatureStoreException,
+  public <S> FeatureGroupValidation validate(S data, Boolean logActivity) throws FeatureStoreException,
       IOException {
     // Check if an expectation contains features. If it does not, try to use all the current FG features
     List<Expectation> expectations = expectationsApi.get(this);
@@ -472,5 +472,39 @@ public class FeatureGroupBase {
   @JsonIgnore
   public List<FeatureGroupValidation> getValidations() throws FeatureStoreException, IOException {
     return DataValidationEngine.getInstance().getValidations(this);
+  }
+
+  public String getOnlineTopicName() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public List<String> getComplexFeatures() {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  @JsonIgnore
+  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
+    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
+    return null;
+  }
+
+  public TimeTravelFormat getTimeTravelFormat() {
+    // This method should be overridden by the FeatureGroup classes
+    return null;
   }
 }
