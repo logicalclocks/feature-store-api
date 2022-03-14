@@ -20,7 +20,7 @@
     
     
       
-        <title>Transformation functions - Hopsworks Documentation</title>
+        <title>Transformation Functions - Hopsworks Documentation</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#transfromation-function" class="md-skip">
+        <a href="#transformation-function" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Transformation functions
+              Transformation Functions
             
           </span>
         </div>
@@ -202,8 +202,8 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-tabs__link">
+      Compute Management
     </a>
   </li>
 
@@ -214,8 +214,20 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-tabs__link">
+      Administration
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -240,6 +252,18 @@
   <li class="md-tabs__item">
     <a href="https://community.hopsworks.ai/" class="md-tabs__link">
       Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1110,6 +1134,19 @@
 
 
   <li class="md-nav__item">
+    <a href="../query_api/" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../rule_definition_api/" class="md-nav__link">
       Rule Definiton
     </a>
@@ -1171,12 +1208,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Transformation functions
+        Transformation Functions
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Transformation functions
+      Transformation Functions
     </a>
     
       
@@ -1398,8 +1435,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-nav__link">
+      Compute Management
     </a>
   </li>
 
@@ -1411,8 +1448,21 @@
 
 
   <li class="md-nav__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-nav__link">
+      Administration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -1439,6 +1489,19 @@
   <li class="md-nav__item">
     <a href="https://community.hopsworks.ai/" class="md-nav__link">
       Community
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1623,8 +1686,8 @@
               
                 
                 
-                <h1 id="transfromation-function">Transfromation Function<a class="headerlink" href="#transfromation-function" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L24">[source]</a></span></p>
+                <h1 id="transformation-function">Transformation Function<a class="headerlink" href="#transformation-function" title="Permanent link">#</a></h1>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L25">[source]</a></span></p>
 <h3 id="transformationfunction">TransformationFunction<a class="headerlink" href="#transformationfunction" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">transformation_function</span><span class="o">.</span><span class="n">TransformationFunction</span><span class="p">(</span>
     <span class="n">featurestore_id</span><span class="p">,</span>
@@ -1632,6 +1695,7 @@
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">source_code_content</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">builtin_source_code</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1642,43 +1706,43 @@
 </code></pre></div>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L170">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L186">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Training dataset id.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L179">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L195">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L199">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L215">[source]</a></span></p>
 <h3 id="output_type">output_type<a class="headerlink" href="#output_type" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L195">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L211">[source]</a></span></p>
 <h3 id="source_code_content">source_code_content<a class="headerlink" href="#source_code_content" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L191">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L207">[source]</a></span></p>
 <h3 id="transformation_fn">transformation_fn<a class="headerlink" href="#transformation_fn" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L187">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L203">[source]</a></span></p>
 <h3 id="transformer_code">transformer_code<a class="headerlink" href="#transformer_code" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L183">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L199">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L69">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L85">[source]</a></span></p>
 <h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </code></pre></div>
 <p>Delete transformation function from backend.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L65">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L81">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <p>Persist transformation function in backend.</p>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L669">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L678">[source]</a></span></p>
 <h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1698,7 +1762,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L728">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L737">[source]</a></span></p>
 <h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1712,7 +1776,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L744">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L753">[source]</a></span></p>
 <h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
 </code></pre></div>

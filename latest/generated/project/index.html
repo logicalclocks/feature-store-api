@@ -202,8 +202,8 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-tabs__link">
+      Compute Management
     </a>
   </li>
 
@@ -214,8 +214,20 @@
 
 
   <li class="md-tabs__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-tabs__link">
+      Administration
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-tabs__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -240,6 +252,18 @@
   <li class="md-tabs__item">
     <a href="https://community.hopsworks.ai/" class="md-tabs__link">
       Community
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-tabs__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1230,6 +1254,19 @@
 
 
   <li class="md-nav__item">
+    <a href="../api/query_api/" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../api/rule_definition_api/" class="md-nav__link">
       Rule Definiton
     </a>
@@ -1283,7 +1320,7 @@
 
   <li class="md-nav__item">
     <a href="../api/transformation_functions_api/" class="md-nav__link">
-      Transformation functions
+      Transformation Functions
     </a>
   </li>
 
@@ -1344,8 +1381,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
-      Hopsworks.ai
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/compute/" class="md-nav__link">
+      Compute Management
     </a>
   </li>
 
@@ -1357,8 +1394,21 @@
 
 
   <li class="md-nav__item">
-    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
-      Hopsworks Platform
+    <a href="https://docs.hopsworks.ai/hopsworks/latest/admin/" class="md-nav__link">
+      Administration
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://docs.hopsworks.ai/hopsworks-cloud/latest/" class="md-nav__link">
+      Hopsworks.ai
     </a>
   </li>
 
@@ -1385,6 +1435,19 @@
   <li class="md-nav__item">
     <a href="https://community.hopsworks.ai/" class="md-nav__link">
       Community
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+
+  <li class="md-nav__item">
+    <a href="https://hopsworks.readthedocs.io/en/stable/index.html" class="md-nav__link">
+      Old Documentation
     </a>
   </li>
 
@@ -1771,8 +1834,8 @@ connection.</p>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Get a reference to a feature store to perform operations on.</p>
-<p>Defaulting to the project's default feature store. Shared feature stores can be
-retrieved by passing the <code>name</code> argument.</p>
+<p>Defaulting to the project name of default feature store. To get a
+Shared feature stores, the project name of the feature store is required.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>name</strong> <code>str</code>: The name of the feature store, defaults to <code>None</code>.</li>
