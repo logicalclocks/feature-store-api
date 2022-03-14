@@ -111,8 +111,6 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
 
     Schema featureSchema;
     byte[] featureData;
-    GenericRecord featureResult;
-    DatumReader<GenericRecord> datumReader;
     Decoder decoder;
 
     for (String complexFeature : complexFeatures) {
@@ -122,14 +120,12 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
       featureSchema = complexFeatureSchemas.get(complexFeature);
       try {
         decoder = DecoderFactory.get().binaryDecoder(featureData, binaryDecoder);
-        featureResult = new GenericData.Record(featureSchema);
-        featureResult = complexFeaturesDatumReaders.get(complexFeature).read(featureResult, decoder);
+        finalResult.put(complexFeature, complexFeaturesDatumReaders.get(complexFeature).read(null, decoder));
       } catch (Exception ex) {
         throw new SerializationException(
             "Can't deserialize complex feature data '" + Arrays.toString(featureData) + "' from topic '" + topic
                 + "' with schema: " + featureSchema.toString(true), ex);
       }
-      finalResult.put(complexFeature, featureResult);
     }
 
     for (String feature : this.schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList())) {
