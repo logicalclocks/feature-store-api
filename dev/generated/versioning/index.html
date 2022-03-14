@@ -897,6 +897,19 @@
 
 
   <li class="md-nav__item">
+    <a href="../stream_feature_group/" class="md-nav__link">
+      Stream Feature Group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
     <a href="../storage_connector/" class="md-nav__link">
       Storage Connector
     </a>
@@ -1589,7 +1602,7 @@
 The <code>version</code> parameter is not mandatory. If not provided and no feature group (or training dataset) with that name exists, then the version is going to be set to 1. If the <code>version</code> parameter is not provided, and a feature group (or training dataset) already exist, then the version number will be increased by one.</p>
 <h3 id="appending-features-to-an-existing-version">Appending features to an existing version<a class="headerlink" href="#appending-features-to-an-existing-version" title="Permanent link">#</a></h3>
 <p>For feature groups, it is possible to append new features to existing feature groups. This is not considered a breaking change. To append new features users can either use the UI or the following <code>append_features</code> method:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L335">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L336">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
@@ -1635,7 +1648,7 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L236">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L288">[source]</a></span></p>
 <h3 id="get_training_datasets">get_training_datasets<a class="headerlink" href="#get_training_datasets" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_datasets</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1664,7 +1677,7 @@ Data versioning is also not critical for training datasets, which are point in t
 </p>
 
 <p>It is also possible to retrieve the same information programmatically, using the <code>commit_details()</code> method of a feature group object:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1015">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1008">[source]</a></span></p>
 <h3 id="commit_details">commit_details<a class="headerlink" href="#commit_details" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">commit_details</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
