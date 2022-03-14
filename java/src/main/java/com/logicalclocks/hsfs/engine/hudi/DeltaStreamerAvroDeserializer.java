@@ -115,7 +115,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
 
     for (String complexFeature : complexFeatures) {
       ByteBuffer byteBuffer = (ByteBuffer) result.get(complexFeature);
-      featureData = new byte[byteBuffer.remaining()]; //(byte[]) result.get(complexFeature);
+      featureData = new byte[byteBuffer.remaining()];
       byteBuffer.get(featureData);
       featureSchema = complexFeatureSchemas.get(complexFeature);
       try {
