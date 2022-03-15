@@ -153,6 +153,58 @@ class FeatureStore:
             name, None, feature_group_api.FeatureGroupApi.CACHED
         )
 
+    def get_stream_feature_group(self, name: str, version: int = None):
+        """Get a stream feature group entity from the feature store.
+
+        Getting a feature group from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame or use
+        the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the feature group to get.
+            version: Version of the feature group to retrieve, defaults to `None` and will
+                return the `version=1`.
+
+        # Returns
+            `FeatureGroup`: The feature group metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+        if version is None:
+            warnings.warn(
+                "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
+        return self._feature_group_api.get(
+            name, version, feature_group_api.FeatureGroupApi.STREAM
+        )
+
+    def get_stream_feature_groups(self, name: str):
+        """Get a list of all versions of a stream feature group entity from the feature store.
+
+        Getting a feature group from the Feature Store means getting its metadata handle
+        so you can subsequently read the data into a Spark or Pandas DataFrame or use
+        the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the feature group to get.
+
+        # Returns
+            `FeatureGroup`: List of feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+        return self._feature_group_api.get(
+            name, None, feature_group_api.FeatureGroupApi.STREAM
+        )
+
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a on-demand feature group entity from the feature store.
 
@@ -435,6 +487,76 @@ class FeatureStore:
             statistics_config=statistics_config,
             validation_type=validation_type,
             expectations=expectations,
+            event_time=event_time,
+        )
+
+    def create_stream_feature_group(
+        self,
+        name: str,
+        primary_key: List[str],
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        partition_key: Optional[List[str]] = [],
+        hudi_precombine_key: Optional[str] = None,
+        features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        event_time: Optional[str] = None,
+    ):
+        """Create a stream feature group metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata or feature data in the
+            feature store on its own. To persist the feature group and save feature data
+            along the metadata in the feature store, call the `save()` method with a
+            DataFrame.
+
+        # Arguments
+            name: Name of the feature group to create.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key.
+            version: Version of the feature group to retrieve, defaults to `None` and
+                will create the feature group with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            partition_key: A list of feature names to be used as partition key when
+                writing the feature data to the offline storage, defaults to empty list
+                `[]`.
+            hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
+                feature group. Defaults to `None`. If feature group has time travel format
+                `"HUDI"` and hudi precombine key was not specified then the first primary key of
+                the feature group will be used as hudi precombine key.
+            features: Optionally, define the schema of the feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame provided in the `save` method.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+
+        # Returns
+            `FeatureGroup`. The feature group metadata object.
+        """
+        return feature_group.StreamFeatureGroup(
+            name=name,
+            version=version,
+            description=description,
+            partition_key=partition_key,
+            primary_key=primary_key,
+            hudi_precombine_key=hudi_precombine_key,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+            features=features,
+            statistics_config=statistics_config,
             event_time=event_time,
         )
 

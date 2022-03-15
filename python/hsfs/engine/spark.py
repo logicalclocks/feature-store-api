@@ -24,6 +24,8 @@ import pandas as pd
 import avro
 
 # in case importing in %%local
+from hsfs.feature_group import StreamFeatureGroup
+
 try:
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame
@@ -168,28 +170,37 @@ class Engine:
         online_write_options,
         validation_id=None,
     ):
-
-        if storage == "offline" or not online_enabled:
-            self._save_offline_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                offline_write_options,
-                validation_id,
-            )
-        elif storage == "online":
-            self._save_online_dataframe(feature_group, dataframe, online_write_options)
-        elif online_enabled and storage is None:
-            self._save_offline_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                offline_write_options,
-            )
-            self._save_online_dataframe(feature_group, dataframe, online_write_options)
-        else:
+        try:
+            if isinstance(feature_group, StreamFeatureGroup):
+                self._save_online_dataframe(
+                    feature_group, dataframe, online_write_options
+                )
+            else:
+                if storage == "offline" or not online_enabled:
+                    self._save_offline_dataframe(
+                        feature_group,
+                        dataframe,
+                        operation,
+                        offline_write_options,
+                        validation_id,
+                    )
+                elif storage == "online":
+                    self._save_online_dataframe(
+                        feature_group, dataframe, online_write_options
+                    )
+                elif online_enabled and storage is None:
+                    self._save_offline_dataframe(
+                        feature_group,
+                        dataframe,
+                        operation,
+                        offline_write_options,
+                    )
+                    self._save_online_dataframe(
+                        feature_group, dataframe, online_write_options
+                    )
+        except Exception:
             raise FeatureStoreException(
-                "Error writing to offline and online feature store."
+                "Error writing to offline and online feature store"
             )
 
     def save_stream_dataframe(

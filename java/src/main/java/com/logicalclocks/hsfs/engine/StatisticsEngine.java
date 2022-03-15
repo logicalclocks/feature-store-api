@@ -55,8 +55,10 @@ public class StatisticsEngine {
         null));
   }
 
-  public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
+  public <S> Statistics computeStatistics(FeatureGroupBase featureGroup, S genericDataFrame, Long commitId)
       throws FeatureStoreException, IOException {
+
+    Dataset<Row> dataFrame = (Dataset<Row>) genericDataFrame;
     return statisticsApi.post(featureGroup, computeStatistics(dataFrame,
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),

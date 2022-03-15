@@ -44,6 +44,7 @@ nav:
       - Project/Connection: generated/project.md
       - Feature Store: generated/feature_store.md
       - Feature Group: generated/feature_group.md
+      - Stream Feature Group: generated/stream_feature_group.md
       - Storage Connector: generated/storage_connector.md
       - On-demand (External) Feature Group: generated/on_demand_feature_group.md
       - Feature: generated/feature.md

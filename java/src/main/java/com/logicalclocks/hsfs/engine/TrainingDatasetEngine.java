@@ -65,7 +65,7 @@ public class TrainingDatasetEngine {
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private Utils utils = new Utils();
+  private TrainingDatasetUtils utils = new TrainingDatasetUtils();
   private Schema.Parser parser = new Schema.Parser();
   private BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
 

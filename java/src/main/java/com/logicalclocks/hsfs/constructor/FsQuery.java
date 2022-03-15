@@ -18,11 +18,11 @@ package com.logicalclocks.hsfs.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -91,7 +91,7 @@ public class FsQuery {
   public void registerHudiFeatureGroups(Map<String, String> readOptions) {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiCachedFeatureGroups) {
       String alias = hudiFeatureGroupAlias.getAlias();
-      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+      FeatureGroupBase featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
 
       SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
           hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
