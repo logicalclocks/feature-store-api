@@ -19,13 +19,18 @@ package com.logicalclocks.hsfs.constructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
+import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
@@ -67,6 +72,31 @@ public class FsQuery {
         return queryOnline;
       default:
         throw new FeatureStoreException("Cannot run query on ALL storages");
+    }
+  }
+
+  public void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException {
+    if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
+      return;
+    }
+
+    for (OnDemandFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroups) {
+      String alias = onDemandFeatureGroupAlias.getAlias();
+      OnDemandFeatureGroup onDemandFeatureGroup = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
+
+      SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
+    }
+  }
+
+  public void registerHudiFeatureGroups(Map<String, String> readOptions) {
+    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiCachedFeatureGroups) {
+      String alias = hudiFeatureGroupAlias.getAlias();
+      FeatureGroupBase featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
+
+      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
+          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
+          readOptions);
     }
   }
 }

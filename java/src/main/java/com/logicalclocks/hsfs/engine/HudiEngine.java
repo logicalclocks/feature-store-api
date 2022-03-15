@@ -136,7 +136,8 @@ public class HudiEngine {
     sparkSession.read()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
-        .load(featureGroup.getLocation()).createOrReplaceTempView(alias);
+        .load(featureGroup.getLocation())
+        .createOrReplaceTempView(alias);
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
@@ -208,7 +209,7 @@ public class HudiEngine {
 
   private Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = new HashMap<String, String>();
+    Map<String, String> hudiArgs = new HashMap<>();
 
     if (startTimestamp != null) {
       hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
@@ -216,7 +217,12 @@ public class HudiEngine {
       hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
     }
 
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    if (endTimestamp != null) {
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    } else {
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(System.currentTimeMillis()));
+    }
+
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
@@ -227,8 +233,8 @@ public class HudiEngine {
   }
 
   @SneakyThrows
-  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    return dateFormat.format(commitedOnDate);
+  public String timeStampToHudiFormat(Long committedOnTimeStamp) {
+    Date committedOnDate = new Timestamp(committedOnTimeStamp);
+    return dateFormat.format(committedOnDate);
   }
 }
