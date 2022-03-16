@@ -18,6 +18,8 @@ import pandas as pd
 import numpy as np
 import boto3
 import time
+import re
+import warnings
 
 from io import BytesIO
 from pyhive import hive
@@ -212,8 +214,21 @@ class Engine:
 
     def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, pd.DataFrame):
-            dataframe.columns = [x.lower() for x in dataframe.columns]
-            return dataframe
+            upper_case_features = [
+                col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
+
+            # making a shallow copy of the dataframe so that column names are unchanged
+            dataframe_copy = dataframe.copy(deep=False)
+            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+            return dataframe_copy
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
