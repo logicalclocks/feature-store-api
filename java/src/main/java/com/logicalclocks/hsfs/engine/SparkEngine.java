@@ -681,7 +681,8 @@ public class SparkEngine {
           property_key_file, localPath
       );
     } else {
-      sparkSession.sparkContext().hadoopConfiguration().unset(property_key_file); // to clear previous
+      // to clear previous
+      sparkSession.sparkContext().hadoopConfiguration().unset(property_key_file);
     }
 
     if (!Strings.isNullOrEmpty(storageConnector.getEncryptionKey())) { // if encryption fields present
