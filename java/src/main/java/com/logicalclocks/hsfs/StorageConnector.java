@@ -492,26 +492,34 @@ public abstract class StorageConnector {
   }
 
   public static class GcsConnector extends StorageConnector {
+    @Getter
     private String keyPath;
+    @Getter
     private String algorithm;
+    @Getter
     private String encryptionKey;
+    @Getter
     private String encryptionKeyHash;
+    @Getter
+    private String bucket;
 
     public GcsConnector() {
     }
 
-    public String getPath(String subPath) throws FeatureStoreException {
-      return null;
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return "gs://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
 
+    @Override
     public Map<String, String> sparkOptions() {
-      return new HashMap();
+      return new HashMap<>();
     }
 
-    public Dataset<Row> read(String dataFormat, Map<String, String> options, String path)
+    @Override
+    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
-
-      this.refetch();
+      path = getPath(path);
       return SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
 
@@ -519,20 +527,5 @@ public abstract class StorageConnector {
       SparkEngine.getInstance().setupConnectorHadoopConf(this);
     }
 
-    public String getKeyPath() {
-      return this.keyPath;
-    }
-
-    public String getAlgorithm() {
-      return algorithm;
-    }
-
-    public String getEncryptionKey() {
-      return encryptionKey;
-    }
-
-    public String getEncryptionKeyHash() {
-      return encryptionKeyHash;
-    }
   }
 }

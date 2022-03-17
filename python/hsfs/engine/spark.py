@@ -809,37 +809,30 @@ class Engine:
 
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
-        if storage_connector.key_path:
-            local_path = self.add_file(
-                storage_connector.key_path.replace("hdfs://", "")
-            )
-            self._spark_context._jsc.hadoopConfiguration().set(
-                PROPERTY_KEY_FILE, local_path
-            )
-
-        if storage_connector.encryption_key:  # if encryption fields present
-            self._spark_context._jsc.hadoopConfiguration().set(
-                PROPERTY_ENCRYPTION_KEY, storage_connector.encryption_key
-            )
-        else:  # unset if already set
-            self._spark_context._jsc.hadoopConfiguration().unset(
-                PROPERTY_ENCRYPTION_KEY
-            )
+        local_path = self.add_file(storage_connector.key_path)
+        self._spark_context._jsc.hadoopConfiguration().set(
+            PROPERTY_KEY_FILE, local_path
+        )
 
         if storage_connector.algorithm:
+            # if encryption fields present
             self._spark_context._jsc.hadoopConfiguration().set(
                 PROPERTY_ALGORITHM, storage_connector.algorithm
             )
-        else:
-            self._spark_context._jsc.hadoopConfiguration().unset(PROPERTY_ALGORITHM)
-
-        if storage_connector.encryption_key_hash:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                PROPERTY_ENCRYPTION_KEY, storage_connector.encryption_key
+            )
             self._spark_context._jsc.hadoopConfiguration().set(
                 PROPERTY_ENCRYPTION_HASH, storage_connector.encryption_key_hash
             )
         else:
+            # unset if already set
+            self._spark_context._jsc.hadoopConfiguration().unset(PROPERTY_ALGORITHM)
             self._spark_context._jsc.hadoopConfiguration().unset(
                 PROPERTY_ENCRYPTION_HASH
+            )
+            self._spark_context._jsc.hadoopConfiguration().unset(
+                PROPERTY_ENCRYPTION_KEY
             )
 
         return path

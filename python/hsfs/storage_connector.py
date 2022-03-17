@@ -940,12 +940,14 @@ class GcsConnector(StorageConnector):
         featurestore_id,
         # members specific to type of connector
         key_path=None,
+        bucket=None,
         algorithm=None,
         encryption_key=None,
         encryption_key_hash=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
+        self._bucket = bucket
         self._key_path = key_path
         self._algorithm = algorithm
         self._encryption_key = encryption_key
@@ -971,14 +973,19 @@ class GcsConnector(StorageConnector):
         """Encryption Key Hash"""
         return self._encryption_key_hash
 
+    @property
+    def path(self):
+        """the path of the connector along with gs file system prefixed"""
+        return "gs://" + self._bucket
+
+    def _get_path(self, sub_path: str):
+        return os.path.join(self.path, sub_path)
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        return super().spark_options
-
-    def _get_path(self, sub_path: str):
-        super()._get_path(sub_path)
+        return {}
 
     def read(
         self,
@@ -1004,7 +1011,7 @@ class GcsConnector(StorageConnector):
         # Returns
             `StreamingDataframe`: A Spark streaming dataframe.
         """
-        self.refetch()
+        path = self._get_path(path)
         return engine.get_instance().read(self, data_format, options, path)
 
     def prepare_spark(self, path: Optional[str] = None):
