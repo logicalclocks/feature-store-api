@@ -40,9 +40,10 @@ setup(
             "sphinx==3.5.4",
             "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include"],
-        "hive": ["pyhopshive[thrift]"]
+        "hive": ["pyhopshive[thrift]"],
+        "python": ["pyhopshive[thrift]"],
     },
-    author="Logical Clocks AB",
+    author="Hopsworks AB",
     author_email="moritz@logicalclocks.com",
     description="HSFS: An environment independent client to interact with the Hopsworks Featurestore",
     license="Apache License 2.0",

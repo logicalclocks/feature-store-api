@@ -25,8 +25,6 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
-from pyhive.exc import NotSupportedError
-
 from hsfs import client, feature, util
 from hsfs.core import (
     feature_group_api,
@@ -179,7 +177,7 @@ class Engine:
         options,
         include_metadata,
     ):
-        raise NotSupportedError(
+        raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
         )
 

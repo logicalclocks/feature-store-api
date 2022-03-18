@@ -182,16 +182,16 @@ class Connection:
                 self._engine is None and importlib.util.find_spec("pyspark")
             ):
                 self._engine = "spark"
-            elif (self._engine is not None and self._engine.lower() == "hive") or (
-                self._engine is None and not importlib.util.find_spec("pyspark")
-            ):
-                self._engine = "hive"
+            elif (
+                self._engine is not None and self._engine.lower() in ["hive", "python"]
+            ) or (self._engine is None and not importlib.util.find_spec("pyspark")):
+                self._engine = "python"
             elif self._engine is not None and self._engine.lower() == "training":
                 self._engine = "training"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'`, `'hive'` and `'training'`."
+                    "Supported engines are `'spark'`, `'python'` and `'training'`."
                 )
 
             # init client

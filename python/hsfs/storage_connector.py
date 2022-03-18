@@ -19,7 +19,6 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
-from pyhive.exc import NotSupportedError
 
 from hsfs import engine
 from hsfs.core import storage_connector_api
@@ -870,7 +869,7 @@ class KafkaConnector(StorageConnector):
         path: str = None,
     ):
         """NOT SUPPORTED."""
-        raise NotSupportedError(
+        raise NotImplementedError(
             "Reading a Kafka Stream into a static Spark Dataframe is not supported."
         )
 
