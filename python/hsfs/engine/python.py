@@ -375,7 +375,7 @@ class Engine:
         )
 
     def get_empty_appended_dataframe(self, dataframe, new_features):
-        """No-op in hive engine, user has to write to feature group manually for schema
+        """No-op in python engine, user has to write to feature group manually for schema
         change to take effect."""
         return None
 

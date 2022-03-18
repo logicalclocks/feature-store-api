@@ -9,7 +9,7 @@
 
     ```bash
     cd python
-    pip install -e ".[hive,dev]"
+    pip install -e ".[python,dev]"
     ```
 
 - Install [pre-commit](https://pre-commit.com/) and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through [black](https://github.com/psf/black) and [flake8](https://gitlab.com/pycqa/flake8). Run the following commands from the `python` directory:
@@ -80,7 +80,7 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 2. Install HSFS with `docs` extras:
 
     ```bash
-    pip install -e .[hive,dev,docs]
+    pip install -e .[python,dev,docs]
     ```
 
 3. To build the docs, first run the auto doc script:

@@ -531,7 +531,7 @@ class FeatureGroupBase:
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
             return self._statistics_engine.compute_statistics(self)
         else:
@@ -833,7 +833,7 @@ class FeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
-            # For Hive engine, the computation happens in the Hopsworks application
+            # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -922,7 +922,7 @@ class FeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
-            # if Hive, the statistics are computed by the application doing the insert
+            # if Python, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
     def insert_stream(
@@ -1102,7 +1102,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
 
             fg_commit_id = None
@@ -1426,7 +1426,7 @@ class StreamFeatureGroup(FeatureGroup):
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
-            # For Hive engine, the computation happens in the Hopsworks application
+            # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(

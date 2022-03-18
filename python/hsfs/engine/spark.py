@@ -739,7 +739,7 @@ class Engine:
         return dataframe
 
     def save_empty_dataframe(self, feature_group, dataframe):
-        """Wrapper around save_dataframe in order to provide no-op in hive engine."""
+        """Wrapper around save_dataframe in order to provide no-op in python engine."""
         self.save_dataframe(
             feature_group,
             dataframe,

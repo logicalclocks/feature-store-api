@@ -34,7 +34,7 @@ class StatisticsEngine:
         if engine.get_type() == "spark":
 
             # If the feature dataframe is None, then trigger a read on the metadata instance
-            # We do it here to avoid making a useless request when using the Hive engine
+            # We do it here to avoid making a useless request when using the Python engine
             # and calling compute_statistics
             if feature_dataframe is None:
                 if feature_group_commit_id is not None:
@@ -61,7 +61,7 @@ class StatisticsEngine:
             return stats
 
         else:
-            # Hive engine
+            # Python engine
             engine.get_instance().profile(metadata_instance)
 
     @staticmethod
