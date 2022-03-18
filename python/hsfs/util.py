@@ -175,3 +175,7 @@ class StatisticsWarning(Warning):
 
 class ValidationWarning(Warning):
     pass
+
+
+class FeatureGroupWarning(Warning):
+    pass
