@@ -23,7 +23,6 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
-from pyhive.exc import NotSupportedError
 
 from hsfs import client, feature, util
 from hsfs.core import (
@@ -177,7 +176,7 @@ class Engine:
         options,
         include_metadata,
     ):
-        raise NotSupportedError(
+        raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
         )
 
@@ -208,7 +207,7 @@ class Engine:
         self._wait_for_job(job)
 
     def validate(self, dataframe, expectations, log_activity=True):
-        raise NotSupportedError(
+        raise NotImplementedError(
             "Deequ data validation is only available with Spark Engine."
         )
 
@@ -232,7 +231,7 @@ class Engine:
         ]
 
     def parse_schema_training_dataset(self, dataframe):
-        raise NotSupportedError(
+        raise NotImplementedError(
             "Training dataset creation from Dataframes is not "
             + "supported in Python environment. Use HSFS Query object instead."
         )
