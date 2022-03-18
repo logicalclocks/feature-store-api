@@ -207,6 +207,11 @@ class Engine:
 
         self._wait_for_job(job)
 
+    def validate(self, dataframe, expectations, log_activity=True):
+        raise NotSupportedError(
+            "Deequ data validation is only available with Spark Engine."
+        )
+
     def set_job_group(self, group_id, description):
         pass
 
@@ -225,6 +230,12 @@ class Engine:
             feature.Feature(feat_name.lower(), self._convert_pandas_type(feat_type))
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
+
+    def parse_schema_training_dataset(self, dataframe):
+        raise NotSupportedError(
+            "Training dataset creation from Dataframes is not "
+            + "supported in Python environment. Use HSFS Query object instead."
+        )
 
     def _convert_pandas_type(self, dtype):
         # This is a simple type conversion between pandas type and pyspark types.
