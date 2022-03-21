@@ -1521,7 +1521,7 @@
 <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">package_name</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">os</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pip install %s[hive]==%s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">package_name</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pip install %s[python]==%s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">package_name</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
 
 <span class="c1"># Put the API key into Key Vault for any production setup:</span>
 <span class="c1"># See, https://docs.microsoft.com/en-us/azure/machine-learning/how-to-use-secrets-in-runs</span>
@@ -1539,7 +1539,7 @@
         <span class="n">project</span><span class="o">=</span><span class="s1">&#39;MY_PROJECT&#39;</span><span class="p">,</span>                  <span class="c1"># Name of your Hopsworks Feature Store project</span>
         <span class="n">api_key_value</span><span class="o">=</span><span class="n">secret_value</span><span class="p">,</span>            <span class="c1"># The API key to authenticate with Hopsworks</span>
         <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># Disable for self-signed certificates</span>
-        <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;hive&#39;</span>                          <span class="c1"># Choose Hive as engine</span>
+        <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;python&#39;</span>                        <span class="c1"># Choose python as engine</span>
     <span class="p">)</span>
     <span class="n">fs</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">()</span>              <span class="c1"># Get the project&#39;s default feature store</span>
 

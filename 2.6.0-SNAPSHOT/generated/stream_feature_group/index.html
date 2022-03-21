@@ -2706,7 +2706,7 @@ either <code>insert</code> or <code>upsert</code>.</p>
 <li><strong>operation</strong> <code>Optional[str]</code>: Apache Hudi operation type <code>"insert"</code> or <code>"upsert"</code>.
     Defaults to <code>"upsert"</code>.</li>
 <li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>hive</code> engine, write_options can contain the
+    When using the <code>python</code> engine, write_options can contain the
     following entries:<ul>
 <li>key <code>spark</code> and value an object of type
 <a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>

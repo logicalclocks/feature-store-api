@@ -2907,7 +2907,7 @@ either <code>insert</code> or <code>upsert</code>.</p>
     storage only with <code>"offline"</code> or online only with <code>"online"</code>, defaults
     to <code>None</code>.</li>
 <li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>hive</code> engine, write_options can contain the
+    When using the <code>python</code> engine, write_options can contain the
     following entries:<ul>
 <li>key <code>spark</code> and value an object of type
 <a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
@@ -3065,7 +3065,7 @@ or a two-dimensional Numpy array or a two-dimensional Python nested list.</p>
 <ul>
 <li><strong>features</strong> <code>Union[pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Query, DataFrame, RDD, Ndarray, list. Features to be saved.</li>
 <li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>hive</code> engine, write_options can contain the
+    When using the <code>python</code> engine, write_options can contain the
     following entries:<ul>
 <li>key <code>spark</code> and value an object of type
 <a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
@@ -3080,7 +3080,7 @@ or a two-dimensional Numpy array or a two-dimensional Python nested list.</p>
 </li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Job</code>: When using the <code>hive</code> engine, it returns the Hopsworks Job
+<p><code>Job</code>: When using the <code>python</code> engine, it returns the Hopsworks Job
     that was launched to ingest the feature group data.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>. Unable to create feature group.</p>

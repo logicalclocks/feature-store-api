@@ -1536,11 +1536,11 @@
 
 <h3 id="install-hsfs">Install <strong>HSFS</strong><a class="headerlink" href="#install-hsfs" title="Permanent link">#</a></h3>
 <p>To be able to access the Hopsworks Feature Store, the <code>HSFS</code> Python library needs to be installed. One way of achieving this is by opening a Python notebook in Azure Machine Learning and installing the <code>HSFS</code> with a magic command and pip:</p>
-<div class="highlight"><pre><span></span><code>!pip install hsfs[hive]~=[HOPSWORKS_VERSION]
+<div class="highlight"><pre><span></span><code>!pip install hsfs[python]~=[HOPSWORKS_VERSION]
 </code></pre></div>
 <div class="admonition attention">
 <p class="admonition-title">Hive Dependencies</p>
-<p>By default, <code>HSFS</code> assumes Spark is used as execution engine and therefore Hive dependencies are not installed. Hence, if you are using a regular Python Kernel <strong>without Spark</strong>, make sure to install the <strong>"hive"</strong> extra dependencies (<code>hsfs[hive]</code>).</p>
+<p>By default, <code>HSFS</code> assumes Spark is used as execution engine and therefore Hive dependencies are not installed. Hence, if you are using a regular Python Kernel <strong>without Spark</strong>, make sure to install the <strong>"python"</strong> extra dependencies (<code>hsfs[python]</code>).</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Matching Hopsworks version</p>
@@ -1570,7 +1570,7 @@
     <span class="n">project</span><span class="o">=</span><span class="s1">&#39;MY_PROJECT&#39;</span><span class="p">,</span>                  <span class="c1"># Name of your Hopsworks Feature Store project</span>
     <span class="n">api_key_value</span><span class="o">=</span><span class="n">secret_value</span><span class="p">,</span>            <span class="c1"># The API key to authenticate with Hopsworks</span>
     <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># Disable for self-signed certificates</span>
-    <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;hive&#39;</span>                          <span class="c1"># Choose Hive as engine</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;python&#39;</span>                        <span class="c1"># Choose Python as engine</span>
 <span class="p">)</span>
 
 <span class="c1"># Get the feature store handle for the project&#39;s feature store</span>

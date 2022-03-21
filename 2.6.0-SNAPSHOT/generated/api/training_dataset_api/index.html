@@ -2579,7 +2579,7 @@ lists or Numpy ndarrays. The schemas must match for this operation.</p>
 <li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
 <li><strong>overwrite</strong> <code>bool</code>: Whether to overwrite the entire data in the training dataset.</li>
 <li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>hive</code> engine, write_options can contain the
+    When using the <code>python</code> engine, write_options can contain the
     following entries:<ul>
 <li>key <code>spark</code> and value an object of type
 <a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
@@ -2591,7 +2591,7 @@ lists or Numpy ndarrays. The schemas must match for this operation.</p>
 </li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Job</code>: When using the <code>hive</code> engine, it returns the Hopsworks Job
+<p><code>Job</code>: When using the <code>python</code> engine, it returns the Hopsworks Job
     that was launched to create the training dataset.</p>
 <p><strong>Raises</strong></p>
 <ul>
@@ -2633,7 +2633,7 @@ From v2.5 onward, filters are saved along with the <code>Query</code>.</p>
 <ul>
 <li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
 <li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>hive</code> engine, write_options can contain the
+    When using the <code>python</code> engine, write_options can contain the
     following entries:<ul>
 <li>key <code>spark</code> and value an object of type
 <a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
@@ -2645,7 +2645,7 @@ From v2.5 onward, filters are saved along with the <code>Query</code>.</p>
 </li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Job</code>: When using the <code>hive</code> engine, it returns the Hopsworks Job
+<p><code>Job</code>: When using the <code>python</code> engine, it returns the Hopsworks Job
     that was launched to create the training dataset.</p>
 <p><strong>Raises</strong></p>
 <ul>

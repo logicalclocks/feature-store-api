@@ -1496,11 +1496,11 @@
 </div>
 <h2 id="install-hsfs">Install <strong>HSFS</strong><a class="headerlink" href="#install-hsfs" title="Permanent link">#</a></h2>
 <p>To be able to access the Hopsworks Feature Store, the <code>HSFS</code> Python library needs to be installed in the environment from which you want to connect to the Feature Store. You can install the library through pip. We recommend using a Python environment manager such as <em>virtualenv</em> or <em>conda</em>.</p>
-<div class="highlight"><pre><span></span><code>pip install hsfs[hive]~=[HOPSWORKS_VERSION]
+<div class="highlight"><pre><span></span><code>pip install hsfs[python]~=[HOPSWORKS_VERSION]
 </code></pre></div>
 <div class="admonition attention">
 <p class="admonition-title">Hive Dependencies</p>
-<p>By default, <code>HSFS</code> assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on a local Python evnironment, if you are planning to use a regular Python Kernel <strong>without Spark/EMR</strong>, make sure to install the <strong>"hive"</strong> extra dependencies (<code>hsfs[hive]</code>).</p>
+<p>By default, <code>HSFS</code> assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on a local Python evnironment, if you are planning to use a regular Python Kernel <strong>without Spark/EMR</strong>, make sure to install the <strong>"python"</strong> extra dependencies (<code>hsfs[python]</code>).</p>
 </div>
 <div class="admonition attention">
 <p class="admonition-title">Matching Hopsworks version</p>
@@ -1527,7 +1527,7 @@
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Engine</p>
-<p><code>HSFS</code> uses either Apache Spark or Apache Hive as an execution engine to perform queries against the feature store. The <code>engine</code> option of the connection let's you overwrite the default behaviour by setting it to <code>"hive"</code> or <code>"spark"</code>. By default, <code>HSFS</code> will try to use Spark as engine if PySpark is available. So if you have PySpark installed in your local Python environment, but you have not configured Spark, you will have to set <code>engine='hive'</code>. Please refer to the <a href="../spark/">Spark integration guide</a> to configure your local Spark cluster to be able to connect to the Hopsworks Feature Store.</p>
+<p><code>HSFS</code> uses either Apache Spark or Pandas on Python as an execution engine to perform queries against the feature store. The <code>engine</code> option of the connection let's you overwrite the default behaviour by setting it to <code>"python"</code> or <code>"spark"</code>. By default, <code>HSFS</code> will try to use Spark as engine if PySpark is available. So if you have PySpark installed in your local Python environment, but you have not configured Spark, you will have to set <code>engine='python'</code>. Please refer to the <a href="../spark/">Spark integration guide</a> to configure your local Spark cluster to be able to connect to the Hopsworks Feature Store.</p>
 </div>
 <div class="admonition info">
 <p class="admonition-title">Ports</p>

@@ -1785,9 +1785,9 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
 <li><strong>project</strong> <code>Optional[str]</code>: The name of the project to connect to. When running on Hopsworks, this
     defaults to the project from where the client is run from.
     Defaults to <code>None</code>.</li>
-<li><strong>engine</strong> <code>Optional[str]</code>: Which engine to use, <code>"spark"</code>, <code>"hive"</code> or <code>"training"</code>. Defaults to <code>None</code>,
+<li><strong>engine</strong> <code>Optional[str]</code>: Which engine to use, <code>"spark"</code>, <code>"python"</code> or <code>"training"</code>. Defaults to <code>None</code>,
     which initializes the engine to Spark if the environment provides Spark, for
-    example on Hopsworks and Databricks, or falls back on Hive if Spark is not
+    example on Hopsworks and Databricks, or falls back on Hive in Python if Spark is not
     available, e.g. on local Python environments or AWS SageMaker. This option
     allows you to override this behaviour. <code>"training"</code> engine is useful when only
     feature store metadata is needed, for example training dataset location and label
