@@ -43,12 +43,12 @@ To access the Feature Store from Azure Machine Learning, open a Python notebook 
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed. One way of achieving this is by opening a Python notebook in Azure Machine Learning and installing the `HSFS` with a magic command and pip:
 
 ```
-!pip install hsfs[hive]~=[HOPSWORKS_VERSION]
+!pip install hsfs[python]~=[HOPSWORKS_VERSION]
 ```
 
 !!! attention "Hive Dependencies"
 
-    By default, `HSFS` assumes Spark is used as execution engine and therefore Hive dependencies are not installed. Hence, if you are using a regular Python Kernel **without Spark**, make sure to install the **"hive"** extra dependencies (`hsfs[hive]`).
+    By default, `HSFS` assumes Spark is used as execution engine and therefore Hive dependencies are not installed. Hence, if you are using a regular Python Kernel **without Spark**, make sure to install the **"python"** extra dependencies (`hsfs[python]`).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**. Check [PyPI](https://pypi.org/project/hsfs/#history) for available releases.
@@ -81,7 +81,7 @@ conn = hsfs.connection(
     project='MY_PROJECT',                  # Name of your Hopsworks Feature Store project
     api_key_value=secret_value,            # The API key to authenticate with Hopsworks
     hostname_verification=True,            # Disable for self-signed certificates
-    engine='hive'                          # Choose Hive as engine
+    engine='python'                        # Choose Python as engine
 )
 
 # Get the feature store handle for the project's feature store

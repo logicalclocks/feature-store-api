@@ -68,7 +68,7 @@ version = 'MY_VERSION'
 spec = importlib.util.find_spec(package_name)
 if spec is None:
     import os
-    os.system(f"pip install %s[hive]==%s" % (package_name, version))
+    os.system(f"pip install %s[python]==%s" % (package_name, version))
 
 # Put the API key into Key Vault for any production setup:
 # See, https://docs.microsoft.com/en-us/azure/machine-learning/how-to-use-secrets-in-runs
@@ -86,7 +86,7 @@ def azureml_main(dataframe1 = None, dataframe2 = None):
         project='MY_PROJECT',                  # Name of your Hopsworks Feature Store project
         api_key_value=secret_value,            # The API key to authenticate with Hopsworks
         hostname_verification=True,            # Disable for self-signed certificates
-        engine='hive'                          # Choose Hive as engine
+        engine='python'                        # Choose python as engine
     )
     fs = conn.get_feature_store()              # Get the project's default feature store
 

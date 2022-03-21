@@ -81,9 +81,9 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        engine: Which engine to use, `"spark"`, `"hive"` or `"training"`. Defaults to `None`,
+        engine: Which engine to use, `"spark"`, `"python"` or `"training"`. Defaults to `None`,
             which initializes the engine to Spark if the environment provides Spark, for
-            example on Hopsworks and Databricks, or falls back on Hive if Spark is not
+            example on Hopsworks and Databricks, or falls back on Hive in Python if Spark is not
             available, e.g. on local Python environments or AWS SageMaker. This option
             allows you to override this behaviour. `"training"` engine is useful when only
             feature store metadata is needed, for example training dataset location and label
@@ -182,16 +182,16 @@ class Connection:
                 self._engine is None and importlib.util.find_spec("pyspark")
             ):
                 self._engine = "spark"
-            elif (self._engine is not None and self._engine.lower() == "hive") or (
-                self._engine is None and not importlib.util.find_spec("pyspark")
-            ):
-                self._engine = "hive"
+            elif (
+                self._engine is not None and self._engine.lower() in ["hive", "python"]
+            ) or (self._engine is None and not importlib.util.find_spec("pyspark")):
+                self._engine = "python"
             elif self._engine is not None and self._engine.lower() == "training":
                 self._engine = "training"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'`, `'hive'` and `'training'`."
+                    "Supported engines are `'spark'`, `'python'` and `'training'`."
                 )
 
             # init client

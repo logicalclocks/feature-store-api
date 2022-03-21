@@ -77,7 +77,7 @@ class Client(base.Client):
         self._cert_key = None
         self._cert_folder_base = None
 
-        if engine == "hive":
+        if engine == "python":
             # On external Spark clients (Databricks, Spark Cluster),
             # certificates need to be provided before the Spark application starts.
             self._cert_folder_base = cert_folder

@@ -28,17 +28,17 @@ def init(engine_type):
         if engine_type == "spark":
             _engine_type = "spark"
             _engine = spark.Engine()
-        elif engine_type == "hive" or engine_type == "training":
+        elif engine_type in ["hive", "python", "training"]:
             try:
-                from hsfs.engine import hive
+                from hsfs.engine import python
             except ImportError:
                 raise exceptions.FeatureStoreException(
-                    "Trying to instantiate Hive as engine, but 'hive' extras are "
+                    "Trying to instantiate Python as engine, but 'python' extras are "
                     "missing in HSFS installation. Install with `pip install "
-                    "hsfs[hive]`."
+                    "hsfs[python]`."
                 )
-            _engine_type = "hive"
-            _engine = hive.Engine()
+            _engine_type = "python"
+            _engine = python.Engine()
         elif engine_type == "training":
             _engine = "training"
 
@@ -49,7 +49,7 @@ def get_instance():
         if _engine == "training":
             raise Exception(
                 "`training` engine doesn't support this operation. "
-                "Supported engines are `'spark'` and `'hive'`."
+                "Supported engines are `'spark'` and `'python'`."
             )
         return _engine
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")

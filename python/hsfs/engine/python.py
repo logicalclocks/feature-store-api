@@ -25,7 +25,6 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 
-
 from hsfs import client, feature, util
 from hsfs.core import (
     feature_group_api,
@@ -387,7 +386,7 @@ class Engine:
         )
 
     def get_empty_appended_dataframe(self, dataframe, new_features):
-        """No-op in hive engine, user has to write to feature group manually for schema
+        """No-op in python engine, user has to write to feature group manually for schema
         change to take effect."""
         return None
 

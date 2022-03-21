@@ -531,7 +531,7 @@ class FeatureGroupBase:
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
             return self._statistics_engine.compute_statistics(self)
         else:
@@ -804,7 +804,7 @@ class FeatureGroup(FeatureGroupBase):
         # Arguments
             features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -818,7 +818,7 @@ class FeatureGroup(FeatureGroupBase):
 
 
         # Returns
-            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
 
         # Raises
@@ -828,12 +828,12 @@ class FeatureGroup(FeatureGroupBase):
 
         user_version = self._version
 
-        # fg_job is used only if the hive engine is used
+        # fg_job is used only if the python engine is used
         fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
-            # For Hive engine, the computation happens in the Hopsworks application
+            # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -893,7 +893,7 @@ class FeatureGroup(FeatureGroupBase):
                 storage only with `"offline"` or online only with `"online"`, defaults
                 to `None`.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -922,7 +922,7 @@ class FeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
-            # if Hive, the statistics are computed by the application doing the insert
+            # if Python, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
     def insert_stream(
@@ -1102,7 +1102,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
 
             fg_commit_id = None
@@ -1426,7 +1426,7 @@ class StreamFeatureGroup(FeatureGroup):
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
-            # For Hive engine, the computation happens in the Hopsworks application
+            # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -1482,7 +1482,7 @@ class StreamFeatureGroup(FeatureGroup):
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
                 Defaults to `"upsert"`.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
