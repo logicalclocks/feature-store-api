@@ -559,6 +559,7 @@ class FeatureGroupBase:
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
+    STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -583,6 +584,7 @@ class FeatureGroup(FeatureGroupBase):
         expectations=None,
         online_topic_name=None,
         event_time=None,
+        stream=False,
     ):
         super().__init__(featurestore_id, validation_type, location)
 
@@ -607,6 +609,7 @@ class FeatureGroup(FeatureGroupBase):
         self._avro_schema = None
         self._online_topic_name = online_topic_name
         self._event_time = event_time
+        self._stream = stream
 
         if self._id:
             # initialized by backend
@@ -630,13 +633,20 @@ class FeatureGroup(FeatureGroupBase):
 
         else:
             # initialized by user
+            # for python engine we always use stream feature group
+            if engine.get_type() == "python":
+                self._stream = True
+            # for stream feature group time travel format is always HUDI
+            if self._stream:
+                self._time_travel_format = "HUDI"
+
             self.primary_key = primary_key
             self.partition_key = partition_key
             self._hudi_precombine_key = (
                 hudi_precombine_key.lower()
                 if hudi_precombine_key is not None
-                and time_travel_format is not None
-                and time_travel_format.upper() == "HUDI"
+                and self._time_travel_format is not None
+                and self._time_travel_format == "HUDI"
                 else None
             )
             self.statistics_config = statistics_config
@@ -827,6 +837,19 @@ class FeatureGroup(FeatureGroupBase):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
+
+        if self._stream:
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            self._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
+            )
 
         # fg_job is used only if the python engine is used
         fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
@@ -1135,23 +1158,30 @@ class FeatureGroup(FeatureGroupBase):
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
+            json_decamelized["stream"] = (
+                json_decamelized["type"] == "streamFeatureGroupDTO"
+            )
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
+            fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        stream = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
+        self._stream = stream
+        self._online_enabled = stream
         return self
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "version": self._version,
@@ -1160,12 +1190,17 @@ class FeatureGroup(FeatureGroupBase):
             "timeTravelFormat": self._time_travel_format,
             "features": self._features,
             "featurestoreId": self._feature_store_id,
-            "type": "cachedFeaturegroupDTO",
+            "type": "cachedFeaturegroupDTO"
+            if not self._stream
+            else "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
         }
+        if self._stream:
+            fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
+        return fg_meta_dict
 
     def _get_table_name(self):
         return self.feature_store_name + "." + self.name + "_" + str(self.version)
@@ -1281,6 +1316,11 @@ class FeatureGroup(FeatureGroupBase):
         """The names of expectations attached to this feature group."""
         return self._expectations_names
 
+    @property
+    def stream(self):
+        """whether real time stream writing capabilities are supported or not"""
+        return self._stream
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -1321,231 +1361,9 @@ class FeatureGroup(FeatureGroupBase):
     def expectations_names(self, new_expectations_names):
         self._expectations_names = new_expectations_names
 
-
-class StreamFeatureGroup(FeatureGroup):
-    STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
-    ENTITY_TYPE = "featuregroups"
-
-    def __init__(
-        self,
-        name,
-        version,
-        featurestore_id,
-        description="",
-        partition_key=None,
-        primary_key=None,
-        hudi_precombine_key=None,
-        featurestore_name=None,
-        created=None,
-        creator=None,
-        id=None,
-        features=None,
-        location=None,
-        statistics_config=None,
-        validation_type="NONE",
-        expectations=None,
-        online_topic_name=None,
-        event_time=None,
-    ):
-        super().__init__(
-            name=name,
-            version=version,
-            featurestore_id=featurestore_id,
-            description=description,
-            partition_key=partition_key,
-            primary_key=primary_key,
-            hudi_precombine_key=hudi_precombine_key,
-            featurestore_name=featurestore_name,
-            created=created,
-            creator=creator,
-            id=id,
-            features=features,
-            location=location,
-            online_enabled=True,
-            time_travel_format="HUDI",
-            statistics_config=statistics_config,
-            validation_type=validation_type,
-            expectations=expectations,
-            online_topic_name=online_topic_name,
-            event_time=event_time,
-        )
-
-        self._deltastreamer_jobconf = None
-
-    def save(
-        self,
-        features: Union[
-            pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
-            np.ndarray,
-            List[list],
-        ],
-        write_options: Optional[Dict[Any, Any]] = {},
-    ):
-        """Persist the metadata and materialize the feature group to the feature store.
-
-        Calling `save` creates the metadata for the feature group in the feature store
-        and writes the specified `features` dataframe as feature group to the
-        online/offline feature store as specified.
-
-        This writes the feature group to the both online and offline storage.
-
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
-        or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
-        # Arguments
-            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                Write_options can contain the following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to write data into the
-                  feature group.
-
-        # Raises
-            `RestAPIError`. Unable to create feature group.
-        """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
-
-        user_version = self._version
-
-        # when creating a stream feature group, users have the possibility of passing
-        # a spark_job_configuration object as part of the write_options with the key "spark"
-        _spark_options = write_options.pop("spark", None)
-        _write_options = (
-            [{"name": k, "value": v} for k, v in write_options.items()]
-            if write_options
-            else None
-        )
-        self._deltastreamer_jobconf = DeltaStreamerJobConf(
-            _spark_options, _write_options
-        )
-
-        self._feature_group_engine.save(self, feature_dataframe, write_options)
-        self._code_engine.save_code(self)
-        if self.statistics_config.enabled and engine.get_type() == "spark":
-            # Only compute statistics if the engine is Spark.
-            # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
-        if user_version is None:
-            warnings.warn(
-                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
-                    self._name, self._version
-                ),
-                util.VersionWarning,
-            )
-
-    def insert(
-        self,
-        features: Union[
-            pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
-            np.ndarray,
-            List[list],
-        ],
-        overwrite: Optional[bool] = False,
-        operation: Optional[str] = "upsert",
-        write_options: Optional[Dict[Any, Any]] = {},
-        **kwargs,
-    ):
-        """Insert data from a dataframe into the stream feature group.
-
-        Incrementally insert data to a feature group or overwrite all data contained
-        in the feature group. By default, the data is inserted into the offline storage
-        as well as the online storage if the feature group is `online_enabled=True`. To
-        insert only into the online storage, set `storage="online"`, or oppositely
-        `storage="offline"`.
-
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
-        or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
-        If statistics are enabled, statistics are recomputed for the entire feature
-        group.
-
-        If feature group's time travel format is `HUDI` then `operation` argument can be
-        either `insert` or `upsert`.
-
-        !!! example "Upsert new feature data with time travel format `HUDI`:"
-            ```python
-            fs = conn.get_feature_store();
-            fg = fs.get_stream_feature_group("example_feature_group", 1)
-            upsert_df = ...
-            fg.insert(upsert_df)
-            ```
-
-        # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
-            overwrite: Drop all data in the feature group before
-                inserting new data. This does not affect metadata, defaults to False.
-            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
-                Defaults to `"upsert"`.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, write_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to write data into the
-                  feature group.
-                * key `wait_for_job` and value `True` or `False` to configure
-                  whether or not to the insert call should return only
-                  after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
-
-        # Returns
-            `FeatureGroup`. Updated feature group metadata object.
-        """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
-
-        self._feature_group_engine.insert(
-            self,
-            feature_dataframe,
-            overwrite,
-            operation,
-            None,
-            write_options,
-        )
-
-        self._code_engine.save_code(self)
-
-    @classmethod
-    def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        if isinstance(json_decamelized, dict):
-            _ = json_decamelized.pop("type", None)
-            return cls(**json_decamelized)
-        for fg in json_decamelized:
-            _ = fg.pop("type", None)
-        return [cls(**fg) for fg in json_decamelized]
-
-    def update_from_response_json(self, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
-        self.__init__(**json_decamelized)
-        return self
-
-    def json(self):
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
-
-    def to_dict(self):
-        return {
-            "id": self._id,
-            "name": self._name,
-            "version": self._version,
-            "description": self._description,
-            "onlineEnabled": self._online_enabled,
-            "timeTravelFormat": self._time_travel_format,
-            "features": self._features,
-            "featurestoreId": self._feature_store_id,
-            "type": "streamFeatureGroupDTO",
-            "statisticsConfig": self._statistics_config,
-            "validationType": self._validation_type,
-            "expectationsNames": self._expectations_names,
-            "eventTime": self._event_time,
-            "deltaStreamerJobConf": self._deltastreamer_jobconf,
-        }
+    @stream.setter
+    def stream(self, stream):
+        self._stream = stream
 
 
 class OnDemandFeatureGroup(FeatureGroupBase):
