@@ -94,8 +94,6 @@ theme:
     - navigation.tabs.sticky
 
 extra:
-  version:
-    provider: mike
   analytics:
     provider: google
     property: G-64FEEXPSDN
@@ -112,10 +110,10 @@ extra:
 
 extra_css:
     - css/custom.css
-    #- css/version-select.css
+    - css/version-select.css
 
-#extra_javascript:
-#    - js/version-select.js
+extra_javascript:
+    - js/version-select.js
 
 plugins:
     - search
