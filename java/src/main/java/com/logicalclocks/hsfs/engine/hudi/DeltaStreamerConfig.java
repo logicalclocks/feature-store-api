@@ -50,6 +50,11 @@ public class DeltaStreamerConfig implements Serializable {
       cfg.operation = WriteOperationType.UPSERT;
     }
 
+    if (writeOptions.containsKey(HudiEngine.INITIAL_CHECKPOINT_STRING)) {
+      // Resume Delta Streamer from this checkpoint
+      cfg.checkpoint = writeOptions.get(HudiEngine.INITIAL_CHECKPOINT_STRING);
+    }
+
     // Enable syncing to hive metastore
     cfg.enableHiveSync = true;
 
@@ -65,9 +70,6 @@ public class DeltaStreamerConfig implements Serializable {
       // Delta Streamer runs in continuous mode running source-fetch -> Transform -> Hudi Write in loop
       cfg.continuousMode = true;
     }
-
-    // Resume Delta Streamer from this checkpoint
-    cfg.checkpoint = writeOptions.get(HudiEngine.CHECKPOINT_PROVIDER_PATH_PROP);
 
     cfg.sparkMaster = HudiEngine.SPARK_MASTER;
 

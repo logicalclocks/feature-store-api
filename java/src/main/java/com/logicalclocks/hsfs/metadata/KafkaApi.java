@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class KafkaApi {
@@ -48,6 +49,30 @@ public class KafkaApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
+  }
+
+  public List<PartitionDetails> getTopicDetails(FeatureStore featureStore, String topicName)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+        + KAFKA_PATH + TOPIC_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureStore.getProjectId())
+        .set("topicName", topicName)
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    PartitionDetails dto = hopsworksClient.handleRequest(new HttpGet(uri), PartitionDetails.class);
+    List<PartitionDetails> partitionDetails;
+    if (dto.getCount() == null) {
+      partitionDetails = new ArrayList<>();
+      partitionDetails.add(dto);
+    } else {
+      partitionDetails = dto.getItems();
+    }
+    LOGGER.info("Received partitions: " + partitionDetails);
+    return partitionDetails;
   }
 
   public List<String> getBrokerEndpoints(FeatureStore featureStore) throws FeatureStoreException, IOException {
