@@ -1170,11 +1170,9 @@ class FeatureGroup(FeatureGroupBase):
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        stream = json_decamelized["type"] == "streamFeatureGroupDTO"
+        json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
-        self._stream = stream
-        self._online_enabled = stream
         return self
 
     def json(self):

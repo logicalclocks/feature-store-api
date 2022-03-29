@@ -155,12 +155,27 @@ public class FeatureGroupEngine {
         writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
+  @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
                                      Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-    throw new FeatureStoreException("Stream ingestion is only available for StreamFeatureGroups.");
+    if (!featureGroup.getOnlineEnabled()) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. "
+          + "It is currently only possible to stream to the online storage.");
+    }
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
+          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
+        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+        utils.getKafkaConfig(featureGroup, writeOptions));
+
+    return streamingQuery;
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,

@@ -27,6 +27,7 @@ from urllib.parse import urlparse
 
 from hsfs import client, feature, util
 from hsfs.core import (
+    feature_group_api,
     dataset_api,
     job_api,
     ingestion_job_conf,
@@ -283,11 +284,31 @@ class Engine:
         online_write_options,
         validation_id=None,
     ):
-        self._save_online_dataframe(feature_group, dataframe, online_write_options)
+        # App configuration
+        app_options = self._get_app_options(offline_write_options)
 
-    def _save_online_dataframe(self, feature_group, dataframe, write_options):
-        # TODO (Moritz): here we need to be able to write to kafka topic
-        pass
+        # Setup job for ingestion
+        # Configure Hopsworks ingestion job
+        print("Configuring ingestion job...")
+        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
+        ingestion_job = fg_api.ingestion(feature_group, app_options)
+
+        # Upload dataframe into Hopsworks
+        print("Uploading Pandas dataframe...")
+        self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
+
+        # Launch job
+        print("Launching ingestion job...")
+        self._job_api.launch(ingestion_job.job.name)
+        print(
+            "Ingestion Job started successfully, you can follow the progress at {}".format(
+                self._get_job_url(ingestion_job.job.href)
+            )
+        )
+
+        self._wait_for_job(ingestion_job.job, offline_write_options)
+
+        return ingestion_job.job
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode

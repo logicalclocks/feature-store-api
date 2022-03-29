@@ -13,6 +13,8 @@
 #   limitations under the License.
 #
 
+import warnings
+
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
@@ -248,9 +250,23 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
     ):
 
+        if not feature_group.online_enabled and not feature_group.stream:
+            raise exceptions.FeatureStoreException(
+                "Online storage is not enabled for this feature group. "
+                "It is currently only possible to stream to the online storage."
+            )
+
         if not feature_group.stream:
-            raise NotImplementedError(
-                "`insert_stream` method is only available for feature groups created with `stream=True`."
+            warnings.warn(
+                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
+            )
+
+        if feature_group.validation_type != "NONE":
+            warnings.warn(
+                "Stream ingestion for feature group `{}`, with version `{}` will not perform validation.".format(
+                    feature_group.name, feature_group.version
+                ),
+                util.ValidationWarning,
             )
 
         streaming_query = engine.get_instance().save_stream_dataframe(

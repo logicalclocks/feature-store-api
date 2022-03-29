@@ -314,27 +314,62 @@ public class FeatureGroup extends FeatureGroupBase {
     computeStatistics();
   }
 
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, null);
   }
 
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, "append");
   }
 
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, false, null);
   }
 
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
