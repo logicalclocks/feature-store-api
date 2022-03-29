@@ -519,10 +519,10 @@ public abstract class StorageConnector {
     }
 
     @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       path = getPath(path);
-      return SparkEngine.getInstance().read(this, dataFormat, options, path);
+      return super.read(query, dataFormat, options, path);
     }
 
     public void prepareSpark() throws FeatureStoreException, IOException {

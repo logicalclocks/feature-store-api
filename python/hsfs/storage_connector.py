@@ -997,7 +997,7 @@ class GcsConnector(StorageConnector):
         """Reads GCS path into a dataframe using the storage connector.
 
         ```python
-        conn.read(path='gs://bucket/path')
+        conn.read(path='path_to_data')
         ```
 
         # Arguments
