@@ -85,17 +85,25 @@ class TransformationFunctionEngine:
             ] = attached_transformation_fn.transformation_function
         return transformation_fn_dict
 
-    def attach_transformation_fn(self, training_dataset):
-        if training_dataset._transformation_functions:
+    def attach_transformation_fn(
+        self,
+        training_dataset_obj=None,
+        feature_view_obj=None
+    ):
+        if training_dataset_obj:
+            target_obj = training_dataset_obj
+        else:
+            target_obj = feature_view_obj
+        if target_obj._transformation_functions:
             for (
                 feature_name,
                 transformation_fn,
-            ) in training_dataset._transformation_functions.items():
-                if feature_name in training_dataset.label:
+            ) in target_obj._transformation_functions.items():
+                if feature_name in target_obj.label:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
-                training_dataset._features.append(
+                target_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature_name,
                         feature_group_feature_name=feature_name,

@@ -18,7 +18,7 @@ import json
 import humps
 from typing import Optional, List, Union
 
-from hsfs import util, engine
+from hsfs import util, engine, feature
 from hsfs.core import query_constructor_api, storage_connector_api
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
@@ -239,6 +239,23 @@ class Query:
             "filter": self._filter,
             "hiveEngine": self._python_engine,
         }
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+
+        return cls(
+            left_feature_group=json_decamelized["left_feature_group"],
+            left_features=[
+                feature.Feature.from_response_json(_feature)
+                for _feature in json_decamelized["left_features"]],
+            feature_store_name=json_decamelized.get("feature_store_name", None),
+            feature_store_id=json_decamelized.get("feature_store_id", None),
+            left_feature_group_start_time=json_decamelized.get("left_feature_group_start_time", None),
+            left_feature_group_end_time=json_decamelized.get("left_feature_group_end_time", None),
+            joins=json_decamelized.get("joins", None),
+            filter=json_decamelized.get("filter", None),
+        )
 
     @classmethod
     def _hopsworks_json(cls, json_dict):

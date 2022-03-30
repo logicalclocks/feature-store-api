@@ -31,6 +31,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
+    feature_view
 )
 from hsfs.core import (
     feature_group_api,
@@ -38,6 +39,7 @@ from hsfs.core import (
     training_dataset_api,
     expectations_api,
     feature_group_engine,
+    feature_view_engine
 )
 from hsfs.statistics_config import StatisticsConfig
 
@@ -94,6 +96,9 @@ class FeatureStore:
 
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(self._id)
+        )
+        self._feature_view_engine = (
+            feature_view_engine.FeatureViewEngine(self._id)
         )
 
     @classmethod
@@ -879,6 +884,33 @@ class FeatureStore:
              `List[TransformationFunction]`. List of transformation function instances.
         """
         return self._transformation_function_engine.get_transformation_fns()
+
+    def create_feature_view(
+        self,
+        name: str,
+        query,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        label: Optional[List[str]] = [],
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
+    ):
+        return feature_view.FeatureView(
+            name=name,
+            query=query,
+            featurestore_id=self._id,
+            version=version,
+            description=description,
+            statistics_config=statistics_config,
+            label=label,
+            transformation_functions=transformation_functions
+        )
+
+    def get_feature_view(self, name, version):
+        return self._feature_view_engine.get(name, version)
+
+    def get_feature_views(self, name):
+        return self._feature_view_engine.get(name)
 
     @property
     def id(self):
