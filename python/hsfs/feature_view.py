@@ -24,6 +24,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query
 import json
 
+
 class FeatureView:
 
     def __init__(
@@ -48,7 +49,8 @@ class FeatureView:
         self._label = label
         self._transformation_functions = transformation_functions
         self._features = None
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(featurestore_id)
+        self._feature_view_engine = feature_view_engine.FeatureViewEngine(
+            featurestore_id)
 
     def save(self):
         self._feature_view_engine.save(self)
@@ -59,13 +61,11 @@ class FeatureView:
     def update_description(self, description):
         return self
 
-    def get_query(self):
-        return constructor.query.Query
-
     def get_batch_query(
         self, start_time: Optional[datetime], end_time: Optional[datetime]
     ):
-        return ""
+        return self._feature_view_engine.get_batch_query(
+            self, start_time, end_time)
 
     def get_online_vector(
         self,

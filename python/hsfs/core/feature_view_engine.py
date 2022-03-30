@@ -67,3 +67,8 @@ class FeatureViewEngine:
             return self._feature_view_api.delete_by_name_version(name, version)
         else:
             return self._feature_view_api.delete_by_name(name)
+
+    def get_batch_query(self, feature_view_obj, start_time, end_time):
+        return self._feature_view_api.get_batch_query(
+            feature_view_obj.name, feature_view_obj.version, start_time,
+            end_time, is_python_engine=engine.get_type() == "python")
