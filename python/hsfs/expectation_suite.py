@@ -37,6 +37,7 @@ class ExpectationSuite:
         items=None,
         count=None,
         type=None,
+        created=None,
     ):
         self._id = id
         self._expectation_suite_name = expectation_suite_name
@@ -65,8 +66,8 @@ class ExpectationSuite:
     def to_dict(self):
         return {
             "id": self._id,
-            "expectation_suite_name": self._name,
-            "expectations": self._meta,
+            "expectation_suite_name": self.expectation_suite_name,
+            "expectations": self._expectations,
             "meta": self._meta,
         }
 
@@ -106,6 +107,9 @@ class ExpectationSuite:
     @meta.setter
     def meta(self, meta):
         self._meta = meta
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

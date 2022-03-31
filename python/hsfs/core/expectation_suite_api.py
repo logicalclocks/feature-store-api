@@ -78,7 +78,8 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id
+            self._feature_group_id,
+            "expectationsuite"
         ]
 
         return expectation_suite.ExpectationSuite.from_response_json(

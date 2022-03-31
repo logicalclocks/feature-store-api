@@ -14,12 +14,14 @@
 #   limitations under the License.
 #
 
+from argparse import ArgumentError
 import copy
 import humps
 import json
 import warnings
 import pandas as pd
 import numpy as np
+import great_expectations as ge
 import avro.schema
 from typing import Optional, Union, Any, Dict, List, TypeVar
 
@@ -27,6 +29,7 @@ from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
+    expectation_suite_engine,
     code_engine,
     data_validation_engine,
     on_demand_feature_group_engine,
@@ -498,6 +501,8 @@ class FeatureGroupBase:
     def expectation_suite(self, expectation_suite):
         if isinstance(expectation_suite, ExpectationSuite):
             self._expectation_suite = expectation_suite
+        elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
+            self._expectation_suite = ExpectationSuite(**expectation_suite.to_json_dict())
         elif isinstance(expectation_suite, dict):
             self._expectation_suite = ExpectationSuite(**expectation_suite)
         elif expectation_suite is None:
@@ -659,6 +664,7 @@ class FeatureGroup(FeatureGroupBase):
 
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
+            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(self.feature_store_id, self.id)
 
         else:
             # initialized by user
@@ -1133,6 +1139,52 @@ class FeatureGroup(FeatureGroupBase):
             dataframe = self.read()
             log_activity = True
         return self._data_validation_engine.validate(self, dataframe, log_activity)
+
+    def get_expectation_suite(self):
+        """Return the expectation suite attached to the feature group if it exists.
+
+        # Returns
+            `ExpectationSuite`. The expectation suite attached to the feature group.
+        
+        # Raises
+            `RestAPIException`.
+            `FeatureStoreException`. If no expectation suite have been found.
+        """
+        if self._expectation_suite != None:
+            return self._expectation_suite
+        elif self._id != None:
+            self._expectation_suite = self._expectation_suite_engine.get()
+            return self._expectation_suite
+        else:
+            raise FeatureStoreException("No expectation suite found.")
+
+
+    def save_expectation_suite(self, expectation_suite=None):
+        """Attach an expectation suite to a feature group and saves it for future use. If an expectation
+        suite is already attached, it is replaced. 
+
+        # Arguments
+            `ExpectationSuite`. The expectation suite to attach to the featuregroup. 
+        
+        # Raises
+            `RestAPIException`.
+        """
+        if (expectation_suite is None) and (self._expectation_suite is None):
+            raise ArgumentError(" If no expectation suite is set on the featuregroup, you must provide an expectation suite")
+        elif expectation_suite is not None:
+            self._expectation_suite = expectation_suite
+            self._expectation_suite = self._expectation_suite_engine.save(self._expectation_suite)
+        else:
+            self._expectation_suite = self._expectation_suite_engine.save(self._expectation_suite)
+
+    def delete_expectation_suite(self):
+        """Delete the expectation suite attached to the featuregroup.\
+
+        # Raises
+            `RestAPIException`. 
+        """
+        self._expectation_suite = None
+        self._expectation_suite_engine.delete()
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the

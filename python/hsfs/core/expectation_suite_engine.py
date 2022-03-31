@@ -27,7 +27,14 @@ class ExpectationSuiteEngine:
         :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
-        self._expectations_api = expectation_suite_api.ExpectationSuiteApi(feature_store_id)
+        self._feature_group_id = feature_group_id
+        self._expectation_suite_api = expectation_suite_api.ExpectationSuiteApi(feature_store_id, feature_group_id)
 
     def save(self, expectation_suite):
         self._expectation_suite_api.create(expectation_suite)
+
+    def get(self):
+        self._expectation_suite_api.get()
+
+    def delete(self):
+        self._expectation_suite_api.delete()
