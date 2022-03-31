@@ -71,16 +71,21 @@ class StatisticsApi:
         )
 
     def get_last(self, metadata_instance, for_transformation):
-        # TODO feature view: add feature view endpoint
         """Gets the statistics of the last commit for an instance."""
         _client = client.get_instance()
+        entity_id = (metadata_instance.id if
+                     self._entity_type !=
+                     # TODO feature view: fix constant
+                     "featureview" else
+                     f"{metadata_instance.name}/{str(metadata_instance.version)}"
+                     )
         path_params = [
             "project",
             _client._project_id,
             "featurestores",
             self._feature_store_id,
             self._entity_type,
-            metadata_instance.id,
+            entity_id,
             "statistics",
         ]
         headers = {"content-type": "application/json"}

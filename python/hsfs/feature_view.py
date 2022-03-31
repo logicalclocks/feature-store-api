@@ -80,20 +80,42 @@ class FeatureView:
             self, start_time, end_time)
 
     def get_online_vector(
-        self,
-        entry: Dict[str, Any],
-        replace: Optional[Dict],
-        external: Optional[bool] = False,
+        self, entry: Dict[str, Any], external: Optional[bool] = False
     ):
-        return list()
+        """Returns assembled serving vector from online feature store.
+
+        # Arguments
+            entry: dictionary of training dataset feature group primary key names as keys and values provided by
+                serving application.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        # Returns
+            `list` List of feature values related to provided primary keys, ordered according to positions of this
+            features in training dataset query.
+        """
+        return self._vector_server.get_serving_vector(self, entry, external)
 
     def get_online_vectors(
-        self,
-        entry: Dict[str, Any],
-        replace: Optional[Dict],
-        external: Optional[bool] = False,
+        self, entry: Dict[str, List[Any]], external: Optional[bool] = False
     ):
-        return list(list())
+        """Returns assembled serving vectors in batches from online feature store.
+
+        # Arguments
+            entry: dict of feature group primary key names as keys and value as list of primary keys provided by
+                serving application.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        # Returns
+            `List[list]` List of lists of feature values related to provided primary keys, ordered according to
+            positions of this features in training dataset query.
+        """
+        return self._vector_server.get_serving_vectors(self, entry, external)
 
     def preview_online_vector(self):
         return list()
@@ -105,7 +127,7 @@ class FeatureView:
         # return df
         pass
 
-    def cretae_batch_data(self, start_time, end_time, storage_connector):
+    def create_batch_data(self, start_time, end_time, storage_connector):
         # return None, save to storage connector
         pass
 

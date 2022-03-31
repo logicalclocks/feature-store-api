@@ -14,7 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client, feature_view
+from hsfs import client, feature_view, transformation_function_attached
+from hsfs.constructor import serving_prepared_statement
 
 
 class FeatureViewApi:
@@ -24,6 +25,9 @@ class FeatureViewApi:
     _VERSION = "version"
     _QUERY = "query"
     _BATCH = "batch"
+    _PREPARED_STATEMENT = "preparedstatements"
+    _TRANSFORMATION = "transformation"
+    _FUNCTIONS = "functions"
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -73,13 +77,26 @@ class FeatureViewApi:
         path = self._base_path + \
                [name, self._VERSION, version, self._QUERY, self._BATCH]
         return self._client._send_request(self._GET, path,
-                                       {"start_time": start_time,
-                                        "end_time": end_time,
-                                        "with_label": with_label,
-                                        "is_hive_engine": is_python_engine}
-        )
+                                          {"start_time": start_time,
+                                           "end_time": end_time,
+                                           "with_label": with_label,
+                                           "is_hive_engine": is_python_engine}
+                                          )
 
     def get_serving_prepared_statement(self, name, version, batch):
-        # TODO feature view:
-        pass
+        path = self._base_path + \
+               [name, self._VERSION, version, self._PREPARED_STATEMENT]
+        headers = {"content-type": "application/json"}
+        query_params = {"batch": batch}
+        return serving_prepared_statement.ServingPreparedStatement\
+            .from_response_json(
+            self._client._send_request(
+                "GET", path, query_params, headers=headers)
+        )
 
+    def get_attached_transformation_fn(self, name, version):
+        path = self._base_path + \
+               [name, self._VERSION, version,
+                self._TRANSFORMATION, self._FUNCTIONS]
+        return transformation_function_attached.TransformationFunctionAttached.\
+            from_response_json(self._client._send_request("GET", path))

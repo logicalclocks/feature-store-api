@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, training_dataset_feature, util
+from hsfs import engine, training_dataset_feature
 
 from hsfs.core import (
     tags_api,
@@ -72,3 +72,8 @@ class FeatureViewEngine:
         return self._feature_view_api.get_batch_query(
             feature_view_obj.name, feature_view_obj.version, start_time,
             end_time, is_python_engine=engine.get_type() == "python")
+
+    def get_attached_transformation_fn(self, name, version):
+        return self._feature_view_api.get_attached_transformation_fn(
+            name, version
+        )
