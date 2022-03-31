@@ -87,7 +87,7 @@ public class HudiEngine {
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();

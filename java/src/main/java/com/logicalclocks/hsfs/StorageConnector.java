@@ -29,8 +29,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 
 import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
@@ -74,7 +72,7 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+  public Object read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
@@ -138,7 +136,7 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       return SparkEngine.getInstance().read(this, dataFormat, options, path);
@@ -212,7 +210,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -344,7 +342,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
@@ -375,7 +373,7 @@ public abstract class StorageConnector {
     }
 
     @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -473,7 +471,7 @@ public abstract class StorageConnector {
       return null;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+    public Object read(String query, String dataFormat, Map<String, String> options, String path) {
       throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
     }
 

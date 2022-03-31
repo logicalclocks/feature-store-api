@@ -231,14 +231,13 @@ public class Query {
     }
   }
 
-  /* TODO (davit):
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(false, numRows);
   }
+
   public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
-    read(online).show(numRows);
+    SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
   }
-   */
 
   public String toString() {
     return toString(Storage.OFFLINE);
