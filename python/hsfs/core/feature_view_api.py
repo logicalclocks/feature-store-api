@@ -79,4 +79,7 @@ class FeatureViewApi:
                                         "is_hive_engine": is_python_engine}
         )
 
+    def get_serving_prepared_statement(self, name, version, batch):
+        # TODO feature view:
+        pass
 

@@ -31,6 +31,7 @@ from hsfs.core import (
     statistics_engine,
     code_engine,
     transformation_function_engine,
+    vector_server
 )
 from hsfs.constructor import query
 
@@ -77,10 +78,6 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
-        self._prepared_statement_engine = None
-        self._prepared_statements = None
-        self._serving_keys = None
-        self._pkname_by_serving_index = None
         self._transformation_functions = transformation_functions
         self._train_split = train_split
 
@@ -101,6 +98,7 @@ class TrainingDataset:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
+        self._vector_server = vector_server.VectorServer(featurestore_id)
 
         # set up depending on user initialized or coming from backend response
         if training_dataset_type is None:
@@ -663,7 +661,7 @@ class TrainingDataset:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        self._training_dataset_engine.init_prepared_statement(self, batch, external)
+        self._vector_server.init_serving(self, batch, external)
 
     def get_serving_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False
@@ -682,7 +680,7 @@ class TrainingDataset:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vector(self, entry, external)
+        return self._vector_server.get_serving_vector(self, entry, external)
 
     def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
@@ -701,7 +699,7 @@ class TrainingDataset:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._training_dataset_engine.get_serving_vectors(self, entry, external)
+        return self._vector_server.get_serving_vectors(self, entry, external)
 
     @property
     def label(self):
@@ -718,35 +716,6 @@ class TrainingDataset:
     @property
     def feature_store_id(self):
         return self._feature_store_id
-
-    @property
-    def prepared_statement_engine(self):
-        """JDBC connection engine to retrieve connections to online features store from."""
-        return self._prepared_statement_engine
-
-    @prepared_statement_engine.setter
-    def prepared_statement_engine(self, prepared_statement_engine):
-        self._prepared_statement_engine = prepared_statement_engine
-
-    @property
-    def prepared_statements(self):
-        """The dict object of prepared_statements as values and kes as indices of positions in the query for
-        selecting features from feature groups of the training dataset.
-        """
-        return self._prepared_statements
-
-    @prepared_statements.setter
-    def prepared_statements(self, prepared_statements):
-        self._prepared_statements = prepared_statements
-
-    @property
-    def serving_keys(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        return self._serving_keys
-
-    @serving_keys.setter
-    def serving_keys(self, serving_vector_keys):
-        self._serving_keys = serving_vector_keys
 
     @property
     def train_split(self):

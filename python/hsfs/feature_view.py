@@ -17,7 +17,10 @@
 from typing import Optional, Union, Any, Dict, List, TypeVar
 from datetime import datetime
 from hsfs import constructor, tag, util
-from hsfs.core import feature_view_engine
+from hsfs.core import (
+    feature_view_engine, statistics_engine,
+    transformation_function_engine, vector_server
+)
 import humps
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
@@ -26,6 +29,8 @@ import json
 
 
 class FeatureView:
+
+    ENTITY_TYPE = "featureview"
 
     def __init__(
         self,
@@ -51,6 +56,13 @@ class FeatureView:
         self._features = None
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id)
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
+        )
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+        self._vector_server = vector_server.VectorServer(featurestore_id)
 
     def save(self):
         self._feature_view_engine.save(self)
@@ -58,7 +70,7 @@ class FeatureView:
     def delete(self):
         self._feature_view_engine.delete(self.name, self.version)
 
-    def update_description(self, description):
+    def update(self):
         return self
 
     def get_batch_query(
@@ -88,6 +100,14 @@ class FeatureView:
 
     def preview_online_vectors(self, n: int):
         return list(list())
+
+    def get_batch_data(self, start_time, end_time):
+        # return df
+        pass
+
+    def cretae_batch_data(self, start_time, end_time, storage_connector):
+        # return None, save to storage connector
+        pass
 
     def add_tag(self, name: str, value):
         pass
@@ -135,6 +155,9 @@ class FeatureView:
     def delete_all_training_datasets(self):
         pass
 
+    def register_transformation_statistics(self, training_dataset_version):
+        pass
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -153,11 +176,11 @@ class FeatureView:
         other = self.from_response_json(json_dict)
         for key in ["name", 'description', "id", "query", "featurestore_id",
                     "version", "statistics_config", "label"]:
-            self._update_if_present(self, other, key)
+            self._update_attribute_if_present(self, other, key)
         return self
 
     @staticmethod
-    def _update_if_present(this, new, key):
+    def _update_attribute_if_present(this, new, key):
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
 
@@ -263,3 +286,21 @@ class FeatureView:
                     type(statistics_config)
                 )
             )
+
+    @property
+    def transformation_functions(self):
+        """Set transformation functions."""
+        if self._id is not None and self._transformation_functions is None:
+            self._transformation_functions = (
+                self._transformation_function_engine.get_td_transformation_fn(self)
+            )
+        return self._transformation_functions
+
+    @transformation_functions.setter
+    def transformation_functions(self, transformation_functions):
+        self._transformation_functions = transformation_functions
+
+    @property
+    def schema(self):
+        """Feature view schema."""
+        return self._features

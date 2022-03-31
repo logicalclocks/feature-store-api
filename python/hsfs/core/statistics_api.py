@@ -71,6 +71,7 @@ class StatisticsApi:
         )
 
     def get_last(self, metadata_instance, for_transformation):
+        # TODO feature view: add feature view endpoint
         """Gets the statistics of the last commit for an instance."""
         _client = client.get_instance()
         path_params = [
