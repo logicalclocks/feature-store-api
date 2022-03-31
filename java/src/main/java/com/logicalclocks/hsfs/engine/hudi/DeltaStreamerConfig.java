@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine.hudi;
 
 
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.WriteOperationType;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -94,9 +93,9 @@ public class DeltaStreamerConfig implements Serializable {
     return cfg;
   }
 
-  public TypedProperties streamToHoodieTable(Map<String, String> writeOptions, SparkSession spark) throws Exception {
+  public void streamToHoodieTable(Map<String, String> writeOptions, SparkSession spark) throws Exception {
     HoodieDeltaStreamer deltaSync = new HoodieDeltaStreamer(
         deltaStreamerConfig(writeOptions), JavaSparkContext.fromSparkContext(spark.sparkContext()));
-    return deltaSync.sync();
+    deltaSync.sync();
   }
 }

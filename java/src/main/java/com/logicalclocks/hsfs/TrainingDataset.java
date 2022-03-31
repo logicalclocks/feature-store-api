@@ -193,7 +193,7 @@ public class TrainingDataset {
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
     this.queryInt = query;
-    save(query.read(), writeOptions);
+    save((Dataset<Row>) query.read(), writeOptions);
   }
 
   /**
@@ -247,7 +247,7 @@ public class TrainingDataset {
    */
   public void insert(Query query, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.insert(this, query.read(),
+    trainingDatasetEngine.insert(this, (Dataset<Row>) query.read(),
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
     computeStatistics();
   }
@@ -442,7 +442,7 @@ public class TrainingDataset {
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
     return getQuery(storage, false);
   }
-  
+
   @JsonIgnore
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getQuery(this, storage, withLabel, false);

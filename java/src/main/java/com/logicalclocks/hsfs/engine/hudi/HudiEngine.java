@@ -28,7 +28,6 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.HoodieTableMetaClient;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
@@ -294,9 +293,8 @@ public class HudiEngine {
       createEmptyTable(streamFeatureGroup);
     }
 
-    TypedProperties typedProperties = deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
+    deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
-    fgCommit.setValidationId((Integer) typedProperties.get(VALIDATION_ID));
     featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
     streamFeatureGroup.computeStatistics();
   }
