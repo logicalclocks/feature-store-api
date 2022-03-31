@@ -24,8 +24,6 @@ import pandas as pd
 import avro
 
 # in case importing in %%local
-from hsfs.feature_group import StreamFeatureGroup
-
 try:
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame
@@ -171,7 +169,7 @@ class Engine:
         validation_id=None,
     ):
         try:
-            if isinstance(feature_group, StreamFeatureGroup):
+            if feature_group.stream:
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
                 )

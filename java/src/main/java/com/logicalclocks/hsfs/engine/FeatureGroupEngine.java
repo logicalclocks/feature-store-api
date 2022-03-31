@@ -155,6 +155,7 @@ public class FeatureGroupEngine {
         writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
+  @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
                                      Map<String, String> writeOptions)

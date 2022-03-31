@@ -54,6 +54,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
+  private Boolean onlineEnabled;
+
+  @Getter
+  @Setter
   private StorageConnector onlineStorageConnector;
 
   @Getter
@@ -100,7 +104,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                             List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-                            List<Feature> features,
+                            boolean onlineEnabled, List<Feature> features,
                             StatisticsConfig statisticsConfig, ValidationType validationType,
                             scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
@@ -112,6 +116,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.partitionKeys = partitionKeys != null
                 ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.hudiPrecombineKey = hudiPrecombineKey != null ? hudiPrecombineKey.toLowerCase() : null;
+    this.onlineEnabled = onlineEnabled;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.validationType = validationType != null ? validationType : ValidationType.NONE;

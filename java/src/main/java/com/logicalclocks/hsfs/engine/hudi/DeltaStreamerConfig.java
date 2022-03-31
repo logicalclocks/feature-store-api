@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine.hudi;
 
 
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.common.model.WriteOperationType;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -50,6 +49,11 @@ public class DeltaStreamerConfig implements Serializable {
       cfg.operation = WriteOperationType.UPSERT;
     }
 
+    if (writeOptions.containsKey(HudiEngine.INITIAL_CHECKPOINT_STRING)) {
+      // Resume Delta Streamer from this checkpoint
+      cfg.checkpoint = writeOptions.get(HudiEngine.INITIAL_CHECKPOINT_STRING);
+    }
+
     // Enable syncing to hive metastore
     cfg.enableHiveSync = true;
 
@@ -65,9 +69,6 @@ public class DeltaStreamerConfig implements Serializable {
       // Delta Streamer runs in continuous mode running source-fetch -> Transform -> Hudi Write in loop
       cfg.continuousMode = true;
     }
-
-    // Resume Delta Streamer from this checkpoint
-    cfg.checkpoint = writeOptions.get(HudiEngine.CHECKPOINT_PROVIDER_PATH_PROP);
 
     cfg.sparkMaster = HudiEngine.SPARK_MASTER;
 
@@ -94,9 +95,9 @@ public class DeltaStreamerConfig implements Serializable {
     return cfg;
   }
 
-  public TypedProperties streamToHoodieTable(Map<String, String> writeOptions, SparkSession spark) throws Exception {
+  public void streamToHoodieTable(Map<String, String> writeOptions, SparkSession spark) throws Exception {
     HoodieDeltaStreamer deltaSync = new HoodieDeltaStreamer(
         deltaStreamerConfig(writeOptions), JavaSparkContext.fromSparkContext(spark.sparkContext()));
-    return deltaSync.sync();
+    deltaSync.sync();
   }
 }

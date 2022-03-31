@@ -95,4 +95,12 @@ public class DeltaStreamerKafkaSource extends AvroSource {
           return (GenericRecord)obj.value();
         });
   }
+
+  @Override
+  public void onCommit(String lastCkptStr) {
+    if (this.props.getBoolean(KafkaOffsetGen.Config.ENABLE_KAFKA_COMMIT_OFFSET.key(),
+        KafkaOffsetGen.Config.ENABLE_KAFKA_COMMIT_OFFSET.defaultValue())) {
+      offsetGen.commitOffsetToKafka(lastCkptStr);
+    }
+  }
 }

@@ -48,7 +48,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             ):
                 feat.hudi_precombine_key = True
 
-        if isinstance(feature_group, fg.StreamFeatureGroup):
+        if feature_group.stream:
             feature_group._options = write_options
 
         self._feature_group_api.save(feature_group)
@@ -249,10 +249,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         timeout,
         write_options,
     ):
-        if not feature_group.online_enabled:
+
+        if not feature_group.online_enabled and not feature_group.stream:
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group. "
                 "It is currently only possible to stream to the online storage."
+            )
+
+        if not feature_group.stream:
+            warnings.warn(
+                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
             )
 
         if feature_group.validation_type != "NONE":

@@ -42,31 +42,6 @@ PAGES = {
             ],
         ),
     },
-    "stream_feature_group.md": {
-        "fg_create": ["hsfs.feature_store.FeatureStore.create_stream_feature_group"],
-        "fg_get": ["hsfs.feature_store.FeatureStore.get_stream_feature_group"],
-        "fg_properties": keras_autodoc.get_properties(
-            "hsfs.feature_group.StreamFeatureGroup",
-            exclude=[
-                "expectations_names",
-                "validation_type",
-                "online_enabled",
-                "time_travel_format",
-            ],
-        ),
-        "fg_methods": keras_autodoc.get_methods(
-            "hsfs.feature_group.StreamFeatureGroup",
-            exclude=[
-                "from_response_json",
-                "update_from_response_json",
-                "json",
-                "to_dict",
-                "attach_expectation",
-                "detach_expectation",
-                "get_expectation",
-            ],
-        ),
-    },
     "on_demand_feature_group.md": {
         "fg_create": ["hsfs.feature_store.FeatureStore.create_on_demand_feature_group"],
         "fg_get": ["hsfs.feature_store.FeatureStore.get_on_demand_feature_group"],
