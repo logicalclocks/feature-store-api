@@ -509,7 +509,7 @@ public abstract class StorageConnector {
     }
 
     @JsonIgnore
-    public String getPath(String subPath) throws FeatureStoreException {
+    public String getPath(String subPath) {
       return "gs://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
 
