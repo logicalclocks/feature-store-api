@@ -509,7 +509,7 @@ public abstract class StorageConnector {
     }
 
     @JsonIgnore
-    public String getPath(String subPath) {
+    public String getPath(String subPath) throws FeatureStoreException {
       return "gs://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
 
@@ -518,11 +518,10 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    @Override
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       path = getPath(path);
-      return super.read(query, dataFormat, options, path);
+      return SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
 
     public void prepareSpark() throws FeatureStoreException, IOException {
