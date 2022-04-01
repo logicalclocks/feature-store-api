@@ -1016,7 +1016,7 @@ class GcsConnector(StorageConnector):
             `ValueError`: Malformed arguments.
 
         # Returns
-            `StreamingDataframe`: A Spark streaming dataframe.
+            `Dataframe`: A Spark dataframe.
         """
 
         return engine.get_instance().read(self, data_format, options, path)
