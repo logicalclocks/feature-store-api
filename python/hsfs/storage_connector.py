@@ -1003,26 +1003,22 @@ class GcsConnector(StorageConnector):
         path: str = None,
     ):
         """Reads GCS path into a dataframe using the storage connector.
-        The value specified in the bucket variable is concatenated to path argument
-         along with the file system prefix `gs://`
 
         ```python
-        conn.read(path='path_to_gcs_data')
+        conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
         ```
 
         # Arguments
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
-            path: GCS path succeeding to `gs://BUCKET/`
-            e.g. If path='DATA' final path to read is `gs://BUCKET/DATA`
-
+            path: GCS path. Defaults to `None`.
         # Raises
             `ValueError`: Malformed arguments.
 
         # Returns
             `StreamingDataframe`: A Spark streaming dataframe.
         """
-        path = self._get_path(path)
+
         return engine.get_instance().read(self, data_format, options, path)
 
     def prepare_spark(self, path: Optional[str] = None):

@@ -518,12 +518,6 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Object read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException, IOException {
-      path = getPath(path);
-      return SparkEngine.getInstance().read(this, dataFormat, options, path);
-    }
-
     public void prepareSpark() throws FeatureStoreException, IOException {
       SparkEngine.getInstance().setupConnectorHadoopConf(this);
     }
