@@ -70,17 +70,23 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_last(self, metadata_instance, for_transformation):
+    def get_last(self, metadata_instance, for_transformation,
+                 training_dataset_version):
         """Gets the statistics of the last commit for an instance."""
         _client = client.get_instance()
-        if self._entity_type != feature_view.FeatureView.ENTITY_TYPE:
+        if self._entity_type == feature_view.FeatureView.ENTITY_TYPE:
             path_params = [
                 "project",
                 _client._project_id,
                 "featurestores",
                 self._feature_store_id,
-                self._entity_type,
-                metadata_instance.id,
+                "featureview",
+                metadata_instance.name,
+                "version",
+                metadata_instance.version,
+                "trainingdatasets",
+                "version",
+                training_dataset_version,
                 "statistics",
             ]
         else:
@@ -90,9 +96,7 @@ class StatisticsApi:
                 "featurestores",
                 self._feature_store_id,
                 self._entity_type,
-                metadata_instance.name,
-                "version",
-                metadata_instance.version,
+                metadata_instance.id,
                 "statistics",
             ]
         headers = {"content-type": "application/json"}

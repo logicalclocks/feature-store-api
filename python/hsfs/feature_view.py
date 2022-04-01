@@ -73,6 +73,25 @@ class FeatureView:
     def update(self):
         return self
 
+    def init_serving(
+        self, training_dataset_version: Optional[int] = None,
+        batch: Optional[bool] = None, external: Optional[bool] = False
+    ):
+        """Initialise and cache parametrized prepared statement to
+           retrieve feature vector from online feature store.
+
+        # Arguments
+            batch: boolean, optional. If set to True, prepared statements will be
+                initialised for retrieving serving vectors as a batch.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        """
+        self._vector_server.init_serving(self, batch, external)
+        self._vector_server.training_dataset_version = training_dataset_version
+
     def get_batch_query(
         self, start_time: Optional[datetime], end_time: Optional[datetime]
     ):

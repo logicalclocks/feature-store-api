@@ -16,7 +16,7 @@
 
 import datetime
 
-from hsfs import engine, statistics, util, split_statistics
+from hsfs import engine, statistics, util, split_statistics, feature_view
 from hsfs.core import statistics_api
 from hsfs.client import exceptions
 
@@ -132,9 +132,12 @@ class StatisticsEngine:
         self._statistics_api.post(td_metadata_instance, stats)
         return stats
 
-    def get_last(self, metadata_instance, for_transformation=False):
+    def get_last(self, metadata_instance, for_transformation=False,
+                 training_dataset_version=None):
         """Get the most recent Statistics of an entity."""
-        return self._statistics_api.get_last(metadata_instance, for_transformation)
+        return self._statistics_api.get_last(metadata_instance,
+                                             for_transformation,
+                                             training_dataset_version)
 
     def get(self, metadata_instance, commit_time, for_transformation=False):
         """Get Statistics with the specified commit time of an entity."""

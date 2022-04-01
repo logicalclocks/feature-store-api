@@ -31,7 +31,8 @@ from hsfs.core import (
 
 class VectorServer:
 
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id, training_dataset_version=None):
+        self._training_dataset_version = training_dataset_version
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
@@ -138,7 +139,8 @@ class VectorServer:
                 "Entry is expected to be single value per primary key. "
                 "If you have already initialised prepared statements for single vector and now want to retrieve "
                 "batch vector please reinitialise prepared statements with  "
-                "`training_dataset.init_prepared_statement(batch_size=n)`"
+                "`training_dataset.init_prepared_statement()` "
+                "or `feature_view.init_serving()`"
             )
 
         serving_vector = []
@@ -185,13 +187,14 @@ class VectorServer:
 
         # initialize prepared statements
         if self.prepared_statements is None:
-            self.init_prepared_statement(vector_server, True, external)
+            self.init_serving(vector_server, True, external)
 
         if not all([isinstance(val, list) for val in entry.values()]):
             raise ValueError(
                 "Entry is expected to be list of primary key values. "
                 "If you have already initialised for batch serving and now want to retrieve single vector "
-                "please reinitialise prepared statements with  `training_dataset.init_prepared_statement()`"
+                "please reinitialise prepared statements with `training_dataset.init_prepared_statement()` "
+                "or `feature_view.init_serving()`"
             )
 
         # create dict object that will have of order of the vector as key and values as
@@ -323,12 +326,20 @@ class VectorServer:
             )
         )
 
-        # if there are any built-in transformation functions get related statistics and
-        # populate with relevant arguments
-        # there should be only one statistics object with for_transformation=true
-        td_tffn_stats = vector_server._statistics_engine.get_last(
-            vector_server, for_transformation=True
-        )
+        if (isinstance(vector_server, feature_view.FeatureView) and
+            len(transformation_functions) == 0):
+            td_tffn_stats = None
+        else:
+            # if there are any built-in transformation functions get related statistics and
+            # populate with relevant arguments
+            # there should be only one statistics object with for_transformation=true
+            td_tffn_stats = vector_server._statistics_engine.get_last(
+                vector_server, for_transformation=True,
+                training_dataset_version=self._training_dataset_version
+            )
+
+        if len(transformation_functions) > 0 and td_tffn_stats is None:
+            raise ValueError("No statistics available for initializing transformation functions.")
 
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(
@@ -366,3 +377,11 @@ class VectorServer:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def training_dataset_version(self):
+        return self._training_dataset_version
+
+    @training_dataset_version.setter
+    def training_dataset_version(self, training_dataset_version):
+        self._training_dataset_version = training_dataset_version
