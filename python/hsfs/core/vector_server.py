@@ -19,8 +19,7 @@ import avro.schema
 import avro.io
 from sqlalchemy import sql, bindparam, exc
 from hsfs import util
-from hsfs.training_dataset import TrainingDataset
-from hsfs.feature_view import FeatureView
+from hsfs import training_dataset, feature_view
 from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
@@ -57,7 +56,7 @@ class VectorServer:
         )
 
     def init_serving(self, vector_server, batch, external):
-        if isinstance(vector_server, FeatureView):
+        if isinstance(vector_server, feature_view.FeatureView):
             prepared_statements = \
                 self._feature_view_api.get_serving_prepared_statement(
                     vector_server.name, vector_server.version, batch
@@ -317,7 +316,7 @@ class VectorServer:
         transformation_functions = (
             self._transformation_function_engine.get_td_transformation_fn(
                 vector_server
-            ) if isinstance(vector_server, TrainingDataset) else (
+            ) if isinstance(vector_server, training_dataset.TrainingDataset) else (
                 self._feature_view_engine.get_attached_transformation_fn(
                     vector_server.name, vector_server.version
                 )

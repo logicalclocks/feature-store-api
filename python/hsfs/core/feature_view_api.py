@@ -25,7 +25,7 @@ class FeatureViewApi:
     _VERSION = "version"
     _QUERY = "query"
     _BATCH = "batch"
-    _PREPARED_STATEMENT = "preparedstatements"
+    _PREPARED_STATEMENT = "preparedstatement"
     _TRANSFORMATION = "transformation"
     _FUNCTIONS = "functions"
 
@@ -55,13 +55,14 @@ class FeatureViewApi:
         path = self._base_path + [name]
         return [feature_view.FeatureView.from_response_json(fv)
                 for fv in self._client._send_request(
-                self._GET, path, {"expand": "query"})["items"]
+                self._GET, path, {"expand": ["query", "features"]})["items"]
                 ]
 
     def get_by_name_version(self, name, version):
         path = self._base_path + [name, self._VERSION, version]
         return feature_view.FeatureView.from_response_json(
-            self._client._send_request(self._GET, path, {"expand": "query"})
+            self._client._send_request(self._GET, path,
+                                       {"expand": ["query", "features"]})
         )
 
     def delete_by_name(self, name):

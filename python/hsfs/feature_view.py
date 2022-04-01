@@ -16,7 +16,7 @@
 
 from typing import Optional, Union, Any, Dict, List, TypeVar
 from datetime import datetime
-from hsfs import constructor, tag, util
+from hsfs import constructor, tag, util, training_dataset_feature
 from hsfs.core import (
     feature_view_engine, statistics_engine,
     transformation_function_engine, vector_server
@@ -183,7 +183,7 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        return cls(
+        fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
             query=query.Query.from_response_json(json_decamelized["query"]),
@@ -193,6 +193,13 @@ class FeatureView:
             statistics_config=json_decamelized.get("statistics_config", None),
             label=json_decamelized.get("label", None)
         )
+        features = json_decamelized.get("features", None)
+        if features:
+            features = [
+                training_dataset_feature.TrainingDatasetFeature.from_response_json(feature)
+                for feature in features]
+        fv.schema = features
+        return fv
 
     def update_from_response_json(self, json_dict):
         other = self.from_response_json(json_dict)
@@ -326,3 +333,7 @@ class FeatureView:
     def schema(self):
         """Feature view schema."""
         return self._features
+
+    @schema.setter
+    def schema(self, features):
+        self._features = features
