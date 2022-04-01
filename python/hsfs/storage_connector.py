@@ -978,8 +978,16 @@ class GcsConnector(StorageConnector):
         """the path of the connector along with gs file system prefixed"""
         return "gs://" + self._bucket
 
+    @property
+    def bucket(self):
+        """GCS Bucket"""
+        return self._bucket
+
     def _get_path(self, sub_path: str):
-        return os.path.join(self.path, sub_path)
+        if sub_path:
+            return os.path.join(self.path, sub_path)
+        else:
+            return self.path
 
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
@@ -995,15 +1003,18 @@ class GcsConnector(StorageConnector):
         path: str = None,
     ):
         """Reads GCS path into a dataframe using the storage connector.
+        The value specified in the bucket variable is concatenated to path argument
+         along with the file system prefix `gs://`
 
         ```python
-        conn.read(path='path_to_data')
+        conn.read(path='path_to_gcs_data')
         ```
 
         # Arguments
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
-            path: GCS path to data
+            path: GCS path succeeding to `gs://BUCKET/`
+            e.g. If path='DATA' final path to read is `gs://BUCKET/DATA`
 
         # Raises
             `ValueError`: Malformed arguments.
