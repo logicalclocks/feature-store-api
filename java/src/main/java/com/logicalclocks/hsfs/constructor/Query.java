@@ -28,8 +28,6 @@ import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,15 +206,15 @@ public class Query {
     return this;
   }
 
-  public Dataset<Row> read() throws FeatureStoreException, IOException {
+  public Object read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
-  public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
+  public Object read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
 
-  public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
 
     if (online) {
@@ -238,7 +236,7 @@ public class Query {
   }
 
   public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
-    read(online).show(numRows);
+    SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
   }
 
   public String toString() {

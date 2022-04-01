@@ -161,7 +161,7 @@ public class TrainingDatasetEngine {
     } else {
       path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
-    return trainingDataset.getStorageConnector()
+    return (Dataset<Row>) trainingDataset.getStorageConnector()
         .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 

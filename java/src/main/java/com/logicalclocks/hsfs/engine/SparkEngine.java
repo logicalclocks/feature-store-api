@@ -148,7 +148,8 @@ public class SparkEngine {
 
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException, IOException {
-    Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector().read(onDemandFeatureGroup.getQuery(),
+    Dataset<Row> dataset = (Dataset<Row>) onDemandFeatureGroup.getStorageConnector()
+        .read(onDemandFeatureGroup.getQuery(),
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
@@ -644,5 +645,9 @@ public class SparkEngine {
       return stream.load();
     }
     return stream.load().select("key", "value");
+  }
+
+  public Dataset<Row> objectToDataset(Object obj) {
+    return (Dataset<Row>) obj;
   }
 }

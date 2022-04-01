@@ -142,7 +142,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
-    return selectAll().read(online);
+    return (Dataset<Row>) selectAll().read(online);
   }
 
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -150,7 +150,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return selectAll().read(online, readOptions);
+    return (Dataset<Row>) selectAll().read(online, readOptions);
   }
 
   /**
@@ -163,7 +163,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
-    return selectAll().asOf(wallclockTime).read(false, null);
+    return (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, null);
   }
 
   /**
@@ -178,7 +178,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
-    return selectAll().asOf(wallclockTime).read(false, readOptions);
+    return (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, readOptions);
   }
 
   /**
@@ -193,7 +193,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
+    return (Dataset<Row>) selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
   /**
@@ -208,7 +208,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
+    return (Dataset<Row>) selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
   /**
@@ -480,7 +480,7 @@ public class FeatureGroup extends FeatureGroupBase {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
           utils.commitDetailsByWallclockTime(this, wallclockTime, 1);
-      Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
+      Dataset<Row> featureData = (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, null);
       Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
       return statisticsEngine.computeStatistics(this, featureData, commitId);
     } else {

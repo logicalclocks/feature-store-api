@@ -72,9 +72,9 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+  public Object read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
-    return (S) SparkEngine.getInstance().read(this, dataFormat, options, path);
+    return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
@@ -136,10 +136,10 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
-      return (S) SparkEngine.getInstance().read(this, dataFormat, options, path);
+      return SparkEngine.getInstance().read(this, dataFormat, options, path);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -210,14 +210,14 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return (S) SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -342,13 +342,13 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return (S) SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
+      return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
     }
 
     @JsonIgnore
@@ -373,14 +373,14 @@ public abstract class StorageConnector {
     }
 
     @Override
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return (S) SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+      return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -471,16 +471,11 @@ public abstract class StorageConnector {
       return null;
     }
 
-    public <S> S read(String query, String dataFormat, Map<String, String> options, String path) {
+    public Object read(String query, String dataFormat, Map<String, String> options, String path) {
       throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
     }
 
-    public <S, U> S readStream(String topic, boolean topicPattern, String messageFormat, U schema,
-        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
-      return readStream(topic, topicPattern, messageFormat, schema, options, includeMetadata);
-    }
-
-    public <S> S readStream(String topic, boolean topicPattern, String messageFormat, String schema,
+    public Object readStream(String topic, boolean topicPattern, String messageFormat, String schema,
         Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
       if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
         throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
@@ -492,8 +487,8 @@ public abstract class StorageConnector {
         options.put("subscribe", topic);
       }
 
-      return (S) SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(), schema, options,
-        includeMetadata);
+      return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(),
+          schema, options, includeMetadata);
     }
   }
 }
