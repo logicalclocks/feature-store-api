@@ -654,7 +654,6 @@ public class SparkEngine {
     return (Dataset<Row>) obj;
   }
 
-
   private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) {
     // The AbstractFileSystem for 'gs:' URIs
     sparkSession.sparkContext().hadoopConfiguration().set(
