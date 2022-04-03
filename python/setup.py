@@ -29,19 +29,23 @@ setup(
         "PyMySQL[rsa]",
     ],
     extras_require={
-        "dev": [
-            "pytest",
-            "flake8",
-            "black"],
+        "dev": ["pytest", "flake8", "black"],
         "docs": [
             "mkdocs==1.1.2",
             "mkdocs-material==6.2.2",
             "mike==0.5.5",
             "sphinx==3.5.4",
             "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
-            "markdown-include"],
-        "hive": ["pyhopshive[thrift]"],
-        "python": ["pyhopshive[thrift]"],
+            "markdown-include",
+        ],
+        "hive": [
+            "pyhopshive[thrift]",
+            "pyarrow",
+        ],
+        "python": [
+            "pyhopshive[thrift]",
+            "pyarrow",
+        ],
     },
     author="Hopsworks AB",
     author_email="moritz@logicalclocks.com",
