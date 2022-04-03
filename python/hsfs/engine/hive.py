@@ -361,10 +361,12 @@ class Engine:
         Args:
             href (str): the endpoint returned by the API
         """
-        url_splits = urlparse(href)
-        project_id = url_splits.path.split("/")[4]
-        ui_url = url_splits._replace(
-            path="hopsworks/#!/project/{}/jobs".format(project_id)
+        url = urlparse(href)
+        url_splits = url.path.split("/")
+        project_id = url_splits[4]
+        job_name = url_splits[6]
+        ui_url = url._replace(
+            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
         )
         return ui_url.geturl()
 
@@ -378,15 +380,10 @@ class Engine:
         Property name should match the value in the JobConfiguration.__init__
         """
         spark_job_configuration = user_write_options.pop("spark", None)
-        read_csv_mode = user_write_options.pop("mode", "FAILFAST")
 
         return ingestion_job_conf.IngestionJobConf(
-            data_format="CSV",
-            data_options=[
-                {"name": "header", "value": "true"},
-                {"name": "inferSchema", "value": "true"},
-                {"name": "mode", "value": read_csv_mode},
-            ],
+            data_format="PARQUET",
+            data_options=[],
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,
         )
