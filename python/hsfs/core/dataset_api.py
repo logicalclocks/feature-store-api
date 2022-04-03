@@ -23,18 +23,20 @@ class DatasetApi:
     DEFAULT_FLOW_CHUNK_SIZE = 1048576
 
     def upload(self, feature_group, path, dataframe):
-        # Convert the dataframe into CSV for upload
-        df_csv = dataframe.to_csv(index=False)
-        csv_length = len(df_csv)
-        num_chunks = math.ceil(csv_length / self.DEFAULT_FLOW_CHUNK_SIZE)
+        # Convert the dataframe into PARQUET for upload
+        df_parquet = dataframe.to_parquet(index=False)
+        parquet_length = len(df_parquet)
+        num_chunks = math.ceil(parquet_length / self.DEFAULT_FLOW_CHUNK_SIZE)
 
-        base_params = self._get_flow_base_params(feature_group, num_chunks, csv_length)
+        base_params = self._get_flow_base_params(
+            feature_group, num_chunks, parquet_length
+        )
 
         chunk_number = 1
-        for i in range(0, csv_length, self.DEFAULT_FLOW_CHUNK_SIZE):
+        for i in range(0, parquet_length, self.DEFAULT_FLOW_CHUNK_SIZE):
             query_params = base_params
             query_params["flowCurrentChunkSize"] = len(
-                df_csv[i : i + self.DEFAULT_FLOW_CHUNK_SIZE]
+                df_parquet[i : i + self.DEFAULT_FLOW_CHUNK_SIZE]
             )
             query_params["flowChunkNumber"] = chunk_number
 
@@ -42,7 +44,7 @@ class DatasetApi:
                 query_params,
                 path,
                 util.feature_group_name(feature_group),
-                df_csv[i : i + self.DEFAULT_FLOW_CHUNK_SIZE],
+                df_parquet[i : i + self.DEFAULT_FLOW_CHUNK_SIZE],
             )
 
             chunk_number += 1
