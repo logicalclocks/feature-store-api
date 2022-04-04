@@ -14,12 +14,13 @@
 #   limitations under the License.
 #
 
-from hsfs import client, expectation_suite
+from hsfs import client, validation_report
 
 
-class ExpectationSuiteApi:
+class ValidationReportApi:
     def __init__(self, feature_store_id, feature_group_id):
-        """Expectation Suite endpoints for the featuregroup resource.
+        """Validation Report endpoints for the featuregroup resource.
+
         :param feature_store_id: id of the respective featurestore
         :type feature_store_id: int
         :param feature_group_id: id of the respective featuregroup
@@ -28,10 +29,11 @@ class ExpectationSuiteApi:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
 
-    def create(self, expectation_suite):
-        """Create an expectation suite attached to a featuregroup.
-        :param expectation_suite: expectation suite object to be created for a featuregroup
-        :type expectation_suite: `ExpectationSuite`
+    def create(self, validation_report):
+        """Create an validation report attached to a featuregroup.
+
+        :param validation_report: validation report object to be created for a featuregroup
+        :type validation_report: `ValidationReport`
         """
         _client = client.get_instance()
         path_params = [
@@ -41,15 +43,15 @@ class ExpectationSuiteApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "expectationsuite",
+            "validationreport",
         ]
 
         headers = {"content-type": "application/json"}
-        payload = expectation_suite.json() if expectation_suite else None
+        payload = validation_report.json() if validation_report else None
         _client._send_request("PUT", path_params, headers=headers, data=payload)
 
-    def delete(self):
-        """Delete the expectation suite attached to a featuregroup."""
+    def delete(self, validation_report_id):
+        """Delete the validation report attached to a featuregroup."""
         _client = client.get_instance()
         path_params = [
             "project",
@@ -58,16 +60,42 @@ class ExpectationSuiteApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "expectationsuite",
+            "validationreport",
+            validation_report_id,
         ]
 
         _client._send_request("DELETE", path_params)
 
-    def get(self):
-        """Get the expectation suite attached to a feature group.
+    def get_last(self):
+        """Gets the latest Validation Report of a featuregroup."""
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            self._feature_group_id,
+            "validationreport"
+        ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "sort_by": "validation_time:desc",
+            "offset": 0,
+            "limit": 1,
+            "fields": "content",
+        }
+
+        return validation_report.ValidationReport.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )
+
+
+    def get_all(self):
+        """Get the validation report attached to a featuregroup.
         
-        :return: expectation suite
-        :rtype: dict
+        :return: validation report
+        :rtype: list[dict]
         """
         _client = client.get_instance()
         path_params = [
@@ -77,9 +105,9 @@ class ExpectationSuiteApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "expectationsuite"
+            "validationreport"
         ]
 
-        return expectation_suite.ExpectationSuite.from_response_json(
+        return validation_report.ValidationReport.from_response_json(
             _client._send_request("GET", path_params)
         )

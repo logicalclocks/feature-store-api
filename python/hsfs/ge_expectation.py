@@ -18,39 +18,22 @@ import json
 
 import humps
 from hsfs import util
-from hsfs.core import expectation_suite_engine
-from hsfs.ge_expectation import GeExpectation
 
-class ExpectationSuite:
+
+class GeExpectation:
     """Metadata object representing an feature validation expectation in the Feature Store."""
 
     def __init__(
         self,
-        expectation_suite_name,
-        expectations,
+        expectation_type,
+        kwargs,
         meta,
-        id=None,
-        data_asset_type=None,
-        ge_cloud_id=None,
-        featurestore_id=None,
-        featuregroup_id=None,
-        href=None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
-        created=None,
+        id = None
     ):
         self._id = id
-        self._expectation_suite_name = expectation_suite_name
-        self.expectations = expectations
+        self.expectation_type = expectation_type
+        self.kwargs = kwargs
         self.meta = meta
-        self._featurestore_id = featurestore_id
-        self._featuregroup_id = featuregroup_id
-
-    def save(self):
-        """Persist the expectation metadata object to the feature store."""
-        expectation_suite_engine.ExpectationSuiteEngine(self._featurestore_id, self._featuregroup_id).save(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -64,9 +47,9 @@ class ExpectationSuite:
 
     def to_dict(self):
         return {
-            "id": self._id,
-            "expectationSuiteName": self._expectation_suite_name,
-            "expectations": [expectation.to_dict() for expectation in self._expectations],
+            # "id": self._id,
+            "expectationType": self._expectation_type,
+            "kwargs": json.dumps(self._kwargs),
             "meta": json.dumps(self._meta),
         }
 
@@ -78,12 +61,12 @@ class ExpectationSuite:
 
     def __repr__(self):
         return (
-            f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
+            f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
         )
 
     @property
     def id(self):
-        """Id of the expectation suite, set by backend."""
+        """Id of the expectation, set by backend."""
         return self._id
 
     @id.setter
@@ -91,27 +74,32 @@ class ExpectationSuite:
         self._id = id
 
     @property
-    def expectation_suite_name(self):
-        """Name of the expectation suite."""
-        return self._expectation_suite_name
+    def expectation_type(self):
+        """Type of the expectation."""
+        return self._expectation_type
 
-    @expectation_suite_name.setter
-    def expectation_suite_name(self, expectation_suite_name):
-        self._expectation_suite_name = expectation_suite_name
+    @expectation_type.setter
+    def expectation_type(self, expectation_type):
+        self._expectation_type = expectation_type
 
 
     @property
-    def expectations(self):
-        """List of expectations to run at validation."""
-        return self._expectations
+    def kwargs(self):
+        """Kwargs to run the expectation."""
+        return self._kwargs
 
-    @expectations.setter
-    def expectations(self, expectations):
-        self._expectations = [GeExpectation(**expectation) for expectation in expectations]
+    @kwargs.setter
+    def kwargs(self, kwargs):
+        if isinstance(kwargs, dict):
+            self._kwargs = kwargs
+        elif isinstance(kwargs, str):
+            self._kwargs = json.loads(kwargs)
+        else:
+            raise ValueError("Kwargs field must be stringified json or dict")
 
     @property
     def meta(self):
-        """Meta field of the expectation suite to store additional informations."""
+        """Meta field of the expectation to store additional informations."""
         return self._meta
 
     @meta.setter

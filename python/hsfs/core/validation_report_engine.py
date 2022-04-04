@@ -14,12 +14,12 @@
 #   limitations under the License.
 #
 
-from hsfs.core import expectation_suite_api
+from hsfs.core import validation_report_api
 
 
-class ExpectationSuiteEngine:
+class ValidationReportEngine:
     def __init__(self, feature_store_id, feature_group_id):
-        """Expectation Suite engine.
+        """Validation Report engine.
 
         :param feature_store_id: id of the respective featurestore
         :param feature_group_id: id of the featuregroup it is attached to
@@ -28,13 +28,18 @@ class ExpectationSuiteEngine:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
-        self._expectation_suite_api = expectation_suite_api.ExpectationSuiteApi(feature_store_id, feature_group_id)
+        self._validation_report_api = validation_report_api.ValidationReportApi(feature_store_id, feature_group_id)
 
-    def save(self, expectation_suite):
-        return self._expectation_suite_api.create(expectation_suite)
+    def save(self, validation_report):
+        self._validation_report_api.create(validation_report)
 
-    def get(self):
-        return self._expectation_suite_api.get()
+    def get_last(self):
+        """Get the most recent Validation Report of a Feature Group."""
+        return self._validation_report_api.get_last()
 
-    def delete(self):
-        self._expectation_suite_api.delete()
+    def get_all(self):
+        """Get all Validation Report of a FeaturevGroup."""
+        return self._validation_report_api.get_all()
+
+    def delete(self, validation_report_id):
+        self._validation_report_api.delete(validation_report_id)
