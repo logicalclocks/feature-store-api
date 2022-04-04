@@ -76,4 +76,14 @@ public class Constants {
   public static final String KAFKA_SSL_KEY_PASSWORD = "kafka.ssl.key.password";
   public static final String KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM =
       "kafka.ssl.endpoint.identification.algorithm";
+
+  //GCS
+  public static final String PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile";
+  public static final String PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key";
+  public static final String PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash";
+  public static final String PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm";
+  public static final String PROPERTY_GCS_FS_KEY = "fs.AbstractFileSystem.gs.impl";
+  public static final String PROPERTY_GCS_FS_VALUE = "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS";
+  public static final String PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable";
+  // end gcs
 }

@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
     @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
     @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC"),
-    @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA")
+    @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA"),
+    @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS")
 })
 public abstract class StorageConnector {
 
@@ -490,5 +491,36 @@ public abstract class StorageConnector {
       return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(),
           schema, options, includeMetadata);
     }
+  }
+
+  public static class GcsConnector extends StorageConnector {
+    @Getter
+    private String keyPath;
+    @Getter
+    private String algorithm;
+    @Getter
+    private String encryptionKey;
+    @Getter
+    private String encryptionKeyHash;
+    @Getter
+    private String bucket;
+
+    public GcsConnector() {
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return "gs://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+    }
+
+    @Override
+    public Map<String, String> sparkOptions() {
+      return new HashMap<>();
+    }
+
+    public void prepareSpark() throws FeatureStoreException, IOException {
+      SparkEngine.getInstance().setupConnectorHadoopConf(this);
+    }
+
   }
 }

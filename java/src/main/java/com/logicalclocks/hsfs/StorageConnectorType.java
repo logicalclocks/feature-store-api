@@ -23,5 +23,6 @@ public enum StorageConnectorType {
   REDSHIFT,
   ADLS,
   SNOWFLAKE,
-  KAFKA
+  KAFKA,
+  GCS
 }

@@ -32,6 +32,7 @@ class StorageConnector(ABC):
     ADLS = "ADLS"
     SNOWFLAKE = "SNOWFLAKE"
     KAFKA = "KAFKA"
+    GCS = "GCS"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -926,3 +927,111 @@ class KafkaConnector(StorageConnector):
             options,
             include_metadata,
         )
+
+
+class GcsConnector(StorageConnector):
+    type = StorageConnector.GCS
+
+    def __init__(
+        self,
+        id,
+        name,
+        description,
+        featurestore_id,
+        # members specific to type of connector
+        key_path=None,
+        bucket=None,
+        algorithm=None,
+        encryption_key=None,
+        encryption_key_hash=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+
+        self._bucket = bucket
+        self._key_path = key_path
+        self._algorithm = algorithm
+        self._encryption_key = encryption_key
+        self._encryption_key_hash = encryption_key_hash
+
+    @property
+    def key_path(self):
+        """GCS key file HDFS path"""
+        return self._key_path
+
+    @property
+    def algorithm(self):
+        """Encryption Algorithm"""
+        return self._algorithm
+
+    @property
+    def encryption_key(self):
+        """Encryption Key"""
+        return self._encryption_key
+
+    @property
+    def encryption_key_hash(self):
+        """Encryption Key Hash"""
+        return self._encryption_key_hash
+
+    @property
+    def path(self):
+        """the path of the connector along with gs file system prefixed"""
+        return "gs://" + self._bucket
+
+    @property
+    def bucket(self):
+        """GCS Bucket"""
+        return self._bucket
+
+    def _get_path(self, sub_path: str):
+        if sub_path:
+            return os.path.join(self.path, sub_path)
+        else:
+            return self.path
+
+    def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional
+        arguments.
+        """
+        return {}
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        """Reads GCS path into a dataframe using the storage connector.
+
+        ```python
+        conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
+        ```
+
+        # Arguments
+            data_format: Spark data format. Defaults to `None`.
+            options: Spark options. Defaults to `None`.
+            path: GCS path. Defaults to `None`.
+        # Raises
+            `ValueError`: Malformed arguments.
+
+        # Returns
+            `Dataframe`: A Spark dataframe.
+        """
+
+        return engine.get_instance().read(self, data_format, options, path)
+
+    def prepare_spark(self, path: Optional[str] = None):
+        """Prepare Spark to use this Storage Connector.
+
+        ```python
+        conn.prepare_spark()
+        spark.read.format("json").load("gs://bucket/path")
+        # or
+        spark.read.format("json").load(conn.prepare_spark("gs://bucket/path"))
+        ```
+
+        # Arguments
+            path: Path to prepare for reading from Google cloud storage. Defaults to `None`.
+        """
+        return engine.get_instance().setup_storage_connector(self, path)

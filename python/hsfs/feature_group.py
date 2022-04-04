@@ -824,9 +824,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
-
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -926,8 +923,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
