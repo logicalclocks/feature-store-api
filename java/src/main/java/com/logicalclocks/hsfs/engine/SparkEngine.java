@@ -505,6 +505,9 @@ public class SparkEngine {
       case ADLS:
         setupAdlsConnectorHadoopConf((StorageConnector.AdlsConnector) storageConnector);
         break;
+      case GCS:
+        setupGcsConnectorHadoopConf((StorageConnector.GcsConnector) storageConnector);
+        break;
       default:
         // No-OP
         break;
@@ -649,5 +652,38 @@ public class SparkEngine {
 
   public Dataset<Row> objectToDataset(Object obj) {
     return (Dataset<Row>) obj;
+  }
+
+  private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) {
+    // The AbstractFileSystem for 'gs:' URIs
+    sparkSession.sparkContext().hadoopConfiguration().set(
+        Constants.PROPERTY_GCS_FS_KEY, Constants.PROPERTY_GCS_FS_VALUE
+    );
+    // Whether to use a service account for GCS authorization. Setting this
+    // property to `false` will disable use of service accounts for authentication.
+    sparkSession.sparkContext().hadoopConfiguration().set(
+        Constants.PROPERTY_GCS_ACCOUNT_ENABLE, "true"
+    );
+    // The JSON key file of the service account used for GCS
+    // access when google.cloud.auth.service.account.enable is true.
+    String localPath = addFile(storageConnector.getKeyPath());
+    sparkSession.sparkContext().hadoopConfiguration().set(
+        Constants.PROPERTY_KEY_FILE, localPath
+    );
+
+    // if encryption fields present
+    if (!Strings.isNullOrEmpty(storageConnector.getAlgorithm())) {
+      sparkSession.sparkContext().hadoopConfiguration().set(
+          Constants.PROPERTY_ALGORITHM, storageConnector.getAlgorithm());
+      sparkSession.sparkContext().hadoopConfiguration().set(
+          Constants.PROPERTY_ENCRYPTION_KEY, storageConnector.getEncryptionKey());
+      sparkSession.sparkContext().hadoopConfiguration().set(
+          Constants.PROPERTY_ENCRYPTION_HASH, storageConnector.getEncryptionKeyHash());
+    } else {
+      // unset if set before
+      sparkSession.sparkContext().hadoopConfiguration().unset(Constants.PROPERTY_ALGORITHM);
+      sparkSession.sparkContext().hadoopConfiguration().unset(Constants.PROPERTY_ENCRYPTION_KEY);
+      sparkSession.sparkContext().hadoopConfiguration().unset(Constants.PROPERTY_ENCRYPTION_HASH);
+    }
   }
 }
