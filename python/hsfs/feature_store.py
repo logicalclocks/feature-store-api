@@ -41,6 +41,7 @@ from hsfs.core import (
     feature_group_engine,
     feature_view_engine
 )
+from hsfs.constructor.query import Query
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -888,28 +889,81 @@ class FeatureStore:
     def create_feature_view(
         self,
         name: str,
-        query,
+        query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         label: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
     ):
+        """Create a feature view metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata on its own.
+            To save metadata in the feature store, call the `save()` method.
+
+
+        # Arguments
+            name: Name of the feature view to create.
+            version: Version of the feature view to create, defaults to `None` and
+                will create the feature view with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the feature view to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            label: A list of feature names constituting the prediction label/feature of
+                the feature view. When replaying a `Query` during model inference,
+                the label features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
+            transformation_functions: A dictionary mapping tansformation functions to
+                to the features they should be applied to before writing out the
+                vector and at inference time. Defaults to `{}`, no
+                transformations.
+
+        # Returns:
+            `FeatureView`: The feature view metadata object.
+        """
         return feature_view.FeatureView(
             name=name,
             query=query,
             featurestore_id=self._id,
             version=version,
             description=description,
-            statistics_config=statistics_config,
             label=label,
             transformation_functions=transformation_functions
         )
 
     def get_feature_view(self, name, version):
+        """Get a feature view entity from the feature store.
+
+        Getting a feature view from the Feature Store means getting its metadata.
+
+        # Arguments
+            name: Name of the feature view to get.
+            version: Version of the feature view to retrieve, defaults to `None` and will
+                return the `version=1`.
+
+        # Returns
+            `FeatureView`: The feature view metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature view from the feature store.
+        """
         return self._feature_view_engine.get(name, version)
 
     def get_feature_views(self, name):
+        """Get a list of all versions of a feature view entity from the feature store.
+
+        Getting a feature view from the Feature Store means getting its metadata.
+
+        # Arguments
+            name: Name of the feature view to get.
+
+        # Returns
+            `FeatureView`: List of feature view metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature view from the feature store.
+        """
         return self._feature_view_engine.get(name)
 
     @property
