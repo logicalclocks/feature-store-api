@@ -89,7 +89,7 @@ class FeatureView:
         return self
 
     def init_serving(
-        self, training_dataset_version: Optional[int] = None,
+        self, training_dataset_version: Optional[int] = 1,
         batch: Optional[bool] = None, external: Optional[bool] = False
     ):
         """Initialise and cache parametrized prepared statement to
