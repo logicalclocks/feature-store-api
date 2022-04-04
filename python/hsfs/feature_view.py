@@ -23,7 +23,6 @@ from hsfs.core import (
 )
 import humps
 from hsfs.transformation_function import TransformationFunction
-from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query
 import json
 
@@ -40,7 +39,6 @@ class FeatureView:
         id=None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         label: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
     ):
@@ -50,7 +48,6 @@ class FeatureView:
         self._featurestore_id = featurestore_id
         self._version = version
         self._description = description
-        self._statistics_config = statistics_config
         self._label = label
         self._transformation_functions = transformation_functions
         self._features = None
@@ -81,6 +78,8 @@ class FeatureView:
            retrieve feature vector from online feature store.
 
         # Arguments
+            training_dataset_version: int, optional. Default to be 1. Transformation statistics
+                are fetched from training dataset and apply in serving vector.
             batch: boolean, optional. If set to True, prepared statements will be
                 initialised for retrieving serving vectors as a batch.
             external: boolean, optional. If set to True, the connection to the
@@ -162,9 +161,6 @@ class FeatureView:
     def delete_tag(self, name: str):
         pass
 
-    def register_transformation_statistics(self, version: int):
-        pass
-
     def add_training_dataset_tag(self, version: int, name: str, value):
         pass
 
@@ -194,9 +190,6 @@ class FeatureView:
         pass
 
     def delete_all_training_datasets(self):
-        pass
-
-    def register_transformation_statistics(self, training_dataset_version):
         pass
 
     @classmethod
@@ -241,7 +234,6 @@ class FeatureView:
             "version": self._version,
             "description": self._description,
             "query": self._query,
-            "statisticsConfig": self._statistics_config,
             "features": self._features,
             "label": self._label
         }
@@ -311,29 +303,6 @@ class FeatureView:
     def query(self, query_obj):
         """Query of the feature view."""
         self._query = query_obj
-
-    @property
-    def statistics_config(self):
-        """Statistics configuration object defining the settings for statistics
-        computation of the feature view."""
-        return self._statistics_config
-
-    @statistics_config.setter
-    def statistics_config(self, statistics_config):
-        if isinstance(statistics_config, StatisticsConfig):
-            self._statistics_config = statistics_config
-        elif isinstance(statistics_config, dict):
-            self._statistics_config = StatisticsConfig(**statistics_config)
-        elif isinstance(statistics_config, bool):
-            self._statistics_config = StatisticsConfig(statistics_config)
-        elif statistics_config is None:
-            self._statistics_config = StatisticsConfig()
-        else:
-            raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
-                    type(statistics_config)
-                )
-            )
 
     @property
     def transformation_functions(self):
