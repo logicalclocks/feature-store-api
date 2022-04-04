@@ -610,6 +610,7 @@ class FeatureGroup(FeatureGroupBase):
         self._online_topic_name = online_topic_name
         self._event_time = event_time
         self._stream = stream
+        self._deltastreamer_jobconf = None
 
         if self._id:
             # initialized by backend
@@ -1158,13 +1159,15 @@ class FeatureGroup(FeatureGroupBase):
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
-            json_decamelized["stream"] = (
-                json_decamelized["type"] == "streamFeatureGroupDTO"
-            )
+            if "type" in json_decamelized:
+                json_decamelized["stream"] = (
+                    json_decamelized["type"] == "streamFeatureGroupDTO"
+                )
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
-            fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
+            if "type" in json_decamelized:
+                fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
