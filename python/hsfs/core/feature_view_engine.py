@@ -54,7 +54,7 @@ class FeatureViewEngine:
         self._transformation_function_engine.attach_transformation_fn(
             feature_view_obj
         )
-        self._feature_view_api.post(feature_view_obj)
+        return self._feature_view_api.post(feature_view_obj)
 
     def get(self, name, version=None):
         if version:

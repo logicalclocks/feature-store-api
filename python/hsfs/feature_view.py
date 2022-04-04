@@ -65,9 +65,23 @@ class FeatureView:
         self._vector_server = vector_server.VectorServer(featurestore_id)
 
     def save(self):
-        self._feature_view_engine.save(self)
+        """Save created feature view object to Hopsworks
+
+        # Returns
+            `FeatureView`: updated `FeatureView` after save
+        """
+        return self._feature_view_engine.save(self)
 
     def delete(self):
+        """Delete current feature view and all associated metadata.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            feature view **and** related training dataset **and** materialized data in HopsFS.
+
+        # Raises
+            `RestAPIError`.
+        """
         self._feature_view_engine.delete(self.name, self.version)
 
     def update(self):
@@ -98,6 +112,15 @@ class FeatureView:
     def get_batch_query(
         self, start_time: Optional[datetime], end_time: Optional[datetime]
     ):
+        """Get a query string of batch query.
+
+        # Arguments
+            start_time: Optional. Start time of the batch query.
+            end_time: Optional. End time of the batch query.
+
+        # Returns
+            `str`: batch query
+        """
         return self._feature_view_engine.get_batch_query(
             self, start_time, end_time)
 
