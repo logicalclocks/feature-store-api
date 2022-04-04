@@ -34,9 +34,9 @@ setup(
             "flake8",
             "black"],
         "docs": [
-            "mkdocs==1.1.2",
-            "mkdocs-material==6.2.2",
-            "mike==0.5.5",
+            "mkdocs==1.3.0",
+            "mkdocs-material==8.2.8",
+            "mike==1.1.2",
             "sphinx==3.5.4",
             "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include"],
