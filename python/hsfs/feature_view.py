@@ -14,21 +14,22 @@
 #   limitations under the License.
 #
 
-from typing import Optional, Union, Any, Dict, List, TypeVar
+import json
 from datetime import datetime
-from hsfs import constructor, tag, util, training_dataset_feature
+from typing import Optional, Any, Dict, List
+
+import humps
+
+from hsfs import tag, util, training_dataset_feature
+from hsfs.constructor import query
 from hsfs.core import (
     feature_view_engine, statistics_engine,
     transformation_function_engine, vector_server
 )
-import humps
 from hsfs.transformation_function import TransformationFunction
-from hsfs.constructor import query
-import json
 
 
 class FeatureView:
-
     ENTITY_TYPE = "featureview"
 
     def __init__(
@@ -40,7 +41,8 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         label: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
+        transformation_functions: Optional[
+            Dict[str, TransformationFunction]] = {}
     ):
         self._name = name
         self._id = id
@@ -54,7 +56,8 @@ class FeatureView:
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id)
         self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
+            transformation_function_engine.TransformationFunctionEngine(
+                featurestore_id)
         )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -68,6 +71,7 @@ class FeatureView:
         self._feature_view_engine.delete(self.name, self.version)
 
     def update(self):
+        # TODO feature view: wait for RestAPI
         return self
 
     def init_serving(
@@ -135,11 +139,35 @@ class FeatureView:
         """
         return self._vector_server.get_serving_vectors(self, entry, external)
 
-    def preview_online_vector(self):
-        return list()
+    def preview_online_vector(self, external: Optional[bool] = False):
+        """Returns a sample of assembled serving vector from online feature store.
 
-    def preview_online_vectors(self, n: int):
-        return list(list())
+        # Arguments
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        # Returns
+            `list` List of feature values, ordered according to positions of this
+            features in training dataset query.
+        """
+        return self._vector_server.get_preview_vectors(self, external, 1)
+
+    def preview_online_vectors(self, n: int, external: Optional[bool] = False):
+        """Returns n samples of assembled serving vectors in batches from online feature store.
+
+        # Arguments
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP.
+        # Returns
+            `List[list]` List of lists of feature values , ordered according to
+            positions of this features in training dataset query.
+        """
+        return self._vector_server.get_preview_vectors(self, external, n)
 
     def get_batch_data(self, start_time, end_time):
         # return df
@@ -202,13 +230,13 @@ class FeatureView:
             featurestore_id=json_decamelized["featurestore_id"],
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
-            statistics_config=json_decamelized.get("statistics_config", None),
             label=json_decamelized.get("label", None)
         )
         features = json_decamelized.get("features", None)
         if features:
             features = [
-                training_dataset_feature.TrainingDatasetFeature.from_response_json(feature)
+                training_dataset_feature.TrainingDatasetFeature.from_response_json(
+                    feature)
                 for feature in features]
         fv.schema = features
         return fv
@@ -309,7 +337,8 @@ class FeatureView:
         """Set transformation functions."""
         if self._id is not None and self._transformation_functions is None:
             self._transformation_functions = (
-                self._transformation_function_engine.get_td_transformation_fn(self)
+                self._transformation_function_engine.get_td_transformation_fn(
+                    self)
             )
         return self._transformation_functions
 

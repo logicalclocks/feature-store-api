@@ -17,7 +17,7 @@ import re
 import io
 import avro.schema
 import avro.io
-from sqlalchemy import sql, bindparam, exc
+from sqlalchemy import sql, bindparam, exc, text
 from hsfs import util
 from hsfs import training_dataset, feature_view
 from hsfs.core import (
@@ -131,10 +131,23 @@ class VectorServer:
         if batch:
             self._pkname_by_serving_index = pkname_by_serving_index
 
-    def get_serving_vector(self, vector_server, entry, external):
+    def get_preview_vectors(self, vector_server, external, n):
+        batch = n > 1
+        if self.prepared_statements is None:
+            self.init_serving(vector_server, batch, external)
+        entry = dict([(key, None) for key in self.serving_keys])
+        if batch:
+            return self.get_serving_vectors(vector_server, entry, external, n)
+        else:
+            return self.get_serving_vector(
+                vector_server, entry, external, n)
+
+    def get_serving_vector(self, vector_server, entry, external,
+                           preview_sample=0):
         """Assembles serving vector from online feature store."""
 
-        if all([isinstance(val, list) for val in entry.values()]):
+        if (not preview_sample and
+            all([isinstance(val, list) for val in entry.values()])):
             raise ValueError(
                 "Entry is expected to be single value per primary key. "
                 "If you have already initialised prepared statements for single vector and now want to retrieve "
@@ -161,6 +174,9 @@ class VectorServer:
         for prepared_statement_index in self.prepared_statements:
             prepared_statement = self.prepared_statements[
                 prepared_statement_index]
+            if preview_sample:
+                prepared_statement = self._make_preview_statement(
+                    prepared_statement, preview_sample)
             with self.prepared_statement_engine.connect() as mysql_conn:
                 result_proxy = mysql_conn.execute(prepared_statement,
                                                   entry).fetchall()
@@ -182,14 +198,16 @@ class VectorServer:
 
         return serving_vector
 
-    def get_serving_vectors(self, vector_server, entry, external):
+    def get_serving_vectors(self, vector_server, entry, external,
+                            preview_sample=0):
         """Assembles serving vector from online feature store."""
 
         # initialize prepared statements
         if self.prepared_statements is None:
             self.init_serving(vector_server, True, external)
 
-        if not all([isinstance(val, list) for val in entry.values()]):
+        if not preview_sample and \
+            not all([isinstance(val, list) for val in entry.values()]):
             raise ValueError(
                 "Entry is expected to be list of primary key values. "
                 "If you have already initialised for batch serving and now want to retrieve single vector "
@@ -208,19 +226,21 @@ class VectorServer:
                 "Provided primary key map doesn't correspond to serving_keys"
             )
 
-        prepared_statements = self.prepared_statements
-
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(vector_server)
 
         self.refresh_mysql_connection(external)
         for prepared_statement_index in self.prepared_statements:
             order_in_batch = 0
-            prepared_statement = prepared_statements[prepared_statement_index]
+            prepared_statement = self.prepared_statements[
+                prepared_statement_index]
+            if preview_sample:
+                prepared_statement = self._make_preview_statement(
+                    prepared_statement, preview_sample)
             with self.prepared_statement_engine.connect() as mysql_conn:
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
-                    batch_ids=tuple(
+                    batch_ids=None if preview_sample else tuple(
                         zip(
                             *[
                                 entry.get(key)
@@ -281,6 +301,10 @@ class VectorServer:
                 pass
         except exc.OperationalError:
             self._set_mysql_connection(external)
+
+    def _make_preview_statement(self, statement, n):
+        return text(statement.text[:statement.text.find(" WHERE ")]
+                    + f" LIMIT {n}")
 
     def _set_mysql_connection(self, external):
         online_conn = self._storage_connector_api.get_online_connector()
