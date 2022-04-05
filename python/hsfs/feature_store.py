@@ -895,12 +895,7 @@ class FeatureStore:
         label: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
     ):
-        """Create a feature view metadata object.
-
-        !!! note "Lazy"
-            This method is lazy and does not persist any metadata on its own.
-            To save metadata in the feature store, call the `save()` method.
-
+        """Create a feature view metadata object and saved it to Hopsworks.
 
         # Arguments
             name: Name of the feature view to create.
@@ -922,7 +917,7 @@ class FeatureStore:
         # Returns:
             `FeatureView`: The feature view metadata object.
         """
-        return feature_view.FeatureView(
+        feat_view = feature_view.FeatureView(
             name=name,
             query=query,
             featurestore_id=self._id,
@@ -931,6 +926,7 @@ class FeatureStore:
             label=label,
             transformation_functions=transformation_functions
         )
+        return self._feature_view_engine.save(feat_view)
 
     def get_feature_view(self, name, version):
         """Get a feature view entity from the feature store.

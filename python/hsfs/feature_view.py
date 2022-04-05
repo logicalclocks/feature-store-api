@@ -64,14 +64,6 @@ class FeatureView:
         )
         self._vector_server = vector_server.VectorServer(featurestore_id)
 
-    def save(self):
-        """Save created feature view object to Hopsworks
-
-        # Returns
-            `FeatureView`: updated `FeatureView` after save
-        """
-        return self._feature_view_engine.save(self)
-
     def delete(self):
         """Delete current feature view and all associated metadata.
 
