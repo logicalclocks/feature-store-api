@@ -1683,7 +1683,7 @@
 <h2 id="step-1-set-up-a-hopsworks-api-key">Step 1: Set up a Hopsworks API key<a class="headerlink" href="#step-1-set-up-a-hopsworks-api-key" title="Permanent link">#</a></h2>
 <p>In order for EMR clusters to be able to communicate with the Hopsworks Feature Store, the clients running on EMR need to be able to access a Hopsworks API key.</p>
 <h3 id="generate-an-api-key">Generate an API key<a class="headerlink" href="#generate-an-api-key" title="Permanent link">#</a></h3>
-<p>In Hopsworks, click on your <em>username</em> in the top-right corner and select <em>Settings</em> to open the user settings. Select <em>API keys</em>. Give the key a name and select the project scope before creating the key. Copy the key into your clipboard for the next step.</p>
+<p>In Hopsworks, click on your <em>username</em> in the top-right corner and select <em>Account Settings</em> to open the user settings. Select <em>API</em>. Give the key a name and select the project scope before creating the key. Copy the key into your clipboard for the next step.</p>
 <div class="admonition success">
 <p class="admonition-title">Scopes</p>
 <p>The API key should contain at least the following scopes:</p>
@@ -1773,32 +1773,23 @@ Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.inte
 <span class="w">    </span><span class="p">]</span><span class="w"></span>
 <span class="w">  </span><span class="p">},</span><span class="w"></span>
 <span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;core-site&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;fs.hopsfs.impl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.ssl.hostname.verifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.ssl.keystore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hops.ssl.trustore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.fs.hopsfs.impl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.hostname.verifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.trustore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.serializer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;org.apache.spark.serializer.KryoSerializer&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hive.metastore.uris&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span><span class="w"></span>
 <span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-hive-site&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;hive.metastore.uris&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
 <span class="p">]</span><span class="w"></span>
 </code></pre></div>
 <p>When you create your EMR cluster, add the configuration:</p>
@@ -1844,7 +1835,7 @@ sudo chown hadoop:hadoop /usr/lib/hopsworks
 curl -o client.tar.gz -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/client
 
 tar -xvf client.tar.gz
-tar -xzf client/apache-hive-*-bin.tar.gz
+tar -xzf client/apache-hive-*-bin.tar.gz <span class="o">||</span> <span class="nb">true</span>
 mv apache-hive-*-bin apache-hive-bin
 rm client.tar.gz
 rm client/apache-hive-*-bin.tar.gz
@@ -1856,7 +1847,20 @@ curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${<
 <span class="nb">echo</span> -n <span class="k">$(</span>curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .password<span class="k">)</span> &gt; material_passwd
 
 chmod -R o-rwx /usr/lib/hopsworks
+
+sudo pip3 install --upgrade hsfs~<span class="o">=</span>X.X.0
 </code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Don't forget to replace X.X.0 with the major and minor version of your Hopsworks deployment.</p>
+</div>
+<p align="center">
+    <figure>
+        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
+        <figcaption>To find your Hopsworks version, enter any of your projects and go to the settings tab inside your project.</figcaption>
+    </figure>
+</p>
+
 <p>Add the bootstrap actions when configuring your EMR cluster. Provide 3 arguments to the bootstrap action: The name of the API key secret e.g., <code>hopsworks/featurestore</code>,
 the public DNS name of your Hopsworks cluster, such as <code>ad005770-33b5-11eb-b5a7-bfabd757769f.cloud.hopsworks.ai</code>, and the name of your Hopsworks project, e.g. <code>demo_fs_meb10179</code>.</p>
 <p align="center">
@@ -1870,18 +1874,7 @@ the public DNS name of your Hopsworks cluster, such as <code>ad005770-33b5-11eb-
 
 <p>Your EMR cluster will now be able to access your Hopsworks Feature Store.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
-<p>If you use Python, then install the <a href="https://pypi.org/project/hsfs/">HSFS library</a>. The Scala version of the library has already been installed to your EMR cluster.
-Use the <a href="../../../generated/api/connection_api/">Connection API</a> to connect to the Hopsworks Feature Store. For more information about how to use the Feature Store, see the <a href="../../../quickstart/">Quickstart Guide</a>.</p>
-<div class="admonition attention">
-<p class="admonition-title">Matching Hopsworks version</p>
-<p>The <strong>major version of <code>HSFS</code></strong> needs to match the <strong>major version of Hopsworks</strong>.</p>
-</div>
-<p align="center">
-    <figure>
-        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
-        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
-    </figure>
-</p>
+<p>Use the <a href="../../../generated/api/connection_api/">Connection API</a> to connect to the Hopsworks Feature Store. For more information about how to use the Feature Store, see the <a href="../../../quickstart/">Quickstart Guide</a>.</p>
 
               
             </article>
