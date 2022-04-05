@@ -137,12 +137,12 @@ class VectorServer:
             self.init_serving(vector_server, batch, external)
         entry = dict([(key, None) for key in self.serving_keys])
         if batch:
-            return self.get_serving_vectors(vector_server, entry, external, n)
+            return self.get_feature_vectors(vector_server, entry, external, n)
         else:
-            return self.get_serving_vector(
+            return self.get_feature_vector(
                 vector_server, entry, external, n)
 
-    def get_serving_vector(self, vector_server, entry, external,
+    def get_feature_vector(self, vector_server, entry, external,
                            preview_sample=0):
         """Assembles serving vector from online feature store."""
 
@@ -198,7 +198,7 @@ class VectorServer:
 
         return serving_vector
 
-    def get_serving_vectors(self, vector_server, entry, external,
+    def get_feature_vectors(self, vector_server, entry, external,
                             preview_sample=0):
         """Assembles serving vector from online feature store."""
 

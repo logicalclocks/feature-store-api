@@ -124,7 +124,7 @@ class FeatureView:
         return self._feature_view_engine.get_batch_query(
             self, start_time, end_time)
 
-    def get_online_vector(
+    def get_feature_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False
     ):
         """Returns assembled serving vector from online feature store.
@@ -141,9 +141,9 @@ class FeatureView:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._vector_server.get_serving_vector(self, entry, external)
+        return self._vector_server.get_feature_vector(self, entry, external)
 
-    def get_online_vectors(
+    def get_feature_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
     ):
         """Returns assembled serving vectors in batches from online feature store.
@@ -160,9 +160,9 @@ class FeatureView:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._vector_server.get_serving_vectors(self, entry, external)
+        return self._vector_server.get_feature_vectors(self, entry, external)
 
-    def preview_online_vector(self, external: Optional[bool] = False):
+    def preview_feature_vector(self, external: Optional[bool] = False):
         """Returns a sample of assembled serving vector from online feature store.
 
         # Arguments
@@ -177,7 +177,7 @@ class FeatureView:
         """
         return self._vector_server.get_preview_vectors(self, external, 1)
 
-    def preview_online_vectors(self, n: int, external: Optional[bool] = False):
+    def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
         """Returns n samples of assembled serving vectors in batches from online feature store.
 
         # Arguments
