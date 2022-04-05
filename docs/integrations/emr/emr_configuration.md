@@ -9,7 +9,7 @@ In order for EMR clusters to be able to communicate with the Hopsworks Feature S
 
 ### Generate an API key
 
-In Hopsworks, click on your *username* in the top-right corner and select *Settings* to open the user settings. Select *API keys*. Give the key a name and select the project scope before creating the key. Copy the key into your clipboard for the next step.
+In Hopsworks, click on your *username* in the top-right corner and select *Account Settings* to open the user settings. Select *API*. Give the key a name and select the project scope before creating the key. Copy the key into your clipboard for the next step.
 
 !!! success "Scopes"
     The API key should contain at least the following scopes:
@@ -106,32 +106,23 @@ Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.inte
     ]
   },
   {
-    "Classification": "core-site",
-    "Properties": {
-      "fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
-      "hops.ipc.server.ssl.enabled": true,
-      "hops.ssl.hostname.verifier": "ALLOW_ALL",
-      "hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
-      "client.rpc.ssl.enabled.protocol": "TLSv1.2",
-      "hops.ssl.keystores.passwd.name": "/usr/lib/hopsworks/material_passwd",
-      "hops.ssl.keystore.name": "/usr/lib/hopsworks/keyStore.jks",
-      "hops.ssl.trustore.name": "/usr/lib/hopsworks/trustStore.jks"
-    }
-  },
-  {
     "Classification": "spark-defaults",
     "Properties": {
-      "spark.sql.hive.metastore.jars": "/usr/lib/hopsworks/apache-hive-bin/lib/*",
+      "spark.hadoop.hops.ipc.server.ssl.enabled": true,
+      "spark.hadoop.fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+      "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+      "spark.hadoop.hops.ssl.hostname.verifier": "ALLOW_ALL",
+      "spark.hadoop.hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+      "spark.hadoop.hops.ssl.keystores.passwd.name": "/usr/lib/hopsworks/material_passwd",
+      "spark.hadoop.hops.ssl.keystore.name": "/usr/lib/hopsworks/keyStore.jks",
+      "spark.hadoop.hops.ssl.trustore.name": "/usr/lib/hopsworks/trustStore.jks",
+      "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
       "spark.executor.extraClassPath": "/usr/lib/hopsworks/client/*",
-      "spark.driver.extraClassPath": "/usr/lib/hopsworks/client/*"
+      "spark.driver.extraClassPath": "/usr/lib/hopsworks/client/*",
+      "spark.sql.hive.metastore.jars": "/usr/lib/hopsworks/apache-hive-bin/lib/*",
+      "spark.hadoop.hive.metastore.uris": "thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083"
     }
   },
-  {
-    "Classification": "spark-hive-site",
-    "Properties": {
-      "hive.metastore.uris": "thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083"
-    }
-  }
 ]
 ```
 
@@ -181,7 +172,7 @@ cd /usr/lib/hopsworks
 curl -o client.tar.gz -H "Authorization: ApiKey ${API_KEY}" https://$HOST/hopsworks-api/api/project/$PROJECT_ID/client
 
 tar -xvf client.tar.gz
-tar -xzf client/apache-hive-*-bin.tar.gz
+tar -xzf client/apache-hive-*-bin.tar.gz || true
 mv apache-hive-*-bin apache-hive-bin
 rm client.tar.gz
 rm client/apache-hive-*-bin.tar.gz
@@ -193,7 +184,18 @@ curl -H "Authorization: ApiKey ${API_KEY}" https://$HOST/hopsworks-api/api/proje
 echo -n $(curl -H "Authorization: ApiKey ${API_KEY}" https://$HOST/hopsworks-api/api/project/$PROJECT_ID/credentials | jq -r .password) > material_passwd
 
 chmod -R o-rwx /usr/lib/hopsworks
+
+sudo pip3 install --upgrade hsfs~=X.X.0
 ```
+!!! note
+    Don't forget to replace X.X.0 with the major and minor version of your Hopsworks deployment.
+
+<p align="center">
+    <figure>
+        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
+        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
+    </figure>
+</p>
 
 Add the bootstrap actions when configuring your EMR cluster. Provide 3 arguments to the bootstrap action: The name of the API key secret e.g., `hopsworks/featurestore`,
 the public DNS name of your Hopsworks cluster, such as `ad005770-33b5-11eb-b5a7-bfabd757769f.cloud.hopsworks.ai`, and the name of your Hopsworks project, e.g. `demo_fs_meb10179`.
@@ -211,16 +213,4 @@ Your EMR cluster will now be able to access your Hopsworks Feature Store.
 
 ## Next Steps
 
-If you use Python, then install the [HSFS library](https://pypi.org/project/hsfs/). The Scala version of the library has already been installed to your EMR cluster.
 Use the [Connection API](../../../generated/api/connection_api/) to connect to the Hopsworks Feature Store. For more information about how to use the Feature Store, see the [Quickstart Guide](../../quickstart.md).
-
-!!! attention "Matching Hopsworks version"
-    The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
-
-
-<p align="center">
-    <figure>
-        <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
-        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
-    </figure>
-</p>
