@@ -81,9 +81,10 @@ public class CodeEngine {
         String notebookPath = dbutils.notebook().getContext().notebookPath().get();
         String browserHostName = dbutils.notebook().getContext().browserHostName().get();
         codeApi.post(featureGroup, saveCode(), notebookPath, Code.RunType.DATABRICKS, browserHostName);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         // ignore the exception - the code might be running on a third party platform where databricks
         // library is not available
+        // Throwable because the "class not found" is an error not exception
       }
     }
   }
