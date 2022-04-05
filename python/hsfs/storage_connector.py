@@ -928,6 +928,7 @@ class KafkaConnector(StorageConnector):
             include_metadata,
         )
 
+
 class GcsConnector(StorageConnector):
     type = StorageConnector.GCS
 
