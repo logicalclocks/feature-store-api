@@ -20,7 +20,7 @@ setup(
         "requests",
         "furl",
         "boto3",
-        "pandas",
+        "pandas>=1.2.0",
         "numpy",
         "pyjks",
         "mock",
