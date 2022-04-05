@@ -193,7 +193,7 @@ sudo pip3 install --upgrade hsfs~=X.X.0
 <p align="center">
     <figure>
         <img src="../../../assets/images/hopsworks-version.png" alt="HSFS version needs to match the major version of Hopsworks">
-        <figcaption>You find the Hopsworks version inside any of your Project's settings tab on Hopsworks</figcaption>
+        <figcaption>To find your Hopsworks version, enter any of your projects and go to the settings tab inside your project.</figcaption>
     </figure>
 </p>
 
