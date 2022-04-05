@@ -27,7 +27,6 @@ setup(
         "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL[rsa]",
-        "confluent-kafka",
     ],
     extras_require={
         "dev": ["pytest", "flake8", "black"],
