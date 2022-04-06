@@ -20,10 +20,13 @@ import boto3
 import time
 import re
 import warnings
+import avro
+import json
 
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
+from typing import Dict
 
 from hsfs import client, feature, util
 from hsfs.core import (
@@ -37,6 +40,16 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.client import exceptions
+from hsfs.feature_group import FeatureGroup
+
+HAS_FAST = False
+try:
+    from fastavro import schemaless_writer
+    from fastavro.schema import parse_schema
+
+    HAS_FAST = True
+except ImportError:
+    pass
 
 
 class Engine:
@@ -284,6 +297,19 @@ class Engine:
         online_write_options,
         validation_id=None,
     ):
+        pass
+
+    def old_save_dataframe(
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        online_enabled,
+        storage,
+        offline_write_options,
+        online_write_options,
+        validation_id=None,
+    ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
 
@@ -454,3 +480,26 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
+
+    def _pandas_to_avro(
+        self, feature_group: FeatureGroup, dataframe: pd.DataFrame
+    ) -> pd.DataFrame:
+        # return dataframe.apply(lambda row: _encode_complex_features(feature_group, row))
+        pass
+
+    def _encode_complex_features(self, feature_writers: Dict[str, callable], row: dict):
+        for feature_name, writer in feature_writers.items():
+            with BytesIO() as outf:
+                writer(row[feature_name], outf)
+                row[feature_name] = outf.getvalue()
+        return row
+
+    def _get_encoder_func(self, writer_schema: str):
+        if HAS_FAST:
+            schema = json.loads(writer_schema)
+            parsed_schema = parse_schema(schema)
+            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
+
+        parsed_schema = avro.schema.parse(writer_schema)
+        writer = avro.io.DatumWriter(parsed_schema)
+        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
