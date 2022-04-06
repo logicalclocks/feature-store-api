@@ -14,7 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client, validation_report
+from hsfs import client
+from hsfs.validation_report import ValidationReport
 
 
 class ValidationReportApi:
@@ -48,7 +49,9 @@ class ValidationReportApi:
 
         headers = {"content-type": "application/json"}
         payload = validation_report.json() if validation_report else None
-        _client._send_request("PUT", path_params, headers=headers, data=payload)
+        return ValidationReport.from_response_json(
+            _client._send_request("PUT", path_params, headers=headers, data=payload)
+        )
 
     def delete(self, validation_report_id):
         """Delete the validation report attached to a featuregroup."""
@@ -86,7 +89,7 @@ class ValidationReportApi:
             "fields": "content",
         }
 
-        return validation_report.ValidationReport.from_response_json(
+        return ValidationReport.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
@@ -107,7 +110,13 @@ class ValidationReportApi:
             self._feature_group_id,
             "validationreport"
         ]
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "sort_by": "validation_time:desc",
+            "offset": 0,
+            "fields": "content",
+        }
 
-        return validation_report.ValidationReport.from_response_json(
-            _client._send_request("GET", path_params)
+        return ValidationReport.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
         )

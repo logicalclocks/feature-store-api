@@ -31,7 +31,7 @@ class ValidationReportEngine:
         self._validation_report_api = validation_report_api.ValidationReportApi(feature_store_id, feature_group_id)
 
     def save(self, validation_report):
-        self._validation_report_api.create(validation_report)
+        return self._validation_report_api.create(validation_report)
 
     def get_last(self):
         """Get the most recent Validation Report of a Feature Group."""

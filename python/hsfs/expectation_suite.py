@@ -70,6 +70,14 @@ class ExpectationSuite:
             "meta": json.dumps(self._meta),
         }
 
+    def to_nested_dict(self):
+        return {
+            "id": self._id,
+            "expectationSuiteName": self._expectation_suite_name,
+            "expectations": [expectation.to_nested_dict() for expectation in self._expectations],
+            "meta": self._meta,
+        }
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 

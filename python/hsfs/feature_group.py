@@ -30,6 +30,7 @@ from hsfs.core import (
     feature_group_engine,
     statistics_engine,
     expectation_suite_engine,
+    validation_report_engine,
     code_engine,
     data_validation_engine,
     on_demand_feature_group_engine,
@@ -38,6 +39,7 @@ from hsfs.core import (
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
+from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 
@@ -642,6 +644,7 @@ class FeatureGroup(FeatureGroupBase):
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
             self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(self.feature_store_id, self.id)
+            self._validation_report_engine = validation_report_engine.ValidationReportEngine(self.feature_store_id, self.id)
 
         else:
             # initialized by user
@@ -1162,6 +1165,54 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._expectation_suite = None
         self._expectation_suite_engine.delete()
+
+    def get_latest_validation_report(self):
+        """Return the latest validation report attached to the feature group if it exists.
+
+        # Returns
+            `ValidationReport`. The latest validation report attached to the feature group.
+        
+        # Raises
+            `RestAPIException`.
+            `FeatureStoreException`. If no validation report have been found.
+        """
+        if self._id != None:
+            return self._validation_report_engine.get_last()
+        else:
+            raise FeatureStoreException("No validation report found.")
+
+    def get_all_validation_reports(self):
+        """Return the latest validation report attached to the feature group if it exists.
+
+        # Returns
+            `ValidationReport`. The latest validation report attached to the feature group.
+        
+        # Raises
+            `RestAPIException`.
+            `FeatureStoreException`. If no validation report have been found.
+        """
+        if self._id != None:
+            return self._validation_report_engine.get_all()
+        else:
+            raise FeatureStoreException("No validation report found.")
+
+    def save_validation_report(self, validation_report):
+        """Save validation report to hopsworks platform along previous reports of the same featuregroup. 
+
+        # Arguments
+            `ValidationReport`. The validation report to attach to the featuregroup. 
+        
+        # Raises
+            `RestAPIException`.
+        """
+        if isinstance(validation_report, ge.core.expectation_validation_result.ExpectationSuiteValidationResult):
+            report = ValidationReport(**validation_report.to_json_dict())
+        elif isinstance(validation_report, dict):
+            report = ValidationReport(**validation_report)
+        elif isinstance(validation_report, ValidationReport):
+            report = validation_report
+
+        return self._validation_report_engine.save(report)
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the

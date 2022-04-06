@@ -53,6 +53,14 @@ class GeExpectation:
             "meta": json.dumps(self._meta),
         }
 
+    def to_nested_dict(self):
+        return {
+            # "id": self._id,
+            "expectationType": self._expectation_type,
+            "kwargs": self._kwargs,
+            "meta": self._meta,
+        }
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 

@@ -15,12 +15,13 @@
 #
 
 import json
+import re
 import great_expectations as ge
 
 import humps
 from hsfs import util
 from hsfs.core import validation_report_engine
-from python.hsfs.validation_result2 import ValidationResult
+from hsfs.validation_result2 import ValidationResult
 
 
 class ValidationReport:
@@ -28,12 +29,13 @@ class ValidationReport:
 
     def __init__(
         self,
-        id,
         success,
         results,
         meta,
         statistics,
-        full_path=None,
+        evaluation_parameters=None,
+        id=None,
+        full_report_path=None,
         featurestore_id=None,
         featuregroup_id=None,
         href=None,
@@ -41,14 +43,16 @@ class ValidationReport:
         items=None,
         count=None,
         type=None,
-        created=None,
+        validation_time=None,
     ):
         self._id = id
         self._success = success
-        self._results = results
-        self._meta = meta
-        self._statistics = statistics
-        self._full_path = full_path
+        self.results = results
+        self.meta = meta
+        self.statistics = statistics
+        self.evaluation_parameters = evaluation_parameters
+        self._full_report_path = full_report_path
+        self._validation_time = validation_time
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
 
@@ -73,8 +77,19 @@ class ValidationReport:
         return {
             "id": self._id,
             "success": self.success,
+            "evaluationParameters": json.dumps(self.evaluation_parameters),
+            "statistics": json.dumps(self._statistics),
+            "results": [result.to_dict() for result in self._results],
+            "meta": json.dumps(self._meta),
+        }
+
+    def to_nested_dict(self):
+        return {
+            "id": self._id,
+            "success": self.success,
+            "evaluationParameters": self.evaluation_parameters,
             "statistics": self._statistics,
-            "results": self._results,
+            "results": [result.to_nested_dict() for result in self._results],
             "meta": self._meta,
         }
 
@@ -119,7 +134,14 @@ class ValidationReport:
 
     @meta.setter
     def meta(self, meta):
-        self._meta = meta
+        if meta is None:
+            self._meta = None
+        elif isinstance(meta, dict):
+            self._meta = meta
+        elif isinstance(meta, str):
+            self._meta = json.loads(meta)
+        else:
+            raise ValueError("Meta field must be stringified json or dict")
 
     @property
     def statistics(self):
@@ -128,19 +150,42 @@ class ValidationReport:
 
     @statistics.setter
     def statistics(self, statistics):
-        self._statistics = statistics
+        if statistics is None:
+            self._statistics = None
+        elif isinstance(statistics, dict):
+            self._statistics = statistics
+        elif isinstance(statistics, str):
+            self._statistics = json.loads(statistics)
+        else:
+            raise ValueError("Statistics field must be stringified json or dict")
 
+    @property
+    def evaluation_parameters(self):
+        """Evaluation parameters field of the validation report which store kwargs of the validation."""
+        return self._evaluation_parameters
+
+    @evaluation_parameters.setter
+    def evaluation_parameters(self, evaluation_parameters):
+        if evaluation_parameters is None:
+            self._evaluation_parameters = None
+        elif isinstance(evaluation_parameters, dict):
+            self._evaluation_parameters = evaluation_parameters
+        elif isinstance(evaluation_parameters, str):
+            self._evaluation_parameters = json.loads(evaluation_parameters)
+        else:
+            raise ValueError("Evaluation parameters field must be stringified json or dict")
+    
     def __str__(self):
         return self.json()
 
     def __repr__(self):
         
-        full_path_string = ""
-        if self._full_path == None:
-            full_path_string = f"download_path : {self._full_path}"
+        full_report_path_string = ""
+        if self._full_report_path == None:
+            full_report_path_string = f"download_path : {self._full_report_path}"
 
         return (
             f"ValidationReport(success: {self._success}, " 
             + f"{self._statistics}, {len(self._results)} results" 
-            + f" , {self._meta}, {full_path_string})" 
+            + f" , {self._meta}, {full_report_path_string})" 
         )
