@@ -319,6 +319,11 @@ public class HudiEngine {
       writeOptions.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
     }
 
+    // it is possible that table was generated from empty topic, thus we need to generate InitialCheckPointStr
+    if (getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation()) == null) {
+      writeOptions.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
+    }
+
     deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
     if (fgCommit != null) {
