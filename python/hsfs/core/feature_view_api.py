@@ -27,6 +27,7 @@ class FeatureViewApi:
     _BATCH = "batch"
     _PREPARED_STATEMENT = "preparedstatement"
     _TRANSFORMATION = "transformation"
+    _TRAINING_DATASET = "trainingdatasets"
     _FUNCTIONS = "functions"
 
     def __init__(self, feature_store_id):
@@ -101,3 +102,13 @@ class FeatureViewApi:
                 self._TRANSFORMATION, self._FUNCTIONS]
         return transformation_function_attached.TransformationFunctionAttached.\
             from_response_json(self._client._send_request("GET", path))
+
+    def create_training_dataset(self, name, version, training_dataset_obj):
+        path = self._base_path + \
+               [name, self._VERSION, version,
+                self._TRAINING_DATASET]
+        headers = {"content-type": "application/json"}
+        return training_dataset_obj.update_from_response_json(
+            self._client._send_request(
+                "POST", path, headers=headers, data=training_dataset_obj.json())
+        )

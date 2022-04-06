@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import warnings
 from hsfs import engine, training_dataset_feature
 
 from hsfs.core import (
@@ -26,6 +27,8 @@ from hsfs.core import (
 
 class FeatureViewEngine:
     ENTITY_TYPE = "featureview"
+    _OVERWRITE = "overwrite"
+    _APPEND = "append"
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -77,3 +80,27 @@ class FeatureViewEngine:
         return self._feature_view_api.get_attached_transformation_fn(
             name, version
         )
+
+    def create_training_dataset(self, feature_view_obj,
+                                training_dataset_obj, user_write_options):
+        if (len(training_dataset_obj.splits) > 0 and
+            training_dataset_obj.train_split is None):
+            training_dataset_obj.train_split = "train"
+            warnings.warn(
+                "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
+                "used for training) was provided. Setting this property to `train`. The statistics of this "
+                "split will be used for transformation functions."
+            )
+
+        updated_instance = self._feature_view_api.create_training_dataset(
+            feature_view_obj.name, feature_view_obj.version,
+            training_dataset_obj)
+        td_job = engine.get_instance().write_training_dataset(
+            training_dataset_obj, feature_view_obj.query, user_write_options,
+            self._OVERWRITE
+        )
+        return updated_instance, td_job
+
+    def compute_training_dataset_statistics(self, feature_view_obj,
+                                            training_dataset_obj):
+        pass

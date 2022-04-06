@@ -48,6 +48,8 @@ class TrainingDataset:
         data_format,
         location,
         featurestore_id,
+        start_time=None,
+        end_time=None,
         coalesce=False,
         description=None,
         storage_connector=None,
@@ -72,6 +74,8 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
+        self._start_time = start_time
+        self._end_time = end_time
         self._coalesce = coalesce
         self._seed = seed
         self._location = location

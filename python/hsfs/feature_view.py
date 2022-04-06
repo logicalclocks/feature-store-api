@@ -15,18 +15,23 @@
 #
 
 import json
+import warnings
 from datetime import datetime
-from typing import Optional, Any, Dict, List
+from typing import Optional, Union, List, Dict, Any
 
 import humps
 
-from hsfs import tag, util, training_dataset_feature
+from hsfs import (
+    tag, util, training_dataset_feature, storage_connector, training_dataset,
+    engine
+)
 from hsfs.constructor import query
 from hsfs.core import (
     feature_view_engine, statistics_engine,
-    transformation_function_engine, vector_server
+    transformation_function_engine, vector_server, code_engine
 )
 from hsfs.transformation_function import TransformationFunction
+from hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureView:
@@ -63,6 +68,8 @@ class FeatureView:
             featurestore_id, self.ENTITY_TYPE
         )
         self._vector_server = vector_server.VectorServer(featurestore_id)
+        self._code_engine = code_engine.CodeEngine(featurestore_id,
+                                                   self.ENTITY_TYPE)
 
     def delete(self):
         """Delete current feature view and all associated metadata.
@@ -188,10 +195,6 @@ class FeatureView:
         # return df
         pass
 
-    def create_batch_data(self, start_time, end_time, storage_connector):
-        # return None, save to storage connector
-        pass
-
     def add_tag(self, name: str, value):
         pass
 
@@ -203,6 +206,147 @@ class FeatureView:
 
     def delete_tag(self, name: str):
         pass
+
+    def get_training_dataset(
+        self,
+        start_time: Optional = None,
+        end_time: Optional = None,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        splits: Optional[Dict[str, float]] = {},
+        seed: Optional[int] = None,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        train_split: str = None,
+        read_options: Optional[Dict[Any, Any]] = {}
+    ):
+        pass
+
+    def create_training_dataset(
+        self,
+        start_time: Optional = None,
+        end_time: Optional = None,
+        storage_connector: Optional[storage_connector.StorageConnector] = None,
+        location: Optional[str] = "",
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        data_format: Optional[str] = "tfrecords",
+        coalesce: Optional[bool] = False,
+        splits: Optional[Dict[str, float]] = {},
+        seed: Optional[int] = None,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        train_split: str = None,
+        write_options: Optional[Dict[Any, Any]] = {}
+    ):
+        """Create a training dataset and save data into `location`.
+
+                !!! info "Data Formats"
+                    The feature store currently supports the following data formats for
+                    training datasets:
+
+                    1. tfrecord
+                    2. csv
+                    3. tsv
+                    4. parquet
+                    5. avro
+                    6. orc
+
+                    Currently not supported petastorm, hdf5 and npy file formats.
+
+
+                # Arguments
+                    storage_connector: Storage connector defining the sink location for the
+                        training dataset, defaults to `None`, and materializes training dataset
+                        on HopsFS.
+                    location: Path to complement the sink storage connector with, e.g if the
+                        storage connector points to an S3 bucket, this path can be used to
+                        define a sub-directory inside the bucket to place the training dataset.
+                        Defaults to `""`, saving the training dataset at the root defined by the
+                        storage connector.
+                    version: Version of the training dataset to retrieve, defaults to `None` and
+                        will create the training dataset with incremented version from the last
+                        version in the feature store.
+                    description: A string describing the contents of the training dataset to
+                        improve discoverability for Data Scientists, defaults to empty string
+                        `""`.
+                    data_format: The data format used to save the training dataset,
+                        defaults to `"tfrecords"`-format.
+                    coalesce: If true the training dataset data will be coalesced into
+                        a single partition before writing. The resulting training dataset
+                        will be a single file per split. Default False.
+                    splits: A dictionary defining training dataset splits to be created. Keys in
+                        the dictionary define the name of the split as `str`, values represent
+                        percentage of samples in the split as `float`. Currently, only random
+                        splits are supported. Defaults to empty dict`{}`, creating only a single
+                        training dataset without splits.
+                    seed: Optionally, define a seed to create the random splits with, in order
+                        to guarantee reproducability, defaults to `None`.
+                    statistics_config: A configuration object, or a dictionary with keys
+                        "`enabled`" to generally enable descriptive statistics computation for
+                        this feature group, `"correlations`" to turn on feature correlation
+                        computation and `"histograms"` to compute feature value frequencies. The
+                        values should be booleans indicating the setting. To fully turn off
+                        statistics computation pass `statistics_config=False`. Defaults to
+                        `None` and will compute only descriptive statistics.
+                    label: A list of feature names constituting the prediction label/feature of
+                        the training dataset. When replaying a `Query` during model inference,
+                        the label features can be omitted from the feature vector retrieval.
+                        Defaults to `[]`, no label.
+                    transformation_functions: A dictionary mapping tansformation functions to
+                        to the features they should be applied to before writing out the
+                        training data and at inference time. Defaults to `{}`, no
+                        transformations.
+                    train_split: If `splits` is set, provide the name of the split that is going
+                        to be used for training. The statistics of this split will be used for
+                        transformation functions if necessary. Defaults to `None`.
+                    write_options: Additional write options as key-value pairs, defaults to `{}`.
+                        When using the `python` engine, write_options can contain the
+                        following entries:
+                        * key `spark` and value an object of type
+                        [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                          to configure the Hopsworks Job used to compute the training dataset.
+                        * key `wait_for_job` and value `True` or `False` to configure
+                          whether or not to the save call should return only
+                          after the Hopsworks Job has finished. By default it waits.
+
+                # Returns
+                    `Job`: When using the `python` engine, it returns the Hopsworks Job
+                        that was launched to create the training dataset.
+                """
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=version,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            data_format=data_format,
+            storage_connector=storage_connector,
+            location=location,
+            featurestore_id=self._id,
+            splits=splits,
+            seed=seed,
+            statistics_config=statistics_config,
+            coalesce=coalesce,
+            train_split=train_split
+        )
+        # td_job is used only if the python engine is used
+        td, td_job = self._feature_view_engine.create_training_dataset(
+            self, td, write_options
+        )
+        # currently we do not save the training dataset statistics config for training datasets
+        self._code_engine.save_code(self)
+        if statistics_config.enabled and engine.get_type() == "spark":
+            self._feature_view_engine.compute_training_dataset_statistics(
+                self, td)
+        if version is None:
+            warnings.warn(
+                "No version provided for creating training dataset, incremented version to `{}`.".format(
+                    td.version
+                ),
+                util.VersionWarning,
+            )
+
+        return td_job
+
 
     def add_training_dataset_tag(self, version: int, name: str, value):
         pass
@@ -259,7 +403,7 @@ class FeatureView:
     def update_from_response_json(self, json_dict):
         other = self.from_response_json(json_dict)
         for key in ["name", 'description', "id", "query", "featurestore_id",
-                    "version", "statistics_config", "label"]:
+                    "version", "label", "schema"]:
             self._update_attribute_if_present(self, other, key)
         return self
 
