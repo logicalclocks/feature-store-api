@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.HsfsSpark;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
@@ -178,8 +179,8 @@ public class FeatureStore {
         .asScala().toSeq();
   }
 
-  public Object sql(String query) {
-    return SparkEngine.getInstance().sql(query);
+  public HsfsSpark sql(String query) {
+    return SparkEngine.getInstance().sparkHsfsData(SparkEngine.getInstance().sql(query));
   }
 
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {

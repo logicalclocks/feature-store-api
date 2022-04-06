@@ -119,7 +119,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
   @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
-    return (Dataset<Row>) selectAll().read();
+    return selectAll().read().getDataSet();
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {

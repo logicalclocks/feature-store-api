@@ -161,8 +161,8 @@ public class TrainingDatasetEngine {
     } else {
       path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
-    return (Dataset<Row>) trainingDataset.getStorageConnector()
-        .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
+    return trainingDataset.getStorageConnector()
+        .read(null, trainingDataset.getDataFormat().toString(), readOptions, path).getDataSet();
   }
 
   public void addTag(TrainingDataset trainingDataset, String name, Object value)

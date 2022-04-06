@@ -193,7 +193,7 @@ public class TrainingDataset {
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
     this.queryInt = query;
-    save((Dataset<Row>) query.read(), writeOptions);
+    save(query.read().getDataSet(), writeOptions);
   }
 
   /**
@@ -247,7 +247,7 @@ public class TrainingDataset {
    */
   public void insert(Query query, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    trainingDatasetEngine.insert(this, (Dataset<Row>) query.read(),
+    trainingDatasetEngine.insert(this, query.read().getDataSet(),
         writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
     computeStatistics();
   }

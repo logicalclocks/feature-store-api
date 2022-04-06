@@ -148,11 +148,12 @@ public class SparkEngine {
 
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException, IOException {
-    Dataset<Row> dataset = (Dataset<Row>) onDemandFeatureGroup.getStorageConnector()
+    Dataset<Row> dataset = onDemandFeatureGroup.getStorageConnector()
         .read(onDemandFeatureGroup.getQuery(),
         onDemandFeatureGroup.getDataFormat() != null ? onDemandFeatureGroup.getDataFormat().toString() : null,
         getOnDemandOptions(onDemandFeatureGroup),
-        onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
+        onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()))
+        .getDataSet();
     if (!Strings.isNullOrEmpty(onDemandFeatureGroup.getLocation())) {
       sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(), 0).collect();
     }
@@ -650,8 +651,10 @@ public class SparkEngine {
     return stream.load().select("key", "value");
   }
 
-  public Dataset<Row> objectToDataset(Object obj) {
-    return (Dataset<Row>) obj;
+  public HsfsSpark sparkHsfsData(Object obj) {
+    HsfsSpark hsfsSpark = new HsfsSpark();
+    hsfsSpark.setDataSet(obj);
+    return hsfsSpark;
   }
 
   private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) {
