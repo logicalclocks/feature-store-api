@@ -32,9 +32,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
 import org.apache.hudi.common.table.HoodieTableMetaClient;
+import org.apache.hudi.common.table.timeline.HoodieInstant;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
 
+import org.apache.hudi.common.util.Option;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
@@ -139,9 +141,10 @@ public class HudiEngine {
         .save(featureGroup.getLocation());
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
-    fgCommit.setValidationId(validationId);
-
-    featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    if (fgCommit != null) {
+      fgCommit.setValidationId(validationId);
+      featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+    }
   }
 
   public <S> FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroupBase featureGroup,
@@ -159,10 +162,13 @@ public class HudiEngine {
         .save(featureGroup.getLocation());
 
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, featureGroup.getLocation());
-    FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
-    apiFgCommit.setCommitID(apiFgCommit.getCommitID());
-
-    return apiFgCommit;
+    if (fgCommit != null) {
+      FeatureGroupCommit apiFgCommit = featureGroupApi.featureGroupCommit(featureGroup, fgCommit);
+      apiFgCommit.setCommitID(apiFgCommit.getCommitID());
+      return apiFgCommit;
+    } else {
+      throw new FeatureStoreException("No commit information was found for this feature group");
+    }
   }
 
   public void registerTemporaryTable(SparkSession sparkSession, FeatureGroupBase featureGroup, String alias,
@@ -178,15 +184,19 @@ public class HudiEngine {
       throws IOException, FeatureStoreException, ParseException {
     FileSystem hopsfsConf = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
     HoodieTimeline commitTimeline = HoodieDataSourceHelpers.allCompletedCommitsCompactions(hopsfsConf, basePath);
-
-    fgCommitMetadata.setCommitDateString(commitTimeline.lastInstant().get().getTimestamp());
-    fgCommitMetadata.setCommitTime(utils.getTimeStampFromDateString(commitTimeline.lastInstant().get().getTimestamp()));
-    byte[] commitsToReturn = commitTimeline.getInstantDetails(commitTimeline.lastInstant().get()).get();
-    HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn, HoodieCommitMetadata.class);
-    fgCommitMetadata.setRowsUpdated(commitMetadata.fetchTotalUpdateRecordsWritten());
-    fgCommitMetadata.setRowsInserted(commitMetadata.fetchTotalInsertRecordsWritten());
-    fgCommitMetadata.setRowsDeleted(commitMetadata.getTotalRecordsDeleted());
-    return fgCommitMetadata;
+    Option<HoodieInstant> lastInstant = commitTimeline.lastInstant();
+    if (lastInstant.isPresent()) {
+      fgCommitMetadata.setCommitDateString(lastInstant.get().getTimestamp());
+      fgCommitMetadata.setCommitTime(utils.getTimeStampFromDateString(lastInstant.get().getTimestamp()));
+      byte[] commitsToReturn = commitTimeline.getInstantDetails(lastInstant.get()).get();
+      HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn, HoodieCommitMetadata.class);
+      fgCommitMetadata.setRowsUpdated(commitMetadata.fetchTotalUpdateRecordsWritten());
+      fgCommitMetadata.setRowsInserted(commitMetadata.fetchTotalInsertRecordsWritten());
+      fgCommitMetadata.setRowsDeleted(commitMetadata.getTotalRecordsDeleted());
+      return fgCommitMetadata;
+    } else {
+      return null;
+    }
   }
 
   private Map<String, String> setupHudiWriteOpts(FeatureGroupBase featureGroup, HudiOperationType operation,
@@ -311,7 +321,9 @@ public class HudiEngine {
 
     deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
-    featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
-    streamFeatureGroup.computeStatistics();
+    if (fgCommit != null) {
+      featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);
+      streamFeatureGroup.computeStatistics();
+    }
   }
 }
