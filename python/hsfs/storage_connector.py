@@ -1071,29 +1071,36 @@ class BigQueryConnector(StorageConnector):
 
     @property
     def key_path(self):
+        """GCP JSON Key File HDFS path"""
         return self._key_path
 
     @property
     def parent_project(self):
+        """BigQuery Parent Project"""
         return self._parent_project
 
     @property
     def dataset(self):
+        """BigQuery Dataset"""
         return self._dataset
 
     @property
     def query_table(self):
+        """BigQuery Table"""
         return self._query_table
 
     @property
     def query_project(self):
+        """BigQuery Project"""
         return self._query_project
 
     @property
     def materialization_dataset(self):
+        """BigQuery Materialization View"""
         return self._materialization_dataset
 
     def spark_options(self):
+        """Return spark options to be set specifically for BigQuery"""
         properties = {}
         local_key_path = engine.get_instance().add_file(self._key_path)
         properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
@@ -1117,7 +1124,30 @@ class BigQueryConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        self.refetch()
+        """Reads from BigQuery into a dataframe using the storage connector.
+
+          If Table options are set in storage connector, then it will read from the BigQuery table.
+            ```python
+            conn.read()
+            ```
+          If Materialization View is set, provide BigQuery SQL to `query` argument.
+            ```python
+            conn.read(query='SQL')
+            ```
+
+        # Arguments
+            query: SQL query. Defaults to `None`.
+            data_format: Spark data format. Defaults to `None`.
+            options: Spark options. Defaults to `None`.
+
+        # Raises
+            `ValueError`: Malformed arguments.
+
+        # Returns
+            `Dataframe`: A Spark dataframe.
+        """
+
+        # merge user spark options on top of default spark options
         options = (
             {**self.spark_options(), **options}
             if options is not None

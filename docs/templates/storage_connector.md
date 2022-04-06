@@ -77,3 +77,13 @@ database or the distributed filesystem HOPSFS.
 ### Methods
 
 {{gcs_methods}}
+
+## BigQuery
+
+### Properties
+
+{{bigquery_properties}}
+
+### Methods
+
+{{bigquery_methods}}

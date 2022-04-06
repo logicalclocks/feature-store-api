@@ -545,6 +545,10 @@ public abstract class StorageConnector {
     @Getter @Setter
     private String materializationDataset;
 
+    /**
+     * Set spark options specific to BigQuery.
+     * @return Map
+     */
     public Map<String, String> sparkOptions() {
       Map<String, String> options = new HashMap<>();
       options.put(Constants.BIGQ_CREDENTIALS_FILE, SparkEngine.getInstance().addFile(keyPath));
@@ -563,11 +567,23 @@ public abstract class StorageConnector {
       return options;
     }
 
+    /**
+     * If Table options are set in the storage connector, set path to table.
+     * Else use the query argument to set as path.
+     * @param query
+     * @param dataFormat
+     * @param options
+     * @param path
+     * @return Dataframe
+     * @throws FeatureStoreException
+     * @throws IOException
+     */
     @Override
     public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
 
       Map<String, String> readOptions = sparkOptions();
+      // merge user spark options on top of default spark options
       if (!options.isEmpty()) {
         readOptions.putAll(options);
       }

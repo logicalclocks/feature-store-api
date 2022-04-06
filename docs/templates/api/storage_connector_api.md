@@ -73,3 +73,13 @@
 ### Methods
 
 {{gcs_methods}}
+
+## BigQuery
+
+### Properties
+
+{{bigquery_properties}}
+
+### Methods
+
+{{bigquery_methods}}
