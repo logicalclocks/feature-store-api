@@ -1161,7 +1161,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
-            if "type" in json_decamelized:
+            if "type" in fg:
                 fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
