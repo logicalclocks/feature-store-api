@@ -574,6 +574,11 @@ class TrainingDataset:
         """Training dataset schema."""
         return self._features
 
+    @schema.setter
+    def schema(self, features):
+        """Training dataset schema."""
+        self._features = features
+
     @property
     def seed(self):
         """Seed."""

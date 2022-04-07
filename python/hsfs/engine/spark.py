@@ -324,7 +324,8 @@ class Engine:
         )
 
     def write_training_dataset(
-        self, training_dataset, dataset, user_write_options, save_mode
+        self, training_dataset, dataset, user_write_options, save_mode,
+        feature_view_obj=None
     ):
         if isinstance(dataset, query.Query):
             dataset = dataset.read()

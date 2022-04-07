@@ -21,7 +21,8 @@ from hsfs.core import (
     tags_api,
     storage_connector_api,
     transformation_function_engine,
-    feature_view_api
+    feature_view_api,
+    code_engine
 )
 
 
@@ -45,6 +46,8 @@ class FeatureViewEngine:
                 feature_store_id
             )
         )
+        self._code_engine = code_engine.CodeEngine(feature_store_id,
+                                                   self.ENTITY_TYPE)
 
     def save(self, feature_view_obj):
         if feature_view_obj.label:
@@ -95,11 +98,38 @@ class FeatureViewEngine:
         updated_instance = self._feature_view_api.create_training_dataset(
             feature_view_obj.name, feature_view_obj.version,
             training_dataset_obj)
-        td_job = engine.get_instance().write_training_dataset(
-            training_dataset_obj, feature_view_obj.query, user_write_options,
-            self._OVERWRITE
+        td_job = self.compute_training_dataset(
+            feature_view_obj,
+            user_write_options,
+            training_dataset_obj=training_dataset_obj
         )
         return updated_instance, td_job
+
+    # This method is used by hsfs_utils to launch a job for python client
+    def compute_training_dataset(self, feature_view_obj, user_write_options,
+                                 training_dataset_obj=None,
+                                 training_dataset_version=None):
+        if training_dataset_obj:
+            pass
+        elif training_dataset_version:
+            training_dataset_obj = \
+                self._feature_view_api.get_training_dataset_by_version(
+                    feature_view_obj.name, feature_view_obj.version,
+                    training_dataset_version)
+        else:
+            raise ValueError("No training dataset object or version is provided")
+
+        training_dataset_obj.schema = feature_view_obj.schema
+        td_job = engine.get_instance().write_training_dataset(
+            training_dataset_obj, feature_view_obj.query, user_write_options,
+            self._OVERWRITE, feature_view_obj=feature_view_obj
+        )
+        # currently we do not save the training dataset statistics config for training datasets
+        self._code_engine.save_code(self)
+        if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
+            self.compute_training_dataset_statistics(
+                self, training_dataset_obj)
+        return td_job
 
     def compute_training_dataset_statistics(self, feature_view_obj,
                                             training_dataset_obj):

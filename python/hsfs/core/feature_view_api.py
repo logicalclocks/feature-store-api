@@ -14,7 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs import client, feature_view, transformation_function_attached
+from hsfs import (
+    client, feature_view, transformation_function_attached, training_dataset
+)
 from hsfs.constructor import serving_prepared_statement
 
 
@@ -29,6 +31,7 @@ class FeatureViewApi:
     _TRANSFORMATION = "transformation"
     _TRAINING_DATASET = "trainingdatasets"
     _FUNCTIONS = "functions"
+    _COMPUTE = "compute"
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -111,4 +114,26 @@ class FeatureViewApi:
         return training_dataset_obj.update_from_response_json(
             self._client._send_request(
                 "POST", path, headers=headers, data=training_dataset_obj.json())
+        )
+
+    def get_training_dataset_by_version(self, name, version,
+                                        training_dataset_version):
+        path = self._base_path + \
+               [name, self._VERSION, version,
+                self._TRAINING_DATASET, self._VERSION, training_dataset_version]
+        return training_dataset.TrainingDataset.from_response_json(
+            self._client._send_request(
+                "GET", path)
+        )
+
+    def compute_training_dataset(self, name, version, training_dataset_version,
+                                 td_app_conf):
+        path = self._base_path + \
+               [name, self._VERSION, version,
+                self._TRAINING_DATASET, self._VERSION, training_dataset_version,
+                self._COMPUTE]
+        headers = {"content-type": "application/json"}
+        return training_dataset.TrainingDataset.from_response_json(
+            self._client._send_request(
+                "POST", path, headers=headers, data=td_app_conf.json())
         )

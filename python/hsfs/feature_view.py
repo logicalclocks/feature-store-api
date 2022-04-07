@@ -68,8 +68,6 @@ class FeatureView:
             featurestore_id, self.ENTITY_TYPE
         )
         self._vector_server = vector_server.VectorServer(featurestore_id)
-        self._code_engine = code_engine.CodeEngine(featurestore_id,
-                                                   self.ENTITY_TYPE)
 
     def delete(self):
         """Delete current feature view and all associated metadata.
@@ -332,11 +330,6 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self, td, write_options
         )
-        # currently we do not save the training dataset statistics config for training datasets
-        self._code_engine.save_code(self)
-        if statistics_config.enabled and engine.get_type() == "spark":
-            self._feature_view_engine.compute_training_dataset_statistics(
-                self, td)
         if version is None:
             warnings.warn(
                 "No version provided for creating training dataset, incremented version to `{}`.".format(

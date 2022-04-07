@@ -34,6 +34,7 @@ from hsfs.core import (
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
+    feature_view_api
 )
 from hsfs.constructor import query
 from hsfs.client import exceptions
@@ -311,9 +312,10 @@ class Engine:
         return ingestion_job.job
 
     def write_training_dataset(
-        self, training_dataset, dataset, user_write_options, save_mode
+        self, training_dataset, dataset, user_write_options, save_mode,
+        feature_view_obj=None
     ):
-        if not isinstance(dataset, query.Query):
+        if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(
                 "Currently only query based training datasets are supported by the Python engine"
             )
@@ -328,10 +330,17 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-        td_api = training_dataset_api.TrainingDatasetApi(
-            training_dataset.feature_store_id
-        )
-        td_job = td_api.compute(training_dataset, td_app_conf)
+        if feature_view_obj:
+            fv_api = feature_view_api.FeatureViewApi(
+                feature_view_obj.feature_store_id
+            )
+            td_job = fv_api.compute_training_dataset(
+                training_dataset, td_app_conf)
+        else:
+            td_api = training_dataset_api.TrainingDatasetApi(
+                training_dataset.feature_store_id
+            )
+            td_job = td_api.compute(training_dataset, td_app_conf)
         print(
             "Training dataset job started successfully, you can follow the progress at {}".format(
                 self._get_job_url(td_job.href)
