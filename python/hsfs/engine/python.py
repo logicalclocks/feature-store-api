@@ -22,11 +22,13 @@ import re
 import warnings
 import avro
 import json
+import socket
 
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 from typing import Dict
+from confluent_kafka import Producer
 
 from hsfs import client, feature, util
 from hsfs.core import (
@@ -34,6 +36,7 @@ from hsfs.core import (
     dataset_api,
     job_api,
     ingestion_job_conf,
+    kafka_api,
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
@@ -59,6 +62,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
+        self._kafka_api = kafka_api.KafkaApi()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -288,18 +292,31 @@ class Engine:
 
     def save_dataframe(
         self,
-        feature_group,
-        dataframe,
-        operation,
-        online_enabled,
-        storage,
-        offline_write_options,
-        online_write_options,
-        validation_id=None,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        operation: str,
+        online_enabled: bool,
+        storage: bool,
+        offline_write_options: dict,
+        online_write_options: dict,
+        validation_id: int = None,
     ):
-        pass
+        if feature_group.stream:
+            self._write_dataframe_kafka(feature_group, dataframe)
+        else:
+            # for backwards compatibility
+            return self.legacy_save_dataframe(
+                feature_group,
+                dataframe,
+                operation,
+                online_enabled,
+                storage,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            )
 
-    def old_save_dataframe(
+    def legacy_save_dataframe(
         self,
         feature_group,
         dataframe,
@@ -481,20 +498,73 @@ class Engine:
         # can be used to materialize certificates locally
         return file
 
-    def _pandas_to_avro(
+    def _write_dataframe_kafka(
+        self, feature_group: FeatureGroup, dataframe: pd.DataFrame
+    ):
+        # setup kafka producer
+        producer = Producer(self._get_kafka_config())
+
+        # setup complex feature writers
+        feature_writers = {
+            feature: self._get_encoder_func(
+                feature_group._get_feature_avro_schema(feature)
+            )
+            for feature in feature_group.get_complex_features()
+        }
+
+        # setup row writer function
+        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+
+        # loop over rows
+        for i, r in dataframe.iterrows():
+            # create copy of row only
+            row = r.to_dict()
+
+            # transform special data types
+            # here we might need to handle also timestamps and other complex types
+            # possible optimizaiton: make it based on type so we don't need to loop over
+            # all keys in the row
+            for k in row.keys():
+                # convert numpy arrays to python list
+                if isinstance(row[k], np.ndarray):
+                    row[k] = row[k].tolist()
+
+            # encode complex features
+            row = self._encode_complex_features(feature_writers, row)
+
+            # encode feature row
+            with BytesIO() as outf:
+                writer(row, outf)
+                encoded_row = outf.getvalue()
+
+            # assemble key
+            key = "key"
+
+            # produce
+            producer.produce(
+                topic=feature_group._online_topic_name, key=key, value=encoded_row
+            )
+
+        # make sure producer blocks and everything is delivered
+        producer.flush()
+        return None
+
+    def _encode_feature_row(
         self, feature_group: FeatureGroup, dataframe: pd.DataFrame
     ) -> pd.DataFrame:
         # return dataframe.apply(lambda row: _encode_complex_features(feature_group, row))
         pass
 
-    def _encode_complex_features(self, feature_writers: Dict[str, callable], row: dict):
+    def _encode_complex_features(
+        self, feature_writers: Dict[str, callable], row: dict
+    ) -> dict:
         for feature_name, writer in feature_writers.items():
             with BytesIO() as outf:
                 writer(row[feature_name], outf)
                 row[feature_name] = outf.getvalue()
         return row
 
-    def _get_encoder_func(self, writer_schema: str):
+    def _get_encoder_func(self, writer_schema: str) -> callable:
         if HAS_FAST:
             schema = json.loads(writer_schema)
             parsed_schema = parse_schema(schema)
@@ -503,3 +573,18 @@ class Engine:
         parsed_schema = avro.schema.parse(writer_schema)
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
+
+    def _get_kafka_config(self) -> dict:
+        return {
+            "bootstrap.servers": ",".join(
+                [
+                    endpoint.replace("INTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints()
+                ]
+            ),
+            "security.protocol": "SSL",
+            "ssl.ca.location": "ca_chain.pem",
+            "ssl.certificate.location": "client.pem",
+            "ssl.key.location": "client_key.pem",
+            "client.id": socket.gethostname(),
+        }
