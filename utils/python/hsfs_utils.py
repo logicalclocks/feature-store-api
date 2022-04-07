@@ -134,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-op",
         type=str,
-        choices=["insert_fg", "create_td", "compute_stats"],
+        choices=["insert_fg", "create_td", "create_fv_td", "compute_stats"],
         help="Operation type",
     )
     parser.add_argument(
