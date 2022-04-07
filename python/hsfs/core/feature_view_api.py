@@ -15,8 +15,9 @@
 #
 
 from hsfs import (
-    client, feature_view, transformation_function_attached, training_dataset
+    client, feature_view, transformation_function_attached, training_dataset,
 )
+from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement
 
 
@@ -121,7 +122,7 @@ class FeatureViewApi:
         path = self._base_path + \
                [name, self._VERSION, version,
                 self._TRAINING_DATASET, self._VERSION, training_dataset_version]
-        return training_dataset.TrainingDataset.from_response_json(
+        return training_dataset.TrainingDataset.from_response_json_single(
             self._client._send_request(
                 "GET", path)
         )
@@ -133,7 +134,7 @@ class FeatureViewApi:
                 self._TRAINING_DATASET, self._VERSION, training_dataset_version,
                 self._COMPUTE]
         headers = {"content-type": "application/json"}
-        return training_dataset.TrainingDataset.from_response_json(
+        return job.Job.from_response_json(
             self._client._send_request(
                 "POST", path, headers=headers, data=td_app_conf.json())
         )

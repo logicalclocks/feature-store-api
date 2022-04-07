@@ -332,10 +332,11 @@ class Engine:
 
         if feature_view_obj:
             fv_api = feature_view_api.FeatureViewApi(
-                feature_view_obj.feature_store_id
+                feature_view_obj.featurestore_id
             )
             td_job = fv_api.compute_training_dataset(
-                training_dataset, td_app_conf)
+                feature_view_obj.name, feature_view_obj.version,
+                training_dataset.version, td_app_conf)
         else:
             td_api = training_dataset_api.TrainingDatasetApi(
                 training_dataset.feature_store_id

@@ -119,6 +119,8 @@ class TrainingDataset:
                 storage_connector
             )
 
+            if features is None:
+                features = []
             self._features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
                 for feat in features
@@ -416,6 +418,13 @@ class TrainingDataset:
         for td in json_decamelized:
             _ = td.pop("type")
         return [cls(**td) for td in json_decamelized]
+
+    @classmethod
+    def from_response_json_single(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        json_decamelized.pop("type")
+        json_decamelized.pop("href")
+        return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
