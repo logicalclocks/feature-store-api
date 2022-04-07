@@ -100,8 +100,8 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
 
     fv_engine.compute_training_dataset(
         fv,
+        job_conf.pop("write_options", {}) or {},
         training_dataset_version=job_conf["td_version"],
-        write_options=job_conf.pop("write_options", {}) or {},
     )
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:
