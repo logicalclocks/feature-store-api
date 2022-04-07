@@ -46,8 +46,8 @@ class FeatureViewEngine:
                 feature_store_id
             )
         )
-        self._code_engine = code_engine.CodeEngine(feature_store_id,
-                                                   self.ENTITY_TYPE)
+        self._td_code_engine = code_engine.CodeEngine(feature_store_id,
+                                                   "trainingdatasets")
 
     def save(self, feature_view_obj):
         if feature_view_obj.label:
@@ -125,7 +125,7 @@ class FeatureViewEngine:
             self._OVERWRITE, feature_view_obj=feature_view_obj
         )
         # currently we do not save the training dataset statistics config for training datasets
-        self._code_engine.save_code(training_dataset_obj)
+        self._td_code_engine.save_code(training_dataset_obj)
         if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
             self.compute_training_dataset_statistics(
                 self, training_dataset_obj)
