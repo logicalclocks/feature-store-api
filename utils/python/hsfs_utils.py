@@ -7,6 +7,7 @@ from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
+from hsfs.core import feature_view_engine
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -89,6 +90,19 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
         write_options=job_conf.pop("write_options", {}) or {},
     )
 
+def create_fv_td(job_conf: Dict[Any, Any]) -> None:
+    # Extract the feature store handle
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    fv = fs.get_feature_view(name=job_conf["name"], version=job_conf["version"])
+    fv_engine = feature_view_engine.FeatureViewEngine(fv.featurestore_id)
+
+    fv_engine.compute_training_dataset(
+        fv,
+        training_dataset_version=job_conf["td_version"],
+        write_options=job_conf.pop("write_options", {}) or {},
+    )
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:
     """
@@ -136,5 +150,7 @@ if __name__ == "__main__":
         insert_fg(spark, job_conf)
     elif args.op == "create_td":
         create_td(job_conf)
+    elif args.op == "create_fv_td":
+        create_fv_td(job_conf)
     elif args.op == "compute_stats":
         compute_stats(job_conf)
