@@ -105,7 +105,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
         result = encodedDatumReader.read(result, decoder);
       }
     } catch (Exception ex) {
-      throw new SerializationException(
+      LOGGER.info(
           "Can't deserialize data '" + Arrays.toString(data) + "' from topic '" + topic + "'", ex);
     }
 
