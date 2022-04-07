@@ -125,7 +125,7 @@ class FeatureViewEngine:
             self._OVERWRITE, feature_view_obj=feature_view_obj
         )
         # currently we do not save the training dataset statistics config for training datasets
-        self._code_engine.save_code(self)
+        self._code_engine.save_code(training_dataset_obj)
         if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
             self.compute_training_dataset_statistics(
                 self, training_dataset_obj)
