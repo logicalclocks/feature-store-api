@@ -117,14 +117,12 @@ class FeatureViewEngine:
         if training_dataset_obj:
             pass
         elif training_dataset_version:
-            training_dataset_obj = \
-                self._feature_view_api.get_training_dataset_by_version(
-                    feature_view_obj.name, feature_view_obj.version,
-                    training_dataset_version)
+            training_dataset_obj = self.get_training_data(
+                feature_view_obj, training_dataset_version
+            )
         else:
             raise ValueError("No training dataset object or version is provided")
 
-        training_dataset_obj.schema = feature_view_obj.schema
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj, feature_view_obj.query, user_write_options,
             self._OVERWRITE, feature_view_obj=feature_view_obj
@@ -152,3 +150,14 @@ class FeatureViewEngine:
                 return self._statistics_engine.compute_statistics(
                     training_dataset_obj, feature_dataframe=td_df,
                     feature_view_obj=feature_view_obj)
+
+    def get_training_data(self, feature_view_obj, training_dataset_version):
+        td = self._feature_view_api.get_training_dataset_by_version(
+                    feature_view_obj.name, feature_view_obj.version,
+                    training_dataset_version)
+        # schema and transformation functions need to be set for writing training data or feature serving
+        td.schema = feature_view_obj.schema
+        td.transformation_functions = (
+            feature_view_obj.transformation_functions
+        )
+        return td

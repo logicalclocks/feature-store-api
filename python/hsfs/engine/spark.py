@@ -340,7 +340,6 @@ class Engine:
             training_dataset.data_format, user_write_options
         )
 
-        # TODO feature view: fix transformation
         # check if there any transformation functions that require statistics attached to td features
         builtin_tffn_features = [
             ft_name
