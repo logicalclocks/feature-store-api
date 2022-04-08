@@ -16,6 +16,7 @@
 
 import json
 import re
+import statistics
 import great_expectations as ge
 
 import humps
@@ -71,9 +72,9 @@ class ValidationReport:
             return cls(**json_decamelized)
 
     def json(self):
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
+        return json.dumps(self.to_json_dict())
 
-    def to_dict(self):
+    def to_json_dict(self):
         return {
             "id": self._id,
             "success": self.success,
@@ -83,7 +84,7 @@ class ValidationReport:
             "meta": json.dumps(self._meta),
         }
 
-    def to_nested_dict(self):
+    def to_dict(self):
         return {
             "id": self._id,
             "success": self.success,
@@ -92,6 +93,15 @@ class ValidationReport:
             "results": [result.to_nested_dict() for result in self._results],
             "meta": self._meta,
         }
+
+    def to_ge_type(self):
+        return ge.core.ExpectationSuiteValidationResult(
+            success=self.success,
+            statistics=self.statistics,
+            results=[result.to_ge_type() for result in self.results],
+            evaluation_parameters=self.evaluation_parameters,
+            meta=self.meta
+        )
 
     @property
     def id(self):

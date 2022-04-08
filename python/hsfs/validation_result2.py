@@ -19,6 +19,7 @@ import json
 import humps
 from hsfs import util
 from hsfs.core import validation_report_engine
+import great_expectations as ge
 
 
 class ValidationResult:
@@ -66,9 +67,9 @@ class ValidationResult:
             return cls(**json_decamelized)
 
     def json(self):
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
+        return json.dumps(self.to_json_dict())
 
-    def to_dict(self):
+    def to_json_dict(self):
         return {
             "id": self._id,
             "success": self.success,
@@ -78,7 +79,7 @@ class ValidationResult:
             "meta": json.dumps(self._meta),
         }
     
-    def to_nested_dict(self):
+    def to_dict(self):
         return {
             "id": self._id,
             "success": self.success,
@@ -87,6 +88,15 @@ class ValidationResult:
             "result": self._result,
             "meta": self._meta,
         }
+
+    def to_ge_type(self):
+        return ge.core.ExpectationValidationResult(
+            success = self.success,
+            exception_info = self.exception_info,
+            expectation_config = self.expectation_config,
+            result = self.result,
+            meta = self.meta
+        )
 
     @property
     def id(self):
