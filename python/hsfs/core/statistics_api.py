@@ -81,7 +81,7 @@ class StatisticsApi:
 
     def get_path(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
-        if self._entity_type == feature_view.FeatureView.ENTITY_TYPE:
+        if isinstance(metadata_instance, feature_view.FeatureView):
             return [
                 "project",
                 _client._project_id,
