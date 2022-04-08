@@ -23,7 +23,8 @@ from hsfs.core import (
     transformation_function_engine,
     feature_view_api,
     code_engine,
-    statistics_engine
+    statistics_engine,
+    training_dataset_engine
 )
 
 
@@ -52,6 +53,9 @@ class FeatureViewEngine:
                                                    self._TRAINING_DATA_API_PATH)
         self._statistics_engine = statistics_engine.StatisticsEngine(
             feature_store_id, self._TRAINING_DATA_API_PATH
+        )
+        self._training_dataset_engine = training_dataset_engine.TrainingDatasetEngine(
+            feature_store_id
         )
 
     def save(self, feature_view_obj):
@@ -128,9 +132,20 @@ class FeatureViewEngine:
             self._OVERWRITE, feature_view_obj=feature_view_obj
         )
         self._td_code_engine.save_code(training_dataset_obj)
+        if engine.get_type() == "spark":
+            if training_dataset_obj.splits:
+                td_df = dict([(split, self._training_dataset_engine.read(
+                    training_dataset_obj, split, {})) for
+                    split in training_dataset_obj.splits
+                ])
+            else:
+                td_df = self._training_dataset_engine.read(
+                    training_dataset_obj, None, {})
+        else:
+            td_df = None
         # currently we do not save the training dataset statistics config for training datasets
         self.compute_training_dataset_statistics(
-            feature_view_obj, training_dataset_obj)
+            feature_view_obj, training_dataset_obj, td_df)
         return td_job
 
     def compute_training_dataset_statistics(self, feature_view_obj,
