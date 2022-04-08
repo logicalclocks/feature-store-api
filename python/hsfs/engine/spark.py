@@ -340,6 +340,7 @@ class Engine:
             training_dataset.data_format, user_write_options
         )
 
+        # TODO feature view: fix transformation
         # check if there any transformation functions that require statistics attached to td features
         builtin_tffn_features = [
             ft_name
@@ -352,10 +353,9 @@ class Engine:
         if len(training_dataset.splits) == 0:
             if builtin_tffn_features:
                 # compute statistics before transformations are applied
-                stats = training_dataset._statistics_engine.compute_transformation_fn_statistics(
-                    td_metadata_instance=training_dataset,
-                    columns=builtin_tffn_features,
-                    feature_dataframe=dataset,
+                stats = self._compute_transformation_fn_statistics(
+                    training_dataset, builtin_tffn_features,
+                    dataset, feature_view_obj
                 )
                 # Populate builtin transformations (if any) with respective arguments
                 training_dataset._transformation_function_engine.populate_builtin_attached_fns(
@@ -393,6 +393,7 @@ class Engine:
         save_mode,
         split_names,
         builtin_tffn_features,
+        feature_view_obj=None
     ):
         stats = None
         if builtin_tffn_features:
@@ -402,10 +403,9 @@ class Engine:
                 for i, name in enumerate(split_names)
                 if name == training_dataset.train_split
             ][0]
-            stats = training_dataset._statistics_engine.compute_transformation_fn_statistics(
-                td_metadata_instance=training_dataset,
-                columns=builtin_tffn_features,
-                feature_dataframe=feature_dataframe_list[i],
+            stats = self._compute_transformation_fn_statistics(
+                training_dataset, builtin_tffn_features,
+                feature_dataframe_list[i], feature_view_obj
             )
 
         for i in range(len(feature_dataframe_list)):
@@ -428,6 +428,17 @@ class Engine:
                 save_mode,
                 split_path,
             )
+
+    def _compute_transformation_fn_statistics(
+        self, training_dataset_obj, builtin_tffn_features,
+        feature_dataframe, feature_view_obj
+    ):
+        return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
+            td_metadata_instance=training_dataset_obj,
+            columns=builtin_tffn_features,
+            feature_dataframe=feature_dataframe,
+            feature_view_obj=feature_view_obj
+        )
 
     def _write_training_dataset_single(
         self,

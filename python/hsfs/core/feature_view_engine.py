@@ -22,12 +22,14 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
     feature_view_api,
-    code_engine
+    code_engine,
+    statistics_engine
 )
 
 
 class FeatureViewEngine:
     ENTITY_TYPE = "featureview"
+    _TRAINING_DATA_API_PATH = "trainingdatasets"
     _OVERWRITE = "overwrite"
     _APPEND = "append"
 
@@ -47,7 +49,10 @@ class FeatureViewEngine:
             )
         )
         self._td_code_engine = code_engine.CodeEngine(feature_store_id,
-                                                   "trainingdatasets")
+                                                   self._TRAINING_DATA_API_PATH)
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            feature_store_id, self._TRAINING_DATA_API_PATH
+        )
 
     def save(self, feature_view_obj):
         if feature_view_obj.label:
@@ -124,13 +129,26 @@ class FeatureViewEngine:
             training_dataset_obj, feature_view_obj.query, user_write_options,
             self._OVERWRITE, feature_view_obj=feature_view_obj
         )
-        # currently we do not save the training dataset statistics config for training datasets
         self._td_code_engine.save_code(training_dataset_obj)
-        if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
-            self.compute_training_dataset_statistics(
-                self, training_dataset_obj)
+        # currently we do not save the training dataset statistics config for training datasets
+        self.compute_training_dataset_statistics(
+            feature_view_obj, training_dataset_obj)
         return td_job
 
     def compute_training_dataset_statistics(self, feature_view_obj,
-                                            training_dataset_obj):
-        pass
+                                            training_dataset_obj,
+                                            td_df):
+        # In Python engine, a job computes a statistics along with training data
+        if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
+            if training_dataset_obj.splits:
+                if not isinstance(td_df, dict):
+                    raise ValueError(
+                        "Provided dataframes should be in dict format "
+                        "'split': dataframe")
+                return self._statistics_engine.register_split_statistics(
+                    training_dataset_obj, feature_dataframes=td_df,
+                    feature_view_obj=feature_view_obj)
+            else:
+                return self._statistics_engine.compute_statistics(
+                    training_dataset_obj, feature_dataframe=td_df,
+                    feature_view_obj=feature_view_obj)

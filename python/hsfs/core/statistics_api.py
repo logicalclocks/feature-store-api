@@ -30,35 +30,21 @@ class StatisticsApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def post(self, metadata_instance, statistics):
+    def post(self, metadata_instance, statistics, training_dataset_version):
         _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "statistics",
-        ]
+        path_params = self.get_path(metadata_instance, training_dataset_version)
 
         headers = {"content-type": "application/json"}
         _client._send_request(
             "POST", path_params, headers=headers, data=statistics.json()
         )
 
-    def get(self, metadata_instance, commit_timestamp, for_transformation):
+    def get(self, metadata_instance, commit_timestamp,
+            for_transformation, training_dataset_version):
         """Gets the statistics for a specific commit time for an instance."""
         _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "statistics",
-        ]
+        path_params = self.get_path(metadata_instance, training_dataset_version)
+
         headers = {"content-type": "application/json"}
         query_params = {
             "filter_by": "commit_time_eq:" + str(commit_timestamp),
@@ -74,8 +60,29 @@ class StatisticsApi:
                  training_dataset_version):
         """Gets the statistics of the last commit for an instance."""
         _client = client.get_instance()
+        path_params = self.get_path(metadata_instance, training_dataset_version)
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "sort_by": "commit_time:desc",
+            "offset": 0,
+            "limit": 1,
+            "fields": "content",
+            "for_transformation": for_transformation,
+        }
+
+        return statistics.Statistics.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )
+
+    def compute(self, metadata_instance, training_dataset_version):
+        _client = client.get_instance()
+        path_params = self.get_path(metadata_instance, training_dataset_version)
+        return job.Job.from_response_json(_client._send_request("POST", path_params))
+
+    def get_path(self, metadata_instance, training_dataset_version=None):
+        _client = client.get_instance()
         if self._entity_type == feature_view.FeatureView.ENTITY_TYPE:
-            path_params = [
+            return [
                 "project",
                 _client._project_id,
                 "featurestores",
@@ -90,7 +97,7 @@ class StatisticsApi:
                 "statistics",
             ]
         else:
-            path_params = [
+            return [
                 "project",
                 _client._project_id,
                 "featurestores",
@@ -99,29 +106,3 @@ class StatisticsApi:
                 metadata_instance.id,
                 "statistics",
             ]
-        headers = {"content-type": "application/json"}
-        query_params = {
-            "sort_by": "commit_time:desc",
-            "offset": 0,
-            "limit": 1,
-            "fields": "content",
-            "for_transformation": for_transformation,
-        }
-
-        return statistics.Statistics.from_response_json(
-            _client._send_request("GET", path_params, query_params, headers=headers)
-        )
-
-    def compute(self, metadata_instance):
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "statistics",
-            "compute",
-        ]
-        return job.Job.from_response_json(_client._send_request("POST", path_params))

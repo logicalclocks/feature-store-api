@@ -64,9 +64,6 @@ class FeatureView:
             transformation_function_engine.TransformationFunctionEngine(
                 featurestore_id)
         )
-        self._statistics_engine = statistics_engine.StatisticsEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
         self._vector_server = vector_server.VectorServer(featurestore_id)
 
     def delete(self):
