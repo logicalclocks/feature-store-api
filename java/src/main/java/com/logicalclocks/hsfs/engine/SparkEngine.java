@@ -651,11 +651,18 @@ public class SparkEngine {
     return stream.load().select("key", "value");
   }
 
-  public HsfsSpark sparkHsfsData(Object obj) {
-    HsfsSpark hsfsSpark = new HsfsSpark();
-    hsfsSpark.setDataSet(obj);
-    return hsfsSpark;
+  public HsfsSparkBatch sparkHsfsData(Object obj) {
+    HsfsSparkBatch hsfsSparkBatch = new HsfsSparkBatch();
+    hsfsSparkBatch.setDataSet(obj);
+    return hsfsSparkBatch;
   }
+
+  public HsfsSparkStream sparkHsfsStream(Object obj) {
+    HsfsSparkStream hsfsSparkStream = new HsfsSparkStream();
+    hsfsSparkStream.setStream(obj);
+    return hsfsSparkStream;
+  }
+
 
   private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) {
     // The AbstractFileSystem for 'gs:' URIs

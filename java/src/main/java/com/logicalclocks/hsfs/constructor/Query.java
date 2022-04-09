@@ -21,7 +21,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.engine.HsfsSpark;
+import com.logicalclocks.hsfs.engine.HsfsSparkBatch;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -207,15 +207,16 @@ public class Query {
     return this;
   }
 
-  public HsfsSpark read() throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
-  public HsfsSpark read(boolean online) throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
 
-  public HsfsSpark read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException {
     FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
 
     if (online) {

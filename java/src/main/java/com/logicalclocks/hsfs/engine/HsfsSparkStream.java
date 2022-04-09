@@ -17,27 +17,26 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.streaming.StreamingQuery;
 
-public class HsfsSpark implements HsfsDataSet {
+public class HsfsSparkStream implements HsfsStream {
 
-  private Dataset<Row> data;
+  private StreamingQuery streamingQuery;
 
-  <S extends Dataset<Row>> HsfsSpark(S s) {
-    data = s.toDF();
+  <S extends StreamingQuery> HsfsSparkStream(S s) {
+    streamingQuery = (StreamingQuery) s;
   }
 
-  public HsfsSpark() {
-  }
-
-  @Override
-  public void setDataSet(Object data) {
-    this.data = (Dataset<Row>) data;
+  public HsfsSparkStream() {
   }
 
   @Override
-  public Dataset<Row> getDataSet() {
-    return data;
+  public void setStream(Object stream) {
+    this.streamingQuery = (StreamingQuery) stream;
+  }
+
+  @Override
+  public Object getStream() {
+    return streamingQuery;
   }
 }

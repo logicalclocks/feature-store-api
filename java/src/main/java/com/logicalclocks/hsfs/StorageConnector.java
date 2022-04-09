@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.logicalclocks.hsfs.engine.HsfsSpark;
+import com.logicalclocks.hsfs.engine.HsfsSparkBatch;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -74,7 +74,7 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path)
+  public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().sparkHsfsData(
         SparkEngine.getInstance().read(this, dataFormat, options, path));
@@ -139,7 +139,7 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path)
+    public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       return SparkEngine.getInstance().sparkHsfsData(
@@ -214,7 +214,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path)
+    public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -347,7 +347,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path)
+    public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
@@ -379,7 +379,7 @@ public abstract class StorageConnector {
     }
 
     @Override
-    public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path)
+    public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -478,12 +478,13 @@ public abstract class StorageConnector {
       return null;
     }
 
-    public HsfsSpark read(String query, String dataFormat, Map<String, String> options, String path) {
+    public HsfsSparkBatch read(String query, String dataFormat, Map<String, String> options, String path) {
       throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
     }
 
-    public HsfsSpark readStream(String topic, boolean topicPattern, String messageFormat, String schema,
-        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
+    public HsfsSparkBatch readStream(String topic, boolean topicPattern, String messageFormat, String schema,
+                                     Map<String, String> options, boolean includeMetadata)
+        throws FeatureStoreException {
       if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
         throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
       }

@@ -139,9 +139,9 @@ public class StreamFeatureGroupEngine {
   }
 
   @SneakyThrows
-  public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
-                                 String outputMode, boolean awaitTermination, Long timeout,
-                                 Map<String, String> writeOptions) {
+  public <S> HsfsSparkStream insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
+                                         String outputMode, boolean awaitTermination, Long timeout,
+                                         Map<String, String> writeOptions) {
 
     if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
       LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
@@ -152,9 +152,11 @@ public class StreamFeatureGroupEngine {
       writeOptions = new HashMap<>();
     }
 
-    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+    return SparkEngine.getInstance().sparkHsfsStream(
+        SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
+            utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+            utils.getKafkaConfig(streamFeatureGroup, writeOptions))
+    );
   }
 
   public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData, HudiOperationType operation,

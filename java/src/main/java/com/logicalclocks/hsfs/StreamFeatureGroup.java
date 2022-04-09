@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
+import com.logicalclocks.hsfs.engine.HsfsSparkBatch;
+import com.logicalclocks.hsfs.engine.HsfsSparkStream;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
@@ -150,15 +152,16 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
 
-  public Object read() throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
-  public Object read(boolean online) throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
 
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+  public HsfsSparkBatch read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException {
     return selectAll().read(online, readOptions);
   }
 
@@ -171,12 +174,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws IOException
    * @throws ParseException
    */
-  public Object read(String wallclockTime)
+  public HsfsSparkBatch read(String wallclockTime)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, null);
   }
 
-  public Object read(String wallclockTime, Map<String, String> readOptions)
+  public HsfsSparkBatch read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
@@ -191,12 +194,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
 
-  public Object readChanges(String wallclockStartTime, String wallclockEndTime)
+  public HsfsSparkBatch readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
-  public Object readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
+  public HsfsSparkBatch readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
@@ -260,33 +263,33 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     codeEngine.saveCode(this);
   }
 
-  public <S> Object insertStream(S featureData) {
+  public <S> HsfsSparkStream insertStream(S featureData) {
     return insertStream(featureData, null, "append", false, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName) {
+  public <S> HsfsSparkStream insertStream(S featureData, String queryName) {
     return insertStream(featureData, queryName, null, false, null, null);
   }
 
-  public <S> Object insertStream(S featureData, Map<String, String> writeOptions) {
+  public <S> HsfsSparkStream insertStream(S featureData, Map<String, String> writeOptions) {
     return insertStream(featureData, null, null, false, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
+  public <S> HsfsSparkStream insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
     return insertStream(featureData, queryName, "append", false, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode) {
+  public <S> HsfsSparkStream insertStream(S featureData, String queryName, String outputMode) {
     return insertStream(featureData, queryName, outputMode, false, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout) {
+  public <S> HsfsSparkStream insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+                                         Long timeout) {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout, Map<String, String> writeOptions)  {
+  public <S> HsfsSparkStream insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+                                          Long timeout, Map<String, String> writeOptions)  {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
         awaitTermination, timeout, writeOptions);
   }
