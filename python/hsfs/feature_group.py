@@ -1025,6 +1025,7 @@ class FeatureGroup(FeatureGroupBase):
                 output_mode,
                 await_termination,
                 timeout,
+                checkpoint_dir,
                 write_options,
             )
 
