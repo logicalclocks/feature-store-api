@@ -107,6 +107,10 @@ class FeatureViewEngine:
         updated_instance = self._feature_view_api.create_training_dataset(
             feature_view_obj.name, feature_view_obj.version,
             training_dataset_obj)
+        updated_instance.schema = feature_view_obj.schema
+        updated_instance.transformation_functions = (
+            feature_view_obj.transformation_functions
+        )
         td_job = self.compute_training_dataset(
             feature_view_obj,
             user_write_options,
@@ -172,7 +176,7 @@ class FeatureViewEngine:
                     training_dataset_version)
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
-        td.transformation_functions = (
-            feature_view_obj.transformation_functions
+        td.transformation_functions = self._feature_view_api.get_attached_transformation_fn(
+            feature_view_obj, training_dataset_version
         )
         return td
