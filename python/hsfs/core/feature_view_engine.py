@@ -177,6 +177,6 @@ class FeatureViewEngine:
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
         td.transformation_functions = self._feature_view_api.get_attached_transformation_fn(
-            feature_view_obj, training_dataset_version
+            feature_view_obj.name, feature_view_obj.version
         )
         return td
