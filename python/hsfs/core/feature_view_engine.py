@@ -176,7 +176,17 @@ class FeatureViewEngine:
                     training_dataset_version)
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
-        td.transformation_functions = self._feature_view_api.get_attached_transformation_fn(
+        transformation_functions = self._feature_view_api.get_attached_transformation_fn(
             feature_view_obj.name, feature_view_obj.version
         )
+        if isinstance(transformation_functions, list):
+            td.transformation_functions = dict([
+                (tf.name, tf.transformation_function) for
+                tf in transformation_functions
+            ])
+        else:
+            td.transformation_functions = {
+                transformation_functions.name:
+                    transformation_functions.transformation_function
+            }
         return td
