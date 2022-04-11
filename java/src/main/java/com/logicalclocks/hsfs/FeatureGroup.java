@@ -341,13 +341,6 @@ public class FeatureGroup extends FeatureGroupBase {
     return insertStream(featureData, queryName, outputMode, awaitTermination, null, checkpointLocation, null);
   }
 
-  /**
-   * insert streaming dataframe in the Feature group.
-   *
-   * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
-   */
-  @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, String checkpointLocation,
                                      Map<String, String> writeOptions)
