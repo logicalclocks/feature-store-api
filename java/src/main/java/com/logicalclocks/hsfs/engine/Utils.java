@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureGroup;
@@ -186,5 +187,14 @@ public class Utils {
     Long commitTimeStamp = dateFormat.parse(tempDate).getTime();;
 
     return commitTimeStamp;
+  }
+
+  public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = "insert_stream_" + onlineTopicName;
+    }
+    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+        + "/Resources/" + queryName + "-checkpoint";
+
   }
 }

@@ -30,7 +30,6 @@ import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -347,7 +346,7 @@ public class SparkEngine {
 
   public StreamingQuery writeStreamDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
-                                             Map<String, String> writeOptions)
+                                             String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (Strings.isNullOrEmpty(queryName)) {
@@ -359,8 +358,9 @@ public class SparkEngine {
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
-        .option("checkpointLocation", "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-            + "/Resources/" + queryName + "-checkpoint")
+        .option("checkpointLocation", checkpointLocation == null
+            ? utils.checkpointDirPath(queryName, featureGroup.getOnlineTopicName())
+            : checkpointLocation)
         .options(writeOptions)
         .option("topic", featureGroup.getOnlineTopicName());
 

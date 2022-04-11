@@ -326,17 +326,31 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
-    return insertStream(featureData, queryName, outputMode, false, null);
+    return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
-    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout, Map<String, String> writeOptions)
+                                     boolean awaitTermination, String checkpointLocation)
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, null, checkpointLocation, null);
+  }
+
+  /**
+   * insert streaming dataframe in the Feature group.
+   *
+   * @deprecated
+   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   */
+  @Deprecated
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, String checkpointLocation,
+                                     Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
     if (!featureData.isStreaming()) {
       throw new FeatureStoreException(
@@ -344,8 +358,8 @@ public class FeatureGroup extends FeatureGroupBase {
     }
     LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
         + "` will not compute statistics.");
-    return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination, timeout,
-        writeOptions);
+    return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination,
+        timeout, checkpointLocation, writeOptions);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)
