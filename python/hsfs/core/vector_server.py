@@ -31,7 +31,7 @@ from hsfs.core import (
 
 class VectorServer:
 
-    def __init__(self, feature_store_id, training_dataset_version=None):
+    def __init__(self, feature_store_id, training_dataset_version=1):
         self._training_dataset_version = training_dataset_version
         self._prepared_statement_engine = None
         self._prepared_statements = None
@@ -357,7 +357,7 @@ class VectorServer:
             # if there are any built-in transformation functions get related statistics and
             # populate with relevant arguments
             # there should be only one statistics object with for_transformation=true
-            td_tffn_stats = vector_server._statistics_engine.get_last(
+            td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
                 vector_server, for_transformation=True,
                 training_dataset_version=self._training_dataset_version
             )
