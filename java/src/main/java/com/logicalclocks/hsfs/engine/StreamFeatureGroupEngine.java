@@ -140,7 +140,7 @@ public class StreamFeatureGroupEngine {
 
   @SneakyThrows
   public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
-                                 String outputMode, boolean awaitTermination, Long timeout,
+                                 String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
                                  Map<String, String> writeOptions) {
 
     if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
@@ -153,7 +153,7 @@ public class StreamFeatureGroupEngine {
     }
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 

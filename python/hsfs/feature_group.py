@@ -951,6 +951,7 @@ class FeatureGroup(FeatureGroupBase):
         output_mode: Optional[str] = "append",
         await_termination: Optional[bool] = False,
         timeout: Optional[int] = None,
+        checkpoint_dir: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
@@ -986,9 +987,12 @@ class FeatureGroup(FeatureGroupBase):
                 query.stop() or by an exception. If the query has terminated with an
                 exception, then the exception will be thrown. If timeout is set, it
                 returns whether the query has terminated or not within the timeout
-                seconds. Defaults to `Fals`e.
+                seconds. Defaults to `False`.
             timeout: Only relevant in combination with `await_termination=True`.
                 Defaults to `None`.
+            checkpoint_dir: Checkpoint directory location. This will be used to as a reference to
+            from where to resume the streaming job. If `None` then hsfs will construct as
+            "insert_stream_" + online_topic_name. Defaults to `None`.
             write_options: Additional write options for Spark as key-value pairs.
                 Defaults to `{}`.
 

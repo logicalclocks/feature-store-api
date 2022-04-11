@@ -261,34 +261,43 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> Object insertStream(S featureData) {
-    return insertStream(featureData, null, "append", false, null, null);
+    return insertStream(featureData, null, "append", false, null, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName) {
-    return insertStream(featureData, queryName, null, false, null, null);
+    return insertStream(featureData, queryName, null,false, null, null, null);
   }
 
   public <S> Object insertStream(S featureData, Map<String, String> writeOptions) {
-    return insertStream(featureData, null, null, false, null, writeOptions);
+    return insertStream(featureData, null, null, false, null, null, writeOptions);
   }
 
   public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
-    return insertStream(featureData, queryName, "append", false, null, writeOptions);
+    return insertStream(featureData, queryName, "append", false, null, null, writeOptions);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode) {
-    return insertStream(featureData, queryName, outputMode, false, null, null);
+    return insertStream(featureData, queryName, outputMode, false, null, null, null);
+  }
+
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation) {
+    return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
                                  Long timeout) {
-    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null);
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout, Map<String, String> writeOptions)  {
+                                 Long timeout, String checkpointLocation) {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null);
+  }
+
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions)  {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
-        awaitTermination, timeout, writeOptions);
+        awaitTermination, timeout, checkpointLocation, writeOptions);
   }
 
   public <S> void commitDeleteRecord(S featureData)

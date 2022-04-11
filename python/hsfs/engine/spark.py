@@ -16,7 +16,6 @@
 
 import os
 import json
-import datetime
 import importlib.util
 
 import numpy as np
@@ -209,18 +208,15 @@ class Engine:
         output_mode,
         await_termination,
         timeout,
+        checkpoint_dir,
         write_options,
     ):
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
+
         if query_name is None:
-            query_name = (
-                "insert_stream_"
-                + feature_group._online_topic_name
-                + "_"
-                + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            )
+            query_name = "insert_stream_" + feature_group._online_topic_name
 
         query = (
             serialized_df.writeStream.outputMode(output_mode)
@@ -231,7 +227,9 @@ class Engine:
                 + client.get_instance()._project_name
                 + "/Resources/"
                 + query_name
-                + "-checkpoint",
+                + "-checkpoint"
+                if checkpoint_dir is None
+                else checkpoint_dir,
             )
             .options(**write_options)
             .option("topic", feature_group._online_topic_name)
