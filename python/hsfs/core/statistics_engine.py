@@ -60,8 +60,6 @@ class StatisticsEngine:
                 feature_group_commit_id=feature_group_commit_id,
             )
             self._save_statistics(stats, metadata_instance, feature_view_obj)
-
-
         else:
             # Python engine
             engine.get_instance().profile(metadata_instance)

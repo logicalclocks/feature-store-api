@@ -57,7 +57,7 @@ class FeatureView:
         self._description = description
         self._label = label
         self._transformation_functions = transformation_functions
-        self._features = None
+        self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id)
         self._transformation_function_engine = (
