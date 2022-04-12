@@ -105,7 +105,8 @@ class FeatureView:
         self._vector_server.init_serving(self, batch, external)
 
     def get_batch_query(
-        self, start_time: Optional[datetime], end_time: Optional[datetime]
+        self, start_time: Optional[datetime]=None,
+        end_time: Optional[datetime]=None
     ):
         """Get a query string of batch query.
 

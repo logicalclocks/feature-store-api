@@ -91,19 +91,6 @@ class FeatureViewApi:
                                           )
         )
 
-    def get_batch_query_string(self, name, version, start_time, end_time,
-                        with_label=False, is_python_engine=False):
-        path = self._base_path + \
-               [name, self._VERSION, version, self._QUERY, self._BATCH]
-        return fs_query.FsQuery.from_response_json(
-            self._client._send_request(self._GET, path,
-                                          {"start_time": start_time,
-                                           "end_time": end_time,
-                                           "with_label": with_label,
-                                           "is_hive_engine": is_python_engine}
-                                          )
-        )
-
     def get_serving_prepared_statement(self, name, version, batch):
         path = self._base_path + \
                [name, self._VERSION, version, self._PREPARED_STATEMENT]

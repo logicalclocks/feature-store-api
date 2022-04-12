@@ -24,7 +24,8 @@ from hsfs.core import (
     feature_view_api,
     code_engine,
     statistics_engine,
-    training_dataset_engine
+    training_dataset_engine,
+    query_constructor_api
 )
 
 
@@ -57,6 +58,7 @@ class FeatureViewEngine:
         self._training_dataset_engine = training_dataset_engine.TrainingDatasetEngine(
             feature_store_id
         )
+        self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
     def save(self, feature_view_obj):
         if feature_view_obj.label:
@@ -91,10 +93,11 @@ class FeatureViewEngine:
         )
 
     def get_batch_query_string(self, feature_view_obj, start_time, end_time):
-        fs_query = self._feature_view_api.get_batch_query_string(
+        query_obj = self._feature_view_api.get_batch_query(
             feature_view_obj.name, feature_view_obj.version, start_time,
             end_time, is_python_engine=engine.get_type() == "python"
         )
+        fs_query = self._query_constructor_api.construct_query(query_obj)
         if fs_query.pit_query is not None:
             return fs_query.pit_query
         return fs_query.query
