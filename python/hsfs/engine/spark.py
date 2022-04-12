@@ -323,6 +323,13 @@ class Engine:
             ]
         )
 
+    def get_training_data(self, query_obj, read_options):
+        df = query_obj.read(
+            read_options=read_options
+        )
+        # todo feature view: apply transformation
+        return df
+
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
         feature_view_obj=None

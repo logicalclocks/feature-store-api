@@ -116,7 +116,7 @@ class FeatureView:
         # Returns
             `str`: batch query
         """
-        return self._feature_view_engine.get_batch_query(
+        return self._feature_view_engine.get_batch_query_string(
             self, start_time, end_time)
 
     def get_feature_vector(
@@ -217,13 +217,51 @@ class FeatureView:
         end_time: Optional = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        splits: Optional[Dict[str, float]] = {},
-        seed: Optional[int] = None,
+        # splits: Optional[Dict[str, float]] = {},
+        # seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        train_split: str = None,
+        split: str = None,
         read_options: Optional[Dict[Any, Any]] = {}
     ):
-        pass
+        """ Get training data from storage or feature groups.
+
+        If version is not provided or provided version has not already existed, it creates
+        a new version of training data according to given arguments and returns a dataframe.
+        If version is provided and has already existed, it reads training data from storage
+        or feature groups and returns a dataframe.
+
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+        """
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=version,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            storage_connector=None,
+            featurestore_id=self._id,
+            data_format="df",
+            location=None,
+            splits={},
+            # seed=seed,
+            statistics_config=statistics_config,
+            # train_split=train_split
+        )
+        # td_job is used only if the python engine is used
+        td, df = self._feature_view_engine.get_training_data(
+            self, td, read_options, split=split
+        )
+        if version is None:
+            warnings.warn(
+                "No version provided for creating training dataset, incremented version to `{}`.".format(
+                    td.version
+                ),
+                util.VersionWarning,
+            )
+        return df
 
     def create_training_dataset(
         self,

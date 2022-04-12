@@ -756,3 +756,11 @@ class TrainingDataset:
     @transformation_functions.setter
     def transformation_functions(self, transformation_functions):
         self._transformation_functions = transformation_functions
+
+    @property
+    def start_time(self):
+        return self._start_time
+
+    @property
+    def end_time(self):
+        return self._end_time
