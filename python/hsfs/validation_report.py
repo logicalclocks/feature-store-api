@@ -80,7 +80,7 @@ class ValidationReport:
             "success": self.success,
             "evaluationParameters": json.dumps(self.evaluation_parameters),
             "statistics": json.dumps(self._statistics),
-            "results": [result.to_dict() for result in self._results],
+            "results": [result.to_json_dict() for result in self._results],
             "meta": json.dumps(self._meta),
         }
 
@@ -90,7 +90,7 @@ class ValidationReport:
             "success": self.success,
             "evaluationParameters": self.evaluation_parameters,
             "statistics": self._statistics,
-            "results": [result.to_nested_dict() for result in self._results],
+            "results": [result.to_dict() for result in self._results],
             "meta": self._meta,
         }
 
@@ -100,7 +100,7 @@ class ValidationReport:
             statistics=self.statistics,
             results=[result.to_ge_type() for result in self.results],
             evaluation_parameters=self.evaluation_parameters,
-            meta=self.meta
+            meta =self.meta
         )
 
     @property

@@ -44,11 +44,11 @@ class ValidationResult:
     ):
         self._id = id
         self._success = success
-        self._result = result
-        self._meta = meta
-        self._exception_info = exception_info
-        self._expectation_config = expectation_config
-        self._observed_value = observed_value
+        self.result = result
+        self.meta = meta
+        self.exception_info = exception_info
+        self.expectation_config = expectation_config
+        self.observed_value = observed_value
         self._expectation_id = expectation_id
         self._validation_report_id = validation_report_id
 

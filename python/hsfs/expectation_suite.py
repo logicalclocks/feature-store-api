@@ -15,6 +15,7 @@
 #
 
 import json
+from typing import Optional
 
 import humps
 from hsfs import util
@@ -34,7 +35,7 @@ class ExpectationSuite:
         data_asset_type=None,
         ge_cloud_id=None,
         run_validation=True,
-        validation_ingestion_policy="strict",
+        validation_ingestion_management="STRICT",
         featurestore_id=None,
         featuregroup_id=None,
         href=None,
@@ -48,10 +49,10 @@ class ExpectationSuite:
         self._expectation_suite_name = expectation_suite_name
         self.expectations = expectations
         self.meta = meta
-        self._data_asset_type = data_asset_type,
+        self.data_asset_type = data_asset_type,
         self._ge_cloud_id = ge_cloud_id,
         self.run_validation = run_validation,
-        self.validation_ingestion_policy = validation_ingestion_policy,
+        self.validation_ingestion_management = validation_ingestion_management,
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
 
@@ -69,11 +70,15 @@ class ExpectationSuite:
         else:
             return cls(**json_decamelized)
 
+    @classmethod
+    def from_ge_type(cls, ge_expectation_suite, run_validation: Optional[bool] = True, validation_ingestion_management : Optional[str] = "ALWAYS"):
+        return cls(**ge_expectation_suite.to_json_dict(), run_validation=run_validation, validation_ingestion_management=validation_ingestion_management)
+
     def to_json_dict(self):
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
-            "expectations": [expectation.to_dict() for expectation in self._expectations],
+            "expectations": [expectation.to_json_dict() for expectation in self._expectations],
             "meta": json.dumps(self._meta),
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
@@ -99,8 +104,8 @@ class ExpectationSuite:
     def to_ge_type(self):
         return ge.core.ExpectationSuite(
             expectation_suite_name=self.expectation_suite_name,
-            ge_cloud_id=self.ge_cloud_id,
-            data_asset_type=self.data_asset_type,
+            ge_cloud_id=self._ge_cloud_id,
+            data_asset_type=self._data_asset_type,
             expectations=[expectation.to_ge_type() for expectation in self.expectations],
             meta = self.meta
         )
@@ -156,6 +161,8 @@ class ExpectationSuite:
 
     @run_validation.setter
     def run_validation(self, run_validation):
+        if isinstance(run_validation, tuple):
+            run_validation = run_validation[0]
         if isinstance(run_validation, bool):
             self._run_validation = run_validation
         else:
@@ -165,21 +172,27 @@ class ExpectationSuite:
     def validation_ingestion_management(self):
         """Whether to ingest a df based on the validation result.
         
-            "strict" : ingest df only if all expectations succeed,
-            "always" : always ingest df, even if one or more expectations fail
+            "STRICT" : ingest df only if all expectations succeed,
+            "ALWAYS" : always ingest df, even if one or more expectations fail
         """
         return self._validation_ingestion_management
 
     @validation_ingestion_management.setter
     def validation_ingestion_management(self, validation_ingestion_management):
+        if isinstance(validation_ingestion_management, tuple):
+            validation_ingestion_management = validation_ingestion_management[0]
         if isinstance(validation_ingestion_management, str):
             validation_ingestion_management = validation_ingestion_management.upper()
             if validation_ingestion_management == "STRICT":
                 self._validation_ingestion_management = validation_ingestion_management
             elif validation_ingestion_management == "ALWAYS":
                 self._validation_ingestion_management = validation_ingestion_management
+            else:
+                raise ValueError(f"validation_ingestion_management {validation_ingestion_management} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+        elif validation_ingestion_management is None:
+            validation_ingestion_management = "ALWAYS"
         else:
-            raise ValueError(f"validation_ingestion_management must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+            raise ValueError(f"validation_ingestion_management {validation_ingestion_management} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
 
     @property
     def expectations(self):
