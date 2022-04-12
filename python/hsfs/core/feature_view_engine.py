@@ -206,9 +206,11 @@ class FeatureViewEngine:
         else:
             raise ValueError("No training dataset object or version is provided")
 
-        # todo feature view: use batch query
+        batch_query = self.get_batch_query(
+            self, training_dataset_obj.start_time, training_dataset_obj.end_time
+        )
         td_job = engine.get_instance().write_training_dataset(
-            training_dataset_obj, feature_view_obj.query, user_write_options,
+            training_dataset_obj, batch_query, user_write_options,
             self._OVERWRITE, feature_view_obj=feature_view_obj
         )
         self._td_code_engine.save_code(training_dataset_obj)
