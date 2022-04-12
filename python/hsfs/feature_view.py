@@ -218,8 +218,6 @@ class FeatureView:
         end_time: Optional = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        # splits: Optional[Dict[str, float]] = {},
-        # seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         split: str = None,
         read_options: Optional[Dict[Any, Any]] = {}
@@ -228,9 +226,10 @@ class FeatureView:
 
         If version is not provided or provided version has not already existed, it creates
         a new version of training data according to given arguments and returns a dataframe.
-        If version is provided and has already existed, it reads training data from storage
-        or feature groups and returns a dataframe.
+        Note that, creating training data with split is only possible using `create_training_dataset`.
 
+        If version is provided and has already existed, it reads training data from storage
+        or feature groups and returns a dataframe. If split is provided, it read the specific split.
 
         !!! info
         If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -247,9 +246,7 @@ class FeatureView:
             data_format="df",
             location=None,
             splits={},
-            # seed=seed,
             statistics_config=statistics_config,
-            # train_split=train_split
         )
         # td_job is used only if the python engine is used
         td, df = self._feature_view_engine.get_training_data(
@@ -396,13 +393,6 @@ class FeatureView:
         return list(list(tag.Tag()))
 
     def delete_training_dataset_tag(self, version: int, name: str):
-        pass
-
-    def get_training_data(
-        self,
-        version: int,
-        split: str,
-    ):
         pass
 
     def purge_training_data(self, version: int):
