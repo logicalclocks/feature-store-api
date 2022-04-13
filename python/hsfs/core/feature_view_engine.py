@@ -153,11 +153,13 @@ class FeatureViewEngine:
     def get_training_data(self, feature_view_obj,
                                 training_dataset_obj, read_options, split=None):
         td_updated = None
+        should_compute_statistics = True
         # check if provided td version has already existed.
         if training_dataset_obj.version:
             try:
                 td_updated = self.get_training_data_metadata(
                     feature_view_obj, training_dataset_obj.version)
+                should_compute_statistics = False
             except exceptions.RestAPIError as e:
                 # error code: 270012, error msg: Training dataset wasn't found.
                 if e.response.json().get("errorCode", "") != 270012:
@@ -189,8 +191,11 @@ class FeatureViewEngine:
             df = engine.get_instance().get_training_data(
                 query, read_options
             )
+        if should_compute_statistics:
+            self.compute_training_dataset_statistics(
+                feature_view_obj, training_dataset_obj, df
+            )
 
-        # todo feature view: self.compute_training_dataset_statistics()
         return td_updated, df
 
     # This method is used by hsfs_utils to launch a job for python client
@@ -207,7 +212,7 @@ class FeatureViewEngine:
             raise ValueError("No training dataset object or version is provided")
 
         batch_query = self.get_batch_query(
-            self, training_dataset_obj.start_time, training_dataset_obj.end_time
+            feature_view_obj, training_dataset_obj.start_time, training_dataset_obj.end_time
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj, batch_query, user_write_options,

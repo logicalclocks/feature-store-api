@@ -74,9 +74,10 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def compute(self, metadata_instance, training_dataset_version):
+    def compute(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
-        path_params = self.get_path(metadata_instance, training_dataset_version)
+        path_params = self.get_path(
+            metadata_instance, training_dataset_version) + ["compute"]
         return job.Job.from_response_json(_client._send_request("POST", path_params))
 
     def get_path(self, metadata_instance, training_dataset_version=None):
