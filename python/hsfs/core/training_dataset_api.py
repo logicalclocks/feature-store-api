@@ -61,7 +61,9 @@ class TrainingDatasetApi:
         else:
             return td_list
 
-    def get_query(self, training_dataset_instance, with_label, is_hive_query):
+    def get_query(
+        self, training_dataset_instance, with_label, is_hive_query, optimized_pit
+    ):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -72,7 +74,11 @@ class TrainingDatasetApi:
             training_dataset_instance.id,
             "query",
         ]
-        query_params = {"withLabel": with_label, "hiveQuery": is_hive_query}
+        query_params = {
+            "withLabel": with_label,
+            "hiveQuery": is_hive_query,
+            "optimizedPit": optimized_pit,
+        }
 
         return fs_query.FsQuery.from_response_json(
             _client._send_request("GET", path_params, query_params)

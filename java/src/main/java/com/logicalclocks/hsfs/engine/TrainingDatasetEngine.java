@@ -182,9 +182,10 @@ public class TrainingDatasetEngine {
     tagsApi.deleteTag(trainingDataset, name);
   }
 
-  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
+  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery,
+    boolean optimizedPit)
       throws FeatureStoreException, IOException {
-    FsQuery fsQuery = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery);
+    FsQuery fsQuery = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery, optimizedPit);
 
     if (storage == Storage.OFFLINE) {
       // register the temporary tables so that people can make

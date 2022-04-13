@@ -21,11 +21,12 @@ import importlib.util
 import numpy as np
 import pandas as pd
 import avro
+from ackuq.pit.context import PitContext
 
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
@@ -50,6 +51,10 @@ class Engine:
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
         self._jvm = self._spark_context._jvm
+
+        self.sql_context = SQLContext(self._spark_context)
+        # Init the PIT context, this will register the required Spark strategies as well as exposing the PIT UDF
+        self.pit_context = PitContext()
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")

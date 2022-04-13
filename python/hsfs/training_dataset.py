@@ -630,7 +630,9 @@ class TrainingDataset:
         """Query to generate this training dataset from online feature store."""
         return self._training_dataset_engine.query(self, True, True, False)
 
-    def get_query(self, online: bool = True, with_label: bool = False):
+    def get_query(
+        self, online: bool = True, with_label: bool = False, optimized_pit: bool = False
+    ):
         """Returns the query used to generate this training dataset
 
         # Arguments
@@ -639,13 +641,16 @@ class TrainingDataset:
             with_label: Indicator whether the query should contain features which were
                 marked as prediction label/feature when the training dataset was
                 created, defaults to `False`.
+            optimized_pit: boolean, optional. Return a PIT optimized version of the query,
+                this version uses a PIT UDF function to be able to provide better performance
+                when executing the query, defaults to `False`.
 
         # Returns
             `str`. Query string for the chosen storage used to generate this training
                 dataset.
         """
         return self._training_dataset_engine.query(
-            self, online, with_label, engine.get_type() == "python"
+            self, online, with_label, engine.get_type() == "python", optimized_pit
         )
 
     def init_prepared_statement(

@@ -27,6 +27,7 @@ setup(
         "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL[rsa]",
+        "spark-pit==0.3.0",
     ],
     extras_require={
         "dev": ["pytest", "flake8", "black"],

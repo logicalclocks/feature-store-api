@@ -48,6 +48,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 
+import io.github.ackuq.pit.EarlyStopSortMerge;
+
 import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.from_json;
@@ -102,6 +104,9 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
     // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+    
+    // Register the required strategies and UDF for optimized PIT join
+    EarlyStopSortMerge.init(sparkSession);
   }
 
   public void validateSparkConfiguration() throws FeatureStoreException {

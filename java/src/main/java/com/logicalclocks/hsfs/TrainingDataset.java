@@ -430,22 +430,27 @@ public class TrainingDataset {
 
   @JsonIgnore
   public String getQuery() throws FeatureStoreException, IOException {
-    return getQuery(Storage.ONLINE, false);
+    return getQuery(Storage.ONLINE, false, false);
   }
 
   @JsonIgnore
   public String getQuery(boolean withLabel) throws FeatureStoreException, IOException {
-    return getQuery(Storage.ONLINE, withLabel);
+    return getQuery(Storage.ONLINE, withLabel, false);
   }
 
   @JsonIgnore
   public String getQuery(Storage storage) throws FeatureStoreException, IOException {
-    return getQuery(storage, false);
+    return getQuery(storage, false, false);
+  }
+  
+  public String getQuery(Storage storage, boolean optimizedPit) throws FeatureStoreException, IOException {
+    return getQuery(storage, false, optimizedPit);
   }
 
   @JsonIgnore
-  public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
-    return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
+  public String getQuery(Storage storage, boolean withLabel, boolean optimizedPit) throws FeatureStoreException,
+    IOException {
+    return trainingDatasetEngine.getQuery(this, storage, withLabel, false, optimizedPit);
   }
 
   @JsonIgnore

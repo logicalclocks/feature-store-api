@@ -122,9 +122,9 @@ class TrainingDatasetEngine:
             path=path,
         )
 
-    def query(self, training_dataset, online, with_label, is_hive_query):
+    def query(self, training_dataset, online, with_label, is_hive_query, optimized_pit):
         fs_query = self._training_dataset_api.get_query(
-            training_dataset, with_label, is_hive_query
+            training_dataset, with_label, is_hive_query, optimized_pit
         )
 
         if online:
