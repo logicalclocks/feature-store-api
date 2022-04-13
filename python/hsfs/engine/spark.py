@@ -355,7 +355,7 @@ class Engine:
             )
 
             path = training_dataset.location + "/" + training_dataset.name
-            self._write_training_dataset_single(
+            return self._write_training_dataset_single(
                 training_dataset,
                 dataset,
                 training_dataset.storage_connector,
@@ -376,7 +376,7 @@ class Engine:
             self._populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
-            self._write_training_dataset_splits(
+            return self._write_training_dataset_splits(
                 training_dataset,
                 split_dataset,
                 write_options,
