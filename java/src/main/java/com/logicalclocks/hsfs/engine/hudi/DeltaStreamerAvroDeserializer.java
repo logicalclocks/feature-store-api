@@ -105,7 +105,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
         result = encodedDatumReader.read(result, decoder);
       }
     } catch (Exception ex) {
-      throw new SerializationException(
+      LOGGER.info(
           "Can't deserialize data '" + Arrays.toString(data) + "' from topic '" + topic + "'", ex);
     }
 
@@ -122,7 +122,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
         decoder = DecoderFactory.get().binaryDecoder(featureData, binaryDecoder);
         finalResult.put(complexFeature, complexFeaturesDatumReaders.get(complexFeature).read(null, decoder));
       } catch (Exception ex) {
-        throw new SerializationException(
+        LOGGER.info(
             "Can't deserialize complex feature data '" + Arrays.toString(featureData) + "' from topic '" + topic
                 + "' with schema: " + featureSchema.toString(true), ex);
       }
