@@ -328,7 +328,8 @@ class Engine:
         df = query_obj.read(
             read_options=read_options
         )
-        return self.write_training_dataset(training_dataset, df, {}, None,
+        return self.write_training_dataset(training_dataset, df, read_options,
+                                           None,
                                            feature_view_obj=feature_view_obj)
 
     def write_training_dataset(

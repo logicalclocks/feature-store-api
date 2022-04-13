@@ -25,7 +25,8 @@ from hsfs.core import (
     code_engine,
     statistics_engine,
     training_dataset_engine,
-    query_constructor_api
+    query_constructor_api,
+    job
 )
 
 
@@ -170,33 +171,46 @@ class FeatureViewEngine:
             feature_view_obj.name, feature_view_obj.version,
             training_dataset_obj)
 
-        if td_updated.data_format != "df":
-            if split is not None:
-                path = td_updated.location + "/" + str(split)
-            else:
-                path = td_updated.location + "/" + td_updated.name
-            df = td_updated.storage_connector.read(
-                # always read from materialized dataset, not query object
-                query=None,
-                data_format=td_updated.data_format,
-                options=read_options,
-                path=path,
+        try:
+            df = self._read_from_storage_connector(
+                training_dataset_obj, split, read_options
             )
-        else:
+        except:
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=training_dataset_obj.start_time,
                 end_time=training_dataset_obj.end_time
             )
             df = engine.get_instance().get_training_data(
+                training_dataset_obj, feature_view_obj,
                 query, read_options
             )
+
         if should_compute_statistics:
             self.compute_training_dataset_statistics(
                 feature_view_obj, training_dataset_obj, df
             )
 
+        # read from hopsfs after job finished
+        if isinstance(df, job.Job):
+            df = self._read_from_storage_connector(
+                training_dataset_obj, split, read_options
+            )
+
         return td_updated, df
+
+    def _read_from_storage_connector(self, training_data_obj, split, read_options):
+        if split is not None:
+            path = training_data_obj.location + "/" + str(split)
+        else:
+            path = training_data_obj.location + "/" + training_data_obj.name
+        return training_data_obj.storage_connector.read(
+            # always read from materialized dataset, not query object
+            query=None,
+            data_format=training_data_obj.data_format,
+            options=read_options,
+            path=path,
+        )
 
     # This method is used by hsfs_utils to launch a job for python client
     def compute_training_dataset(self, feature_view_obj, user_write_options,

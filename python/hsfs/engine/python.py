@@ -311,15 +311,11 @@ class Engine:
 
         return ingestion_job.job
 
-    def get_training_data(self, query_obj, read_options):
-        df = query_obj.read(
-            read_options=read_options
-        )
-        return self._apply_transformation(df)
-
-    def _apply_transformation(self, df):
-        # todo feature view
-        return df
+    def get_training_data(self, training_dataset, feature_view_obj,
+                          query_obj, read_options):
+        return self.write_training_dataset(
+            training_dataset, query_obj,
+            read_options, None, feature_view_obj=feature_view_obj)
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
