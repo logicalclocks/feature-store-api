@@ -347,26 +347,10 @@ class Engine:
             training_dataset.data_format, user_write_options
         )
 
-        # check if there any transformation functions that require statistics attached to td features
-        builtin_tffn_features = [
-            ft_name
-            for ft_name in training_dataset.transformation_functions
-            if training_dataset._transformation_function_engine.is_builtin(
-                training_dataset.transformation_functions[ft_name]
-            )
-        ]
-
         if len(training_dataset.splits) == 0:
-            if builtin_tffn_features:
-                # compute statistics before transformations are applied
-                stats = self._compute_transformation_fn_statistics(
-                    training_dataset, builtin_tffn_features,
-                    dataset, feature_view_obj
-                )
-                # Populate builtin transformations (if any) with respective arguments
-                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
-                    training_dataset.transformation_functions, stats.content
-                )
+            self._populate_builtin_transformation_functions(
+                training_dataset, feature_view_obj, dataset
+            )
             # apply transformation functions (they are applied separately if there are splits)
             dataset = self._apply_transformation_function(training_dataset, dataset)
 
@@ -382,50 +366,65 @@ class Engine:
         else:
             split_names = sorted([*training_dataset.splits])
             split_weights = [training_dataset.splits[i] for i in split_names]
+            split_dataset = dataset.randomSplit(
+                split_weights, training_dataset.seed
+            )
+            split_dataset = dict([(split_names[i], split_dataset[i])
+                              for i in range(len(split_names))])
+            self._populate_builtin_transformation_functions(
+                training_dataset, feature_view_obj, split_dataset
+            )
             self._write_training_dataset_splits(
                 training_dataset,
-                dataset.randomSplit(split_weights, training_dataset.seed),
+                split_dataset,
                 write_options,
-                save_mode,
-                split_names,
-                builtin_tffn_features=builtin_tffn_features,
+                save_mode
+            )
+
+    def _populate_builtin_transformation_functions(
+        self, training_dataset, feature_view_obj, dataset):
+        # check if there any transformation functions that require statistics attached to td features
+        builtin_tffn_features = [
+            ft_name
+            for ft_name in training_dataset.transformation_functions
+            if training_dataset._transformation_function_engine.is_builtin(
+                training_dataset.transformation_functions[ft_name]
+            )
+        ]
+
+        if builtin_tffn_features:
+            if training_dataset.splits:
+                # compute statistics before transformations are applied
+                stats = self._compute_transformation_fn_statistics(
+                    training_dataset, builtin_tffn_features,
+                    dataset.get(training_dataset.train_split), feature_view_obj
+                )
+            else:
+                # compute statistics before transformations are applied
+                stats = self._compute_transformation_fn_statistics(
+                    training_dataset, builtin_tffn_features,
+                    dataset, feature_view_obj
+                )
+            # Populate builtin transformations (if any) with respective arguments
+            training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                training_dataset.transformation_functions, stats.content
             )
 
     def _write_training_dataset_splits(
         self,
         training_dataset,
-        feature_dataframe_list,
+        feature_dataframes,
         write_options,
-        save_mode,
-        split_names,
-        builtin_tffn_features,
-        feature_view_obj=None
+        save_mode
     ):
-        stats = None
-        if builtin_tffn_features:
-            # compute statistics before transformations are applied
-            i = [
-                i
-                for i, name in enumerate(split_names)
-                if name == training_dataset.train_split
-            ][0]
-            stats = self._compute_transformation_fn_statistics(
-                training_dataset, builtin_tffn_features,
-                feature_dataframe_list[i], feature_view_obj
-            )
 
-        for i in range(len(feature_dataframe_list)):
-            # Populate builtin transformations (if any) with respective arguments for each split
-            if stats is not None:
-                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
-                    training_dataset.transformation_functions, stats.content
-                )
+        for split_name, feature_dataframe in feature_dataframes.items():
             # apply transformation functions (they are applied separately to each split)
             dataset = self._apply_transformation_function(
-                training_dataset, dataset=feature_dataframe_list[i]
+                training_dataset, dataset=feature_dataframe
             )
 
-            split_path = training_dataset.location + "/" + str(split_names[i])
+            split_path = training_dataset.location + "/" + str(split_name)
             self._write_training_dataset_single(
                 dataset,
                 training_dataset.storage_connector,
