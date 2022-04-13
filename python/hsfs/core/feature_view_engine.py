@@ -15,6 +15,8 @@
 #
 
 import warnings
+import time
+from multiprocessing import Process
 from hsfs import engine, training_dataset_feature, training_dataset
 from hsfs.client import exceptions
 from hsfs.core import (
@@ -90,10 +92,9 @@ class FeatureViewEngine:
             coalesce=False,
             train_split=None
         )
-        # td_job is used only if the python engine is used
-        td, td_job = self.create_training_dataset(
-            feature_view_obj, td, {"wait_for_job": False}
-        )
+        proc = Process(target=self.create_training_dataset,
+                args=(feature_view_obj, td, {"wait_for_job": True}))
+        proc.start()
         return updated_fv
 
     def get(self, name, version=None):
@@ -196,6 +197,7 @@ class FeatureViewEngine:
             )
         except:
             # todo feature view: refine exception
+            # Should have an internal exception "IOException: FileNotFound" thrown by storage connector
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=training_dataset_obj.start_time,
