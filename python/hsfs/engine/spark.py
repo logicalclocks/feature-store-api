@@ -323,12 +323,13 @@ class Engine:
             ]
         )
 
-    def get_training_data(self, query_obj, read_options):
+    def get_training_data(self, training_dataset, feature_view_obj,
+                          query_obj, read_options):
         df = query_obj.read(
             read_options=read_options
         )
-        # todo feature view: apply transformation
-        return df
+        return self.write_training_dataset(training_dataset, df, {}, None,
+                                           feature_view_obj=feature_view_obj)
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
@@ -351,11 +352,10 @@ class Engine:
             self._populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
-            # apply transformation functions (they are applied separately if there are splits)
-            dataset = self._apply_transformation_function(training_dataset, dataset)
 
             path = training_dataset.location + "/" + training_dataset.name
             self._write_training_dataset_single(
+                training_dataset,
                 dataset,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -417,22 +417,21 @@ class Engine:
         write_options,
         save_mode
     ):
-
         for split_name, feature_dataframe in feature_dataframes.items():
-            # apply transformation functions (they are applied separately to each split)
-            dataset = self._apply_transformation_function(
-                training_dataset, dataset=feature_dataframe
-            )
 
             split_path = training_dataset.location + "/" + str(split_name)
-            self._write_training_dataset_single(
-                dataset,
+            feature_dataframes[split_name] = self._write_training_dataset_single(
+                training_dataset,
+                feature_dataframes[split_name],
                 training_dataset.storage_connector,
                 training_dataset.data_format,
                 write_options,
                 save_mode,
                 split_path,
             )
+
+        if training_dataset.data_format == "df":
+            return feature_dataframes
 
     def _compute_transformation_fn_statistics(
         self, training_dataset_obj, builtin_tffn_features,
@@ -447,6 +446,7 @@ class Engine:
 
     def _write_training_dataset_single(
         self,
+        training_dataset,
         feature_dataframe,
         storage_connector,
         data_format,
@@ -454,6 +454,12 @@ class Engine:
         save_mode,
         path,
     ):
+        # apply transformation functions (they are applied separately to each split)
+        feature_dataframe = self._apply_transformation_function(
+            training_dataset, dataset=feature_dataframe
+        )
+        if data_format == "df":
+            return feature_dataframe
         # TODO: currently not supported petastorm, hdf5 and npy file formats
         if data_format.lower() == "tsv":
             data_format = "csv"
