@@ -329,12 +329,12 @@ class Engine:
             read_options=read_options
         )
         return self.write_training_dataset(training_dataset, df, read_options,
-                                           None,
+                                           None, to_df=True,
                                            feature_view_obj=feature_view_obj)
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
-        feature_view_obj=None
+        feature_view_obj=None, to_df=False
     ):
         if isinstance(dataset, query.Query):
             dataset = dataset.read()
@@ -363,6 +363,7 @@ class Engine:
                 write_options,
                 save_mode,
                 path,
+                to_df=to_df
             )
         else:
             split_names = sorted([*training_dataset.splits])
@@ -379,7 +380,8 @@ class Engine:
                 training_dataset,
                 split_dataset,
                 write_options,
-                save_mode
+                save_mode,
+                to_df=to_df
             )
 
     def _populate_builtin_transformation_functions(
@@ -416,7 +418,8 @@ class Engine:
         training_dataset,
         feature_dataframes,
         write_options,
-        save_mode
+        save_mode,
+        to_df=False
     ):
         for split_name, feature_dataframe in feature_dataframes.items():
 
@@ -429,9 +432,10 @@ class Engine:
                 write_options,
                 save_mode,
                 split_path,
+                to_df=to_df
             )
 
-        if training_dataset.data_format == "df":
+        if to_df:
             return feature_dataframes
 
     def _compute_transformation_fn_statistics(
@@ -454,12 +458,13 @@ class Engine:
         write_options,
         save_mode,
         path,
+        to_df=False
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
             training_dataset, dataset=feature_dataframe
         )
-        if data_format == "df":
+        if to_df:
             return feature_dataframe
         # TODO: currently not supported petastorm, hdf5 and npy file formats
         if data_format.lower() == "tsv":
