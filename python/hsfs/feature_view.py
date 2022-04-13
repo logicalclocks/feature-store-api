@@ -243,7 +243,7 @@ class FeatureView:
             description=description,
             storage_connector=None,
             featurestore_id=self._id,
-            data_format="tfrecords",
+            data_format="tsv",
             location=None,
             splits={},
             statistics_config=statistics_config,
