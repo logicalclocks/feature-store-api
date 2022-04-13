@@ -76,9 +76,17 @@ class FeatureViewEngine:
 
     def get(self, name, version=None):
         if version:
-            return self._feature_view_api.get_by_name_version(name, version)
+            fv = self._feature_view_api.get_by_name_version(name, version)
+            fv.transformation_functions = self.get_attached_transformation_fn(
+                fv.name, fv.version
+            )
         else:
-            return self._feature_view_api.get_by_name(name)
+            fv = self._feature_view_api.get_by_name(name)
+            for _fv in fv:
+                _fv.transformation_functions = self.get_attached_transformation_fn(
+                    _fv.name, _fv.version
+                )
+        return fv
 
     def delete(self, name, version=None):
         if version:
@@ -263,8 +271,8 @@ class FeatureViewEngine:
                     training_dataset_version)
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
-        td.transformation_functions = self.get_attached_transformation_fn(
-            feature_view_obj.name, feature_view_obj.version
+        td.transformation_functions = (
+            feature_view_obj.transformation_functions
         )
         return td
 
