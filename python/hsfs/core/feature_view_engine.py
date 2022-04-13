@@ -15,7 +15,7 @@
 #
 
 import warnings
-from hsfs import engine, training_dataset_feature
+from hsfs import engine, training_dataset_feature, training_dataset
 from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
@@ -72,7 +72,29 @@ class FeatureViewEngine:
         self._transformation_function_engine.attach_transformation_fn(
             feature_view_obj
         )
-        return self._feature_view_api.post(feature_view_obj)
+        updated_fv = self._feature_view_api.post(feature_view_obj)
+
+        td = training_dataset.TrainingDataset(
+            name=feature_view_obj.name,
+            version=1,
+            start_time=None,
+            end_time=None,
+            description="Default training data",
+            data_format="tsv",
+            storage_connector=None,
+            location=None,
+            featurestore_id=feature_view_obj._featurestore_id,
+            splits={},
+            seed=None,
+            statistics_config={},
+            coalesce=False,
+            train_split=None
+        )
+        # td_job is used only if the python engine is used
+        td, td_job = self.create_training_dataset(
+            feature_view_obj, td, {"wait_for_job": False}
+        )
+        return updated_fv
 
     def get(self, name, version=None):
         if version:

@@ -313,6 +313,8 @@ class Engine:
 
     def get_training_data(self, training_dataset, feature_view_obj,
                           query_obj, read_options):
+        # Since statistics can only be calculated in spark kernel, it first launch a job to save a td
+        # then read it back as df.
         return self.write_training_dataset(
             training_dataset, query_obj,
             read_options, None, feature_view_obj=feature_view_obj)
