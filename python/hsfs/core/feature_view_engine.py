@@ -140,17 +140,6 @@ class FeatureViewEngine:
         )
         return updated_instance, td_job
 
-    def _create_training_data_metadata(self, feature_view_obj,
-                                       training_dataset_obj):
-        updated_instance = self._feature_view_api.create_training_dataset(
-            feature_view_obj.name, feature_view_obj.version,
-            training_dataset_obj)
-        updated_instance.schema = feature_view_obj.schema
-        updated_instance.transformation_functions = (
-            feature_view_obj.transformation_functions
-        )
-        return updated_instance
-
     def get_training_data(self, feature_view_obj,
                                 training_dataset_obj, read_options, split=None):
         td_updated = None
@@ -158,7 +147,7 @@ class FeatureViewEngine:
         # check if provided td version has already existed.
         if training_dataset_obj.version:
             try:
-                td_updated = self.get_training_data_metadata(
+                td_updated = self._get_training_data_metadata(
                     feature_view_obj, training_dataset_obj.version)
                 should_compute_statistics = False
             except exceptions.RestAPIError as e:
@@ -167,15 +156,16 @@ class FeatureViewEngine:
                     raise e
 
         if td_updated is None:
-            td_updated = self._feature_view_api.create_training_dataset(
-            feature_view_obj.name, feature_view_obj.version,
-            training_dataset_obj)
+            td_updated = self._create_training_data_metadata(
+            feature_view_obj, training_dataset_obj
+        )
 
         try:
             df = self._read_from_storage_connector(
                 training_dataset_obj, split, read_options
             )
         except:
+            # todo feature view: refine exception
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=training_dataset_obj.start_time,
@@ -219,7 +209,7 @@ class FeatureViewEngine:
         if training_dataset_obj:
             pass
         elif training_dataset_version:
-            training_dataset_obj = self.get_training_data_metadata(
+            training_dataset_obj = self._get_training_data_metadata(
                 feature_view_obj, training_dataset_version
             )
         else:
@@ -267,7 +257,7 @@ class FeatureViewEngine:
                     training_dataset_obj, feature_dataframe=td_df,
                     feature_view_obj=feature_view_obj)
 
-    def get_training_data_metadata(self, feature_view_obj, training_dataset_version):
+    def _get_training_data_metadata(self, feature_view_obj, training_dataset_version):
         td = self._feature_view_api.get_training_dataset_by_version(
                     feature_view_obj.name, feature_view_obj.version,
                     training_dataset_version)
@@ -275,5 +265,16 @@ class FeatureViewEngine:
         td.schema = feature_view_obj.schema
         td.transformation_functions = self.get_attached_transformation_fn(
             feature_view_obj.name, feature_view_obj.version
+        )
+        return td
+
+    def _create_training_data_metadata(self, feature_view_obj,
+                                       training_dataset_obj):
+        td = self._feature_view_api.create_training_dataset(
+            feature_view_obj.name, feature_view_obj.version,
+            training_dataset_obj)
+        td.schema = feature_view_obj.schema
+        td.transformation_functions = (
+            feature_view_obj.transformation_functions
         )
         return td
