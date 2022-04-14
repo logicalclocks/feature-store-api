@@ -79,8 +79,8 @@ class FeatureViewEngine:
         td = training_dataset.TrainingDataset(
             name=feature_view_obj.name,
             version=1,
-            start_time=None,
-            end_time=None,
+            event_start_time=None,
+            event_end_time=None,
             description="Default training data",
             data_format="tsv",
             storage_connector=None,
@@ -200,8 +200,8 @@ class FeatureViewEngine:
             # Should have an internal exception "IOException: FileNotFound" thrown by storage connector
             query = self.get_batch_query(
                 feature_view_obj,
-                start_time=training_dataset_obj.start_time,
-                end_time=training_dataset_obj.end_time
+                start_time=training_dataset_obj.event_start_time,
+                end_time=training_dataset_obj.event_end_time
             )
             df = engine.get_instance().get_training_data(
                 training_dataset_obj, feature_view_obj,
@@ -248,7 +248,8 @@ class FeatureViewEngine:
             raise ValueError("No training dataset object or version is provided")
 
         batch_query = self.get_batch_query(
-            feature_view_obj, training_dataset_obj.start_time, training_dataset_obj.end_time
+            feature_view_obj, training_dataset_obj.event_start_time,
+            training_dataset_obj.event_end_time
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj, batch_query, user_write_options,
@@ -310,3 +311,27 @@ class FeatureViewEngine:
             feature_view_obj.transformation_functions
         )
         return td
+
+    def delete_training_data(self, feature_view_obj,
+                             training_data_version=None):
+        if training_data_version:
+            self._feature_view_api.delete_training_data_version(
+                feature_view_obj.name, feature_view_obj.version,
+                training_data_version
+            )
+        else:
+            self._feature_view_api.delete_training_data(
+                feature_view_obj.name, feature_view_obj.version
+            )
+
+    def delete_training_dataset_only(self, feature_view_obj,
+                                     training_data_version=None):
+        if training_data_version:
+            self._feature_view_api.delete_training_dataset_only_version(
+                feature_view_obj.name, feature_view_obj.version,
+                training_data_version
+            )
+        else:
+            self._feature_view_api.delete_training_dataset_only(
+                feature_view_obj.name, feature_view_obj.version
+            )

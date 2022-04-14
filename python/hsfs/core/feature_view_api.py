@@ -140,3 +140,42 @@ class FeatureViewApi:
             self._client._send_request(
                 "POST", path, headers=headers, data=td_app_conf.json())
         )
+
+    def delete_training_data(self, name, version):
+        path = self.get_training_data_base_path(name, version)
+        return job.Job.from_response_json(
+            self._client._send_request("DELETE", path)
+        )
+
+    def delete_training_data_version(self, name, version,
+                                     training_dataset_version):
+        path = self.get_training_data_base_path(name, version,
+                                                training_dataset_version)
+        return job.Job.from_response_json(
+            self._client._send_request("DELETE", path)
+        )
+
+    def delete_training_dataset_only(self, name, version):
+        path = self.get_training_data_base_path(name, version)
+        return job.Job.from_response_json(
+            self._client._send_request("DELETE", path)
+        )
+
+    def delete_training_dataset_only_version(self, name, version,
+                                             training_dataset_version):
+        path = self.get_training_data_base_path(name, version,
+                                                training_dataset_version)
+        return job.Job.from_response_json(
+            self._client._send_request("DELETE", path)
+        )
+
+    def get_training_data_base_path(self, name, version,
+                                    training_data_version=None):
+        if training_data_version:
+            return self._base_path + \
+               [name, self._VERSION, version, self._TRAINING_DATASET]
+        else:
+            return self._base_path + \
+               [name, self._VERSION, version,
+                self._TRAINING_DATASET, self._VERSION, training_data_version,
+                ]

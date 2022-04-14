@@ -238,8 +238,8 @@ class FeatureView:
         td = training_dataset.TrainingDataset(
             name=self.name,
             version=version,
-            start_time=start_time,
-            end_time=end_time,
+            event_start_time=start_time,
+            event_end_time=end_time,
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
@@ -355,8 +355,8 @@ class FeatureView:
         td = training_dataset.TrainingDataset(
             name=self.name,
             version=version,
-            start_time=start_time,
-            end_time=end_time,
+            event_start_time=start_time,
+            event_end_time=end_time,
             description=description,
             data_format=data_format,
             storage_connector=storage_connector,
@@ -396,16 +396,20 @@ class FeatureView:
         pass
 
     def purge_training_data(self, version: int):
-        pass
+        self._feature_view_engine.delete_training_dataset_only(
+            self, training_data_version=version
+        )
 
     def purge_all_training_data(self):
-        pass
+        self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, version: int):
-        pass
+        self._feature_view_engine.delete_training_data(
+            self, training_data_version=version
+        )
 
     def delete_all_training_datasets(self):
-        pass
+        self._feature_view_engine.delete_training_data(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
