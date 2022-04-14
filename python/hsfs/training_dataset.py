@@ -48,8 +48,8 @@ class TrainingDataset:
         data_format,
         location,
         featurestore_id,
-        start_time=None,
-        end_time=None,
+        event_start_time=None,
+        event_end_time=None,
         coalesce=False,
         description=None,
         storage_connector=None,
@@ -74,8 +74,8 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._start_time = start_time
-        self._end_time = end_time
+        self._start_time = event_start_time
+        self._end_time = event_end_time
         self._coalesce = coalesce
         self._seed = seed
         self._location = location
@@ -467,6 +467,8 @@ class TrainingDataset:
             "queryDTO": self._querydto.to_dict() if self._querydto else None,
             "statisticsConfig": self._statistics_config,
             "trainSplit": self._train_split,
+            "eventStartTime": self._start_time,
+            "eventEndTIme": self._end_time
         }
 
     @property
@@ -758,9 +760,9 @@ class TrainingDataset:
         self._transformation_functions = transformation_functions
 
     @property
-    def start_time(self):
+    def event_start_time(self):
         return self._start_time
 
     @property
-    def end_time(self):
+    def event_end_time(self):
         return self._end_time
