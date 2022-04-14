@@ -468,7 +468,7 @@ class TrainingDataset:
             "statisticsConfig": self._statistics_config,
             "trainSplit": self._train_split,
             "eventStartTime": self._start_time,
-            "eventEndTIme": self._end_time
+            "eventEndTime": self._end_time
         }
 
     @property
