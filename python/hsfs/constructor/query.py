@@ -263,8 +263,7 @@ class Query:
             joins=[join.Join.from_response_json(_join)
                     for _join in json_decamelized.get("joins", [])
                 ],
-            filter=(Logic(**json_decamelized.get("filter", None))
-                    if json_decamelized.get("filter", None) else None),
+            filter=json_decamelized.get("filter", None),
         )
 
     @classmethod
