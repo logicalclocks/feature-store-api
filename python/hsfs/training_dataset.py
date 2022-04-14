@@ -152,7 +152,7 @@ class TrainingDataset:
         # Arguments
             features: Feature data to be materialized.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -162,7 +162,7 @@ class TrainingDataset:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
 
         # Raises
@@ -170,7 +170,7 @@ class TrainingDataset:
         """
         user_version = self._version
         user_stats_config = self._statistics_config
-        # td_job is used only if the hive engine is used
+        # td_job is used only if the python engine is used
         training_dataset, td_job = self._training_dataset_engine.save(
             self, features, write_options
         )
@@ -215,7 +215,7 @@ class TrainingDataset:
             features: Feature data to be materialized.
             overwrite: Whether to overwrite the entire data in the training dataset.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -225,13 +225,13 @@ class TrainingDataset:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
 
         # Raises
             `RestAPIError`: Unable to create training dataset metadata.
         """
-        # td_job is used only if the hive engine is used
+        # td_job is used only if the python engine is used
         td_job = self._training_dataset_engine.insert(
             self, features, write_options, overwrite
         )
@@ -648,7 +648,7 @@ class TrainingDataset:
                 dataset.
         """
         return self._training_dataset_engine.query(
-            self, online, with_label, engine.get_type() == "hive"
+            self, online, with_label, engine.get_type() == "python"
         )
 
     def init_prepared_statement(

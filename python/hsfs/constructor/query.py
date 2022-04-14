@@ -44,7 +44,7 @@ class Query:
         self._left_feature_group_end_time = left_feature_group_end_time
         self._joins = joins or []
         self._filter = Logic.from_response_json(filter)
-        self._hive_engine = True if engine.get_type() == "hive" else False
+        self._python_engine = True if engine.get_type() == "python" else False
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
@@ -64,11 +64,10 @@ class Query:
             online_conn = None
 
             # Register on demand feature groups as temporary tables
-            self._register_on_demand(query.on_demand_fg_aliases)
+            query.register_on_demand()
 
             # Register on hudi feature groups as temporary tables
-            self._register_hudi_tables(
-                query.hudi_cached_feature_groups,
+            query.register_hudi_tables(
                 self._feature_store_id,
                 self._feature_store_name,
                 read_options,
@@ -238,7 +237,7 @@ class Query:
             "leftFeatureGroupEndTime": self._left_feature_group_end_time,
             "joins": self._joins,
             "filter": self._filter,
-            "hiveEngine": self._hive_engine,
+            "hiveEngine": self._python_engine,
         }
 
     @classmethod
@@ -272,16 +271,6 @@ class Query:
     def __str__(self):
         return self._query_constructor_api.construct_query(self)
 
-    def _register_on_demand(self, on_demand_fg_aliases):
-        if on_demand_fg_aliases is None:
-            return
-
-        for on_demand_fg_alias in on_demand_fg_aliases:
-            engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group,
-                on_demand_fg_alias.alias,
-            )
-
     @property
     def left_feature_group_start_time(self):
         return self._left_feature_group_start_time
@@ -297,11 +286,3 @@ class Query:
     @left_feature_group_end_time.setter
     def left_feature_group_end_time(self, left_feature_group_start_time):
         self._left_feature_group_end_time = left_feature_group_start_time
-
-    def _register_hudi_tables(
-        self, hudi_feature_groups, feature_store_id, feature_store_name, read_options
-    ):
-        for hudi_fg in hudi_feature_groups:
-            engine.get_instance().register_hudi_temporary_table(
-                hudi_fg, feature_store_id, feature_store_name, read_options
-            )

@@ -56,7 +56,6 @@ class HudiEngine:
     HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime"
     PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
     PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload"
-    HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates"
 
     def __init__(
         self,
@@ -100,9 +99,15 @@ class HudiEngine:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             self._feature_store_id
         )
-        self._connstr = self._storage_connector_api.get(
-            self._feature_store_name
-        ).connection_string
+
+        if self._feature_store_name:
+            # For read operations we don't actually need the connector
+            # Only to sync write operations
+            self._connstr = self._storage_connector_api.get(
+                self._feature_store_name
+            ).connection_string
+        else:
+            self._connstr = None
 
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
@@ -165,9 +170,6 @@ class HudiEngine:
             self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
 
-        if operation.lower() in [self.HUDI_BULK_INSERT, self.HUDI_INSERT]:
-            hudi_options[self.HUDI_WRITE_INSERT_DROP_DUPLICATES] = "true"
-
         if write_options:
             hudi_options.update(write_options)
 
@@ -216,6 +218,9 @@ class HudiEngine:
         )
 
     def _get_conn_str(self):
+        if not self._connstr:
+            return ""
+
         credentials = {
             "sslTrustStore": client.get_instance()._get_jks_trust_store_path(),
             "trustStorePassword": client.get_instance()._cert_key,

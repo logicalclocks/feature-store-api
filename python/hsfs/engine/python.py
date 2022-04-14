@@ -18,6 +18,8 @@ import pandas as pd
 import numpy as np
 import boto3
 import time
+import re
+import warnings
 
 from io import BytesIO
 from pyhive import hive
@@ -167,11 +169,24 @@ class Engine:
     def read_options(self, data_format, provided_options):
         return {}
 
+    def read_stream(
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
+    ):
+        raise NotImplementedError(
+            "Streaming Sources are not supported for pure Python Environments."
+        )
+
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
     def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        raise NotImplementedError
+        # No op to avoid query failure
+        pass
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
@@ -192,13 +207,31 @@ class Engine:
 
         self._wait_for_job(job)
 
+    def validate(self, dataframe, expectations, log_activity=True):
+        raise NotImplementedError(
+            "Deequ data validation is only available with Spark Engine."
+        )
+
     def set_job_group(self, group_id, description):
         pass
 
     def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, pd.DataFrame):
-            dataframe.columns = [x.lower() for x in dataframe.columns]
-            return dataframe
+            upper_case_features = [
+                col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
+
+            # making a shallow copy of the dataframe so that column names are unchanged
+            dataframe_copy = dataframe.copy(deep=False)
+            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+            return dataframe_copy
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
@@ -210,6 +243,12 @@ class Engine:
             feature.Feature(feat_name.lower(), self._convert_pandas_type(feat_type))
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
+
+    def parse_schema_training_dataset(self, dataframe):
+        raise NotImplementedError(
+            "Training dataset creation from Dataframes is not "
+            + "supported in Python environment. Use HSFS Query object instead."
+        )
 
     def _convert_pandas_type(self, dtype):
         # This is a simple type conversion between pandas type and pyspark types.
@@ -347,7 +386,7 @@ class Engine:
         )
 
     def get_empty_appended_dataframe(self, dataframe, new_features):
-        """No-op in hive engine, user has to write to feature group manually for schema
+        """No-op in python engine, user has to write to feature group manually for schema
         change to take effect."""
         return None
 
@@ -361,10 +400,12 @@ class Engine:
         Args:
             href (str): the endpoint returned by the API
         """
-        url_splits = urlparse(href)
-        project_id = url_splits.path.split("/")[4]
-        ui_url = url_splits._replace(
-            path="hopsworks/#!/project/{}/jobs".format(project_id)
+        url = urlparse(href)
+        url_splits = url.path.split("/")
+        project_id = url_splits[4]
+        job_name = url_splits[6]
+        ui_url = url._replace(
+            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
         )
         return ui_url.geturl()
 
@@ -378,15 +419,10 @@ class Engine:
         Property name should match the value in the JobConfiguration.__init__
         """
         spark_job_configuration = user_write_options.pop("spark", None)
-        read_csv_mode = user_write_options.pop("mode", "FAILFAST")
 
         return ingestion_job_conf.IngestionJobConf(
-            data_format="CSV",
-            data_options=[
-                {"name": "header", "value": "true"},
-                {"name": "inferSchema", "value": "true"},
-                {"name": "mode", "value": read_csv_mode},
-            ],
+            data_format="PARQUET",
+            data_options=[],
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,
         )
@@ -413,3 +449,8 @@ class Engine:
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
+
+    def add_file(self, file):
+        # if streaming connectors are implemented in the future, this method
+        # can be used to materialize certificates locally
+        return file

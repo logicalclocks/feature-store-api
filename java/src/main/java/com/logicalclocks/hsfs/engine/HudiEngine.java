@@ -84,14 +84,12 @@ public class HudiEngine {
   private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
-  private static final String HUDI_WRITE_INSERT_DROP_DUPLICATES = "hoodie.datasource.write.insert.drop.duplicates";
-
   private static final String PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class";
   private static final String PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload";
 
-  private Utils utils = new Utils();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
 
 
@@ -138,7 +136,8 @@ public class HudiEngine {
     sparkSession.read()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
-        .load(featureGroup.getLocation()).createOrReplaceTempView(alias);
+        .load(featureGroup.getLocation())
+        .createOrReplaceTempView(alias);
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
@@ -201,11 +200,6 @@ public class HudiEngine {
 
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
 
-    // drop duplicates for insert and bulk insert only
-    if (HudiOperationType.BULK_INSERT == operation || HudiOperationType.INSERT == operation) {
-      hudiArgs.put(HUDI_WRITE_INSERT_DROP_DUPLICATES, "true");
-    }
-
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {
       hudiArgs.putAll(writeOptions);
@@ -215,7 +209,7 @@ public class HudiEngine {
 
   private Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = new HashMap<String, String>();
+    Map<String, String> hudiArgs = new HashMap<>();
 
     if (startTimestamp != null) {
       hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
@@ -223,7 +217,12 @@ public class HudiEngine {
       hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
     }
 
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    if (endTimestamp != null) {
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
+    } else {
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(System.currentTimeMillis()));
+    }
+
     hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
@@ -234,8 +233,8 @@ public class HudiEngine {
   }
 
   @SneakyThrows
-  public String timeStampToHudiFormat(Long commitedOnTimeStamp) {
-    Date commitedOnDate = new Timestamp(commitedOnTimeStamp);
-    return dateFormat.format(commitedOnDate);
+  public String timeStampToHudiFormat(Long committedOnTimeStamp) {
+    Date committedOnDate = new Timestamp(committedOnTimeStamp);
+    return dateFormat.format(committedOnDate);
   }
 }

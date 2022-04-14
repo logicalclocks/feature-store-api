@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
+import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -64,7 +65,7 @@ public class TrainingDatasetEngine {
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private Utils utils = new Utils();
+  private TrainingDatasetUtils utils = new TrainingDatasetUtils();
   private Schema.Parser parser = new Schema.Parser();
   private BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
 
@@ -160,7 +161,7 @@ public class TrainingDatasetEngine {
     } else {
       path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
-    return trainingDataset.getStorageConnector()
+    return (Dataset<Row>) trainingDataset.getStorageConnector()
         .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
@@ -183,7 +184,16 @@ public class TrainingDatasetEngine {
 
   public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery).getStorageQuery(storage);
+    FsQuery fsQuery = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery);
+
+    if (storage == Storage.OFFLINE) {
+      // register the temporary tables so that people can make
+      // batch inference requests by doing `fs.sql(td.getQuery())`
+      fsQuery.registerOnDemandFeatureGroups();
+      fsQuery.registerHudiFeatureGroups(new HashMap<>());
+    }
+
+    return fsQuery.getStorageQuery(storage);
   }
 
   public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {

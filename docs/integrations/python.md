@@ -30,12 +30,12 @@ Create a file called `featurestore.key` in your designated Python environment an
 To be able to access the Hopsworks Feature Store, the `HSFS` Python library needs to be installed in the environment from which you want to connect to the Feature Store. You can install the library through pip. We recommend using a Python environment manager such as *virtualenv* or *conda*.
 
 ```
-pip install hsfs[hive]~=[HOPSWORKS_VERSION]
+pip install hsfs[python]~=[HOPSWORKS_VERSION]
 ```
 
 !!! attention "Hive Dependencies"
 
-    By default, `HSFS` assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on a local Python evnironment, if you are planning to use a regular Python Kernel **without Spark/EMR**, make sure to install the **"hive"** extra dependencies (`hsfs[hive]`).
+    By default, `HSFS` assumes Spark/EMR is used as execution engine and therefore Hive dependencies are not installed. Hence, on a local Python evnironment, if you are planning to use a regular Python Kernel **without Spark/EMR**, make sure to install the **"python"** extra dependencies (`hsfs[python]`).
 
 !!! attention "Matching Hopsworks version"
     The **major version of `HSFS`** needs to match the **major version of Hopsworks**.
@@ -66,7 +66,7 @@ fs = conn.get_feature_store()           # Get the project's default feature stor
 
 !!! note "Engine"
 
-    `HSFS` uses either Apache Spark or Apache Hive as an execution engine to perform queries against the feature store. The `engine` option of the connection let's you overwrite the default behaviour by setting it to `"hive"` or `"spark"`. By default, `HSFS` will try to use Spark as engine if PySpark is available. So if you have PySpark installed in your local Python environment, but you have not configured Spark, you will have to set `engine='hive'`. Please refer to the [Spark integration guide](spark.md) to configure your local Spark cluster to be able to connect to the Hopsworks Feature Store.
+    `HSFS` uses either Apache Spark or Pandas on Python as an execution engine to perform queries against the feature store. The `engine` option of the connection let's you overwrite the default behaviour by setting it to `"python"` or `"spark"`. By default, `HSFS` will try to use Spark as engine if PySpark is available. So if you have PySpark installed in your local Python environment, but you have not configured Spark, you will have to set `engine='python'`. Please refer to the [Spark integration guide](spark.md) to configure your local Spark cluster to be able to connect to the Hopsworks Feature Store.
 
 !!! info "Ports"
 

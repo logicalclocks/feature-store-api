@@ -14,40 +14,12 @@
 #   limitations under the License.
 #
 
-import inspect
-
 from hsfs.client.exceptions import FeatureStoreException
 
 
 class BuiltInTransformationFunction:
     def __init__(self, method):
         self._method = method.lower()
-
-    def generate_source_code(self):
-        if self._method == "min_max_scaler":
-            source_code, output_type = self.generate_min_max_scaler()
-        elif self._method == "standard_scaler":
-            source_code, output_type = self.generate_standard_scaler()
-        elif self._method == "robust_scaler":
-            source_code, output_type = self.generate_robust_scaler()
-        elif self._method == "label_encoder":
-            source_code, output_type = self.generate_label_encoder()
-        else:
-            raise ValueError(
-                "Provided {method:} is not recognised. Supported mothods are min_max_scaler, "
-                "standard_scaler and robust_scaler".format(method=self._method)
-            )
-        return inspect.cleandoc(source_code), output_type
-
-    @staticmethod
-    def generate_min_max_scaler():
-        output_type = "double"
-        source_code = """
-            # Min-Max scaling
-            def min_max_scaler(value, min_value, max_value):
-                return (value - min_value) / (max_value - min_value)
-            """
-        return source_code, output_type
 
     @staticmethod
     def min_max_scaler_stats(content, feature_name):
@@ -70,16 +42,6 @@ class BuiltInTransformationFunction:
         return min_value, max_value
 
     @staticmethod
-    def generate_standard_scaler():
-        output_type = "double"
-        source_code = """
-            # Standardization / zcore
-            def standard_scaler(value, mean, std_dev):
-                return (value - mean) / std_dev
-            """
-        return source_code, output_type
-
-    @staticmethod
     def standard_scaler_stats(content, feature_name):
         mean = None
         std_dev = None
@@ -100,16 +62,6 @@ class BuiltInTransformationFunction:
         return mean, std_dev
 
     @staticmethod
-    def generate_robust_scaler():
-        output_type = "double"
-        source_code = """
-                # Robust scaling
-                def robust_scaler(value, p25, p50, p75):
-                    return (value - p50) / (p75 - p25)
-                """
-        return source_code, output_type
-
-    @staticmethod
     def robust_scaler_stats(content, feature_name):
         percentiles = None
         for col in content["columns"]:
@@ -125,17 +77,6 @@ class BuiltInTransformationFunction:
                 "standard_scaler method".format(feature_name=feature_name)
             )
         return percentiles
-
-    @staticmethod
-    def generate_label_encoder():
-        output_type = "int"
-        source_code = """
-            # label encoder
-            def label_encoder(value, value_to_index):
-                # define a mapping of values to integers
-                return value_to_index[value]
-            """
-        return source_code, output_type
 
     @staticmethod
     def encoder_stats(content, feature_name):

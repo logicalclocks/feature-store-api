@@ -26,8 +26,6 @@ import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
@@ -111,6 +109,34 @@ public class FeatureStore {
   }
 
   /**
+   * Get a feature group object from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @param version the version of the feature group
+   * @return FeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getStreamFeatureGroup(this, name, version);
+  }
+
+  /**
+   * Get a feature group object with default version `1` from the feature store.
+   *
+   * @param name the name of the feature group
+   * @return FeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getStreamFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  /**
    * Get a on-demand feature group object from the feature store.
    *
    * @param name    the name of the feature group
@@ -152,7 +178,7 @@ public class FeatureStore {
         .asScala().toSeq();
   }
 
-  public Dataset<Row> sql(String query) {
+  public Object sql(String query) {
     return SparkEngine.getInstance().sql(query);
   }
 
@@ -186,13 +212,26 @@ public class FeatureStore {
     return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
   }
 
+  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.KafkaConnector) storageConnectorApi.getByName(this, name);
+  }
+
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
+  }
+
+  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.GcsConnector) storageConnectorApi.getByName(this, name);
   }
 
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
         .featureStore(this);
+  }
+
+  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+    return StreamFeatureGroup.builder()
+            .featureStore(this);
   }
 
   public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {

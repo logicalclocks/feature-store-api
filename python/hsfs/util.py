@@ -104,6 +104,7 @@ def get_timestamp_from_date_string(input_date):
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
     }
     input_date = (
         input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
@@ -125,9 +126,7 @@ def get_timestamp_from_date_string(input_date):
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
-    date_obj = datetime.fromtimestamp(timestamp / 1000)
-    date_str = date_obj.strftime("%Y%m%d%H%M%S")
-    return date_str
+    return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
 def setup_pydoop():
@@ -175,4 +174,8 @@ class StatisticsWarning(Warning):
 
 
 class ValidationWarning(Warning):
+    pass
+
+
+class FeatureGroupWarning(Warning):
     pass

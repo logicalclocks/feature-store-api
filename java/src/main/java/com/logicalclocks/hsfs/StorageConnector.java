@@ -29,9 +29,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 
+import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -51,7 +50,9 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = StorageConnector.RedshiftConnector.class, name = "REDSHIFT"),
     @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
     @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
-    @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC")
+    @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC"),
+    @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA"),
+    @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS")
 })
 public abstract class StorageConnector {
 
@@ -72,7 +73,7 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+  public Object read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
@@ -136,7 +137,7 @@ public abstract class StorageConnector {
       return new HashMap<>();
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       return SparkEngine.getInstance().read(this, dataFormat, options, path);
@@ -186,7 +187,7 @@ public abstract class StorageConnector {
     private String iamRole;
 
     @Getter @Setter
-    private String arguments;
+    private List<Option> arguments;
 
     @Getter @Setter
     private Instant expiration;
@@ -194,8 +195,10 @@ public abstract class StorageConnector {
     public Map<String, String> sparkOptions() {
       String constr =
           "jdbc:redshift://" + clusterIdentifier + "." + databaseEndpoint + ":" + databasePort + "/" + databaseName;
-      if (!Strings.isNullOrEmpty(arguments)) {
-        constr += "?" + arguments;
+      if (arguments != null && !arguments.isEmpty()) {
+        constr += "?" + arguments.stream()
+          .map(arg -> arg.getName() + (arg.getValue() != null ? "=" + arg.getValue() : ""))
+          .collect(Collectors.joining(","));
       }
       Map<String, String> options = new HashMap<>();
       options.put(Constants.JDBC_DRIVER, databaseDriver);
@@ -208,7 +211,7 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -340,7 +343,8 @@ public abstract class StorageConnector {
       return options;
     }
 
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) {
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
@@ -360,18 +364,17 @@ public abstract class StorageConnector {
     private String connectionString;
 
     @Getter @Setter
-    private String arguments;
+    private List<Option> arguments;
 
     public Map<String, String> sparkOptions() {
-      Map<String, String> options = Arrays.stream(arguments.split(","))
-          .map(arg -> arg.split("="))
-          .collect(Collectors.toMap(a -> a[0], a -> a[1]));
-      options.put(Constants.JDBC_URL, connectionString);
-      return options;
+      Map<String, String> readOptions = arguments.stream()
+              .collect(Collectors.toMap(arg -> arg.getName(), arg -> arg.getValue()));
+      readOptions.put(Constants.JDBC_URL, connectionString);
+      return readOptions;
     }
 
     @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
       update();
       Map<String, String> readOptions = sparkOptions();
@@ -391,5 +394,133 @@ public abstract class StorageConnector {
     public String getPath(String subPath) {
       return null;
     }
+  }
+
+  public static class KafkaConnector extends StorageConnector {
+
+    public static final String sparkFormat = "kafka";
+
+    @Getter @Setter
+    private String bootstrapServers;
+
+    @Getter @Setter
+    private SecurityProtocol securityProtocol;
+
+    @Getter
+    private String sslTruststoreLocation;
+
+    @Getter @Setter
+    private String sslTruststorePassword;
+
+    @Getter
+    private String sslKeystoreLocation;
+
+    @Getter @Setter
+    private String sslKeystorePassword;
+
+    @Getter @Setter
+    private String sslKeyPassword;
+
+    @Getter @Setter
+    private SslEndpointIdentificationAlgorithm sslEndpointIdentificationAlgorithm;
+
+    @Getter @Setter
+    private List<Option> options;
+
+    public void setSslTruststoreLocation(String sslTruststoreLocation) {
+      this.sslTruststoreLocation = SparkEngine.getInstance().addFile(sslTruststoreLocation);
+    }
+
+    public void setSslKeystoreLocation(String sslKeystoreLocation) {
+      this.sslKeystoreLocation = SparkEngine.getInstance().addFile(sslKeystoreLocation);
+    }
+
+    public Map<String, String> sparkOptions() {
+      Map<String, String> options = new HashMap<>();
+      options.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
+      options.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
+      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
+        options.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+      }
+      if (!Strings.isNullOrEmpty(sslTruststorePassword)) {
+        options.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
+        options.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+      }
+      if (!Strings.isNullOrEmpty(sslKeystorePassword)) {
+        options.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
+        options.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
+      // can be empty string
+      if (sslEndpointIdentificationAlgorithm != null) {
+        options.put(
+            Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
+      }
+      if (this.options != null && !this.options.isEmpty()) {
+        Map<String, String> argOptions = this.options.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(argOptions);
+      }
+      return options;
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return null;
+    }
+
+    public Object read(String query, String dataFormat, Map<String, String> options, String path) {
+      throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
+    }
+
+    public Object readStream(String topic, boolean topicPattern, String messageFormat, String schema,
+        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
+      if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
+        throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
+      }
+
+      if (topicPattern) {
+        options.put("subscribePattern", topic);
+      } else {
+        options.put("subscribe", topic);
+      }
+
+      return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(),
+          schema, options, includeMetadata);
+    }
+  }
+
+  public static class GcsConnector extends StorageConnector {
+    @Getter
+    private String keyPath;
+    @Getter
+    private String algorithm;
+    @Getter
+    private String encryptionKey;
+    @Getter
+    private String encryptionKeyHash;
+    @Getter
+    private String bucket;
+
+    public GcsConnector() {
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return "gs://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+    }
+
+    @Override
+    public Map<String, String> sparkOptions() {
+      return new HashMap<>();
+    }
+
+    public void prepareSpark() throws FeatureStoreException, IOException {
+      SparkEngine.getInstance().setupConnectorHadoopConf(this);
+    }
+
   }
 }

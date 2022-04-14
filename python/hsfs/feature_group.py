@@ -32,6 +32,7 @@ from hsfs.core import (
     on_demand_feature_group_engine,
     expectations_api,
 )
+from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
@@ -530,7 +531,7 @@ class FeatureGroupBase:
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
             return self._statistics_engine.compute_statistics(self)
         else:
@@ -558,6 +559,7 @@ class FeatureGroupBase:
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
+    STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -582,6 +584,7 @@ class FeatureGroup(FeatureGroupBase):
         expectations=None,
         online_topic_name=None,
         event_time=None,
+        stream=False,
     ):
         super().__init__(featurestore_id, validation_type, location)
 
@@ -606,6 +609,8 @@ class FeatureGroup(FeatureGroupBase):
         self._avro_schema = None
         self._online_topic_name = online_topic_name
         self._event_time = event_time
+        self._stream = stream
+        self._deltastreamer_jobconf = None
 
         if self._id:
             # initialized by backend
@@ -629,13 +634,20 @@ class FeatureGroup(FeatureGroupBase):
 
         else:
             # initialized by user
+            # for python engine we always use stream feature group
+            if engine.get_type() == "python":
+                self._stream = True
+            # for stream feature group time travel format is always HUDI
+            if self._stream:
+                self._time_travel_format = "HUDI"
+
             self.primary_key = primary_key
             self.partition_key = partition_key
             self._hudi_precombine_key = (
                 hudi_precombine_key.lower()
                 if hudi_precombine_key is not None
-                and time_travel_format is not None
-                and time_travel_format.upper() == "HUDI"
+                and self._time_travel_format is not None
+                and self._time_travel_format == "HUDI"
                 else None
             )
             self.statistics_config = statistics_config
@@ -755,14 +767,6 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`.  No data is available for feature group with this commit date.
             `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "read_changes can only be used on time travel enabled feature groups"
-            )
-
         return (
             self.select_all()
             .pull_changes(start_wallclock_time, end_wallclock_time)
@@ -811,7 +815,7 @@ class FeatureGroup(FeatureGroupBase):
         # Arguments
             features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -820,12 +824,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
-
 
         # Returns
-            `Job`: When using the `hive` engine, it returns the Hopsworks Job
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
 
         # Raises
@@ -835,12 +836,25 @@ class FeatureGroup(FeatureGroupBase):
 
         user_version = self._version
 
-        # fg_job is used only if the hive engine is used
+        if self._stream:
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            self._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
+            )
+
+        # fg_job is used only if the python engine is used
         fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
-            # For Hive engine, the computation happens in the Hopsworks application
+            # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
@@ -900,7 +914,7 @@ class FeatureGroup(FeatureGroupBase):
                 storage only with `"offline"` or online only with `"online"`, defaults
                 to `None`.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `hive` engine, write_options can contain the
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
@@ -909,8 +923,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
@@ -929,7 +941,7 @@ class FeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
-            # if Hive, the statistics are computed by the application doing the insert
+            # if Python, the statistics are computed by the application doing the insert
             self.compute_statistics()
 
     def insert_stream(
@@ -939,6 +951,7 @@ class FeatureGroup(FeatureGroupBase):
         output_mode: Optional[str] = "append",
         await_termination: Optional[bool] = False,
         timeout: Optional[int] = None,
+        checkpoint_dir: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
@@ -974,9 +987,12 @@ class FeatureGroup(FeatureGroupBase):
                 query.stop() or by an exception. If the query has terminated with an
                 exception, then the exception will be thrown. If timeout is set, it
                 returns whether the query has terminated or not within the timeout
-                seconds. Defaults to `Fals`e.
+                seconds. Defaults to `False`.
             timeout: Only relevant in combination with `await_termination=True`.
                 Defaults to `None`.
+            checkpoint_dir: Checkpoint directory location. This will be used to as a reference to
+            from where to resume the streaming job. If `None` then hsfs will construct as
+            "insert_stream_" + online_topic_name. Defaults to `None`.
             write_options: Additional write options for Spark as key-value pairs.
                 Defaults to `{}`.
 
@@ -1009,6 +1025,7 @@ class FeatureGroup(FeatureGroupBase):
                 output_mode,
                 await_termination,
                 timeout,
+                checkpoint_dir,
                 write_options,
             )
 
@@ -1047,13 +1064,6 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`.
         """
-        if (
-            self._time_travel_format is None
-            or self._time_travel_format.upper() != "HUDI"
-        ):
-            raise FeatureStoreException(
-                "commit_delete_record can only be used on time travel enabled feature groups"
-            )
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
     def as_of(self, wallclock_time):
@@ -1074,8 +1084,8 @@ class FeatureGroup(FeatureGroupBase):
 
     def validate(
         self,
-        dataframe: TypeVar("pyspark.sql.DataFrame") = None,
-        log_activity=False,  # noqa: F821
+        dataframe: TypeVar("pyspark.sql.DataFrame") = None,  # noqa: F821
+        log_activity=False,
     ):
         """Run validation based on the attached expectations
 
@@ -1116,7 +1126,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Hive engine. The Hive engine is going to setup a Spark Job
+            # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
 
             fg_commit_id = None
@@ -1149,14 +1159,21 @@ class FeatureGroup(FeatureGroupBase):
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
+            if "type" in json_decamelized:
+                json_decamelized["stream"] = (
+                    json_decamelized["type"] == "streamFeatureGroupDTO"
+                )
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
+            if "type" in fg:
+                fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
         return self
@@ -1165,7 +1182,7 @@ class FeatureGroup(FeatureGroupBase):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "version": self._version,
@@ -1174,12 +1191,17 @@ class FeatureGroup(FeatureGroupBase):
             "timeTravelFormat": self._time_travel_format,
             "features": self._features,
             "featurestoreId": self._feature_store_id,
-            "type": "cachedFeaturegroupDTO",
+            "type": "cachedFeaturegroupDTO"
+            if not self._stream
+            else "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
             "validationType": self._validation_type,
             "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
         }
+        if self._stream:
+            fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
+        return fg_meta_dict
 
     def _get_table_name(self):
         return self.feature_store_name + "." + self.name + "_" + str(self.version)
@@ -1295,6 +1317,11 @@ class FeatureGroup(FeatureGroupBase):
         """The names of expectations attached to this feature group."""
         return self._expectations_names
 
+    @property
+    def stream(self):
+        """whether real time stream writing capabilities are supported or not"""
+        return self._stream
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -1334,6 +1361,10 @@ class FeatureGroup(FeatureGroupBase):
     @expectations_names.setter
     def expectations_names(self, new_expectations_names):
         self._expectations_names = new_expectations_names
+
+    @stream.setter
+    def stream(self, stream):
+        self._stream = stream
 
 
 class OnDemandFeatureGroup(FeatureGroupBase):

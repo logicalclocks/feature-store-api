@@ -63,3 +63,13 @@
 ### Methods
 
 {{snowflake_methods}}
+
+## Google Cloud Storage
+
+### Properties
+
+{{gcs_properties}}
+
+### Methods
+
+{{gcs_methods}}

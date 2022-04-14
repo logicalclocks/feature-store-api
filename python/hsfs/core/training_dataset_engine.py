@@ -38,6 +38,8 @@ class TrainingDatasetEngine:
     ENTITY_TYPE = "trainingdatasets"
 
     def __init__(self, feature_store_id):
+        self._feature_store_id = feature_store_id
+
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
         )
@@ -133,10 +135,22 @@ class TrainingDatasetEngine:
         )
 
         if online:
-            return fs_query["queryOnline"]
-        if "pitQuery" in fs_query:
-            return fs_query["pitQuery"]
-        return fs_query["query"]
+            return fs_query.query_online
+
+        # The offline queries could be referencing temporary tables
+        # like on-demand feature groups/hudi feature groups
+        # Here we register those tables before returning the query to the user
+        # In this way, if they execute the query, it will be valid
+        fs_query.register_on_demand()
+        fs_query.register_hudi_tables(
+            self._feature_store_id,
+            None,  # No need to provide the feature store name for read operations
+            {},
+        )
+        if fs_query.pit_query is not None:
+            return fs_query.pit_query
+
+        return fs_query.query
 
     def add_tag(self, training_dataset, name, value):
         """Attach a name/value tag to a training dataset."""

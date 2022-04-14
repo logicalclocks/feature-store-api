@@ -1,0 +1,8 @@
+<!DOCTYPE suppressions PUBLIC
+        "-//Puppy Crawl//DTD Suppressions 1.1//EN" "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+    <!-- this file maps a DTO from Hopsworks, we can't rename it -->
+    <suppress checks="MemberName" files="Credentials.java"/>
+    <suppress checks="ParameterName" files="Credentials.java"/>
+</suppressions>

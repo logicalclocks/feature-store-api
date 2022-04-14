@@ -364,6 +364,7 @@ class FeatureStore:
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
         event_time: Optional[str] = None,
+        stream: Optional[bool] = False,
     ):
         """Create a feature group metadata object.
 
@@ -416,6 +417,9 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+            stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
+                Stream enabled Feature Groups have unified single API for writing streaming features transparently
+                to both online and offline store.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -436,6 +440,7 @@ class FeatureStore:
             validation_type=validation_type,
             expectations=expectations,
             event_time=event_time,
+            stream=stream,
         )
 
     def create_on_demand_feature_group(
@@ -761,10 +766,6 @@ class FeatureStore:
              `List[TransformationFunction]`. List of transformation function instances.
         """
         return self._transformation_function_engine.get_transformation_fns()
-
-    def register_builtin_transformation_functions(self):
-        """Register hsfs built-in transformation functions."""
-        self._transformation_function_engine.register_builtin_transformation_fns()
 
     @property
     def id(self):

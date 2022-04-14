@@ -21,11 +21,10 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -92,13 +91,13 @@ public class FeatureGroupBaseEngine {
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
-    Dataset<Row> emptyDataframe = SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features);
     featureGroup.getFeatures().addAll(features);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
     if (featureGroup instanceof FeatureGroup) {
-      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup, emptyDataframe,
+      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
+          SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
           HudiOperationType.UPSERT, new HashMap<>(), null);
     }
   }
@@ -112,6 +111,8 @@ public class FeatureGroupBaseEngine {
   private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
     if (featureGroup instanceof FeatureGroup) {
       return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    } else if (featureGroup instanceof StreamFeatureGroup) {
+      return new StreamFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     } else if (featureGroup instanceof OnDemandFeatureGroup) {
       return new OnDemandFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     }

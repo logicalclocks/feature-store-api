@@ -48,10 +48,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             ):
                 feat.hudi_precombine_key = True
 
+        if feature_group.stream:
+            feature_group._options = write_options
+
         self._feature_group_api.save(feature_group)
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
-            # If the engine is Hive, the validation will be executed by
+            # If the engine is Python, the validation will be executed by
             # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
@@ -83,7 +86,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     ):
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
-            # If the engine is Hive, the validation will be executed by
+            # If the engine is Python, the validation will be executed by
             # the Hopsworks job ingesting the data
             validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
@@ -246,10 +249,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         timeout,
         write_options,
     ):
-        if not feature_group.online_enabled:
+
+        if not feature_group.online_enabled and not feature_group.stream:
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group. "
                 "It is currently only possible to stream to the online storage."
+            )
+
+        if not feature_group.stream:
+            warnings.warn(
+                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
             )
 
         if feature_group.validation_type != "NONE":
@@ -260,7 +269,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 util.ValidationWarning,
             )
 
-        return engine.get_instance().save_stream_dataframe(
+        streaming_query = engine.get_instance().save_stream_dataframe(
             feature_group,
             dataframe,
             query_name,
@@ -269,3 +278,5 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             timeout,
             self.get_kafka_config(write_options),
         )
+
+        return streaming_query

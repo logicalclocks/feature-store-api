@@ -21,7 +21,7 @@
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <spark.version>3.1.1.0</spark.version>
         <deequ.version>1.1.0.4-SNAPSHOT</deequ.version>
-        <hudi.version>0.7.0</hudi.version>
+        <hudi.version>0.10.0.1</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
@@ -217,7 +217,7 @@
         <!-- https://mvnrepository.com/artifact/org.apache.hudi/hudi-spark-bundle -->
         <dependency>
             <groupId>io.hops.hudi</groupId>
-            <artifactId>hudi-spark-bundle</artifactId>
+            <artifactId>hudi-spark3-bundle_${scala-short.version}</artifactId>
             <version>${hudi.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -231,6 +231,24 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>io.hops.hudi</groupId>
+            <artifactId>hudi-utilities-bundle_${scala-short.version}</artifactId>
+            <version>${hudi.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
