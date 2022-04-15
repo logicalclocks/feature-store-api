@@ -244,6 +244,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         output_mode,
         await_termination,
         timeout,
+        checkpoint_dir,
         write_options,
     ):
         if not feature_group.online_enabled:
@@ -267,5 +268,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             output_mode,
             await_termination,
             timeout,
+            checkpoint_dir,
             self.get_kafka_config(write_options),
         )
