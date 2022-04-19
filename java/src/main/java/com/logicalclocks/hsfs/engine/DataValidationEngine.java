@@ -147,7 +147,6 @@ public class DataValidationEngine {
           String deequRule = null;
           boolean constraintTypeComplex = false;
 
-          LOGGER.info("constraintResult: " + constraintResult.constraint().toString());
           if (constraintType.equals("Compliance")) { //IS_LESS_THAN etc.
             // ComplianceConstraint(Compliance(year is less than salary,year < salary,None))
             constraintTypeComplex = true;
@@ -192,7 +191,6 @@ public class DataValidationEngine {
             }
           }
 
-          LOGGER.info("deequRule: " + deequRule);
           RuleName ruleName = getRuleNameFromDeequ(deequRule);
           // Find rule from list of rules that Deequ used for validation
           if (constraintTypeComplex) {
