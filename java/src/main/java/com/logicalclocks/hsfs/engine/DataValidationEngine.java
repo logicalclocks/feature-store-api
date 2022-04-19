@@ -150,6 +150,10 @@ public class DataValidationEngine {
               // ComplianceConstraint(Compliance(age is positive,COALESCE(car, 1.0) > 0,None))
               deequRule = "ispositive";
               deequFeatures.add(constraintInfo[2]);
+            } else if (constraintResult.constraint().toString().contains("non-negative")) {
+              //  ComplianceConstraint(Compliance(age is non-negative,COALESCE(amount, 0.0) >= 0,None))
+              deequRule = "isnonnegative";
+              deequFeatures.add(constraintInfo[2]);
             } else {
               deequFeatures.addAll(Arrays.asList(
                       Arrays.stream(constraintInfo, constraintInfo.length - 3, constraintInfo.length - 2 + 1)
