@@ -834,24 +834,8 @@ class Engine:
         return path
 
     @staticmethod
-    def profile_unique_values(dataframe, content_str):
-        content_dict = json.loads(content_str)
-        col_index = 0
-        for column in content_dict["columns"]:
-            if column["dataType"] == "String":
-                column.update(
-                    {
-                        "unique_values": [
-                            value[column["column"]]
-                            for value in dataframe.select(column["column"])
-                            .distinct()
-                            .collect()
-                        ]
-                    }
-                )
-                content_dict["columns"][col_index] = column
-            col_index += 1
-        return json.dumps(content_dict)
+    def get_unique_values(feature_dataframe, feature_name):
+        return feature_dataframe.select(feature_name).distinct().collect()
 
 
 class SchemaError(Exception):

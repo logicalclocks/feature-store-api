@@ -574,3 +574,7 @@ class Engine:
             )
 
         return dataset
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        return feature_dataframe[feature_name].unique()
