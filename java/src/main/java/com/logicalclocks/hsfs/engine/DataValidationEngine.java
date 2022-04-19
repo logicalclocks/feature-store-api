@@ -159,7 +159,7 @@ public class DataValidationEngine {
               deequRule = "ispositive";
               deequFeatures.add(constraintInfo[2]);
             } else if (constraintResult.constraint().toString().contains("non-negative")) {
-              //  ComplianceConstraint(Compliance(amount is non-negative,COALESCE(amount, 0.0) >= 0,None))
+              //  ComplianceConstraint(Compliance(age is non-negative,COALESCE(amount, 0.0) >= 0,None))
               deequRule = "isnonnegative";
               deequFeatures.add(constraintInfo[2]);
             } else {
