@@ -546,7 +546,6 @@ class Engine:
 
     @staticmethod
     def profile_unique_values(dataframe, content_str):
-        # parsing JSON string:
         content_dict = json.loads(content_str)
         col_index = 0
         for column in content_dict["columns"]:
@@ -563,7 +562,6 @@ class Engine:
                 )
                 content_dict["columns"][col_index] = column
             col_index += 1
-        # the result is a JSON string:
         return json.dumps(content_dict)
 
     def validate(self, dataframe, expectations, log_activity=True):
