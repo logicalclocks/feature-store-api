@@ -466,7 +466,7 @@ public class FeatureGroupBase {
         LOGGER.debug("validate :: expectation = " + expectation);
       }
     }
-    return DataValidationEngine.getInstance().validate(data, this, expectations, logActivity);
+    return DataValidationEngine.getInstance().validate(this, data, expectations, logActivity);
   }
 
   @JsonIgnore

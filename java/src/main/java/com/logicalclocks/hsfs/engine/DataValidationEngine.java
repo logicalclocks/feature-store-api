@@ -70,11 +70,11 @@ public class DataValidationEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataValidationEngine.class);
 
-  public <S> FeatureGroupValidation validate(S data, FeatureGroupBase featureGroupBase,
-                                         List<Expectation> expectations,
+  public <S> FeatureGroupValidation validate(FeatureGroupBase featureGroupBase, S data,
+                                             List<Expectation> expectations,
                                          Boolean logActivity)
       throws FeatureStoreException, IOException {
-    List<ExpectationResult> expectationResults = validate(data, expectations);
+    List<ExpectationResult> expectationResults = validate((Dataset<Row>) data, expectations);
     return featureGroupValidationsApi.put(featureGroupBase,
         FeatureGroupValidation.builder()
             .validationTime(Instant.now().toEpochMilli())
@@ -82,7 +82,7 @@ public class DataValidationEngine {
         logActivity);
   }
 
-  private <S> List<ExpectationResult> validate(S data, List<Expectation> expectations) {
+  public List<ExpectationResult> validate(Dataset<Row> data, List<Expectation> expectations) {
     // Loop through all feature group expectations, then loop all features and rules of the expectation and
     // create constraints for Deequ.
     List<ExpectationResult> expectationResults = new ArrayList<>();
@@ -131,7 +131,7 @@ public class DataValidationEngine {
       }
 
       // Run Deequ verification suite and return results
-      Map<Check, CheckResult> deequResults = DeequEngine.runVerification((Dataset<Row>) data,
+      Map<Check, CheckResult> deequResults = DeequEngine.runVerification(data,
           JavaConverters.asScalaIteratorConverter(constraintGroups.iterator()).asScala().toSeq());
       // Parse Deequ results and convert to Feature Group validation results. Unfortunately we don't have a way of
       // getting the features and the constraint type directly from the ConstraintResult object so we need to parse
@@ -146,6 +146,8 @@ public class DataValidationEngine {
           List<String> deequFeatures = new ArrayList<>();
           String deequRule = null;
           boolean constraintTypeComplex = false;
+
+          LOGGER.info("constraintResult: " + constraintResult.constraint().toString());
           if (constraintType.equals("Compliance")) { //IS_LESS_THAN etc.
             // ComplianceConstraint(Compliance(year is less than salary,year < salary,None))
             constraintTypeComplex = true;
@@ -156,6 +158,10 @@ public class DataValidationEngine {
             } else if (constraintResult.constraint().toString().contains("is positive")) {
               // ComplianceConstraint(Compliance(age is positive,COALESCE(car, 1.0) > 0,None))
               deequRule = "ispositive";
+              deequFeatures.add(constraintInfo[2]);
+            } else if (constraintResult.constraint().toString().contains("non-negative")) {
+              //  ComplianceConstraint(Compliance(amount is non-negative,COALESCE(amount, 0.0) >= 0,None))
+              deequRule = "isnonnegative";
               deequFeatures.add(constraintInfo[2]);
             } else {
               deequFeatures.addAll(Arrays.asList(
@@ -186,6 +192,7 @@ public class DataValidationEngine {
             }
           }
 
+          LOGGER.info("deequRule: " + deequRule);
           RuleName ruleName = getRuleNameFromDeequ(deequRule);
           // Find rule from list of rules that Deequ used for validation
           if (constraintTypeComplex) {
