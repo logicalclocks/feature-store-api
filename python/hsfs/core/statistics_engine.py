@@ -92,6 +92,10 @@ class StatisticsEngine:
         content_str = engine.get_instance().profile(
             feature_dataframe, columns, False, True, False
         )
+        # add unique value profile to String type columns
+        content_str = engine.get_instance().profile_unique_values(
+            feature_dataframe, content_str
+        )
         return content_str
 
     def register_split_statistics(self, td_metadata_instance):
