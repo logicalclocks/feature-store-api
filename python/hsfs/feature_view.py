@@ -234,6 +234,11 @@ class FeatureView:
         !!! info
         If a materialised training data has deleted. Use `recreate_training_dataset()` to
         recreate the training data.
+
+        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
         """
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -294,6 +299,10 @@ class FeatureView:
 
 
                 # Arguments
+                    start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                        following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                    end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                        following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
                     storage_connector: Storage connector defining the sink location for the
                         training dataset, defaults to `None`, and materializes training dataset
                         on HopsFS.

@@ -74,8 +74,9 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._start_time = event_start_time
-        self._end_time = event_end_time
+        self._start_time = self._convert_event_time_to_timestamp(
+            event_start_time)
+        self._end_time = self._convert_event_time_to_timestamp(event_end_time)
         self._coalesce = coalesce
         self._seed = seed
         self._location = location
@@ -131,6 +132,16 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
+
+    def _convert_event_time_to_timestamp(self, event_time):
+        if not event_time:
+            return None
+        if isinstance(event_time, str):
+            return util.get_timestamp_from_date_string(event_time)
+        elif isinstance(event_time, int):
+            return event_time
+        else:
+            raise ValueError("Given event time should be in `str` or `int` type")
 
     def save(
         self,
