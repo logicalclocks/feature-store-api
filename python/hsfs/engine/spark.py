@@ -553,7 +553,7 @@ class Engine:
                 column.update(
                     {
                         "unique_values": [
-                            value[col["column"]]
+                            value[column["column"]]
                             for value in dataframe.select(column["column"])
                             .distinct()
                             .collect()
