@@ -45,7 +45,6 @@ from hsfs.client import exceptions
 
 
 class Engine:
-
     APP_OP_INSERT_FG = "insert_fg"
 
     def __init__(self):
@@ -365,15 +364,16 @@ class Engine:
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
             split_df = self._split_df(df, training_dataset_obj.splits)
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
         else:
             split_df = df
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
-        # TODO: apply transformation
+
+        split_df = self._apply_transformation_function(training_dataset_obj, split_df)
         return split_df
 
     def _split_df(self, df, splits):
@@ -562,3 +562,15 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
+
+    @staticmethod
+    def _apply_transformation_function(training_dataset_instance, dataset):
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset_instance.transformation_functions.items():
+            dataset[feature_name] = dataset[feature_name].map(
+                transformation_fn.transformation_fn
+            )
+
+        return dataset

@@ -245,6 +245,6 @@ class TransformationFunctionEngine:
                     )
                 )
             # Populate builtin transformations (if any) with respective arguments
-            training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+            return training_dataset._transformation_function_engine.populate_builtin_attached_fns(
                 training_dataset.transformation_functions, stats.content
             )
