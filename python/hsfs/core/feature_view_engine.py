@@ -15,6 +15,7 @@
 #
 
 import warnings
+import time
 from multiprocessing import Process
 from hsfs import engine, training_dataset_feature, training_dataset
 from hsfs.client import exceptions
@@ -92,7 +93,7 @@ class FeatureViewEngine:
             train_split=None
         )
         proc = Process(target=self.create_training_dataset,
-                args=(feature_view_obj, td, {}))
+                args=(feature_view_obj, td, {"wait_for_job": True}))
         proc.start()
         return updated_fv
 
@@ -208,9 +209,9 @@ class FeatureViewEngine:
             )
 
         if should_compute_statistics:
-            proc = Process(target=self.compute_training_dataset_statistics,
-                           args=(feature_view_obj, training_dataset_obj, df))
-            proc.start()
+            self.compute_training_dataset_statistics(
+                feature_view_obj, training_dataset_obj, df
+            )
 
         # read from hopsfs after job finished
         if isinstance(df, job.Job):
@@ -267,9 +268,8 @@ class FeatureViewEngine:
         else:
             td_df = None
         # currently we do not save the training dataset statistics config for training datasets
-        proc = Process(target=self.compute_training_dataset_statistics,
-                args=(feature_view_obj, training_dataset_obj, td_df))
-        proc.start()
+        self.compute_training_dataset_statistics(
+            feature_view_obj, training_dataset_obj, td_df)
         return td_job
 
     def compute_training_dataset_statistics(self, feature_view_obj,
