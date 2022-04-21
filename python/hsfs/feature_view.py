@@ -196,9 +196,9 @@ class FeatureView:
             self.init_serving()
         return self._vector_server.get_preview_vectors(self, external, n)
 
-    def get_batch_data(self, start_time, end_time):
-        # return df
-        pass
+    def get_batch_data(self, start_time, end_time, read_options=None):
+        self._feature_view_engine.get_batch_data(
+            self, start_time, end_time, read_options)
 
     def add_tag(self, name: str, value):
         pass

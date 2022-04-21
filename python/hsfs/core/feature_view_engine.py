@@ -335,3 +335,10 @@ class FeatureViewEngine:
             self._feature_view_api.delete_training_dataset_only(
                 feature_view_obj.name, feature_view_obj.version
             )
+
+    def get_batch_data(self, feature_view_obj, start_time,
+                               end_time, read_options=None):
+        return self.get_batch_query(
+            feature_view_obj, start_time, end_time
+        ).read(read_options=read_options)
+
