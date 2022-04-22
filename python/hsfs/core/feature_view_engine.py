@@ -168,7 +168,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj
         )
-        return updated_instance, td_job
+        return updated_instance.version, td_job
 
     def get_training_data(self, feature_view_obj,
                                 training_dataset_obj, read_options, split=None):
