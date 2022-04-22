@@ -15,8 +15,9 @@
 #
 
 import warnings
-from multiprocessing import Process
-from hsfs import engine, training_dataset_feature, training_dataset
+from hsfs import (
+    engine, training_dataset_feature
+)
 from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
@@ -27,7 +28,6 @@ from hsfs.core import (
     statistics_engine,
     training_dataset_engine,
     query_constructor_api,
-    job
 )
 
 
@@ -74,26 +74,6 @@ class FeatureViewEngine:
             feature_view_obj
         )
         updated_fv = self._feature_view_api.post(feature_view_obj)
-
-        td = training_dataset.TrainingDataset(
-            name=feature_view_obj.name,
-            version=1,
-            event_start_time=None,
-            event_end_time=None,
-            description="Default training data",
-            data_format="tsv",
-            storage_connector=None,
-            location=None,
-            featurestore_id=feature_view_obj._featurestore_id,
-            splits={},
-            seed=None,
-            statistics_config={},
-            coalesce=False,
-            train_split=None
-        )
-        proc = Process(target=self.create_training_dataset,
-                args=(feature_view_obj, td, {"wait_for_job": True}))
-        proc.start()
         return updated_fv
 
     def get(self, name, version=None):
@@ -174,6 +154,12 @@ class FeatureViewEngine:
                                 training_dataset_obj, read_options, split=None):
         td_updated = None
         should_compute_statistics = True
+        if ((engine.get_type() == "python" or engine.get_type() == "hive") and
+            not feature_view_obj.query.from_cache_feature_group_only()):
+            raise NotImplementedError(
+                "Python kernel can only read from cached feature group."
+                "Please use `feature_view.create_training_dataset` instead."
+            )
         # check if provided td version has already existed.
         if training_dataset_obj.version:
             try:

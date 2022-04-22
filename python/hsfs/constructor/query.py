@@ -224,6 +224,13 @@ class Query:
             self._filter = self._filter & f
         return self
 
+    def from_cache_feature_group_only(self):
+        for _query in [join.query for join in self._joins] + [self]:
+            if not isinstance(
+                _query._left_feature_group, feature_group.FeatureGroup):
+                return False
+        return True
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
