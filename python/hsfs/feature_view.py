@@ -212,6 +212,48 @@ class FeatureView:
     def delete_tag(self, name: str):
         pass
 
+    def get_training_datasets(
+        self,
+        splits: Optional[Dict[str, float]],
+        start_time: Optional = None,
+        end_time: Optional = None,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        read_options: Optional[Dict[Any, Any]] = {}
+    ):
+        """
+        # Returns
+            Training datasets: `dict(str, Dataframe)`
+                Dictionary of dataframes where split is the key
+
+        """
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=version,
+            event_start_time=start_time,
+            event_end_time=end_time,
+            description=description,
+            storage_connector=None,
+            featurestore_id=self._featurestore_id,
+            data_format="tsv",
+            location=None,
+            splits=splits,
+            statistics_config=statistics_config,
+        )
+        # td_job is used only if the python engine is used
+        td_version, df = self._feature_view_engine.get_training_data(
+            self, td, read_options, splits=splits
+        )
+        if version is None:
+            warnings.warn(
+                "No version provided for creating training dataset, incremented version to `{}`.".format(
+                    td.version
+                ),
+                util.VersionWarning,
+            )
+        return td_version, df
+
     def get_training_dataset(
         self,
         start_time: Optional = None,
@@ -219,14 +261,12 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        split: str = None,
         read_options: Optional[Dict[Any, Any]] = {}
     ):
         """ Get training data from storage or feature groups.
 
         If version is not provided or provided version has not already existed, it creates
         a new version of training data according to given arguments and returns a dataframe.
-        Note that, creating training data with split is only possible using `create_training_dataset`.
 
         If version is provided and has already existed, it reads training data from storage
         or feature groups and returns a dataframe. If split is provided, it read the specific split.
@@ -240,31 +280,16 @@ class FeatureView:
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
         """
-        td = training_dataset.TrainingDataset(
-            name=self.name,
+        td_version, df = self.get_training_datasets(
+            {"train": 1.0},
+            start_time=start_time,
+            end_time=end_time,
             version=version,
-            event_start_time=start_time,
-            event_end_time=end_time,
             description=description,
-            storage_connector=None,
-            featurestore_id=self._featurestore_id,
-            data_format="tsv",
-            location=None,
-            splits={},
             statistics_config=statistics_config,
+            read_options=read_options,
         )
-        # td_job is used only if the python engine is used
-        td, df = self._feature_view_engine.get_training_data(
-            self, td, read_options, split=split
-        )
-        if version is None:
-            warnings.warn(
-                "No version provided for creating training dataset, incremented version to `{}`.".format(
-                    td.version
-                ),
-                util.VersionWarning,
-            )
-        return df
+        return td_version, df["train"]
 
     def create_training_dataset(
         self,

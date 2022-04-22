@@ -15,6 +15,7 @@
 #
 
 import warnings
+import random
 from hsfs import (
     engine, training_dataset_feature
 )
@@ -151,9 +152,16 @@ class FeatureViewEngine:
         return updated_instance.version, td_job
 
     def get_training_data(self, feature_view_obj,
-                                training_dataset_obj, read_options, split=None):
+                                training_dataset_obj, read_options, splits=None):
+        if (len(training_dataset_obj.splits) > 0 and
+            training_dataset_obj.train_split is None):
+            training_dataset_obj.train_split = "train"
+            warnings.warn(
+                "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
+                "used for training) was provided. Setting this property to `train`. The statistics of this "
+                "split will be used for transformation functions."
+            )
         td_updated = None
-        should_compute_statistics = True
         if ((engine.get_type() == "python" or engine.get_type() == "hive") and
             not feature_view_obj.query.from_cache_feature_group_only()):
             raise NotImplementedError(
@@ -165,7 +173,6 @@ class FeatureViewEngine:
             try:
                 td_updated = self._get_training_data_metadata(
                     feature_view_obj, training_dataset_obj.version)
-                should_compute_statistics = False
             except exceptions.RestAPIError as e:
                 # error code: 270012, error msg: Training dataset wasn't found.
                 if e.response.json().get("errorCode", "") != 270012:
@@ -177,8 +184,8 @@ class FeatureViewEngine:
         )
 
         try:
-            df = self._read_from_storage_connector(
-                training_dataset_obj, split, read_options
+            split_df = self._read_from_storage_connector(
+                training_dataset_obj, splits, read_options
             )
         except:
             # todo feature view: refine exception
@@ -192,19 +199,55 @@ class FeatureViewEngine:
                 training_dataset_obj, feature_view_obj,
                 query, read_options
             )
+            split_df = self._split_df(df, splits)
 
-        if should_compute_statistics:
             self.compute_training_dataset_statistics(
-                feature_view_obj, training_dataset_obj, df
+                feature_view_obj, training_dataset_obj, split_df
             )
 
-        return td_updated, df
+        return td_updated.version, split_df
 
-    def _read_from_storage_connector(self, training_data_obj, split, read_options):
-        if split is not None:
-            path = training_data_obj.location + "/" + str(split)
+    def _split_df(self, df, splits):
+        split_column = "_SPLIT_INDEX_fjslkfjslw"
+        result_df = {}
+        items = splits.items()
+        if engine.get_type() == "python" or engine.get_type() == "hive":
+            df_size = len(df)
+            groups = []
+            for i, item in enumerate(items):
+                groups += [i]*int(df_size*item[1])
+            groups += [len(items)-1] * (df_size - len(groups))
+            random.shuffle(groups)
+            df[split_column] = groups
+            for i, item in enumerate(items):
+                result_df[item[0]] = df[df[split_column] == i].drop(
+                    split_column, axis=1)
+
+        else:
+            split_ratio = [item[1] for item in items]
+            split_df = df.randomSplit(split_ratio)
+            for item, _df in zip(items, split_df):
+                result_df[item[0]] = _df
+        return result_df
+
+    def _read_from_storage_connector(
+        self, training_data_obj, splits, read_options):
+        if splits is not None:
+            result = {}
+            for split in splits:
+                path = training_data_obj.location + "/" + str(split)
+                result[split] = self._read_dir_from_storage_connector(
+                    training_data_obj, path, read_options
+                )
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
+            return self._read_dir_from_storage_connector(
+                training_data_obj, path, read_options
+            )
+
+
+    def _read_dir_from_storage_connector(
+        self, training_data_obj, path, read_options):
         return training_data_obj.storage_connector.read(
             # always read from materialized dataset, not query object
             query=None,
@@ -254,7 +297,6 @@ class FeatureViewEngine:
     def compute_training_dataset_statistics(self, feature_view_obj,
                                             training_dataset_obj,
                                             td_df):
-        # In Python engine, a job computes a statistics along with training data
         if training_dataset_obj.statistics_config.enabled:
             if training_dataset_obj.splits:
                 if not isinstance(td_df, dict):
