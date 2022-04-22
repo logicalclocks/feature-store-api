@@ -15,7 +15,6 @@
 #
 
 import warnings
-import time
 from multiprocessing import Process
 from hsfs import engine, training_dataset_feature, training_dataset
 from hsfs.client import exceptions
@@ -276,7 +275,7 @@ class FeatureViewEngine:
                                             training_dataset_obj,
                                             td_df):
         # In Python engine, a job computes a statistics along with training data
-        if training_dataset_obj.statistics_config.enabled and engine.get_type() == "spark":
+        if training_dataset_obj.statistics_config.enabled:
             if training_dataset_obj.splits:
                 if not isinstance(td_df, dict):
                     raise ValueError(

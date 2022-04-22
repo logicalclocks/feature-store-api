@@ -32,8 +32,7 @@ class StatisticsEngine:
         feature_group_commit_id=None, feature_view_obj=None
     ):
         """Compute statistics for a dataframe and send the result json to Hopsworks."""
-        if engine.get_type() == "spark":
-
+        if engine.get_type() == "spark" or feature_view_obj is not None:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Python engine
             # and calling compute_statistics
