@@ -120,8 +120,16 @@ public class HudiEngine {
   protected static final String FUNCTION_TYPE = "functionType";
   protected static final String STREAMING_QUERY = "streamingQuery";
 
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
+  private static final Map<String, String> HUDI_DEFAULT_PARALLELISM = new HashMap<String, String>() {
+    {
+      put("hoodie.bulkinsert.shuffle.parallelism", "5");
+      put("hoodie.insert.shuffle.parallelism", "5");
+      put("hoodie.upsert.shuffle.parallelism", "5");
+    }
+  };
 
+
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
@@ -133,6 +141,12 @@ public class HudiEngine {
       throws IOException, FeatureStoreException, ParseException {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
+
+    for (Map.Entry<String, String> entry : HUDI_DEFAULT_PARALLELISM.entrySet()) {
+      if (writeOptions != null && !writeOptions.containsKey((entry.getKey()))) {
+        hudiArgs.put(entry.getKey(), entry.getValue());
+      }
+    }
 
     dataset.write()
         .format(HUDI_SPARK_FORMAT)

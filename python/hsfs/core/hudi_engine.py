@@ -56,6 +56,11 @@ class HudiEngine:
     HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime"
     PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
     PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload"
+    HUDI_DEFAULT_PARALLELISM = {
+        "hoodie.bulkinsert.shuffle.parallelism": "5",
+        "hoodie.insert.shuffle.parallelism": "5",
+        "hoodie.upsert.shuffle.parallelism": "5",
+    }
 
     def __init__(
         self,
@@ -112,6 +117,12 @@ class HudiEngine:
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
     ):
+
+        for parallelism_option in HudiEngine.HUDI_DEFAULT_PARALLELISM:
+            if parallelism_option not in write_options:
+                write_options[parallelism_option] = HudiEngine.HUDI_DEFAULT_PARALLELISM[
+                    parallelism_option
+                ]
         fg_commit = self._write_hudi_dataset(
             dataset, save_mode, operation, write_options
         )
