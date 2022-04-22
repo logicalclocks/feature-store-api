@@ -195,7 +195,7 @@ class Engine:
         # No op to avoid query failure
         pass
 
-    def profile(self, metadata_instance):
+    def profile_by_spark(self, metadata_instance):
         stat_api = statistics_api.StatisticsApi(
             metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
         )
@@ -207,6 +207,47 @@ class Engine:
         )
 
         self._wait_for_job(job)
+
+    def profile(
+        self,
+        df,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
+    ):
+        stats = df[relevant_columns].describe()
+        final_stats = []
+        for col in relevant_columns:
+            if col not in stats.columns:
+                continue
+            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stat["dataType"] = (
+                "Fractional"
+                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
+                else "Integral"
+            )
+            stat["isDataTypeInferred"] = "false"
+            stat["column"] = col
+            stat["completeness"] = 1
+            final_stats.append(stat)
+        return final_stats
+
+    def _convert_pandas_statistics(self, stat):
+        # For now transformation only need 25th, 50th, 75th percentiles
+        # TODO: calculate properly all percentiles
+        percentiles = [0] * 100
+        percentiles[24] = stat["25%"]
+        percentiles[49] = stat["50%"]
+        percentiles[74] = stat["75%"]
+        return {
+            "mean": stat["mean"],
+            "sum": stat["mean"]*stat["count"],
+            "maximum": stat["max"],
+            "stdDev": stat["std"],
+            "minimum": stat["min"],
+            "approxPercentiles": percentiles
+        }
 
     def validate(self, dataframe, expectations, log_activity=True):
         raise NotImplementedError(

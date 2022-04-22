@@ -62,7 +62,7 @@ class StatisticsEngine:
             self._save_statistics(stats, metadata_instance, feature_view_obj)
         else:
             # Python engine
-            engine.get_instance().profile(metadata_instance)
+            engine.get_instance().profile_by_spark(metadata_instance)
 
     @staticmethod
     def profile_statistics(metadata_instance, feature_dataframe):
@@ -72,14 +72,13 @@ class StatisticsEngine:
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group."
             )
-        content_str = engine.get_instance().profile(
+        return engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,
             metadata_instance.statistics_config.correlations,
             metadata_instance.statistics_config.histograms,
             metadata_instance.statistics_config.exact_uniqueness,
         )
-        return content_str
 
     @staticmethod
     def profile_transformation_fn_statistics(feature_dataframe, columns):
@@ -89,10 +88,9 @@ class StatisticsEngine:
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group."
             )
-        content_str = engine.get_instance().profile(
+        return engine.get_instance().profile(
             feature_dataframe, columns, False, True, False
         )
-        return content_str
 
     def register_split_statistics(self, td_metadata_instance,
                                   feature_view_obj=None,
