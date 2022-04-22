@@ -20,6 +20,7 @@ import boto3
 import time
 import re
 import warnings
+import json
 
 from io import BytesIO
 from pyhive import hive
@@ -216,11 +217,12 @@ class Engine:
         histograms,
         exact_uniqueness=True,
     ):
-        stats = df[relevant_columns].describe()
+        if not relevant_columns:
+            stats = df.describe()
+        else:
+            stats = df[relevant_columns].describe()
         final_stats = []
-        for col in relevant_columns:
-            if col not in stats.columns:
-                continue
+        for col in stats.columns:
             stat = self._convert_pandas_statistics(stats[col].to_dict())
             stat["dataType"] = (
                 "Fractional"
@@ -231,7 +233,7 @@ class Engine:
             stat["column"] = col
             stat["completeness"] = 1
             final_stats.append(stat)
-        return final_stats
+        return json.dumps({"columns": final_stats})
 
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
@@ -354,15 +356,15 @@ class Engine:
 
     def get_training_data(self, training_dataset, feature_view_obj,
                           query_obj, read_options):
-        # Since statistics can only be calculated in spark kernel, it first launch a job to save a td
-        # then read it back as df.
-        return self.write_training_dataset(
-            training_dataset, query_obj,
-            read_options, None, feature_view_obj=feature_view_obj)
+        df = query_obj.read(
+            read_options=read_options
+        )
+        # TODO: apply transformation
+        return df
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
-        feature_view_obj=None
+        feature_view_obj=None, to_df=False
     ):
         if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(

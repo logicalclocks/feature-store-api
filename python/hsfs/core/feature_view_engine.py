@@ -212,12 +212,6 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_obj, df
             )
 
-        # read from hopsfs after job finished
-        if isinstance(df, job.Job):
-            df = self._read_from_storage_connector(
-                training_dataset_obj, split, read_options
-            )
-
         return td_updated, df
 
     def _read_from_storage_connector(self, training_data_obj, split, read_options):
