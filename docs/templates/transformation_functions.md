@@ -2,7 +2,8 @@
 
 HSFS provides functionality to attach transformation functions to [training datasets](training_dataset.md).
 
-To be able to attach a transformation function to a training dataset it has to be either part of the library
+User defined, custom transformation functions need to be registered in the Feature Store to make them accessible for
+training dataset creation. To register them in the Feature Store they either have to be part of the library
 [installed](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries) in Hopsworks
 or attached when starting a [Jupyter notebook](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter)
 or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html).
@@ -11,39 +12,29 @@ or [Hopsworks job](https://hopsworks.readthedocs.io/en/stable/user_guide/hopswor
     Don't decorate transformation functions with Pyspark `@udf` or `@pandas_udf`, as well as don't use any Pyspark dependencies.
     HSFS will decorate transformation function only if it is used inside Pyspark application.
 
-HSFS also comes with built-in transformation functions such as `min_max_scaler`, `standard_scaler`, `robust_scaler`
-and `label_encoder`.
+Hopsworks also ships Built-in transformation functions such as `min_max_scaler`, `standard_scaler`, `robust_scaler`
+and `label_encoder`. They can be registered by calling`register_builtin_transformation_functions` method on the feature
+store handle.
 
 ## Examples
-
-Transformation functions need to be registered in the Feature Store to make them accessible for training dataset creation.
-Assume you have a Python library called `hsfs_transformers` containing your transformation function `plus_one`.
+Let's assume that we have already installed Python library  [transformation_fn_template](https://github.com/logicalclocks/transformation_fn_template)
+containing transformation function `plus_one`.
 
 === "Python"
 
     !!! example "Register transformation function  `plus_one` in the Hopsworks feature store."
         ```python
-        from hsfs_transformers import transformers
+        from custom_functions import transformations
         plus_one_meta = fs.create_transformation_function(
-                    transformation_function=transformers.plus_one,
+                    transformation_function=transformations.plus_one,
                     output_type=int,
                     version=1)
         plus_one_meta.save()
         ```
 
-Built-in transformation functions can be registered by calling `register_builtin_transformation_functions` method on the
-feature store handle.
-
-=== "Python"
-
-    !!! example "Register built-in transformation functions in the Hopsworks feature store."
-        ```python
-        fs.register_builtin_transformation_functions()
-        ```
-
 To retrieve all transformation functions from the feature store use `get_transformation_functions` which will return list of `TransformationFunction` objects.
 A specific transformation function can be retrieved by `get_transformation_function` method where the user can provide a name and a version of the transformation function.
-If only the name is provided then it will default to version 1.
+If only function name is provided then it will default to version 1.
 
 === "Python"
 
@@ -83,6 +74,8 @@ methods are called on training dataset object.
 Built-in transformation functions are attached in the same way. The only difference is that it will compute the necessary statistics
 for the specific function in the background. For example min and max values for `min_max_scaler`; mean and standard deviation
 for `standard_scaler` etc.
+
+=== "Python"
 
     !!! example "Attaching built-in transformation functions to the training dataset"
         ```python
