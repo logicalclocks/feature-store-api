@@ -967,20 +967,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../stream_feature_group.md" class="md-nav__link">
-        Stream Feature Group
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../storage_connector/" class="md-nav__link">
         Storage Connector
       </a>
@@ -1552,7 +1538,8 @@
 
 <h1 id="transformation-functions">Transformation Functions<a class="headerlink" href="#transformation-functions" title="Permanent link">#</a></h1>
 <p>HSFS provides functionality to attach transformation functions to <a href="../training_dataset/">training datasets</a>.</p>
-<p>To be able to attach a transformation function to a training dataset it has to be either part of the library
+<p>User defined, custom transformation functions need to be registered in the Feature Store to make them accessible for
+training dataset creation. To register them in the Feature Store they either have to be part of the library
 <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/python.html?highlight=install#installing-libraries">installed</a> in Hopsworks
 or attached when starting a <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jupyter.html?highlight=jupyter">Jupyter notebook</a>
 or <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html">Hopsworks job</a>.</p>
@@ -1561,19 +1548,20 @@ or <a href="https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs
 <p>Don't decorate transformation functions with Pyspark <code>@udf</code> or <code>@pandas_udf</code>, as well as don't use any Pyspark dependencies.
 HSFS will decorate transformation function only if it is used inside Pyspark application.</p>
 </div>
-<p>HSFS also comes with built-in transformation functions such as <code>min_max_scaler</code>, <code>standard_scaler</code>, <code>robust_scaler</code>
-and <code>label_encoder</code>.</p>
+<p>Hopsworks also ships Built-in transformation functions such as <code>min_max_scaler</code>, <code>standard_scaler</code>, <code>robust_scaler</code>
+and <code>label_encoder</code>. They can be registered by calling<code>register_builtin_transformation_functions</code> method on the feature
+store handle.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h2>
-<p>Transformation functions need to be registered in the Feature Store to make them accessible for training dataset creation.
-Assume you have a Python library called <code>hsfs_transformers</code> containing your transformation function <code>plus_one</code>.</p>
+<p>Let's assume that we have already installed Python library  <a href="https://github.com/logicalclocks/transformation_fn_template">transformation_fn_template</a>
+containing transformation function <code>plus_one</code>.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="admonition example">
 <p class="admonition-title">Register transformation function  <code>plus_one</code> in the Hopsworks feature store.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">hsfs_transformers</span> <span class="kn">import</span> <span class="n">transformers</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">custom_functions</span> <span class="kn">import</span> <span class="n">transformations</span>
 <span class="n">plus_one_meta</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span>
-            <span class="n">transformation_function</span><span class="o">=</span><span class="n">transformers</span><span class="o">.</span><span class="n">plus_one</span><span class="p">,</span>
+            <span class="n">transformation_function</span><span class="o">=</span><span class="n">transformations</span><span class="o">.</span><span class="n">plus_one</span><span class="p">,</span>
             <span class="n">output_type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
             <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">plus_one_meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -1582,23 +1570,10 @@ Assume you have a Python library called <code>hsfs_transformers</code> containin
 </div>
 </div>
 </div>
-<p>Built-in transformation functions can be registered by calling <code>register_builtin_transformation_functions</code> method on the
-feature store handle.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Python</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="admonition example">
-<p class="admonition-title">Register built-in transformation functions in the Hopsworks feature store.</p>
-<div class="highlight"><pre><span></span><code><span class="n">fs</span><span class="o">.</span><span class="n">register_builtin_transformation_functions</span><span class="p">()</span>
-</code></pre></div>
-</div>
-</div>
-</div>
-</div>
 <p>To retrieve all transformation functions from the feature store use <code>get_transformation_functions</code> which will return list of <code>TransformationFunction</code> objects.
 A specific transformation function can be retrieved by <code>get_transformation_function</code> method where the user can provide a name and a version of the transformation function.
-If only the name is provided then it will default to version 1.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Python</label></div>
+If only function name is provided then it will default to version 1.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Python</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="admonition example">
@@ -1622,7 +1597,7 @@ If only the name is provided then it will default to version 1.</p>
 <p>To attach transformation function to training dataset provide transformation functions as dict, where key is feature name and value is online transformation function name.
 Also training dataset must be created from the <a href="../query_vs_dataframe/">Query</a> object. Once attached transformation function will be applied on whenever <code>save</code>, <code>insert</code> and <code>get_serving_vector</code>
 methods are called on training dataset object.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Python</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Python</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="admonition example">
@@ -1643,25 +1618,30 @@ methods are called on training dataset object.</p>
 <p>Built-in transformation functions are attached in the same way. The only difference is that it will compute the necessary statistics
 for the specific function in the background. For example min and max values for <code>min_max_scaler</code>; mean and standard deviation
 for <code>standard_scaler</code> etc.</p>
-<div class="codehilite"><pre><span></span><code>!!! example &quot;Attaching built-in transformation functions to the training dataset&quot;
-    ```python
-    min_max_scaler = fs.get_transformation_function(name=&quot;min_max_scaler&quot;)
-    standard_scaler = fs.get_transformation_function(name=&quot;standard_scaler&quot;)
-    robust_scaler = fs.get_transformation_function(name=&quot;robust_scaler&quot;)
-    label_encoder = fs.get_transformation_function(name=&quot;label_encoder&quot;)
-    fs.create_training_dataset(name=&quot;td_demo&quot;,
-                               description=&quot;Dataset to train the demo model&quot;,
-                               data_format=&quot;csv&quot;,
-                               transformation_functions={&quot;feature_name&quot;:min_max_scaler,
-                                                         &quot;feature_name&quot;:standard_scaler,
-                                                         &quot;feature_name&quot;:robust_scaler,
-                                                         &quot;feature_name&quot;:label_encoder},
-                               statistics_config=None,
-                               version=1)
-    td.save(join_query)
-    ```
+<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Python</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="admonition example">
+<p class="admonition-title">Attaching built-in transformation functions to the training dataset</p>
+<div class="highlight"><pre><span></span><code><span class="n">min_max_scaler</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;min_max_scaler&quot;</span><span class="p">)</span>
+<span class="n">standard_scaler</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;standard_scaler&quot;</span><span class="p">)</span>
+<span class="n">robust_scaler</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;robust_scaler&quot;</span><span class="p">)</span>
+<span class="n">label_encoder</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;label_encoder&quot;</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;td_demo&quot;</span><span class="p">,</span>
+                           <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dataset to train the demo model&quot;</span><span class="p">,</span>
+                           <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
+                           <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;feature_name&quot;</span><span class="p">:</span><span class="n">min_max_scaler</span><span class="p">,</span>
+                                                     <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span><span class="n">standard_scaler</span><span class="p">,</span>
+                                                     <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span><span class="n">robust_scaler</span><span class="p">,</span>
+                                                     <span class="s2">&quot;feature_name&quot;</span><span class="p">:</span><span class="n">label_encoder</span><span class="p">},</span>
+                           <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">td</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">join_query</span><span class="p">)</span>
 </code></pre></div>
-
+</div>
+</div>
+</div>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Scala support</p>
 <p>Creating and attaching Transformation functions to training datasets are not supported for hsfs scala client.
