@@ -38,7 +38,7 @@ except ImportError:
 from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine
+from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
 
 
@@ -350,7 +350,9 @@ class Engine:
         )
 
         if len(training_dataset.splits) == 0:
-            self._populate_builtin_transformation_functions(
+            transformation_function_engine.\
+                TransformationFunctionEngine.\
+                populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
 
@@ -373,7 +375,9 @@ class Engine:
             )
             split_dataset = dict([(split_names[i], split_dataset[i])
                               for i in range(len(split_names))])
-            self._populate_builtin_transformation_functions(
+            transformation_function_engine.\
+                TransformationFunctionEngine.\
+                populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
             return self._write_training_dataset_splits(
@@ -384,34 +388,6 @@ class Engine:
                 to_df=to_df
             )
 
-    def _populate_builtin_transformation_functions(
-        self, training_dataset, feature_view_obj, dataset):
-        # check if there any transformation functions that require statistics attached to td features
-        builtin_tffn_features = [
-            ft_name
-            for ft_name in training_dataset.transformation_functions
-            if training_dataset._transformation_function_engine.is_builtin(
-                training_dataset.transformation_functions[ft_name]
-            )
-        ]
-
-        if builtin_tffn_features:
-            if training_dataset.splits:
-                # compute statistics before transformations are applied
-                stats = self._compute_transformation_fn_statistics(
-                    training_dataset, builtin_tffn_features,
-                    dataset.get(training_dataset.train_split), feature_view_obj
-                )
-            else:
-                # compute statistics before transformations are applied
-                stats = self._compute_transformation_fn_statistics(
-                    training_dataset, builtin_tffn_features,
-                    dataset, feature_view_obj
-                )
-            # Populate builtin transformations (if any) with respective arguments
-            training_dataset._transformation_function_engine.populate_builtin_attached_fns(
-                training_dataset.transformation_functions, stats.content
-            )
 
     def _write_training_dataset_splits(
         self,
@@ -437,17 +413,6 @@ class Engine:
 
         if to_df:
             return feature_dataframes
-
-    def _compute_transformation_fn_statistics(
-        self, training_dataset_obj, builtin_tffn_features,
-        feature_dataframe, feature_view_obj
-    ):
-        return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
-            td_metadata_instance=training_dataset_obj,
-            columns=builtin_tffn_features,
-            feature_dataframe=feature_dataframe,
-            feature_view_obj=feature_view_obj
-        )
 
     def _write_training_dataset_single(
         self,

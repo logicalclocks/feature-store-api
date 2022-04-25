@@ -37,7 +37,8 @@ from hsfs.core import (
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
-    feature_view_api
+    feature_view_api,
+    transformation_function_engine
 )
 from hsfs.constructor import query
 from hsfs.client import exceptions
@@ -222,7 +223,9 @@ class Engine:
         if not relevant_columns:
             stats = df.describe()
         else:
-            stats = df[relevant_columns].describe()
+            target_cols = [col for col in df.columns if
+                           col in relevant_columns]
+            stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
             stat = self._convert_pandas_statistics(stats[col].to_dict())
@@ -363,8 +366,18 @@ class Engine:
         )
         if training_dataset_obj.splits:
             split_df = self._split_df(df, training_dataset_obj.splits)
+            transformation_function_engine.\
+                TransformationFunctionEngine.\
+                populate_builtin_transformation_functions(
+                training_dataset_obj, feature_view_obj, split_df
+            )
         else:
             split_df = df
+            transformation_function_engine.\
+                TransformationFunctionEngine.\
+                populate_builtin_transformation_functions(
+                training_dataset_obj, feature_view_obj, split_df
+            )
         # TODO: apply transformation
         return split_df
 
