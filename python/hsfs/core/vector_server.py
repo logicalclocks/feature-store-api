@@ -360,7 +360,7 @@ class VectorServer:
             # there should be only one statistics object with for_transformation=true
             if is_feat_view and self._training_dataset_version is None:
                 raise ValueError(
-                    "Training data version is required. Training data can be created by"
+                    "Training data version is required. Training data can be created by "
                     "`feature_view.create_training_data` or `feature_view.get_training_data`"
                 )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
