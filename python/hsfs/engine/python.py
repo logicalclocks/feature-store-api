@@ -223,8 +223,10 @@ class Engine:
         if not relevant_columns:
             stats = df.describe()
         else:
+            # TODO feature view: should add "as" clause in sql string so that
+            #  column names do not have feature group as prefix
             target_cols = [col for col in df.columns if
-                           col in relevant_columns]
+                           col.split(".")[-1] in relevant_columns]
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
@@ -235,7 +237,7 @@ class Engine:
                 else "Integral"
             )
             stat["isDataTypeInferred"] = "false"
-            stat["column"] = col
+            stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
             final_stats.append(stat)
         return json.dumps({"columns": final_stats})
