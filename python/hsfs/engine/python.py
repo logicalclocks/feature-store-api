@@ -38,6 +38,7 @@ from hsfs.core import (
 from hsfs.constructor import query
 from hsfs.client import exceptions
 
+import great_expectations as ge
 
 class Engine:
 
@@ -207,10 +208,14 @@ class Engine:
 
         self._wait_for_job(job)
 
-    def validate(self, dataframe, expectations, log_activity=True):
+    def validate(self, dataframe:pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
-            "Deequ data validation is only available with Spark Engine."
+            "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
+
+    def validate_with_great_expectations(self, dataframe:pd.DataFrame, expectation_suite:TypeVar("ge.core.ExpectationSuite"), ge_validate_kwargs:dict):
+        report = ge.from_pandas(dataframe, expectation_suite=expectation_suite).validate(**ge_validate_kwargs)
+        return report
 
     def set_job_group(self, group_id, description):
         pass
@@ -454,3 +459,5 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
+
+    
