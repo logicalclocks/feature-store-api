@@ -31,7 +31,7 @@ from hsfs.core import (
 
 class VectorServer:
 
-    def __init__(self, feature_store_id, training_dataset_version=1):
+    def __init__(self, feature_store_id, training_dataset_version=None):
         self._training_dataset_version = training_dataset_version
         self._prepared_statement_engine = None
         self._prepared_statements = None
@@ -349,20 +349,27 @@ class VectorServer:
                 )
             )
         )
-
-        if (isinstance(vector_server, feature_view.FeatureView) and
-            len(transformation_functions) == 0):
+        is_stat_required = len(
+            set(self._transformation_function_engine.BUILTIN_FN_NAMES).intersection(
+                set([tf.name for tf in transformation_functions.values()]))) > 0
+        is_feat_view = isinstance(vector_server, feature_view.FeatureView)
+        if not is_stat_required:
             td_tffn_stats = None
         else:
             # if there are any built-in transformation functions get related statistics and
             # populate with relevant arguments
             # there should be only one statistics object with for_transformation=true
+            if is_feat_view and self._training_dataset_version is None:
+                raise ValueError(
+                    "Training data version is required. Training data can be created by"
+                    "`feature_view.create_training_data` or `feature_view.get_training_data`"
+                )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
                 vector_server, for_transformation=True,
                 training_dataset_version=self._training_dataset_version
             )
 
-        if len(transformation_functions) > 0 and td_tffn_stats is None:
+        if is_stat_required and td_tffn_stats is None:
             raise ValueError("No statistics available for initializing transformation functions.")
 
         transformation_fns = (

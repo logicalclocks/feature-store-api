@@ -83,7 +83,7 @@ class FeatureView:
         return self
 
     def init_serving(
-        self, training_dataset_version: Optional[int] = 1,
+        self, training_dataset_version: Optional[int] = None,
         batch: Optional[bool] = None, external: Optional[bool] = False
     ):
         """Initialise and cache parametrized prepared statement to
@@ -242,7 +242,7 @@ class FeatureView:
             statistics_config=statistics_config,
         )
         # td_job is used only if the python engine is used
-        td_version, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self, td, read_options, splits=splits
         )
         if version is None:
@@ -252,7 +252,7 @@ class FeatureView:
                 ),
                 util.VersionWarning,
             )
-        return td_version, df
+        return td.version, df
 
     def get_training_dataset(
         self,
@@ -280,8 +280,8 @@ class FeatureView:
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
         """
-        td_version, df = self.get_training_datasets(
-            {"train": 1.0},
+        td, df = self.get_training_datasets(
+            {},
             start_time=start_time,
             end_time=end_time,
             version=version,
@@ -289,7 +289,7 @@ class FeatureView:
             statistics_config=statistics_config,
             read_options=read_options,
         )
-        return td_version, df["train"]
+        return td, df
 
     def create_training_dataset(
         self,
@@ -414,7 +414,7 @@ class FeatureView:
                 util.VersionWarning,
             )
 
-        return td_job
+        return td.version, td_job
 
 
     def add_training_dataset_tag(self, version: int, name: str, value):

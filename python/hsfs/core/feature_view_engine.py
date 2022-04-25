@@ -149,7 +149,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj
         )
-        return updated_instance.version, td_job
+        return updated_instance, td_job
 
     def get_training_data(self, feature_view_obj,
                                 training_dataset_obj, read_options, splits=None):
@@ -199,13 +199,15 @@ class FeatureViewEngine:
                 training_dataset_obj, feature_view_obj,
                 query, read_options
             )
-            split_df = self._split_df(df, splits)
-
+            if splits:
+                split_df = self._split_df(df, splits)
+            else:
+                split_df = df
             self.compute_training_dataset_statistics(
-                feature_view_obj, training_dataset_obj, split_df
+                feature_view_obj, training_dataset_obj, split_df, calc_stat=True
             )
 
-        return td_updated.version, split_df
+        return td_updated, split_df
 
     def _split_df(self, df, splits):
         split_column = "_SPLIT_INDEX_fjslkfjslw"
@@ -222,7 +224,6 @@ class FeatureViewEngine:
             for i, item in enumerate(items):
                 result_df[item[0]] = df[df[split_column] == i].drop(
                     split_column, axis=1)
-
         else:
             split_ratio = [item[1] for item in items]
             split_df = df.randomSplit(split_ratio)
@@ -232,7 +233,7 @@ class FeatureViewEngine:
 
     def _read_from_storage_connector(
         self, training_data_obj, splits, read_options):
-        if splits is not None:
+        if splits:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split)
@@ -291,13 +292,15 @@ class FeatureViewEngine:
             td_df = None
         # currently we do not save the training dataset statistics config for training datasets
         self.compute_training_dataset_statistics(
-            feature_view_obj, training_dataset_obj, td_df)
+            feature_view_obj, training_dataset_obj, td_df,
+            calc_stat=engine.get_type() == "spark"
+        )
         return td_job
 
     def compute_training_dataset_statistics(self, feature_view_obj,
                                             training_dataset_obj,
-                                            td_df):
-        if training_dataset_obj.statistics_config.enabled:
+                                            td_df, calc_stat=False):
+        if training_dataset_obj.statistics_config.enabled and calc_stat:
             if training_dataset_obj.splits:
                 if not isinstance(td_df, dict):
                     raise ValueError(
