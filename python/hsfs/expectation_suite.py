@@ -201,7 +201,14 @@ class ExpectationSuite:
 
     @expectations.setter
     def expectations(self, expectations):
-        self._expectations = [GeExpectation(**expectation) for expectation in expectations]
+        if ((expectations == None) or (len(expectations) ==0)):
+            self._expectations = []
+        elif isinstance(expectations[0], ge.core.ExpectationConfiguration):
+            self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in expectations]
+        elif isinstance(expectations[0], GeExpectation):
+            self._expectations = expectations
+        elif isinstance(expectations[0], dict):
+            self._expectations = [GeExpectation(**expectation) for expectation in expectations]
 
     @property
     def meta(self):

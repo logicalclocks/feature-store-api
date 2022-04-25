@@ -592,11 +592,8 @@ class FeatureGroup(FeatureGroupBase):
         expectations=None,
         online_topic_name=None,
         event_time=None,
-<<<<<<< HEAD
         stream=False,
-=======
         expectation_suite=None,
->>>>>>> 6497e58b (Expectation Suite)
     ):
         super().__init__(featurestore_id, validation_type, location)
 
@@ -894,6 +891,7 @@ class FeatureGroup(FeatureGroupBase):
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = {}
     ):
         """Insert data from a dataframe into the feature group.
 
@@ -939,11 +937,19 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
-
+                * key `mode` instruct the ingestion job on how to deal with corrupted
+                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to False to run validation logic on ingestion
+                * key `save_report` boolean value, set to False to skip upload of the validation report to hopsworks
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations
+                * key `log_activity` a boolean to log Deequ validation information (could be merged with save_report for consistency)
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        self._pre_insert_validation(feature_dataframe=feature_dataframe, validation_options=validation_options)
 
         self._feature_group_engine.insert(
             self,
@@ -1098,6 +1104,23 @@ class FeatureGroup(FeatureGroupBase):
         """
         return self.select_all().as_of(wallclock_time)
     
+    def _pre_insert_validation(self, feature_dataframe: Union[TypeVar("pyspark.sql.DataFrame"), pd.DataFrame], validation_options: Optional[Dict[Any, Any]]=dict()):
+        if validation_options.get("run_validation", True) is False:
+            return None
+
+        # Handle Deequ first
+        if self.validation_type != "NONE":
+            self.validate(feature_dataframe, log_activity=validation_options.get("log_activity", False))
+
+        # Handle Great Expectation
+        expectation_suite = self.get_expectation_suite(ge_type=False)
+        if expectation_suite.run_validation is False:
+            return None
+        else:
+            self.validate_with_great_expectations(feature_dataframe, expectation_suite=expectation_suite, validation_options=validation_options)
+        
+        return None
+
     def validate(
         self,
         dataframe: TypeVar("pyspark.sql.DataFrame") = None,  # noqa: F821
@@ -1119,8 +1142,9 @@ class FeatureGroup(FeatureGroupBase):
             log_activity = True
         return self._data_validation_engine.validate(self, dataframe, log_activity)
 
-    def validate_with_great_expectations(self, dataframe:pd.DataFrame, expectation_suite: Union[TypeVar("ge.core.ExpectationSuite"), TypeVar("hsfs.ExpectationSuite")] = None,
-    validation_options:Dict(Any, Any)=dict()):
+    def validate_with_great_expectations(self, dataframe:pd.DataFrame, 
+        expectation_suite: Optional[Union[TypeVar("ge.core.ExpectationSuite"), TypeVar("hsfs.ExpectationSuite")]] = None,
+        validation_options:Optional[Dict[Any, Any]]=dict()):
         """Run validation based on provided or attached expectation suite.
 
         # Arguments
@@ -1138,12 +1162,8 @@ class FeatureGroup(FeatureGroupBase):
 
         if expectation_suite != None:
             validation_options["save_report"] = False
-
-            if isinstance(expectation_suite, ge.core.ExpectationSuite):
-                expectation_suite = ExpectationSuite.from_ge_type(expectation_suite, 
-                run_validation=True, validation_ingestion_management="STRICT") 
-                # validation ingestion will not be relevant as insertion should not be performed when passing an expectation suite.
-            
+            if isinstance(expectation_suite, ExpectationSuite):
+                expectation_suite = expectation_suite.to_ge_type() 
         else:
             expectation_suite = self.get_expectation_suite()
 
@@ -1151,7 +1171,7 @@ class FeatureGroup(FeatureGroupBase):
         report = engine.get_instance().validate_with_great_expectations(
             dataframe=dataframe, 
             expectation_suite=expectation_suite,
-            ge_validate_kwargs=validation_options.get("ge_validate_kwargs", {}))
+            ge_validate_kwargs=validation_options.get("ge_validate_kwargs", dict()))
         
         if validation_options.get("save_report", False) is True:
             self.save_validation_report(report)
@@ -1559,264 +1579,6 @@ class FeatureGroup(FeatureGroupBase):
             )
 
 
-<<<<<<< HEAD
-=======
-class StreamFeatureGroup(FeatureGroup):
-    STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
-    ENTITY_TYPE = "featuregroups"
-
-    def __init__(
-        self,
-        name,
-        version,
-        featurestore_id,
-        description="",
-        partition_key=None,
-        primary_key=None,
-        hudi_precombine_key=None,
-        featurestore_name=None,
-        created=None,
-        creator=None,
-        id=None,
-        features=None,
-        location=None,
-        statistics_config=None,
-        validation_type="NONE",
-        expectations=None,
-        online_topic_name=None,
-        event_time=None,
-        expectation_suite=None,
-    ):
-        super().__init__(
-            name=name,
-            version=version,
-            featurestore_id=featurestore_id,
-            description=description,
-            partition_key=partition_key,
-            primary_key=primary_key,
-            hudi_precombine_key=hudi_precombine_key,
-            featurestore_name=featurestore_name,
-            created=created,
-            creator=creator,
-            id=id,
-            features=features,
-            location=location,
-            online_enabled=True,
-            time_travel_format="HUDI",
-            statistics_config=statistics_config,
-            validation_type=validation_type,
-            expectations=expectations,
-            online_topic_name=online_topic_name,
-            event_time=event_time,
-            expectation_suite=expectation_suite,
-        )
-
-        self._deltastreamer_jobconf = None
-
-    def save(
-        self,
-        features: Union[
-            pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
-            np.ndarray,
-            List[list],
-        ],
-        write_options: Optional[Dict[Any, Any]] = {},
-    ):
-        """Persist the metadata and materialize the feature group to the feature store.
-
-        Calling `save` creates the metadata for the feature group in the feature store
-        and writes the specified `features` dataframe as feature group to the
-        online/offline feature store as specified.
-
-        This writes the feature group to the both online and offline storage.
-
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
-        or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
-        # Arguments
-            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                Write_options can contain the following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to write data into the
-                  feature group.
-
-        # Raises
-            `RestAPIError`. Unable to create feature group.
-        """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
-
-        user_version = self._version
-
-        # when creating a stream feature group, users have the possibility of passing
-        # a spark_job_configuration object as part of the write_options with the key "spark"
-        _spark_options = write_options.pop("spark", None)
-        _write_options = (
-            [{"name": k, "value": v} for k, v in write_options.items()]
-            if write_options
-            else None
-        )
-        self._deltastreamer_jobconf = DeltaStreamerJobConf(
-            _spark_options, _write_options
-        )
-
-        self._feature_group_engine.save(self, feature_dataframe, write_options)
-        self._code_engine.save_code(self)
-        if self.statistics_config.enabled and engine.get_type() == "spark":
-            # Only compute statistics if the engine is Spark.
-            # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
-        if user_version is None:
-            warnings.warn(
-                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
-                    self._name, self._version
-                ),
-                util.VersionWarning,
-            )
-
-    def insert(
-        self,
-        features: Union[
-            pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
-            np.ndarray,
-            List[list],
-        ],
-        overwrite: Optional[bool] = False,
-        operation: Optional[str] = "upsert",
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
-        **kwargs,
-    ):
-        """Insert data from a dataframe into the stream feature group.
-
-        Incrementally insert data to a feature group or overwrite all data contained
-        in the feature group. By default, the data is inserted into the offline storage
-        as well as the online storage if the feature group is `online_enabled=True`. To
-        insert only into the online storage, set `storage="online"`, or oppositely
-        `storage="offline"`.
-
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
-        or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
-        If statistics are enabled, statistics are recomputed for the entire feature
-        group.
-
-        If feature group's time travel format is `HUDI` then `operation` argument can be
-        either `insert` or `upsert`.
-
-        !!! example "Upsert new feature data with time travel format `HUDI`:"
-            ```python
-            fs = conn.get_feature_store();
-            fg = fs.get_stream_feature_group("example_feature_group", 1)
-            upsert_df = ...
-            fg.insert(upsert_df)
-            ```
-
-        # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
-            overwrite: Drop all data in the feature group before
-                inserting new data. This does not affect metadata, defaults to False.
-            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
-                Defaults to `"upsert"`.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, write_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to write data into the
-                  feature group.
-                * key `wait_for_job` and value `True` or `False` to configure
-                  whether or not to the insert call should return only
-                  after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
-            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
-                * key `run_validation` boolean value, set to False to run validation logic on ingestion
-                * key `save_report` boolean value, set to False to skip upload of the validation report to hopsworks
-                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations
-                * key `log_activity` a boolean to log Deequ validation information (could be merged with save_report for consistency)
-        # Returns
-            `FeatureGroup`. Updated feature group metadata object.
-        """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
-
-        self._pre_insert_validation(self, feature_dataframe, validation_options)
-            
-        self._feature_group_engine.insert(
-            self,
-            feature_dataframe,
-            overwrite,
-            operation,
-            None,
-            write_options,
-        )
-
-        self._code_engine.save_code(self)
-
-    def _pre_insert_validation(self, feature_dataframe: Union[TypeVar("pyspark.sql.DataFrame"), pd.DataFrame], validation_options: Optional(Dict[Any, Any])=dict()):
-        if validation_options.get("run_validation", True) is False:
-            return None
-
-        # Handle Deequ first
-        if self.validation_type != None:
-            deequ_report = self.validate(feature_dataframe, log_activity=validation_options.get("log_activity", False))
-
-        # Handle Great Expectation
-        expectation_suite = self.get_expectation_suite(ge_type=False)
-        if expectation_suite.run_validation is False:
-            ge_report = None
-        else:
-            ge_report = self.validate_with_great_expectations(feature_dataframe, validation_options)
-        
-        return ge_report, 
-
-        
-
-    @classmethod
-    def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        if isinstance(json_decamelized, dict):
-            _ = json_decamelized.pop("type", None)
-            return cls(**json_decamelized)
-        for fg in json_decamelized:
-            _ = fg.pop("type", None)
-        return [cls(**fg) for fg in json_decamelized]
-
-    def update_from_response_json(self, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
-        self.__init__(**json_decamelized)
-        return self
-
-    def json(self):
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
-
-    def to_dict(self):
-        return {
-            "id": self._id,
-            "name": self._name,
-            "version": self._version,
-            "description": self._description,
-            "onlineEnabled": self._online_enabled,
-            "timeTravelFormat": self._time_travel_format,
-            "features": self._features,
-            "featurestoreId": self._feature_store_id,
-            "type": "streamFeatureGroupDTO",
-            "statisticsConfig": self._statistics_config,
-            "validationType": self._validation_type,
-            "expectationsNames": self._expectations_names,
-            "eventTime": self._event_time,
-            "deltaStreamerJobConf": self._deltastreamer_jobconf,
-            "expectationSuite": self._expectation_suite
-        }
-
-
->>>>>>> 3ee302e7 (Jim-Moritz meeting + Validate draft)
 class OnDemandFeatureGroup(FeatureGroupBase):
     ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"

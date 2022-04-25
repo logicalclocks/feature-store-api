@@ -20,6 +20,7 @@ import boto3
 import time
 import re
 import warnings
+import great_expectations as ge
 
 from io import BytesIO
 from pyhive import hive
@@ -38,7 +39,9 @@ from hsfs.core import (
 from hsfs.constructor import query
 from hsfs.client import exceptions
 
-import great_expectations as ge
+from typing import TypeVar, Optional, Dict, Any
+
+
 
 class Engine:
 
@@ -213,7 +216,7 @@ class Engine:
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
 
-    def validate_with_great_expectations(self, dataframe:pd.DataFrame, expectation_suite:TypeVar("ge.core.ExpectationSuite"), ge_validate_kwargs:dict):
+    def validate_with_great_expectations(self, dataframe:pd.DataFrame, expectation_suite:TypeVar("ge.core.ExpectationSuite"), ge_validate_kwargs:Optional[Dict[Any, Any]] = {}):
         report = ge.from_pandas(dataframe, expectation_suite=expectation_suite).validate(**ge_validate_kwargs)
         return report
 

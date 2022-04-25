@@ -48,7 +48,7 @@ class ValidationResult:
         self.meta = meta
         self.exception_info = exception_info
         self.expectation_config = expectation_config
-        self.observed_value = observed_value
+        self._observed_value = observed_value
         self._expectation_id = expectation_id
         self._validation_report_id = validation_report_id
 
@@ -115,7 +115,6 @@ class ValidationResult:
     @success.setter
     def success(self, success):
         self._success = success
-
 
     @property
     def result(self):
@@ -185,9 +184,9 @@ class ValidationResult:
 
     def __repr__(self):
         result_string = ""
-        if self._result == None and self._observed_values != None:
-            result_string += f"observed_values : {self._observed_values}"
-        elif self._observed_value != None and self._observed_values == None:
+        if self._result == None and self._observed_value != None:
+            result_string += f"observed_value : {self._observed_value}"
+        elif self._result != None and self._observed_value == None:
             result_string += f"result : {self._result}"
         
         return (
