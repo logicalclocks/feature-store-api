@@ -118,11 +118,6 @@ class HudiEngine:
         self, dataset, save_mode, operation, write_options, validation_id=None
     ):
 
-        for parallelism_option in HudiEngine.HUDI_DEFAULT_PARALLELISM:
-            if parallelism_option not in write_options:
-                write_options[parallelism_option] = HudiEngine.HUDI_DEFAULT_PARALLELISM[
-                    parallelism_option
-                ]
         fg_commit = self._write_hudi_dataset(
             dataset, save_mode, operation, write_options
         )
@@ -183,6 +178,13 @@ class HudiEngine:
 
         if write_options:
             hudi_options.update(write_options)
+            for parallelism_option in HudiEngine.HUDI_DEFAULT_PARALLELISM:
+                if parallelism_option not in write_options:
+                    write_options[
+                        parallelism_option
+                    ] = HudiEngine.HUDI_DEFAULT_PARALLELISM[parallelism_option]
+        else:
+            hudi_options.update(HudiEngine.HUDI_DEFAULT_PARALLELISM)
 
         return hudi_options
 

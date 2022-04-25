@@ -142,12 +142,6 @@ public class HudiEngine {
 
     Map<String, String> hudiArgs = setupHudiWriteOpts(featureGroup, operation, writeOptions);
 
-    for (Map.Entry<String, String> entry : HUDI_DEFAULT_PARALLELISM.entrySet()) {
-      if (writeOptions != null && !writeOptions.containsKey((entry.getKey()))) {
-        hudiArgs.put(entry.getKey(), entry.getValue());
-      }
-    }
-
     dataset.write()
         .format(HUDI_SPARK_FORMAT)
         .options(hudiArgs)
@@ -261,6 +255,13 @@ public class HudiEngine {
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {
       hudiArgs.putAll(writeOptions);
+      for (Map.Entry<String, String> entry : HUDI_DEFAULT_PARALLELISM.entrySet()) {
+        if (writeOptions != null && !writeOptions.containsKey((entry.getKey()))) {
+          hudiArgs.put(entry.getKey(), entry.getValue());
+        }
+      }
+    } else {
+      hudiArgs.putAll(HUDI_DEFAULT_PARALLELISM);
     }
     return hudiArgs;
   }
