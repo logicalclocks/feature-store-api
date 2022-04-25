@@ -57,6 +57,16 @@ class VectorServer:
         )
 
     def init_serving(self, vector_server, batch, external):
+        self.init_prepared_statement(vector_server, batch, external)
+        self.init_transformation(vector_server)
+
+    def init_transformation(self, vector_server):
+        # attach transformation functions
+        vector_server.transformation_functions = self._get_transformation_fns(
+            vector_server
+        )
+
+    def init_prepared_statement(self, vector_server, batch, external):
         if isinstance(vector_server, feature_view.FeatureView):
             prepared_statements = \
                 self._feature_view_api.get_serving_prepared_statement(
@@ -67,17 +77,6 @@ class VectorServer:
                 self._training_dataset_api.get_serving_prepared_statement(
                     vector_server, batch
                 )
-        self.init_prepared_statement(prepared_statements, batch, external)
-        self.init_transformation(vector_server)
-
-    def init_transformation(self, vector_server):
-        # attach transformation functions
-        vector_server.transformation_functions = self._get_transformation_fns(
-            vector_server
-        )
-
-    def init_prepared_statement(self, prepared_statements, batch, external):
-
         # reset values to default, as user may be re-initialising with different parameters
         self.prepared_statement_engine = None
         self.prepared_statements = None
