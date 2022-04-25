@@ -15,7 +15,6 @@
 #
 
 import warnings
-import random
 from hsfs import (
     engine, training_dataset_feature
 )
@@ -195,41 +194,15 @@ class FeatureViewEngine:
                 start_time=training_dataset_obj.event_start_time,
                 end_time=training_dataset_obj.event_end_time
             )
-            df = engine.get_instance().get_training_data(
+            split_df = engine.get_instance().get_training_data(
                 training_dataset_obj, feature_view_obj,
                 query, read_options
             )
-            if splits:
-                split_df = self._split_df(df, splits)
-            else:
-                split_df = df
             self.compute_training_dataset_statistics(
                 feature_view_obj, training_dataset_obj, split_df, calc_stat=True
             )
 
         return td_updated, split_df
-
-    def _split_df(self, df, splits):
-        split_column = "_SPLIT_INDEX_fjslkfjslw"
-        result_df = {}
-        items = splits.items()
-        if engine.get_type() == "python" or engine.get_type() == "hive":
-            df_size = len(df)
-            groups = []
-            for i, item in enumerate(items):
-                groups += [i]*int(df_size*item[1])
-            groups += [len(items)-1] * (df_size - len(groups))
-            random.shuffle(groups)
-            df[split_column] = groups
-            for i, item in enumerate(items):
-                result_df[item[0]] = df[df[split_column] == i].drop(
-                    split_column, axis=1)
-        else:
-            split_ratio = [item[1] for item in items]
-            split_df = df.randomSplit(split_ratio)
-            for item, _df in zip(items, split_df):
-                result_df[item[0]] = _df
-        return result_df
 
     def _read_from_storage_connector(
         self, training_data_obj, splits, read_options):

@@ -21,6 +21,8 @@ import time
 import re
 import warnings
 import json
+import random
+import uuid
 
 from io import BytesIO
 from pyhive import hive
@@ -354,13 +356,33 @@ class Engine:
 
         return ingestion_job.job
 
-    def get_training_data(self, training_dataset, feature_view_obj,
+    def get_training_data(self, training_dataset_obj, feature_view_obj,
                           query_obj, read_options):
         df = query_obj.read(
             read_options=read_options
         )
+        if training_dataset_obj.splits:
+            split_df = self._split_df(df, training_dataset_obj.splits)
+        else:
+            split_df = df
         # TODO: apply transformation
-        return df
+        return split_df
+
+    def _split_df(self, df, splits):
+        split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
+        result_df = {}
+        items = splits.items()
+        df_size = len(df)
+        groups = []
+        for i, item in enumerate(items):
+            groups += [i]*int(df_size*item[1])
+        groups += [len(items)-1] * (df_size - len(groups))
+        random.shuffle(groups)
+        df[split_column] = groups
+        for i, item in enumerate(items):
+            result_df[item[0]] = df[df[split_column] == i].drop(
+                split_column, axis=1)
+        return result_df
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
