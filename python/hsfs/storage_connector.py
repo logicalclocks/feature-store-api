@@ -1060,6 +1060,8 @@ class BigQueryConnector(StorageConnector):
         query_table=None,
         query_project=None,
         materialization_dataset=None,
+        arguments=None
+
     ):
         super().__init__(id, name, description, featurestore_id)
         self._key_path = key_path
@@ -1068,6 +1070,9 @@ class BigQueryConnector(StorageConnector):
         self._query_table = query_table
         self._query_project = query_project
         self._materialization_dataset = materialization_dataset
+        self._arguments = (
+            {opt["name"]: opt["value"] for opt in arguments} if arguments else {}
+        )
 
     @property
     def key_path(self):
@@ -1099,9 +1104,14 @@ class BigQueryConnector(StorageConnector):
         """BigQuery Materialization View"""
         return self._materialization_dataset
 
+    @property
+    def arguments(self):
+        """Additional spark options"""
+        return self._arguments
+
     def spark_options(self):
         """Return spark options to be set specifically for BigQuery"""
-        properties = {}
+        properties = self._arguments
         local_key_path = engine.get_instance().add_file(self._key_path)
         properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
         properties[self.BIGQ_PARENT_PROJECT] = self._parent_project
@@ -1153,10 +1163,12 @@ class BigQueryConnector(StorageConnector):
             if options is not None
             else self.spark_options()
         )
-        if self._query_table:
-            path = self._query_table
-        elif query:
+        if query:
             path = query
+        elif self._query_table:
+            path = self._query_table
+        elif path:
+            pass;
         else:
             raise ValueError(
                 "Either query should be provided "
