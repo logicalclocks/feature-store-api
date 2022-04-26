@@ -1987,11 +1987,11 @@ call the <code>save()</code> method of the expectation metadata object.</p>
 </div>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the training dataset to create.</li>
+<li><strong>name</strong> <code>str</code>: Name of the expectation to create.</li>
 <li><strong>description</strong> <code>Optional[str]</code>: A string describing the expectation that can describe its business logic and applications
     within the feature store.</li>
 <li><strong>features</strong> <code>Optional[List[str]]</code>: The features this expectation is applied on.</li>
-<li><strong>rules</strong> <code>Optional[List[hsfs.rule.Rule]]</code>: The validation rules this expectation will apply to the its features.</li>
+<li><strong>rules</strong> <code>Optional[List[hsfs.rule.Rule]]</code>: The validation rules this expectation will apply to the features.</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <p><code>Expectation</code>: The expectation metadata object.</p>
@@ -2100,7 +2100,7 @@ The list of allowed validation types are:</p>
 </div>
 <h2 id="validate">Validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h2>
 <p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
-<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1085">[source]</a></span></p>
+<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1086">[source]</a></span></p>
 <h3 id="validate_1">validate<a class="headerlink" href="#validate_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_activity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
@@ -2116,7 +2116,7 @@ The list of allowed validation types are:</p>
 <p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
 <hr />
 <h2 id="retrieval_2">Retrieval<a class="headerlink" href="#retrieval_2" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L429">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L430">[source]</a></span></p>
 <h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
