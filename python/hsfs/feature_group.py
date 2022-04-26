@@ -111,7 +111,8 @@ class FeatureGroupBase:
 
         # Arguments
             features: list, optional. A list of `Feature` objects or feature names as
-                strings to be selected, defaults to [], selecting all features.
+                strings to be excluded from the selection. Defaults to [],
+                selecting all features.
 
         # Returns
             `Query`: A query object with the selected features of the feature group.
