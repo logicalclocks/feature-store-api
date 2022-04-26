@@ -588,10 +588,12 @@ public abstract class StorageConnector {
         readOptions.putAll(options);
       }
 
-      if (!Strings.isNullOrEmpty(queryTable)) {
-        path = queryTable;
-      } else if (!Strings.isNullOrEmpty(query)) {
+      if (!Strings.isNullOrEmpty(query)) {
         path = query;
+      } else if (!Strings.isNullOrEmpty(queryTable)) {
+        path = queryTable;
+      } else if (!Strings.isNullOrEmpty(path)) {
+        path = path;
       } else {
         throw new IllegalArgumentException("Either query should be provided"
                                              + " or Query Project,Dataset and Table should be set");
