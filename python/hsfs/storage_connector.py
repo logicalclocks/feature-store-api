@@ -1060,8 +1060,7 @@ class BigQueryConnector(StorageConnector):
         query_table=None,
         query_project=None,
         materialization_dataset=None,
-        arguments=None
-
+        arguments=None,
     ):
         super().__init__(id, name, description, featurestore_id)
         self._key_path = key_path
@@ -1134,21 +1133,33 @@ class BigQueryConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        """Reads from BigQuery into a dataframe using the storage connector.
+        """Reads from BigQuery into a spark dataframe using the storage connector.
 
-          If Table options are set in storage connector, then it will read from the BigQuery table.
+          Reading from bigquery is done via either specifying the BigQuery Table options (project, dataset, table
+          needs to be set on connector) or via passing a BigQuery SQL as an argument to `query`
+          (Materiliazation Dataset needs to be set on connector).
+          For example, create a storage connector by setting the BigQuery Project, Dataset and Table to read directly
+           from the corresponding path.
             ```python
             conn.read()
             ```
-          If Materialization View is set, provide BigQuery SQL to `query` argument.
+          OR set `Materialization View`, and pass your BigQuery SQL to `query` argument.
             ```python
             conn.read(query='SQL')
             ```
+          Additionally, passing `query` argument will take priority at runtime even if the table options were set
+          on the storage connector.
+          Also, you can pass the `path` argument to change the bigquery path to query at runtime if table options were
+          not set.
+            ```python
+            conn.read(path='project.dataset.table')
+            ```
 
         # Arguments
-            query: SQL query. Defaults to `None`.
+            query: BigQuery SQL. Defaults to `None`.
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
+            path: BigQuery path to query. Defaults to `None`.
 
         # Raises
             `ValueError`: Malformed arguments.
@@ -1168,7 +1179,7 @@ class BigQueryConnector(StorageConnector):
         elif self._query_table:
             path = self._query_table
         elif path:
-            pass;
+            pass
         else:
             raise ValueError(
                 "Either query should be provided "

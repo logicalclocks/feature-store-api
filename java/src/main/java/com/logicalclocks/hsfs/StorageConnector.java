@@ -545,6 +545,9 @@ public abstract class StorageConnector {
     @Getter @Setter
     private String materializationDataset;
 
+    @Getter @Setter
+    private List<Option>  arguments;
+
     /**
      * Set spark options specific to BigQuery.
      * @return Map
@@ -562,6 +565,11 @@ public abstract class StorageConnector {
       }
       if (!Strings.isNullOrEmpty(dataset)) {
         options.put(Constants.BIGQ_DATASET, dataset);
+      }
+      if (arguments != null && !arguments.isEmpty()) {
+        Map<String, String> argOptions = arguments.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(argOptions);
       }
 
       return options;

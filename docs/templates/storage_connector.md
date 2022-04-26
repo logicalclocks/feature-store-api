@@ -79,6 +79,11 @@ database or the distributed filesystem HOPSFS.
 {{gcs_methods}}
 
 ## BigQuery
+The BigQuery storage connector provides integration to GCP BigQuery.
+You can use it to run bigquery on your GCP and load results into spark dataframe.
+The storage connector uses the Google `spark-bigquery-connector` behind the scenes.
+To read more information by Google on the connector, like the spark options or usage, check [GCP documentation](https://github.com/GoogleCloudDataproc/spark-bigquery-connector#usage
+'github.com/GoogleCloudDataproc/spark-bigquery-connector')
 
 ### Properties
 
