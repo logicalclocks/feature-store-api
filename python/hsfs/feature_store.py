@@ -652,11 +652,11 @@ class FeatureStore:
             call the `save()` method of the expectation metadata object.
 
         # Arguments
-            name: Name of the training dataset to create.
+            name: Name of the expectation to create.
             description: A string describing the expectation that can describe its business logic and applications
                 within the feature store.
             features: The features this expectation is applied on.
-            rules: The validation rules this expectation will apply to the its features.
+            rules: The validation rules this expectation will apply to the features.
 
         # Returns:
             `Expectation`: The expectation metadata object.
