@@ -74,4 +74,4 @@ The Feature Store is a dual database-system, to cover all machine learning use c
   </figure>
 </p>
 
-There is no database fullfilling both requirements of very low latency and and high throughput. Therefore, the Hopsworks Feature Store builds on Apache Hive with Apache Hudi as offline storage layer and MySQL Cluster (NDB) as online storage.
+There is no database fullfilling both requirements of very low latency and and high throughput. Therefore, the Hopsworks Feature Store builds on Apache Hive with Apache Hudi as offline storage layer and [RonDB](https://docs.rondb.com/) as online storage.
