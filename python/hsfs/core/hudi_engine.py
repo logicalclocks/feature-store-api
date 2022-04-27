@@ -175,16 +175,10 @@ class HudiEngine:
             self.HUDI_TABLE_OPERATION: operation,
             self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
         }
+        hudi_options.update(HudiEngine.HUDI_DEFAULT_PARALLELISM)
 
         if write_options:
             hudi_options.update(write_options)
-            for parallelism_option in HudiEngine.HUDI_DEFAULT_PARALLELISM:
-                if parallelism_option not in write_options:
-                    write_options[
-                        parallelism_option
-                    ] = HudiEngine.HUDI_DEFAULT_PARALLELISM[parallelism_option]
-        else:
-            hudi_options.update(HudiEngine.HUDI_DEFAULT_PARALLELISM)
 
         return hudi_options
 

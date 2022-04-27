@@ -249,20 +249,14 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
-
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
+    hudiArgs.putAll(HUDI_DEFAULT_PARALLELISM);
 
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {
       hudiArgs.putAll(writeOptions);
-      for (Map.Entry<String, String> entry : HUDI_DEFAULT_PARALLELISM.entrySet()) {
-        if (writeOptions != null && !writeOptions.containsKey((entry.getKey()))) {
-          hudiArgs.put(entry.getKey(), entry.getValue());
-        }
-      }
-    } else {
-      hudiArgs.putAll(HUDI_DEFAULT_PARALLELISM);
     }
+
     return hudiArgs;
   }
 
