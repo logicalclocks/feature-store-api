@@ -1075,32 +1075,33 @@ class BigQueryConnector(StorageConnector):
 
     @property
     def key_path(self):
-        """GCP JSON Key File HDFS path"""
+        """JSON keyfile for service account"""
         return self._key_path
 
     @property
     def parent_project(self):
-        """BigQuery Parent Project"""
+        """BigQuery parent project (Google Cloud Project ID of the table to bill for the export)"""
         return self._parent_project
 
     @property
     def dataset(self):
-        """BigQuery Dataset"""
+        """BigQuery dataset (The dataset containing the table)"""
         return self._dataset
 
     @property
     def query_table(self):
-        """BigQuery Table"""
+        """BigQuery table name"""
         return self._query_table
 
     @property
     def query_project(self):
-        """BigQuery Project"""
+        """BigQuery project (The Google Cloud Project ID of the table)"""
         return self._query_project
 
     @property
     def materialization_dataset(self):
-        """BigQuery Materialization View"""
+        """BigQuery materialization dataset (The dataset where the materialized view is going to be created,
+        used in case of query)"""
         return self._materialization_dataset
 
     @property
@@ -1109,7 +1110,7 @@ class BigQueryConnector(StorageConnector):
         return self._arguments
 
     def spark_options(self):
-        """Return spark options to be set specifically for BigQuery"""
+        """Return spark options to be set for BigQuery spark connector"""
         properties = self._arguments
         local_key_path = engine.get_instance().add_file(self._key_path)
         properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
@@ -1133,33 +1134,33 @@ class BigQueryConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        """Reads from BigQuery into a spark dataframe using the storage connector.
+        """Reads results from BigQuery into a spark dataframe using the storage connector.
 
-          Reading from bigquery is done via either specifying the BigQuery Table options (project, dataset, table
-          needs to be set on connector) or via passing a BigQuery SQL as an argument to `query`
-          (Materiliazation Dataset needs to be set on connector).
-          For example, create a storage connector by setting the BigQuery Project, Dataset and Table to read directly
-           from the corresponding path.
+          Reading from bigquery is done via either specifying the BigQuery table or BigQuery query.
+          For example, to read from a BigQuery table, set the BigQuery project, dataset and table on storage connector
+          and read directly from the corresponding path.
             ```python
             conn.read()
             ```
-          OR set `Materialization View`, and pass your BigQuery SQL to `query` argument.
+          OR, to read results from a BigQuery query, set `Materialization Dataset` on storage connector,
+           and pass your SQL to `query` argument.
             ```python
             conn.read(query='SQL')
             ```
-          Additionally, passing `query` argument will take priority at runtime even if the table options were set
-          on the storage connector.
-          Also, you can pass the `path` argument to change the bigquery path to query at runtime if table options were
-          not set.
+          Optionally, passing `query` argument will take priority at runtime if the table options were also set
+          on the storage connector. This allows user to run from both a query or table with same connector, assuming
+          all fields were set.
+          Also, user can set the `path` argument to a bigquery table path to read at runtime,
+           if table options were not set initially while creating the connector.
             ```python
             conn.read(path='project.dataset.table')
             ```
 
         # Arguments
-            query: BigQuery SQL. Defaults to `None`.
+            query: BigQuery query. Defaults to `None`.
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
-            path: BigQuery path to query. Defaults to `None`.
+            path: BigQuery table path. Defaults to `None`.
 
         # Raises
             `ValueError`: Malformed arguments.

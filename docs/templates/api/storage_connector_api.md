@@ -75,6 +75,16 @@
 {{gcs_methods}}
 
 ## BigQuery
+The BigQuery storage connector provides integration to Google Cloud BigQuery.
+You can use it to run bigquery on your GCP cluster and load results into spark dataframe.
+
+Authentication to GCP is handled by uploading the `JSON keyfile for service account` to the Hopsworks Project. For more information
+on service accounts and creating keyfile read [Google Cloud documentation.](https://cloud.google.com/docs/authentication/production#create_service_account
+'creating service account keyfile')
+
+The storage connector uses the Google `spark-bigquery-connector` behind the scenes.
+To read more about the spark connector, like the spark options or usage, check [Apache Spark SQL connector for Google BigQuery.](https://github.com/GoogleCloudDataproc/spark-bigquery-connector#usage
+'github.com/GoogleCloudDataproc/spark-bigquery-connector')
 
 ### Properties
 
