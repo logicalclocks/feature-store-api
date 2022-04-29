@@ -1202,12 +1202,16 @@ class FeatureGroup(FeatureGroupBase):
             raise FeatureStoreException("No expectation suite found.")
 
 
-    def save_expectation_suite(self, expectation_suite=None):
+    def save_expectation_suite(self, expectation_suite=None, run_validation=True, validation_ingestion_policy="ALWAYS"):
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. 
 
         # Arguments
-            `ExpectationSuite`. The expectation suite to attach to the featuregroup. 
+            `expectation_suite`. The expectation suite to attach to the featuregroup. 
+            `run_validation`. Boolean, set whether the expectation_suite will run on ingestion
+            `validation_ingestion_policy`. Set the policy for ingestion to the featuregroup. 
+                - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
+                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
         
         # Raises
             `RestAPIException`.
@@ -1215,7 +1219,13 @@ class FeatureGroup(FeatureGroupBase):
         if (expectation_suite is None) and (self._expectation_suite is None):
             raise ArgumentError(" If no expectation suite is set on the featuregroup, you must provide an expectation suite")
         elif expectation_suite is not None:
-            self.expectation_suite = expectation_suite
+            if isinstance(expectation_suite, ge.core.ExpectationSuite):
+                expectation_suite = ExpectationSuite.from_ge_type(
+                    ge_expectation_suite=expectation_suite, 
+                    run_validation=run_validation, 
+                    validation_ingestion_policy=validation_ingestion_policy)
+
+            self._expectation_suite = expectation_suite
             self._expectation_suite = self._expectation_suite_engine.save(self._expectation_suite)
         else:
             self._expectation_suite = self._expectation_suite_engine.save(self._expectation_suite)
