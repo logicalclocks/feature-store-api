@@ -35,7 +35,7 @@ class ExpectationSuite:
         data_asset_type=None,
         ge_cloud_id=None,
         run_validation=True,
-        validation_ingestion_management="STRICT",
+        validation_ingestion_policy="STRICT",
         featurestore_id=None,
         featuregroup_id=None,
         href=None,
@@ -52,7 +52,7 @@ class ExpectationSuite:
         self.data_asset_type = data_asset_type,
         self._ge_cloud_id = ge_cloud_id,
         self.run_validation = run_validation,
-        self.validation_ingestion_management = validation_ingestion_management,
+        self.validation_ingestion_policy = validation_ingestion_policy,
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
 
@@ -71,8 +71,8 @@ class ExpectationSuite:
             return cls(**json_decamelized)
 
     @classmethod
-    def from_ge_type(cls, ge_expectation_suite, run_validation: Optional[bool] = True, validation_ingestion_management : Optional[str] = "ALWAYS"):
-        return cls(**ge_expectation_suite.to_json_dict(), run_validation=run_validation, validation_ingestion_management=validation_ingestion_management)
+    def from_ge_type(cls, ge_expectation_suite, run_validation: Optional[bool] = True, validation_ingestion_policy : Optional[str] = "ALWAYS"):
+        return cls(**ge_expectation_suite.to_json_dict(), run_validation=run_validation, validation_ingestion_policy=validation_ingestion_policy)
 
     def to_json_dict(self):
         return {
@@ -83,7 +83,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionManagement": self._validation_ingestion_management
+            "validationIngestionPolicy": self._validation_ingestion_policy
         }
 
     def to_dict(self):
@@ -95,7 +95,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionManagement": self._validation_ingestion_management,
+            "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
     def json(self):
@@ -169,30 +169,30 @@ class ExpectationSuite:
             raise ValueError(f"run_validation must be a boolean, not {run_validation}. True to run validation, false to skip validation.")
 
     @property
-    def validation_ingestion_management(self):
+    def validation_ingestion_policy(self):
         """Whether to ingest a df based on the validation result.
         
             "STRICT" : ingest df only if all expectations succeed,
             "ALWAYS" : always ingest df, even if one or more expectations fail
         """
-        return self._validation_ingestion_management
+        return self._validation_ingestion_policy
 
-    @validation_ingestion_management.setter
-    def validation_ingestion_management(self, validation_ingestion_management):
-        if isinstance(validation_ingestion_management, tuple):
-            validation_ingestion_management = validation_ingestion_management[0]
-        if isinstance(validation_ingestion_management, str):
-            validation_ingestion_management = validation_ingestion_management.upper()
-            if validation_ingestion_management == "STRICT":
-                self._validation_ingestion_management = validation_ingestion_management
-            elif validation_ingestion_management == "ALWAYS":
-                self._validation_ingestion_management = validation_ingestion_management
+    @validation_ingestion_policy.setter
+    def validation_ingestion_policy(self, validation_ingestion_policy):
+        if isinstance(validation_ingestion_policy, tuple):
+            validation_ingestion_policy = validation_ingestion_policy[0]
+        if isinstance(validation_ingestion_policy, str):
+            validation_ingestion_policy = validation_ingestion_policy.upper()
+            if validation_ingestion_policy == "STRICT":
+                self._validation_ingestion_policy = validation_ingestion_policy
+            elif validation_ingestion_policy == "ALWAYS":
+                self._validation_ingestion_policy = validation_ingestion_policy
             else:
-                raise ValueError(f"validation_ingestion_management {validation_ingestion_management} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
-        elif validation_ingestion_management is None:
-            validation_ingestion_management = "ALWAYS"
+                raise ValueError(f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+        elif validation_ingestion_policy is None:
+            validation_ingestion_policy = "ALWAYS"
         else:
-            raise ValueError(f"validation_ingestion_management {validation_ingestion_management} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+            raise ValueError(f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
 
     @property
     def expectations(self):
