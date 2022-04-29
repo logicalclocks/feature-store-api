@@ -23,12 +23,11 @@ import humps
 
 from hsfs import (
     tag, util, training_dataset_feature, storage_connector, training_dataset,
-    engine
 )
 from hsfs.constructor import query
 from hsfs.core import (
-    feature_view_engine, statistics_engine,
-    transformation_function_engine, vector_server, code_engine
+    feature_view_engine,
+    transformation_function_engine, vector_server
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
