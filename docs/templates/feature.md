@@ -12,21 +12,21 @@ for online storage will make a feature available as an online feature.
 
 Within a [feature group](feature_group.md) there are different categories of features:
 
-* **Primary Keys**: These features describe the entity contained in a feature group (e.g. customer features, user features, ...). Within a feature group there could be more than one feature describing the primary key.
-* **Event Time**: One feature within a feature group can be selected to identify the time at which the event for the given record has happened. The event time feature is going to be used to enforce Point-in-time correctness when joining features from different feature groups together. When storing feature data on the offline feature store, each record is uniquely identified by the union of the primary key features and the even time feature.
-* **Partition Keys**: These features describe the storage layout of the feature group data on the offline feature store. Partition keys allow to divide the feature group data into different subdirectory. Partitioning can help to query more efficiently the data from the offline feature store.
-* **Normal Features**: These features represent attributes of related to the primary keys.
+* **Primary Keys**: The columns that uniquely identify an entity in a feature group (e.g., the customer, the transaction, ...). A primary key may consist of multiple columns, that is, a composite primary key.
+* **Event Time**: The column in a feature group that stores the time at which the event for the given record has happened (the observation time for the row). You need to provide the event time, if you want the feature group to be able to support point-in-time correct joins when used to creating training data.
+* **Partition Keys**: The columns that define the storage layout of the feature group data in the offline feature store. The partition keys may be defined over one or more columns, the data is organized in partitions which are stored in separate subdirectories. Partitioning can help improve query efficiency for the offline feature store, by reducing the amount of data that needs to be read from disk for a given query.
+* **Features**: These columns are the features that can be used to train models and perform inference on models.
 
-## Feature Types
+## Feature Data Types
 
-Each features has two different data types:
+When a feature is stored in the both the online and offline feature stores, it will be stored in a data storage type native to each store.
 
-* **Offline type**: The data type of the feature when stored on the offline feature store
-* **Online type**: The data type of the feature when stored on the online feature store.
+* **Offline data type**: The data type of the feature when stored on the offline feature store
+* **Online data type**: The data type of the feature when stored on the online feature store.
 
-The offline type is always required, even if the feature group is stored only online. On the other hand, if the feature group is not *online_enabled*, its features will not have an online type.
+The offline data type is always required, even if the feature group is stored only online. On the other hand, if the feature group is not *online_enabled*, its features will not have an online data type.
 
-### Offline Storage
+### Offline Data Types
 
 The offline feature store is based on Apache Hudi and Hive Metastore, as such, any
 [Hive Data Type](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types)
@@ -48,10 +48,10 @@ Potential *offline* types are:
 "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
 ```
 
-### Online Storage
+### Online Data Types
 
 The online storage is based on RonDB and hence, any
-[RonDB Data Type](https://dev.mysql.com/doc/refman/8.0/en/data-types.html)
+[MySQL Data Type](https://dev.mysql.com/doc/refman/8.0/en/data-types.html)
 can be leveraged.
 
 Potential *online* types are:
@@ -63,32 +63,32 @@ Potential *online* types are:
 "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT", "JSON"
 ```
 
-#### Complex online types
+#### Complex online data types
 
 Additionally to the *online* types above, Hopsworks allows users to store complex types (e.g. *ARRAY<INT>*) on the online feature store.
-Hopsworks will take care of transparently serializing the complex features and storing them as *VARBINARY* on the online feature store. The serialization happens when calling the [save()](../api/feature_group_api/#save), [insert()](../api/feature_group_api/#insert) or [insert_stream()](../api/feature_group_api/#insert_stream) methods. The deserialization will be executed when calling the [get_serving_vector()](../api/training_dataset_api/#get_serving_vector) method to retrieve data from the online feature store.
-If users query directly the online feature store, for instance using the `fs.sql("SELECT ...", online=True)` statement, they will receive back a binary blob.
+Hopsworks serializes the complex features transparently and stores them as VARBINARY in the online feature store. The serialization happens when calling the [save()](../api/feature_group_api/#save), [insert()](../api/feature_group_api/#insert) or [insert_stream()](../api/feature_group_api/#insert_stream) methods. The deserialization will be executed when calling the [get_serving_vector()](../api/training_dataset_api/#get_serving_vector) method to retrieve data from the online feature store.
+If users query directly the online feature store, for instance using the `fs.sql("SELECT ...", online=True)` statement, it will return a binary blob.
 
 On the feature store UI, the online feature type for complex features will be reported as *VARBINARY*.
 
 #### Online restrictions for primary key types:
 
-When a feature is being used as a primary key, certain types are not allowed. Examples of such types are *Float*, *Double*, *Date*, *Text*, *Blob* and *Complex Types*  (e.g. Array<>). Additionally the size of the sum of the primary key online types storage requirements should not exceed 3KB.
+When a feature is being used as a primary key, certain types are not allowed. Examples of such types are *Float*, *Double*, *Date*, *Text*, *Blob* and *Complex Types*  (e.g. Array<>). Additionally the size of the sum of the primary key online data types storage requirements should not exceed 3KB.
 
-### Type Inference
+### Type Mapping
 
-The offline and online types for each feature are inferred automatically when calling the [save()](../api/feature_group_api/#save) method to create a feature group. The types will be inferred based on the types of the Spark or Pandas DataFrame.
+The offline and online types for each feature are identified based on the types of the columns in the Spark or Pandas DataFrame, and those types are then mapped to the online and offline data types.
 
-In the case of Spark DataFrame, the [Spark types](https://spark.apache.org/docs/latest/sql-ref-datatypes.html) will be converted in the equivalent Hive Metastore type and used as offline feature store type. If the feature group is online enabled, Hopsworks will then match the offline type to the corresponding online type. The matching is performed as following:
+In the case of a Spark DataFrame, the [Spark types](https://spark.apache.org/docs/latest/sql-ref-datatypes.html) will be mapped to the corresponding Hive Metastore type and used as offline data type. If the feature group is online enabled, Hopsworks will then map the offline data type to the corresponding online data type. The mapping is based on the following rules:
 
-* If the offline type is supported also on the online feature store (e.g. INT, FLOAT, DATE, TIMESTAMP), the online type will be equivalent to the offline type
-* If the offline type is *boolean*, the online type is going to be set as *tinyint*
-* If the offline type is *string*, the online type is going to be set as *varchar(100)*
-* If the offline type is not supported by the online feature store and it is not one of the above exception, the online type will be set as *varbinary(100)* to handle complex types.
+* If the offline data type is also supported on the online feature store (e.g. INT, FLOAT, DATE, TIMESTAMP), the online data type will be the same as the offline data type
+* If the offline data type is *boolean*, the online data type is going to be set as *tinyint*
+* If the offline data type is *string*, the online data type is going to be set as *varchar(100)*
+* If the offline data type is not supported by the online feature store and it is not one of the above exception, the online data type will be set as *varbinary(100)* to handle complex types.
 
 #### Pandas Conversion
 
-When registering a [Pandas](https://pandas.pydata.org/) DataFrame as feature group, the following conversion is applied:
+When registering a [Pandas](https://pandas.pydata.org/) DataFrame as a feature group, the following mapping rules are applied:
 
 | Pandas Type        | Offline Feature Type|
 | ------------------ | ------------------- |
@@ -100,10 +100,10 @@ When registering a [Pandas](https://pandas.pydata.org/) DataFrame as feature gro
 | object             | STRING              |
 
 
-### Type Overwrite
+### Explicit Schema Definition
 
-When creating a feature group it is possible for the user to control both the offline and online type of each feature. If users manually specify a schema for the feature group, Hopsworks is going to use it to create the feature group, without performing any type inference.
-Users can manually define the feature group schema as follow:
+When creating a feature group it is possible for the user to control both the offline and online data type of each column. If users explicitly define the schema for the feature group, Hopsworks is going to use that schema to create the feature group, without performing any type inference.
+Users can explicitly define the feature group schema as follows:
 
 ```python
 from hsfs.feature import Feature
