@@ -1211,7 +1211,7 @@ class FeatureGroup(FeatureGroupBase):
             `run_validation`. Boolean, set whether the expectation_suite will run on ingestion
             `validation_ingestion_policy`. Set the policy for ingestion to the featuregroup. 
                 - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
-                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
+                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result. 
         
         # Raises
             `RestAPIException`.
