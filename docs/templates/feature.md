@@ -71,7 +71,7 @@ If users query directly the online feature store, for instance using the `fs.sql
 
 On the feature store UI, the online feature type for complex features will be reported as *VARBINARY*.
 
-#### Online restrictions for primary key types:
+#### Online restrictions for primary key data types:
 
 When a feature is being used as a primary key, certain types are not allowed. Examples of such types are *Float*, *Double*, *Date*, *Text*, *Blob* and *Complex Types*  (e.g. Array<>). Additionally the size of the sum of the primary key online data types storage requirements should not exceed 3KB.
 
