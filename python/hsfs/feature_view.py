@@ -236,9 +236,9 @@ class FeatureView:
             storage_connector=None,
             featurestore_id=self._featurestore_id,
             data_format="tsv",
-            location=None,
+            location="",
             splits=splits,
-            statistics_config=statistics_config,
+            statistics_config=statistics_config
         )
         # td_job is used only if the python engine is used
         td, df = self._feature_view_engine.get_training_data(

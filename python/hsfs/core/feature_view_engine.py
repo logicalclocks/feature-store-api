@@ -184,22 +184,22 @@ class FeatureViewEngine:
 
         try:
             split_df = self._read_from_storage_connector(
-                training_dataset_obj, splits, read_options
+                td_updated, splits, read_options
             )
         except:
             # todo feature view: refine exception
             # Should have an internal exception "IOException: FileNotFound" thrown by storage connector
             query = self.get_batch_query(
                 feature_view_obj,
-                start_time=training_dataset_obj.event_start_time,
-                end_time=training_dataset_obj.event_end_time
+                start_time=td_updated.event_start_time,
+                end_time=td_updated.event_end_time
             )
             split_df = engine.get_instance().get_training_data(
-                training_dataset_obj, feature_view_obj,
+                td_updated, feature_view_obj,
                 query, read_options
             )
             self.compute_training_dataset_statistics(
-                feature_view_obj, training_dataset_obj, split_df, calc_stat=True
+                feature_view_obj, td_updated, split_df, calc_stat=True
             )
 
         return td_updated, split_df
