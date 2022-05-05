@@ -453,8 +453,7 @@ class FeatureView:
             query=query.Query.from_response_json(json_decamelized["query"]),
             featurestore_id=json_decamelized["featurestore_id"],
             version=json_decamelized.get("version", None),
-            description=json_decamelized.get("description", None),
-            label=json_decamelized.get("label", None)
+            description=json_decamelized.get("description", None)
         )
         features = json_decamelized.get("features", None)
         if features:
@@ -463,6 +462,7 @@ class FeatureView:
                     feature)
                 for feature in features]
         fv.schema = features
+        fv.label = [feature.name for feature in features if feature.label]
         return fv
 
     def update_from_response_json(self, json_dict):

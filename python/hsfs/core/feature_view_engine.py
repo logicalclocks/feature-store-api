@@ -186,7 +186,8 @@ class FeatureViewEngine:
             split_df = self._read_from_storage_connector(
                 td_updated, splits, read_options
             )
-        except:
+        except Exception as e:
+            print(e.args)
             # todo feature view: refine exception
             # Should have an internal exception "IOException: FileNotFound" thrown by storage connector
             query = self.get_batch_query(
