@@ -28,6 +28,7 @@ class FeatureViewApi:
     _VERSION = "version"
     _QUERY = "query"
     _BATCH = "batch"
+    _DATA = "data"
     _PREPARED_STATEMENT = "preparedstatement"
     _TRANSFORMATION = "transformation"
     _TRAINING_DATASET = "trainingdatasets"
@@ -110,9 +111,7 @@ class FeatureViewApi:
             from_response_json(self._client._send_request("GET", path))
 
     def create_training_dataset(self, name, version, training_dataset_obj):
-        path = self._base_path + \
-               [name, self._VERSION, version,
-                self._TRAINING_DATASET]
+        path = self.get_training_data_base_path(name, version)
         headers = {"content-type": "application/json"}
         return training_dataset_obj.update_from_response_json(
             self._client._send_request(
@@ -121,9 +120,8 @@ class FeatureViewApi:
 
     def get_training_dataset_by_version(self, name, version,
                                         training_dataset_version):
-        path = self._base_path + \
-               [name, self._VERSION, version,
-                self._TRAINING_DATASET, self._VERSION, training_dataset_version]
+        path = self.get_training_data_base_path(
+            name, version, training_dataset_version)
         return training_dataset.TrainingDataset.from_response_json_single(
             self._client._send_request(
                 "GET", path)
@@ -131,10 +129,8 @@ class FeatureViewApi:
 
     def compute_training_dataset(self, name, version, training_dataset_version,
                                  td_app_conf):
-        path = self._base_path + \
-               [name, self._VERSION, version,
-                self._TRAINING_DATASET, self._VERSION, training_dataset_version,
-                self._COMPUTE]
+        path = self.get_training_data_base_path(
+            name, version, training_dataset_version) + [self._COMPUTE]
         headers = {"content-type": "application/json"}
         return job.Job.from_response_json(
             self._client._send_request(
@@ -151,23 +147,18 @@ class FeatureViewApi:
                                      training_dataset_version):
         path = self.get_training_data_base_path(name, version,
                                                 training_dataset_version)
-        return job.Job.from_response_json(
-            self._client._send_request("DELETE", path)
-        )
+        return self._client._send_request("DELETE", path)
 
     def delete_training_dataset_only(self, name, version):
-        path = self.get_training_data_base_path(name, version)
-        return job.Job.from_response_json(
-            self._client._send_request("DELETE", path)
-        )
+        path = self.get_training_data_base_path(name, version) + [self._DATA]
+        return self._client._send_request("DELETE", path)
 
     def delete_training_dataset_only_version(self, name, version,
                                              training_dataset_version):
-        path = self.get_training_data_base_path(name, version,
-                                                training_dataset_version)
-        return job.Job.from_response_json(
-            self._client._send_request("DELETE", path)
-        )
+        path = self.get_training_data_base_path(
+            name, version, training_dataset_version) + [self._DATA]
+
+        return self._client._send_request("DELETE", path)
 
     def get_training_data_base_path(self, name, version,
                                     training_data_version=None):
