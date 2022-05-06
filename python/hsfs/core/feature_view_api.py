@@ -139,9 +139,7 @@ class FeatureViewApi:
 
     def delete_training_data(self, name, version):
         path = self.get_training_data_base_path(name, version)
-        return job.Job.from_response_json(
-            self._client._send_request("DELETE", path)
-        )
+        return self._client._send_request("DELETE", path)
 
     def delete_training_data_version(self, name, version,
                                      training_dataset_version):
@@ -164,9 +162,9 @@ class FeatureViewApi:
                                     training_data_version=None):
         if training_data_version:
             return self._base_path + \
-               [name, self._VERSION, version, self._TRAINING_DATASET]
-        else:
-            return self._base_path + \
                [name, self._VERSION, version,
                 self._TRAINING_DATASET, self._VERSION, training_data_version,
                 ]
+        else:
+            return self._base_path + \
+                   [name, self._VERSION, version, self._TRAINING_DATASET]
