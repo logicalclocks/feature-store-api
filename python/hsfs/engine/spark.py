@@ -344,7 +344,8 @@ class Engine:
         if training_dataset.coalesce:
             dataset = dataset.coalesce(1)
 
-        self.training_dataset_schema_match(dataset, training_dataset.schema)
+        if feature_view_obj is None:
+            self.training_dataset_schema_match(dataset, training_dataset.schema)
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
