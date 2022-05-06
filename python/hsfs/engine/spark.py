@@ -39,6 +39,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine
 from hsfs.constructor import query
 
+from great_expectations.core import ExpectationSuite
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
 from great_expectations.data_context.types.base import (
@@ -599,7 +600,12 @@ class Engine:
             dataframe._jdf, expectations_java
         )
 
-    def validate_with_great_expectations(self, dataframe: TypeVar("pyspark.sql.DataFrame"), expectation_suite: TypeVar("ge.core.ExpectationSuite"), ge_validate_kwargs:Optional[dict]):
+    def validate_with_great_expectations(
+        self,
+        dataframe: TypeVar("DataFrame"),
+        expectation_suite: TypeVar("ExpectationSuite"),
+        ge_validate_kwargs: Optional[dict],
+    ):
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
         # may experience data loss as it persists nothing. It is used here for testing.
         # Please refer to docs to learn how to instantiate your DataContext.
@@ -611,17 +617,19 @@ class Engine:
         context = BaseDataContext(project_config=data_context_config)
 
         datasource = {
-            'name': 'my_spark_dataframe',
-            'class_name': 'Datasource',
-            'execution_engine': {
-                'class_name': 'SparkDFExecutionEngine'
-                },
-            'data_connectors': {
-                'default_runtime_data_connector_name': {
-                    'class_name': 'RuntimeDataConnector',
-                    'batch_identifiers': ['batch_id']}
+            "name": "my_spark_dataframe",
+            "class_name": "Datasource",
+            "execution_engine": {
+                "class_name": "SparkDFExecutionEngine",
+                "force_reuse_spark_context": True,
+            },
+            "data_connectors": {
+                "default_runtime_data_connector_name": {
+                    "class_name": "RuntimeDataConnector",
+                    "batch_identifiers": ["batch_id"],
                 }
-            }
+            },
+        }
         context.add_datasource(**datasource)
 
         # Here is a RuntimeBatchRequest using a dataframe
@@ -630,11 +638,13 @@ class Engine:
             data_connector_name="default_runtime_data_connector_name",
             data_asset_name="<YOUR_MEANGINGFUL_NAME>",  # This can be anything that identifies this data_asset for you
             batch_identifiers={"batch_id": "default_identifier"},
-            runtime_parameters={"batch_data": df},  # Your dataframe goes here
+            runtime_parameters={"batch_data": dataframe},  # Your dataframe goes here
         )
         context.save_expectation_suite(expectation_suite)
         validator = context.get_validator(
-            batch_request=batch_request, expectation_suite_name=expectation_suite.expectation_suite_name)
+            batch_request=batch_request,
+            expectation_suite_name=expectation_suite.expectation_suite_name,
+        )
         report = validator.validate()
 
         return report
