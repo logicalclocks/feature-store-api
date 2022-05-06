@@ -52,7 +52,8 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
     @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC"),
     @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA"),
-    @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS")
+    @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS"),
+    @JsonSubTypes.Type(value = StorageConnector.BigqueryConnector.class, name = "BIGQUERY")
 })
 public abstract class StorageConnector {
 
@@ -522,5 +523,96 @@ public abstract class StorageConnector {
       SparkEngine.getInstance().setupConnectorHadoopConf(this);
     }
 
+  }
+
+  public static class BigqueryConnector extends StorageConnector {
+
+    @Getter @Setter
+    private String keyPath;
+
+    @Getter @Setter
+    private String parentProject;
+
+    @Getter @Setter
+    private String queryProject;
+
+    @Getter @Setter
+    private String dataset;
+
+    @Getter @Setter
+    private String queryTable;
+
+    @Getter @Setter
+    private String materializationDataset;
+
+    @Getter @Setter
+    private List<Option>  arguments;
+
+    /**
+     * Set spark options specific to BigQuery.
+     * @return Map
+     */
+    public Map<String, String> sparkOptions() {
+      Map<String, String> options = new HashMap<>();
+      options.put(Constants.BIGQ_CREDENTIALS_FILE, SparkEngine.getInstance().addFile(keyPath));
+      options.put(Constants.BIGQ_PARENT_PROJECT, parentProject);
+      if (!Strings.isNullOrEmpty(materializationDataset)) {
+        options.put(Constants.BIGQ_MATERIAL_DATASET, materializationDataset);
+        options.put(Constants.BIGQ_VIEWS_ENABLED,"true");
+      }
+      if (!Strings.isNullOrEmpty(queryProject)) {
+        options.put(Constants.BIGQ_PROJECT, queryProject);
+      }
+      if (!Strings.isNullOrEmpty(dataset)) {
+        options.put(Constants.BIGQ_DATASET, dataset);
+      }
+      if (arguments != null && !arguments.isEmpty()) {
+        Map<String, String> argOptions = arguments.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(argOptions);
+      }
+
+      return options;
+    }
+
+    /**
+     * If Table options are set in the storage connector, set path to table.
+     * Else use the query argument to set as path.
+     * @param query
+     * @param dataFormat
+     * @param options
+     * @param path
+     * @return Dataframe
+     * @throws FeatureStoreException
+     * @throws IOException
+     */
+    @Override
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
+
+      Map<String, String> readOptions = sparkOptions();
+      // merge user spark options on top of default spark options
+      if (!options.isEmpty()) {
+        readOptions.putAll(options);
+      }
+
+      if (!Strings.isNullOrEmpty(query)) {
+        path = query;
+      } else if (!Strings.isNullOrEmpty(queryTable)) {
+        path = queryTable;
+      } else if (!Strings.isNullOrEmpty(path)) {
+        path = path;
+      } else {
+        throw new IllegalArgumentException("Either query should be provided"
+                                             + " or Query Project,Dataset and Table should be set");
+      }
+
+      return SparkEngine.getInstance().read(this, Constants.BIGQUERY_FORMAT, readOptions, path);
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return null;
+    }
   }
 }

@@ -445,9 +445,10 @@ class Engine:
 
     def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):
-            if data_format.lower() in ["delta", "parquet", "hudi", "orc"]:
+            if data_format.lower() in ["delta", "parquet", "hudi", "orc", "bigquery"]:
                 # All the above data format readers can handle partitioning
                 # by their own, they don't need /**
+                # for bigquery, argument location can be a SQL query
                 path = location
             else:
                 path = location + "/**"
