@@ -97,10 +97,11 @@ class FeatureViewEngine:
             return self._feature_view_api.delete_by_name(name)
 
     def get_batch_query(self, feature_view_obj, start_time,
-                               end_time):
+                               end_time, with_label=False):
         return self._feature_view_api.get_batch_query(
             feature_view_obj.name, feature_view_obj.version, start_time,
-            end_time, is_python_engine=engine.get_type() == "python"
+            end_time, is_python_engine=engine.get_type() == "python",
+            with_label=with_label
         )
 
     def get_batch_query_string(self, feature_view_obj, start_time, end_time):
@@ -151,7 +152,8 @@ class FeatureViewEngine:
         return updated_instance, td_job
 
     def get_training_data(self, feature_view_obj,
-                                training_dataset_obj, read_options, splits=None):
+                          training_dataset_obj, read_options,
+                          splits=None):
         if (len(training_dataset_obj.splits) > 0 and
             training_dataset_obj.train_split is None):
             training_dataset_obj.train_split = "train"
@@ -193,7 +195,8 @@ class FeatureViewEngine:
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=td_updated.event_start_time,
-                end_time=td_updated.event_end_time
+                end_time=td_updated.event_end_time,
+                with_label=True
             )
             split_df = engine.get_instance().get_training_data(
                 td_updated, feature_view_obj,
@@ -246,7 +249,7 @@ class FeatureViewEngine:
 
         batch_query = self.get_batch_query(
             feature_view_obj, training_dataset_obj.event_start_time,
-            training_dataset_obj.event_end_time
+            training_dataset_obj.event_end_time, with_label=True
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj, batch_query, user_write_options,
@@ -337,6 +340,6 @@ class FeatureViewEngine:
     def get_batch_data(self, feature_view_obj, start_time,
                                end_time, read_options=None):
         return self.get_batch_query(
-            feature_view_obj, start_time, end_time
+            feature_view_obj, start_time, end_time, with_label=False
         ).read(read_options=read_options)
 
