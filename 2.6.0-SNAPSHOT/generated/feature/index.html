@@ -1029,30 +1029,84 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#feature_1" class="md-nav__link">
-    Feature
+  <a href="#features-taxonomy" class="md-nav__link">
+    Features Taxonomy
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#feature-types" class="md-nav__link">
-    Feature Types
+  <a href="#feature-data-types" class="md-nav__link">
+    Feature Data Types
   </a>
   
-    <nav class="md-nav" aria-label="Feature Types">
+    <nav class="md-nav" aria-label="Feature Data Types">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#offline-storage" class="md-nav__link">
-    Offline Storage
+  <a href="#offline-data-types" class="md-nav__link">
+    Offline Data Types
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#online-storage" class="md-nav__link">
-    Online Storage
+  <a href="#online-data-types" class="md-nav__link">
+    Online Data Types
+  </a>
+  
+    <nav class="md-nav" aria-label="Online Data Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complex-online-data-types" class="md-nav__link">
+    Complex online data types
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#online-restrictions-for-primary-key-data-types" class="md-nav__link">
+    Online restrictions for primary key data types:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-mapping" class="md-nav__link">
+    Type Mapping
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pandas-conversion" class="md-nav__link">
+    Pandas Conversion
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-schema-definition" class="md-nav__link">
+    Explicit Schema Definition
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature_1" class="md-nav__link">
+    Feature
   </a>
   
 </li>
@@ -1646,30 +1700,84 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#feature_1" class="md-nav__link">
-    Feature
+  <a href="#features-taxonomy" class="md-nav__link">
+    Features Taxonomy
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#feature-types" class="md-nav__link">
-    Feature Types
+  <a href="#feature-data-types" class="md-nav__link">
+    Feature Data Types
   </a>
   
-    <nav class="md-nav" aria-label="Feature Types">
+    <nav class="md-nav" aria-label="Feature Data Types">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#offline-storage" class="md-nav__link">
-    Offline Storage
+  <a href="#offline-data-types" class="md-nav__link">
+    Offline Data Types
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#online-storage" class="md-nav__link">
-    Online Storage
+  <a href="#online-data-types" class="md-nav__link">
+    Online Data Types
+  </a>
+  
+    <nav class="md-nav" aria-label="Online Data Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complex-online-data-types" class="md-nav__link">
+    Complex online data types
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#online-restrictions-for-primary-key-data-types" class="md-nav__link">
+    Online restrictions for primary key data types:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-mapping" class="md-nav__link">
+    Type Mapping
+  </a>
+  
+    <nav class="md-nav" aria-label="Type Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pandas-conversion" class="md-nav__link">
+    Pandas Conversion
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-schema-definition" class="md-nav__link">
+    Explicit Schema Definition
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature_1" class="md-nav__link">
+    Feature
   </a>
   
 </li>
@@ -1798,14 +1906,120 @@
 
 <h1 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h1>
 <p><em>Features</em> are the most granular entity in the <a href="../feature_store/">feature store</a> and are
-logically grouped by <a href="../feature_group/">feature groups</a>.</p>
+logically grouped by <a href="../feature_group/">feature groups</a>.
+Features in the same feature groups are semantically related to the feature groups primary keys.</p>
 <p>The storage location of a single feature is determined by the
 <a href="../feature_group/">feature group</a>. Hence, enabling a <a href="../feature_group/">feature group</a>
 for online storage will make a feature available as an online feature.</p>
-<p>New features can be appended to <a href="../feature_group/">feature groups</a>, however, to drop
-features, a new <a href="../feature_group/">feature group</a> version has to be created. When
-appending features it is possible to specify a default value which is used for existing
-feature vectors in the <a href="../feature_group/">feature group</a> for the new feature.</p>
+<h2 id="features-taxonomy">Features Taxonomy<a class="headerlink" href="#features-taxonomy" title="Permanent link">#</a></h2>
+<p>Within a <a href="../feature_group/">feature group</a> there are different categories of features:</p>
+<ul>
+<li><strong>Primary Keys</strong>: The columns that uniquely identify an entity in a feature group (e.g., the customer, the transaction, ...). A primary key may consist of multiple columns, that is, a composite primary key.</li>
+<li><strong>Event Time</strong>: The column in a feature group that stores the time at which the event for the given record has happened (the observation time for the row). You need to provide the event time, if you want the feature group to be able to support point-in-time correct joins when used to creating training data.</li>
+<li><strong>Partition Keys</strong>: The columns that define the storage layout of the feature group data in the offline feature store. The partition keys may be defined over one or more columns, the data is organized in partitions which are stored in separate subdirectories. Partitioning can help improve query efficiency for the offline feature store, by reducing the amount of data that needs to be read from disk for a given query.</li>
+<li><strong>Features</strong>: These columns are the features that can be used to train models and perform inference on models.</li>
+</ul>
+<h2 id="feature-data-types">Feature Data Types<a class="headerlink" href="#feature-data-types" title="Permanent link">#</a></h2>
+<p>When a feature is stored in the both the online and offline feature stores, it will be stored in a data storage type native to each store.</p>
+<ul>
+<li><strong>Offline data type</strong>: The data type of the feature when stored on the offline feature store</li>
+<li><strong>Online data type</strong>: The data type of the feature when stored on the online feature store.</li>
+</ul>
+<p>The offline data type is always required, even if the feature group is stored only online. On the other hand, if the feature group is not <em>online_enabled</em>, its features will not have an online data type.</p>
+<h3 id="offline-data-types">Offline Data Types<a class="headerlink" href="#offline-data-types" title="Permanent link">#</a></h3>
+<p>The offline feature store is based on Apache Hudi and Hive Metastore, as such, any
+<a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types">Hive Data Type</a>
+can be leveraged.</p>
+<p>Potential <em>offline</em> types are:</p>
+<div class="highlight"><pre><span></span><code><span class="ss">&quot;TINYINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;SMALLINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;INT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BIGINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;FLOAT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DOUBLE&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;DECIMAL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIMESTAMP&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;STRING&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BOOLEAN&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BINARY&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;ARRAY &lt;TINYINT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;SMALLINT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;INT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;BIGINT&gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;ARRAY &lt;FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;DOUBLE&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;DECIMAL&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;TIMESTAMP&gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;ARRAY &lt;DATE&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;STRING&gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;ARRAY &lt;BOOLEAN&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;ARRAY &lt;FLOAT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;ARRAY &lt;ARRAY &lt;INT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;ARRAY &lt;STRING&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;MAP &lt;FLOAT, FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;FLOAT, STRING&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;FLOAT, INT&gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;MAP &lt;FLOAT, BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, INT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, STRING&gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;MAP &lt;INT, BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, ARRAY &lt;FLOAT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;STRUCT &lt; label: STRING, index: INT &gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;UNIONTYPE &lt; STRING, INT&gt;&quot;</span><span class="w"></span>
+</code></pre></div>
+<h3 id="online-data-types">Online Data Types<a class="headerlink" href="#online-data-types" title="Permanent link">#</a></h3>
+<p>The online storage is based on RonDB and hence, any
+<a href="https://dev.mysql.com/doc/refman/8.0/en/data-types.html">MySQL Data Type</a>
+can be leveraged.</p>
+<p>Potential <em>online</em> types are:</p>
+<div class="highlight"><pre><span></span><code><span class="ss">&quot;None&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;INT(11)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TINYINT(1)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;SMALLINT(5)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMINT(7)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BIGINT(20)&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;FLOAT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DOUBLE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DECIMAL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATETIME&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIMESTAMP&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIME&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;YEAR&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;CHAR&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(n)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BINARY&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARBINARY(n)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TINYBLOB&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="ss">&quot;TINYTEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMBLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMTEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;LONGBLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;LONGTEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;JSON&quot;</span><span class="w"></span>
+</code></pre></div>
+<h4 id="complex-online-data-types">Complex online data types<a class="headerlink" href="#complex-online-data-types" title="Permanent link">#</a></h4>
+<p>Additionally to the <em>online</em> types above, Hopsworks allows users to store complex types (e.g. <em>ARRAY<INT></em>) on the online feature store.
+Hopsworks serializes the complex features transparently and stores them as VARBINARY in the online feature store. The serialization happens when calling the <a href="../api/feature_group_api/#save">save()</a>, <a href="../api/feature_group_api/#insert">insert()</a> or <a href="../api/feature_group_api/#insert_stream">insert_stream()</a> methods. The deserialization will be executed when calling the <a href="../api/training_dataset_api/#get_serving_vector">get_serving_vector()</a> method to retrieve data from the online feature store.
+If users query directly the online feature store, for instance using the <code>fs.sql("SELECT ...", online=True)</code> statement, it will return a binary blob.</p>
+<p>On the feature store UI, the online feature type for complex features will be reported as <em>VARBINARY</em>.</p>
+<h4 id="online-restrictions-for-primary-key-data-types">Online restrictions for primary key data types:<a class="headerlink" href="#online-restrictions-for-primary-key-data-types" title="Permanent link">#</a></h4>
+<p>When a feature is being used as a primary key, certain types are not allowed. Examples of such types are <em>Float</em>, <em>Double</em>, <em>Date</em>, <em>Text</em>, <em>Blob</em> and <em>Complex Types</em>  (e.g. Array&lt;&gt;). Additionally the size of the sum of the primary key online data types storage requirements should not exceed 3KB.</p>
+<h3 id="type-mapping">Type Mapping<a class="headerlink" href="#type-mapping" title="Permanent link">#</a></h3>
+<p>The offline and online types for each feature are identified based on the types of the columns in the Spark or Pandas DataFrame, and those types are then mapped to the online and offline data types.</p>
+<p>In the case of a Spark DataFrame, the <a href="https://spark.apache.org/docs/latest/sql-ref-datatypes.html">Spark types</a> will be mapped to the corresponding Hive Metastore type and used as offline data type. If the feature group is online enabled, Hopsworks will then map the offline data type to the corresponding online data type. The mapping is based on the following rules:</p>
+<ul>
+<li>If the offline data type is also supported on the online feature store (e.g. INT, FLOAT, DATE, TIMESTAMP), the online data type will be the same as the offline data type</li>
+<li>If the offline data type is <em>boolean</em>, the online data type is going to be set as <em>tinyint</em></li>
+<li>If the offline data type is <em>string</em>, the online data type is going to be set as <em>varchar(100)</em></li>
+<li>If the offline data type is not supported by the online feature store and it is not one of the above exception, the online data type will be set as <em>varbinary(100)</em> to handle complex types.</li>
+</ul>
+<h4 id="pandas-conversion">Pandas Conversion<a class="headerlink" href="#pandas-conversion" title="Permanent link">#</a></h4>
+<p>When registering a <a href="https://pandas.pydata.org/">Pandas</a> DataFrame as a feature group, the following mapping rules are applied:</p>
+<table>
+<thead>
+<tr>
+<th>Pandas Type</th>
+<th>Offline Feature Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>int32</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>int64</td>
+<td>BIGINT</td>
+</tr>
+<tr>
+<td>float32</td>
+<td>FLOAT</td>
+</tr>
+<tr>
+<td>float64</td>
+<td>DOUBLE</td>
+</tr>
+<tr>
+<td>datetime64[ns]</td>
+<td>TIMESTAMP</td>
+</tr>
+<tr>
+<td>object</td>
+<td>STRING</td>
+</tr>
+</tbody>
+</table>
+<h3 id="explicit-schema-definition">Explicit Schema Definition<a class="headerlink" href="#explicit-schema-definition" title="Permanent link">#</a></h3>
+<p>When creating a feature group it is possible for the user to control both the offline and online data type of each column. If users explicitly define the schema for the feature group, Hopsworks is going to use that schema to create the feature group, without performing any type inference.
+Users can explicitly define the feature group schema as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">hsfs.feature</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Feature</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="n">online_type</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">),</span>
+    <span class="n">Feature</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="n">online_type</span><span class="o">=</span><span class="s2">&quot;varchar(20)&quot;</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">fg</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_feature_group</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;fg_manual_schema&quot;</span><span class="p">,</span>
+                             <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+                             <span class="n">online_enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</code></pre></div>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L24">[source]</a></span></p>
 <h3 id="feature_1">Feature<a class="headerlink" href="#feature_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">Feature</span><span class="p">(</span>
@@ -1825,54 +2039,6 @@ feature vectors in the <a href="../feature_group/">feature group</a> for the new
 <p>See Training Dataset Feature for the
 feature representation of training dataset schemas.</p>
 <hr />
-<h2 id="feature-types">Feature Types<a class="headerlink" href="#feature-types" title="Permanent link">#</a></h2>
-<p>Each features requires at least an offline type to be specified for the creation of the
-meta data of the <a href="../feature_group/">feature group</a> in the offline storage, even if the
-<a href="../feature_group/">feature group</a> is going to be a purely online
-<a href="../feature_group/">feature group</a> with no data in the offline storage.</p>
-<h3 id="offline-storage">Offline Storage<a class="headerlink" href="#offline-storage" title="Permanent link">#</a></h3>
-<p>The offline storage is based on Apache Hive and hence, any
-<a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types">Hive Data Type</a>
-can be leveraged.</p>
-<div class="admonition note">
-<p class="admonition-title">Type Inference</p>
-<p>When creating a <a href="../feature_group/">feature group</a> from a Spark DataFrame, without
-providing a schema manually, the feature store will infer the schema with feature
-types from the DataFrame.</p>
-</div>
-<p>Potential <em>offline</em> types are:</p>
-<div class="highlight"><pre><span></span><code><span class="ss">&quot;None&quot;</span><span class="p">,</span><span class="ss">&quot;TINYINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;SMALLINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;INT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BIGINT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;FLOAT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DOUBLE&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;DECIMAL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIMESTAMP&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;STRING&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;BOOLEAN&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BINARY&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;ARRAY &lt;TINYINT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;SMALLINT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;INT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;BIGINT&gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;ARRAY &lt;FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;DOUBLE&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;DECIMAL&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;TIMESTAMP&gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;ARRAY &lt;DATE&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;STRING&gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;ARRAY &lt;BOOLEAN&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;ARRAY &lt;FLOAT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;ARRAY &lt;ARRAY &lt;INT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;ARRAY &lt;ARRAY &lt;STRING&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;MAP &lt;FLOAT, FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;FLOAT, STRING&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;FLOAT, INT&gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;MAP &lt;FLOAT, BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, INT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, STRING&gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;MAP &lt;INT, BINARY&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, FLOAT&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MAP &lt;INT, ARRAY &lt;FLOAT&gt; &gt;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;STRUCT &lt; label: STRING, index: INT &gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;UNIONTYPE &lt; STRING, INT&gt;&quot;</span><span class="w"></span>
-</code></pre></div>
-<h3 id="online-storage">Online Storage<a class="headerlink" href="#online-storage" title="Permanent link">#</a></h3>
-<p>The online storage is based on MySQL Cluster (NDB) and hence, any
-<a href="https://dev.mysql.com/doc/refman/8.0/en/data-types.html">MySQL Data Type</a>
-can be leveraged.</p>
-<div class="admonition note">
-<p class="admonition-title">Type Inference</p>
-<p>When creating a <a href="../feature_group/">feature group</a> from a Spark DataFrame, without
-providing a schema manually, the feature store will infer the schema with feature
-types from the DataFrame.</p>
-</div>
-<p>Potential <em>online</em> types are:</p>
-<div class="highlight"><pre><span></span><code><span class="ss">&quot;None&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;INT(11)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TINYINT(1)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;SMALLINT(5)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMINT(7)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BIGINT(20)&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;FLOAT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DOUBLE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DECIMAL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;DATETIME&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIMESTAMP&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TIME&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;YEAR&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;CHAR&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(25)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(125)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(225)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(500)&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;VARCHAR(1000)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(2000)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(5000)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARCHAR(10000)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BINARY&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;VARBINARY(100)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARBINARY(500)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;VARBINARY(1000)&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;BLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TEXT&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;TINYBLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;TINYTEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMBLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;MEDIUMTEXT&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;LONGBLOB&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;LONGTEXT&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="ss">&quot;JSON&quot;</span><span class="w"></span>
-</code></pre></div>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature.py#L156">[source]</a></span></p>
 <h3 id="default_value">default_value<a class="headerlink" href="#default_value" title="Permanent link">#</a></h3>
