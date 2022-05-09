@@ -200,16 +200,16 @@ class FeatureView:
             self, start_time, end_time, read_options)
 
     def add_tag(self, name: str, value):
-        pass
+        return self._feature_view_engine.add_tag(self, name, value)
 
     def get_tag(self, name: str):
-        return tag.Tag()
+        return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
-        return list(list(tag.Tag()))
+        return self._feature_view_engine.get_tags(self)
 
     def delete_tag(self, name: str):
-        pass
+        return self._feature_view_engine.delete_tag(self, name)
 
     def get_training_datasets(
         self,
@@ -416,17 +416,26 @@ class FeatureView:
         return td.version, td_job
 
 
-    def add_training_dataset_tag(self, version: int, name: str, value):
-        pass
+    def add_training_dataset_tag(
+        self, training_dataset_version: int, name: str, value):
+        return self._feature_view_engine.add_tag(
+            self, name, value, training_dataset_version=training_dataset_version
+        )
 
-    def get_training_dataset_tag(self, version: int, name: str):
-        return tag.Tag()
+    def get_training_dataset_tag(
+        self, training_dataset_version: int, name: str):
+        return self._feature_view_engine.get_tag(
+            self, name, training_dataset_version=training_dataset_version)
 
-    def get_training_dataset_tags(self, version: int):
-        return list(list(tag.Tag()))
+    def get_training_dataset_tags(
+        self, training_dataset_version: int):
+        return self._feature_view_engine.get_tags(
+            self, training_dataset_version=training_dataset_version)
 
-    def delete_training_dataset_tag(self, version: int, name: str):
-        pass
+    def delete_training_dataset_tag(
+        self, training_dataset_version: int, name: str):
+        return self._feature_view_engine.delete_tag(
+            self, name, training_dataset_version=training_dataset_version)
 
     def purge_training_data(self, version: int):
         self._feature_view_engine.delete_training_dataset_only(

@@ -343,3 +343,29 @@ class FeatureViewEngine:
             feature_view_obj, start_time, end_time, with_label=False
         ).read(read_options=read_options)
 
+    def add_tag(self, feature_view_obj, name: str, value,
+                training_dataset_version=None):
+        self._tags_api.add(
+            feature_view_obj, name, value,
+            training_dataset_version=training_dataset_version
+        )
+
+    def delete_tag(self, feature_view_obj, name: str,
+                training_dataset_version=None):
+        self._tags_api.delete(
+            feature_view_obj, name,
+            training_dataset_version=training_dataset_version
+        )
+
+    def get_tag(self, feature_view_obj, name: str,
+                training_dataset_version=None):
+        return self._tags_api.get(
+            feature_view_obj, name,
+            training_dataset_version=training_dataset_version)[name]
+
+    def get_tags(self, feature_view_obj, training_dataset_version=None):
+        return self._tags_api.get(
+            feature_view_obj,
+            training_dataset_version=training_dataset_version
+        )
+

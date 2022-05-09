@@ -18,7 +18,7 @@ from hsfs import (
     client, feature_view, transformation_function_attached, training_dataset
 )
 from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement, fs_query, query
+from hsfs.constructor import serving_prepared_statement, query
 
 
 class FeatureViewApi:
