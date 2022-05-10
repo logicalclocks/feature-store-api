@@ -16,6 +16,7 @@
 import json
 import warnings
 from typing import Optional, Union, Any, Dict, List, TypeVar
+from datetime import timezone
 
 import humps
 import pandas as pd
@@ -137,8 +138,11 @@ class TrainingDataset:
         if not event_time:
             return None
         if isinstance(event_time, str):
-            return util.get_timestamp_from_date_string(event_time)
+            return util.get_timestamp_from_date_string(event_time, timezone.utc)
         elif isinstance(event_time, int):
+            if event_time < 1000:
+                raise ValueError(
+                    "Timestamp should be greater than or equal to 1000 ms")
             return event_time
         else:
             raise ValueError("Given event time should be in `str` or `int` type")
