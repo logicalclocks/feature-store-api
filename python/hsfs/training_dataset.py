@@ -40,6 +40,7 @@ from hsfs.constructor import query
 class TrainingDataset:
     HOPSFS = "HOPSFS_TRAINING_DATASET"
     EXTERNAL = "EXTERNAL_TRAINING_DATASET"
+    IN_MEMORY = "IN_MEMORY_TRAINING_DATASET"
     ENTITY_TYPE = "trainingdatasets"
 
     def __init__(
@@ -47,8 +48,8 @@ class TrainingDataset:
         name,
         version,
         data_format,
-        location,
         featurestore_id,
+        location="",
         event_start_time=None,
         event_end_time=None,
         coalesce=False,
@@ -105,21 +106,26 @@ class TrainingDataset:
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
         self._vector_server = vector_server.VectorServer(featurestore_id)
-
+        if training_dataset_type:
+            self.training_dataset_type = training_dataset_type
         # set up depending on user initialized or coming from backend response
-        if training_dataset_type is None:
+        if created is None:
             # no type -> user init
             self._features = features
-            self.storage_connector = storage_connector
+            if training_dataset_type != self.IN_MEMORY:
+                self.storage_connector = storage_connector
+            else:
+                self._storage_connector = None
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
         else:
-            # type available -> init from backend response
-            # make rest call to get all connector information, description etc.
-            self._storage_connector = StorageConnector.from_response_json(
-                storage_connector
-            )
+            if training_dataset_type != self.IN_MEMORY:
+                # type available -> init from backend response
+                # make rest call to get all connector information, description etc.
+                self._storage_connector = StorageConnector.from_response_json(
+                    storage_connector
+                )
 
             if features is None:
                 features = []
@@ -128,7 +134,6 @@ class TrainingDataset:
                 for feat in features
             ]
             self._splits = splits
-            self._training_dataset_type = training_dataset_type
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
@@ -781,3 +786,22 @@ class TrainingDataset:
     @property
     def event_end_time(self):
         return self._end_time
+
+    @property
+    def training_dataset_type(self):
+        return self._training_dataset_type
+
+    @training_dataset_type.setter
+    def training_dataset_type(self, training_dataset_type):
+        valid_type = [
+            self.IN_MEMORY,
+            self.HOPSFS,
+            self.EXTERNAL
+        ]
+        if training_dataset_type not in valid_type:
+            raise ValueError(
+                "Training dataset type should be one of "
+                ", ".join(valid_type)
+            )
+        else:
+            self._training_dataset_type = training_dataset_type

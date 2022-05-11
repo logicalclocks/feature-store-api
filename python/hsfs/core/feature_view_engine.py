@@ -167,7 +167,7 @@ class FeatureViewEngine:
             not feature_view_obj.query.from_cache_feature_group_only()):
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
-                "Please use `feature_view.create_training_dataset` instead."
+                " Please use `feature_view.create_training_dataset` instead."
             )
         # check if provided td version has already existed.
         if training_dataset_obj.version:
@@ -184,14 +184,11 @@ class FeatureViewEngine:
             feature_view_obj, training_dataset_obj
         )
 
-        try:
+        if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
             split_df = self._read_from_storage_connector(
                 td_updated, splits, read_options
             )
-        except Exception as e:
-            print(e.args)
-            # todo feature view: refine exception
-            # Should have an internal exception "IOException: FileNotFound" thrown by storage connector
+        else:
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=td_updated.event_start_time,
@@ -207,6 +204,9 @@ class FeatureViewEngine:
             )
 
         return td_updated, split_df
+
+    def recreate_training_dataset(self):
+        pass
 
     def _read_from_storage_connector(
         self, training_data_obj, splits, read_options):
@@ -226,13 +226,22 @@ class FeatureViewEngine:
 
     def _read_dir_from_storage_connector(
         self, training_data_obj, path, read_options):
-        return training_data_obj.storage_connector.read(
-            # always read from materialized dataset, not query object
-            query=None,
-            data_format=training_data_obj.data_format,
-            options=read_options,
-            path=path,
-        )
+        try:
+            return training_data_obj.storage_connector.read(
+                # always read from materialized dataset, not query object
+                query=None,
+                data_format=training_data_obj.data_format,
+                options=read_options,
+                path=path,
+            )
+        except Exception as e:
+            if not isinstance(e, ModuleNotFoundError):
+                raise FileNotFoundError(
+                    f"Failed to read dataset from {path}."
+                    " Check if path exists or recreate a training dataset."
+                )
+            else:
+                raise e
 
     # This method is used by hsfs_utils to launch a job for python client
     def compute_training_dataset(self, feature_view_obj, user_write_options,

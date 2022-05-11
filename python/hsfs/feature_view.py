@@ -238,7 +238,8 @@ class FeatureView:
             data_format="tsv",
             location="",
             splits=splits,
-            statistics_config=statistics_config
+            statistics_config=statistics_config,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY
         )
         # td_job is used only if the python engine is used
         td, df = self._feature_view_engine.get_training_data(
