@@ -583,8 +583,8 @@ class Engine:
                 ]
             ),
             "security.protocol": "SSL",
-            "ssl.ca.location": "ca_chain.pem",
-            "ssl.certificate.location": "client.pem",
-            "ssl.key.location": "client_key.pem",
+            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
+            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
+            "ssl.key.location": client.get_instance()._get_client_key_path(),
             "client.id": socket.gethostname(),
         }
