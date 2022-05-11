@@ -353,7 +353,7 @@ class Engine:
                     feature_dataframe=dataset,
                 )
                 # Populate builtin transformations (if any) with respective arguments
-                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                training_dataset.transformation_functions = training_dataset._transformation_function_engine.populate_builtin_attached_fns(
                     training_dataset.transformation_functions, stats.content
                 )
             # apply transformation functions (they are applied separately if there are splits)
@@ -757,7 +757,11 @@ class Engine:
             transformation_fn,
         ) in training_dataset.transformation_functions.items():
             fn_registration_name = (
-                transformation_fn.name + "_" + str(transformation_fn.version)
+                transformation_fn.name
+                + "_"
+                + str(transformation_fn.version)
+                + "_"
+                + feature_name
             )
             self._spark_session.udf.register(
                 fn_registration_name, transformation_fn.transformation_fn
