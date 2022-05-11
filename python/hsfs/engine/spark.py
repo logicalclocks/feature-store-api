@@ -389,7 +389,6 @@ class Engine:
         split_names,
         builtin_tffn_features,
     ):
-        stats = None
         if builtin_tffn_features:
             # compute statistics before transformations are applied
             i = [
@@ -402,13 +401,12 @@ class Engine:
                 columns=builtin_tffn_features,
                 feature_dataframe=feature_dataframe_list[i],
             )
-
-        for i in range(len(feature_dataframe_list)):
             # Populate builtin transformations (if any) with respective arguments for each split
             if stats is not None:
                 training_dataset.transformation_functions = training_dataset._transformation_function_engine.populate_builtin_attached_fns(
                     training_dataset.transformation_functions, stats.content
                 )
+        for i in range(len(feature_dataframe_list)):
             # apply transformation functions (they are applied separately to each split)
             dataset = self._apply_transformation_function(
                 training_dataset, dataset=feature_dataframe_list[i]
