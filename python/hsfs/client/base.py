@@ -101,18 +101,18 @@ class Client(ABC):
         """
         return self._send_request("GET", ["project", project_id, "credentials"])
 
-    def _write_pem_file(self, content, path):
+    def _write_pem_file(self, content: str, path: str) -> None:
         with open(path, "w") as f:
             f.write(content)
 
-    def _get_ca_chain_path(self):
+    def _get_ca_chain_path(self) -> str:
         return os.path.join("/tmp", "ca_chain.pem")
 
-    def _get_client_cert_path(self):
+    def _get_client_cert_path(self) -> str:
         return os.path.join("/tmp", "client_cert.pem")
 
-    def _get_client_key_path(self):
-        return os.path("/tmp", "client_key.pem")
+    def _get_client_key_path(self) -> str:
+        return os.path.join("/tmp", "client_key.pem")
 
     @connected
     def _send_request(
