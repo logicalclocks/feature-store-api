@@ -32,7 +32,6 @@ class FeatureViewApi:
     _PREPARED_STATEMENT = "preparedstatement"
     _TRANSFORMATION = "transformation"
     _TRAINING_DATASET = "trainingdatasets"
-    _FUNCTIONS = "functions"
     _COMPUTE = "compute"
 
     def __init__(self, feature_store_id):
@@ -106,7 +105,7 @@ class FeatureViewApi:
     def get_attached_transformation_fn(self, name, version):
         path = self._base_path + \
                [name, self._VERSION, version,
-                self._TRANSFORMATION, self._FUNCTIONS]
+                self._TRANSFORMATION]
         return transformation_function_attached.TransformationFunctionAttached.\
             from_response_json(self._client._send_request("GET", path))
 
