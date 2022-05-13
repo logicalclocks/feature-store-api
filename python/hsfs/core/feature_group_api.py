@@ -263,3 +263,20 @@ class FeatureGroupApi:
                 "POST", path_params, headers=headers, data=ingestion_conf.json()
             ),
         )
+
+    def get_explicit_provenance_links(self, feature_group_instance):
+        """Get the parent feature groups that were used to generate this feature
+        group. This is based on explicit provenance.
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        return _client._send_request("GET", path_params)

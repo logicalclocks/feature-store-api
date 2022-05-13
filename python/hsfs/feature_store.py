@@ -385,6 +385,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
+        parents: Optional[List[feature_group.FeatureGroup]] = [],
     ):
         """Create a feature group metadata object.
 
@@ -437,6 +438,8 @@ class FeatureStore:
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
+            parents: Optionally, Define the parents of this feature group as the
+                origin where the data is coming from.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -457,6 +460,7 @@ class FeatureStore:
             event_time=event_time,
             stream=stream,
             expectation_suite=expectation_suite,
+            parents=parents,
         )
 
     def get_or_create_feature_group(
@@ -476,6 +480,7 @@ class FeatureStore:
         ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
+        parents: Optional[List[feature_group.FeatureGroup]] = [],
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -526,6 +531,8 @@ class FeatureStore:
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
+            parents: Optionally, Define the parents of this feature group as the
+                origin where the data is coming from.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -556,6 +563,7 @@ class FeatureStore:
                     event_time=event_time,
                     stream=stream,
                     expectation_suite=expectation_suite,
+                    parents=parents,
                 )
             else:
                 raise e

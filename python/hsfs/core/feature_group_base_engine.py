@@ -47,6 +47,14 @@ class FeatureGroupBaseEngine:
         """Get all tags for a feature group."""
         return self._tags_api.get(feature_group)
 
+    def get_explicit_provenance_links(self, feature_group):
+        """Get the parent feature groups that were used to generate this feature
+        group. This is based on explicit provenance.
+        """
+        return self._feature_group_api.get_explicit_provenance_links(
+            self, feature_group
+        )
+
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
         self._feature_group_api.update_metadata(

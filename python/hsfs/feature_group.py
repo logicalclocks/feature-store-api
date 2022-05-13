@@ -216,6 +216,68 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_tags(self)
 
+    def get_parent_feature_groups(self):
+        """Get the parent feature groups that were used to generate this feature
+        group. This is based on explicit provenance.
+        """
+        links_dto = self._feature_group_engine.get_explicit_provenance_links(self)
+        parent_links = []
+        for link in links_dto.upstream:
+            parent_links.append(
+                {
+                    "project": link["project"],
+                    "name": link["name"],
+                    "version": link["version"],
+                    "type": link["type"],
+                    "accessible": link["accessible"],
+                    "deleted": link["deleted"],
+                }
+            )
+        return parent_links
+
+    def get_derived_feature_groups(self):
+        """Get the derived feature groups that used this feature group.
+        This is based on explicit provenance.
+        """
+        links_dto = self._feature_group_engine.get_derived_artifacts(self)
+        derived_feature_groups = []
+        for link in links_dto.upstream:
+            if (
+                link["type"] == "CACHED_FEATURE_GROUP"
+                or link["type"] == "FEATURE_GROUP"
+            ):
+                derived_feature_groups.append(
+                    {
+                        "project": link["project"],
+                        "name": link["name"],
+                        "version": link["version"],
+                        "type": link["type"],
+                        "accessible": link["accessible"],
+                        "deleted": link["deleted"],
+                    }
+                )
+        return derived_feature_groups
+
+    def get_derived_feature_views(self):
+        """Get the derived feature views that used this feature group.
+        This is based on explicit provenance.
+        """
+        links_dto = self._feature_group_engine.get_derived_artifacts(self)
+        derived_feature_views = []
+        for link in links_dto.upstream:
+            if link["type"] == "FEATURE_VIEW":
+                derived_feature_views.append(
+                    {
+                        "project": link["project"],
+                        "name": link["name"],
+                        "version": link["version"],
+                        "type": link["type"],
+                        "accessible": link["accessible"],
+                        "deleted": link["deleted"],
+                    }
+                )
+        return derived_feature_views
+
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
 
@@ -687,6 +749,7 @@ class FeatureGroup(FeatureGroupBase):
         event_time=None,
         stream=False,
         expectation_suite=None,
+        parents=None,
     ):
         super().__init__(featurestore_id, location)
 
@@ -712,6 +775,7 @@ class FeatureGroup(FeatureGroupBase):
         self._online_topic_name = online_topic_name
         self._event_time = event_time
         self._stream = stream
+        self._parents = parents
         self._deltastreamer_jobconf = None
 
         if self._id:
@@ -1357,6 +1421,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
+            "parents": self._parents,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -1471,6 +1536,12 @@ class FeatureGroup(FeatureGroupBase):
         """Whether to enable real time stream writing capabilities."""
         return self._stream
 
+    @property
+    def parents(self):
+        """Parent feature groups as origin of the data in the current feature group.
+        This is part of explicit provenance"""
+        return self._parents
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -1502,6 +1573,10 @@ class FeatureGroup(FeatureGroupBase):
     @stream.setter
     def stream(self, stream):
         self._stream = stream
+
+    @parents.setter
+    def parents(self, new_parents):
+        self._parents = new_parents
 
 
 class ExternalFeatureGroup(FeatureGroupBase):
