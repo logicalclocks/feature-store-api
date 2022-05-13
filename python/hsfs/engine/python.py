@@ -578,12 +578,6 @@ class Engine:
         producer.flush()
         return None
 
-    def _encode_feature_row(
-        self, feature_group: FeatureGroup, dataframe: pd.DataFrame
-    ) -> pd.DataFrame:
-        # return dataframe.apply(lambda row: _encode_complex_features(feature_group, row))
-        pass
-
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
     ) -> dict:
