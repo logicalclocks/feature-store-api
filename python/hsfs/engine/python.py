@@ -552,7 +552,7 @@ class Engine:
             # possible optimizaiton: make it based on type so we don't need to loop over
             # all keys in the row
             for k in row.keys():
-                # convert numpy arrays to python list
+                # for avro to be able to serialize them, they need to be python data types
                 if isinstance(row[k], np.ndarray):
                     row[k] = row[k].tolist()
                 if isinstance(row[k], pd.Timestamp):
