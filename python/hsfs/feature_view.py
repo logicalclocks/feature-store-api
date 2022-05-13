@@ -216,7 +216,7 @@ class FeatureView:
         splits: Optional[Dict[str, float]],
         start_time: Optional = None,
         end_time: Optional = None,
-        version: Optional[int] = None,
+        version: Optional[int] = 1,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = {}
@@ -258,7 +258,7 @@ class FeatureView:
         self,
         start_time: Optional = None,
         end_time: Optional = None,
-        version: Optional[int] = None,
+        version: Optional[int] = 1,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = {}
@@ -299,7 +299,7 @@ class FeatureView:
         location: Optional[str] = "",
         version: Optional[int] = None,
         description: Optional[str] = "",
-        data_format: Optional[str] = "tfrecords",
+        data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         splits: Optional[Dict[str, float]] = {},
         seed: Optional[int] = None,
@@ -343,7 +343,7 @@ class FeatureView:
                         improve discoverability for Data Scientists, defaults to empty string
                         `""`.
                     data_format: The data format used to save the training dataset,
-                        defaults to `"tfrecords"`-format.
+                        defaults to `"csv"`-format.
                     coalesce: If true the training dataset data will be coalesced into
                         a single partition before writing. The resulting training dataset
                         will be a single file per split. Default False.

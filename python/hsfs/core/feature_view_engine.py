@@ -230,7 +230,7 @@ class FeatureViewEngine:
                 path=path,
             )
         except Exception as e:
-            if not isinstance(e, ModuleNotFoundError):
+            if isinstance(e, FileNotFoundError):
                 raise FileNotFoundError(
                     f"Failed to read dataset from {path}."
                     " Check if path exists or recreate a training dataset."
