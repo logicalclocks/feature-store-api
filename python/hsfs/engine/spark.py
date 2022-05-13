@@ -341,7 +341,7 @@ class Engine:
                     feature_dataframe=dataset,
                 )
                 # Populate builtin transformations (if any) with respective arguments
-                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                training_dataset.transformation_functions = training_dataset._transformation_function_engine.populate_builtin_attached_fns(
                     training_dataset.transformation_functions, stats.content
                 )
             # apply transformation functions (they are applied separately if there are splits)
@@ -377,7 +377,6 @@ class Engine:
         split_names,
         builtin_tffn_features,
     ):
-        stats = None
         if builtin_tffn_features:
             # compute statistics before transformations are applied
             i = [
@@ -390,13 +389,12 @@ class Engine:
                 columns=builtin_tffn_features,
                 feature_dataframe=feature_dataframe_list[i],
             )
-
-        for i in range(len(feature_dataframe_list)):
             # Populate builtin transformations (if any) with respective arguments for each split
             if stats is not None:
-                training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                training_dataset.transformation_functions = training_dataset._transformation_function_engine.populate_builtin_attached_fns(
                     training_dataset.transformation_functions, stats.content
                 )
+        for i in range(len(feature_dataframe_list)):
             # apply transformation functions (they are applied separately to each split)
             dataset = self._apply_transformation_function(
                 training_dataset, dataset=feature_dataframe_list[i]
@@ -841,7 +839,11 @@ class Engine:
             transformation_fn,
         ) in training_dataset.transformation_functions.items():
             fn_registration_name = (
-                transformation_fn.name + "_" + str(transformation_fn.version)
+                transformation_fn.name
+                + "_"
+                + str(transformation_fn.version)
+                + "_"
+                + feature_name
             )
             self._spark_session.udf.register(
                 fn_registration_name, transformation_fn.transformation_fn
