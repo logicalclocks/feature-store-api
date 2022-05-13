@@ -23,6 +23,7 @@ import warnings
 import avro
 import json
 import socket
+import pyarrow as pa
 
 from io import BytesIO
 from pyhive import hive
@@ -256,8 +257,12 @@ class Engine:
         )
 
     def parse_schema_feature_group(self, dataframe):
+        arrow_schema = pa.Schema.from_pandas(dataframe)
         return [
-            feature.Feature(feat_name.lower(), self._convert_pandas_type(feat_type))
+            feature.Feature(
+                feat_name.lower(),
+                self._convert_pandas_type(feat_name, feat_type, arrow_schema),
+            )
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
 
@@ -267,15 +272,24 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def _convert_pandas_type(self, dtype):
+    def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
         # This is a simple type conversion between pandas type and pyspark types.
         # In PySpark they use PyArrow to do the schema conversion, but this python layer
         # should be as thin as possible. Adding PyArrow will make the library less flexible.
         # If the conversion fails, users can always fall back and provide their own types
 
-        # TODO(Fabio): consider arrays
         if dtype == np.dtype("O"):
-            # This is an object, fall back to string
+            return self._infer_type_pyarrow(feat_name, arrow_schema)
+
+        return self._convert_simple_pandas_type(dtype)
+
+    def _convert_simple_pandas_type(self, dtype):
+        # This is a simple type conversion between pandas type and pyspark types.
+        # In PySpark they use PyArrow to do the schema conversion, but this python layer
+        # should be as thin as possible. Adding PyArrow will make the library less flexible.
+        # If the conversion fails, users can always fall back and provide their own types
+
+        if dtype == np.dtype("O"):
             return "string"
         elif dtype == np.dtype("int32"):
             return "int"
@@ -287,7 +301,20 @@ class Engine:
             return "double"
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
+        elif dtype == np.dtype("bool"):
+            return "bool"
 
+        return "string"
+
+    def _infer_type_pyarrow(self, field, schema):
+        arrow_type = schema.field(field).type
+
+        if pa.types.is_list(arrow_type):
+            # figure out sub type
+            subtype = self._convert_simple_pandas_type(
+                arrow_type.value_type.to_pandas_dtype()
+            )
+            return "array<{}>".format(subtype)
         return "string"
 
     def save_dataframe(
@@ -528,6 +555,8 @@ class Engine:
                 # convert numpy arrays to python list
                 if isinstance(row[k], np.ndarray):
                     row[k] = row[k].tolist()
+                if isinstance(row[k], pd.Timestamp):
+                    row[k] = row[k].to_pydatetime()
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
