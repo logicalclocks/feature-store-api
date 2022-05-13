@@ -163,12 +163,6 @@ class FeatureViewEngine:
                 "split will be used for transformation functions."
             )
         td_updated = None
-        if ((engine.get_type() == "python" or engine.get_type() == "hive") and
-            not feature_view_obj.query.from_cache_feature_group_only()):
-            raise NotImplementedError(
-                "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_dataset` instead."
-            )
         # check if provided td version has already existed.
         if training_dataset_obj.version:
             try:
@@ -189,6 +183,7 @@ class FeatureViewEngine:
                 td_updated, splits, read_options
             )
         else:
+            self._check_feature_group_accessibility(feature_view_obj)
             query = self.get_batch_query(
                 feature_view_obj,
                 start_time=td_updated.event_start_time,
@@ -348,6 +343,7 @@ class FeatureViewEngine:
 
     def get_batch_data(self, feature_view_obj, start_time,
                                end_time, read_options=None):
+        self._check_feature_group_accessibility(feature_view_obj)
         return self.get_batch_query(
             feature_view_obj, start_time, end_time, with_label=False
         ).read(read_options=read_options)
@@ -377,4 +373,12 @@ class FeatureViewEngine:
             feature_view_obj,
             training_dataset_version=training_dataset_version
         )
+
+    def _check_feature_group_accessibility(self, feature_view_obj):
+        if ((engine.get_type() == "python" or engine.get_type() == "hive") and
+            not feature_view_obj.query.from_cache_feature_group_only()):
+            raise NotImplementedError(
+                "Python kernel can only read from cached feature group."
+                " Please use `feature_view.create_training_dataset` instead."
+            )
 
