@@ -324,7 +324,9 @@ class Engine:
         validation_id: int = None,
     ):
         if feature_group.stream:
-            self._write_dataframe_kafka(feature_group, dataframe)
+            return self._write_dataframe_kafka(
+                feature_group, dataframe, offline_write_options
+            )
         else:
             # for backwards compatibility
             return self.legacy_save_dataframe(
@@ -521,7 +523,10 @@ class Engine:
         return file
 
     def _write_dataframe_kafka(
-        self, feature_group: FeatureGroup, dataframe: pd.DataFrame
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        offline_write_options: dict,
     ):
         # setup kafka producer
         producer = Producer(self._get_kafka_config())
@@ -571,7 +576,25 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         producer.flush()
-        return None
+
+        # start backfilling job
+        if offline_write_options is not None and offline_write_options.get(
+            "start_offline_backfill", True
+        ):
+            print("Launching offline feature group backfill job...")
+            job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+                fg_name=feature_group.name, version=feature_group.version
+            )
+            job = self._job_api.get(job_name)
+            self._job_api.launch(job_name)
+            print(
+                "Backfill Job started successfully, you can follow the progress at {}".format(
+                    self._get_job_url(job.href)
+                )
+            )
+            self._wait_for_job(job, offline_write_options)
+
+        return job
 
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
