@@ -273,11 +273,6 @@ class Engine:
         )
 
     def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
-        # This is a simple type conversion between pandas type and pyspark types.
-        # In PySpark they use PyArrow to do the schema conversion, but this python layer
-        # should be as thin as possible. Adding PyArrow will make the library less flexible.
-        # If the conversion fails, users can always fall back and provide their own types
-
         if dtype == np.dtype("O"):
             return self._infer_type_pyarrow(feat_name, arrow_schema)
 
@@ -567,7 +562,7 @@ class Engine:
                 encoded_row = outf.getvalue()
 
             # assemble key
-            key = "key"
+            key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
             # produce
             producer.produce(
