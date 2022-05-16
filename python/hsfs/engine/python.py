@@ -43,7 +43,7 @@ from hsfs.core import (
     training_dataset_job_conf,
 )
 from hsfs.constructor import query
-from hsfs.client import exceptions
+from hsfs.client import exceptions, external, hopsworks
 from hsfs.feature_group import FeatureGroup
 
 HAS_FAST = False
@@ -617,16 +617,30 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self) -> dict:
-        return {
-            "bootstrap.servers": ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints()
-                ]
-            ),
+        config = {
             "security.protocol": "SSL",
             "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
             "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
             "ssl.key.location": client.get_instance()._get_client_key_path(),
             "client.id": socket.gethostname(),
         }
+
+        if isinstance(client.get_instance(), external.Client):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("EXTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                        externalListeners=True
+                    )
+                ]
+            )
+        elif isinstance(client.get_instance(), hopsworks.Client):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("INTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                        externalListeners=False
+                    )
+                ]
+            )
+        return config
