@@ -32,7 +32,6 @@ from hsfs.core import (
     on_demand_feature_group_engine,
     expectations_api,
 )
-from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
@@ -833,37 +832,16 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+        features = engine.get_instance().convert_to_default_dataframe(features)
 
-        user_version = self._version
+        fg_job = self._feature_group_engine.save(self, features, write_options)
 
-        if self._stream:
-            # when creating a stream feature group, users have the possibility of passing
-            # a spark_job_configuration object as part of the write_options with the key "spark"
-            _spark_options = write_options.pop("spark", None)
-            _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
-                if write_options
-                else None
-            )
-            self._deltastreamer_jobconf = DeltaStreamerJobConf(
-                _write_options, _spark_options
-            )
-
-        # fg_job is used only if the python engine is used
-        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
         self._code_engine.save_code(self)
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
-        if user_version is None:
-            warnings.warn(
-                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
-                    self._name, self._version
-                ),
-                util.VersionWarning,
-            )
+            self._statistics_engine.compute_statistics(self, features)
+
         return fg_job
 
     def insert(
@@ -880,13 +858,19 @@ class FeatureGroup(FeatureGroupBase):
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Insert data from a dataframe into the feature group.
+        """Persist the metadata and materialize the feature group to the feature store
+        or Insert data from a dataframe into the existing feature group.
 
-        Incrementally insert data to a feature group or overwrite all data contained
-        in the feature group. By default, the data is inserted into the offline storage
-        as well as the online storage if the feature group is `online_enabled=True`. To
-        insert only into the online storage, set `storage="online"`, or oppositely
-        `storage="offline"`.
+        If feature group doesn't exist calling `insert` creates the metadata for the
+        feature group in the feature store and writes the specified `features` dataframe
+        as feature group to the online/offline feature store as specified.
+        By default, this writes the feature group to the offline storage, and if
+            `online_enabled` for the feature group, also to the online feature store.
+
+        If feature group already exist `insert` method Incrementally insert data to a feature group
+        or overwrite all data contained in the feature group. By default, the data is inserted into the
+        offline storage as well as the online storage if the feature group is `online_enabled=True`. To
+        insert only into the online storage, set `storage="online"`, or oppositely `storage="offline"`.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
@@ -895,12 +879,20 @@ class FeatureGroup(FeatureGroupBase):
         group.
 
         If feature group's time travel format is `HUDI` then `operation` argument can be
-        either `insert` or `upsert`.
+        either `insert`, `upsert` or  `bulk_insert`..
+
+        !!! example "Create new feature group and insert new data with time travel format `HUDI`:"
+            ```python
+            fs = conn.get_feature_store();
+            fg = fs.create_feature_group(name="example_feature_group", version=1)
+            upsert_df = ...
+            fg.insert(upsert_df)
+            ```
 
         !!! example "Upsert new feature data with time travel format `HUDI`:"
             ```python
             fs = conn.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
+            fg = fs.get_feature_group(name="example_feature_group", version=1)
             upsert_df = ...
             fg.insert(upsert_df)
             ```
@@ -909,8 +901,8 @@ class FeatureGroup(FeatureGroupBase):
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
-            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
-                Defaults to `"upsert"`.
+            operation: Apache Hudi operation type `"insert"`, `"upsert"` or  `"bulk_insert"`.
+                Defaults to `"upsert"` if feature group already exist otherwise to `"bulk_insert"`.
             storage: Overwrite default behaviour, write to offline
                 storage only with `"offline"` or online only with `"online"`, defaults
                 to `None`.
@@ -930,6 +922,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        # this means FG is already created so we will insert new data in it
         self._feature_group_engine.insert(
             self,
             feature_dataframe,
@@ -940,6 +933,7 @@ class FeatureGroup(FeatureGroupBase):
         )
 
         self._code_engine.save_code(self)
+
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
@@ -1019,6 +1013,7 @@ class FeatureGroup(FeatureGroupBase):
                 ).format(self._name, self._version),
                 util.StatisticsWarning,
             )
+
             return self._feature_group_engine.insert_stream(
                 self,
                 feature_dataframe,

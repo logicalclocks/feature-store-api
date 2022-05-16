@@ -19,6 +19,7 @@ from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -33,6 +34,21 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
                 feature_dataframe
+            )
+
+        user_version = feature_group._version
+
+        if feature_group._stream:
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
             )
 
         # set primary and partition key columns
@@ -61,6 +77,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
+
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
+                    feature_group._name, feature_group._version
+                ),
+                util.VersionWarning,
+            )
 
         return engine.get_instance().save_dataframe(
             feature_group,
@@ -98,6 +122,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group."
             )
+
+        if not feature_group._id:
+            # this means FG doesn't exist and should create the new one
+            self.save(feature_group, feature_dataframe, write_options)
 
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
@@ -257,9 +285,17 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
+        if not self._id:
+            # this means FG doesn't exist and should create the new one
+            features = engine.get_instance()._spark_session.sqlContext.createDataFrame(
+                engine.get_instance()._spark_context.emptyRDD(), dataframe.schema
+            )
+            self._feature_group_engine.save(self, features, write_options)
+
         if not feature_group.stream:
             warnings.warn(
-                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
+                "`insert_stream` method in the next release be available only for feature groups created with "
+                "`stream=True`."
             )
 
         if feature_group.validation_type != "NONE":
