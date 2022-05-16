@@ -112,20 +112,16 @@ class TrainingDataset:
         if created is None:
             # no type -> user init
             self._features = features
-            if training_dataset_type != self.IN_MEMORY:
-                self.storage_connector = storage_connector
-            else:
-                self._storage_connector = None
+            self.storage_connector = storage_connector
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
         else:
-            if training_dataset_type != self.IN_MEMORY:
-                # type available -> init from backend response
-                # make rest call to get all connector information, description etc.
-                self._storage_connector = StorageConnector.from_response_json(
-                    storage_connector
-                )
+            # type available -> init from backend response
+            # make rest call to get all connector information, description etc.
+            self._storage_connector = StorageConnector.from_response_json(
+                storage_connector
+            )
 
             if features is None:
                 features = []
@@ -576,9 +572,10 @@ class TrainingDataset:
                     type(storage_connector)
                 )
             )
-        self._training_dataset_type = self._infer_training_dataset_type(
-            self._storage_connector.type
-        )
+        if self.training_dataset_type != self.IN_MEMORY:
+            self._training_dataset_type = self._infer_training_dataset_type(
+                self._storage_connector.type
+            )
 
     @property
     def splits(self):
