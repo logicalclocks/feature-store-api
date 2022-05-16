@@ -228,6 +228,11 @@ class VectorServer:
             raise ValueError(
                 "Provided primary key map doesn't correspond to serving_keys"
             )
+        if not len({len(i) for i in entry.keys()}) == 1:
+            raise Exception(
+                "Not all primary keys have the same length. Please make sure that all primary key have "
+                "the same length."
+            )
 
         # get schemas for complex features once
         complex_features = self.get_complex_feature_schemas(vector_server)
