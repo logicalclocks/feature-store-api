@@ -578,14 +578,15 @@ class Engine:
         producer.flush()
 
         # start backfilling job
+        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+            fg_name=feature_group.name, version=feature_group.version
+        )
+        job = self._job_api.get(job_name)
+
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
             print("Launching offline feature group backfill job...")
-            job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-                fg_name=feature_group.name, version=feature_group.version
-            )
-            job = self._job_api.get(job_name)
             self._job_api.launch(job_name)
             print(
                 "Backfill Job started successfully, you can follow the progress at {}".format(
