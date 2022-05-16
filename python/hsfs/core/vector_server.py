@@ -72,11 +72,15 @@ class VectorServer:
                 self._feature_view_api.get_serving_prepared_statement(
                     vector_server.name, vector_server.version, batch
                 )
-        else:
+        elif isinstance(vector_server, training_dataset.TrainingDataset):
             prepared_statements = \
                 self._training_dataset_api.get_serving_prepared_statement(
                     vector_server, batch
                 )
+        else:
+            raise ValueError(
+                "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
+            )
         # reset values to default, as user may be re-initialising with different parameters
         self.prepared_statement_engine = None
         self.prepared_statements = None

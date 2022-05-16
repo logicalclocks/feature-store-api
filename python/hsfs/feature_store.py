@@ -899,6 +899,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the feature view to create.
+            query: Feature store `Query`.
             version: Version of the feature view to create, defaults to `None` and
                 will create the feature view with incremented version from the last
                 version in the feature store.

@@ -182,6 +182,7 @@ class FeatureView:
         """Returns n samples of assembled serving vectors in batches from online feature store.
 
         # Arguments
+            n: int. Number of feature vectors to return.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
@@ -196,6 +197,14 @@ class FeatureView:
         return self._vector_server.get_preview_vectors(self, external, n)
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
+        """
+        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+        read_options: User provided read options. Defaults to `{}`.
+
+        """
         return self._feature_view_engine.get_batch_data(
             self, start_time, end_time, read_options)
 
@@ -222,9 +231,26 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = {}
     ):
         """
+        Get training data from storage or feature groups.
+
+        If version is not provided or provided version has not already existed, it creates
+        a new version of training data according to given arguments and returns a dataframe.
+
+        If version is provided and has already existed, it reads training data from storage
+        or feature groups and returns a dataframe. If split is provided, it read the specific split.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+
         # Returns
-            Training datasets: `dict(str, Dataframe)`
-                Dictionary of dataframes where split is the key
+            Training dataset tuple: (`int`, `dict(str, Dataframe)`)
+                Training dataset version and Dictionary of dataframes where split is the key.
 
         """
         td = training_dataset.TrainingDataset(
@@ -269,16 +295,16 @@ class FeatureView:
         a new version of training data according to given arguments and returns a dataframe.
 
         If version is provided and has already existed, it reads training data from storage
-        or feature groups and returns a dataframe. If split is provided, it read the specific split.
+        or feature groups and returns a dataframe.
 
         !!! info
         If a materialised training data has deleted. Use `recreate_training_dataset()` to
         recreate the training data.
 
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
         """
         td, df = self.get_training_datasets(
             {},
@@ -325,9 +351,9 @@ class FeatureView:
 
                 # Arguments
                     start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                        following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
                     end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                        following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
                     storage_connector: Storage connector defining the sink location for the
                         training dataset, defaults to `None`, and materializes training dataset
                         on HopsFS.
@@ -361,14 +387,6 @@ class FeatureView:
                         values should be booleans indicating the setting. To fully turn off
                         statistics computation pass `statistics_config=False`. Defaults to
                         `None` and will compute only descriptive statistics.
-                    label: A list of feature names constituting the prediction label/feature of
-                        the training dataset. When replaying a `Query` during model inference,
-                        the label features can be omitted from the feature vector retrieval.
-                        Defaults to `[]`, no label.
-                    transformation_functions: A dictionary mapping tansformation functions to
-                        to the features they should be applied to before writing out the
-                        training data and at inference time. Defaults to `{}`, no
-                        transformations.
                     train_split: If `splits` is set, provide the name of the split that is going
                         to be used for training. The statistics of this split will be used for
                         transformation functions if necessary. Defaults to `None`.

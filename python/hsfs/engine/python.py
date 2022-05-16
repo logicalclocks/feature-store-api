@@ -220,13 +220,12 @@ class Engine:
         histograms,
         exact_uniqueness=True,
     ):
+        # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
             stats = df.describe()
         else:
-            # TODO feature view: should add "as" clause in sql string so that
-            #  column names do not have feature group as prefix
             target_cols = [col for col in df.columns if
-                           col.split(".")[-1] in relevant_columns]
+                           col in relevant_columns]
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
@@ -384,9 +383,19 @@ class Engine:
         return split_df
 
     def _split_df(self, df, splits):
+        """
+        Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
+        and values are split ratios.
+        """
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
-        result_df = {}
+        result_dfs = {}
         items = splits.items()
+        if (sum(splits.values) != 1 or
+            sum([v > 1 or v < 0 for v in splits.values()]) > 1):
+            raise ValueError(
+                "Sum of split ratios should be 1 and each values should be in range [0, 1)"
+            )
+
         df_size = len(df)
         groups = []
         for i, item in enumerate(items):
@@ -395,9 +404,9 @@ class Engine:
         random.shuffle(groups)
         df[split_column] = groups
         for i, item in enumerate(items):
-            result_df[item[0]] = df[df[split_column] == i].drop(
+            result_dfs[item[0]] = df[df[split_column] == i].drop(
                 split_column, axis=1)
-        return result_df
+        return result_dfs
 
     def write_training_dataset(
         self, training_dataset, dataset, user_write_options, save_mode,
