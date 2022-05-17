@@ -18,7 +18,7 @@ import json
 import humps
 from typing import Optional, List, Union
 
-from hsfs import util, engine
+from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
@@ -224,6 +224,13 @@ class Query:
             self._filter = self._filter & f
         return self
 
+    def from_cache_feature_group_only(self):
+        for _query in [join.query for join in self._joins] + [self]:
+            if not isinstance(
+                _query._left_feature_group, feature_group.FeatureGroup):
+                return False
+        return True
+
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -239,6 +246,32 @@ class Query:
             "filter": self._filter,
             "hiveEngine": self._python_engine,
         }
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        feature_group_json = json_decamelized["left_feature_group"]
+        feature_group_obj = (
+            feature_group.OnDemandFeatureGroup.from_response_json(
+                feature_group_json)
+            if "storage_connector" in feature_group_json
+            else feature_group.FeatureGroup.from_response_json(
+                feature_group_json)
+        )
+        return cls(
+            left_feature_group=feature_group_obj,
+            left_features=json_decamelized["left_features"],
+            feature_store_name=json_decamelized.get("feature_store_name", None),
+            feature_store_id=json_decamelized.get("feature_store_id", None),
+            left_feature_group_start_time=json_decamelized.get(
+                "left_feature_group_start_time", None),
+            left_feature_group_end_time=json_decamelized.get(
+                "left_feature_group_end_time", None),
+            joins=[join.Join.from_response_json(_join)
+                    for _join in json_decamelized.get("joins", [])
+                ],
+            filter=json_decamelized.get("filter", None),
+        )
 
     @classmethod
     def _hopsworks_json(cls, json_dict):

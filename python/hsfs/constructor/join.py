@@ -15,7 +15,8 @@
 #
 
 from hsfs import util
-
+from hsfs.constructor import query
+import humps
 
 class Join:
     INNER = "INNER"
@@ -44,6 +45,19 @@ class Join:
             "type": self._join_type,
             "prefix": self._prefix,
         }
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+
+        return cls(
+            query=query.Query.from_response_json(json_decamelized["query"]),
+            on=json_decamelized.get("on", None),
+            left_on=json_decamelized.get("left_on", None),
+            right_on=json_decamelized.get("right_on", None),
+            join_type=json_decamelized.get("join_type", None),
+            prefix=json_decamelized.get("prefix", None),
+        )
 
     @property
     def query(self):

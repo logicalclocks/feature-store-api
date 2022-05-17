@@ -85,17 +85,25 @@ class TransformationFunctionEngine:
             ] = attached_transformation_fn.transformation_function
         return transformation_fn_dict
 
-    def attach_transformation_fn(self, training_dataset):
-        if training_dataset._transformation_functions:
+    def attach_transformation_fn(
+        self,
+        training_dataset_obj=None,
+        feature_view_obj=None
+    ):
+        if training_dataset_obj:
+            target_obj = training_dataset_obj
+        else:
+            target_obj = feature_view_obj
+        if target_obj._transformation_functions:
             for (
                 feature_name,
                 transformation_fn,
-            ) in training_dataset._transformation_functions.items():
-                if feature_name in training_dataset.label:
+            ) in target_obj._transformation_functions.items():
+                if feature_name in target_obj.label:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
-                training_dataset._features.append(
+                target_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature_name,
                         feature_group_feature_name=feature_name,
@@ -192,3 +200,45 @@ class TransformationFunctionEngine:
             return "BooleanType()"
         else:
             raise TypeError("Not supported type %s." % output_type)
+
+    @staticmethod
+    def compute_transformation_fn_statistics(
+        training_dataset_obj, builtin_tffn_features,
+        feature_dataframe, feature_view_obj
+    ):
+        return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
+            td_metadata_instance=training_dataset_obj,
+            columns=builtin_tffn_features,
+            feature_dataframe=feature_dataframe,
+            feature_view_obj=feature_view_obj
+        )
+
+    @staticmethod
+    def populate_builtin_transformation_functions(
+        training_dataset, feature_view_obj, dataset):
+        # check if there any transformation functions that require statistics attached to td features
+        builtin_tffn_features = [
+            ft_name
+            for ft_name in training_dataset.transformation_functions
+            if training_dataset._transformation_function_engine.is_builtin(
+                training_dataset.transformation_functions[ft_name]
+            )
+        ]
+
+        if builtin_tffn_features:
+            if training_dataset.splits:
+                # compute statistics before transformations are applied
+                stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
+                    training_dataset, builtin_tffn_features,
+                    dataset.get(training_dataset.train_split), feature_view_obj
+                )
+            else:
+                # compute statistics before transformations are applied
+                stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
+                    training_dataset, builtin_tffn_features,
+                    dataset, feature_view_obj
+                )
+            # Populate builtin transformations (if any) with respective arguments
+            training_dataset._transformation_function_engine.populate_builtin_attached_fns(
+                training_dataset.transformation_functions, stats.content
+            )

@@ -16,7 +16,7 @@
 
 import humps
 
-from hsfs.feature_group import FeatureGroup
+import hsfs.feature_group as feature_group
 from hsfs.feature import Feature
 from hsfs.transformation_function import TransformationFunction
 
@@ -36,7 +36,7 @@ class TrainingDatasetFeature:
         self._type = type
         self._index = index
         self._feature_group = (
-            FeatureGroup.from_response_json(featuregroup)
+            feature_group.FeatureGroup.from_response_json(featuregroup)
             if isinstance(featuregroup, dict)
             else featuregroup
         )
