@@ -529,7 +529,7 @@ class Engine:
         offline_write_options: dict,
     ):
         # setup kafka producer
-        producer = Producer(self._get_kafka_config())
+        producer = Producer(self._get_kafka_config(offline_write_options))
 
         # setup complex feature writers
         feature_writers = {
@@ -616,7 +616,7 @@ class Engine:
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
-    def _get_kafka_config(self) -> dict:
+    def _get_kafka_config(self, write_options: dict = {}) -> dict:
         config = {
             "security.protocol": "SSL",
             "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
@@ -625,16 +625,12 @@ class Engine:
             "client.id": socket.gethostname(),
         }
 
-        if isinstance(client.get_instance(), external.Client):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("EXTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=True
-                    )
-                ]
-            )
-        elif isinstance(client.get_instance(), hopsworks.Client):
+        print(write_options)
+
+        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+            "internal_kafka", False
+        ):
+            print("here")
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("INTERNAL://", "")
@@ -643,4 +639,15 @@ class Engine:
                     )
                 ]
             )
+        elif isinstance(client.get_instance(), external.Client):
+            print("second")
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("EXTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                        externalListeners=True
+                    )
+                ]
+            )
+
         return config
