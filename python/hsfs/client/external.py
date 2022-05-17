@@ -183,6 +183,15 @@ class Client(base.Client):
     def _get_jks_key_store_path(self):
         return self._key_store_path
 
+    def _get_ca_chain_path(self) -> str:
+        return os.path.join(self._cert_folder, "ca_chain.pem")
+
+    def _get_client_cert_path(self) -> str:
+        return os.path.join(self._cert_folder, "client_cert.pem")
+
+    def _get_client_key_path(self) -> str:
+        return os.path.join(self._cert_folder, "client_key.pem")
+
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
 
