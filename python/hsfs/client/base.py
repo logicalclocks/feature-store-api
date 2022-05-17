@@ -105,14 +105,14 @@ class Client(ABC):
         with open(path, "w") as f:
             f.write(content)
 
-    def _get_ca_chain_path(self) -> str:
-        return os.path.join("/tmp", "ca_chain.pem")
+    def _get_ca_chain_path(self, base_path: str) -> str:
+        return os.path.join(base_path, "ca_chain.pem")
 
-    def _get_client_cert_path(self) -> str:
-        return os.path.join("/tmp", "client_cert.pem")
+    def _get_client_cert_path(self, base_path: str) -> str:
+        return os.path.join(base_path, "client_cert.pem")
 
-    def _get_client_key_path(self) -> str:
-        return os.path.join("/tmp", "client_key.pem")
+    def _get_client_key_path(self, base_path: str) -> str:
+        return os.path.join(base_path, "client_key.pem")
 
     @connected
     def _send_request(

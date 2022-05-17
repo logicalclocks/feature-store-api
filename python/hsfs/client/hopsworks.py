@@ -72,9 +72,13 @@ class Client(base.Client):
 
         credentials = self._get_credentials(self._project_id)
 
-        self._write_pem_file(credentials["caChain"], self._get_ca_chain_path())
-        self._write_pem_file(credentials["clientCert"], self._get_client_cert_path())
-        self._write_pem_file(credentials["clientKey"], self._get_client_key_path())
+        self._write_pem_file(credentials["caChain"], self._get_ca_chain_path("/tmp"))
+        self._write_pem_file(
+            credentials["clientCert"], self._get_client_cert_path("/tmp")
+        )
+        self._write_pem_file(
+            credentials["clientKey"], self._get_client_key_path("/tmp")
+        )
 
     def _get_hopsworks_rest_endpoint(self):
         """Get the hopsworks REST endpoint for making requests to the REST API."""
