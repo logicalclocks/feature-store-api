@@ -217,18 +217,27 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return selectAll().asOf(wallclockTime);
   }
 
+  /*
+   * @deprecated
+   * In the next release save method will be  replaced by insert method.
+   */
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null, false);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
     }
   }
 
+  /*
+   * @deprecated
+   * In the next release save method will be  replaced by insert method.
+   */
   public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration sparkOptions)
       throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
+        sparkOptions, false);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -245,57 +254,90 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
-                         Map<String, String> writeOptions)
-          throws FeatureStoreException, IOException, ParseException {
-
-    if (operation == null) {
-      if (overwrite) {
-        operation = HudiOperationType.BULK_INSERT;
-      } else {
-        operation = HudiOperationType.UPSERT;
-      }
-    }
-
-    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
-    codeEngine.saveCode(this);
+                         Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions, null);
   }
 
-  public <S> Object insertStream(S featureData) {
+  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+                         Map<String, String> writeOptions, JobConfiguration sparkOptions)
+          throws FeatureStoreException, IOException, ParseException {
+
+    if (this.getId() == null) {
+      streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
+          sparkOptions, false);
+    } else {
+      if (operation == null) {
+        if (overwrite) {
+          operation = HudiOperationType.BULK_INSERT;
+        } else {
+          operation = HudiOperationType.UPSERT;
+        }
+      }
+      streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
+    }
+    codeEngine.saveCode(this);
+    computeStatistics();
+  }
+
+  public <S> Object insertStream(S featureData) throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, null, "append", false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName) {
+  public <S> Object insertStream(S featureData, String queryName)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, null,false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, Map<String, String> writeOptions) {
+  public <S> Object insertStream(S featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, null, null, false, null, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
+  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, "append", false, null, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode) {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation) {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout) {
+                                 Long timeout) throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout, String checkpointLocation) {
+                                 Long timeout, String checkpointLocation)
+      throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions)  {
+                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, writeOptions,
+        null);
+  }
+
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
+                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions,
+                                 JobConfiguration sparkOptions)
+      throws FeatureStoreException, IOException, ParseException {
+
+    // TODO (davit): convert to spark df
+    if (this.getId() == null) {
+      streamFeatureGroupEngine.save(this, featureData, this.partitionKeys, this.hudiPrecombineKey,
+          writeOptions, sparkOptions, true);
+    }
+
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
         awaitTermination, timeout, checkpointLocation, writeOptions);
   }

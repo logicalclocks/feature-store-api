@@ -62,7 +62,7 @@ public class StreamFeatureGroupEngine {
    */
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions,
-                                     JobConfiguration sparkJobConfiguration)
+                                     JobConfiguration sparkJobConfiguration, boolean isEmpty)
           throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
@@ -132,6 +132,9 @@ public class StreamFeatureGroupEngine {
     }
 
     // Write the online dataframe
+    if (isEmpty) {
+      dataset = SparkEngine.getInstance().createEmptyDataFrameFromStream(dataset);
+    }
     insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
         SaveMode.APPEND, writeOptions);
 

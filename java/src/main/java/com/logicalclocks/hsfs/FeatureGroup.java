@@ -235,10 +235,18 @@ public class FeatureGroup extends FeatureGroupBase {
     read(online).show(numRows);
   }
 
+  /*
+   * @deprecated
+   * In the next release save method will be  replaced by insert method.
+   */
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
   }
 
+  /*
+   * @deprecated
+   * In the next release save method will be  replaced by insert method.
+   */
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
@@ -295,21 +303,26 @@ public class FeatureGroup extends FeatureGroupBase {
                      Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
 
-    // operation is only valid for time travel enabled feature group
-    if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
-      throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
-    }
-
-    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
-      if (overwrite) {
-        operation = HudiOperationType.BULK_INSERT;
-      } else {
-        operation = HudiOperationType.UPSERT;
+    if (this.getId() == null) {
+      featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
+          writeOptions);
+    } else {
+      // operation is only valid for time travel enabled feature group
+      if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
+        throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
       }
-    }
 
-    featureGroupEngine.insert(this, featureData, storage, operation,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+      if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+        if (overwrite) {
+          operation = HudiOperationType.BULK_INSERT;
+        } else {
+          operation = HudiOperationType.UPSERT;
+        }
+      }
+
+      featureGroupEngine.insert(this, featureData, storage, operation,
+          overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+    }
     codeEngine.saveCode(this);
     computeStatistics();
   }
