@@ -744,7 +744,6 @@ class Engine:
                 ]
             )
         elif isinstance(client.get_instance(), external.Client):
-            print("second")
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("EXTERNAL://", "")
