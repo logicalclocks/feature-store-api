@@ -832,6 +832,11 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
+
+        warnings.warn(
+            "`save` method is deprecated and In the next release it will be  replaced by `insert` method."
+        )
+
         features = engine.get_instance().convert_to_default_dataframe(features)
 
         fg_job = self._feature_group_engine.save(self, features, write_options)

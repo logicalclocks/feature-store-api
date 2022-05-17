@@ -219,7 +219,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /*
    * @deprecated
-   * In the next release save method will be  replaced by insert method.
+   * `save` method is deprecated and in the next release it will be  replaced by `insert` and `insertStream` methods.
    */
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {

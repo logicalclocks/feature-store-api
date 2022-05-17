@@ -237,7 +237,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /*
    * @deprecated
-   * In the next release save method will be  replaced by insert method.
+   * `save` method is deprecated and in the next release it will be  replaced by `insert` method.
    */
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
