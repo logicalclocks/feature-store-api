@@ -62,7 +62,7 @@ public class FeatureGroupEngine {
    * @throws IOException
    */
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
-                           String hudiPrecombineKey, Map<String, String> writeOptions)
+                           String hudiPrecombineKey, Map<String, String> writeOptions, boolean isEmpty)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
@@ -123,7 +123,10 @@ public class FeatureGroupEngine {
       featureGroup.setFeatures(features);
     }
 
-    // Write the dataframe
+    // Write the online dataframe
+    if (isEmpty) {
+      dataset = SparkEngine.getInstance().createEmptyDataFrameFromStream(dataset);
+    }
     insert(featureGroup, dataset, null,
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
             ? HudiOperationType.BULK_INSERT : null,

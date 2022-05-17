@@ -332,7 +332,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
                                  JobConfiguration sparkOptions)
       throws FeatureStoreException, IOException, ParseException {
 
-    // TODO (davit): convert to spark df
     if (this.getId() == null) {
       streamFeatureGroupEngine.save(this, featureData, this.partitionKeys, this.hudiPrecombineKey,
           writeOptions, sparkOptions, true);

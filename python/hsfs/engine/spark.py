@@ -25,7 +25,7 @@ import avro
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
@@ -837,6 +837,11 @@ class Engine:
             )
 
         return path
+
+    def stream_to_empty_df(self, streaming_df):
+        return SQLContext(self._spark_context).createDataFrame(
+            self._spark_context.emptyRDD(), streaming_df.schema
+        )
 
 
 class SchemaError(Exception):

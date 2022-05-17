@@ -250,7 +250,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
-        writeOptions);
+        writeOptions, false);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -305,7 +305,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
     if (this.getId() == null) {
       featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
-          writeOptions);
+          writeOptions, false);
     } else {
       // operation is only valid for time travel enabled feature group
       if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
@@ -335,7 +335,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, null);
   }
 
@@ -347,7 +347,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, "append");
   }
 
@@ -359,7 +359,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
@@ -372,7 +372,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
@@ -385,7 +385,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, String checkpointLocation)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, null, checkpointLocation, null);
   }
 
@@ -399,13 +399,17 @@ public class FeatureGroup extends FeatureGroupBase {
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, String checkpointLocation,
                                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
     if (!featureData.isStreaming()) {
       throw new FeatureStoreException(
           "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
     }
     LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
         + "` will not compute statistics.");
+    if (this.getId() == null) {
+      featureGroupEngine.save(this, featureData, this.partitionKeys, this.hudiPrecombineKey,
+          writeOptions, true);
+    }
     return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination,
         timeout, checkpointLocation, writeOptions);
   }

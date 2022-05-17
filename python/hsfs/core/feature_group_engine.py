@@ -285,12 +285,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
-        if not self._id:
+        if not feature_group._id:
             # this means FG doesn't exist and should create the new one
-            features = engine.get_instance()._spark_session.sqlContext.createDataFrame(
-                engine.get_instance()._spark_context.emptyRDD(), dataframe.schema
-            )
-            self._feature_group_engine.save(self, features, write_options)
+            features = engine.get_instance().stream_to_empty_df(dataframe)
+            self.save(feature_group, features, write_options)
 
         if not feature_group.stream:
             warnings.warn(
