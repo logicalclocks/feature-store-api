@@ -732,12 +732,9 @@ class Engine:
             "client.id": socket.gethostname(),
         }
 
-        print(write_options)
-
         if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
             "internal_kafka", False
         ):
-            print("here")
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("INTERNAL://", "")
