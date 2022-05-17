@@ -244,6 +244,39 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+  public FeatureView.FeatureViewBuilder createFeatureView() {
+    return FeatureView.builder()
+        .featureStore(this);
+  }
+
+  /**
+   * Get a feature view object from the selected feature store.
+   *
+   * @param name    name of the feature view
+   * @param version version to get
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  /**
+   * Get a feature view object with the default version `1` from the selected feature store.
+   *
+   * @param name name of the feature view
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getFeatureView(name, DEFAULT_VERSION);
+  }
+
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
     return TrainingDataset.builder()
         .featureStore(this);
