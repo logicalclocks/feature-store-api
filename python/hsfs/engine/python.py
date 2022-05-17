@@ -38,7 +38,7 @@ from hsfs.core import (
     training_dataset_api,
     training_dataset_job_conf,
     feature_view_api,
-    transformation_function_engine
+    transformation_function_engine,
 )
 from hsfs.constructor import query
 from hsfs.client import exceptions
@@ -224,8 +224,7 @@ class Engine:
         if not relevant_columns:
             stats = df.describe()
         else:
-            target_cols = [col for col in df.columns if
-                           col in relevant_columns]
+            target_cols = [col for col in df.columns if col in relevant_columns]
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
@@ -250,11 +249,11 @@ class Engine:
         percentiles[74] = stat["75%"]
         return {
             "mean": stat["mean"],
-            "sum": stat["mean"]*stat["count"],
+            "sum": stat["mean"] * stat["count"],
             "maximum": stat["max"],
             "stdDev": stat["std"],
             "minimum": stat["min"],
-            "approxPercentiles": percentiles
+            "approxPercentiles": percentiles,
         }
 
     def validate(self, dataframe, expectations, log_activity=True):
@@ -360,23 +359,18 @@ class Engine:
 
         return ingestion_job.job
 
-    def get_training_data(self, training_dataset_obj, feature_view_obj,
-                          query_obj, read_options):
-        df = query_obj.read(
-            read_options=read_options
-        )
+    def get_training_data(
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
+    ):
+        df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
             split_df = self._split_df(df, training_dataset_obj.splits)
-            transformation_function_engine.\
-                TransformationFunctionEngine.\
-                populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
         else:
             split_df = df
-            transformation_function_engine.\
-                TransformationFunctionEngine.\
-                populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
         # TODO: apply transformation
@@ -390,8 +384,10 @@ class Engine:
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         items = splits.items()
-        if (sum(splits.values) != 1 or
-            sum([v > 1 or v < 0 for v in splits.values()]) > 1):
+        if (
+            sum(splits.values) != 1
+            or sum([v > 1 or v < 0 for v in splits.values()]) > 1
+        ):
             raise ValueError(
                 "Sum of split ratios should be 1 and each values should be in range [0, 1)"
             )
@@ -399,18 +395,22 @@ class Engine:
         df_size = len(df)
         groups = []
         for i, item in enumerate(items):
-            groups += [i]*int(df_size*item[1])
-        groups += [len(items)-1] * (df_size - len(groups))
+            groups += [i] * int(df_size * item[1])
+        groups += [len(items) - 1] * (df_size - len(groups))
         random.shuffle(groups)
         df[split_column] = groups
         for i, item in enumerate(items):
-            result_dfs[item[0]] = df[df[split_column] == i].drop(
-                split_column, axis=1)
+            result_dfs[item[0]] = df[df[split_column] == i].drop(split_column, axis=1)
         return result_dfs
 
     def write_training_dataset(
-        self, training_dataset, dataset, user_write_options, save_mode,
-        feature_view_obj=None, to_df=False
+        self,
+        training_dataset,
+        dataset,
+        user_write_options,
+        save_mode,
+        feature_view_obj=None,
+        to_df=False,
     ):
         if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(
@@ -428,12 +428,13 @@ class Engine:
         )
 
         if feature_view_obj:
-            fv_api = feature_view_api.FeatureViewApi(
-                feature_view_obj.featurestore_id
-            )
+            fv_api = feature_view_api.FeatureViewApi(feature_view_obj.featurestore_id)
             td_job = fv_api.compute_training_dataset(
-                feature_view_obj.name, feature_view_obj.version,
-                training_dataset.version, td_app_conf)
+                feature_view_obj.name,
+                feature_view_obj.version,
+                training_dataset.version,
+                td_app_conf,
+            )
         else:
             td_api = training_dataset_api.TrainingDatasetApi(
                 training_dataset.feature_store_id

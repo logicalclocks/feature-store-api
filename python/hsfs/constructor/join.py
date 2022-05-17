@@ -18,6 +18,7 @@ from hsfs import util
 from hsfs.constructor import query
 import humps
 
+
 class Join:
     INNER = "INNER"
     LEFT = "LEFT"

@@ -22,13 +22,14 @@ from typing import Optional, Union, List, Dict, Any
 import humps
 
 from hsfs import (
-    tag, util, training_dataset_feature, storage_connector, training_dataset,
+    tag,
+    util,
+    training_dataset_feature,
+    storage_connector,
+    training_dataset,
 )
 from hsfs.constructor import query
-from hsfs.core import (
-    feature_view_engine,
-    transformation_function_engine, vector_server
-)
+from hsfs.core import feature_view_engine, transformation_function_engine, vector_server
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 
@@ -45,8 +46,7 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         label: Optional[List[str]] = [],
-        transformation_functions: Optional[
-            Dict[str, TransformationFunction]] = {}
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         self._name = name
         self._id = id
@@ -58,10 +58,10 @@ class FeatureView:
         self._transformation_functions = transformation_functions
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
-            featurestore_id)
+            featurestore_id
+        )
         self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(
-                featurestore_id)
+            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
         self._vector_server = None
 
@@ -82,8 +82,10 @@ class FeatureView:
         return self
 
     def init_serving(
-        self, training_dataset_version: Optional[int] = None,
-        batch: Optional[bool] = None, external: Optional[bool] = False
+        self,
+        training_dataset_version: Optional[int] = None,
+        batch: Optional[bool] = None,
+        external: Optional[bool] = False,
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
@@ -100,12 +102,12 @@ class FeatureView:
                 which relies on the private IP.
         """
         self._vector_server = vector_server.VectorServer(
-            self._featurestore_id, training_dataset_version)
+            self._featurestore_id, training_dataset_version
+        )
         self._vector_server.init_serving(self, batch, external)
 
     def get_batch_query(
-        self, start_time: Optional[datetime]=None,
-        end_time: Optional[datetime]=None
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ):
         """Get a query string of batch query.
 
@@ -117,7 +119,8 @@ class FeatureView:
             `str`: batch query
         """
         return self._feature_view_engine.get_batch_query_string(
-            self, start_time, end_time)
+            self, start_time, end_time
+        )
 
     def get_feature_vector(
         self, entry: Dict[str, Any], external: Optional[bool] = False
@@ -206,7 +209,8 @@ class FeatureView:
 
         """
         return self._feature_view_engine.get_batch_data(
-            self, start_time, end_time, read_options)
+            self, start_time, end_time, read_options
+        )
 
     def add_tag(self, name: str, value):
         return self._feature_view_engine.add_tag(self, name, value)
@@ -229,7 +233,7 @@ class FeatureView:
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         train_split: Optional[str] = None,
-        read_options: Optional[Dict[Any, Any]] = {}
+        read_options: Optional[Dict[Any, Any]] = {},
     ):
         """
         Get training data from storage or feature groups.
@@ -295,7 +299,7 @@ class FeatureView:
             splits=splits,
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
-            train_split=train_split
+            train_split=train_split,
         )
         # td_job is used only if the python engine is used
         td, df = self._feature_view_engine.get_training_data(
@@ -317,9 +321,9 @@ class FeatureView:
         version: Optional[int] = 1,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        read_options: Optional[Dict[Any, Any]] = {}
+        read_options: Optional[Dict[Any, Any]] = {},
     ):
-        """ Get training data from storage or feature groups.
+        """Get training data from storage or feature groups.
 
         If version is not provided or provided version has not already existed, it creates
         a new version of training data according to given arguments and returns a dataframe.
@@ -385,7 +389,7 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         train_split: str = None,
-        write_options: Optional[Dict[Any, Any]] = {}
+        write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
 
@@ -457,7 +461,7 @@ class FeatureView:
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
-                """
+        """
         td = training_dataset.TrainingDataset(
             name=self.name,
             version=version,
@@ -472,7 +476,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
-            train_split=train_split
+            train_split=train_split,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -488,27 +492,25 @@ class FeatureView:
 
         return td.version, td_job
 
-
-    def add_training_dataset_tag(
-        self, training_dataset_version: int, name: str, value):
+    def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
         )
 
-    def get_training_dataset_tag(
-        self, training_dataset_version: int, name: str):
+    def get_training_dataset_tag(self, training_dataset_version: int, name: str):
         return self._feature_view_engine.get_tag(
-            self, name, training_dataset_version=training_dataset_version)
+            self, name, training_dataset_version=training_dataset_version
+        )
 
-    def get_training_dataset_tags(
-        self, training_dataset_version: int):
+    def get_training_dataset_tags(self, training_dataset_version: int):
         return self._feature_view_engine.get_tags(
-            self, training_dataset_version=training_dataset_version)
+            self, training_dataset_version=training_dataset_version
+        )
 
-    def delete_training_dataset_tag(
-        self, training_dataset_version: int, name: str):
+    def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
         return self._feature_view_engine.delete_tag(
-            self, name, training_dataset_version=training_dataset_version)
+            self, name, training_dataset_version=training_dataset_version
+        )
 
     def purge_training_data(self, version: int):
         self._feature_view_engine.delete_training_dataset_only(
@@ -535,22 +537,32 @@ class FeatureView:
             query=query.Query.from_response_json(json_decamelized["query"]),
             featurestore_id=json_decamelized["featurestore_id"],
             version=json_decamelized.get("version", None),
-            description=json_decamelized.get("description", None)
+            description=json_decamelized.get("description", None),
         )
         features = json_decamelized.get("features", None)
         if features:
             features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(
-                    feature)
-                for feature in features]
+                    feature
+                )
+                for feature in features
+            ]
         fv.schema = features
         fv.label = [feature.name for feature in features if feature.label]
         return fv
 
     def update_from_response_json(self, json_dict):
         other = self.from_response_json(json_dict)
-        for key in ["name", 'description', "id", "query", "featurestore_id",
-                    "version", "label", "schema"]:
+        for key in [
+            "name",
+            "description",
+            "id",
+            "query",
+            "featurestore_id",
+            "version",
+            "label",
+            "schema",
+        ]:
             self._update_attribute_if_present(self, other, key)
         return self
 
@@ -569,7 +581,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
-            "label": self._label
+            "label": self._label,
         }
 
     @property
@@ -643,8 +655,7 @@ class FeatureView:
         """Set transformation functions."""
         if self._id is not None and self._transformation_functions is None:
             self._transformation_functions = (
-                self._transformation_function_engine.get_td_transformation_fn(
-                    self)
+                self._transformation_function_engine.get_td_transformation_fn(self)
             )
         return self._transformation_functions
 

@@ -31,8 +31,7 @@ class TagsApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def add(self, metadata_instance, name, value,
-            training_dataset_version=None):
+    def add(self, metadata_instance, name, value, training_dataset_version=None):
         """Attach a name/value tag to a training dataset or feature group.
 
         A tag consists of a name/value pair. Tag names are unique identifiers.
@@ -47,14 +46,14 @@ class TagsApi:
         :type value: str
         """
         _client = client.get_instance()
-        path_params = self.get_path(
-            metadata_instance, training_dataset_version) + [name]
+        path_params = self.get_path(metadata_instance, training_dataset_version) + [
+            name
+        ]
         headers = {"content-type": "application/json"}
         json_value = json.dumps(value)
         _client._send_request("PUT", path_params, headers=headers, data=json_value)
 
-    def delete(self, metadata_instance, name,
-            training_dataset_version=None):
+    def delete(self, metadata_instance, name, training_dataset_version=None):
         """Delete a tag from a training dataset or feature group.
 
         Tag names are unique identifiers.
@@ -66,13 +65,13 @@ class TagsApi:
         :type name: str
         """
         _client = client.get_instance()
-        path_params = self.get_path(
-            metadata_instance, training_dataset_version) + [name]
+        path_params = self.get_path(metadata_instance, training_dataset_version) + [
+            name
+        ]
 
         _client._send_request("DELETE", path_params)
 
-    def get(self, metadata_instance, name: str = None,
-            training_dataset_version=None):
+    def get(self, metadata_instance, name: str = None, training_dataset_version=None):
         """Get the tags of a training dataset or feature group.
 
         Gets all tags if no tag name is specified.
@@ -109,13 +108,14 @@ class TagsApi:
                 "featureview",
                 metadata_instance.name,
                 "version",
-                metadata_instance.version
+                metadata_instance.version,
             ]
             if training_dataset_version:
-                return path + ["version",
-                               training_dataset_version,
-                               "tags",
-                               ]
+                return path + [
+                    "version",
+                    training_dataset_version,
+                    "tags",
+                ]
             else:
                 return path + ["tags"]
         else:

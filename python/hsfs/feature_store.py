@@ -31,7 +31,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
-    feature_view
+    feature_view,
 )
 from hsfs.core import (
     feature_group_api,
@@ -39,7 +39,7 @@ from hsfs.core import (
     training_dataset_api,
     expectations_api,
     feature_group_engine,
-    feature_view_engine
+    feature_view_engine,
 )
 from hsfs.constructor.query import Query
 from hsfs.statistics_config import StatisticsConfig
@@ -98,9 +98,7 @@ class FeatureStore:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(self._id)
         )
-        self._feature_view_engine = (
-            feature_view_engine.FeatureViewEngine(self._id)
-        )
+        self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -776,7 +774,7 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         label: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {}
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
 
@@ -808,7 +806,7 @@ class FeatureStore:
             version=version,
             description=description,
             label=label,
-            transformation_functions=transformation_functions
+            transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)
 

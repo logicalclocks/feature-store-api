@@ -15,9 +15,7 @@
 #
 
 import warnings
-from hsfs import (
-    engine, training_dataset_feature
-)
+from hsfs import engine, training_dataset_feature
 from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
@@ -40,9 +38,7 @@ class FeatureViewEngine:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-        self._feature_view_api = feature_view_api.FeatureViewApi(
-            feature_store_id
-        )
+        self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
@@ -52,8 +48,9 @@ class FeatureViewEngine:
                 feature_store_id
             )
         )
-        self._td_code_engine = code_engine.CodeEngine(feature_store_id,
-                                                   self._TRAINING_DATA_API_PATH)
+        self._td_code_engine = code_engine.CodeEngine(
+            feature_store_id, self._TRAINING_DATA_API_PATH
+        )
         self._statistics_engine = statistics_engine.StatisticsEngine(
             feature_store_id, self._TRAINING_DATA_API_PATH
         )
@@ -64,15 +61,15 @@ class FeatureViewEngine:
 
     def save(self, feature_view_obj):
         if feature_view_obj.label:
-            feature_view_obj._features.append([
-                training_dataset_feature.TrainingDatasetFeature(
-                    name=label_name, label=True
-                )
-                for label_name in feature_view_obj.label
-            ])
-        self._transformation_function_engine.attach_transformation_fn(
-            feature_view_obj
-        )
+            feature_view_obj._features.append(
+                [
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=label_name, label=True
+                    )
+                    for label_name in feature_view_obj.label
+                ]
+            )
+        self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         return updated_fv
 
@@ -96,18 +93,23 @@ class FeatureViewEngine:
         else:
             return self._feature_view_api.delete_by_name(name)
 
-    def get_batch_query(self, feature_view_obj, start_time,
-                               end_time, with_label=False):
+    def get_batch_query(self, feature_view_obj, start_time, end_time, with_label=False):
         return self._feature_view_api.get_batch_query(
-            feature_view_obj.name, feature_view_obj.version, start_time,
-            end_time, is_python_engine=engine.get_type() == "python",
-            with_label=with_label
+            feature_view_obj.name,
+            feature_view_obj.version,
+            start_time,
+            end_time,
+            is_python_engine=engine.get_type() == "python",
+            with_label=with_label,
         )
 
     def get_batch_query_string(self, feature_view_obj, start_time, end_time):
         query_obj = self._feature_view_api.get_batch_query(
-            feature_view_obj.name, feature_view_obj.version, start_time,
-            end_time, is_python_engine=engine.get_type() == "python"
+            feature_view_obj.name,
+            feature_view_obj.version,
+            start_time,
+            end_time,
+            is_python_engine=engine.get_type() == "python",
         )
         fs_query = self._query_constructor_api.construct_query(query_obj)
         if fs_query.pit_query is not None:
@@ -115,25 +117,29 @@ class FeatureViewEngine:
         return fs_query.query
 
     def get_attached_transformation_fn(self, name, version):
-        transformation_functions = self._feature_view_api.get_attached_transformation_fn(
-            name, version
+        transformation_functions = (
+            self._feature_view_api.get_attached_transformation_fn(name, version)
         )
         if isinstance(transformation_functions, list):
-            transformation_functions_dict = dict([
-                (tf.name, tf.transformation_function) for
-                tf in transformation_functions
-            ])
+            transformation_functions_dict = dict(
+                [
+                    (tf.name, tf.transformation_function)
+                    for tf in transformation_functions
+                ]
+            )
         else:
             transformation_functions_dict = {
-                transformation_functions.name:
-                    transformation_functions.transformation_function
+                transformation_functions.name: transformation_functions.transformation_function
             }
         return transformation_functions_dict
 
-    def create_training_dataset(self, feature_view_obj,
-                                training_dataset_obj, user_write_options):
-        if (len(training_dataset_obj.splits) > 0 and
-            training_dataset_obj.train_split is None):
+    def create_training_dataset(
+        self, feature_view_obj, training_dataset_obj, user_write_options
+    ):
+        if (
+            len(training_dataset_obj.splits) > 0
+            and training_dataset_obj.train_split is None
+        ):
             training_dataset_obj.train_split = "train"
             warnings.warn(
                 "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
@@ -147,15 +153,17 @@ class FeatureViewEngine:
         td_job = self.compute_training_dataset(
             feature_view_obj,
             user_write_options,
-            training_dataset_obj=training_dataset_obj
+            training_dataset_obj=training_dataset_obj,
         )
         return updated_instance, td_job
 
-    def get_training_data(self, feature_view_obj,
-                          training_dataset_obj, read_options,
-                          splits=None):
-        if (len(training_dataset_obj.splits) > 0 and
-            training_dataset_obj.train_split is None):
+    def get_training_data(
+        self, feature_view_obj, training_dataset_obj, read_options, splits=None
+    ):
+        if (
+            len(training_dataset_obj.splits) > 0
+            and training_dataset_obj.train_split is None
+        ):
             training_dataset_obj.train_split = "train"
             warnings.warn(
                 "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
@@ -167,7 +175,8 @@ class FeatureViewEngine:
         if training_dataset_obj.version:
             try:
                 td_updated = self._get_training_data_metadata(
-                    feature_view_obj, training_dataset_obj.version)
+                    feature_view_obj, training_dataset_obj.version
+                )
             except exceptions.RestAPIError as e:
                 # error code: 270012, error msg: Training dataset wasn't found.
                 if e.response.json().get("errorCode", "") != 270012:
@@ -175,8 +184,8 @@ class FeatureViewEngine:
 
         if td_updated is None:
             td_updated = self._create_training_data_metadata(
-            feature_view_obj, training_dataset_obj
-        )
+                feature_view_obj, training_dataset_obj
+            )
 
         if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
             split_df = self._read_from_storage_connector(
@@ -188,11 +197,10 @@ class FeatureViewEngine:
                 feature_view_obj,
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
-                with_label=True
+                with_label=True,
             )
             split_df = engine.get_instance().get_training_data(
-                td_updated, feature_view_obj,
-                query, read_options
+                td_updated, feature_view_obj, query, read_options
             )
             self.compute_training_dataset_statistics(
                 feature_view_obj, td_updated, split_df, calc_stat=True
@@ -203,8 +211,7 @@ class FeatureViewEngine:
     def recreate_training_dataset(self):
         pass
 
-    def _read_from_storage_connector(
-        self, training_data_obj, splits, read_options):
+    def _read_from_storage_connector(self, training_data_obj, splits, read_options):
         if splits:
             result = {}
             for split in splits:
@@ -218,9 +225,7 @@ class FeatureViewEngine:
                 training_data_obj, path, read_options
             )
 
-
-    def _read_dir_from_storage_connector(
-        self, training_data_obj, path, read_options):
+    def _read_dir_from_storage_connector(self, training_data_obj, path, read_options):
         try:
             return training_data_obj.storage_connector.read(
                 # always read from materialized dataset, not query object
@@ -239,9 +244,13 @@ class FeatureViewEngine:
                 raise e
 
     # This method is used by hsfs_utils to launch a job for python client
-    def compute_training_dataset(self, feature_view_obj, user_write_options,
-                                 training_dataset_obj=None,
-                                 training_dataset_version=None):
+    def compute_training_dataset(
+        self,
+        feature_view_obj,
+        user_write_options,
+        training_dataset_obj=None,
+        training_dataset_version=None,
+    ):
         if training_dataset_obj:
             pass
         elif training_dataset_version:
@@ -252,133 +261,144 @@ class FeatureViewEngine:
             raise ValueError("No training dataset object or version is provided")
 
         batch_query = self.get_batch_query(
-            feature_view_obj, training_dataset_obj.event_start_time,
-            training_dataset_obj.event_end_time, with_label=True
+            feature_view_obj,
+            training_dataset_obj.event_start_time,
+            training_dataset_obj.event_end_time,
+            with_label=True,
         )
         td_job = engine.get_instance().write_training_dataset(
-            training_dataset_obj, batch_query, user_write_options,
-            self._OVERWRITE, feature_view_obj=feature_view_obj
+            training_dataset_obj,
+            batch_query,
+            user_write_options,
+            self._OVERWRITE,
+            feature_view_obj=feature_view_obj,
         )
         self._td_code_engine.save_code(training_dataset_obj)
         if engine.get_type() == "spark":
             if training_dataset_obj.splits:
-                td_df = dict([(split, self._training_dataset_engine.read(
-                    training_dataset_obj, split, {})) for
-                    split in training_dataset_obj.splits
-                ])
+                td_df = dict(
+                    [
+                        (
+                            split,
+                            self._training_dataset_engine.read(
+                                training_dataset_obj, split, {}
+                            ),
+                        )
+                        for split in training_dataset_obj.splits
+                    ]
+                )
             else:
                 td_df = self._training_dataset_engine.read(
-                    training_dataset_obj, None, {})
+                    training_dataset_obj, None, {}
+                )
         else:
             td_df = None
         # currently we do not save the training dataset statistics config for training datasets
         self.compute_training_dataset_statistics(
-            feature_view_obj, training_dataset_obj, td_df,
-            calc_stat=engine.get_type() == "spark"
+            feature_view_obj,
+            training_dataset_obj,
+            td_df,
+            calc_stat=engine.get_type() == "spark",
         )
         return td_job
 
-    def compute_training_dataset_statistics(self, feature_view_obj,
-                                            training_dataset_obj,
-                                            td_df, calc_stat=False):
+    def compute_training_dataset_statistics(
+        self, feature_view_obj, training_dataset_obj, td_df, calc_stat=False
+    ):
         if training_dataset_obj.statistics_config.enabled and calc_stat:
             if training_dataset_obj.splits:
                 if not isinstance(td_df, dict):
                     raise ValueError(
                         "Provided dataframes should be in dict format "
-                        "'split': dataframe")
+                        "'split': dataframe"
+                    )
                 return self._statistics_engine.register_split_statistics(
-                    training_dataset_obj, feature_dataframes=td_df,
-                    feature_view_obj=feature_view_obj)
+                    training_dataset_obj,
+                    feature_dataframes=td_df,
+                    feature_view_obj=feature_view_obj,
+                )
             else:
                 return self._statistics_engine.compute_statistics(
-                    training_dataset_obj, feature_dataframe=td_df,
-                    feature_view_obj=feature_view_obj)
+                    training_dataset_obj,
+                    feature_dataframe=td_df,
+                    feature_view_obj=feature_view_obj,
+                )
 
     def _get_training_data_metadata(self, feature_view_obj, training_dataset_version):
         td = self._feature_view_api.get_training_dataset_by_version(
-                    feature_view_obj.name, feature_view_obj.version,
-                    training_dataset_version)
+            feature_view_obj.name, feature_view_obj.version, training_dataset_version
+        )
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
-        td.transformation_functions = (
-            feature_view_obj.transformation_functions
-        )
+        td.transformation_functions = feature_view_obj.transformation_functions
         return td
 
-    def _create_training_data_metadata(self, feature_view_obj,
-                                       training_dataset_obj):
+    def _create_training_data_metadata(self, feature_view_obj, training_dataset_obj):
         td = self._feature_view_api.create_training_dataset(
-            feature_view_obj.name, feature_view_obj.version,
-            training_dataset_obj)
-        td.schema = feature_view_obj.schema
-        td.transformation_functions = (
-            feature_view_obj.transformation_functions
+            feature_view_obj.name, feature_view_obj.version, training_dataset_obj
         )
+        td.schema = feature_view_obj.schema
+        td.transformation_functions = feature_view_obj.transformation_functions
         return td
 
-    def delete_training_data(self, feature_view_obj,
-                             training_data_version=None):
+    def delete_training_data(self, feature_view_obj, training_data_version=None):
         if training_data_version:
             self._feature_view_api.delete_training_data_version(
-                feature_view_obj.name, feature_view_obj.version,
-                training_data_version
+                feature_view_obj.name, feature_view_obj.version, training_data_version
             )
         else:
             self._feature_view_api.delete_training_data(
                 feature_view_obj.name, feature_view_obj.version
             )
 
-    def delete_training_dataset_only(self, feature_view_obj,
-                                     training_data_version=None):
+    def delete_training_dataset_only(
+        self, feature_view_obj, training_data_version=None
+    ):
         if training_data_version:
             self._feature_view_api.delete_training_dataset_only_version(
-                feature_view_obj.name, feature_view_obj.version,
-                training_data_version
+                feature_view_obj.name, feature_view_obj.version, training_data_version
             )
         else:
             self._feature_view_api.delete_training_dataset_only(
                 feature_view_obj.name, feature_view_obj.version
             )
 
-    def get_batch_data(self, feature_view_obj, start_time,
-                               end_time, read_options=None):
+    def get_batch_data(self, feature_view_obj, start_time, end_time, read_options=None):
         self._check_feature_group_accessibility(feature_view_obj)
         return self.get_batch_query(
             feature_view_obj, start_time, end_time, with_label=False
         ).read(read_options=read_options)
 
-    def add_tag(self, feature_view_obj, name: str, value,
-                training_dataset_version=None):
+    def add_tag(
+        self, feature_view_obj, name: str, value, training_dataset_version=None
+    ):
         self._tags_api.add(
-            feature_view_obj, name, value,
-            training_dataset_version=training_dataset_version
+            feature_view_obj,
+            name,
+            value,
+            training_dataset_version=training_dataset_version,
         )
 
-    def delete_tag(self, feature_view_obj, name: str,
-                training_dataset_version=None):
+    def delete_tag(self, feature_view_obj, name: str, training_dataset_version=None):
         self._tags_api.delete(
-            feature_view_obj, name,
-            training_dataset_version=training_dataset_version
+            feature_view_obj, name, training_dataset_version=training_dataset_version
         )
 
-    def get_tag(self, feature_view_obj, name: str,
-                training_dataset_version=None):
+    def get_tag(self, feature_view_obj, name: str, training_dataset_version=None):
         return self._tags_api.get(
-            feature_view_obj, name,
-            training_dataset_version=training_dataset_version)[name]
+            feature_view_obj, name, training_dataset_version=training_dataset_version
+        )[name]
 
     def get_tags(self, feature_view_obj, training_dataset_version=None):
         return self._tags_api.get(
-            feature_view_obj,
-            training_dataset_version=training_dataset_version
+            feature_view_obj, training_dataset_version=training_dataset_version
         )
 
     def _check_feature_group_accessibility(self, feature_view_obj):
-        if ((engine.get_type() == "python" or engine.get_type() == "hive") and
-            not feature_view_obj.query.from_cache_feature_group_only()):
+        if (
+            engine.get_type() == "python" or engine.get_type() == "hive"
+        ) and not feature_view_obj.query.from_cache_feature_group_only():
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
                 " Please use `feature_view.create_training_dataset` instead."
             )
-

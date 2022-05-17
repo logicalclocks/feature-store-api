@@ -28,8 +28,11 @@ class StatisticsEngine:
         )
 
     def compute_statistics(
-        self, metadata_instance, feature_dataframe=None,
-        feature_group_commit_id=None, feature_view_obj=None
+        self,
+        metadata_instance,
+        feature_dataframe=None,
+        feature_group_commit_id=None,
+        feature_view_obj=None,
     ):
         """Compute statistics for a dataframe and send the result json to Hopsworks."""
         if engine.get_type() == "spark" or feature_view_obj is not None:
@@ -81,9 +84,13 @@ class StatisticsEngine:
 
     @staticmethod
     def profile_transformation_fn_statistics(feature_dataframe, columns):
-        if ((engine.get_type() == "spark" and len(feature_dataframe.select(*columns).head(1)) == 0) or
-            ((engine.get_type() == "hive" or engine.get_type() == "python") and
-             len(feature_dataframe.head()) == 0)):
+        if (
+            engine.get_type() == "spark"
+            and len(feature_dataframe.select(*columns).head(1)) == 0
+        ) or (
+            (engine.get_type() == "hive" or engine.get_type() == "python")
+            and len(feature_dataframe.head()) == 0
+        ):
             raise exceptions.FeatureStoreException(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
@@ -93,9 +100,9 @@ class StatisticsEngine:
             feature_dataframe, columns, False, True, False
         )
 
-    def register_split_statistics(self, td_metadata_instance,
-                                  feature_view_obj=None,
-                                  feature_dataframes=None):
+    def register_split_statistics(
+        self, td_metadata_instance, feature_view_obj=None, feature_dataframes=None
+    ):
         statistics_of_splits = []
         for split_name in td_metadata_instance.splits:
             statistics_of_splits.append(
@@ -103,8 +110,11 @@ class StatisticsEngine:
                     split_name,
                     self.profile_statistics(
                         td_metadata_instance,
-                        (feature_dataframes.get(split_name) if feature_dataframes
-                         else td_metadata_instance.read(split_name))
+                        (
+                            feature_dataframes.get(split_name)
+                            if feature_dataframes
+                            else td_metadata_instance.read(split_name)
+                        ),
                     ),
                 )
             )
@@ -122,7 +132,7 @@ class StatisticsEngine:
         td_metadata_instance,
         columns,
         feature_dataframe=None,
-        feature_view_obj=None
+        feature_view_obj=None,
     ):
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         content_str = self.profile_transformation_fn_statistics(
@@ -137,25 +147,34 @@ class StatisticsEngine:
         self._save_statistics(stats, td_metadata_instance, feature_view_obj)
         return stats
 
-    def get_last(self, metadata_instance, for_transformation=False,
-                 training_dataset_version=None):
+    def get_last(
+        self, metadata_instance, for_transformation=False, training_dataset_version=None
+    ):
         """Get the most recent Statistics of an entity."""
-        return self._statistics_api.get_last(metadata_instance,
-                                             for_transformation,
-                                             training_dataset_version)
+        return self._statistics_api.get_last(
+            metadata_instance, for_transformation, training_dataset_version
+        )
 
-    def get(self, metadata_instance, commit_time,
-            for_transformation=False, training_dataset_version=None):
+    def get(
+        self,
+        metadata_instance,
+        commit_time,
+        for_transformation=False,
+        training_dataset_version=None,
+    ):
         """Get Statistics with the specified commit time of an entity."""
         commit_timestamp = util.get_timestamp_from_date_string(commit_time)
         return self._statistics_api.get(
-            metadata_instance, commit_timestamp,
-            for_transformation, training_dataset_version
+            metadata_instance,
+            commit_timestamp,
+            for_transformation,
+            training_dataset_version,
         )
 
     def _save_statistics(self, stats, td_metadata_instance, feature_view_obj):
         if feature_view_obj:
-            self._statistics_api.post(feature_view_obj, stats,
-                                      td_metadata_instance.version)
+            self._statistics_api.post(
+                feature_view_obj, stats, td_metadata_instance.version
+            )
         else:
             self._statistics_api.post(td_metadata_instance, stats, None)

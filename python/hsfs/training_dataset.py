@@ -32,7 +32,7 @@ from hsfs.core import (
     statistics_engine,
     code_engine,
     transformation_function_engine,
-    vector_server
+    vector_server,
 )
 from hsfs.constructor import query
 
@@ -76,8 +76,7 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._start_time = self._convert_event_time_to_timestamp(
-            event_start_time)
+        self._start_time = self._convert_event_time_to_timestamp(event_start_time)
         self._end_time = self._convert_event_time_to_timestamp(event_end_time)
         self._coalesce = coalesce
         self._seed = seed
@@ -142,8 +141,7 @@ class TrainingDataset:
             return util.get_timestamp_from_date_string(event_time, timezone.utc)
         elif isinstance(event_time, int):
             if event_time < 1000:
-                raise ValueError(
-                    "Timestamp should be greater than or equal to 1000 ms")
+                raise ValueError("Timestamp should be greater than or equal to 1000 ms")
             return event_time
         else:
             raise ValueError("Given event time should be in `str` or `int` type")
@@ -484,7 +482,7 @@ class TrainingDataset:
             "statisticsConfig": self._statistics_config,
             "trainSplit": self._train_split,
             "eventStartTime": self._start_time,
-            "eventEndTime": self._end_time
+            "eventEndTime": self._end_time,
         }
 
     @property
@@ -790,15 +788,10 @@ class TrainingDataset:
 
     @training_dataset_type.setter
     def training_dataset_type(self, training_dataset_type):
-        valid_type = [
-            self.IN_MEMORY,
-            self.HOPSFS,
-            self.EXTERNAL
-        ]
+        valid_type = [self.IN_MEMORY, self.HOPSFS, self.EXTERNAL]
         if training_dataset_type not in valid_type:
             raise ValueError(
-                "Training dataset type should be one of "
-                ", ".join(valid_type)
+                "Training dataset type should be one of " ", ".join(valid_type)
             )
         else:
             self._training_dataset_type = training_dataset_type

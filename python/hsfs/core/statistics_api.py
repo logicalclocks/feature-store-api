@@ -39,8 +39,13 @@ class StatisticsApi:
             "POST", path_params, headers=headers, data=statistics.json()
         )
 
-    def get(self, metadata_instance, commit_timestamp,
-            for_transformation, training_dataset_version):
+    def get(
+        self,
+        metadata_instance,
+        commit_timestamp,
+        for_transformation,
+        training_dataset_version,
+    ):
         """Gets the statistics for a specific commit time for an instance."""
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
@@ -56,8 +61,7 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_last(self, metadata_instance, for_transformation,
-                 training_dataset_version):
+    def get_last(self, metadata_instance, for_transformation, training_dataset_version):
         """Gets the statistics of the last commit for an instance."""
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
@@ -76,8 +80,9 @@ class StatisticsApi:
 
     def compute(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
-        path_params = self.get_path(
-            metadata_instance, training_dataset_version) + ["compute"]
+        path_params = self.get_path(metadata_instance, training_dataset_version) + [
+            "compute"
+        ]
         return job.Job.from_response_json(_client._send_request("POST", path_params))
 
     def get_path(self, metadata_instance, training_dataset_version=None):

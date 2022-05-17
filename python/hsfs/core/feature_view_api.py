@@ -15,7 +15,10 @@
 #
 
 from hsfs import (
-    client, feature_view, transformation_function_attached, training_dataset
+    client,
+    feature_view,
+    transformation_function_attached,
+    training_dataset,
 )
 from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement, query
@@ -58,16 +61,19 @@ class FeatureViewApi:
 
     def get_by_name(self, name):
         path = self._base_path + [name]
-        return [feature_view.FeatureView.from_response_json(fv)
-                for fv in self._client._send_request(
-                self._GET, path, {"expand": ["query", "features"]})["items"]
-                ]
+        return [
+            feature_view.FeatureView.from_response_json(fv)
+            for fv in self._client._send_request(
+                self._GET, path, {"expand": ["query", "features"]}
+            )["items"]
+        ]
 
     def get_by_name_version(self, name, version):
         path = self._base_path + [name, self._VERSION, version]
         return feature_view.FeatureView.from_response_json(
-            self._client._send_request(self._GET, path,
-                                       {"expand": ["query", "features"]})
+            self._client._send_request(
+                self._GET, path, {"expand": ["query", "features"]}
+            )
         )
 
     def delete_by_name(self, name):
@@ -78,92 +84,117 @@ class FeatureViewApi:
         path = self._base_path + [name, self._VERSION, version]
         self._client._send_request(self._DELETE, path)
 
-    def get_batch_query(self, name, version, start_time, end_time,
-                        with_label=False, is_python_engine=False):
-        path = self._base_path + \
-               [name, self._VERSION, version, self._QUERY, self._BATCH]
+    def get_batch_query(
+        self,
+        name,
+        version,
+        start_time,
+        end_time,
+        with_label=False,
+        is_python_engine=False,
+    ):
+        path = self._base_path + [
+            name,
+            self._VERSION,
+            version,
+            self._QUERY,
+            self._BATCH,
+        ]
         return query.Query.from_response_json(
-            self._client._send_request(self._GET, path,
-                                          {"start_time": start_time,
-                                           "end_time": end_time,
-                                           "with_label": with_label,
-                                           "is_hive_engine": is_python_engine}
-                                          )
+            self._client._send_request(
+                self._GET,
+                path,
+                {
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "with_label": with_label,
+                    "is_hive_engine": is_python_engine,
+                },
+            )
         )
 
     def get_serving_prepared_statement(self, name, version, batch):
-        path = self._base_path + \
-               [name, self._VERSION, version, self._PREPARED_STATEMENT]
+        path = self._base_path + [
+            name,
+            self._VERSION,
+            version,
+            self._PREPARED_STATEMENT,
+        ]
         headers = {"content-type": "application/json"}
         query_params = {"batch": batch}
-        return serving_prepared_statement.ServingPreparedStatement\
-            .from_response_json(
-            self._client._send_request(
-                "GET", path, query_params, headers=headers)
+        return serving_prepared_statement.ServingPreparedStatement.from_response_json(
+            self._client._send_request("GET", path, query_params, headers=headers)
         )
 
     def get_attached_transformation_fn(self, name, version):
-        path = self._base_path + \
-               [name, self._VERSION, version,
-                self._TRANSFORMATION]
-        return transformation_function_attached.TransformationFunctionAttached.\
-            from_response_json(self._client._send_request("GET", path))
+        path = self._base_path + [name, self._VERSION, version, self._TRANSFORMATION]
+        return transformation_function_attached.TransformationFunctionAttached.from_response_json(
+            self._client._send_request("GET", path)
+        )
 
     def create_training_dataset(self, name, version, training_dataset_obj):
         path = self.get_training_data_base_path(name, version)
         headers = {"content-type": "application/json"}
         return training_dataset_obj.update_from_response_json(
             self._client._send_request(
-                "POST", path, headers=headers, data=training_dataset_obj.json())
+                "POST", path, headers=headers, data=training_dataset_obj.json()
+            )
         )
 
-    def get_training_dataset_by_version(self, name, version,
-                                        training_dataset_version):
-        path = self.get_training_data_base_path(
-            name, version, training_dataset_version)
+    def get_training_dataset_by_version(self, name, version, training_dataset_version):
+        path = self.get_training_data_base_path(name, version, training_dataset_version)
         return training_dataset.TrainingDataset.from_response_json_single(
-            self._client._send_request(
-                "GET", path)
+            self._client._send_request("GET", path)
         )
 
-    def compute_training_dataset(self, name, version, training_dataset_version,
-                                 td_app_conf):
+    def compute_training_dataset(
+        self, name, version, training_dataset_version, td_app_conf
+    ):
         path = self.get_training_data_base_path(
-            name, version, training_dataset_version) + [self._COMPUTE]
+            name, version, training_dataset_version
+        ) + [self._COMPUTE]
         headers = {"content-type": "application/json"}
         return job.Job.from_response_json(
             self._client._send_request(
-                "POST", path, headers=headers, data=td_app_conf.json())
+                "POST", path, headers=headers, data=td_app_conf.json()
+            )
         )
 
     def delete_training_data(self, name, version):
         path = self.get_training_data_base_path(name, version)
         return self._client._send_request("DELETE", path)
 
-    def delete_training_data_version(self, name, version,
-                                     training_dataset_version):
-        path = self.get_training_data_base_path(name, version,
-                                                training_dataset_version)
+    def delete_training_data_version(self, name, version, training_dataset_version):
+        path = self.get_training_data_base_path(name, version, training_dataset_version)
         return self._client._send_request("DELETE", path)
 
     def delete_training_dataset_only(self, name, version):
         path = self.get_training_data_base_path(name, version) + [self._DATA]
         return self._client._send_request("DELETE", path)
 
-    def delete_training_dataset_only_version(self, name, version,
-                                             training_dataset_version):
+    def delete_training_dataset_only_version(
+        self, name, version, training_dataset_version
+    ):
         path = self.get_training_data_base_path(
-            name, version, training_dataset_version) + [self._DATA]
+            name, version, training_dataset_version
+        ) + [self._DATA]
 
         return self._client._send_request("DELETE", path)
 
-    def get_training_data_base_path(self, name, version,
-                                    training_data_version=None):
+    def get_training_data_base_path(self, name, version, training_data_version=None):
         if training_data_version:
-            return self._base_path + \
-               [name, self._VERSION, version,
-                self._TRAINING_DATASET, self._VERSION, training_data_version,
-                ]
+            return self._base_path + [
+                name,
+                self._VERSION,
+                version,
+                self._TRAINING_DATASET,
+                self._VERSION,
+                training_data_version,
+            ]
         else:
-            return self._base_path + \
-                   [name, self._VERSION, version, self._TRAINING_DATASET]
+            return self._base_path + [
+                name,
+                self._VERSION,
+                version,
+                self._TRAINING_DATASET,
+            ]

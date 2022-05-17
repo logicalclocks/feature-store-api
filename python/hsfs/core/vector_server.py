@@ -25,12 +25,11 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
     feature_view_api,
-    feature_view_engine
+    feature_view_engine,
 )
 
 
 class VectorServer:
-
     def __init__(self, feature_store_id, training_dataset_version=None):
         self._training_dataset_version = training_dataset_version
         self._prepared_statement_engine = None
@@ -41,9 +40,7 @@ class VectorServer:
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
         )
-        self._feature_view_api = feature_view_api.FeatureViewApi(
-            feature_store_id
-        )
+        self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
@@ -52,8 +49,8 @@ class VectorServer:
                 feature_store_id
             )
         )
-        self._feature_view_engine = (
-            feature_view_engine.FeatureViewEngine(feature_store_id)
+        self._feature_view_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id
         )
 
     def init_serving(self, vector_server, batch, external):
@@ -68,15 +65,15 @@ class VectorServer:
 
     def init_prepared_statement(self, vector_server, batch, external):
         if isinstance(vector_server, feature_view.FeatureView):
-            prepared_statements = \
-                self._feature_view_api.get_serving_prepared_statement(
-                    vector_server.name, vector_server.version, batch
-                )
+            prepared_statements = self._feature_view_api.get_serving_prepared_statement(
+                vector_server.name, vector_server.version, batch
+            )
         elif isinstance(vector_server, training_dataset.TrainingDataset):
-            prepared_statements = \
+            prepared_statements = (
                 self._training_dataset_api.get_serving_prepared_statement(
                     vector_server, batch
                 )
+            )
         else:
             raise ValueError(
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
@@ -92,8 +89,7 @@ class VectorServer:
         pkname_by_serving_index = {}
         serving_vector_keys = set()
         for prepared_statement in prepared_statements:
-            query_online = str(prepared_statement.query_online).replace("\n",
-                                                                        " ")
+            query_online = str(prepared_statement.query_online).replace("\n", " ")
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -110,12 +106,10 @@ class VectorServer:
 
             if not batch:
                 for pk_name in pk_names:
-                    query_online = self._parametrize_query(pk_name,
-                                                           query_online)
+                    query_online = self._parametrize_query(pk_name, query_online)
                 query_online = sql.text(query_online)
             else:
-                query_online = self._parametrize_query("batch_ids",
-                                                       query_online)
+                query_online = self._parametrize_query("batch_ids", query_online)
                 query_online = sql.text(query_online)
                 query_online = query_online.bindparams(
                     batch_ids=bindparam("batch_ids", expanding=True)
@@ -142,15 +136,14 @@ class VectorServer:
         if batch:
             return self.get_feature_vectors(vector_server, entry, external, n)
         else:
-            return self.get_feature_vector(
-                vector_server, entry, external, n)
+            return self.get_feature_vector(vector_server, entry, external, n)
 
-    def get_feature_vector(self, vector_server, entry, external,
-                           preview_sample=0):
+    def get_feature_vector(self, vector_server, entry, external, preview_sample=0):
         """Assembles serving vector from online feature store."""
 
-        if (not preview_sample and
-            all([isinstance(val, list) for val in entry.values()])):
+        if not preview_sample and all(
+            [isinstance(val, list) for val in entry.values()]
+        ):
             raise ValueError(
                 "Entry is expected to be single value per primary key. "
                 "If you have already initialised prepared statements for single vector and now want to retrieve "
@@ -175,14 +168,13 @@ class VectorServer:
 
         self.refresh_mysql_connection(external)
         for prepared_statement_index in self.prepared_statements:
-            prepared_statement = self.prepared_statements[
-                prepared_statement_index]
+            prepared_statement = self.prepared_statements[prepared_statement_index]
             if preview_sample:
                 prepared_statement = self._make_preview_statement(
-                    prepared_statement, preview_sample)
+                    prepared_statement, preview_sample
+                )
             with self.prepared_statement_engine.connect() as mysql_conn:
-                result_proxy = mysql_conn.execute(prepared_statement,
-                                                  entry).fetchall()
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
             result_dict = {}
             for row in result_proxy:
                 result_dict = self.deserialize_complex_features(
@@ -201,16 +193,16 @@ class VectorServer:
 
         return serving_vector
 
-    def get_feature_vectors(self, vector_server, entry, external,
-                            preview_sample=0):
+    def get_feature_vectors(self, vector_server, entry, external, preview_sample=0):
         """Assembles serving vector from online feature store."""
 
         # initialize prepared statements
         if self.prepared_statements is None:
             self.init_serving(vector_server, True, external)
 
-        if not preview_sample and \
-            not all([isinstance(val, list) for val in entry.values()]):
+        if not preview_sample and not all(
+            [isinstance(val, list) for val in entry.values()]
+        ):
             raise ValueError(
                 "Entry is expected to be list of primary key values. "
                 "If you have already initialised for batch serving and now want to retrieve single vector "
@@ -240,15 +232,17 @@ class VectorServer:
         self.refresh_mysql_connection(external)
         for prepared_statement_index in self.prepared_statements:
             order_in_batch = 0
-            prepared_statement = self.prepared_statements[
-                prepared_statement_index]
+            prepared_statement = self.prepared_statements[prepared_statement_index]
             if preview_sample:
                 prepared_statement = self._make_preview_statement(
-                    prepared_statement, preview_sample)
+                    prepared_statement, preview_sample
+                )
             with self.prepared_statement_engine.connect() as mysql_conn:
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
-                    batch_ids=None if preview_sample else tuple(
+                    batch_ids=None
+                    if preview_sample
+                    else tuple(
                         zip(
                             *[
                                 entry.get(key)
@@ -289,8 +283,7 @@ class VectorServer:
     def get_complex_feature_schemas(self, vector_server):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(
-                    f._feature_group._get_feature_avro_schema(f.name))
+                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
             )
             for f in vector_server.schema
             if f.is_complex()
@@ -311,8 +304,7 @@ class VectorServer:
             self._set_mysql_connection(external)
 
     def _make_preview_statement(self, statement, n):
-        return text(statement.text[:statement.text.find(" WHERE ")]
-                    + f" LIMIT {n}")
+        return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
     def _set_mysql_connection(self, external):
         online_conn = self._storage_connector_api.get_online_connector()
@@ -323,10 +315,8 @@ class VectorServer:
     def _apply_transformation(transformation_fns, row_dict):
         for feature_name in transformation_fns:
             if feature_name in row_dict:
-                transformation_fn = transformation_fns[
-                    feature_name].transformation_fn
-                row_dict[feature_name] = transformation_fn(
-                    row_dict[feature_name])
+                transformation_fn = transformation_fns[feature_name].transformation_fn
+                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
 
     @staticmethod
@@ -349,17 +339,22 @@ class VectorServer:
     def _get_transformation_fns(self, vector_server):
         # get attached transformation functions
         transformation_functions = (
-            self._transformation_function_engine.get_td_transformation_fn(
-                vector_server
-            ) if isinstance(vector_server, training_dataset.TrainingDataset) else (
+            self._transformation_function_engine.get_td_transformation_fn(vector_server)
+            if isinstance(vector_server, training_dataset.TrainingDataset)
+            else (
                 self._feature_view_engine.get_attached_transformation_fn(
                     vector_server.name, vector_server.version
                 )
             )
         )
-        is_stat_required = len(
-            set(self._transformation_function_engine.BUILTIN_FN_NAMES).intersection(
-                set([tf.name for tf in transformation_functions.values()]))) > 0
+        is_stat_required = (
+            len(
+                set(self._transformation_function_engine.BUILTIN_FN_NAMES).intersection(
+                    set([tf.name for tf in transformation_functions.values()])
+                )
+            )
+            > 0
+        )
         is_feat_view = isinstance(vector_server, feature_view.FeatureView)
         if not is_stat_required:
             td_tffn_stats = None
@@ -373,12 +368,15 @@ class VectorServer:
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
-                vector_server, for_transformation=True,
-                training_dataset_version=self._training_dataset_version
+                vector_server,
+                for_transformation=True,
+                training_dataset_version=self._training_dataset_version,
             )
 
         if is_stat_required and td_tffn_stats is None:
-            raise ValueError("No statistics available for initializing transformation functions.")
+            raise ValueError(
+                "No statistics available for initializing transformation functions."
+            )
 
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(

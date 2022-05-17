@@ -319,18 +319,27 @@ class Engine:
             ]
         )
 
-    def get_training_data(self, training_dataset, feature_view_obj,
-                          query_obj, read_options):
-        df = query_obj.read(
-            read_options=read_options
+    def get_training_data(
+        self, training_dataset, feature_view_obj, query_obj, read_options
+    ):
+        df = query_obj.read(read_options=read_options)
+        return self.write_training_dataset(
+            training_dataset,
+            df,
+            read_options,
+            None,
+            to_df=True,
+            feature_view_obj=feature_view_obj,
         )
-        return self.write_training_dataset(training_dataset, df, read_options,
-                                           None, to_df=True,
-                                           feature_view_obj=feature_view_obj)
 
     def write_training_dataset(
-        self, training_dataset, dataset, user_write_options, save_mode,
-        feature_view_obj=None, to_df=False
+        self,
+        training_dataset,
+        dataset,
+        user_write_options,
+        save_mode,
+        feature_view_obj=None,
+        to_df=False,
     ):
         if isinstance(dataset, query.Query):
             dataset = dataset.read()
@@ -347,9 +356,7 @@ class Engine:
         )
 
         if len(training_dataset.splits) == 0:
-            training_dataset.transformation_functions = transformation_function_engine.\
-                TransformationFunctionEngine.\
-                populate_builtin_transformation_functions(
+            training_dataset.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
 
@@ -362,29 +369,21 @@ class Engine:
                 write_options,
                 save_mode,
                 path,
-                to_df=to_df
+                to_df=to_df,
             )
         else:
             split_names = sorted([*training_dataset.splits])
             split_weights = [training_dataset.splits[i] for i in split_names]
-            split_dataset = dataset.randomSplit(
-                split_weights, training_dataset.seed
+            split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
+            split_dataset = dict(
+                [(split_names[i], split_dataset[i]) for i in range(len(split_names))]
             )
-            split_dataset = dict([(split_names[i], split_dataset[i])
-                              for i in range(len(split_names))])
-            transformation_function_engine.\
-                TransformationFunctionEngine.\
-                populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
             return self._write_training_dataset_splits(
-                training_dataset,
-                split_dataset,
-                write_options,
-                save_mode,
-                to_df=to_df
+                training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
-
 
     def _write_training_dataset_splits(
         self,
@@ -392,7 +391,7 @@ class Engine:
         feature_dataframes,
         write_options,
         save_mode,
-        to_df=False
+        to_df=False,
     ):
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
@@ -404,7 +403,7 @@ class Engine:
                 write_options,
                 save_mode,
                 split_path,
-                to_df=to_df
+                to_df=to_df,
             )
 
         if to_df:
@@ -419,7 +418,7 @@ class Engine:
         write_options,
         save_mode,
         path,
-        to_df=False
+        to_df=False,
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
