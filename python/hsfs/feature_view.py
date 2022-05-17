@@ -363,7 +363,7 @@ class FeatureView:
             Training dataset tuple: (`int`, `Dataframe`)
                 Training dataset version and dataframe.
         """
-        td, df = self.get_training_datasets(
+        td, df = self.get_training_dataset_splits(
             {},
             start_time=start_time,
             end_time=end_time,
