@@ -16,9 +16,9 @@
 
 import datetime
 
-from hsfs import engine, statistics, util, split_statistics, feature_view
-from hsfs.core import statistics_api
+from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
+from hsfs.core import statistics_api
 
 
 class StatisticsEngine:

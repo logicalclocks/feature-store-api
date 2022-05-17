@@ -22,7 +22,6 @@ from typing import Optional, Union, List, Dict, Any
 import humps
 
 from hsfs import (
-    tag,
     util,
     training_dataset_feature,
     storage_connector,
