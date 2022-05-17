@@ -260,8 +260,7 @@ public class FeatureGroupUtils {
 
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
     if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + onlineTopicName + "_" + LocalDateTime.now().format(
-          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+      queryName = "insert_stream_" + onlineTopicName;
     }
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";

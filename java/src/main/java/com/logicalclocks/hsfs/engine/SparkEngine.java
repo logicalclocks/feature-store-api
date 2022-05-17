@@ -332,6 +332,10 @@ public class SparkEngine {
         .options(readOptions);
 
     if (!Strings.isNullOrEmpty(path)) {
+      // for BigQuery we set SQL query as location which should be passed to load()
+      if (dataFormat.equals(Constants.BIGQUERY_FORMAT)) {
+        return reader.load(location);
+      }
       return reader.load(SparkEngine.sparkPath(path));
     }
     return reader.load();
@@ -359,7 +363,7 @@ public class SparkEngine {
 
   public <S> StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, S datasetGeneric, String queryName,
                                              String outputMode, boolean awaitTermination, Long timeout,
-                                             Map<String, String> writeOptions)
+                                             String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
@@ -368,7 +372,9 @@ public class SparkEngine {
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
-        .option("checkpointLocation", utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName()))
+        .option("checkpointLocation", checkpointLocation == null
+            ? utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
+            : checkpointLocation)
         .options(writeOptions)
         .option("topic", featureGroupBase.getOnlineTopicName());
 

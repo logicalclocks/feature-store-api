@@ -16,7 +16,7 @@
 
 import json
 
-from hsfs import client, tag
+from hsfs import client, tag, feature_view
 
 
 class TagsApi:
@@ -31,7 +31,7 @@ class TagsApi:
         self._feature_store_id = feature_store_id
         self._entity_type = entity_type
 
-    def add(self, metadata_instance, name, value):
+    def add(self, metadata_instance, name, value, training_dataset_version=None):
         """Attach a name/value tag to a training dataset or feature group.
 
         A tag consists of a name/value pair. Tag names are unique identifiers.
@@ -46,21 +46,14 @@ class TagsApi:
         :type value: str
         """
         _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "tags",
-            name,
+        path_params = self.get_path(metadata_instance, training_dataset_version) + [
+            name
         ]
         headers = {"content-type": "application/json"}
         json_value = json.dumps(value)
         _client._send_request("PUT", path_params, headers=headers, data=json_value)
 
-    def delete(self, metadata_instance, name):
+    def delete(self, metadata_instance, name, training_dataset_version=None):
         """Delete a tag from a training dataset or feature group.
 
         Tag names are unique identifiers.
@@ -72,19 +65,13 @@ class TagsApi:
         :type name: str
         """
         _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "tags",
-            name,
+        path_params = self.get_path(metadata_instance, training_dataset_version) + [
+            name
         ]
+
         _client._send_request("DELETE", path_params)
 
-    def get(self, metadata_instance, name: str = None):
+    def get(self, metadata_instance, name: str = None, training_dataset_version=None):
         """Get the tags of a training dataset or feature group.
 
         Gets all tags if no tag name is specified.
@@ -98,15 +85,7 @@ class TagsApi:
         :rtype: dict
         """
         _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            self._entity_type,
-            metadata_instance.id,
-            "tags",
-        ]
+        path_params = self.get_path(metadata_instance, training_dataset_version)
 
         if name is not None:
             path_params.append(name)
@@ -117,3 +96,35 @@ class TagsApi:
                 _client._send_request("GET", path_params)
             )
         }
+
+    def get_path(self, metadata_instance, training_dataset_version=None):
+        _client = client.get_instance()
+        if isinstance(metadata_instance, feature_view.FeatureView):
+            path = [
+                "project",
+                _client._project_id,
+                "featurestores",
+                self._feature_store_id,
+                "featureview",
+                metadata_instance.name,
+                "version",
+                metadata_instance.version,
+            ]
+            if training_dataset_version:
+                return path + [
+                    "version",
+                    training_dataset_version,
+                    "tags",
+                ]
+            else:
+                return path + ["tags"]
+        else:
+            return [
+                "project",
+                _client._project_id,
+                "featurestores",
+                self._feature_store_id,
+                self._entity_type,
+                metadata_instance.id,
+                "tags",
+            ]

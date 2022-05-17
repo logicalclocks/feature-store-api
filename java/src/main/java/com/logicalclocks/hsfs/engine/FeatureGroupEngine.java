@@ -158,7 +158,7 @@ public class FeatureGroupEngine {
   @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
-                                     Map<String, String> writeOptions)
+                                     String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
     if (!featureGroup.getOnlineEnabled()) {
@@ -173,7 +173,7 @@ public class FeatureGroupEngine {
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
         utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        utils.getKafkaConfig(featureGroup, writeOptions));
+        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
 
     return streamingQuery;
   }
