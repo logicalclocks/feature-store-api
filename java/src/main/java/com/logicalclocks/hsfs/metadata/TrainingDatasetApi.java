@@ -131,7 +131,6 @@ public class TrainingDatasetApi {
 
   public List<ServingPreparedStatement> getServingPreparedStatement(TrainingDataset trainingDataset, boolean batch)
       throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + PREP_STATEMENT_PATH;
@@ -142,10 +141,9 @@ public class TrainingDatasetApi {
         .set("tdId", trainingDataset.getId())
         .set("batch", batch)
         .expand();
-
     HttpGet getRequest = new HttpGet(uri);
     LOGGER.info("Sending metadata request: " + uri);
-
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     ServingPreparedStatement servingPreparedStatement = hopsworksClient.handleRequest(getRequest,
         ServingPreparedStatement.class);
     return servingPreparedStatement.getItems();

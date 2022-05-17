@@ -24,6 +24,7 @@ import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.TrainingDatasetUtils;
+import com.logicalclocks.hsfs.engine.VectorServer;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.Getter;
@@ -111,35 +112,11 @@ public class TrainingDataset {
   @JsonIgnore
   private List<String> label;
 
-  @Getter
-  @Setter
-  @JsonIgnore
-  private Connection preparedStatementConnection;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private TreeMap<Integer, PreparedStatement> preparedStatements;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private TreeMap<Integer, String> preparedQueryString;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private HashSet<String> servingKeys;
-
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
   private TrainingDatasetUtils utils = new TrainingDatasetUtils();
+  private VectorServer vectorServer = new VectorServer();
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
@@ -479,7 +456,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(boolean external)
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this, false, external);
+    vectorServer.initPreparedStatement(this, false, external);
   }
 
   /**
@@ -491,7 +468,7 @@ public class TrainingDataset {
    */
   public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
           FeatureStoreException, ClassNotFoundException {
-    trainingDatasetEngine.initPreparedStatement(this, batch, external);
+    vectorServer.initPreparedStatement(this, batch, external);
   }
 
   /**
@@ -521,7 +498,7 @@ public class TrainingDataset {
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return trainingDatasetEngine.getServingVector(this, entry, external);
+    return vectorServer.getServingVector(this, entry, external);
   }
 
   @JsonIgnore
@@ -533,7 +510,7 @@ public class TrainingDataset {
   @JsonIgnore
   public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
           throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return trainingDatasetEngine.getServingVectors(this, entry, external);
+    return vectorServer.getServingVectors(this, entry, external);
   }
 
   /**
