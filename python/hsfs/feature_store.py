@@ -31,6 +31,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
+    feature_view,
 )
 from hsfs.core import (
     feature_group_api,
@@ -38,7 +39,9 @@ from hsfs.core import (
     training_dataset_api,
     expectations_api,
     feature_group_engine,
+    feature_view_engine,
 )
+from hsfs.constructor.query import Query
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -95,6 +98,7 @@ class FeatureStore:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(self._id)
         )
+        self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -762,6 +766,83 @@ class FeatureStore:
              `List[TransformationFunction]`. List of transformation function instances.
         """
         return self._transformation_function_engine.get_transformation_fns()
+
+    def create_feature_view(
+        self,
+        name: str,
+        query: Query,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        label: Optional[List[str]] = [],
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+    ):
+        """Create a feature view metadata object and saved it to Hopsworks.
+
+        # Arguments
+            name: Name of the feature view to create.
+            query: Feature store `Query`.
+            version: Version of the feature view to create, defaults to `None` and
+                will create the feature view with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the feature view to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            label: A list of feature names constituting the prediction label/feature of
+                the feature view. When replaying a `Query` during model inference,
+                the label features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
+            transformation_functions: A dictionary mapping tansformation functions to
+                to the features they should be applied to before writing out the
+                vector and at inference time. Defaults to `{}`, no
+                transformations.
+
+        # Returns:
+            `FeatureView`: The feature view metadata object.
+        """
+        feat_view = feature_view.FeatureView(
+            name=name,
+            query=query,
+            featurestore_id=self._id,
+            version=version,
+            description=description,
+            label=label,
+            transformation_functions=transformation_functions,
+        )
+        return self._feature_view_engine.save(feat_view)
+
+    def get_feature_view(self, name, version):
+        """Get a feature view entity from the feature store.
+
+        Getting a feature view from the Feature Store means getting its metadata.
+
+        # Arguments
+            name: Name of the feature view to get.
+            version: Version of the feature view to retrieve, defaults to `None` and will
+                return the `version=1`.
+
+        # Returns
+            `FeatureView`: The feature view metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature view from the feature store.
+        """
+        return self._feature_view_engine.get(name, version)
+
+    def get_feature_views(self, name):
+        """Get a list of all versions of a feature view entity from the feature store.
+
+        Getting a feature view from the Feature Store means getting its metadata.
+
+        # Arguments
+            name: Name of the feature view to get.
+
+        # Returns
+            `FeatureView`: List of feature view metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature view from the feature store.
+        """
+        return self._feature_view_engine.get(name)
 
     @property
     def id(self):
