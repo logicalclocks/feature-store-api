@@ -107,6 +107,8 @@ class TrainingDataset:
         self._vector_server = vector_server.VectorServer(featurestore_id)
         if training_dataset_type:
             self.training_dataset_type = training_dataset_type
+        else:
+            self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
             # no type -> user init
