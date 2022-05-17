@@ -385,7 +385,7 @@ class Engine:
         result_dfs = {}
         items = splits.items()
         if (
-            sum(splits.values) != 1
+            sum(splits.values()) != 1
             or sum([v > 1 or v < 0 for v in splits.values()]) > 1
         ):
             raise ValueError(
