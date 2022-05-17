@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 public class Query {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
@@ -239,11 +241,12 @@ public class Query {
     SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
   }
 
-  public String toString() {
-    return toString(Storage.OFFLINE);
+  public String sql() {
+    // overriding toString does not work wtih jackson
+    return sql(Storage.OFFLINE);
   }
 
-  public String toString(Storage storage) {
+  public String sql(Storage storage) {
     try {
       return queryConstructorApi
           .constructQuery(leftFeatureGroup.getFeatureStore(), this)

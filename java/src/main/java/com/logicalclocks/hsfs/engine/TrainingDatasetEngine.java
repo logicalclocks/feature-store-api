@@ -19,22 +19,10 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDataset;
-import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.constructor.FsQuery;
-import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
-import com.logicalclocks.hsfs.util.Constants;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -43,29 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.DriverManager;
-import java.sql.Statement;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TrainingDatasetEngine {
 
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private TrainingDatasetUtils utils = new TrainingDatasetUtils();
-
 
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
@@ -80,24 +54,13 @@ public class TrainingDatasetEngine {
    * @throws IOException
    */
   public TrainingDataset save(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                              Map<String, String> userWriteOptions, List<String> label)
+      Map<String, String> userWriteOptions, List<String> labels)
       throws FeatureStoreException, IOException {
 
     trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
 
     // set label features
-    if (label != null && !label.isEmpty()) {
-      for (String l : label) {
-        Optional<TrainingDatasetFeature> feature =
-            trainingDataset.getFeatures().stream().filter(f -> f.getName().equals(l)).findFirst();
-        if (feature.isPresent()) {
-          feature.get().setLabel(true);
-        } else {
-          throw new FeatureStoreException("The specified label `" + l + "` could not be found among the features: "
-              + trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName) + ".");
-        }
-      }
-    }
+    TrainingDatasetUtils.setLabelFeature(trainingDataset.getFeatures(), labels);
 
     // Make the rest call to create the training dataset metadata
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
@@ -132,7 +95,7 @@ public class TrainingDatasetEngine {
    * @throws FeatureStoreException
    */
   public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
-                     Map<String, String> providedOptions, SaveMode saveMode)
+      Map<String, String> providedOptions, SaveMode saveMode)
       throws FeatureStoreException, IOException {
     // validate that the schema matches
     utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
@@ -205,7 +168,6 @@ public class TrainingDatasetEngine {
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
   }
-
 
 
 }

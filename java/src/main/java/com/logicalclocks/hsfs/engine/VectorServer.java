@@ -1,10 +1,9 @@
 package com.logicalclocks.hsfs.engine;
 
-import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
@@ -70,16 +69,21 @@ public class VectorServer {
   @JsonIgnore
   private HashSet<String> servingKeys;
 
-  public List<Object> getServingVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
+  public List<Object> getFeatureVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     // init prepared statement if it has not already
     if (preparedStatements == null) {
       initPreparedStatement(trainingDataset, false, external);
     }
-    return getServingVector(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
+    return getFeatureVector(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
   }
 
-  private List<Object> getServingVector(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  public List<Object> getFeatureVector(FeatureView featureView, Map<String, Object> entry, boolean external)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return null;
+  }
+
+  private List<Object> getFeatureVector(FeatureStore featureStore, List<TrainingDatasetFeature> features,
       Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException {
     checkPrimaryKeys(entry.keySet());
@@ -124,7 +128,7 @@ public class VectorServer {
     return servingVector;
   }
 
-  public List<List<Object>> getServingVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
+  public List<List<Object>> getFeatureVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
       boolean external) throws SQLException, FeatureStoreException, IOException,
       ClassNotFoundException {
     // init prepared statement if it has not already
@@ -133,11 +137,16 @@ public class VectorServer {
       // it was not initialized from initPreparedStatement(batchSize)
       initPreparedStatement(trainingDataset, true, external);
     }
-    return getServingVectors(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
-
+    return getFeatureVectors(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
   }
 
-  private List<List<Object>> getServingVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  public List<List<Object>> getFeatureVectors(FeatureView featureView, Map<String, List<Object>> entry,
+      boolean external) throws SQLException, FeatureStoreException, IOException,
+      ClassNotFoundException {
+    return null;
+  }
+
+  private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
       Map<String, List<Object>> entry, boolean external) throws SQLException, FeatureStoreException, IOException {
 
     checkPrimaryKeys(entry.keySet());
@@ -197,9 +206,32 @@ public class VectorServer {
     return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
 
+  public List<Object> previewFeatureVector(FeatureView featureView, boolean external)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return null;
+  }
+
+  public List<List<Object>> previewFeatureVectors(FeatureView featureView,
+      boolean external) throws SQLException, FeatureStoreException, IOException,
+      ClassNotFoundException {
+    return null;
+  }
+
   public void initServing(TrainingDataset trainingDataset, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     initPreparedStatement(trainingDataset, batch, external);
+    // TODO: init transformation
+  }
+
+  public void initServing(FeatureView featureView, boolean batch, boolean external)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    //    initPreparedStatement(featureView, batch, external);
+    // TODO: init transformation
+  }
+
+  public void initServing(FeatureView featureView, Integer trainingDatasetVersion, boolean batch, boolean external)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    //    initPreparedStatement(featureView, batch, external);
     // TODO: init transformation
   }
 
@@ -227,11 +259,11 @@ public class VectorServer {
     TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
 
     // in case its batch serving then we need to save sql string only
-    TreeMap<Integer, String> preparedQueryString =  new TreeMap<>();
+    TreeMap<Integer, String> preparedQueryString = new TreeMap<>();
 
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
-    for (ServingPreparedStatement servingPreparedStatement: servingPreparedStatements) {
+    for (ServingPreparedStatement servingPreparedStatement : servingPreparedStatements) {
       if (batch) {
         preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
             servingPreparedStatement.getQueryOnline());

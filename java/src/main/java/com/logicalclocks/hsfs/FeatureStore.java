@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
@@ -54,6 +55,7 @@ public class FeatureStore {
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
   private ExpectationsApi expectationsApi;
+  private FeatureViewEngine featureViewEngine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -64,6 +66,7 @@ public class FeatureStore {
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     expectationsApi = new ExpectationsApi();
+    featureViewEngine = new FeatureViewEngine();
   }
 
   /**
@@ -245,8 +248,7 @@ public class FeatureStore {
   }
 
   public FeatureView.FeatureViewBuilder createFeatureView() {
-    return FeatureView.builder()
-        .featureStore(this);
+    return new FeatureView.FeatureViewBuilder(this);
   }
 
   /**
@@ -260,7 +262,7 @@ public class FeatureStore {
    */
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return null;
+    return featureViewEngine.get(this, name, version);
   }
 
   /**
