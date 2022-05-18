@@ -20,7 +20,6 @@ from typing import Optional
 import humps
 import great_expectations as ge
 
-from hsfs.core import expectation_suite_engine
 from hsfs.ge_expectation import GeExpectation
 
 
@@ -48,20 +47,24 @@ class ExpectationSuite:
     ):
         self._id = id
         self._expectation_suite_name = expectation_suite_name
-        self.expectations = expectations
-        self.meta = meta
-        self.data_asset_type = (data_asset_type,)
-        self._ge_cloud_id = (ge_cloud_id,)
-        self.run_validation = (run_validation,)
-        self.validation_ingestion_policy = (validation_ingestion_policy,)
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
+        self._ge_cloud_id = ge_cloud_id
+        self._data_asset_type = data_asset_type
+        self._
 
-    def save(self):
-        """Persist the expectation metadata object to the feature store."""
-        expectation_suite_engine.ExpectationSuiteEngine(
-            self._featurestore_id, self._featuregroup_id
-        ).save(self)
+        # use setters because these need to be transformed from stringified json
+        self.expectations = expectations
+        self.meta = meta
+        self.run_validation = run_validation
+        self.validation_ingestion_policy = validation_ingestion_policy
+
+    # MORITZ - this shouldn't be here
+    # def save(self):
+    #    """Persist the expectation metadata object to the feature store."""
+    #    expectation_suite_engine.ExpectationSuiteEngine(
+    #        self._featurestore_id, self._featuregroup_id
+    #    ).save(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
