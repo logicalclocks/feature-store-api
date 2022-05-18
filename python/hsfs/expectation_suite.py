@@ -1,5 +1,5 @@
 #
-#   Copyright 2022 Logical Clocks AB
+#   Copyright 2022 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -18,10 +18,11 @@ import json
 from typing import Optional
 
 import humps
-from hsfs import util
+import great_expectations as ge
+
 from hsfs.core import expectation_suite_engine
 from hsfs.ge_expectation import GeExpectation
-import great_expectations as ge
+
 
 class ExpectationSuite:
     """Metadata object representing an feature validation expectation in the Feature Store."""
@@ -49,16 +50,18 @@ class ExpectationSuite:
         self._expectation_suite_name = expectation_suite_name
         self.expectations = expectations
         self.meta = meta
-        self.data_asset_type = data_asset_type,
-        self._ge_cloud_id = ge_cloud_id,
-        self.run_validation = run_validation,
-        self.validation_ingestion_policy = validation_ingestion_policy,
+        self.data_asset_type = (data_asset_type,)
+        self._ge_cloud_id = (ge_cloud_id,)
+        self.run_validation = (run_validation,)
+        self.validation_ingestion_policy = (validation_ingestion_policy,)
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
 
     def save(self):
         """Persist the expectation metadata object to the feature store."""
-        expectation_suite_engine.ExpectationSuiteEngine(self._featurestore_id, self._featuregroup_id).save(self)
+        expectation_suite_engine.ExpectationSuiteEngine(
+            self._featurestore_id, self._featuregroup_id
+        ).save(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -66,31 +69,47 @@ class ExpectationSuite:
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
-            return [cls(**expectation_suite) for expectation_suite in json_decamelized["items"]]
+            return [
+                cls(**expectation_suite)
+                for expectation_suite in json_decamelized["items"]
+            ]
         else:
             return cls(**json_decamelized)
 
     @classmethod
-    def from_ge_type(cls, ge_expectation_suite, run_validation: Optional[bool] = True, validation_ingestion_policy : Optional[str] = "ALWAYS"):
-        return cls(**ge_expectation_suite.to_json_dict(), run_validation=run_validation, validation_ingestion_policy=validation_ingestion_policy)
+    def from_ge_type(
+        cls,
+        ge_expectation_suite,
+        run_validation: Optional[bool] = True,
+        validation_ingestion_policy: Optional[str] = "ALWAYS",
+    ):
+        return cls(
+            **ge_expectation_suite.to_json_dict(),
+            run_validation=run_validation,
+            validation_ingestion_policy=validation_ingestion_policy,
+        )
 
     def to_json_dict(self):
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
-            "expectations": [expectation.to_json_dict() for expectation in self._expectations],
+            "expectations": [
+                expectation.to_json_dict() for expectation in self._expectations
+            ],
             "meta": json.dumps(self._meta),
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionPolicy": self._validation_ingestion_policy
+            "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
     def to_dict(self):
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
-            "expectations": [expectation.to_dict() for expectation in self._expectations],
+            "expectations": [
+                expectation.to_dict() for expectation in self._expectations
+            ],
             "meta": self._meta,
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
@@ -106,17 +125,17 @@ class ExpectationSuite:
             expectation_suite_name=self.expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,
             data_asset_type=self._data_asset_type,
-            expectations=[expectation.to_ge_type() for expectation in self.expectations],
-            meta = self.meta
+            expectations=[
+                expectation.to_ge_type() for expectation in self.expectations
+            ],
+            meta=self.meta,
         )
 
     def __str__(self):
         return self.json()
 
     def __repr__(self):
-        return (
-            f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
-        )
+        return f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
 
     @property
     def id(self):
@@ -166,14 +185,16 @@ class ExpectationSuite:
         if isinstance(run_validation, bool):
             self._run_validation = run_validation
         else:
-            raise ValueError(f"run_validation must be a boolean, not {run_validation}. True to run validation, false to skip validation.")
+            raise ValueError(
+                f"run_validation must be a boolean, not {run_validation}. True to run validation, false to skip validation."
+            )
 
     @property
     def validation_ingestion_policy(self):
         """Whether to ingest a df based on the validation result.
-        
-            "STRICT" : ingest df only if all expectations succeed,
-            "ALWAYS" : always ingest df, even if one or more expectations fail
+
+        "STRICT" : ingest df only if all expectations succeed,
+        "ALWAYS" : always ingest df, even if one or more expectations fail
         """
         return self._validation_ingestion_policy
 
@@ -188,11 +209,15 @@ class ExpectationSuite:
             elif validation_ingestion_policy == "ALWAYS":
                 self._validation_ingestion_policy = validation_ingestion_policy
             else:
-                raise ValueError(f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+                raise ValueError(
+                    f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result."
+                )
         elif validation_ingestion_policy is None:
             validation_ingestion_policy = "ALWAYS"
         else:
-            raise ValueError(f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result.")
+            raise ValueError(
+                f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result."
+            )
 
     @property
     def expectations(self):
@@ -201,14 +226,19 @@ class ExpectationSuite:
 
     @expectations.setter
     def expectations(self, expectations):
-        if ((expectations == None) or (len(expectations) ==0)):
+        if (expectations is None) or (len(expectations) == 0):
             self._expectations = []
         elif isinstance(expectations[0], ge.core.ExpectationConfiguration):
-            self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in expectations]
+            self._expectations = [
+                GeExpectation(**expectation.to_json_dict())
+                for expectation in expectations
+            ]
         elif isinstance(expectations[0], GeExpectation):
             self._expectations = expectations
         elif isinstance(expectations[0], dict):
-            self._expectations = [GeExpectation(**expectation) for expectation in expectations]
+            self._expectations = [
+                GeExpectation(**expectation) for expectation in expectations
+            ]
 
     @property
     def meta(self):
