@@ -1848,7 +1848,7 @@ please use the Python client.</p>
     <span class="n">secrets_store</span><span class="o">=</span><span class="s2">&quot;parameterstore&quot;</span><span class="p">,</span>
     <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">trust_store_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cert_folder</span><span class="o">=</span><span class="s2">&quot;hops&quot;</span><span class="p">,</span>
+    <span class="n">cert_folder</span><span class="o">=</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span>
     <span class="n">api_key_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">api_key_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1913,7 +1913,7 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
 <li><strong>trust_store_path</strong> <code>Optional[str]</code>: Path on the file system containing the Hopsworks certificates,
     defaults to <code>None</code>.</li>
 <li><strong>cert_folder</strong> <code>str</code>: The directory to store retrieved HopsFS certificates, defaults to
-    <code>"hops"</code>. Only required when running without a Spark environment.</li>
+    <code>"/tmp"</code>. Only required when running without a Spark environment.</li>
 <li><strong>api_key_file</strong> <code>Optional[str]</code>: Path to a file containing the API Key, if provided,
     <code>secrets_store</code> will be ignored, defaults to <code>None</code>.</li>
 <li><strong>api_key_value</strong> <code>Optional[str]</code>: API Key as string, if provided, <code>secrets_store</code> will be ignored<code>,
@@ -1991,7 +1991,7 @@ Shared feature stores, the project name of the feature store is required.</p>
     <span class="n">secrets_store</span><span class="o">=</span><span class="s2">&quot;parameterstore&quot;</span><span class="p">,</span>
     <span class="n">hostname_verification</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">trust_store_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cert_folder</span><span class="o">=</span><span class="s2">&quot;hops&quot;</span><span class="p">,</span>
+    <span class="n">cert_folder</span><span class="o">=</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span>
     <span class="n">api_key_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">api_key_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
