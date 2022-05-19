@@ -825,6 +825,13 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job gets started immediately.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -924,6 +931,13 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job gets started immediately.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.

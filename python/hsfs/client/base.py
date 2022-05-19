@@ -91,6 +91,20 @@ class Client(ABC):
         with open(os.path.join(self._secrets_dir, secret_file), "r") as secret:
             return secret.read()
 
+    def _get_credentials(self, project_id):
+        """Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
+
+        :param project_id: id of the project
+        :type project_id: int
+        :return: JSON response with credentials
+        :rtype: dict
+        """
+        return self._send_request("GET", ["project", project_id, "credentials"])
+
+    def _write_pem_file(self, content: str, path: str) -> None:
+        with open(path, "w") as f:
+            f.write(content)
+
     @connected
     def _send_request(
         self,

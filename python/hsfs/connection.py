@@ -27,7 +27,7 @@ AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443
 SECRETS_STORE_DEFAULT = "parameterstore"
 HOSTNAME_VERIFICATION_DEFAULT = True
-CERT_FOLDER_DEFAULT = "hops"
+CERT_FOLDER_DEFAULT = "/tmp"
 
 
 class Connection:
@@ -97,7 +97,7 @@ class Connection:
         trust_store_path: Path on the file system containing the Hopsworks certificates,
             defaults to `None`.
         cert_folder: The directory to store retrieved HopsFS certificates, defaults to
-            `"hops"`. Only required when running without a Spark environment.
+            `"/tmp"`. Only required when running without a Spark environment.
         api_key_file: Path to a file containing the API Key, if provided,
             `secrets_store` will be ignored, defaults to `None`.
         api_key_value: API Key as string, if provided, `secrets_store` will be ignored`,

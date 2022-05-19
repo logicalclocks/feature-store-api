@@ -20,6 +20,9 @@ import boto3
 import time
 import re
 import warnings
+import avro
+import socket
+import pyarrow as pa
 import json
 import random
 import uuid
@@ -27,6 +30,8 @@ import uuid
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
+from typing import Dict
+from confluent_kafka import Producer
 
 from hsfs import client, feature, util
 from hsfs.core import (
@@ -34,6 +39,7 @@ from hsfs.core import (
     dataset_api,
     job_api,
     ingestion_job_conf,
+    kafka_api,
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
@@ -41,7 +47,17 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.constructor import query
-from hsfs.client import exceptions
+from hsfs.client import exceptions, external, hopsworks
+from hsfs.feature_group import FeatureGroup
+
+HAS_FAST = False
+try:
+    from fastavro import schemaless_writer
+    from fastavro.schema import parse_schema
+
+    HAS_FAST = True
+except ImportError:
+    pass
 
 
 class Engine:
@@ -51,6 +67,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
+        self._kafka_api = kafka_api.KafkaApi()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -288,8 +305,12 @@ class Engine:
         )
 
     def parse_schema_feature_group(self, dataframe):
+        arrow_schema = pa.Schema.from_pandas(dataframe)
         return [
-            feature.Feature(feat_name.lower(), self._convert_pandas_type(feat_type))
+            feature.Feature(
+                feat_name.lower(),
+                self._convert_pandas_type(feat_name, feat_type, arrow_schema),
+            )
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
 
@@ -299,15 +320,19 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def _convert_pandas_type(self, dtype):
+    def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
+        if dtype == np.dtype("O"):
+            return self._infer_type_pyarrow(feat_name, arrow_schema)
+
+        return self._convert_simple_pandas_type(dtype)
+
+    def _convert_simple_pandas_type(self, dtype):
         # This is a simple type conversion between pandas type and pyspark types.
         # In PySpark they use PyArrow to do the schema conversion, but this python layer
         # should be as thin as possible. Adding PyArrow will make the library less flexible.
         # If the conversion fails, users can always fall back and provide their own types
 
-        # TODO(Fabio): consider arrays
         if dtype == np.dtype("O"):
-            # This is an object, fall back to string
             return "string"
         elif dtype == np.dtype("int32"):
             return "int"
@@ -319,10 +344,51 @@ class Engine:
             return "double"
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
+        elif dtype == np.dtype("bool"):
+            return "bool"
 
         return "string"
 
+    def _infer_type_pyarrow(self, field, schema):
+        arrow_type = schema.field(field).type
+
+        if pa.types.is_list(arrow_type):
+            # figure out sub type
+            subtype = self._convert_simple_pandas_type(
+                arrow_type.value_type.to_pandas_dtype()
+            )
+            return "array<{}>".format(subtype)
+        return "string"
+
     def save_dataframe(
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        operation: str,
+        online_enabled: bool,
+        storage: bool,
+        offline_write_options: dict,
+        online_write_options: dict,
+        validation_id: int = None,
+    ):
+        if feature_group.stream:
+            return self._write_dataframe_kafka(
+                feature_group, dataframe, offline_write_options
+            )
+        else:
+            # for backwards compatibility
+            return self.legacy_save_dataframe(
+                feature_group,
+                dataframe,
+                operation,
+                online_enabled,
+                storage,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            )
+
+    def legacy_save_dataframe(
         self,
         feature_group,
         dataframe,
@@ -562,3 +628,129 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
+
+    def _write_dataframe_kafka(
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        offline_write_options: dict,
+    ):
+        # setup kafka producer
+        producer = Producer(self._get_kafka_config(offline_write_options))
+
+        # setup complex feature writers
+        feature_writers = {
+            feature: self._get_encoder_func(
+                feature_group._get_feature_avro_schema(feature)
+            )
+            for feature in feature_group.get_complex_features()
+        }
+
+        # setup row writer function
+        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+
+        # loop over rows
+        for i, r in dataframe.iterrows():
+            # create copy of row only
+            row = r.to_dict()
+
+            # transform special data types
+            # here we might need to handle also timestamps and other complex types
+            # possible optimizaiton: make it based on type so we don't need to loop over
+            # all keys in the row
+            for k in row.keys():
+                # for avro to be able to serialize them, they need to be python data types
+                if isinstance(row[k], np.ndarray):
+                    row[k] = row[k].tolist()
+                if isinstance(row[k], pd.Timestamp):
+                    row[k] = row[k].to_pydatetime()
+
+            # encode complex features
+            row = self._encode_complex_features(feature_writers, row)
+
+            # encode feature row
+            with BytesIO() as outf:
+                writer(row, outf)
+                encoded_row = outf.getvalue()
+
+            # assemble key
+            key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
+
+            # produce
+            producer.produce(
+                topic=feature_group._online_topic_name, key=key, value=encoded_row
+            )
+
+        # make sure producer blocks and everything is delivered
+        producer.flush()
+
+        # start backfilling job
+        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+            fg_name=feature_group.name, version=feature_group.version
+        )
+        job = self._job_api.get(job_name)
+
+        if offline_write_options is not None and offline_write_options.get(
+            "start_offline_backfill", True
+        ):
+            print("Launching offline feature group backfill job...")
+            self._job_api.launch(job_name)
+            print(
+                "Backfill Job started successfully, you can follow the progress at {}".format(
+                    self._get_job_url(job.href)
+                )
+            )
+            self._wait_for_job(job, offline_write_options)
+
+        return job
+
+    def _encode_complex_features(
+        self, feature_writers: Dict[str, callable], row: dict
+    ) -> dict:
+        for feature_name, writer in feature_writers.items():
+            with BytesIO() as outf:
+                writer(row[feature_name], outf)
+                row[feature_name] = outf.getvalue()
+        return row
+
+    def _get_encoder_func(self, writer_schema: str) -> callable:
+        if HAS_FAST:
+            schema = json.loads(writer_schema)
+            parsed_schema = parse_schema(schema)
+            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
+
+        parsed_schema = avro.schema.parse(writer_schema)
+        writer = avro.io.DatumWriter(parsed_schema)
+        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
+
+    def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        config = {
+            "security.protocol": "SSL",
+            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
+            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
+            "ssl.key.location": client.get_instance()._get_client_key_path(),
+            "client.id": socket.gethostname(),
+        }
+
+        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+            "internal_kafka", False
+        ):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("INTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                        externalListeners=False
+                    )
+                ]
+            )
+        elif isinstance(client.get_instance(), external.Client):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("EXTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                        externalListeners=True
+                    )
+                ]
+            )
+
+        return config
