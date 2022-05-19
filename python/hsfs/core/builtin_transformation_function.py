@@ -82,7 +82,7 @@ class BuiltInTransformationFunction:
     def encoder_stats(content, feature_name):
         value_to_index = {}
         for col in content["columns"]:
-            if col["column"] == feature_name:
+            if col["column"] == feature_name and "unique_values" in col:
                 unique_data = [value for value in col["unique_values"]]
                 value_to_index = dict(
                     (value, index) for index, value in enumerate(unique_data)

@@ -201,11 +201,16 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def compute_transformation_fn_statistics(
-        training_dataset_obj, builtin_tffn_features, feature_dataframe, feature_view_obj
+        training_dataset_obj,
+        builtin_tffn_features,
+        label_encoder_features,
+        feature_dataframe,
+        feature_view_obj,
     ):
         return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
             td_metadata_instance=training_dataset_obj,
             columns=builtin_tffn_features,
+            label_encoder_features=label_encoder_features,
             feature_dataframe=feature_dataframe,
             feature_view_obj=feature_view_obj,
         )
@@ -215,12 +220,23 @@ class TransformationFunctionEngine:
         training_dataset, feature_view_obj, dataset
     ):
         # check if there any transformation functions that require statistics attached to td features
+        builtin_tffn_label_encoder_features = [
+            ft_name
+            for ft_name in training_dataset.transformation_functions
+            if training_dataset._transformation_function_engine.is_builtin(
+                training_dataset.transformation_functions[ft_name]
+            )
+            and training_dataset.transformation_functions[ft_name].name
+            == "label_encoder"
+        ]
         builtin_tffn_features = [
             ft_name
             for ft_name in training_dataset.transformation_functions
             if training_dataset._transformation_function_engine.is_builtin(
                 training_dataset.transformation_functions[ft_name]
             )
+            and training_dataset.transformation_functions[ft_name].name
+            != "label_encoder"
         ]
 
         if builtin_tffn_features:
@@ -230,6 +246,7 @@ class TransformationFunctionEngine:
                     TransformationFunctionEngine.compute_transformation_fn_statistics(
                         training_dataset,
                         builtin_tffn_features,
+                        builtin_tffn_label_encoder_features,
                         dataset.get(training_dataset.train_split),
                         feature_view_obj,
                     )
@@ -240,6 +257,7 @@ class TransformationFunctionEngine:
                     TransformationFunctionEngine.compute_transformation_fn_statistics(
                         training_dataset,
                         builtin_tffn_features,
+                        builtin_tffn_label_encoder_features,
                         dataset,
                         feature_view_obj,
                     )
