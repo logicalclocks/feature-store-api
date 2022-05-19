@@ -51,13 +51,13 @@ class ExpectationSuite:
         self._featuregroup_id = featuregroup_id
         self._ge_cloud_id = ge_cloud_id
         self._data_asset_type = data_asset_type
-        self._
+        self._run_validation = run_validation
+        self._validation_ingestion_policy = validation_ingestion_policy.upper()
+        self._expectations = []
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
         self.meta = meta
-        self.run_validation = run_validation
-        self.validation_ingestion_policy = validation_ingestion_policy
 
     # MORITZ - this shouldn't be here
     # def save(self):
@@ -125,13 +125,13 @@ class ExpectationSuite:
 
     def to_ge_type(self):
         return ge.core.ExpectationSuite(
-            expectation_suite_name=self.expectation_suite_name,
+            expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,
             data_asset_type=self._data_asset_type,
             expectations=[
-                expectation.to_ge_type() for expectation in self.expectations
+                expectation.to_ge_type() for expectation in self._expectations
             ],
-            meta=self.meta,
+            meta=self._meta,
         )
 
     def __str__(self):
@@ -183,14 +183,7 @@ class ExpectationSuite:
 
     @run_validation.setter
     def run_validation(self, run_validation):
-        if isinstance(run_validation, tuple):
-            run_validation = run_validation[0]
-        if isinstance(run_validation, bool):
-            self._run_validation = run_validation
-        else:
-            raise ValueError(
-                f"run_validation must be a boolean, not {run_validation}. True to run validation, false to skip validation."
-            )
+        self._run_validation = run_validation
 
     @property
     def validation_ingestion_policy(self):
@@ -203,24 +196,7 @@ class ExpectationSuite:
 
     @validation_ingestion_policy.setter
     def validation_ingestion_policy(self, validation_ingestion_policy):
-        if isinstance(validation_ingestion_policy, tuple):
-            validation_ingestion_policy = validation_ingestion_policy[0]
-        if isinstance(validation_ingestion_policy, str):
-            validation_ingestion_policy = validation_ingestion_policy.upper()
-            if validation_ingestion_policy == "STRICT":
-                self._validation_ingestion_policy = validation_ingestion_policy
-            elif validation_ingestion_policy == "ALWAYS":
-                self._validation_ingestion_policy = validation_ingestion_policy
-            else:
-                raise ValueError(
-                    f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result."
-                )
-        elif validation_ingestion_policy is None:
-            validation_ingestion_policy = "ALWAYS"
-        else:
-            raise ValueError(
-                f"validation_ingestion_policy {validation_ingestion_policy} must be either 'STRICT' to ingest only if validation is success or 'ALWAYS' to ingest independently of validation result."
-            )
+        self._validation_ingestion_policy = validation_ingestion_policy.upper()
 
     @property
     def expectations(self):
@@ -229,19 +205,24 @@ class ExpectationSuite:
 
     @expectations.setter
     def expectations(self, expectations):
-        if (expectations is None) or (len(expectations) == 0):
-            self._expectations = []
-        elif isinstance(expectations[0], ge.core.ExpectationConfiguration):
-            self._expectations = [
-                GeExpectation(**expectation.to_json_dict())
-                for expectation in expectations
-            ]
-        elif isinstance(expectations[0], GeExpectation):
-            self._expectations = expectations
-        elif isinstance(expectations[0], dict):
-            self._expectations = [
-                GeExpectation(**expectation) for expectation in expectations
-            ]
+        if expectations is None:
+            pass
+        elif isinstance(expectations, list):
+            for expectation in expectations:
+                if isinstance(expectation, ge.core.ExpectationConfiguration):
+                    self._expectations.append(
+                        GeExpectation(**expectation.to_json_dict())
+                    )
+                elif isinstance(expectation, GeExpectation):
+                    self._expectations.append(expectation)
+                elif isinstance(expectation, dict):
+                    self._expectations.append(GeExpectation(**expectation))
+                else:
+                    raise TypeError(
+                        "Expectation of type {} is not supported.".format(
+                            type(expectation)
+                        )
+                    )
 
     @property
     def meta(self):
@@ -255,4 +236,4 @@ class ExpectationSuite:
         elif isinstance(meta, str):
             self._meta = json.loads(meta)
         else:
-            raise ValueError("Meta field must be stringified json or dict")
+            raise ValueError("Meta field must be stringified json or dict.")

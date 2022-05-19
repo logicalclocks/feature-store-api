@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-import hsfs.expectation_suite
+from hsfs import client, expectation_suite
 
 
 class ExpectationSuiteApi:
@@ -46,8 +45,8 @@ class ExpectationSuiteApi:
         ]
 
         headers = {"content-type": "application/json"}
-        payload = expectation_suite.json() if expectation_suite else None
-        return hsfs.expectation_suite.ExpectationSuite.from_response_json(
+        payload = expectation_suite.json()
+        return expectation_suite.ExpectationSuite.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
@@ -68,7 +67,7 @@ class ExpectationSuiteApi:
 
     def get(self):
         """Get the expectation suite attached to a feature group.
-        
+
         :return: expectation suite
         :rtype: dict
         """
@@ -80,9 +79,9 @@ class ExpectationSuiteApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "expectationsuite"
+            "expectationsuite",
         ]
 
-        return hsfs.expectation_suite.ExpectationSuite.from_response_json(
+        return expectation_suite.ExpectationSuite.from_response_json(
             _client._send_request("GET", path_params)
         )

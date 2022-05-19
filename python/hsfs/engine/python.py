@@ -42,7 +42,6 @@ from hsfs.client import exceptions
 from typing import TypeVar, Optional, Dict, Any
 
 
-
 class Engine:
 
     APP_OP_INSERT_FG = "insert_fg"
@@ -211,13 +210,20 @@ class Engine:
 
         self._wait_for_job(job)
 
-    def validate(self, dataframe:pd.DataFrame, expectations, log_activity=True):
+    def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
 
-    def validate_with_great_expectations(self, dataframe:pd.DataFrame, expectation_suite:TypeVar("ge.core.ExpectationSuite"), ge_validate_kwargs:Optional[Dict[Any, Any]] = {}):
-        report = ge.from_pandas(dataframe, expectation_suite=expectation_suite).validate(**ge_validate_kwargs)
+    def validate_with_great_expectations(
+        self,
+        dataframe: pd.DataFrame,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+    ):
+        report = ge.from_pandas(
+            dataframe, expectation_suite=expectation_suite
+        ).validate(**ge_validate_kwargs)
         return report
 
     def set_job_group(self, group_id, description):
@@ -462,5 +468,3 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
-
-    

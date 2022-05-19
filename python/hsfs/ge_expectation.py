@@ -17,8 +17,8 @@
 import json
 
 import humps
-from hsfs import util
 from great_expectations.core import ExpectationConfiguration
+
 
 class GeExpectation:
     """Metadata object representing an feature validation expectation in the Feature Store."""
@@ -28,10 +28,10 @@ class GeExpectation:
         expectation_type,
         kwargs,
         meta,
-        id = None
+        id=None,
     ):
         self._id = id
-        self.expectation_type = expectation_type
+        self._expectation_type = expectation_type
         self.kwargs = kwargs
         self.meta = meta
 
@@ -41,7 +41,10 @@ class GeExpectation:
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
-            return [cls(**expectation_suite) for expectation_suite in json_decamelized["items"]]
+            return [
+                cls(**expectation_suite)
+                for expectation_suite in json_decamelized["items"]
+            ]
         else:
             return cls(**json_decamelized)
 
@@ -68,16 +71,12 @@ class GeExpectation:
         return self.json()
 
     def __repr__(self):
-        return (
-            f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
-        )
+        return f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
 
     def to_ge_type(self):
         return ExpectationConfiguration(
-            expectation_type = self.expectation_type,
-            kwargs = self.kwargs,
-            meta = self.meta
-        ) 
+            expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
+        )
 
     @property
     def id(self):
@@ -97,7 +96,6 @@ class GeExpectation:
     def expectation_type(self, expectation_type):
         self._expectation_type = expectation_type
 
-
     @property
     def kwargs(self):
         """Kwargs to run the expectation."""
@@ -110,11 +108,11 @@ class GeExpectation:
         elif isinstance(kwargs, str):
             self._kwargs = json.loads(kwargs)
         else:
-            raise ValueError("Kwargs field must be stringified json or dict")
+            raise ValueError("Kwargs field must be stringified json or dict.")
 
     @property
     def meta(self):
-        """Meta field of the expectation to store additional informations."""
+        """Meta field of the expectation to store additional information."""
         return self._meta
 
     @meta.setter
@@ -124,4 +122,4 @@ class GeExpectation:
         elif isinstance(meta, str):
             self._meta = json.loads(meta)
         else:
-            raise ValueError("Meta field must be stringified json or dict")
+            raise ValueError("Meta field must be stringified json or dict.")
