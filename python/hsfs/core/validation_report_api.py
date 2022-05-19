@@ -48,7 +48,7 @@ class ValidationReportApi:
         ]
 
         headers = {"content-type": "application/json"}
-        payload = validation_report.json() if validation_report else None
+        payload = validation_report.json()
         return ValidationReport.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
@@ -79,7 +79,7 @@ class ValidationReportApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "validationreport"
+            "validationreport",
         ]
         headers = {"content-type": "application/json"}
         query_params = {
@@ -93,10 +93,9 @@ class ValidationReportApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )[0]
 
-
     def get_all(self):
         """Get the validation report attached to a featuregroup.
-        
+
         :return: validation report
         :rtype: list[dict]
         """
@@ -108,7 +107,7 @@ class ValidationReportApi:
             self._feature_store_id,
             "featuregroups",
             self._feature_group_id,
-            "validationreport"
+            "validationreport",
         ]
         headers = {"content-type": "application/json"}
         query_params = {

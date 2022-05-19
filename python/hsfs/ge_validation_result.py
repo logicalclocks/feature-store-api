@@ -112,7 +112,7 @@ class ValidationResult:
 
     @property
     def success(self):
-        """Overall success of the validation step"""
+        """Overall success of the validation step."""
         return self._success
 
     @success.setter
@@ -122,10 +122,7 @@ class ValidationResult:
     @property
     def result(self):
         """Result of the expectation after validation."""
-        if self._result is None and self._observed_value is not None:
-            return {"observed_value": self._observed_value}
-        else:
-            return self._result
+        return self._result
 
     @result.setter
     def result(self, result):
@@ -134,7 +131,7 @@ class ValidationResult:
         elif isinstance(result, str):
             self._result = json.loads(result)
         else:
-            raise ValueError("Result field must be stringified json or dict")
+            raise ValueError("Result field must be stringified json or dict.")
 
     @property
     def meta(self):
@@ -152,7 +149,7 @@ class ValidationResult:
 
     @property
     def exception_info(self):
-        """Exception info which can be raised when running validation"""
+        """Exception info which can be raised when running validation."""
         return self._exception_info
 
     @exception_info.setter
@@ -162,11 +159,11 @@ class ValidationResult:
         elif isinstance(exception_info, str):
             self._exception_info = json.loads(exception_info)
         else:
-            raise ValueError("Exception info field must be stringified json or dict")
+            raise ValueError("Exception info field must be stringified json or dict.")
 
     @property
     def expectation_config(self):
-        """Expectation configuration used when running validation"""
+        """Expectation configuration used when running validation."""
         return self._expectation_config
 
     @expectation_config.setter
