@@ -17,8 +17,6 @@
 import json
 
 import humps
-from hsfs import util
-from hsfs.core import validation_report_engine
 import great_expectations as ge
 
 
@@ -44,17 +42,19 @@ class ValidationResult:
     ):
         self._id = id
         self._success = success
-        self.result = result
-        self.meta = meta
-        self.exception_info = exception_info
-        self.expectation_config = expectation_config
         self._observed_value = observed_value
         self._expectation_id = expectation_id
         self._validation_report_id = validation_report_id
 
-    def save(self):
-        """Persist the expectation metadata object to the feature store."""
-        validation_report_engine.ValidationReportEngine(self._featurestore_id, self._featuregroup_id).save(self)
+        self.result = result
+        self.meta = meta
+        self.exception_info = exception_info
+        self.expectation_config = expectation_config
+
+    # TODO Moritz this shouldn't be here
+    # def save(self):
+    #    """Persist the expectation metadata object to the feature store."""
+    #    validation_report_engine.ValidationReportEngine(self._featurestore_id, self._featuregroup_id).save(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -62,7 +62,10 @@ class ValidationResult:
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
-            return [cls(**validation_report) for validation_report in json_decamelized["items"]]
+            return [
+                cls(**validation_report)
+                for validation_report in json_decamelized["items"]
+            ]
         else:
             return cls(**json_decamelized)
 
@@ -78,7 +81,7 @@ class ValidationResult:
             "result": json.dumps(self._result),
             "meta": json.dumps(self._meta),
         }
-    
+
     def to_dict(self):
         return {
             "id": self._id,
@@ -91,11 +94,11 @@ class ValidationResult:
 
     def to_ge_type(self):
         return ge.core.ExpectationValidationResult(
-            success = self.success,
-            exception_info = self.exception_info,
-            expectation_config = self.expectation_config,
-            result = self.result,
-            meta = self.meta
+            success=self.success,
+            exception_info=self.exception_info,
+            expectation_config=self.expectation_config,
+            result=self.result,
+            meta=self.meta,
         )
 
     @property
@@ -120,7 +123,7 @@ class ValidationResult:
     def result(self):
         """Result of the expectation after validation."""
         if self._result is None and self._observed_value is not None:
-            return {"observed_value":self._observed_value}
+            return {"observed_value": self._observed_value}
         else:
             return self._result
 
@@ -173,23 +176,22 @@ class ValidationResult:
         elif isinstance(expectation_config, str):
             self._expectation_config = json.loads(expectation_config)
         else:
-            raise ValueError("Expectation config field must be stringified json or dict")
-
-
-    def json(self):
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
+            raise ValueError(
+                "Expectation config field must be stringified json or dict"
+            )
 
     def __str__(self):
         return self.json()
 
     def __repr__(self):
         result_string = ""
-        if self._result == None and self._observed_value != None:
+        if self._result is None and self._observed_value is not None:
             result_string += f"observed_value : {self._observed_value}"
-        elif self._result != None and self._observed_value == None:
+        elif self._result is not None and self._observed_value is None:
             result_string += f"result : {self._result}"
-        
+
         return (
-            f"ValidationResult(success: {self._success}," + result_string +
-            f"{self._exception_info}, {self._expectation_config}, {self._meta})"
+            f"ValidationResult(success: {self._success},"
+            + result_string
+            + f"{self._exception_info}, {self._expectation_config}, {self._meta})"
         )

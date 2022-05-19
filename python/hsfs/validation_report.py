@@ -15,14 +15,11 @@
 #
 
 import json
-import re
-import statistics
-import great_expectations as ge
 
 import humps
-from hsfs import util
-from hsfs.core import validation_report_engine
-from hsfs.validation_result2 import ValidationResult
+import great_expectations as ge
+
+from hsfs.ge_validation_result import ValidationResult
 
 
 class ValidationReport:
@@ -45,21 +42,25 @@ class ValidationReport:
         count=None,
         type=None,
         validation_time=None,
+        ingestion_result=None,
     ):
         self._id = id
         self._success = success
-        self.results = results
-        self.meta = meta
-        self.statistics = statistics
-        self.evaluation_parameters = evaluation_parameters
         self._full_report_path = full_report_path
         self._validation_time = validation_time
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
+        self._ingestion_result = None
 
-    def save(self):
-        """Persist the expectation metadata object to the feature store."""
-        validation_report_engine.ValidationReportEngine(self._featurestore_id, self._featuregroup_id).save(self)
+        self.results = results
+        self.meta = meta
+        self.statistics = statistics
+        self.evaluation_parameters = evaluation_parameters
+
+    # TODO MORITZ this shouldn't be here
+    # def save(self):
+    #    """Persist the expectation metadata object to the feature store."""
+    #    validation_report_engine.ValidationReportEngine(self._featurestore_id, self._featuregroup_id).save(self)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -67,7 +68,10 @@ class ValidationReport:
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
-            return [cls(**validation_report) for validation_report in json_decamelized["items"]]
+            return [
+                cls(**validation_report)
+                for validation_report in json_decamelized["items"]
+            ]
         else:
             return cls(**json_decamelized)
 
@@ -100,7 +104,7 @@ class ValidationReport:
             statistics=self.statistics,
             results=[result.to_ge_type() for result in self.results],
             evaluation_parameters=self.evaluation_parameters,
-            meta =self.meta
+            meta=self.meta,
         )
 
     @property
@@ -134,8 +138,13 @@ class ValidationReport:
             self._results = results
         elif isinstance(results[0], dict):
             self._results = [ValidationResult(**result) for result in results]
-        elif isinstance(results[0], ge.core.expectation_validation_result.ExpectationValidationResult):
-            self._results = [ValidationResult(**result.to_json_dict()) for result in results]
+        elif isinstance(
+            results[0],
+            ge.core.expectation_validation_result.ExpectationValidationResult,
+        ):
+            self._results = [
+                ValidationResult(**result.to_json_dict()) for result in results
+            ]
 
     @property
     def meta(self):
@@ -151,11 +160,12 @@ class ValidationReport:
         elif isinstance(meta, str):
             self._meta = json.loads(meta)
         else:
-            raise ValueError("Meta field must be stringified json or dict")
+            raise ValueError("Meta field must be stringified json or dict.")
 
     @property
     def statistics(self):
-        """Statistics field of the validation report which store overall statistics about the validation result, e.g number of failing/successful expectations."""
+        """Statistics field of the validation report which store overall statistics
+        about the validation result, e.g number of failing/successful expectations."""
         return self._statistics
 
     @statistics.setter
@@ -183,19 +193,16 @@ class ValidationReport:
         elif isinstance(evaluation_parameters, str):
             self._evaluation_parameters = json.loads(evaluation_parameters)
         else:
-            raise ValueError("Evaluation parameters field must be stringified json or dict")
-    
+            raise ValueError(
+                "Evaluation parameters field must be stringified json or dict"
+            )
+
     def __str__(self):
         return self.json()
 
     def __repr__(self):
-        
-        full_report_path_string = ""
-        if self._full_report_path == None:
-            full_report_path_string = f"download_path : {self._full_report_path}"
-
         return (
-            f"ValidationReport(success: {self._success}, " 
-            + f"{self._statistics}, {len(self._results)} results" 
-            + f" , {self._meta}, {full_report_path_string})" 
+            f"ValidationReport(success: {self._success}, "
+            + f"{self._statistics}, {len(self._results)} results"
+            + f" , {self._meta}, {self._full_report_path_string})"
         )
