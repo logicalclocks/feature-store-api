@@ -58,11 +58,6 @@ class ValidationReport:
         self.statistics = statistics
         self.evaluation_parameters = evaluation_parameters
 
-    # TODO MORITZ this shouldn't be here
-    # def save(self):
-    #    """Persist the expectation metadata object to the feature store."""
-    #    validation_report_engine.ValidationReportEngine(self._featurestore_id, self._featuregroup_id).save(self)
-
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

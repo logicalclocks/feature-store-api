@@ -15,10 +15,12 @@
 #
 
 import warnings
-import humps
-import numpy
 import datetime
 from typing import Optional, Union, List, Dict, TypeVar
+
+import humps
+import numpy
+import great_expectations as ge
 
 from hsfs.transformation_function import TransformationFunction
 from hsfs.core import transformation_function_engine
@@ -31,6 +33,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
+    expectation_suite,
 )
 from hsfs.core import (
     feature_group_api,
@@ -365,6 +368,9 @@ class FeatureStore:
         expectations: Optional[List[expectation.Expectation]] = [],
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
+        expectation_suite: Optional[
+            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+        ] = None,
     ):
         """Create a feature group metadata object.
 
@@ -420,6 +426,9 @@ class FeatureStore:
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
+            expectation_suite: Optionally, attach an expectation suite to the feature
+                group which dataframes should be validated against upon insertion.
+                Defaults to `None`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -441,6 +450,7 @@ class FeatureStore:
             expectations=expectations,
             event_time=event_time,
             stream=stream,
+            expectation_suite=expectation_suite,
         )
 
     def create_on_demand_feature_group(

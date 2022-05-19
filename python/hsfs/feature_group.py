@@ -1223,7 +1223,7 @@ class FeatureGroup(FeatureGroupBase):
 
     def save_expectation_suite(
         self,
-        expectation_suite,
+        expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
         run_validation=True,
         validation_ingestion_policy="ALWAYS",
     ):

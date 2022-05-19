@@ -60,13 +60,6 @@ class ExpectationSuite:
         self.expectations = expectations
         self.meta = meta
 
-    # MORITZ - this shouldn't be here
-    # def save(self):
-    #    """Persist the expectation metadata object to the feature store."""
-    #    expectation_suite_engine.ExpectationSuiteEngine(
-    #        self._featurestore_id, self._featuregroup_id
-    #    ).save(self)
-
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -83,7 +76,7 @@ class ExpectationSuite:
     @classmethod
     def from_ge_type(
         cls,
-        ge_expectation_suite,
+        ge_expectation_suite: ge.core.ExpectationSuite,
         run_validation: Optional[bool] = True,
         validation_ingestion_policy: Optional[str] = "ALWAYS",
     ):
