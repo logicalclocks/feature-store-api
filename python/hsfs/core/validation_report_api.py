@@ -19,7 +19,7 @@ from hsfs.validation_report import ValidationReport
 
 
 class ValidationReportApi:
-    def __init__(self, feature_store_id, feature_group_id):
+    def __init__(self, feature_store_id):
         """Validation Report endpoints for the featuregroup resource.
 
         :param feature_store_id: id of the respective featurestore
@@ -28,9 +28,8 @@ class ValidationReportApi:
         :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
 
-    def create(self, validation_report):
+    def create(self, feature_group_id, validation_report):
         """Create an validation report attached to a featuregroup.
 
         :param validation_report: validation report object to be created for a featuregroup
@@ -43,7 +42,7 @@ class ValidationReportApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "validationreport",
         ]
 
@@ -53,7 +52,7 @@ class ValidationReportApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self, validation_report_id):
+    def delete(self, feature_group_id, validation_report_id):
         """Delete the validation report attached to a featuregroup."""
         _client = client.get_instance()
         path_params = [
@@ -62,14 +61,14 @@ class ValidationReportApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "validationreport",
             validation_report_id,
         ]
 
         _client._send_request("DELETE", path_params)
 
-    def get_last(self):
+    def get_last(self, feature_group_id):
         """Gets the latest Validation Report of a featuregroup."""
         _client = client.get_instance()
         path_params = [
@@ -78,7 +77,7 @@ class ValidationReportApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "validationreport",
         ]
         headers = {"content-type": "application/json"}
@@ -93,7 +92,7 @@ class ValidationReportApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )[0]
 
-    def get_all(self):
+    def get_all(self, feature_group_id):
         """Get the validation report attached to a featuregroup.
 
         :return: validation report
@@ -106,7 +105,7 @@ class ValidationReportApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "validationreport",
         ]
         headers = {"content-type": "application/json"}

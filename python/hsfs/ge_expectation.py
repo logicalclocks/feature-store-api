@@ -19,6 +19,8 @@ import json
 import humps
 from great_expectations.core import ExpectationConfiguration
 
+from hsfs import util
+
 
 class GeExpectation:
     """Metadata object representing an feature validation expectation in the Feature Store."""
@@ -48,7 +50,7 @@ class GeExpectation:
         else:
             return cls(**json_decamelized)
 
-    def to_json_dict(self):
+    def to_dict(self):
         return {
             # "id": self._id,
             "expectationType": self._expectation_type,
@@ -56,7 +58,7 @@ class GeExpectation:
             "meta": json.dumps(self._meta),
         }
 
-    def to_dict(self):
+    def to_json_dict(self):
         return {
             # "id": self._id,
             "expectationType": self._expectation_type,
@@ -65,7 +67,7 @@ class GeExpectation:
         }
 
     def json(self):
-        return json.dumps(self.to_json_dict())
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

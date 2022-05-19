@@ -20,6 +20,7 @@ from typing import Optional
 import humps
 import great_expectations as ge
 
+from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 
 
@@ -92,13 +93,11 @@ class ExpectationSuite:
             validation_ingestion_policy=validation_ingestion_policy,
         )
 
-    def to_json_dict(self):
+    def to_dict(self):
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
-            "expectations": [
-                expectation.to_json_dict() for expectation in self._expectations
-            ],
+            "expectations": self._expectations,
             "meta": json.dumps(self._meta),
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
@@ -106,12 +105,12 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_dict(self):
+    def to_json_dict(self):
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
             "expectations": [
-                expectation.to_dict() for expectation in self._expectations
+                expectation.to_json_dict() for expectation in self._expectations
             ],
             "meta": self._meta,
             "geCloudId": self._ge_cloud_id,
@@ -121,7 +120,7 @@ class ExpectationSuite:
         }
 
     def json(self):
-        return json.dumps(self.to_json_dict())
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_ge_type(self):
         return ge.core.ExpectationSuite(

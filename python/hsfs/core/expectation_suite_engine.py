@@ -18,23 +18,22 @@ from hsfs.core import expectation_suite_api
 
 
 class ExpectationSuiteEngine:
-    def __init__(self, feature_store_id, feature_group_id):
+    def __init__(self, feature_store_id):
         """Expectation Suite engine.
 
         :param feature_store_id: id of the respective featurestore
-        :param feature_group_id: id of the featuregroup it is attached to
         :type feature_store_id: int
-        :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
-        self._expectation_suite_api = expectation_suite_api.ExpectationSuiteApi(feature_store_id, feature_group_id)
+        self._expectation_suite_api = expectation_suite_api.ExpectationSuiteApi(
+            feature_store_id
+        )
 
-    def save(self, expectation_suite):
-        return self._expectation_suite_api.create(expectation_suite)
+    def save(self, feature_group, expectation_suite):
+        return self._expectation_suite_api.create(feature_group.id, expectation_suite)
 
-    def get(self):
-        return self._expectation_suite_api.get()
+    def get(self, feature_group):
+        return self._expectation_suite_api.get(feature_group.id)
 
-    def delete(self):
-        self._expectation_suite_api.delete()
+    def delete(self, feature_group):
+        self._expectation_suite_api.delete(feature_group.id)

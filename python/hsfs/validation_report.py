@@ -19,6 +19,7 @@ import json
 import humps
 import great_expectations as ge
 
+from hsfs import util
 from hsfs.ge_validation_result import ValidationResult
 
 
@@ -76,25 +77,25 @@ class ValidationReport:
             return cls(**json_decamelized)
 
     def json(self):
-        return json.dumps(self.to_json_dict())
-
-    def to_json_dict(self):
-        return {
-            "id": self._id,
-            "success": self.success,
-            "evaluationParameters": json.dumps(self.evaluation_parameters),
-            "statistics": json.dumps(self._statistics),
-            "results": [result.to_json_dict() for result in self._results],
-            "meta": json.dumps(self._meta),
-        }
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
         return {
             "id": self._id,
             "success": self.success,
+            "evaluationParameters": json.dumps(self.evaluation_parameters),
+            "statistics": json.dumps(self._statistics),
+            "results": self._results,
+            "meta": json.dumps(self._meta),
+        }
+
+    def to_json_dict(self):
+        return {
+            "id": self._id,
+            "success": self.success,
             "evaluationParameters": self.evaluation_parameters,
             "statistics": self._statistics,
-            "results": [result.to_dict() for result in self._results],
+            "results": [result.to_json_dict() for result in self._results],
             "meta": self._meta,
         }
 

@@ -18,7 +18,7 @@ from hsfs.core import validation_report_api
 
 
 class ValidationReportEngine:
-    def __init__(self, feature_store_id, feature_group_id):
+    def __init__(self, feature_store_id):
         """Validation Report engine.
 
         :param feature_store_id: id of the respective featurestore
@@ -27,19 +27,20 @@ class ValidationReportEngine:
         :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
-        self._validation_report_api = validation_report_api.ValidationReportApi(feature_store_id, feature_group_id)
+        self._validation_report_api = validation_report_api.ValidationReportApi(
+            feature_store_id
+        )
 
-    def save(self, validation_report):
-        return self._validation_report_api.create(validation_report)
+    def save(self, feature_group, validation_report):
+        return self._validation_report_api.create(feature_group.id, validation_report)
 
-    def get_last(self):
+    def get_last(self, feature_group):
         """Get the most recent Validation Report of a Feature Group."""
-        return self._validation_report_api.get_last()
+        return self._validation_report_api.get_last(feature_group.id)
 
-    def get_all(self):
+    def get_all(self, feature_group):
         """Get all Validation Report of a FeaturevGroup."""
-        return self._validation_report_api.get_all()
+        return self._validation_report_api.get_all(feature_group.id)
 
-    def delete(self, validation_report_id):
-        self._validation_report_api.delete(validation_report_id)
+    def delete(self, feature_group, validation_report):
+        self._validation_report_api.delete(feature_group.id, validation_report.id)

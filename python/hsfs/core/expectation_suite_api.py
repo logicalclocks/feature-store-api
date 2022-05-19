@@ -14,11 +14,12 @@
 #   limitations under the License.
 #
 
-from hsfs import client, expectation_suite
+from hsfs import client
+from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteApi:
-    def __init__(self, feature_store_id, feature_group_id):
+    def __init__(self, feature_store_id):
         """Expectation Suite endpoints for the featuregroup resource.
         :param feature_store_id: id of the respective featurestore
         :type feature_store_id: int
@@ -26,9 +27,8 @@ class ExpectationSuiteApi:
         :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
 
-    def create(self, expectation_suite):
+    def create(self, feature_group_id, expectation_suite):
         """Create an expectation suite attached to a featuregroup.
         :param expectation_suite: expectation suite object to be created for a featuregroup
         :type expectation_suite: `ExpectationSuite`
@@ -40,17 +40,17 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "expectationsuite",
         ]
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
-        return expectation_suite.ExpectationSuite.from_response_json(
+        return ExpectationSuite.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self):
+    def delete(self, feature_group_id):
         """Delete the expectation suite attached to a featuregroup."""
         _client = client.get_instance()
         path_params = [
@@ -59,13 +59,13 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "expectationsuite",
         ]
 
         _client._send_request("DELETE", path_params)
 
-    def get(self):
+    def get(self, feature_group_id):
         """Get the expectation suite attached to a feature group.
 
         :return: expectation suite
@@ -78,10 +78,10 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            self._feature_group_id,
+            feature_group_id,
             "expectationsuite",
         ]
 
-        return expectation_suite.ExpectationSuite.from_response_json(
+        return ExpectationSuite.from_response_json(
             _client._send_request("GET", path_params)
         )
