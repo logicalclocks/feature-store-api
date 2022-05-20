@@ -694,6 +694,9 @@ class Engine:
                 topic=feature_group._online_topic_name, key=key, value=encoded_row
             )
 
+            # Trigger internal callbacks to empty op queue
+            producer.poll(0)
+
         # make sure producer blocks and everything is delivered
         producer.flush()
 
