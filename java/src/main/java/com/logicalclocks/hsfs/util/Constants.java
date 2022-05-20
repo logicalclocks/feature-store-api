@@ -32,6 +32,7 @@ public class Constants {
   public static final String JDBC_FORMAT = "jdbc";
   public static final String KAFKA_FORMAT = "kafka";
   public static final String SNOWFLAKE_FORMAT = "net.snowflake.spark.snowflake";
+  public static final String BIGQUERY_FORMAT = "bigquery";
 
   // Spark options
   public static final String DELIMITER = "delimiter";
@@ -76,7 +77,6 @@ public class Constants {
   public static final String KAFKA_SSL_KEY_PASSWORD = "kafka.ssl.key.password";
   public static final String KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM =
       "kafka.ssl.endpoint.identification.algorithm";
-
   //GCS
   public static final String PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile";
   public static final String PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key";
@@ -86,4 +86,12 @@ public class Constants {
   public static final String PROPERTY_GCS_FS_VALUE = "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS";
   public static final String PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable";
   // end gcs
+  // bigquery constants
+  public static final String BIGQ_CREDENTIALS_FILE = "credentialsFile";
+  public static final String BIGQ_PARENT_PROJECT = "parentProject";
+  public static final String BIGQ_MATERIAL_DATASET = "materializationDataset";
+  public static final String BIGQ_VIEWS_ENABLED = "viewsEnabled";
+  public static final String BIGQ_PROJECT = "project";
+  public static final String BIGQ_DATASET = "dataset";
+  // end bigq
 }

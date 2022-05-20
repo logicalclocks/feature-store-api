@@ -839,6 +839,13 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job gets started immediately.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -939,13 +946,19 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
-                * key `mode` instruct the ingestion job on how to deal with corrupted
-                  data. Values are PERMISSIVE, DROPMALFORMED or FAILFAST. Default FAILFAST.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job gets started immediately.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to False to run validation logic on ingestion
                 * key `save_report` boolean value, set to False to skip upload of the validation report to hopsworks
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations
                 * key `log_activity` a boolean to log Deequ validation information (could be merged with save_report for consistency)
+
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
         """

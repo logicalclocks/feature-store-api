@@ -332,6 +332,10 @@ public class SparkEngine {
         .options(readOptions);
 
     if (!Strings.isNullOrEmpty(path)) {
+      // for BigQuery we set SQL query as location which should be passed to load()
+      if (dataFormat.equals(Constants.BIGQUERY_FORMAT)) {
+        return reader.load(location);
+      }
       return reader.load(SparkEngine.sparkPath(path));
     }
     return reader.load();

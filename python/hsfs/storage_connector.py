@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 import os
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -33,6 +32,7 @@ class StorageConnector(ABC):
     SNOWFLAKE = "SNOWFLAKE"
     KAFKA = "KAFKA"
     GCS = "GCS"
+    BIGQUERY = "BIGQUERY"
 
     def __init__(self, id, name, description, featurestore_id):
         self._id = id
@@ -955,7 +955,7 @@ class GcsConnector(StorageConnector):
 
     @property
     def key_path(self):
-        """GCS key file HDFS path"""
+        """JSON keyfile for service account"""
         return self._key_path
 
     @property
@@ -1035,3 +1035,156 @@ class GcsConnector(StorageConnector):
             path: Path to prepare for reading from Google cloud storage. Defaults to `None`.
         """
         return engine.get_instance().setup_storage_connector(self, path)
+
+
+class BigQueryConnector(StorageConnector):
+    type = StorageConnector.BIGQUERY
+    BIGQUERY_FORMAT = "bigquery"
+    BIGQ_CREDENTIALS_FILE = "credentialsFile"
+    BIGQ_PARENT_PROJECT = "parentProject"
+    BIGQ_MATERIAL_DATASET = "materializationDataset"
+    BIGQ_VIEWS_ENABLED = "viewsEnabled"
+    BIGQ_PROJECT = "project"
+    BIGQ_DATASET = "dataset"
+
+    def __init__(
+        self,
+        id,
+        name,
+        featurestore_id,
+        description=None,
+        # members specific to type of connector
+        key_path=None,
+        parent_project=None,
+        dataset=None,
+        query_table=None,
+        query_project=None,
+        materialization_dataset=None,
+        arguments=None,
+    ):
+        super().__init__(id, name, description, featurestore_id)
+        self._key_path = key_path
+        self._parent_project = parent_project
+        self._dataset = dataset
+        self._query_table = query_table
+        self._query_project = query_project
+        self._materialization_dataset = materialization_dataset
+        self._arguments = (
+            {opt["name"]: opt["value"] for opt in arguments} if arguments else {}
+        )
+
+    @property
+    def key_path(self):
+        """JSON keyfile for service account"""
+        return self._key_path
+
+    @property
+    def parent_project(self):
+        """BigQuery parent project (Google Cloud Project ID of the table to bill for the export)"""
+        return self._parent_project
+
+    @property
+    def dataset(self):
+        """BigQuery dataset (The dataset containing the table)"""
+        return self._dataset
+
+    @property
+    def query_table(self):
+        """BigQuery table name"""
+        return self._query_table
+
+    @property
+    def query_project(self):
+        """BigQuery project (The Google Cloud Project ID of the table)"""
+        return self._query_project
+
+    @property
+    def materialization_dataset(self):
+        """BigQuery materialization dataset (The dataset where the materialized view is going to be created,
+        used in case of query)"""
+        return self._materialization_dataset
+
+    @property
+    def arguments(self):
+        """Additional spark options"""
+        return self._arguments
+
+    def spark_options(self):
+        """Return spark options to be set for BigQuery spark connector"""
+        properties = self._arguments
+        local_key_path = engine.get_instance().add_file(self._key_path)
+        properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
+        properties[self.BIGQ_PARENT_PROJECT] = self._parent_project
+        if self._materialization_dataset:
+            properties[self.BIGQ_MATERIAL_DATASET] = self._materialization_dataset
+            properties[self.BIGQ_VIEWS_ENABLED] = "true"
+
+        if self._query_project:
+            properties[self.BIGQ_PROJECT] = self._query_project
+
+        if self._dataset:
+            properties[self.BIGQ_DATASET] = self._dataset
+
+        return properties
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = None,
+    ):
+        """Reads results from BigQuery into a spark dataframe using the storage connector.
+
+          Reading from bigquery is done via either specifying the BigQuery table or BigQuery query.
+          For example, to read from a BigQuery table, set the BigQuery project, dataset and table on storage connector
+          and read directly from the corresponding path.
+            ```python
+            conn.read()
+            ```
+          OR, to read results from a BigQuery query, set `Materialization Dataset` on storage connector,
+           and pass your SQL to `query` argument.
+            ```python
+            conn.read(query='SQL')
+            ```
+          Optionally, passing `query` argument will take priority at runtime if the table options were also set
+          on the storage connector. This allows user to run from both a query or table with same connector, assuming
+          all fields were set.
+          Also, user can set the `path` argument to a bigquery table path to read at runtime,
+           if table options were not set initially while creating the connector.
+            ```python
+            conn.read(path='project.dataset.table')
+            ```
+
+        # Arguments
+            query: BigQuery query. Defaults to `None`.
+            data_format: Spark data format. Defaults to `None`.
+            options: Spark options. Defaults to `None`.
+            path: BigQuery table path. Defaults to `None`.
+
+        # Raises
+            `ValueError`: Malformed arguments.
+
+        # Returns
+            `Dataframe`: A Spark dataframe.
+        """
+
+        # merge user spark options on top of default spark options
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
+        if query:
+            path = query
+        elif self._query_table:
+            path = self._query_table
+        elif path:
+            pass
+        else:
+            raise ValueError(
+                "Either query should be provided "
+                "or Query Project,Dataset and Table should be set"
+            )
+
+        return engine.get_instance().read(self, self.BIGQUERY_FORMAT, options, path)

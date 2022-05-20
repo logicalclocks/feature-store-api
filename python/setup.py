@@ -42,10 +42,14 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow",
+            "confluent-kafka==1.3.0",
+            "fastavro==1.4.11",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow",
+            "confluent-kafka==1.3.0",
+            "fastavro==1.4.11",
         ],
     },
     author="Hopsworks AB",
