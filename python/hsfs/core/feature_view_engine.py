@@ -219,6 +219,7 @@ class FeatureViewEngine:
                 result[split] = self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
                 )
+            return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
