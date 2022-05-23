@@ -65,7 +65,7 @@ class ExpectationSuite:
         json_decamelized = humps.decamelize(json_dict)
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
-                return []
+                return None
             return [
                 cls(**expectation_suite)
                 for expectation_suite in json_decamelized["items"]

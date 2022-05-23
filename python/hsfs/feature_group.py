@@ -27,6 +27,7 @@ from typing import Optional, Union, Any, Dict, List, TypeVar
 from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
+    great_expectation_engine,
     statistics_engine,
     expectation_suite_engine,
     validation_report_engine,
@@ -56,6 +57,9 @@ class FeatureGroupBase:
         )
         self._data_validation_engine = data_validation_engine.DataValidationEngine(
             featurestore_id, self.ENTITY_TYPE
+        )
+        self._great_expectation_engine = (
+            great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
 
     def delete(self):
@@ -872,8 +876,12 @@ class FeatureGroup(FeatureGroupBase):
             )
 
         # fg_job is used only if the python engine is used
-        fg_job = self._feature_group_engine.save(self, feature_dataframe, write_options)
-        self._code_engine.save_code(self)
+        fg_job, ge_report = self._feature_group_engine.save(
+            self, feature_dataframe, write_options
+        )
+        if ge_report is None or ge_report.ingestion_result == "INGESTED":
+            self._code_engine.save_code(self)
+
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
@@ -885,7 +893,10 @@ class FeatureGroup(FeatureGroupBase):
                 ),
                 util.VersionWarning,
             )
-        return fg_job
+        return (
+            fg_job,
+            ge_report.to_ge_type() if ge_report is not None else None,
+        )
 
     def insert(
         self,
@@ -964,11 +975,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
-        self._pre_insert_validation(
-            feature_dataframe=feature_dataframe, validation_options=validation_options
-        )
-
-        self._feature_group_engine.insert(
+        job, ge_report = self._feature_group_engine.insert(
             self,
             feature_dataframe,
             overwrite,
@@ -977,11 +984,17 @@ class FeatureGroup(FeatureGroupBase):
             write_options,
         )
 
-        self._code_engine.save_code(self)
+        if ge_report is None or ge_report.ingestion_result == "INGESTED":
+            self._code_engine.save_code(self)
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
             self.compute_statistics()
+
+        return (
+            job,
+            ge_report.to_ge_type() if ge_report is not None else None,
+        )
 
     def insert_stream(
         self,
@@ -1121,97 +1134,47 @@ class FeatureGroup(FeatureGroupBase):
         """
         return self.select_all().as_of(wallclock_time)
 
-    def _pre_insert_validation(
-        self,
-        feature_dataframe: Union[
-            TypeVar("pyspark.sql.DataFrame"), pd.DataFrame  # noqa: F821
-        ],
-        validation_options: Optional[Dict[Any, Any]] = dict(),
-    ):
-        if validation_options.get("run_validation", True) is False:
-            return None
-
-        # Handle Deequ first
-        if self.validation_type != "NONE":
-            self.validate(
-                feature_dataframe,
-                log_activity=validation_options.get("log_activity", False),
-            )
-
-        # Handle Great Expectation
-        expectation_suite = self.get_expectation_suite(ge_type=False)
-        if expectation_suite.run_validation is False:
-            return None
-        else:
-            self.validate_with_great_expectations(
-                feature_dataframe,
-                expectation_suite=expectation_suite,
-                validation_options=validation_options,
-            )
-
-        return None
-
     def validate(
         self,
-        dataframe: TypeVar("pyspark.sql.DataFrame") = None,  # noqa: F821
+        dataframe: Optional[
+            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
+        ] = None,
         log_activity: Optional[bool] = False,
+        save_report: Optional[bool] = False,
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
     ):
-        """Run validation based on the attached expectations
+        """Run validation based on the attached expectations.
+
+        Runs any expectation attached with Deequ. But also runs attached Great Expectation
+        Suites.
 
         # Arguments
             dataframe: The PySpark dataframe to run the data validation expectations against.
-
+            log_activity: Boolean to indicate whether to persist validation results along
+                with the feature group. Defaults to `False`.
+            expectation_suite: Optionally provide an Expectation Suite to override the
+                one that is possibly attached to the feature group. This is useful for
+                testing new Expectation suites. When an extra suite is provided, the results
+                will never be persisted. Defaults to `None`.
+            save_report: TODO
+            ge_validate_kwargs: Additional validation optis as key-value pairs for the
+                validate method of Great Expectations, defaults to `{}`.
 
         # Returns
-            `FeatureGroupValidation`. The feature group validation metadata object.
+            `FeatureGroupValidation`, `ValidationReport`. The feature group validation metadata object,
+                as well as the Validation Report produced by Great Expectations.
 
         """
         # Activity is logged only if a the validation concerts the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
             log_activity = True
-        return self._data_validation_engine.validate(self, dataframe, log_activity)
 
-    def validate_with_great_expectations(
-        self,
-        dataframe: pd.DataFrame,
-        expectation_suite: Optional[
-            Union[TypeVar("ge.core.ExpectationSuite"), TypeVar("ExpectationSuite")]
-        ] = None,
-        validation_options: Optional[Dict[Any, Any]] = dict(),
-    ):
-        """Run validation based on provided or attached expectation suite.
-
-        # Arguments
-            `pd.DataFrame` dataframe: Pandas dataframe containing features to be ingested.
-            `ExpectationSuite` expectation_suite: Great Expectation suite to run validation. Default to expectation suite attached to featuregroup.
-            If an expectation suite is provided, the suite itself and the validation report are not persisted. To enable persistence,
-            register the expectation suite with featuregroup.save_expectation_suite first.
-            `Dict` validation_options: Additional validation options as key-value pairs, defaults to `{}`.
-                * key `save_report` boolean value, set to False to skip upload of the validation report to hopsworks
-                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations
-
-        # Returns
-            `ValidationReport`. The report generated by Great Expectations.
-        """
-
-        if expectation_suite is not None:
-            validation_options["save_report"] = False
-            if isinstance(expectation_suite, ExpectationSuite):
-                expectation_suite = expectation_suite.to_ge_type()
-        else:
-            expectation_suite = self.get_expectation_suite()
-
-        report = engine.get_instance().validate_with_great_expectations(
-            dataframe=dataframe,
-            expectation_suite=expectation_suite,
-            ge_validate_kwargs=validation_options.get("ge_validate_kwargs", dict()),
+        return self._data_validation_engine.validate(
+            self, dataframe, log_activity
+        ), self._great_expectation_engine.validate(
+            self, dataframe, save_report, ge_validate_kwargs
         )
-
-        if validation_options.get("save_report", False) is True:
-            self.save_validation_report(report)
-
-        return report
 
     def get_expectation_suite(self, ge_type: bool = True):
         """Return the expectation suite attached to the feature group if it exists.
@@ -1229,7 +1192,7 @@ class FeatureGroup(FeatureGroupBase):
             `FeatureStoreException`. If no expectation suite has been found.
         """
         self._expectation_suite = self._expectation_suite_engine.get(self)
-        if ge_type is True:
+        if self._expectation_suite is not None and ge_type is True:
             return self._expectation_suite.to_ge_type()
         else:
             return self._expectation_suite
@@ -1324,11 +1287,13 @@ class FeatureGroup(FeatureGroupBase):
             ]
         return self._validation_report_engine.get_all(self)
 
-    def save_validation_report(self, validation_report):
+    def save_validation_report(self, validation_report, ge_type: bool = True):
         """Save validation report to hopsworks platform along previous reports of the same featuregroup.
 
         # Arguments
-            `ValidationReport`. The validation report to attach to the featuregroup.
+            ValidationReport. The validation report to attach to the featuregroup.
+            ge_type. Whether to return a Great Expectations object or a Hopsworks
+                object. Defaults to `True`, a Great Expectations object.
 
         # Raises
             `RestAPIException`.
@@ -1343,7 +1308,9 @@ class FeatureGroup(FeatureGroupBase):
         elif isinstance(validation_report, ValidationReport):
             report = validation_report
 
-        return self._validation_report_engine.save(self, report).to_ge_type()
+        if ge_type:
+            return self._validation_report_engine.save(self, report).to_ge_type()
+        return self._validation_report_engine.save(self, report)
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the

@@ -663,9 +663,10 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         # loop over rows
-        for i, r in dataframe.iterrows():
-            # create copy of row only
-            row = r.to_dict()
+        for r in dataframe.itertuples(index=False):
+            # itertuples returns Python NamedTyple, to be able to serialize it using
+            # avro, create copy of row only by converting to dict, which preserves datatypes
+            row = r._asdict()
 
             # transform special data types
             # here we might need to handle also timestamps and other complex types

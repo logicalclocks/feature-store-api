@@ -51,7 +51,7 @@ class ValidationReport:
         self._validation_time = validation_time
         self._featurestore_id = featurestore_id
         self._featuregroup_id = featuregroup_id
-        self._ingestion_result = None
+        self._ingestion_result = ingestion_result
 
         self.results = results
         self.meta = meta
@@ -192,6 +192,12 @@ class ValidationReport:
             raise ValueError(
                 "Evaluation parameters field must be stringified json or dict"
             )
+
+    @property
+    def ingestion_result(self):
+        """Overall success of the validation run together with the ingestion
+        validation policy. Indicating if dataframe was ingested or rejected."""
+        return self._ingestion_result
 
     def __str__(self):
         return self.json()

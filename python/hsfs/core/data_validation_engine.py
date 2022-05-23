@@ -37,6 +37,13 @@ class DataValidationEngine:
             feature_store_id, entity_type
         )
 
+    def ingest_validate(self, feature_group, feature_dataframe):
+        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
+            # If the engine is Python, the validation will be executed by
+            # the Hopsworks job ingesting the data
+            return self.validate(feature_group, feature_dataframe, True)
+        return None
+
     def validate(self, feature_group, feature_dataframe, log_activity):
         """Perform data validation for a dataframe and send the result json to Hopsworks."""
 
