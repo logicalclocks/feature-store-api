@@ -356,7 +356,7 @@ class Engine:
         )
 
         if len(training_dataset.splits) == 0:
-            training_dataset.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
 

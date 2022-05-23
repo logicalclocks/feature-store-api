@@ -429,26 +429,28 @@ class Engine:
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._split_df(df, training_dataset_obj.splits)
-            training_dataset_obj.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            split_df = self._split_df(df, training_dataset_obj)
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
         else:
             split_df = df
-            training_dataset_obj.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
-
-        split_df = self._apply_transformation_function(training_dataset_obj, split_df)
+            split_df = self._apply_transformation_function(
+                training_dataset_obj, split_df
+            )
         return split_df
 
-    def _split_df(self, df, splits):
+    def _split_df(self, df, training_dataset_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
+        splits = training_dataset_obj.splits
         items = splits.items()
         if (
             sum(splits.values()) != 1
@@ -466,7 +468,10 @@ class Engine:
         random.shuffle(groups)
         df[split_column] = groups
         for i, item in enumerate(items):
-            result_dfs[item[0]] = df[df[split_column] == i].drop(split_column, axis=1)
+            result_dfs[item[0]] = self._apply_transformation_function(
+                training_dataset_obj,
+                df[df[split_column] == i].drop(split_column, axis=1),
+            )
         return result_dfs
 
     def write_training_dataset(
