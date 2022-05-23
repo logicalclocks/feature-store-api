@@ -449,12 +449,6 @@ class Engine:
             if data_format.lower() == "tsv":
                 data_format = "csv"
 
-            if data_format.lower() == "csv":
-                if "header" not in read_options:
-                    read_options["header"] = "true"
-                if "inferSchema" not in read_options:
-                    read_options["inferSchema"] = "true"
-
         else:
             path = None
 
