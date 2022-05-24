@@ -160,9 +160,6 @@ class FeatureViewEngine:
     def get_training_data(
         self, feature_view_obj, training_dataset_obj, read_options, splits=None
     ):
-        read_options = engine.get_instance().read_options(
-            training_dataset_obj.data_format, read_options
-        )
         if (
             len(training_dataset_obj.splits) > 0
             and training_dataset_obj.train_split is None
@@ -189,6 +186,10 @@ class FeatureViewEngine:
             td_updated = self._create_training_data_metadata(
                 feature_view_obj, training_dataset_obj
             )
+
+        read_options = engine.get_instance().read_options(
+            td_updated.data_format, read_options
+        )
 
         if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
             split_df = self._read_from_storage_connector(
