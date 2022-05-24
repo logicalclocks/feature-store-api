@@ -87,5 +87,3 @@ class BuiltInTransformationFunction:
                     (value, index) for index, value in enumerate(unique_data)
                 )
                 return value_to_index
-            else:
-                return {}
