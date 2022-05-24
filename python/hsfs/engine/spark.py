@@ -836,7 +836,7 @@ class Engine:
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
         unique_values = feature_dataframe.select(feature_name).distinct().collect()
-        return [field.__fields__[0] for field in unique_values]
+        return [field[feature_name] for field in unique_values]
 
 
 class SchemaError(Exception):
