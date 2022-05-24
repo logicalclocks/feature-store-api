@@ -16,7 +16,7 @@
 
 import warnings
 
-from hsfs import engine, training_dataset_feature
+from hsfs import engine, training_dataset_feature, client, util
 from hsfs.core import (
     training_dataset_api,
     tags_api,
@@ -85,6 +85,10 @@ class TrainingDatasetEngine:
             )
 
         updated_instance = self._training_dataset_api.post(training_dataset)
+        print(
+            "Training dataset created successfully, explore it at "
+            + self._get_training_dataset_url(updated_instance)
+        )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
@@ -160,3 +164,14 @@ class TrainingDatasetEngine:
         self._training_dataset_api.update_metadata(
             training_dataset, training_dataset, "updateStatsConfig"
         )
+
+    def _get_training_dataset_url(self, training_dataset):
+        path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(training_dataset.feature_store_id)
+            + "/td/"
+            + str(training_dataset.id)
+        )
+        return util.get_hostname_replaced_url(path)

@@ -581,6 +581,7 @@ class Engine:
         ui_url = url._replace(
             path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
         )
+        ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
 
     def _get_app_options(self, user_write_options={}):
