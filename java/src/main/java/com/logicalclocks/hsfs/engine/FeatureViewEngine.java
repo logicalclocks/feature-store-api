@@ -6,6 +6,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.TrainingDatasetBundle;
+import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
@@ -14,6 +15,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FeatureViewEngine {
 
@@ -21,11 +23,16 @@ public class FeatureViewEngine {
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
-    TrainingDatasetUtils.setLabelFeature(featureView.getFeatures(), featureView.getLabels());
-    // TODO: attach transformation function
+    featureView.setFeatures(makeLabelFeatures(featureView.getLabels()));
     FeatureView updatedFeatureView = featureViewApi.save(featureView);
     featureView.setVersion(updatedFeatureView.getVersion());
+    featureView.setFeatures(updatedFeatureView.getFeatures());
     return featureView;
+  }
+
+  private List<TrainingDatasetFeature> makeLabelFeatures(List<String> labels) {
+    return labels.stream().map(label -> new TrainingDatasetFeature(label.toLowerCase(), true))
+        .collect(Collectors.toList());
   }
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,

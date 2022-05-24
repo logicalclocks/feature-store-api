@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureView;
+import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -31,8 +32,8 @@ public class FeatureViewApi {
       + FeatureStoreApi.FEATURE_STORE_PATH + "/featureview";
   private static final String FEATURE_VIEWS_PATH = FEATURE_VIEWS_ROOT_PATH + "{/fvName}";
   private static final String FEATURE_VIEW_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}";
-  //TODO: fix ?&
-//  private static final String QUERY_PARAMETERS = "{?expand}{&filter_by}{&sort_by}";
+  private static final String TRANSFORMATION_PATH = FEATURE_VIEW_PATH + "/transformation";
+  private static final String PREPARED_STATEMENT_PATH = FEATURE_VIEW_PATH + "/preparedstatement{?batch}";
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
@@ -53,7 +54,6 @@ public class FeatureViewApi {
 
   public FeatureView get(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
       IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_PATH)
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
@@ -66,10 +66,28 @@ public class FeatureViewApi {
     HttpGet request = new HttpGet(uri);
 
     LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     return hopsworksClient.handleRequest(request, FeatureView.class);
   }
 
-  public String addQueryParam(String baseUrl, Map<String, Object> params) {
+  public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
+      IOException {
+    String uri = UriTemplate.fromTemplate(FEATURE_VIEWS_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", name)
+        .expand();
+    Map<String, Object> params = Maps.newHashMap();
+    params.put("expand", Lists.newArrayList("query", "features"));
+    uri = addQueryParam(uri, params);
+    HttpGet request = new HttpGet(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
+  }
+
+  private String addQueryParam(String baseUrl, Map<String, Object> params) {
     String url = baseUrl + "?";
     List<String> paramUrl = params.entrySet().stream().flatMap(entry -> {
       if (entry.getValue() instanceof String) {
@@ -82,22 +100,6 @@ public class FeatureViewApi {
       }
     }).collect(Collectors.toList());
     return url + Joiner.on("&").join(paramUrl);
-  }
-
-  public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
-      IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String uri = UriTemplate.fromTemplate(FEATURE_VIEWS_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
-        .set("fvName", name)
-        .set("expand", Lists.newArrayList("query", "features"))
-        .expand();
-
-    HttpGet request = new HttpGet(uri);
-
-    LOGGER.info("Sending metadata request: " + uri);
-    return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
   }
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException, IOException {
@@ -145,8 +147,37 @@ public class FeatureViewApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     hopsworksClient.handleRequest(request);
-
   }
 
+  public List<TransformationFunctionAttached> getTransformationFunctions(FeatureView featureView)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String uri = UriTemplate.fromTemplate(TRANSFORMATION_PATH)
+        .set("projectId", featureView.getFeatureStore().getProjectId())
+        .set("fsId", featureView.getFeatureStore().getId())
+        .set("fvName", featureView.getName())
+        .set("fvVersion", featureView.getVersion())
+        .expand();
 
+    LOGGER.info("Sending metadata request: " + uri);
+    TransformationFunctionAttached transformationFunctionAttached =
+        hopsworksClient.handleRequest(new HttpGet(uri), TransformationFunctionAttached.class);
+    return transformationFunctionAttached.getItems();
+  }
+
+  public List<ServingPreparedStatement> getServingPreparedStatement(FeatureView featureView, boolean batch)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String uri = UriTemplate.fromTemplate(PREPARED_STATEMENT_PATH)
+        .set("projectId", featureView.getFeatureStore().getProjectId())
+        .set("fsId", featureView.getFeatureStore().getId())
+        .set("fvName", featureView.getName())
+        .set("fvVersion", featureView.getVersion())
+        .set("batch", batch)
+        .expand();
+    LOGGER.info("Sending metadata request: " + uri);
+    ServingPreparedStatement servingPreparedStatement = hopsworksClient.handleRequest(new HttpGet(uri),
+        ServingPreparedStatement.class);
+    return servingPreparedStatement.getItems();
+  }
 }
