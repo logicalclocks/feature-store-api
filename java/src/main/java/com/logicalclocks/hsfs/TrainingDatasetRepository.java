@@ -1,10 +1,13 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import lombok.Getter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class TrainingDatasetRepository {
@@ -33,5 +36,14 @@ public class TrainingDatasetRepository {
   @JsonIgnore
   public Dataset<Row> getDataset(String split) {
     return datasetSplits.get(split);
+  }
+
+  @JsonIgnore
+  public List<String> getSplitNames() {
+    if (datasetSplits != null) {
+      return new ArrayList<>(datasetSplits.keySet());
+    } else {
+      return Lists.newArrayList();
+    }
   }
 }

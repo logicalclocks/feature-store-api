@@ -55,10 +55,9 @@ public class FeatureViewEngine {
     featureViewApi.delete(featureStore, name, version);
   }
 
-  public TrainingDatasetRepository createTrainingDataset(
+  public void createTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
   ) {
-    return null;
   }
 
   public TrainingDatasetRepository getTrainingDataset(
@@ -85,6 +84,10 @@ public class FeatureViewEngine {
 
   public void deleteTrainingDatasetOnly(FeatureView featureView) {
 
+  }
+
+  public String getBatchQueryString(FeatureView featureView) {
+    return null;
   }
 
   public String getBatchQueryString(

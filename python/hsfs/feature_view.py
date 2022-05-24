@@ -44,7 +44,7 @@ class FeatureView:
         id=None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        label: Optional[List[str]] = [],
+        labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         self._name = name
@@ -53,7 +53,7 @@ class FeatureView:
         self._featurestore_id = featurestore_id
         self._version = version
         self._description = description
-        self._label = label
+        self._labels = labels
         self._transformation_functions = transformation_functions
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
@@ -83,7 +83,7 @@ class FeatureView:
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
-        batch: Optional[bool] = None,
+        batch: Optional[bool] = False,
         external: Optional[bool] = False,
     ):
         """Initialise and cache parametrized prepared statement to
@@ -491,6 +491,10 @@ class FeatureView:
 
         return td.version, td_job
 
+    def recreate_training_dataset(self, version: int):
+        # TODO fv
+        pass
+
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
@@ -580,7 +584,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
-            "label": self._label,
+            "label": self._labels,
         }
 
     @property
@@ -625,11 +629,11 @@ class FeatureView:
 
         Can be a composite of multiple features.
         """
-        return self._label
+        return self._labels
 
     @label.setter
     def label(self, label):
-        self._label = [lb.lower() for lb in label]
+        self._labels = [lb.lower() for lb in label]
 
     @property
     def description(self):

@@ -108,6 +108,13 @@ public class TrainingDataset {
   @JsonIgnore
   private List<String> label;
 
+  @Getter
+  @Setter
+  private String eventStartTime;
+  @Getter
+  @Setter
+  private String eventEndTime;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
@@ -116,8 +123,9 @@ public class TrainingDataset {
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
-                         Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
-                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label) {
+      Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
+      Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
+      String eventStartTime, String eventEndTime) {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -132,6 +140,8 @@ public class TrainingDataset {
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.eventStartTime = eventStartTime;
+    this.eventEndTime = eventEndTime;
   }
 
   /**

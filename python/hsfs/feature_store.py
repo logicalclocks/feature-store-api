@@ -805,7 +805,7 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            label=label,
+            labels=label,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)

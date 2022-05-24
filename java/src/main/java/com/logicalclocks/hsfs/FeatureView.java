@@ -1,7 +1,6 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
@@ -50,7 +49,6 @@ public class FeatureView {
 
   @Getter
   @Setter
-  @JsonProperty("query")
   private Query query;
 
   @Getter
@@ -108,7 +106,6 @@ public class FeatureView {
 
   public FeatureView(@NonNull String name, Integer version, @NonNull Query query, String description,
       @NonNull FeatureStore featureStore, List<String> labels) {
-    // TODO: add transformation function
     this.name = name;
     this.version = version;
     this.query = query;
@@ -191,6 +188,11 @@ public class FeatureView {
   }
 
   @JsonIgnore
+  public String getBatchQuery() {
+    return featureViewEngine.getBatchQueryString(this);
+  }
+
+  @JsonIgnore
   public String getBatchQuery(String startTime, String endTime) {
     return featureViewEngine.getBatchQueryString(this, startTime, endTime);
   }
@@ -257,21 +259,48 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name);
   }
 
-  public TrainingDatasetRepository getTrainingDataset(
-      Integer version, String description, Map<String, Float> splits,
-      StatisticsConfig statisticsConfig, Map<String, String> writeOptions
-  ) {
+  public TrainingDatasetRepository getTrainingDataset(String startTime, String endTime) {
     TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
-    return featureViewEngine.getTrainingDataset(this, trainingDataset, writeOptions);
+    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
-  public TrainingDatasetRepository createTrainingDataset(
-      Integer version, String description, DataFormat dataFormat,
-      Boolean coalesce, StorageConnector storageConnector, String location, Map<String, Float> splits,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
+  public TrainingDatasetRepository getTrainingDataset(
+      String startTime, String endTime, Map<String, Float> splits, String trainSplit
   ) {
     TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
-    return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
+    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  }
+
+  public TrainingDatasetRepository getTrainingDataset(
+      Integer version, String startTime, String endTime, String description, Map<String, Float> splits,
+      String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
+  ) {
+    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+    return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions);
+  }
+
+  public void createTrainingDataset(
+      String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector
+  ) {
+    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+    featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  }
+
+  public void createTrainingDataset(
+      String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector,
+      Map<String, Float> splits, String trainSplit
+  ) {
+    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+    featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  }
+
+  public void createTrainingDataset(
+      Integer version, String startTime, String endTime, String description, DataFormat dataFormat,
+      Boolean coalesce, StorageConnector storageConnector, String location, Map<String, Float> splits,
+      String trainSplit, Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
+  ) {
+    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+    featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
   }
 
   public void recreateTrainingDataset(Integer version) {
@@ -304,7 +333,7 @@ public class FeatureView {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void addTrainingDatasetTag(String name, Object value, Integer version) throws FeatureStoreException,
+  public void addTrainingDatasetTag(Integer version, String name, Object value) throws FeatureStoreException,
       IOException {
     featureViewEngine.addTag(this, name, value, version);
   }
@@ -331,7 +360,7 @@ public class FeatureView {
    * @throws IOException
    */
   @JsonIgnore
-  public Object getTrainingDatasetTag(String name, Integer version) throws FeatureStoreException, IOException {
+  public Object getTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
     return featureViewEngine.getTag(this, name, version);
   }
 
@@ -343,7 +372,7 @@ public class FeatureView {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void deleteTrainingDatasetTag(String name, Integer version) throws FeatureStoreException, IOException {
+  public void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name, version);
   }
 
