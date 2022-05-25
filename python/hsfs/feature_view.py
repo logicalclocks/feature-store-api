@@ -318,9 +318,7 @@ class FeatureView:
             )
         if splits:
             return training_dataset_bundle.TrainingDatasetBundle(
-                td.version,
-                training_dataset_splits=df,
-                train_split=td.train_split
+                td.version, training_dataset_splits=df, train_split=td.train_split
             )
         else:
             return training_dataset_bundle.TrainingDatasetBundle(

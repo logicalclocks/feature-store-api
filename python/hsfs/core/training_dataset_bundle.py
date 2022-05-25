@@ -17,8 +17,12 @@
 
 class TrainingDatasetBundle:
     def __init__(
-        self, version, training_dataset=None, training_dataset_splits=None,
-        train_split=None, job=None
+        self,
+        version,
+        training_dataset=None,
+        training_dataset_splits=None,
+        train_split=None,
+        job=None,
     ):
         self._version = version
         self._training_dataset = training_dataset
