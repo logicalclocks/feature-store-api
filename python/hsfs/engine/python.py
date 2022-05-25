@@ -429,10 +429,7 @@ class Engine:
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._split_df(df, training_dataset_obj)
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
-            )
+            split_df = self._split_df(df, training_dataset_obj, feature_view_obj)
         else:
             split_df = df
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
@@ -443,7 +440,7 @@ class Engine:
             )
         return split_df
 
-    def _split_df(self, df, training_dataset_obj):
+    def _split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
@@ -468,9 +465,14 @@ class Engine:
         random.shuffle(groups)
         df[split_column] = groups
         for i, item in enumerate(items):
+            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            if item == training_dataset_obj.train_split:
+                transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+                    training_dataset_obj, feature_view_obj, split_df
+                )
             result_dfs[item[0]] = self._apply_transformation_function(
                 training_dataset_obj,
-                df[df[split_column] == i].drop(split_column, axis=1),
+                split_df,
             )
         return result_dfs
 
