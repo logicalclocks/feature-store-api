@@ -259,19 +259,19 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name);
   }
 
-  public TrainingDatasetRepository getTrainingDataset(String startTime, String endTime) {
+  public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime) {
     TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
-  public TrainingDatasetRepository getTrainingDataset(
+  public TrainingDatasetBundle getTrainingDataset(
       String startTime, String endTime, Map<String, Float> splits, String trainSplit
   ) {
     TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
-  public TrainingDatasetRepository getTrainingDataset(
+  public TrainingDatasetBundle getTrainingDataset(
       Integer version, String startTime, String endTime, String description, Map<String, Float> splits,
       String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
   ) {

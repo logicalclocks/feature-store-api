@@ -28,7 +28,10 @@ from hsfs import (
     training_dataset,
 )
 from hsfs.constructor import query
-from hsfs.core import feature_view_engine, transformation_function_engine, vector_server
+from hsfs.core import (
+    feature_view_engine, transformation_function_engine, vector_server,
+    training_dataset_bundle
+)
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 
@@ -223,16 +226,16 @@ class FeatureView:
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 
-    def get_training_dataset_splits(
+    def get_training_datasets(
         self,
-        splits: Optional[Dict[str, float]],
+        version: Optional[int] = None,
         start_time: Optional = None,
         end_time: Optional = None,
-        version: Optional[int] = None,
         description: Optional[str] = "",
-        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        splits: Optional[Dict[str, float]] = None,
         train_split: Optional[str] = None,
-        read_options: Optional[Dict[Any, Any]] = {},
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
         Get training data from storage or feature groups.
@@ -295,14 +298,14 @@ class FeatureView:
             featurestore_id=self._featurestore_id,
             data_format="tsv",
             location="",
-            splits=splits,
+            splits=splits if splits else {},
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
             train_split=train_split,
         )
         # td_job is used only if the python engine is used
         td, df = self._feature_view_engine.get_training_data(
-            self, td, read_options, splits=splits
+            self, td, read_options if read_options else {}, splits=splits
         )
         if version is None:
             warnings.warn(
@@ -311,68 +314,12 @@ class FeatureView:
                 ),
                 util.VersionWarning,
             )
-        return td.version, df
-
-    def get_training_dataset(
-        self,
-        start_time: Optional = None,
-        end_time: Optional = None,
-        version: Optional[int] = None,
-        description: Optional[str] = "",
-        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        read_options: Optional[Dict[Any, Any]] = {},
-    ):
-        """Get training data from storage or feature groups.
-
-        If version is not provided or provided version has not already existed, it creates
-        a new version of training data according to given arguments and returns a dataframe.
-
-        If version is provided and has already existed, it reads training data from storage
-        or feature groups and returns a dataframe.
-
-        !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
-
-        # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            version: Version of the training dataset to retrieve, defaults to `None` and
-                will create the training dataset with incremented version from the last
-                version in the feature store.
-            description: A string describing the contents of the training dataset to
-                improve discoverability for Data Scientists, defaults to empty string
-                `""`.
-            statistics_config: A configuration object, or a dictionary with keys
-                "`enabled`" to generally enable descriptive statistics computation for
-                this feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
-                statistics computation pass `statistics_config=False`. Defaults to
-                `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, write_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
-
-        # Returns
-            Training dataset tuple: (`int`, `Dataframe`)
-                Training dataset version and dataframe.
-        """
-        td, df = self.get_training_dataset_splits(
-            {},
-            start_time=start_time,
-            end_time=end_time,
-            version=version,
-            description=description,
-            statistics_config=statistics_config,
-            read_options=read_options,
-        )
-        return td, df
+        if splits:
+            return training_dataset_bundle.TrainingDatasetBundle(
+                td.version, training_dataset_splits=df)
+        else:
+            return training_dataset_bundle.TrainingDatasetBundle(
+                td.version, training_dataset=df)
 
     def create_training_dataset(
         self,
@@ -489,7 +436,8 @@ class FeatureView:
                 util.VersionWarning,
             )
 
-        return td.version, td_job
+        return training_dataset_bundle.TrainingDatasetBundle(
+                td.version, job=td_job)
 
     def recreate_training_dataset(self, version: int):
         # TODO fv

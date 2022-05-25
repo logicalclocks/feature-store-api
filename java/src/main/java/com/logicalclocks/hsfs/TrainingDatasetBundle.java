@@ -10,19 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TrainingDatasetRepository {
+public class TrainingDatasetBundle {
 
   @Getter
   private Integer version;
   private Map<String, Dataset<Row>> datasetSplits;
   private Dataset<Row> dataset;
 
-  public TrainingDatasetRepository(Integer version, Dataset<Row> dataset) {
+  public TrainingDatasetBundle(Integer version, Dataset<Row> dataset) {
     this.version = version;
     this.dataset = dataset;
   }
 
-  public TrainingDatasetRepository(Integer version,
+  public TrainingDatasetBundle(Integer version,
       Map<String, Dataset<Row>> datasetSplits) {
     this.version = version;
     this.datasetSplits = datasetSplits;

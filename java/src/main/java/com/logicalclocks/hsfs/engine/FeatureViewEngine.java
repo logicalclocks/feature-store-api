@@ -5,7 +5,7 @@ import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.TrainingDataset;
-import com.logicalclocks.hsfs.TrainingDatasetRepository;
+import com.logicalclocks.hsfs.TrainingDatasetBundle;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import org.apache.spark.sql.Dataset;
@@ -60,7 +60,7 @@ public class FeatureViewEngine {
   ) {
   }
 
-  public TrainingDatasetRepository getTrainingDataset(
+  public TrainingDatasetBundle getTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
   ) {
     return null;
