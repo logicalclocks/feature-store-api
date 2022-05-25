@@ -16,16 +16,18 @@ public class TrainingDatasetBundle {
   private Integer version;
   private Map<String, Dataset<Row>> datasetSplits;
   private Dataset<Row> dataset;
+  @Getter
+  private String trainSplit;
 
   public TrainingDatasetBundle(Integer version, Dataset<Row> dataset) {
     this.version = version;
     this.dataset = dataset;
   }
 
-  public TrainingDatasetBundle(Integer version,
-      Map<String, Dataset<Row>> datasetSplits) {
+  public TrainingDatasetBundle(Integer version, Map<String, Dataset<Row>> datasetSplits, String trainSplit) {
     this.version = version;
     this.datasetSplits = datasetSplits;
+    this.trainSplit = trainSplit;
   }
 
   @JsonIgnore

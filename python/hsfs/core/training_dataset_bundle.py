@@ -17,20 +17,22 @@
 
 class TrainingDatasetBundle:
     def __init__(
-        self, version, training_dataset=None, training_dataset_splits=None, job=None
+        self, version, training_dataset=None, training_dataset_splits=None,
+        train_split=None, job=None
     ):
         self._version = version
         self._training_dataset = training_dataset
         self._training_dataset_splits = training_dataset_splits
+        self._train_split = train_split
         self._job = job
 
-    def get_dataset(self):
-        pass
-
-    def get_dataset_split(self):
+    def get_dataset(self, split=None):
         pass
 
     def get_split_names(self):
+        pass
+
+    def get_train_split(self):
         pass
 
     def get_job(self):

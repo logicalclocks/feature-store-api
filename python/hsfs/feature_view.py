@@ -228,7 +228,7 @@ class FeatureView:
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 
-    def get_training_datasets(
+    def get_training_dataset(
         self,
         version: Optional[int] = None,
         start_time: Optional = None,
@@ -318,7 +318,9 @@ class FeatureView:
             )
         if splits:
             return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, training_dataset_splits=df
+                td.version,
+                training_dataset_splits=df,
+                train_split=td.train_split
             )
         else:
             return training_dataset_bundle.TrainingDatasetBundle(
@@ -502,7 +504,7 @@ class FeatureView:
                 for feature in features
             ]
         fv.schema = features
-        fv.label = [feature.name for feature in features if feature.label]
+        fv.labels = [feature.name for feature in features if feature.label]
         return fv
 
     def update_from_response_json(self, json_dict):
@@ -514,7 +516,7 @@ class FeatureView:
             "query",
             "featurestore_id",
             "version",
-            "label",
+            "labels",
             "schema",
         ]:
             self._update_attribute_if_present(self, other, key)
@@ -535,7 +537,6 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
-            "label": self._labels,
         }
 
     @property
@@ -575,16 +576,16 @@ class FeatureView:
         self._version = version
 
     @property
-    def label(self):
-        """The label/prediction feature of the feature view.
+    def labels(self):
+        """The labels/prediction feature of the feature view.
 
         Can be a composite of multiple features.
         """
         return self._labels
 
-    @label.setter
-    def label(self, label):
-        self._labels = [lb.lower() for lb in label]
+    @labels.setter
+    def labels(self, labels):
+        self._labels = [lb.lower() for lb in labels]
 
     @property
     def description(self):
