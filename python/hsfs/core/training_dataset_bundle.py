@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-class TrainingDatasetBundle:
 
-    def __init__(self, version, training_dataset=None,
-                 training_dataset_splits=None, job=None):
+class TrainingDatasetBundle:
+    def __init__(
+        self, version, training_dataset=None, training_dataset_splits=None, job=None
+    ):
         self._version = version
         self._training_dataset = training_dataset
         self._training_dataset_splits = training_dataset_splits

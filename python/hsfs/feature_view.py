@@ -29,8 +29,10 @@ from hsfs import (
 )
 from hsfs.constructor import query
 from hsfs.core import (
-    feature_view_engine, transformation_function_engine, vector_server,
-    training_dataset_bundle
+    feature_view_engine,
+    transformation_function_engine,
+    vector_server,
+    training_dataset_bundle,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
@@ -316,10 +318,12 @@ class FeatureView:
             )
         if splits:
             return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, training_dataset_splits=df)
+                td.version, training_dataset_splits=df
+            )
         else:
             return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, training_dataset=df)
+                td.version, training_dataset=df
+            )
 
     def create_training_dataset(
         self,
@@ -436,8 +440,7 @@ class FeatureView:
                 util.VersionWarning,
             )
 
-        return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, job=td_job)
+        return training_dataset_bundle.TrainingDatasetBundle(td.version, job=td_job)
 
     def recreate_training_dataset(self, version: int):
         # TODO fv
