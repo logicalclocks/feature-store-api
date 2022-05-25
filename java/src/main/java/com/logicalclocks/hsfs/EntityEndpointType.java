@@ -18,7 +18,8 @@ package com.logicalclocks.hsfs;
 
 public enum EntityEndpointType {
   FEATURE_GROUP("featuregroups"),
-  TRAINING_DATASET("trainingdatasets");
+  TRAINING_DATASET("trainingdatasets"),
+  FEATURE_VIEW("featureview");
 
   private final String value;
 
