@@ -39,7 +39,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
 
-from great_expectations.core import ExpectationSuite
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
 from great_expectations.data_context.types.base import (
@@ -596,8 +595,8 @@ class Engine:
 
     def validate_with_great_expectations(
         self,
-        dataframe: TypeVar("DataFrame"),
-        expectation_suite: TypeVar("ExpectationSuite"),
+        dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
         ge_validate_kwargs: Optional[dict],
     ):
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
@@ -639,7 +638,7 @@ class Engine:
             batch_request=batch_request,
             expectation_suite_name=expectation_suite.expectation_suite_name,
         )
-        report = validator.validate()
+        report = validator.validate(**ge_validate_kwargs)
 
         return report
 
