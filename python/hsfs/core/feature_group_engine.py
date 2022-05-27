@@ -28,9 +28,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
-    def save(
-        self, feature_group, feature_dataframe, write_options, ge_validate_kwargs={}
-    ):
+    def save(self, feature_group, feature_dataframe, write_options, validation_options):
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
@@ -63,7 +61,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
-            feature_group, feature_dataframe, True, ge_validate_kwargs
+            feature_group, feature_dataframe, True, validation_options
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
@@ -96,7 +94,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        ge_validate_kwargs={},
+        validation_options,
     ):
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
@@ -106,7 +104,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
-            feature_group, feature_dataframe, True, ge_validate_kwargs
+            feature_group, feature_dataframe, True, validation_options
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":

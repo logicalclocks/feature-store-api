@@ -818,6 +818,7 @@ class FeatureGroup(FeatureGroupBase):
             List[list],
         ],
         write_options: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = {},
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
@@ -850,6 +851,10 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -877,7 +882,7 @@ class FeatureGroup(FeatureGroupBase):
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
-            self, feature_dataframe, write_options
+            self, feature_dataframe, write_options, validation_options
         )
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
@@ -965,10 +970,9 @@ class FeatureGroup(FeatureGroupBase):
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
-                * key `run_validation` boolean value, set to False to run validation logic on ingestion
-                * key `save_report` boolean value, set to False to skip upload of the validation report to hopsworks
-                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations
-                * key `log_activity` a boolean to log Deequ validation information (could be merged with save_report for consistency)
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
 
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
@@ -982,6 +986,7 @@ class FeatureGroup(FeatureGroupBase):
             operation,
             storage.lower() if storage is not None else None,
             write_options,
+            validation_options,
         )
 
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
@@ -1043,9 +1048,9 @@ class FeatureGroup(FeatureGroupBase):
             timeout: Only relevant in combination with `await_termination=True`.
                 Defaults to `None`.
             checkpoint_dir: Checkpoint directory location. This will be used to as a reference to
-            from where to resume the streaming job. If `None` then hsfs will construct as
-            "insert_stream_" + online_topic_name. Defaults to `None`.
-            write_options: Additional write options for Spark as key-value pairs.
+                from where to resume the streaming job. If `None` then hsfs will construct as
+                "insert_stream_" + online_topic_name. Defaults to `None`.
+                write_options: Additional write options for Spark as key-value pairs.
                 Defaults to `{}`.
 
         # Returns
@@ -1141,7 +1146,7 @@ class FeatureGroup(FeatureGroupBase):
         ] = None,
         log_activity: Optional[bool] = False,
         save_report: Optional[bool] = False,
-        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = {},
     ):
         """Run validation based on the attached expectations.
 
@@ -1156,9 +1161,11 @@ class FeatureGroup(FeatureGroupBase):
                 one that is possibly attached to the feature group. This is useful for
                 testing new Expectation suites. When an extra suite is provided, the results
                 will never be persisted. Defaults to `None`.
-            save_report: TODO
-            ge_validate_kwargs: Additional validation optis as key-value pairs for the
-                validate method of Great Expectations, defaults to `{}`.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+
 
         # Returns
             `FeatureGroupValidation`, `ValidationReport`. The feature group validation metadata object,
@@ -1173,14 +1180,14 @@ class FeatureGroup(FeatureGroupBase):
         return self._data_validation_engine.validate(
             self, dataframe, log_activity
         ), self._great_expectation_engine.validate(
-            self, dataframe, save_report, ge_validate_kwargs
+            self, dataframe, save_report, validation_options
         )
 
     def get_expectation_suite(self, ge_type: bool = True):
         """Return the expectation suite attached to the feature group if it exists.
 
         # Arguments
-            `ge_type`. If `True` returns a native Great Expectation type, Hopsworks
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
 
@@ -1189,7 +1196,6 @@ class FeatureGroup(FeatureGroupBase):
 
         # Raises
             `RestAPIException`.
-            `FeatureStoreException`. If no expectation suite has been found.
         """
         self._expectation_suite = self._expectation_suite_engine.get(self)
         if self._expectation_suite is not None and ge_type is True:
@@ -1207,9 +1213,9 @@ class FeatureGroup(FeatureGroupBase):
         suite is already attached, it is replaced.
 
         # Arguments
-            `expectation_suite`. The expectation suite to attach to the featuregroup.
-            `run_validation`. Boolean, set whether the expectation_suite will run on ingestion
-            `validation_ingestion_policy`. Set the policy for ingestion to the featuregroup.
+            expectation_suite: The expectation suite to attach to the featuregroup.
+            run_validation: Set whether the expectation_suite will run on ingestion
+            validation_ingestion_policy: Set the policy for ingestion to the featuregroup.
                 - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
                 - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
 
@@ -1239,7 +1245,7 @@ class FeatureGroup(FeatureGroupBase):
         return self._expectation_suite.to_ge_type()
 
     def delete_expectation_suite(self):
-        """Delete the expectation suite attached to the featuregroup.\
+        """Delete the expectation suite attached to the featuregroup.
 
         # Raises
             `RestAPIException`.
@@ -1251,15 +1257,15 @@ class FeatureGroup(FeatureGroupBase):
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
-            `ge_type`. Boolean, defaults to True. If True returns a native Great Expectation type, Hopsworks custom type otherwise.
-                Conversion can be performed via the to_ge_type() method on hopsworks type.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
 
         # Returns
             `ValidationReport`. The latest validation report attached to the feature group.
 
         # Raises
             `RestAPIException`.
-            `FeatureStoreException`. If no validation report have been found.
         """
         if ge_type is True:
             return self._validation_report_engine.get_last(self).to_ge_type()
@@ -1270,15 +1276,15 @@ class FeatureGroup(FeatureGroupBase):
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
-            `ge_type`. Boolean, defaults to True. If True returns a native Great Expectation type, Hopsworks custom type otherwise.
-                Conversion can be performed via the to_ge_type() method on hopsworks type.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
 
         # Returns
             `ValidationReport`. The latest validation report attached to the feature group.
 
         # Raises
             `RestAPIException`.
-            `FeatureStoreException`. If no validation report have been found.
         """
         if ge_type is True:
             return [
@@ -1287,13 +1293,22 @@ class FeatureGroup(FeatureGroupBase):
             ]
         return self._validation_report_engine.get_all(self)
 
-    def save_validation_report(self, validation_report, ge_type: bool = True):
+    def save_validation_report(
+        self,
+        validation_report: Union[
+            dict,
+            ValidationReport,
+            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+        ],
+        ge_type: bool = True,
+    ):
         """Save validation report to hopsworks platform along previous reports of the same featuregroup.
 
         # Arguments
-            ValidationReport. The validation report to attach to the featuregroup.
-            ge_type. Whether to return a Great Expectations object or a Hopsworks
-                object. Defaults to `True`, a Great Expectations object.
+            validation_report: The validation report to attach to the featuregroup.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
 
         # Raises
             `RestAPIException`.

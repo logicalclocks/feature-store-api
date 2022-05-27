@@ -21,23 +21,23 @@ class GreatExpectationEngine:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-    def validate(self, feature_group, dataframe, save_report, ge_validate_kwargs):
+    def validate(self, feature_group, dataframe, save_report, validation_options):
 
         suite = feature_group.get_expectation_suite(False)
-        if suite is None or not suite.run_validation:
-            return
+        run_validation = validation_options.get("run_validation", suite.run_validation)
+        if suite is not None and run_validation:
+            if (engine.get_type() == "python" and feature_group.stream) or (
+                engine.get_type() == "spark" and not feature_group.stream
+            ):
+                report = engine.get_instance().validate_with_great_expectations(
+                    dataframe=dataframe,
+                    expectation_suite=suite.to_ge_type(),
+                    ge_validate_kwargs=validation_options.get("ge_validate_kwargs", {}),
+                )
 
-        if (engine.get_type() == "python" and feature_group.stream) or (
-            engine.get_type() == "spark" and not feature_group.stream
-        ):
-            report = engine.get_instance().validate_with_great_expectations(
-                dataframe=dataframe,
-                expectation_suite=suite.to_ge_type(),
-                ge_validate_kwargs=ge_validate_kwargs,
-            )
+                save_report = validation_options.get("save_report", save_report)
+                if save_report:
+                    return feature_group.save_validation_report(report, ge_type=False)
 
-            if save_report:
-                return feature_group.save_validation_report(report, ge_type=False)
-
-            return validation_report.ValidationReport(**report.to_json_dict())
+                return validation_report.ValidationReport(**report.to_json_dict())
         return
