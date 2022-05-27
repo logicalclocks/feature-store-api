@@ -51,6 +51,8 @@ from hsfs.core import (
 from hsfs.constructor import query
 from hsfs.client import exceptions, external, hopsworks
 from hsfs.feature_group import FeatureGroup
+from thrift.transport.TTransport import TTransportException
+from pyhive.exc import OperationalError
 
 HAS_FAST = False
 try:
@@ -532,16 +534,28 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store):
-        return hive.Connection(
-            host=client.get_instance()._host,
-            port=9085,
-            # database needs to be set every time, 'default' doesn't work in pyhive
-            database=feature_store,
-            auth="CERTIFICATES",
-            truststore=client.get_instance()._get_jks_trust_store_path(),
-            keystore=client.get_instance()._get_jks_key_store_path(),
-            keystore_password=client.get_instance()._cert_key,
-        )
+        try:
+            return hive.Connection(
+                host=client.get_instance()._host,
+                port=9085,
+                # database needs to be set every time, 'default' doesn't work in pyhive
+                database=feature_store,
+                auth="CERTIFICATES",
+                truststore=client.get_instance()._get_jks_trust_store_path(),
+                keystore=client.get_instance()._get_jks_key_store_path(),
+                keystore_password=client.get_instance()._cert_key,
+            )
+        except (TTransportException, AttributeError) as e:
+            raise ValueError(
+                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
+                "is correct and make sure port '9085' is open on host server."
+            )
+        except OperationalError as e:
+            if e.args[0].status.statusCode == 3:
+                raise RuntimeError(
+                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
+                    f" It is possible to request access from admins of '{feature_store}'."
+                )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
