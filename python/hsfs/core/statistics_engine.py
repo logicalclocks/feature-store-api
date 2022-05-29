@@ -190,6 +190,8 @@ class StatisticsEngine:
     def profile_unique_values(feature_dataframe, label_encoder_features, content_str):
         # parsing JSON string:
         content_dict = json.loads(content_str)
+        if not content_dict:
+            content_dict = {"columns": []}
         for column in label_encoder_features:
             unique_values = {
                 "column": column,

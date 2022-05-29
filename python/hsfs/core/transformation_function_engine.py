@@ -239,7 +239,7 @@ class TransformationFunctionEngine:
             != "label_encoder"
         ]
 
-        if builtin_tffn_features:
+        if builtin_tffn_features or builtin_tffn_label_encoder_features:
             if training_dataset.splits:
                 # compute statistics before transformations are applied
                 stats = (

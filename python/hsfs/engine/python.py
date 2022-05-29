@@ -259,18 +259,26 @@ class Engine:
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
-        percentiles = [0] * 100
-        percentiles[24] = stat["25%"]
-        percentiles[49] = stat["50%"]
-        percentiles[74] = stat["75%"]
-        return {
-            "mean": stat["mean"],
-            "sum": stat["mean"] * stat["count"],
-            "maximum": stat["max"],
-            "stdDev": stat["std"],
-            "minimum": stat["min"],
-            "approxPercentiles": percentiles,
-        }
+        content_dict = {}
+        percentiles = []
+        if "25%" in stat:
+            percentiles = [0] * 100
+            percentiles[24] = stat["25%"]
+            percentiles[49] = stat["50%"]
+            percentiles[74] = stat["75%"]
+        if "mean" in stat:
+            content_dict["mean"] = stat["mean"]
+        if "mean" in stat and "count" in stat:
+            content_dict["sum"] = stat["mean"] * stat["count"]
+        if "max" in stat:
+            content_dict["maximum"] = stat["max"]
+        if "std" in stat:
+            content_dict["stdDev"] = stat["std"]
+        if "min" in stat:
+            content_dict["minimum"] = stat["min"]
+        if percentiles:
+            content_dict["approxPercentiles"] = percentiles
+        return content_dict
 
     def validate(self, dataframe, expectations, log_activity=True):
         raise NotImplementedError(
