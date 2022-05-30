@@ -1859,9 +1859,6 @@
 <span class="c1"># use materialized training dataset for training, possibly in a different environment</span>
 <span class="n">td</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="err">“</span><span class="n">rain_dataset</span><span class="err">”</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># get TFRecordDataset to use in a TensorFlow model</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">tf_data</span><span class="p">()</span><span class="o">.</span><span class="n">tf_record_dataset</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-
 <span class="c1"># reproduce query for online feature store and drop label for inference</span>
 <span class="n">jdbc_querystring</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="n">online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>

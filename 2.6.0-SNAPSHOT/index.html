@@ -1679,14 +1679,6 @@ additional connection information, such as host and port, is required. For more 
 
 <span class="n">td</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">feature_join</span><span class="p">)</span>
 </code></pre></div></p>
-<p>Feed the training dataset to a TensorFlow model:
-<div class="highlight"><pre><span></span><code><span class="n">tf_data_object</span> <span class="o">=</span> <span class="n">training_dataset</span><span class="o">.</span><span class="n">tf_data</span><span class="p">(</span><span class="n">target_name</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">,</span>
-                                          <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
-                                          <span class="n">is_training</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">train_input</span> <span class="o">=</span> <span class="n">tf_data_object</span><span class="o">.</span><span class="n">tf_record_dataset</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                                               <span class="n">num_epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-                                               <span class="n">process</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div></p>
 <p>A short introduction to the Scala API:
 <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
 <span class="kd">val</span><span class="w"> </span><span class="n">connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">()</span><span class="w"></span>
