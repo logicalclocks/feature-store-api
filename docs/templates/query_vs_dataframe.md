@@ -24,9 +24,6 @@ The new joining functionality is heavily inspired by the APIs used by Pandas to 
     # use materialized training dataset for training, possibly in a different environment
     td = fs.get_training_dataset(“rain_dataset”, version=1)
 
-    # get TFRecordDataset to use in a TensorFlow model
-    dataset = td.tf_data().tf_record_dataset(batch_size=32, num_epochs=100)
-
     # reproduce query for online feature store and drop label for inference
     jdbc_querystring = td.get_query(online=True, with_label=False)
     ```

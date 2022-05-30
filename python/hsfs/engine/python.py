@@ -114,7 +114,7 @@ class Engine:
             return pd.read_parquet(BytesIO(obj.read()))
         else:
             raise TypeError(
-                "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                "{} training dataset format is not supported to read as pandas dataframe.".format(
                     data_format
                 )
             )
