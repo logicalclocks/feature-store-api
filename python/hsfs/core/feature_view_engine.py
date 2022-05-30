@@ -192,6 +192,10 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_obj
             )
 
+        read_options = engine.get_instance().read_options(
+            td_updated.data_format, read_options
+        )
+
         if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
             split_df = self._read_from_storage_connector(
                 td_updated, splits, read_options
@@ -224,6 +228,7 @@ class FeatureViewEngine:
                 result[split] = self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
                 )
+            return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
