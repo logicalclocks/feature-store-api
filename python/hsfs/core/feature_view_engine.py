@@ -15,7 +15,8 @@
 #
 
 import warnings
-from hsfs import engine, training_dataset_feature
+
+from hsfs import engine, training_dataset_feature, client, util
 from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
@@ -71,6 +72,10 @@ class FeatureViewEngine:
             )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
+        print(
+            "Feature view created successfully, explore it at "
+            + self._get_feature_view_url(updated_fv)
+        )
         return updated_fv
 
     def get(self, name, version=None):
@@ -402,3 +407,16 @@ class FeatureViewEngine:
                 "Python kernel can only read from cached feature group."
                 " Please use `feature_view.create_training_dataset` instead."
             )
+
+    def _get_feature_view_url(self, feature_view):
+        path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_view.featurestore_id)
+            + "/fv/"
+            + str(feature_view.name)
+            + "/version/"
+            + str(feature_view.version)
+        )
+        return util.get_hostname_replaced_url(path)
