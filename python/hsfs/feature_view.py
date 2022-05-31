@@ -105,6 +105,21 @@ class FeatureView:
         )
         self._vector_server.init_serving(self, batch, external)
 
+    def init_batch_scoring(
+        self,
+        training_dataset_version: Optional[int] = None,
+    ):
+        """Initialise and cache parametrized transformation functions.
+
+        # Arguments
+            training_dataset_version: int, optional. Default to be 1. Transformation statistics
+                are fetched from training dataset and apply in serving vector.
+        """
+        self._vector_server = vector_server.VectorServer(
+            self._featurestore_id, training_dataset_version
+        )
+        self._vector_server.init_batch_scoring(self)
+
     def get_batch_query(
         self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ):
@@ -198,24 +213,17 @@ class FeatureView:
             self.init_serving()
         return self._vector_server.get_preview_vectors(self, external, n)
 
-    def get_batch_data(
-        self,
-        start_time=None,
-        end_time=None,
-        read_options=None,
-        external: Optional[bool] = False,
-    ):
+    def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
         read_options: User provided read options. Defaults to `{}`.
-
         """
 
         if self._vector_server is None:
-            self.init_serving(external=external)
+            self.init_batch_scoring()
 
         return self._feature_view_engine.get_batch_data(
             self,

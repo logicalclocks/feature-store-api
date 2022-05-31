@@ -57,6 +57,9 @@ class VectorServer:
         self.init_prepared_statement(vector_server, batch, external)
         self.init_transformation(vector_server)
 
+    def init_batch_scoring(self, vector_server):
+        self.init_transformation(vector_server)
+
     def init_transformation(self, vector_server):
         # attach transformation functions
         vector_server.transformation_functions = self._get_transformation_fns(
