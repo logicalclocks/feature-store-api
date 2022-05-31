@@ -14,6 +14,7 @@ import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -249,38 +250,80 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name);
   }
 
-  public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime)
+      throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
       String startTime, String endTime, Map<String, Float> splits, String trainSplit
-  ) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()))
+            .trainSplit(trainSplit)
+            .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
       Integer version, String startTime, String endTime, String description, Map<String, Float> splits,
       String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
-  ) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .version(version)
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                    Collectors.toList()))
+            .trainSplit(trainSplit)
+            .statisticsConfig(statisticsConfig)
+            .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions);
   }
 
   public void createTrainingDataset(
       String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector
-  ) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .dataFormat(dataFormat)
+            .storageConnector(storageConnector)
+            .build();
     featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
   public void createTrainingDataset(
       String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector,
       Map<String, Float> splits, String trainSplit
-  ) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .dataFormat(dataFormat)
+            .storageConnector(storageConnector)
+            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()))
+            .trainSplit(trainSplit)
+            .build();
     featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
@@ -288,8 +331,24 @@ public class FeatureView {
       Integer version, String startTime, String endTime, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location, Map<String, Float> splits,
       String trainSplit, Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
-  ) {
-    TrainingDataset trainingDataset = new FeatureStore().createTrainingDataset().build();
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        new FeatureStore()
+            .createTrainingDataset()
+            .version(version)
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .dataFormat(dataFormat)
+            .coalesce(coalesce)
+            .storageConnector(storageConnector)
+            .location(location)
+            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()))
+            .trainSplit(trainSplit)
+            .seed(seed)
+            .statisticsConfig(statisticsConfig)
+            .build();
     featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
   }
 
@@ -297,19 +356,19 @@ public class FeatureView {
     // TODO:
   }
 
-  public void purgeTrainingData(Integer version) {
+  public void purgeTrainingData(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this, version);
   }
 
-  public void purgeAllTrainingData() {
+  public void purgeAllTrainingData() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this);
   }
 
-  public void deleteTrainingDataset(Integer version) {
+  public void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this, version);
   }
 
-  public void deleteAllTrainingDatasets() {
+  public void deleteAllTrainingDatasets() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this);
   }
 

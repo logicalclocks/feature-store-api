@@ -47,15 +47,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-
-import static org.apache.spark.sql.avro.functions.from_avro;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.from_json;
-import static org.apache.spark.sql.avro.functions.to_avro;
-import static org.apache.spark.sql.functions.concat;
-import static org.apache.spark.sql.functions.lit;
-import static org.apache.spark.sql.functions.struct;
-
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -64,16 +55,22 @@ import org.apache.spark.sql.types.StructField;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import static org.apache.spark.sql.avro.functions.from_avro;
+import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
 
@@ -203,23 +200,27 @@ public class SparkEngine {
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
     } else {
-      List<Float> splitFactors = trainingDataset.getSplits().stream()
-          .map(Split::getPercentage)
-          .collect(Collectors.toList());
-
-      // The actual data will be stored in training_ds_version/split_name
-      Dataset<Row>[] datasetSplits = null;
-      if (trainingDataset.getSeed() != null) {
-        datasetSplits = dataset.randomSplit(
-            splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
-      } else {
-        datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
-      }
-
+      Dataset<Row>[] datasetSplits = splitDataset(trainingDataset, dataset);
       writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
           trainingDataset.getLocation(), trainingDataset.getSplits());
     }
+  }
+
+  public Dataset<Row>[] splitDataset(TrainingDataset trainingDataset, Dataset<Row> dataset) {
+    List<Float> splitFactors = trainingDataset.getSplits().stream()
+        .map(Split::getPercentage)
+        .collect(Collectors.toList());
+
+    // The actual data will be stored in training_ds_version/split_name
+    Dataset<Row>[] datasetSplits = null;
+    if (trainingDataset.getSeed() != null) {
+      datasetSplits = dataset.randomSplit(
+          splitFactors.stream().mapToDouble(Float::doubleValue).toArray(), trainingDataset.getSeed());
+    } else {
+      datasetSplits = dataset.randomSplit(splitFactors.stream().mapToDouble(Float::doubleValue).toArray());
+    }
+    return datasetSplits;
   }
 
   public Map<String, String> getWriteOptions(Map<String, String> providedOptions, DataFormat dataFormat) {

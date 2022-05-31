@@ -7,6 +7,8 @@ import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureView;
+import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpDelete;
@@ -32,6 +34,13 @@ public class FeatureViewApi {
       + FeatureStoreApi.FEATURE_STORE_PATH + "/featureview";
   private static final String FEATURE_VIEWS_PATH = FEATURE_VIEWS_ROOT_PATH + "{/fvName}";
   private static final String FEATURE_VIEW_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}";
+  private static final String FEATURE_VIEW_QUERY_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/query";
+  private static final String FEATURE_VIEW_BATCH_QUERY_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/query/batch";
+  private static final String ALL_TRAINING_DATA_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/trainingdatasets";
+  private static final String TRAINING_DATA_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}";
+  private static final String ALL_TRAINING_DATASET_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/trainingdatasets"
+      + "/data";
+  private static final String TRAINING_DATASET_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}/data";
   private static final String TRANSFORMATION_PATH = FEATURE_VIEW_PATH + "/transformation";
   private static final String PREPARED_STATEMENT_PATH = FEATURE_VIEW_PATH + "/preparedstatement{?batch}";
 
@@ -180,4 +189,123 @@ public class FeatureViewApi {
         ServingPreparedStatement.class);
     return servingPreparedStatement.getItems();
   }
+
+  public TrainingDataset createTrainingData(String featureViewName, Integer featureViewVersion,
+      TrainingDataset trainingData) throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATA_PATH)
+        .set("projectId", trainingData.getFeatureStore().getProjectId())
+        .set("fsId", trainingData.getFeatureStore().getId())
+        .set("fvName", featureViewName)
+        .set("fvVersion", featureViewVersion)
+        .expand();
+
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String trainingDataJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingData);
+    HttpPost request = new HttpPost(uri);
+    request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    request.setEntity(new StringEntity(trainingDataJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    return hopsworksClient.handleRequest(request, TrainingDataset.class);
+  }
+
+  public TrainingDataset getTrainingData(FeatureStore featureStore, String featureViewName, Integer featureViewVersion,
+      Integer trainingDataVersion) throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(TRAINING_DATA_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", featureViewName)
+        .set("fvVersion", featureViewVersion)
+        .set("tdVersion", trainingDataVersion)
+        .expand();
+
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    HttpGet request = new HttpGet(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+    return hopsworksClient.handleRequest(request, TrainingDataset.class);
+  }
+
+  public void deleteTrainingData(FeatureStore featureStore, String featureViewName,
+      Integer featureViewVersion, Integer trainingDataVersion) throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(TRAINING_DATA_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", featureViewName)
+        .set("fvVersion", featureViewVersion)
+        .set("tdVersion", trainingDataVersion)
+        .expand();
+
+    HttpDelete request = new HttpDelete(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    hopsworksClient.handleRequest(request);
+  }
+
+  public void deleteTrainingData(FeatureStore featureStore, String name, Integer version)
+      throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATA_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", name)
+        .set("fvVersion", version)
+        .expand();
+
+    HttpDelete request = new HttpDelete(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    hopsworksClient.handleRequest(request);
+  }
+
+  public void deleteTrainingDatasetOnly(FeatureStore featureStore, String name,
+      Integer version, Integer trainingDataVersion) throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(TRAINING_DATASET_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", name)
+        .set("fvVersion", version)
+        .set("tdVersion", trainingDataVersion)
+        .expand();
+
+    HttpDelete request = new HttpDelete(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    hopsworksClient.handleRequest(request);
+  }
+
+  public void deleteTrainingDatasetOnly(FeatureStore featureStore, String name, Integer version)
+      throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATASET_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", name)
+        .set("fvVersion", version)
+        .expand();
+
+    HttpDelete request = new HttpDelete(uri);
+
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    hopsworksClient.handleRequest(request);
+  }
+
+  public Query getBatchQuery(FeatureStore featureStore, String name, Integer version,
+      Long startTime, Long endTime) throws FeatureStoreException, IOException {
+    String uri = UriTemplate.fromTemplate(FEATURE_VIEW_BATCH_QUERY_PATH)
+        .set("projectId", featureStore.getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", name)
+        .set("fvVersion", version)
+        .set("startTime", startTime)
+        .set("endTime", endTime)
+        .expand();
+
+    HttpGet request = new HttpGet(uri);
+    LOGGER.info("Sending metadata request: " + uri);
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    return hopsworksClient.handleRequest(request, Query.class);
+  }
+
 }

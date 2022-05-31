@@ -17,17 +17,23 @@ public class TrainingDatasetBundle {
   private Map<String, Dataset<Row>> datasetSplits;
   private Dataset<Row> dataset;
   @Getter
-  private String trainSplit;
+  private String trainSplitName;
+  private Boolean inMemory = true;
 
   public TrainingDatasetBundle(Integer version, Dataset<Row> dataset) {
     this.version = version;
     this.dataset = dataset;
   }
 
-  public TrainingDatasetBundle(Integer version, Map<String, Dataset<Row>> datasetSplits, String trainSplit) {
+  public TrainingDatasetBundle(Integer version) {
+    this.version = version;
+    this.inMemory = false;
+  }
+
+  public TrainingDatasetBundle(Integer version, Map<String, Dataset<Row>> datasetSplits, String trainSplitName) {
     this.version = version;
     this.datasetSplits = datasetSplits;
-    this.trainSplit = trainSplit;
+    this.trainSplitName = trainSplitName;
   }
 
   @JsonIgnore
@@ -46,6 +52,15 @@ public class TrainingDatasetBundle {
       return new ArrayList<>(datasetSplits.keySet());
     } else {
       return Lists.newArrayList();
+    }
+  }
+
+  @JsonIgnore
+  public Dataset<Row> getTrainSet() {
+    if (trainSplitName != null && !trainSplitName.isEmpty()) {
+      return getDataset(trainSplitName);
+    } else {
+      return getDataset();
     }
   }
 }

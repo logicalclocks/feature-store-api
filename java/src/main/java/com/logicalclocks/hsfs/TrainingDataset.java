@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetUtils;
@@ -37,6 +38,8 @@ import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -98,6 +101,10 @@ public class TrainingDataset {
 
   @Getter
   @Setter
+  private String trainSplit;
+
+  @Getter
+  @Setter
   private StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   @Getter
@@ -110,10 +117,11 @@ public class TrainingDataset {
 
   @Getter
   @Setter
-  private String eventStartTime;
+  private Date eventStartTime;
+
   @Getter
   @Setter
-  private String eventEndTime;
+  private Date eventEndTime;
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -123,9 +131,9 @@ public class TrainingDataset {
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
-      Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
+      Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
-      String eventStartTime, String eventEndTime) {
+      String eventStartTime, String eventEndTime) throws FeatureStoreException, ParseException {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -133,15 +141,15 @@ public class TrainingDataset {
     this.coalesce = coalesce != null ? coalesce : false;
     this.location = location;
     this.storageConnector = storageConnector;
-
+    this.trainSplit = trainSplit;
     this.trainingDatasetType = utils.getTrainingDatasetType(storageConnector);
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
-    this.eventStartTime = eventStartTime;
-    this.eventEndTime = eventEndTime;
+    this.eventStartTime = eventStartTime != null ? FeatureGroupUtils.getDateFromDateString(eventStartTime) : null;
+    this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
   }
 
   /**
