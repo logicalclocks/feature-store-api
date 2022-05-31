@@ -253,8 +253,9 @@ public class FeatureView {
   public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime)
       throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .build();
@@ -265,8 +266,9 @@ public class FeatureView {
       String startTime, String endTime, Map<String, Float> splits, String trainSplit
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
@@ -281,8 +283,9 @@ public class FeatureView {
       String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .version(version)
             .eventStartTime(startTime)
             .eventEndTime(endTime)
@@ -295,18 +298,19 @@ public class FeatureView {
     return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions);
   }
 
-  public void createTrainingDataset(
+  public TrainingDatasetBundle createTrainingDataset(
       String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .dataFormat(dataFormat)
             .storageConnector(storageConnector)
             .build();
-    featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
   public void createTrainingDataset(
@@ -314,8 +318,9 @@ public class FeatureView {
       Map<String, Float> splits, String trainSplit
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .dataFormat(dataFormat)
@@ -333,8 +338,9 @@ public class FeatureView {
       String trainSplit, Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        new FeatureStore()
+        this.featureStore
             .createTrainingDataset()
+            .name("") // name is set in the backend
             .version(version)
             .eventStartTime(startTime)
             .eventEndTime(endTime)

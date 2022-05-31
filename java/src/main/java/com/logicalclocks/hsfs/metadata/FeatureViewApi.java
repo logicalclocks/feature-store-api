@@ -36,10 +36,9 @@ public class FeatureViewApi {
   private static final String FEATURE_VIEW_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}";
   private static final String FEATURE_VIEW_QUERY_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/query";
   private static final String FEATURE_VIEW_BATCH_QUERY_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/query/batch";
-  private static final String ALL_TRAINING_DATA_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/trainingdatasets";
+  private static final String ALL_TRAINING_DATA_PATH = FEATURE_VIEW_PATH + "/trainingdatasets";
   private static final String TRAINING_DATA_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}";
-  private static final String ALL_TRAINING_DATASET_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/trainingdatasets"
-      + "/data";
+  private static final String ALL_TRAINING_DATASET_PATH = FEATURE_VIEW_PATH + "/trainingdatasets/data";
   private static final String TRAINING_DATASET_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}/data";
   private static final String TRANSFORMATION_PATH = FEATURE_VIEW_PATH + "/transformation";
   private static final String PREPARED_STATEMENT_PATH = FEATURE_VIEW_PATH + "/preparedstatement{?batch}";

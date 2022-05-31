@@ -58,12 +58,24 @@ public class FeatureViewEngine {
 
   public FeatureView get(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
       IOException {
-    return featureViewApi.get(featureStore, name, version);
+    FeatureView featureView = featureViewApi.get(featureStore, name, version);
+    featureView.setFeatureStore(featureStore);
+    featureView.getFeatures().stream()
+        .filter(f -> f.getFeaturegroup() != null)
+        .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+    return featureView;
   }
 
   public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
       IOException {
-    return featureViewApi.get(featureStore, name);
+    List<FeatureView> featureViews = featureViewApi.get(featureStore, name);
+    for (FeatureView fv : featureViews) {
+      fv.setFeatureStore(featureStore);
+      fv.getFeatures().stream()
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+    }
+    return featureViews;
   }
 
   public void delete(FeatureStore featureStore, String name) throws FeatureStoreException,
@@ -89,6 +101,7 @@ public class FeatureViewEngine {
     computeStatistics(trainingDataset,
         getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
     return new TrainingDatasetBundle(trainingDataset.getVersion());
+//    return new TrainingDatasetBundle(trainingDataset.getVersion());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
@@ -136,10 +149,13 @@ public class FeatureViewEngine {
           getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
       return trainingDatasetBundle;
     }
+//    return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion());
   }
 
   private void setTrainSplit(TrainingDataset trainingDataset) {
-    if (trainingDataset.getSplits().size() > 0 && Strings.isNullOrEmpty(trainingDataset.getTrainSplit())) {
+    if (trainingDataset.getSplits() != null
+        &&trainingDataset.getSplits().size() > 0
+        && Strings.isNullOrEmpty(trainingDataset.getTrainSplit())) {
       LOGGER.info("Training dataset splits were defined but no `trainSplit` (the name of the split that is going to"
           + " be used for training) was provided. Setting this property to `train`.");
       trainingDataset.setTrainSplit("train");
