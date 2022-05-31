@@ -198,7 +198,13 @@ class FeatureView:
             self.init_serving()
         return self._vector_server.get_preview_vectors(self, external, n)
 
-    def get_batch_data(self, start_time=None, end_time=None, read_options=None):
+    def get_batch_data(
+        self,
+        start_time=None,
+        end_time=None,
+        read_options=None,
+        external: Optional[bool] = False,
+    ):
         """
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
@@ -207,8 +213,16 @@ class FeatureView:
         read_options: User provided read options. Defaults to `{}`.
 
         """
+
+        if self._vector_server is None:
+            self.init_serving(external=external)
+
         return self._feature_view_engine.get_batch_data(
-            self, start_time, end_time, read_options
+            self,
+            start_time,
+            end_time,
+            self._vector_server,
+            read_options,
         )
 
     def add_tag(self, name: str, value):
