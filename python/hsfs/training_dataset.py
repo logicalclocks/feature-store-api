@@ -395,8 +395,8 @@ class TrainingDataset:
     @classmethod
     def from_response_json_single(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        json_decamelized.pop("type")
-        json_decamelized.pop("href")
+        json_decamelized.pop("type", None)
+        json_decamelized.pop("href", None)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
