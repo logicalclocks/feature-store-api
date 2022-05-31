@@ -179,6 +179,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=None,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=features,
         )
         self._feature_group_api.update_metadata(
@@ -215,6 +216,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=description,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=feature_group.features,
         )
         self._feature_group_api.update_metadata(
