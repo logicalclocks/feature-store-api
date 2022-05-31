@@ -448,6 +448,7 @@ class Engine:
 
             if data_format.lower() == "tsv":
                 data_format = "csv"
+
         else:
             path = None
 

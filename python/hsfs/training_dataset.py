@@ -28,7 +28,6 @@ from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
     training_dataset_api,
     training_dataset_engine,
-    tfdata_engine,
     statistics_engine,
     code_engine,
     transformation_function_engine,
@@ -290,48 +289,6 @@ class TrainingDataset:
             else:
                 return self._statistics_engine.compute_statistics(self, self.read())
 
-    def tf_data(
-        self,
-        target_name: str,
-        split: Optional[str] = None,
-        feature_names: Optional[list] = None,
-        var_len_features: Optional[list] = [],
-        is_training: Optional[bool] = True,
-        cycle_length: Optional[int] = 2,
-        deterministic: Optional[bool] = False,
-        file_pattern: Optional[str] = "*.tfrecord*",
-    ):
-        """
-        Returns an object with utility methods to read training dataset as `tf.data.Dataset` object and handle it for further processing.
-
-        # Arguments
-            target_name: Name of the target variable.
-            split: Name of training dataset split. For example, `"train"`, `"test"` or `"val"`, defaults to `None`,
-                returning the full training dataset.
-            feature_names: Names of training variables, defaults to `None`.
-            var_len_features: Feature names that have variable length and need to be returned as `tf.io.VarLenFeature`,
-            defaults to `[]`. is_training: Whether it is for training, testing or validation. Defaults to `True`.
-            cycle_length: Number of files to be read and deserialized in parallel, defaults to `2`.
-            deterministic: Controls the order in which the transformation produces elements. If set to False, the
-            transformation is allowed to yield elements out of order to trade determinism for performance.
-            Defaults to `False`.
-            file_pattern: Returns a list of files that match the given pattern Defaults to `*.tfrecord*`.
-
-        # Returns
-            `TFDataEngine`. An object with utility methods to generate and handle `tf.data.Dataset` object.
-        """
-        return tfdata_engine.TFDataEngine(
-            self,
-            split=split,
-            target_name=target_name,
-            feature_names=feature_names,
-            var_len_features=var_len_features,
-            is_training=is_training,
-            cycle_length=cycle_length,
-            deterministic=deterministic,
-            file_pattern=file_pattern,
-        )
-
     def show(self, n: int, split: str = None):
         """Show the first `n` rows of the training dataset.
 
@@ -438,8 +395,8 @@ class TrainingDataset:
     @classmethod
     def from_response_json_single(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        json_decamelized.pop("type")
-        json_decamelized.pop("href")
+        json_decamelized.pop("type", None)
+        json_decamelized.pop("href", None)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
