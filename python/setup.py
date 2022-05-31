@@ -41,13 +41,13 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow",
-            "confluent-kafka==1.3.0",
+            "confluent-kafka==1.8.2",
             "fastavro==1.4.11",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow",
-            "confluent-kafka==1.3.0",
+            "confluent-kafka==1.8.2",
             "fastavro==1.4.11",
         ],
     },
