@@ -27,10 +27,12 @@ import json
 import random
 import uuid
 
+import great_expectations as ge
+
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
-from typing import Dict
+from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 
 from hsfs import client, feature, util
@@ -273,10 +275,21 @@ class Engine:
             "approxPercentiles": percentiles,
         }
 
-    def validate(self, dataframe, expectations, log_activity=True):
+    def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
-            "Deequ data validation is only available with Spark Engine."
+            "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
+
+    def validate_with_great_expectations(
+        self,
+        dataframe: pd.DataFrame,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+    ):
+        report = ge.from_pandas(
+            dataframe, expectation_suite=expectation_suite
+        ).validate(**ge_validate_kwargs)
+        return report
 
     def set_job_group(self, group_id, description):
         pass
