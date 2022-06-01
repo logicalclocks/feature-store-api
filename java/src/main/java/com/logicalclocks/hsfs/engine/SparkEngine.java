@@ -693,7 +693,7 @@ public class SparkEngine {
     }
   }
 
-  public <S> S createEmptyDataFrameFromStream(S datasetGeneric) {
+  public <S> S createEmptyDataFrame(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     List<Row> rows = new ArrayList<Row>();
     return (S) sparkSession.sqlContext().createDataFrame(rows, dataset.schema());

@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -234,9 +235,292 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version)
+      throws FeatureStoreException {
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (java.io.IOException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .build();
+    }
+
+    return featureGroup;
+
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name,
+                                              Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              boolean onlineEnabled) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .onlineEnabled(onlineEnabled)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              boolean onlineEnabled,
+                                              String eventTime) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .onlineEnabled(onlineEnabled)
+          .eventTime(eventTime)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              boolean onlineEnabled,
+                                              StatisticsConfig statisticsConfig) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .onlineEnabled(onlineEnabled)
+          .statisticsConfig(statisticsConfig)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              boolean onlineEnabled,
+                                              TimeTravelFormat timeTravelFormat,
+                                              StatisticsConfig statisticsConfig,
+                                              String eventTime) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .onlineEnabled(onlineEnabled)
+          .timeTravelFormat(timeTravelFormat)
+          .statisticsConfig(statisticsConfig)
+          .eventTime(eventTime)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
+                                              List<String> primaryKeys, List<String> partitionKeys,
+                                              String hudiPrecombineKey,
+                                              boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                              StatisticsConfig statisticsConfig,  ValidationType validationType,
+                                              scala.collection.Seq<Expectation> expectations, String eventTime) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .description(description)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .hudiPrecombineKey(hudiPrecombineKey)
+          .onlineEnabled(onlineEnabled)
+          .timeTravelFormat(timeTravelFormat)
+          .statisticsConfig(statisticsConfig)
+          .validationType(validationType)
+          .expectations(expectations)
+          .eventTime(eventTime)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder()
             .featureStore(this);
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
+      throws FeatureStoreException {
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (java.io.IOException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .build();
+    }
+
+    return featureGroup;
+
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name,
+                                              Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              String eventTime) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .eventTime(eventTime)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              StatisticsConfig statisticsConfig) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .statisticsConfig(statisticsConfig)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+                                              List<String> primaryKeys, List<String> partitionKeys,
+                                              String hudiPrecombineKey, StatisticsConfig statisticsConfig,
+                                              scala.collection.Seq<Expectation> expectations, String eventTime) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .description(description)
+          .primaryKeys(primaryKeys)
+          .partitionKeys(partitionKeys)
+          .hudiPrecombineKey(hudiPrecombineKey)
+          .statisticsConfig(statisticsConfig)
+          .expectations(expectations)
+          .eventTime(eventTime)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
   }
 
   public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {

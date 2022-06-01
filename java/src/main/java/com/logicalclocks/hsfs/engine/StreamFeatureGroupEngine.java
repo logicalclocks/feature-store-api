@@ -133,7 +133,7 @@ public class StreamFeatureGroupEngine {
 
     // Write the online dataframe
     if (isEmpty) {
-      dataset = SparkEngine.getInstance().createEmptyDataFrameFromStream(dataset);
+      dataset = SparkEngine.getInstance().createEmptyDataFrame(dataset);
     }
     insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
         SaveMode.APPEND, writeOptions);

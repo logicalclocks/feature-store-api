@@ -125,7 +125,7 @@ public class FeatureGroupEngine {
 
     // Write the online dataframe
     if (isEmpty) {
-      dataset = SparkEngine.getInstance().createEmptyDataFrameFromStream(dataset);
+      dataset = SparkEngine.getInstance().createEmptyDataFrame(dataset);
     }
     insert(featureGroup, dataset, null,
         featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
