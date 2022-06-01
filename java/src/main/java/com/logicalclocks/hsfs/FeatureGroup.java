@@ -250,7 +250,7 @@ public class FeatureGroup extends FeatureGroupBase {
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
-        writeOptions, false);
+        writeOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -304,25 +304,27 @@ public class FeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException, ParseException {
 
     if (this.getId() == null) {
-      featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
-          writeOptions, false);
-    } else {
-      // operation is only valid for time travel enabled feature group
-      if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
-        throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
-      }
-
-      if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
-        if (overwrite) {
-          operation = HudiOperationType.BULK_INSERT;
-        } else {
-          operation = HudiOperationType.UPSERT;
-        }
-      }
-
-      featureGroupEngine.insert(this, featureData, storage, operation,
-          overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+      FeatureGroup updatedFeatureGroup = featureGroupEngine.saveFeatureGroupMetaData(this, partitionKeys,
+          hudiPrecombineKey);
+      this.setId(updatedFeatureGroup.getId());
     }
+
+    // operation is only valid for time travel enabled feature group
+    if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
+      throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
+    }
+
+    if (operation == null && this.timeTravelFormat == TimeTravelFormat.HUDI) {
+      if (overwrite) {
+        operation = HudiOperationType.BULK_INSERT;
+      } else {
+        operation = HudiOperationType.UPSERT;
+      }
+    }
+
+    featureGroupEngine.insert(this, featureData, storage, operation,
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+
     codeEngine.saveCode(this);
     computeStatistics();
   }
@@ -406,12 +408,17 @@ public class FeatureGroup extends FeatureGroupBase {
     }
     LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
         + "` will not compute statistics.");
+
+    boolean saveEmpty = false;
     if (this.getId() == null) {
-      featureGroupEngine.save(this, featureData, this.partitionKeys, this.hudiPrecombineKey,
-          writeOptions, true);
+      FeatureGroup updatedFeatureGroup = featureGroupEngine.saveFeatureGroupMetaData(this, partitionKeys,
+          hudiPrecombineKey);
+      this.setId(updatedFeatureGroup.getId());
+      saveEmpty = true;
     }
+
     return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination,
-        timeout, checkpointLocation, writeOptions);
+        timeout, checkpointLocation, writeOptions, saveEmpty);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)

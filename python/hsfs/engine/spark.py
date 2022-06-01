@@ -891,7 +891,7 @@ class Engine:
 
         return path
 
-    def stream_to_empty_df(self, streaming_df):
+    def create_empty_df(self, streaming_df):
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
         )

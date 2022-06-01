@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -62,7 +63,7 @@ public class StreamFeatureGroupEngine {
    */
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions,
-                                     JobConfiguration sparkJobConfiguration, boolean isEmpty)
+                                     JobConfiguration sparkJobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
@@ -71,71 +72,10 @@ public class StreamFeatureGroupEngine {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
-    /* set primary features */
-    if (featureGroup.getPrimaryKeys() != null) {
-      featureGroup.getPrimaryKeys().forEach(pk ->
-              featureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPrimary(true);
-                }
-              }));
-    }
+    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+        writeOptions, sparkJobConfiguration);
 
-    /* set partition key features */
-    if (partitionKeys != null) {
-      partitionKeys.forEach(pk ->
-              featureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPartition(true);
-                }
-              }));
-    }
-
-    /* set hudi precombine key name */
-    if (hudiPrecombineKey != null) {
-      featureGroup.getFeatures().forEach(f -> {
-        if (f.getName().equals(hudiPrecombineKey)) {
-          f.setHudiPrecombineKey(true);
-        }
-      });
-    }
-
-    // set write options for delta streamer job
-    DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
-    deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
-        .map(e -> new Option(e.getKey(), e.getValue()))
-        .collect(Collectors.toList())
-        : null);
-    deltaStreamerJobConf.setSparkJobConfiguration(sparkJobConfiguration);
-
-    featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
-
-    // Send Hopsworks the request to create a new feature group
-    StreamFeatureGroup apiFG = featureGroupApi.save(featureGroup);
-
-    if (featureGroup.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-              + "`, incremented version to `" + apiFG.getVersion() + "`.");
-    }
-
-    // Update the original object - Hopsworks returns the incremented version
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setVersion(apiFG.getVersion());
-    featureGroup.setLocation(apiFG.getLocation());
-    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
-    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
-
-    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
-    if (hudiPrecombineKey == null) {
-      List<Feature> features = apiFG.getFeatures();
-      featureGroup.setFeatures(features);
-    }
-
-    // Write the online dataframe
-    if (isEmpty) {
-      dataset = SparkEngine.getInstance().createEmptyDataFrame(dataset);
-    }
-    insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
+    insert(updatedFeatureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
         SaveMode.APPEND, writeOptions);
 
     return featureGroup;
@@ -144,7 +84,17 @@ public class StreamFeatureGroupEngine {
   @SneakyThrows
   public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
                                  String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
-                                 Map<String, String> writeOptions) {
+                                 Map<String, String> writeOptions, boolean saveEmpty) {
+
+    if (saveEmpty) {
+      // insertStream method was called on feature group object that has not been saved
+      // we will use writeOfflineDataframe method on empty dataframe to create directory structure
+      SparkEngine.getInstance().writeOfflineDataframe(streamFeatureGroup,
+          SparkEngine.getInstance().createEmptyDataFrame(featureData),
+          streamFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+              ? HudiOperationType.BULK_INSERT : null,
+          null, null);
+    }
 
     if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
       LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
@@ -182,5 +132,72 @@ public class StreamFeatureGroupEngine {
 
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
         streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+  }
+
+  public StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
+                                                     String hudiPrecombineKey, Map<String, String> writeOptions,
+                                                     JobConfiguration sparkJobConfiguration)
+      throws FeatureStoreException, IOException {
+    /* set primary features */
+    if (featureGroup.getPrimaryKeys() != null) {
+      featureGroup.getPrimaryKeys().forEach(pk ->
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
+    }
+
+    /* set partition key features */
+    if (partitionKeys != null) {
+      partitionKeys.forEach(pk ->
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPartition(true);
+            }
+          }));
+    }
+
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
+
+    // set write options for delta streamer job
+    DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
+    deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+        .map(e -> new Option(e.getKey(), e.getValue()))
+        .collect(Collectors.toList())
+        : null);
+    deltaStreamerJobConf.setSparkJobConfiguration(sparkJobConfiguration);
+
+    featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
+
+    // Send Hopsworks the request to create a new feature group
+    StreamFeatureGroup apiFG = featureGroupApi.save(featureGroup);
+
+    if (featureGroup.getVersion() == null) {
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
+    }
+
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (hudiPrecombineKey == null) {
+      List<Feature> features = apiFG.getFeatures();
+      featureGroup.setFeatures(features);
+    }
+    return featureGroup;
   }
 }

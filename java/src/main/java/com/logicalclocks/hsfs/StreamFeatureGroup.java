@@ -223,7 +223,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    */
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null, false);
+    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -237,7 +237,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration sparkOptions)
       throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
-        sparkOptions, false);
+        sparkOptions);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -245,12 +245,17 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> void insert(S featureData) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null);
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, null);
   }
 
   public <S> void insert(S featureData, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions);
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions, null);
+  }
+
+  public <S> void insert(S featureData, JobConfiguration sparkOptions) throws FeatureStoreException, IOException,
+      ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, sparkOptions);
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
@@ -259,22 +264,27 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+                         JobConfiguration sparkOptions) throws FeatureStoreException, IOException, ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, sparkOptions);
+  }
+
+  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
                          Map<String, String> writeOptions, JobConfiguration sparkOptions)
           throws FeatureStoreException, IOException, ParseException {
 
     if (this.getId() == null) {
-      streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
-          sparkOptions, false);
-    } else {
-      if (operation == null) {
-        if (overwrite) {
-          operation = HudiOperationType.BULK_INSERT;
-        } else {
-          operation = HudiOperationType.UPSERT;
-        }
-      }
-      streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
+      StreamFeatureGroup updatedFeatureGroup = streamFeatureGroupEngine.saveFeatureGroupMetaData(this,
+          partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
+      this.setId(updatedFeatureGroup.getId());
     }
+    if (operation == null) {
+      if (overwrite) {
+        operation = HudiOperationType.BULK_INSERT;
+      } else {
+        operation = HudiOperationType.UPSERT;
+      }
+    }
+    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
     codeEngine.saveCode(this);
     computeStatistics();
   }
@@ -332,13 +342,16 @@ public class StreamFeatureGroup extends FeatureGroupBase {
                                  JobConfiguration sparkOptions)
       throws FeatureStoreException, IOException, ParseException {
 
+    boolean saveEmpty = false;
     if (this.getId() == null) {
-      streamFeatureGroupEngine.save(this, featureData, this.partitionKeys, this.hudiPrecombineKey,
-          writeOptions, sparkOptions, true);
+      StreamFeatureGroup updatedFeatureGroup = streamFeatureGroupEngine.saveFeatureGroupMetaData(this,
+          partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
+      this.setId(updatedFeatureGroup.getId());
+      saveEmpty = true;
     }
 
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
-        awaitTermination, timeout, checkpointLocation, writeOptions);
+        awaitTermination, timeout, checkpointLocation, writeOptions, saveEmpty);
   }
 
   public <S> void commitDeleteRecord(S featureData)

@@ -62,7 +62,7 @@ public class FeatureGroupEngine {
    * @throws IOException
    */
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
-                           String hudiPrecombineKey, Map<String, String> writeOptions, boolean isEmpty)
+                           String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
@@ -72,6 +72,98 @@ public class FeatureGroupEngine {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
+    FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey);
+
+    insert(updatedFeatureGroup, dataset, null,
+        updatedFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+            ? HudiOperationType.BULK_INSERT : null,
+        SaveMode.Append, writeOptions);
+
+    return updatedFeatureGroup;
+  }
+
+  public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
+                     HudiOperationType operation, SaveMode saveMode, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    Integer validationId = null;
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
+      if (validation != null) {
+        validationId = validation.getValidationId();
+      }
+    }
+
+    if (saveMode == SaveMode.Overwrite) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(featureGroup);
+    }
+
+    saveDataframe(featureGroup, featureData, storage, operation,
+        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
+  }
+
+  @Deprecated
+  public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
+                                     String outputMode, boolean awaitTermination, Long timeout,
+                                     String checkpointLocation, Map<String, String> writeOptions, boolean saveEmpty)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+
+    if (saveEmpty) {
+      // insertStream method was called on feature group object that has not been saved
+      // we will use writeOfflineDataframe method on empty dataframe to create directory structure
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
+          SparkEngine.getInstance().createEmptyDataFrame(featureData),
+          featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+              ? HudiOperationType.BULK_INSERT : null,
+          null, null);
+    }
+
+    if (!featureGroup.getOnlineEnabled()) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. "
+          + "It is currently only possible to stream to the online storage.");
+    }
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
+          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
+        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
+
+    return streamingQuery;
+  }
+
+  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
+                            HudiOperationType operation, Map<String, String> offlineWriteOptions,
+                            Map<String, String> onlineWriteOptions, Integer validationId)
+          throws IOException, FeatureStoreException, ParseException {
+    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
+              + "write to the offline storage.");
+    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+              offlineWriteOptions, validationId);
+    } else if (storage == Storage.ONLINE) {
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
+              onlineWriteOptions);
+    } else if (featureGroup.getOnlineEnabled() && storage == null) {
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
+              offlineWriteOptions, validationId);
+      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
+              onlineWriteOptions);
+    } else {
+      throw new FeatureStoreException("Error writing to offline and online feature store.");
+    }
+  }
+
+  public FeatureGroup saveFeatureGroupMetaData(FeatureGroup featureGroup, List<String> partitionKeys,
+                                               String hudiPrecombineKey) throws FeatureStoreException, IOException {
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
       featureGroup.getPrimaryKeys().forEach(pk ->
@@ -123,84 +215,6 @@ public class FeatureGroupEngine {
       featureGroup.setFeatures(features);
     }
 
-    // Write the online dataframe
-    if (isEmpty) {
-      dataset = SparkEngine.getInstance().createEmptyDataFrame(dataset);
-    }
-    insert(featureGroup, dataset, null,
-        featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-            ? HudiOperationType.BULK_INSERT : null,
-        SaveMode.Append, writeOptions);
-
     return featureGroup;
-  }
-
-  public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
-                     HudiOperationType operation, SaveMode saveMode, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    Integer validationId = null;
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
-      if (validation != null) {
-        validationId = validation.getValidationId();
-      }
-    }
-
-    if (saveMode == SaveMode.Overwrite) {
-      // If we set overwrite, then the directory will be removed and with it all the metadata
-      // related to the feature group will be lost. We need to keep them.
-      // So we call Hopsworks to manage to truncate the table and re-create the metadata
-      // After that it's going to be just a normal append
-      featureGroupApi.deleteContent(featureGroup);
-    }
-
-    saveDataframe(featureGroup, featureData, storage, operation,
-        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
-  }
-
-  @Deprecated
-  public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
-                                     String outputMode, boolean awaitTermination, Long timeout,
-                                     String checkpointLocation, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
-
-    if (!featureGroup.getOnlineEnabled()) {
-      throw new FeatureStoreException("Online storage is not enabled for this feature group. "
-          + "It is currently only possible to stream to the online storage.");
-    }
-
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
-          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
-    }
-
-    StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
-        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
-
-    return streamingQuery;
-  }
-
-  public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
-                            HudiOperationType operation, Map<String, String> offlineWriteOptions,
-                            Map<String, String> onlineWriteOptions, Integer validationId)
-          throws IOException, FeatureStoreException, ParseException {
-    if (!featureGroup.getOnlineEnabled() && storage == Storage.ONLINE) {
-      throw new FeatureStoreException("Online storage is not enabled for this feature group. Set `online=false` to "
-              + "write to the offline storage.");
-    } else if (storage == Storage.OFFLINE || !featureGroup.getOnlineEnabled()) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
-              offlineWriteOptions, validationId);
-    } else if (storage == Storage.ONLINE) {
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
-              onlineWriteOptions);
-    } else if (featureGroup.getOnlineEnabled() && storage == null) {
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup, dataset, operation,
-              offlineWriteOptions, validationId);
-      SparkEngine.getInstance().writeOnlineDataframe(featureGroup, dataset, featureGroup.getOnlineTopicName(),
-              onlineWriteOptions);
-    } else {
-      throw new FeatureStoreException("Error writing to offline and online feature store.");
-    }
   }
 }
