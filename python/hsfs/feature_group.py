@@ -802,6 +802,9 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
+        !!! warning "Deprecated"
+            save` method is deprecated. Use the `insert` method instead.
+
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
         online/offline feature store as specified.

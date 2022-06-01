@@ -7,7 +7,8 @@
 #
 #       http://www.apache.org/licenses/LICENSE-2.0
 #
-#   Unless required by applicable law or agreed to in writing, software
+#   Unless required by applicable law or agreed to in
+#   writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
@@ -460,7 +461,7 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
     ):
-        """Create a feature group metadata object if it doesn't exist or return if it already exists.
+        """Get feature group metadata object or create a new feature group metadata object if it doesn't exist.
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the
@@ -470,9 +471,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the feature group to create.
-            version: Version of the feature group to retrieve, defaults to `None` and
-                will create the feature group with incremented version from the last
-                version in the feature store.
+            version: Version of the feature group to retrieve or create.
             description: A string describing the contents of the feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -518,24 +517,30 @@ class FeatureStore:
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
-        return feature_group.FeatureGroup(
-            name=name,
-            version=version,
-            description=description,
-            online_enabled=online_enabled,
-            time_travel_format=time_travel_format,
-            partition_key=partition_key,
-            primary_key=primary_key,
-            hudi_precombine_key=hudi_precombine_key,
-            featurestore_id=self._id,
-            featurestore_name=self._name,
-            features=features,
-            statistics_config=statistics_config,
-            validation_type=validation_type,
-            expectations=expectations,
-            event_time=event_time,
-            stream=stream,
-        )
+
+        try:
+            return self._feature_group_api.get(
+                name, version, feature_group_api.FeatureGroupApi.CACHED
+            )
+        except Exception:
+            return feature_group.FeatureGroup(
+                name=name,
+                version=version,
+                description=description,
+                online_enabled=online_enabled,
+                time_travel_format=time_travel_format,
+                partition_key=partition_key,
+                primary_key=primary_key,
+                hudi_precombine_key=hudi_precombine_key,
+                featurestore_id=self._id,
+                featurestore_name=self._name,
+                features=features,
+                statistics_config=statistics_config,
+                validation_type=validation_type,
+                expectations=expectations,
+                event_time=event_time,
+                stream=stream,
+            )
 
     def create_on_demand_feature_group(
         self,
@@ -625,6 +630,99 @@ class FeatureStore:
             validation_type=validation_type,
             expectations=expectations,
         )
+
+    def get_or_create_on_demand_feature_group(
+        self,
+        name: str,
+        version: int,
+        storage_connector: storage_connector.StorageConnector,
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = "",
+        options: Optional[Dict[str, str]] = {},
+        description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
+        features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        event_time: Optional[str] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
+    ):
+        """Get on-demand feature group metadata object or create a new object if it doesn't exist.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata in the
+            feature store on its own. To persist the feature group metadata in the feature store,
+            call the `save()` method.
+
+        # Arguments
+            name: Name of the on-demand feature group to create.
+            version: Version of the on-demand feature group to retrieve or create.
+            query: A string containing a SQL query valid for the target data source.
+                the query will be used to pull data from the data sources when the
+                feature group is used.
+            data_format: If the on-demand feature groups refers to a directory with data,
+                the data format to use when reading it
+            path: The location within the scope of the storage connector, from where to read
+                the data for the on-demand feature group
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
+            description: A string describing the contents of the on-demand feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
+            features: Optionally, define the schema of the on-demand feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame resulting by executing the provided query
+                against the data source.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this on-demand feature group, `"correlations`" to turn on feature correlation
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
+
+        # Returns
+            `OnDemandFeatureGroup`. The on-demand feature group metadata object.
+        """
+
+        try:
+            return self._feature_group_api.get(
+                name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+            )
+        except Exception:
+            return feature_group.OnDemandFeatureGroup(
+                name=name,
+                query=query,
+                data_format=data_format,
+                path=path,
+                options=options,
+                storage_connector=storage_connector,
+                version=version,
+                description=description,
+                primary_key=primary_key,
+                featurestore_id=self._id,
+                featurestore_name=self._name,
+                features=features,
+                statistics_config=statistics_config,
+                event_time=event_time,
+                validation_type=validation_type,
+                expectations=expectations,
+            )
 
     def create_training_dataset(
         self,

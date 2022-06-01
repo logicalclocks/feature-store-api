@@ -248,7 +248,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
-        if not feature_group._id or len(feature_group.features) == 0:
+        if not feature_group._id:
             # this means FG doesn't exist and should create the new one
             feature_dataframe = engine.get_instance().stream_to_empty_df(dataframe)
             feature_group._features = engine.get_instance().parse_schema_feature_group(
