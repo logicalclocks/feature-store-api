@@ -1,6 +1,7 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStore;
@@ -14,6 +15,7 @@ import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.TagsApi;
+import org.apache.hadoop.mapreduce.lib.input.InvalidInputException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -26,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.logicalclocks.hsfs.TrainingDatasetType.IN_MEMORY;
+import static com.logicalclocks.hsfs.TrainingDatasetType.IN_MEMORY_TRAINING_DATASET;
 
 public class FeatureViewEngine {
 
@@ -45,8 +47,12 @@ public class FeatureViewEngine {
   }
 
   private List<TrainingDatasetFeature> makeLabelFeatures(List<String> labels) {
-    return labels.stream().map(label -> new TrainingDatasetFeature(label.toLowerCase(), true))
-        .collect(Collectors.toList());
+    if (labels == null || labels.isEmpty()) {
+      return Lists.newArrayList();
+    } else {
+      return labels.stream().map(label -> new TrainingDatasetFeature(label.toLowerCase(), true))
+          .collect(Collectors.toList());
+    }
   }
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
@@ -63,6 +69,7 @@ public class FeatureViewEngine {
     featureView.getFeatures().stream()
         .filter(f -> f.getFeaturegroup() != null)
         .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+    featureView.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
     return featureView;
   }
 
@@ -74,6 +81,7 @@ public class FeatureViewEngine {
       fv.getFeatures().stream()
           .filter(f -> f.getFeaturegroup() != null)
           .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+      fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
     }
     return featureViews;
   }
@@ -101,7 +109,7 @@ public class FeatureViewEngine {
     computeStatistics(trainingDataset,
         getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
     return new TrainingDatasetBundle(trainingDataset.getVersion());
-//    return new TrainingDatasetBundle(trainingDataset.getVersion());
+    //    return new TrainingDatasetBundle(trainingDataset.getVersion());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
@@ -121,18 +129,24 @@ public class FeatureViewEngine {
     if (trainingDatasetUpdated == null) {
       trainingDatasetUpdated = createTrainingDataMetadata(featureView, trainingDataset);
     }
-    if (!IN_MEMORY.equals(trainingDatasetUpdated.getTrainingDatasetType())) {
-      List<Split> splits = trainingDatasetUpdated.getSplits();
-      if (splits != null && !splits.isEmpty()) {
-        Map<String, Dataset<Row>> datasets = Maps.newHashMap();
-        for (Split split: splits) {
-          datasets.put(split.getName(),
-              trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
+    if (!IN_MEMORY_TRAINING_DATASET.equals(trainingDatasetUpdated.getTrainingDatasetType())) {
+      try {
+        List<Split> splits = trainingDatasetUpdated.getSplits();
+        if (splits != null && !splits.isEmpty()) {
+          Map<String, Dataset<Row>> datasets = Maps.newHashMap();
+          for (Split split : splits) {
+            datasets.put(split.getName(),
+                trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
+          }
+          return new TrainingDatasetBundle(trainingDataset.getVersion(), datasets, trainingDataset.getTrainSplit());
+        } else {
+          return new TrainingDatasetBundle(trainingDataset.getVersion(),
+              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions)
+          );
         }
-        return new TrainingDatasetBundle(trainingDataset.getVersion(), datasets, trainingDataset.getTrainSplit());
-      } else {
-        return new TrainingDatasetBundle(trainingDataset.getVersion(),
-            trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions)
+      } catch (InvalidInputException e) {
+        throw new IllegalStateException(
+            "Failed to read dataset. Check if path exists or recreate a training dataset."
         );
       }
     } else {
@@ -149,12 +163,12 @@ public class FeatureViewEngine {
           getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
       return trainingDatasetBundle;
     }
-//    return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion());
+    //    return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion());
   }
 
   private void setTrainSplit(TrainingDataset trainingDataset) {
     if (trainingDataset.getSplits() != null
-        &&trainingDataset.getSplits().size() > 0
+        && trainingDataset.getSplits().size() > 0
         && Strings.isNullOrEmpty(trainingDataset.getTrainSplit())) {
       LOGGER.info("Training dataset splits were defined but no `trainSplit` (the name of the split that is going to"
           + " be used for training) was provided. Setting this property to `train`.");
@@ -238,13 +252,15 @@ public class FeatureViewEngine {
 
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime)
       throws FeatureStoreException, IOException {
-    return featureViewApi.getBatchQuery(
+    Query query = featureViewApi.getBatchQuery(
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),
         startTime == null ? null : startTime.getTime(),
         endTime == null ? null : endTime.getTime()
     );
+    query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
+    return query;
   }
 
   public Dataset<Row> getBatchData(

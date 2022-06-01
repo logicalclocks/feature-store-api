@@ -190,7 +190,7 @@ public class SparkEngine {
       dataset = dataset.coalesce(1);
     }
 
-    if (trainingDataset.getSplits() == null) {
+    if (trainingDataset.getSplits() == null || trainingDataset.getSplits().isEmpty()) {
       // Write a single dataset
 
       // The actual data will be stored in training_ds_version/training_ds the double directory is needed

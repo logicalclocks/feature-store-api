@@ -19,5 +19,5 @@ package com.logicalclocks.hsfs;
 public enum TrainingDatasetType {
   HOPSFS_TRAINING_DATASET,
   EXTERNAL_TRAINING_DATASET,
-  IN_MEMORY
+  IN_MEMORY_TRAINING_DATASET
 }

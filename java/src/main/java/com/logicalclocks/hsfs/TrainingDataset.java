@@ -133,7 +133,8 @@ public class TrainingDataset {
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
-      String eventStartTime, String eventEndTime) throws FeatureStoreException, ParseException {
+      String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType) throws FeatureStoreException,
+      ParseException {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -150,6 +151,7 @@ public class TrainingDataset {
     this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.eventStartTime = eventStartTime != null ? FeatureGroupUtils.getDateFromDateString(eventStartTime) : null;
     this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
+    this.trainingDatasetType = trainingDatasetType;
   }
 
   /**

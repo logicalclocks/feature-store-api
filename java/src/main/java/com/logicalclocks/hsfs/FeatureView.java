@@ -256,6 +256,7 @@ public class FeatureView {
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .build();
@@ -269,6 +270,7 @@ public class FeatureView {
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
@@ -286,6 +288,7 @@ public class FeatureView {
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .version(version)
             .eventStartTime(startTime)
             .eventEndTime(endTime)

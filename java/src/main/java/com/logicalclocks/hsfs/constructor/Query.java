@@ -21,8 +21,8 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.QueryConstructorApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
@@ -66,16 +66,13 @@ public class Query {
   @Setter
   private Boolean hiveEngine = false;
 
-  private QueryConstructorApi queryConstructorApi;
-  private StorageConnectorApi storageConnectorApi;
+  private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
+  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
-
-    this.queryConstructorApi = new QueryConstructorApi();
-    this.storageConnectorApi = new StorageConnectorApi();
   }
 
   public Query join(Query subquery) {
