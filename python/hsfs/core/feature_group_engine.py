@@ -30,44 +30,15 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._online_conn = None
 
     def save(self, feature_group, feature_dataframe, write_options):
+
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
                 feature_dataframe
             )
 
-        user_version = feature_group._version
+        self.save_feature_group_metadata(feature_group, write_options)
 
-        if feature_group._stream:
-            # when creating a stream feature group, users have the possibility of passing
-            # a spark_job_configuration object as part of the write_options with the key "spark"
-            _spark_options = write_options.pop("spark", None)
-            _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
-                if write_options
-                else None
-            )
-            feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
-                _write_options, _spark_options
-            )
-
-        # set primary and partition key columns
-        # we should move this to the backend
-        for feat in feature_group.features:
-            if feat.name in feature_group.primary_key:
-                feat.primary = True
-            if feat.name in feature_group.partition_key:
-                feat.partition = True
-            if (
-                feature_group.hudi_precombine_key is not None
-                and feat.name == feature_group.hudi_precombine_key
-            ):
-                feat.hudi_precombine_key = True
-
-        if feature_group.stream:
-            feature_group._options = write_options
-
-        self._feature_group_api.save(feature_group)
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
             # If the engine is Python, the validation will be executed by
@@ -77,14 +48,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
-
-        if user_version is None:
-            warnings.warn(
-                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
-                    feature_group._name, feature_group._version
-                ),
-                util.VersionWarning,
-            )
 
         return engine.get_instance().save_dataframe(
             feature_group,
@@ -285,10 +248,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
-        if not feature_group._id:
+        if not feature_group._id or len(feature_group.features) == 0:
             # this means FG doesn't exist and should create the new one
-            features = engine.get_instance().stream_to_empty_df(dataframe)
-            self.save(feature_group, features, write_options)
+            feature_dataframe = engine.get_instance().stream_to_empty_df(dataframe)
+            feature_group._features = engine.get_instance().parse_schema_feature_group(
+                feature_dataframe
+            )
+            self.save_feature_group_metadata(feature_group, write_options)
 
         if not feature_group.stream:
             warnings.warn(
@@ -316,3 +282,46 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         return streaming_query
+
+    def save_feature_group_metadata(self, feature_group, write_options):
+
+        user_version = feature_group._version
+
+        if feature_group._stream:
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
+            )
+
+        # set primary and partition key columns
+        # we should move this to the backend
+        for feat in feature_group.features:
+            if feat.name in feature_group.primary_key:
+                feat.primary = True
+            if feat.name in feature_group.partition_key:
+                feat.partition = True
+            if (
+                feature_group.hudi_precombine_key is not None
+                and feat.name == feature_group.hudi_precombine_key
+            ):
+                feat.hudi_precombine_key = True
+
+        if feature_group.stream:
+            feature_group._options = write_options
+
+        self._feature_group_api.save(feature_group)
+
+        if user_version is None:
+            warnings.warn(
+                "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
+                    feature_group._name, feature_group._version
+                ),
+                util.VersionWarning,
+            )

@@ -443,6 +443,100 @@ class FeatureStore:
             stream=stream,
         )
 
+    def get_or_create_feature_group(
+        self,
+        name: str,
+        version: int,
+        description: Optional[str] = "",
+        online_enabled: Optional[bool] = False,
+        time_travel_format: Optional[str] = "HUDI",
+        partition_key: Optional[List[str]] = [],
+        primary_key: Optional[List[str]] = [],
+        hudi_precombine_key: Optional[str] = None,
+        features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
+        event_time: Optional[str] = None,
+        stream: Optional[bool] = False,
+    ):
+        """Create a feature group metadata object if it doesn't exist or return if it already exists.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata or feature data in the
+            feature store on its own. To persist the feature group and save feature data
+            along the metadata in the feature store, call the `insert()` method with a
+            DataFrame.
+
+        # Arguments
+            name: Name of the feature group to create.
+            version: Version of the feature group to retrieve, defaults to `None` and
+                will create the feature group with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            online_enabled: Define whether the feature group should be made available
+                also in the online feature store for low latency access, defaults to
+                `False`.
+            time_travel_format: Format used for time travel, defaults to `"HUDI"`.
+            partition_key: A list of feature names to be used as partition key when
+                writing the feature data to the offline storage, defaults to empty list
+                `[]`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
+            hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
+                feature group. Defaults to `None`. If feature group has time travel format
+                `"HUDI"` and hudi precombine key was not specified then the first primary key of
+                the feature group will be used as hudi precombine key.
+            features: Optionally, define the schema of the feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame provided in the `save` method.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+            stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
+                Stream enabled Feature Groups have unified single API for writing streaming features transparently
+                to both online and offline store.
+
+        # Returns
+            `FeatureGroup`. The feature group metadata object.
+        """
+        return feature_group.FeatureGroup(
+            name=name,
+            version=version,
+            description=description,
+            online_enabled=online_enabled,
+            time_travel_format=time_travel_format,
+            partition_key=partition_key,
+            primary_key=primary_key,
+            hudi_precombine_key=hudi_precombine_key,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+            features=features,
+            statistics_config=statistics_config,
+            validation_type=validation_type,
+            expectations=expectations,
+            event_time=event_time,
+            stream=stream,
+        )
+
     def create_on_demand_feature_group(
         self,
         name: str,
@@ -553,7 +647,7 @@ class FeatureStore:
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the
             feature store on its own. To materialize the training dataset and save
-            feature data along the metadata in the feature store, call the `save()`
+            feature data along the metadata in the feature store, call the `insert()`
             method with a `DataFrame` or `Query`.
 
         !!! info "Data Formats"

@@ -833,9 +833,7 @@ class FeatureGroup(FeatureGroupBase):
             `RestAPIError`. Unable to create feature group.
         """
 
-        warnings.warn(
-            "`save` method is deprecated and In the next release it will be  replaced by `insert` method."
-        )
+        warnings.warn("`save` method is deprecated. Use the `insert` method instead.")
 
         features = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -869,11 +867,10 @@ class FeatureGroup(FeatureGroupBase):
         If feature group doesn't exist calling `insert` creates the metadata for the
         feature group in the feature store and writes the specified `features` dataframe
         as feature group to the online/offline feature store as specified.
-        By default, this writes the feature group to the offline storage, and if
-            `online_enabled` for the feature group, also to the online feature store.
-
         If feature group already exist `insert` method Incrementally insert data to a feature group
-        or overwrite all data contained in the feature group. By default, the data is inserted into the
+        or overwrite all data contained in the feature group.
+
+        By default, the data is inserted into the
         offline storage as well as the online storage if the feature group is `online_enabled=True`. To
         insert only into the online storage, set `storage="online"`, or oppositely `storage="offline"`.
 
