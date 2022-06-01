@@ -286,7 +286,7 @@ class FeatureGroupBase:
         return self
 
     def update_features(self, features: Union[feature.Feature, List[feature.Feature]]):
-        """Update a single feature in this feature group.
+        """Update metadata of features in this feature group.
 
         Currently it's only supported to update the description of a feature.
 

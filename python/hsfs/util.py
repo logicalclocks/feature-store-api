@@ -18,6 +18,8 @@ import re
 import json
 
 from datetime import datetime
+from urllib.parse import urljoin, urlparse
+
 from sqlalchemy import create_engine
 
 from hsfs import client, feature
@@ -165,6 +167,18 @@ def setup_pydoop():
 
     # Monkey patch the class to use the one defined above.
     hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+
+
+def get_hostname_replaced_url(sub_path: str):
+    """
+    construct and return an url with public hopsworks hostname and sub path
+    :param self:
+    :param sub_path: url sub-path after base url
+    :return: href url
+    """
+    href = urljoin(client.get_instance()._base_url, sub_path)
+    url_parsed = client.get_instance().replace_public_host(urlparse(href))
+    return url_parsed.geturl()
 
 
 class VersionWarning(Warning):

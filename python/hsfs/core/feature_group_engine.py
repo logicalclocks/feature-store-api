@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 import warnings
 
 from hsfs import engine, client, util
@@ -52,6 +51,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group._options = write_options
 
         self._feature_group_api.save(feature_group)
+        print(
+            "Feature Group created successfully, explore it at "
+            + self._get_feature_group_url(feature_group)
+        )
 
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
@@ -198,6 +201,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=None,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=features,
         )
         self._feature_group_api.update_metadata(
@@ -234,6 +238,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=description,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=feature_group.features,
         )
         self._feature_group_api.update_metadata(
@@ -304,3 +309,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         return streaming_query
+
+    def _get_feature_group_url(self, feature_group):
+        sub_path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_group.feature_store_id)
+            + "/fg/"
+            + str(feature_group.id)
+        )
+        return util.get_hostname_replaced_url(sub_path)

@@ -116,7 +116,7 @@ class Engine:
             return pd.read_parquet(BytesIO(obj.read()))
         else:
             raise TypeError(
-                "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                "{} training dataset format is not supported to read as pandas dataframe.".format(
                     data_format
                 )
             )
@@ -594,6 +594,7 @@ class Engine:
         ui_url = url._replace(
             path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
         )
+        ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
 
     def _get_app_options(self, user_write_options={}):

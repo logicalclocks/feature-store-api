@@ -15,7 +15,8 @@
 #
 
 import warnings
-from hsfs import engine, training_dataset_feature
+
+from hsfs import engine, training_dataset_feature, client, util
 from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
@@ -71,6 +72,10 @@ class FeatureViewEngine:
             )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
+        print(
+            "Feature view created successfully, explore it at "
+            + self._get_feature_view_url(updated_fv)
+        )
         return updated_fv
 
     def get(self, name, version=None):
@@ -187,6 +192,10 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_obj
             )
 
+        read_options = engine.get_instance().read_options(
+            td_updated.data_format, read_options
+        )
+
         if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
             split_df = self._read_from_storage_connector(
                 td_updated, splits, read_options
@@ -219,6 +228,7 @@ class FeatureViewEngine:
                 result[split] = self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
                 )
+            return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
@@ -402,3 +412,16 @@ class FeatureViewEngine:
                 "Python kernel can only read from cached feature group."
                 " Please use `feature_view.create_training_dataset` instead."
             )
+
+    def _get_feature_view_url(self, feature_view):
+        path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_view.featurestore_id)
+            + "/fv/"
+            + str(feature_view.name)
+            + "/version/"
+            + str(feature_view.version)
+        )
+        return util.get_hostname_replaced_url(path)

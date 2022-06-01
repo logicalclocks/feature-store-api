@@ -287,6 +287,10 @@ class Client(base.Client):
         except OSError:
             pass
 
+    def replace_public_host(self, url):
+        """no need to replace as we are already in external client"""
+        return url
+
     @property
     def host(self):
         return self._host
