@@ -249,12 +249,10 @@ public class FeatureViewEngine {
         featureView.getVersion());
   }
 
-  public String getBatchQueryString(FeatureView featureView) {
-    return null;
-  }
-
-  public String getBatchQueryString(FeatureView featureView, String startTime, String endTime) {
-    return null;
+  public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime)
+      throws FeatureStoreException, IOException {
+    Query query = getBatchQuery(featureView, startTime, endTime);
+    return query.sql();
   }
 
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime)
@@ -271,9 +269,9 @@ public class FeatureViewEngine {
   }
 
   public Dataset<Row> getBatchData(
-      FeatureView featureView, String startTime, String endTime, Map<String, String> readOptions
-  ) {
-    return null;
+      FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions
+  ) throws FeatureStoreException, IOException {
+    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime).read(false, readOptions);
   }
 
   public void addTag(FeatureView featureView, String name, Object value) {

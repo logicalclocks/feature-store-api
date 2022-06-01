@@ -3,6 +3,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.constructor.Query;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.VectorServer;
 import lombok.Getter;
@@ -179,22 +180,32 @@ public class FeatureView {
   }
 
   @JsonIgnore
-  public String getBatchQuery() {
-    return featureViewEngine.getBatchQueryString(this);
+  public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
+    return getBatchQuery(null, null);
   }
 
   @JsonIgnore
-  public String getBatchQuery(String startTime, String endTime) {
-    return featureViewEngine.getBatchQueryString(this, startTime, endTime);
+  public String getBatchQuery(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return featureViewEngine.getBatchQueryString(
+        this,
+        startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
+        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null);
   }
 
   @JsonIgnore
-  public Dataset<Row> getBatchData(String startTime, String endTime) {
-    return featureViewEngine.getBatchData(this, startTime, endTime, Maps.newHashMap());
+  public Dataset<Row> getBatchData(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return getBatchData(startTime, endTime, Maps.newHashMap());
   }
 
-  public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions) {
-    return featureViewEngine.getBatchData(this, startTime, endTime, readOptions);
+  public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    return featureViewEngine.getBatchData(
+        this,
+        startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
+        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
+        readOptions);
 
   }
 
