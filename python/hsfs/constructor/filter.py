@@ -116,10 +116,10 @@ class Logic:
 
         return cls(
             type=json_dict["type"] if "type" in json_dict else None,
-            left_f=Filter.from_response_json(json_dict["left_filter"]),
-            right_f=Filter.from_response_json(json_dict["right_filter"]),
-            left_l=Logic.from_response_json(json_dict["left_logic"]),
-            right_l=Logic.from_response_json(json_dict["right_logic"]),
+            left_f=Filter.from_response_json(json_dict.get("left_filter", None)),
+            right_f=Filter.from_response_json(json_dict.get("right_filter", None)),
+            left_l=Logic.from_response_json(json_dict.get("left_logic", None)),
+            right_l=Logic.from_response_json(json_dict.get("right_logic", None)),
         )
 
     @classmethod

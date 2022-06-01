@@ -47,7 +47,7 @@ class Tag:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if json_decamelized["count"] == 0:
+        if "count" not in json_decamelized or json_decamelized["count"] == 0:
             return []
         return [cls(**tag) for tag in json_decamelized["items"]]
 

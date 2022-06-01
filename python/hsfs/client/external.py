@@ -96,6 +96,12 @@ class Client(base.Client):
                 path=self._get_jks_trust_store_path(),
             )
 
+            self._write_pem_file(credentials["caChain"], self._get_ca_chain_path())
+            self._write_pem_file(
+                credentials["clientCert"], self._get_client_cert_path()
+            )
+            self._write_pem_file(credentials["clientKey"], self._get_client_key_path())
+
             self._cert_key = str(credentials["password"])
             with open(os.path.join(self._cert_folder, "material_passwd"), "w") as f:
                 f.write(str(credentials["password"]))
@@ -152,6 +158,9 @@ class Client(base.Client):
         self._cleanup_file(self._get_jks_key_store_path())
         self._cleanup_file(self._get_jks_trust_store_path())
         self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
+        self._cleanup_file(self._get_ca_chain_path())
+        self._cleanup_file(self._get_client_cert_path())
+        self._cleanup_file(self._get_client_key_path())
 
         try:
             # delete project level
@@ -169,6 +178,15 @@ class Client(base.Client):
 
     def _get_jks_key_store_path(self):
         return self._key_store_path
+
+    def _get_ca_chain_path(self) -> str:
+        return os.path.join(self._cert_folder, "ca_chain.pem")
+
+    def _get_client_cert_path(self) -> str:
+        return os.path.join(self._cert_folder, "client_cert.pem")
+
+    def _get_client_key_path(self) -> str:
+        return os.path.join(self._cert_folder, "client_key.pem")
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
@@ -249,16 +267,6 @@ class Client(base.Client):
         """
         return self._send_request("GET", ["project", "getProjectInfo", project_name])
 
-    def _get_credentials(self, project_id):
-        """Makes a REST call to hopsworks for getting the project user certificates needed to connect to services such as Hive
-
-        :param project_id: id of the project
-        :type project_id: int
-        :return: JSON response with credentials
-        :rtype: dict
-        """
-        return self._send_request("GET", ["project", project_id, "credentials"])
-
     def _write_b64_cert_to_bytes(self, b64_string, path):
         """Converts b64 encoded certificate to bytes file .
 
@@ -278,6 +286,10 @@ class Client(base.Client):
             os.remove(file_path)
         except OSError:
             pass
+
+    def replace_public_host(self, url):
+        """no need to replace as we are already in external client"""
+        return url
 
     @property
     def host(self):

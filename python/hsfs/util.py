@@ -18,6 +18,8 @@ import re
 import json
 
 from datetime import datetime
+from urllib.parse import urljoin, urlparse
+
 from sqlalchemy import create_engine
 
 from hsfs import client, feature
@@ -98,7 +100,7 @@ def create_mysql_engine(online_conn, external):
     return sql_alchemy_engine
 
 
-def get_timestamp_from_date_string(input_date):
+def check_timestamp_format_from_date_string(input_date):
     date_format_patterns = {
         r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
@@ -121,8 +123,14 @@ def get_timestamp_from_date_string(input_date):
         raise ValueError(
             "Unable to identify format of the provided date value : " + input_date
         )
+    return date_format
 
-    return int(float(datetime.strptime(input_date, date_format).timestamp()) * 1000)
+
+def get_timestamp_from_date_string(input_date, time_zone=None):
+    date_format = check_timestamp_format_from_date_string(input_date)
+    date_time = datetime.strptime(input_date, date_format)
+    date_time = date_time.replace(tzinfo=time_zone)
+    return int(float(date_time.timestamp()) * 1000)
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
@@ -159,6 +167,18 @@ def setup_pydoop():
 
     # Monkey patch the class to use the one defined above.
     hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
+
+
+def get_hostname_replaced_url(sub_path: str):
+    """
+    construct and return an url with public hopsworks hostname and sub path
+    :param self:
+    :param sub_path: url sub-path after base url
+    :return: href url
+    """
+    href = urljoin(client.get_instance()._base_url, sub_path)
+    url_parsed = client.get_instance().replace_public_host(urlparse(href))
+    return url_parsed.geturl()
 
 
 class VersionWarning(Warning):

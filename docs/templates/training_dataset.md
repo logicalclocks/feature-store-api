@@ -28,9 +28,3 @@ and users can use it to train models.
 ## Methods
 
 {{td_methods}}
-
-## TFData engine
-
-{{tf_record_dataset}}
-
-{{tf_csv_dataset}}

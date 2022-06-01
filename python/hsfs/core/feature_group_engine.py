@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 import warnings
 
 from hsfs import engine, client, util
@@ -29,8 +28,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
-    def save(self, feature_group, feature_dataframe, write_options):
-
+    def save(self, feature_group, feature_dataframe, write_options, validation_options):
         if len(feature_group.features) == 0:
             # User didn't provide a schema. extract it from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
@@ -46,20 +44,46 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             validation = feature_group.validate(feature_dataframe, True)
             validation_id = validation.validation_id
 
+        if feature_group.stream:
+            feature_group._options = write_options
+
+        self._feature_group_api.save(feature_group)
+        print(
+            "Feature Group created successfully, explore it at "
+            + self._get_feature_group_url(feature_group)
+        )
+
+        # deequ validation only on spark
+        validation = feature_group._data_validation_engine.ingest_validate(
+            feature_group, feature_dataframe
+        )
+        validation_id = validation.validation_id if validation is not None else None
+
+        # ge validation on python and non stream feature groups on spark
+        ge_report = feature_group._great_expectation_engine.validate(
+            feature_group, feature_dataframe, True, validation_options
+        )
+
+        if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            return None, ge_report
+
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
-        return engine.get_instance().save_dataframe(
-            feature_group,
-            feature_dataframe,
-            hudi_engine.HudiEngine.HUDI_BULK_INSERT
-            if feature_group.time_travel_format == "HUDI"
-            else None,
-            feature_group.online_enabled,
-            None,
-            offline_write_options,
-            online_write_options,
-            validation_id,
+        return (
+            engine.get_instance().save_dataframe(
+                feature_group,
+                feature_dataframe,
+                hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                if feature_group.time_travel_format == "HUDI"
+                else None,
+                feature_group.online_enabled,
+                None,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            ),
+            ge_report,
         )
 
     def insert(
@@ -70,13 +94,21 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
+        validation_options,
     ):
-        validation_id = None
-        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
-            # If the engine is Python, the validation will be executed by
-            # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe, True)
-            validation_id = validation.validation_id
+        # deequ validation only on spark
+        validation = feature_group._data_validation_engine.ingest_validate(
+            feature_group, feature_dataframe
+        )
+        validation_id = validation.validation_id if validation is not None else None
+
+        # ge validation on python and non stream feature groups on spark
+        ge_report = feature_group._great_expectation_engine.validate(
+            feature_group, feature_dataframe, True, validation_options
+        )
+
+        if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            return None, ge_report
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
@@ -88,20 +120,23 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if not feature_group._id:
             # this means FG doesn't exist and should create the new one
-            self.save(feature_group, feature_dataframe, write_options)
+            self.save_feature_group_metadata(feature_group, write_options)
 
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
-        return engine.get_instance().save_dataframe(
-            feature_group,
-            feature_dataframe,
-            "bulk_insert" if overwrite else operation,
-            feature_group.online_enabled,
-            storage,
-            offline_write_options,
-            online_write_options,
-            validation_id,
+        return (
+            engine.get_instance().save_dataframe(
+                feature_group,
+                feature_dataframe,
+                "bulk_insert" if overwrite else operation,
+                feature_group.online_enabled,
+                storage,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            ),
+            ge_report,
         )
 
     def delete(self, feature_group):
@@ -167,6 +202,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=None,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=features,
         )
         self._feature_group_api.update_metadata(
@@ -203,6 +239,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=description,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=feature_group.features,
         )
         self._feature_group_api.update_metadata(
@@ -325,3 +362,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 ),
                 util.VersionWarning,
             )
+
+    def _get_feature_group_url(self, feature_group):
+        sub_path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_group.feature_store_id)
+            + "/fg/"
+            + str(feature_group.id)
+        )
+        return util.get_hostname_replaced_url(sub_path)

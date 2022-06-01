@@ -36,6 +36,12 @@ class JobApi:
 
         _client._send_request("POST", path_params)
 
+    def get(self, name: str) -> job.Job:
+        _client = client.get_instance()
+        path_params = ["project", _client._project_id, "jobs", name]
+
+        return job.Job.from_response_json(_client._send_request("GET", path_params))
+
     def last_execution(self, job):
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", job.name, "executions"]

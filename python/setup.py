@@ -15,6 +15,7 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
+    python_requires=">=3.8,<3.10",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
@@ -27,6 +28,7 @@ setup(
         "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL[rsa]",
+        "great_expectations==0.14.3"
     ],
     extras_require={
         "dev": ["pytest", "flake8", "black"],
@@ -41,10 +43,14 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow",
+            "confluent-kafka==1.8.2",
+            "fastavro==1.4.11",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow",
+            "confluent-kafka==1.8.2",
+            "fastavro==1.4.11",
         ],
     },
     author="Hopsworks AB",
@@ -62,7 +68,8 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Intended Audience :: Developers",
     ],
 )

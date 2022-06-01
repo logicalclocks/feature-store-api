@@ -73,8 +73,6 @@ PAGES = {
                 "to_dict",
             ],
         ),
-        "tf_record_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_record_dataset"],
-        "tf_csv_dataset": ["hsfs.core.tfdata_engine.TFDataEngine.tf_csv_dataset"],
     },
     "storage_connector.md": {
         "sc_get": [
