@@ -17,6 +17,7 @@
 import os
 import json
 import importlib.util
+from typing import Optional, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -37,6 +38,13 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
+
+from great_expectations.core.batch import RuntimeBatchRequest
+from great_expectations.data_context import BaseDataContext
+from great_expectations.data_context.types.base import (
+    DataContextConfig,
+    InMemoryStoreBackendDefaults,
+)
 
 
 class Engine:
@@ -585,6 +593,55 @@ class Engine:
         return self._jvm.com.logicalclocks.hsfs.engine.DataValidationEngine.getInstance().validate(
             dataframe._jdf, expectations_java
         )
+
+    def validate_with_great_expectations(
+        self,
+        dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
+        ge_validate_kwargs: Optional[dict],
+    ):
+        # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
+        # may experience data loss as it persists nothing. It is used here for testing.
+        # Please refer to docs to learn how to instantiate your DataContext.
+        store_backend_defaults = InMemoryStoreBackendDefaults()
+        data_context_config = DataContextConfig(
+            store_backend_defaults=store_backend_defaults,
+            checkpoint_store_name=store_backend_defaults.checkpoint_store_name,
+        )
+        context = BaseDataContext(project_config=data_context_config)
+
+        datasource = {
+            "name": "my_spark_dataframe",
+            "class_name": "Datasource",
+            "execution_engine": {
+                "class_name": "SparkDFExecutionEngine",
+                "force_reuse_spark_context": True,
+            },
+            "data_connectors": {
+                "default_runtime_data_connector_name": {
+                    "class_name": "RuntimeDataConnector",
+                    "batch_identifiers": ["batch_id"],
+                }
+            },
+        }
+        context.add_datasource(**datasource)
+
+        # Here is a RuntimeBatchRequest using a dataframe
+        batch_request = RuntimeBatchRequest(
+            datasource_name="my_spark_dataframe",
+            data_connector_name="default_runtime_data_connector_name",
+            data_asset_name="<YOUR_MEANGINGFUL_NAME>",  # This can be anything that identifies this data_asset for you
+            batch_identifiers={"batch_id": "default_identifier"},
+            runtime_parameters={"batch_data": dataframe},  # Your dataframe goes here
+        )
+        context.save_expectation_suite(expectation_suite)
+        validator = context.get_validator(
+            batch_request=batch_request,
+            expectation_suite_name=expectation_suite.expectation_suite_name,
+        )
+        report = validator.validate(**ge_validate_kwargs)
+
+        return report
 
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
