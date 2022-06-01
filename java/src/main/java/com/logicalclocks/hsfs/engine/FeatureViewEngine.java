@@ -101,6 +101,14 @@ public class FeatureViewEngine {
   ) throws IOException, FeatureStoreException {
     setTrainSplit(trainingDataset);
     trainingDataset = createTrainingDataMetadata(featureView, trainingDataset);
+    writeTrainingDataset(featureView, trainingDataset, userWriteOptions);
+    return new TrainingDatasetBundle(trainingDataset.getVersion());
+    //    return new TrainingDatasetBundle(trainingDataset.getVersion());
+  }
+
+  public void writeTrainingDataset(
+      FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
+  ) throws IOException, FeatureStoreException {
     Dataset<Row> dataset = readDataset(featureView, trainingDataset, Maps.newHashMap());
     // Build write options map
     Map<String, String> writeOptions =
@@ -108,8 +116,6 @@ public class FeatureViewEngine {
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
     computeStatistics(trainingDataset,
         getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
-    return new TrainingDatasetBundle(trainingDataset.getVersion());
-    //    return new TrainingDatasetBundle(trainingDataset.getVersion());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
@@ -119,7 +125,7 @@ public class FeatureViewEngine {
     TrainingDataset trainingDatasetUpdated = null;
     if (trainingDataset.getVersion() != null) {
       try {
-        trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset);
+        trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
       } catch (Exception e) {
         if (!e.getMessage().matches(".*27012.*")) {
           throw e;
@@ -146,7 +152,7 @@ public class FeatureViewEngine {
         }
       } catch (InvalidInputException e) {
         throw new IllegalStateException(
-            "Failed to read dataset. Check if path exists or recreate a training dataset."
+            "Failed to read datasets. Check if path exists or recreate a training dataset."
         );
       }
     } else {
@@ -159,8 +165,7 @@ public class FeatureViewEngine {
       } else {
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDataset.getVersion(), dataset);
       }
-      computeStatistics(trainingDataset,
-          getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
+      computeStatistics(trainingDataset, trainingDatasetBundle.getTrainSet());
       return trainingDatasetBundle;
     }
     //    return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion());
@@ -183,9 +188,9 @@ public class FeatureViewEngine {
   }
 
   private TrainingDataset getTrainingDataMetadata(
-      FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
+      FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
     return featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion(), trainingDataset.getVersion());
+        featureView.getVersion(), trainingDatasetVersion);
   }
 
   public Statistics computeStatistics(TrainingDataset trainingDataset, Dataset<Row> dataset)
@@ -209,8 +214,10 @@ public class FeatureViewEngine {
     return datasetSplits;
   }
 
-  public void recreateTrainingDataset(Integer version) {
-
+  public void recreateTrainingDataset(FeatureView featureView, Integer version, Map<String, String> userWriteOptions)
+      throws IOException, FeatureStoreException {
+    TrainingDataset trainingDataset = getTrainingDataMetadata(featureView, version);
+    writeTrainingDataset(featureView, trainingDataset, userWriteOptions);
   }
 
   private Dataset<Row> readDataset(FeatureView featureView, TrainingDataset trainingDataset,

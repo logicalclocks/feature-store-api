@@ -361,8 +361,9 @@ public class FeatureView {
     featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
   }
 
-  public void recreateTrainingDataset(Integer version) {
-    // TODO:
+  public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    featureViewEngine.recreateTrainingDataset(this, version, writeOptions);
   }
 
   public void purgeTrainingData(Integer version) throws FeatureStoreException, IOException {
