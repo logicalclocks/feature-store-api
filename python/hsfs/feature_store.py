@@ -16,7 +16,7 @@
 
 import warnings
 import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+from typing import Optional, Union, List, Dict
 
 import humps
 import numpy
@@ -699,36 +699,18 @@ class FeatureStore:
         transformation_function: callable,
         output_type: Union[
             str,
-            TypeVar("str"),  # noqa: F821
-            TypeVar("string"),  # noqa: F821
             bytes,
-            numpy.int8,
-            TypeVar("int8"),  # noqa: F821
-            TypeVar("byte"),  # noqa: F821
-            numpy.int16,
-            TypeVar("int16"),  # noqa: F821
-            TypeVar("short"),  # noqa: F821
             int,
-            TypeVar("int"),  # noqa: F821
-            numpy.int,
+            numpy.int8,
+            numpy.int16,
             numpy.int32,
             numpy.int64,
-            TypeVar("int64"),  # noqa: F821
-            TypeVar("long"),  # noqa: F821
-            TypeVar("bigint"),  # noqa: F821
             float,
-            TypeVar("float"),  # noqa: F821
-            numpy.float,
             numpy.float64,
-            TypeVar("float64"),  # noqa: F821
-            TypeVar("double"),  # noqa: F821
             datetime.datetime,
             numpy.datetime64,
             datetime.date,
             bool,
-            TypeVar("boolean"),  # noqa: F821
-            TypeVar("bool"),  # noqa: F821
-            numpy.bool,
         ],
         version: Optional[int] = None,
     ):
