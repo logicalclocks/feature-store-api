@@ -31,13 +31,21 @@ class TrainingDatasetBundle:
         self._job = job
 
     def get_dataset(self, split=None):
-        pass
+        if not self.job:
+            if split:
+                return self._training_dataset_splits.get(split)
+            else:
+                if (self._train_split and self._training_dataset_splits):
+                    return self._training_dataset_splits.get(self._train_split)
+                else:
+                    return self._training_dataset
 
     def get_split_names(self):
-        pass
+        if not self.job:
+            return list(self._training_dataset_splits.keys())
 
-    def get_train_split(self):
-        pass
+    def get_train_split_name(self):
+        return self._train_split
 
     def get_job(self):
-        pass
+        return self._job

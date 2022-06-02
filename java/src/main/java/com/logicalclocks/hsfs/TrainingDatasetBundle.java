@@ -38,12 +38,24 @@ public class TrainingDatasetBundle {
 
   @JsonIgnore
   public Dataset<Row> getDataset() {
-    return dataset;
+    if (inMemory) {
+      if (trainSplitName != null && !trainSplitName.isEmpty()) {
+        return getDataset(trainSplitName);
+      } else {
+        return getDataset();
+      }
+    } else {
+      return null;
+    }
   }
 
   @JsonIgnore
   public Dataset<Row> getDataset(String split) {
-    return datasetSplits.get(split);
+    if (inMemory) {
+      return datasetSplits.get(split);
+    } else {
+      return null;
+    }
   }
 
   @JsonIgnore
@@ -52,15 +64,6 @@ public class TrainingDatasetBundle {
       return new ArrayList<>(datasetSplits.keySet());
     } else {
       return Lists.newArrayList();
-    }
-  }
-
-  @JsonIgnore
-  public Dataset<Row> getTrainSet() {
-    if (trainSplitName != null && !trainSplitName.isEmpty()) {
-      return getDataset(trainSplitName);
-    } else {
-      return getDataset();
     }
   }
 }

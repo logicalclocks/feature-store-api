@@ -103,7 +103,6 @@ public class FeatureViewEngine {
     trainingDataset = createTrainingDataMetadata(featureView, trainingDataset);
     writeTrainingDataset(featureView, trainingDataset, userWriteOptions);
     return new TrainingDatasetBundle(trainingDataset.getVersion());
-    //    return new TrainingDatasetBundle(trainingDataset.getVersion());
   }
 
   public void writeTrainingDataset(
@@ -115,7 +114,7 @@ public class FeatureViewEngine {
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
     computeStatistics(trainingDataset,
-        getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getTrainSet());
+        getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getDataset());
   }
 
   public TrainingDatasetBundle getTrainingDataset(
@@ -165,10 +164,9 @@ public class FeatureViewEngine {
       } else {
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDataset.getVersion(), dataset);
       }
-      computeStatistics(trainingDataset, trainingDatasetBundle.getTrainSet());
+      computeStatistics(trainingDataset, trainingDatasetBundle.getDataset());
       return trainingDatasetBundle;
     }
-    //    return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion());
   }
 
   private void setTrainSplit(TrainingDataset trainingDataset) {
