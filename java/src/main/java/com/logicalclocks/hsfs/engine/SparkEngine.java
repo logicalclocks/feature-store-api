@@ -182,7 +182,7 @@ public class SparkEngine {
    * @param writeOptions
    * @param saveMode
    */
-  public void write(TrainingDataset trainingDataset, Dataset<Row> dataset,
+  public Dataset<Row>[] write(TrainingDataset trainingDataset, Dataset<Row> dataset,
                     Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
@@ -199,11 +199,13 @@ public class SparkEngine {
       String path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
       writeSingle(dataset, trainingDataset.getDataFormat(),
           writeOptions, saveMode, path);
+      return new Dataset[] {dataset};
     } else {
       Dataset<Row>[] datasetSplits = splitDataset(trainingDataset, dataset);
       writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
           trainingDataset.getLocation(), trainingDataset.getSplits());
+      return datasetSplits;
     }
   }
 

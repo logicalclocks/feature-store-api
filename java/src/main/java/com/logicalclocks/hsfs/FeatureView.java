@@ -261,6 +261,17 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name);
   }
 
+  public TrainingDatasetBundle getTrainingDataset(Integer version)
+      throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .version(version)
+            .build();
+    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  }
+
   public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime)
       throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
@@ -284,8 +295,9 @@ public class FeatureView {
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .eventStartTime(startTime)
             .eventEndTime(endTime)
-            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-                Collectors.toList()))
+            .splits(splits != null ?
+                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
@@ -304,8 +316,9 @@ public class FeatureView {
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
-            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-                    Collectors.toList()))
+            .splits(splits != null ?
+                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                    Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .statisticsConfig(statisticsConfig)
             .build();
@@ -363,8 +376,9 @@ public class FeatureView {
             .coalesce(coalesce)
             .storageConnector(storageConnector)
             .location(location)
-            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-                Collectors.toList()))
+            .splits(splits != null ?
+                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                    Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .seed(seed)
             .statisticsConfig(statisticsConfig)

@@ -298,7 +298,7 @@ class FeatureView:
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
-            data_format="tsv",
+            data_format="csv",
             location="",
             splits=splits if splits else {},
             statistics_config=statistics_config,

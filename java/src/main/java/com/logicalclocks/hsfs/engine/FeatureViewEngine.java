@@ -112,9 +112,9 @@ public class FeatureViewEngine {
     // Build write options map
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
-    SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
-    computeStatistics(featureView, trainingDataset,
-        getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getDataset());
+    Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions,
+        SaveMode.Overwrite);
+    computeStatistics(featureView, trainingDataset, datasets);
   }
 
   public TrainingDatasetBundle getTrainingDataset(
@@ -126,7 +126,7 @@ public class FeatureViewEngine {
       try {
         trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
       } catch (Exception e) {
-        if (!e.getMessage().matches(".*27012.*")) {
+        if (!e.getMessage().matches(".*\"errorCode\":270012.*")) {
           throw e;
         }
       }
@@ -163,10 +163,11 @@ public class FeatureViewEngine {
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
             convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
             trainingDatasetUpdated.getTrainSplit());
+        computeStatistics(featureView, trainingDatasetUpdated, datasets);
       } else {
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset);
+        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
       }
-      computeStatistics(featureView, trainingDatasetUpdated, trainingDatasetBundle.getDataset());
       return trainingDatasetBundle;
     }
   }
@@ -193,14 +194,15 @@ public class FeatureViewEngine {
         featureView.getVersion(), trainingDatasetVersion);
   }
 
-  public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset, Dataset<Row> dataset)
-      throws FeatureStoreException,
-      IOException {
+  public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset,
+      Dataset<Row>[] datasets)
+      throws FeatureStoreException, IOException {
     if (trainingDataset.getStatisticsConfig().getEnabled()) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        return statisticsEngine.registerSplitStatistics(featureView, trainingDataset);
+        return statisticsEngine.registerSplitStatistics(
+            featureView, trainingDataset, convertSplitDatasetsToMap(trainingDataset.getSplits(), datasets));
       } else {
-        return statisticsEngine.computeStatistics(featureView, trainingDataset, dataset);
+        return statisticsEngine.computeStatistics(featureView, trainingDataset, datasets[0]);
       }
     }
     return null;

@@ -35,6 +35,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class StatisticsEngine {
 
@@ -97,9 +98,10 @@ public class StatisticsEngine {
     return statisticsApi.post(trainingDataset, statistics);
   }
 
-  public Statistics registerSplitStatistics(FeatureView featureView, TrainingDataset trainingDataset)
+  public Statistics registerSplitStatistics(FeatureView featureView, TrainingDataset trainingDataset,
+      Map<String, Dataset<Row>> splitDatasets)
       throws FeatureStoreException, IOException {
-    Statistics statistics = getSplitStatistics(trainingDataset);
+    Statistics statistics = getSplitStatistics(trainingDataset, splitDatasets);
     return statisticsApi.post(featureView, trainingDataset.getVersion(), statistics);
   }
 
@@ -109,6 +111,22 @@ public class StatisticsEngine {
     for (Split split : trainingDataset.getSplits()) {
       splitStatistics.add(new SplitStatistics(split.getName(),
           computeStatistics(trainingDataset.read(split.getName()),
+              trainingDataset.getStatisticsConfig().getColumns(),
+              trainingDataset.getStatisticsConfig().getHistograms(),
+              trainingDataset.getStatisticsConfig().getCorrelations(),
+              trainingDataset.getStatisticsConfig().getExactUniqueness(),
+              null).getContent()));
+    }
+    Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
+    return new Statistics(commitTime, null, null, splitStatistics);
+  }
+
+  public Statistics getSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets)
+      throws FeatureStoreException {
+    List<SplitStatistics> splitStatistics = new ArrayList<>();
+    for (Map.Entry<String, Dataset<Row>> entry : splitDatasets.entrySet()) {
+      splitStatistics.add(new SplitStatistics(entry.getKey(),
+          computeStatistics(entry.getValue(),
               trainingDataset.getStatisticsConfig().getColumns(),
               trainingDataset.getStatisticsConfig().getHistograms(),
               trainingDataset.getStatisticsConfig().getCorrelations(),
