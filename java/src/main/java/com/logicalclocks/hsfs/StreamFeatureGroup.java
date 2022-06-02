@@ -234,10 +234,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @deprecated
    * In the next release save method will be  replaced by insert method.
    */
-  public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration sparkOptions)
+  public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
-        sparkOptions);
+        jobConfiguration);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, featureData, null);
@@ -253,9 +253,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions, null);
   }
 
-  public <S> void insert(S featureData, JobConfiguration sparkOptions) throws FeatureStoreException, IOException,
+  public <S> void insert(S featureData, JobConfiguration jobConfiguration) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, sparkOptions);
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, jobConfiguration);
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
@@ -264,19 +264,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
-                         JobConfiguration sparkOptions) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, sparkOptions);
+                         JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
+    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, jobConfiguration);
   }
 
   public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
-                         Map<String, String> writeOptions, JobConfiguration sparkOptions)
+                         Map<String, String> writeOptions, JobConfiguration jobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
 
-    if (this.getId() == null) {
-      StreamFeatureGroup updatedFeatureGroup = streamFeatureGroupEngine.saveFeatureGroupMetaData(this,
-          partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
-      this.setId(updatedFeatureGroup.getId());
-    }
     if (operation == null) {
       if (overwrite) {
         operation = HudiOperationType.BULK_INSERT;
@@ -284,7 +279,8 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         operation = HudiOperationType.UPSERT;
       }
     }
-    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode, writeOptions);
+    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode,  partitionKeys,
+        hudiPrecombineKey, writeOptions, jobConfiguration);
     codeEngine.saveCode(this);
     computeStatistics();
   }
@@ -339,19 +335,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
                                  Long timeout,  String checkpointLocation, Map<String, String> writeOptions,
-                                 JobConfiguration sparkOptions)
-      throws FeatureStoreException, IOException, ParseException {
-
-    boolean saveEmpty = false;
-    if (this.getId() == null) {
-      StreamFeatureGroup updatedFeatureGroup = streamFeatureGroupEngine.saveFeatureGroupMetaData(this,
-          partitionKeys, hudiPrecombineKey, writeOptions, sparkOptions);
-      this.setId(updatedFeatureGroup.getId());
-      saveEmpty = true;
-    }
+                                 JobConfiguration jobConfiguration) {
 
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
-        awaitTermination, timeout, checkpointLocation, writeOptions, saveEmpty);
+        awaitTermination, timeout, checkpointLocation,  partitionKeys, hudiPrecombineKey, writeOptions,
+        jobConfiguration);
   }
 
   public <S> void commitDeleteRecord(S featureData)

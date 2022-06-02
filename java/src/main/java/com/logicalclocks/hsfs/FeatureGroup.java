@@ -303,12 +303,6 @@ public class FeatureGroup extends FeatureGroupBase {
                      Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
 
-    if (this.getId() == null) {
-      FeatureGroup updatedFeatureGroup = featureGroupEngine.saveFeatureGroupMetaData(this, partitionKeys,
-          hudiPrecombineKey);
-      this.setId(updatedFeatureGroup.getId());
-    }
-
     // operation is only valid for time travel enabled feature group
     if (operation != null && this.timeTravelFormat == TimeTravelFormat.NONE) {
       throw new IllegalArgumentException("operation argument is valid only for time travel enable feature groups");
@@ -323,7 +317,7 @@ public class FeatureGroup extends FeatureGroupBase {
     }
 
     featureGroupEngine.insert(this, featureData, storage, operation,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, partitionKeys, hudiPrecombineKey, writeOptions);
 
     codeEngine.saveCode(this);
     computeStatistics();
@@ -409,16 +403,8 @@ public class FeatureGroup extends FeatureGroupBase {
     LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
         + "` will not compute statistics.");
 
-    boolean saveEmpty = false;
-    if (this.getId() == null) {
-      FeatureGroup updatedFeatureGroup = featureGroupEngine.saveFeatureGroupMetaData(this, partitionKeys,
-          hudiPrecombineKey);
-      this.setId(updatedFeatureGroup.getId());
-      saveEmpty = true;
-    }
-
     return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination,
-        timeout, checkpointLocation, writeOptions, saveEmpty);
+        timeout, checkpointLocation, partitionKeys, hudiPrecombineKey, writeOptions);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)

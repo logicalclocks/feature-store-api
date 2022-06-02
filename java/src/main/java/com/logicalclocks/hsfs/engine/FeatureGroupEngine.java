@@ -66,24 +66,20 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
-    if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(dataset));
-    }
-
-    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
-
-    FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey);
+    FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+        dataset, false);
 
     insert(updatedFeatureGroup, dataset, null,
         updatedFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
             ? HudiOperationType.BULK_INSERT : null,
-        SaveMode.Append, writeOptions);
+        SaveMode.Append, partitionKeys, hudiPrecombineKey, writeOptions);
 
     return updatedFeatureGroup;
   }
 
   public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
-                     HudiOperationType operation, SaveMode saveMode, Map<String, String> writeOptions)
+                     HudiOperationType operation, SaveMode saveMode, List<String> partitionKeys,
+                     String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
 
@@ -92,6 +88,11 @@ public class FeatureGroupEngine {
       if (validation != null) {
         validationId = validation.getValidationId();
       }
+    }
+
+    if (featureGroup.getId() == null) {
+      featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
+          hudiPrecombineKey, featureData, false);
     }
 
     if (saveMode == SaveMode.Overwrite) {
@@ -109,18 +110,9 @@ public class FeatureGroupEngine {
   @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
-                                     String checkpointLocation, Map<String, String> writeOptions, boolean saveEmpty)
+                                     String checkpointLocation, List<String> partitionKeys,
+                                     String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
-
-    if (saveEmpty) {
-      // insertStream method was called on feature group object that has not been saved
-      // we will use writeOfflineDataframe method on empty dataframe to create directory structure
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
-          SparkEngine.getInstance().createEmptyDataFrame(featureData),
-          featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-              ? HudiOperationType.BULK_INSERT : null,
-          null, null);
-    }
 
     if (!featureGroup.getOnlineEnabled()) {
       throw new FeatureStoreException("Online storage is not enabled for this feature group. "
@@ -130,6 +122,11 @@ public class FeatureGroupEngine {
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
           + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    if (featureGroup.getId() == null) {
+      FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
+          hudiPrecombineKey, featureData, true);
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
@@ -163,7 +160,16 @@ public class FeatureGroupEngine {
   }
 
   public FeatureGroup saveFeatureGroupMetaData(FeatureGroup featureGroup, List<String> partitionKeys,
-                                               String hudiPrecombineKey) throws FeatureStoreException, IOException {
+                                               String hudiPrecombineKey, Dataset<Row> featureData,
+                                               boolean saveEmpty)
+      throws FeatureStoreException, IOException, ParseException {
+
+    if (featureGroup.getFeatures() == null) {
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData));
+    }
+
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
       featureGroup.getPrimaryKeys().forEach(pk ->
@@ -213,6 +219,16 @@ public class FeatureGroupEngine {
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
       List<Feature> features = apiFG.getFeatures();
       featureGroup.setFeatures(features);
+    }
+
+    if (saveEmpty) {
+      // insertStream method was called on feature group object that has not been saved
+      // we will use writeOfflineDataframe method on empty dataframe to create directory structure
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
+          SparkEngine.getInstance().createEmptyDataFrame(featureData),
+          featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+              ? HudiOperationType.BULK_INSERT : null,
+          null, null);
     }
 
     return featureGroup;
