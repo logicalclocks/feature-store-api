@@ -126,19 +126,9 @@ public class FeatureView {
     vectorServer.initServing(this, false, false);
   }
 
-  public void initServing(Integer trainingDatasetVersion)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    vectorServer.initServing(this, trainingDatasetVersion, false, false);
-  }
-
   public void initServing(Boolean batch, Boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, batch, external);
-  }
-
-  public void initServing(Integer trainingDatasetVersion, Boolean batch, Boolean external)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    vectorServer.initServing(this, trainingDatasetVersion, batch, external);
   }
 
   @JsonIgnore
@@ -150,7 +140,7 @@ public class FeatureView {
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry, false);
+    return vectorServer.getFeatureVector(this, entry, external);
   }
 
   @JsonIgnore
@@ -167,23 +157,23 @@ public class FeatureView {
 
   public List<Object> previewFeatureVector()
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVector(this, false);
+    return previewFeatureVectors(1, false).get(0);
   }
 
   public List<Object> previewFeatureVector(boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVector(this, external);
+    return previewFeatureVectors(1, external).get(0);
   }
 
   public List<List<Object>> previewFeatureVectors(Integer n)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, false);
+    return vectorServer.previewFeatureVectors(this, false, n);
 
   }
 
   public List<List<Object>> previewFeatureVectors(Integer n, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, external);
+    return vectorServer.previewFeatureVectors(this, external, n);
 
   }
 
