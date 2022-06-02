@@ -450,7 +450,9 @@ class Engine:
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._split_df(df, training_dataset_obj, feature_view_obj)
+            split_df = self._prepare_transform_split_df(
+                df, training_dataset_obj, feature_view_obj
+            )
         else:
             split_df = df
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
@@ -461,7 +463,7 @@ class Engine:
             )
         return split_df
 
-    def _split_df(self, df, training_dataset_obj, feature_view_obj):
+    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
