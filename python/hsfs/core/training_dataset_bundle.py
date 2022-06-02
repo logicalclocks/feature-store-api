@@ -31,7 +31,7 @@ class TrainingDatasetBundle:
         self._job = job
 
     def get_dataset(self, split=None):
-        if not self.job:
+        if not self._job:
             if split:
                 return self._training_dataset_splits.get(split)
             else:
@@ -41,7 +41,7 @@ class TrainingDatasetBundle:
                     return self._training_dataset
 
     def get_split_names(self):
-        if not self.job:
+        if not self._job:
             return list(self._training_dataset_splits.keys())
 
     def get_train_split_name(self):
@@ -49,3 +49,7 @@ class TrainingDatasetBundle:
 
     def get_job(self):
         return self._job
+
+    @property
+    def version(self):
+        return self._version
