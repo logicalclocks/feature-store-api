@@ -557,53 +557,6 @@ class Engine:
             )
         )
 
-    def validate(self, dataframe, expectations, log_activity=True):
-        """Run data validation on the dataframe with Deequ."""
-
-        expectations_java = []
-        for expectation in expectations:
-            rules = []
-            for rule in expectation.rules:
-                rules.append(
-                    self._jvm.com.logicalclocks.hsfs.metadata.validation.Rule.builder()
-                    .name(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.RuleName.valueOf(
-                            rule.get("name")
-                        )
-                    )
-                    .level(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.Level.valueOf(
-                            rule.get("level")
-                        )
-                    )
-                    .min(rule.get("min", None))
-                    .max(rule.get("max", None))
-                    .pattern(rule.get("pattern", None))
-                    .acceptedType(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.AcceptedType.valueOf(
-                            rule.get("accepted_type")
-                        )
-                        if rule.get("accepted_type") is not None
-                        else None
-                    )
-                    .feature((rule.get("feature", None)))
-                    .legalValues(rule.get("legal_values", None))
-                    .build()
-                )
-            expectation = (
-                self._jvm.com.logicalclocks.hsfs.metadata.Expectation.builder()
-                .name(expectation.name)
-                .description(expectation.description)
-                .features(expectation.features)
-                .rules(rules)
-                .build()
-            )
-            expectations_java.append(expectation)
-
-        return self._jvm.com.logicalclocks.hsfs.engine.DataValidationEngine.getInstance().validate(
-            dataframe._jdf, expectations_java
-        )
-
     def validate_with_great_expectations(
         self,
         dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821

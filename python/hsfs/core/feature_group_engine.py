@@ -33,12 +33,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group, feature_dataframe, write_options
         )
 
-        # deequ validation only on spark
-        validation = feature_group._data_validation_engine.ingest_validate(
-            feature_group, feature_dataframe
-        )
-        validation_id = validation.validation_id if validation is not None else None
-
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group, feature_dataframe, True, validation_options
@@ -61,7 +55,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 None,
                 offline_write_options,
                 online_write_options,
-                validation_id,
             ),
             ge_report,
         )
@@ -81,12 +74,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             self._save_feature_group_metadata(
                 feature_group, feature_dataframe, write_options
             )
-
-        # deequ validation only on spark
-        validation = feature_group._data_validation_engine.ingest_validate(
-            feature_group, feature_dataframe
-        )
-        validation_id = validation.validation_id if validation is not None else None
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
@@ -116,7 +103,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 storage,
                 offline_write_options,
                 online_write_options,
-                validation_id,
             ),
             ge_report,
         )

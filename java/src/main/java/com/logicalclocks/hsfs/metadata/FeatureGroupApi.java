@@ -25,7 +25,6 @@ import com.logicalclocks.hsfs.OnDemandFeatureGroup;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
@@ -295,8 +294,7 @@ public class FeatureGroupApi {
                                               String description, List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey, boolean onlineEnabled,
                                               TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, ValidationType validationType,
-                                              scala.collection.Seq<Expectation> expectations, String eventTime)
+                                              StatisticsConfig statisticsConfig, String eventTime)
       throws IOException, FeatureStoreException {
 
 
@@ -316,8 +314,6 @@ public class FeatureGroupApi {
             .onlineEnabled(onlineEnabled)
             .timeTravelFormat(timeTravelFormat)
             .statisticsConfig(statisticsConfig)
-            .validationType(validationType)
-            .expectations(expectations)
             .eventTime(eventTime)
             .build();
 
@@ -335,7 +331,6 @@ public class FeatureGroupApi {
                                                           List<String> partitionKeys, String hudiPrecombineKey,
                                                           boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          scala.collection.Seq<Expectation> expectations,
                                                           String eventTime) throws IOException, FeatureStoreException {
 
 
@@ -354,7 +349,6 @@ public class FeatureGroupApi {
             .hudiPrecombineKey(hudiPrecombineKey)
             .onlineEnabled(onlineEnabled)
             .statisticsConfig(statisticsConfig)
-            .expectations(expectations)
             .eventTime(eventTime)
             .build();
 

@@ -149,8 +149,7 @@ class FeatureGroupApi:
                 feature group.
             feature_group_copy: FeatureGroup. Metadata object of the feature
                 group with the information to be updated.
-            query_parameter: str. Query parameter that controls which information is updated. E.g. "updateMetadata",
-                or "validationType".
+            query_parameter: str. Query parameter that controls which information is updated. E.g. "updateMetadata".
             query_parameter_value: Str. Value of the query_parameter.
 
         # Returns

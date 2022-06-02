@@ -19,10 +19,8 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.CodeEngine;
-import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,10 +28,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import scala.collection.JavaConverters;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,9 +69,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               OnDemandDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
-                              List<Feature> features, StatisticsConfig statisticsConfig,
-                              scala.collection.Seq<Expectation> expectations,
-                              ValidationType validationType, String eventTime) {
+                              List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -93,12 +87,6 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.eventTime = eventTime;
-    this.validationType = validationType != null ? validationType : ValidationType.NONE;
-    if (expectations != null && !expectations.isEmpty()) {
-      this.expectationsNames = new ArrayList<>();
-      this.expectations = JavaConverters.seqAsJavaListConverter(expectations).asJava();
-      this.expectations.forEach(expectation -> this.expectationsNames.add(expectation.getName()));
-    }
   }
 
   public OnDemandFeatureGroup() {
