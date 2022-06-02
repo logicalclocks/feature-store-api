@@ -68,7 +68,7 @@ public class TrainingDatasetFeature {
     this.label = label;
   }
 
-  public TrainingDatasetFeature(String name,Boolean label) {
+  public TrainingDatasetFeature(String name, Boolean label) {
     setName(name);
     this.label = label;
   }
