@@ -15,10 +15,12 @@
 #
 
 import warnings
+import datetime
+from typing import Optional, Union, List, Dict
+
 import humps
 import numpy
-import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+import great_expectations as ge
 
 from hsfs.transformation_function import TransformationFunction
 from hsfs.core import transformation_function_engine
@@ -31,6 +33,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
+    expectation_suite,
     feature_view,
 )
 from hsfs.core import (
@@ -369,6 +372,9 @@ class FeatureStore:
         expectations: Optional[List[expectation.Expectation]] = [],
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
+        expectation_suite: Optional[
+            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+        ] = None,
     ):
         """Create a feature group metadata object.
 
@@ -424,6 +430,9 @@ class FeatureStore:
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
+            expectation_suite: Optionally, attach an expectation suite to the feature
+                group which dataframes should be validated against upon insertion.
+                Defaults to `None`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -445,6 +454,7 @@ class FeatureStore:
             expectations=expectations,
             event_time=event_time,
             stream=stream,
+            expectation_suite=expectation_suite,
         )
 
     def create_on_demand_feature_group(
@@ -689,36 +699,18 @@ class FeatureStore:
         transformation_function: callable,
         output_type: Union[
             str,
-            TypeVar("str"),  # noqa: F821
-            TypeVar("string"),  # noqa: F821
             bytes,
-            numpy.int8,
-            TypeVar("int8"),  # noqa: F821
-            TypeVar("byte"),  # noqa: F821
-            numpy.int16,
-            TypeVar("int16"),  # noqa: F821
-            TypeVar("short"),  # noqa: F821
             int,
-            TypeVar("int"),  # noqa: F821
-            numpy.int,
+            numpy.int8,
+            numpy.int16,
             numpy.int32,
             numpy.int64,
-            TypeVar("int64"),  # noqa: F821
-            TypeVar("long"),  # noqa: F821
-            TypeVar("bigint"),  # noqa: F821
             float,
-            TypeVar("float"),  # noqa: F821
-            numpy.float,
             numpy.float64,
-            TypeVar("float64"),  # noqa: F821
-            TypeVar("double"),  # noqa: F821
             datetime.datetime,
             numpy.datetime64,
             datetime.date,
             bool,
-            TypeVar("boolean"),  # noqa: F821
-            TypeVar("bool"),  # noqa: F821
-            numpy.bool,
         ],
         version: Optional[int] = None,
     ):
