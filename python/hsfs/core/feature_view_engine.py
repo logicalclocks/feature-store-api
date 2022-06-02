@@ -209,13 +209,15 @@ class FeatureViewEngine:
         return td_updated, split_df
 
     def recreate_training_dataset(
-        self, feature_view_obj, training_dataset_version, user_write_options):
+        self, feature_view_obj, training_dataset_version, user_write_options
+    ):
         training_dataset_obj = self._get_training_data_metadata(
-            feature_view_obj, training_dataset_version)
+            feature_view_obj, training_dataset_version
+        )
         td_job = self.compute_training_dataset(
             feature_view_obj,
             user_write_options,
-            training_dataset_obj=training_dataset_obj
+            training_dataset_obj=training_dataset_obj,
         )
         return training_dataset_obj, td_job
 
@@ -257,7 +259,7 @@ class FeatureViewEngine:
         feature_view_obj,
         user_write_options,
         training_dataset_obj=None,
-        training_dataset_version=None
+        training_dataset_version=None,
     ):
         if training_dataset_obj:
             pass

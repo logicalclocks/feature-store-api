@@ -35,7 +35,7 @@ class TrainingDatasetBundle:
             if split:
                 return self._training_dataset_splits.get(split)
             else:
-                if (self._train_split and self._training_dataset_splits):
+                if self._train_split and self._training_dataset_splits:
                     return self._training_dataset_splits.get(self._train_split)
                 else:
                     return self._training_dataset
