@@ -42,7 +42,7 @@ public class TrainingDatasetBundle {
       if (trainSplitName != null && !trainSplitName.isEmpty()) {
         return getDataset(trainSplitName);
       } else {
-        return getDataset();
+        return dataset;
       }
     } else {
       return null;

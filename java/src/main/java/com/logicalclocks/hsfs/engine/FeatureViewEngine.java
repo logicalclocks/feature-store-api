@@ -113,7 +113,7 @@ public class FeatureViewEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
     SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
-    computeStatistics(trainingDataset,
+    computeStatistics(featureView, trainingDataset,
         getTrainingDataset(featureView, trainingDataset, Maps.newHashMap()).getDataset());
   }
 
@@ -143,9 +143,10 @@ public class FeatureViewEngine {
             datasets.put(split.getName(),
                 trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
           }
-          return new TrainingDatasetBundle(trainingDataset.getVersion(), datasets, trainingDataset.getTrainSplit());
+          return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
+              datasets, trainingDatasetUpdated.getTrainSplit());
         } else {
-          return new TrainingDatasetBundle(trainingDataset.getVersion(),
+          return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
               trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions)
           );
         }
@@ -155,16 +156,17 @@ public class FeatureViewEngine {
         );
       }
     } else {
-      Dataset<Row> dataset = readDataset(featureView, trainingDataset, userReadOptions);
+      Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
       TrainingDatasetBundle trainingDatasetBundle;
-      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDataset, dataset);
-        trainingDatasetBundle = new TrainingDatasetBundle(trainingDataset.getVersion(),
-            convertSplitDatasetsToMap(trainingDataset.getSplits(), datasets), trainingDataset.getTrainSplit());
+      if (trainingDatasetUpdated.getSplits() != null && !trainingDatasetUpdated.getSplits().isEmpty()) {
+        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, dataset);
+        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
+            convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
+            trainingDatasetUpdated.getTrainSplit());
       } else {
-        trainingDatasetBundle = new TrainingDatasetBundle(trainingDataset.getVersion(), dataset);
+        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset);
       }
-      computeStatistics(trainingDataset, trainingDatasetBundle.getDataset());
+      computeStatistics(featureView, trainingDatasetUpdated, trainingDatasetBundle.getDataset());
       return trainingDatasetBundle;
     }
   }
@@ -191,14 +193,14 @@ public class FeatureViewEngine {
         featureView.getVersion(), trainingDatasetVersion);
   }
 
-  public Statistics computeStatistics(TrainingDataset trainingDataset, Dataset<Row> dataset)
+  public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset, Dataset<Row> dataset)
       throws FeatureStoreException,
       IOException {
     if (trainingDataset.getStatisticsConfig().getEnabled()) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        return statisticsEngine.registerSplitStatistics(trainingDataset);
+        return statisticsEngine.registerSplitStatistics(featureView, trainingDataset);
       } else {
-        return statisticsEngine.computeStatistics(trainingDataset, dataset);
+        return statisticsEngine.computeStatistics(featureView, trainingDataset, dataset);
       }
     }
     return null;

@@ -143,7 +143,6 @@ public class TrainingDataset {
     this.location = location;
     this.storageConnector = storageConnector;
     this.trainSplit = trainSplit;
-    this.trainingDatasetType = utils.getTrainingDatasetType(storageConnector);
     this.splits = splits;
     this.seed = seed;
     this.featureStore = featureStore;
@@ -151,7 +150,8 @@ public class TrainingDataset {
     this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.eventStartTime = eventStartTime != null ? FeatureGroupUtils.getDateFromDateString(eventStartTime) : null;
     this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
-    this.trainingDatasetType = trainingDatasetType;
+    this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
+        utils.getTrainingDatasetType(storageConnector);
   }
 
   /**
