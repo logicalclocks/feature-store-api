@@ -255,6 +255,30 @@ public class FeatureStore {
   public FeatureGroup getOrCreateFeatureGroup(String name,
                                               Integer version,
                                               List<String> primaryKeys,
+                                              boolean onlineEnabled) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .onlineEnabled(onlineEnabled)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name,
+                                              Integer version,
+                                              List<String> primaryKeys,
                                               List<String> partitionKeys,
                                               boolean onlineEnabled) {
 
@@ -270,6 +294,31 @@ public class FeatureStore {
           .primaryKeys(primaryKeys)
           .partitionKeys(partitionKeys)
           .onlineEnabled(onlineEnabled)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              boolean onlineEnabled,
+                                              String eventTime) {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  FeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .onlineEnabled(onlineEnabled)
+          .eventTime(eventTime)
           .build();
 
       featureGroup.setFeatureStore(this);
@@ -420,6 +469,28 @@ public class FeatureStore {
   }
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name,
+                                                          Integer version,
+                                                          List<String> primaryKeys) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name,
                                               Integer version,
                                               List<String> primaryKeys,
                                               List<String> partitionKeys) {
@@ -435,6 +506,29 @@ public class FeatureStore {
           .version(version)
           .primaryKeys(primaryKeys)
           .partitionKeys(partitionKeys)
+          .build();
+
+      featureGroup.setFeatureStore(this);
+    }
+
+    return featureGroup;
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+                                                          List<String> primaryKeys,
+                                                          String eventTime) {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      featureGroup =  StreamFeatureGroup.builder()
+          .featureStore(this)
+          .name(name)
+          .version(version)
+          .primaryKeys(primaryKeys)
+          .eventTime(eventTime)
           .build();
 
       featureGroup.setFeatureStore(this);
