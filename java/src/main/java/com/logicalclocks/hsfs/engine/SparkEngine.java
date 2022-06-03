@@ -47,15 +47,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-
-import static org.apache.spark.sql.avro.functions.from_avro;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.from_json;
-import static org.apache.spark.sql.avro.functions.to_avro;
-import static org.apache.spark.sql.functions.concat;
-import static org.apache.spark.sql.functions.lit;
-import static org.apache.spark.sql.functions.struct;
-
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -64,16 +55,24 @@ import org.apache.spark.sql.types.StructField;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.apache.spark.sql.avro.functions.from_avro;
+import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
 
@@ -143,7 +142,20 @@ public class SparkEngine {
   }
 
   public Dataset<Row> sql(String query) {
-    return sparkSession.sql(query);
+    try {
+      return sparkSession.sql(query);
+    } catch (Exception e) {
+      if (e.getMessage().contains("Permission denied")) {
+        Pattern pattern = Pattern.compile("inode=\"/apps/hive/warehouse/(.*)?_featurestore\\.db\"");
+        Matcher matcher = pattern.matcher(e.getMessage());
+        if (matcher.find()) {
+          String featureStore = matcher.group(1);
+          throw new RuntimeException(String.format("Cannot access feature store '%s'. " +
+              "It is possible to request access from admins of '%s'.", featureStore, featureStore));
+        }
+      }
+      throw e;
+    }
   }
 
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
