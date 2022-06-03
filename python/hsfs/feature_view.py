@@ -123,7 +123,7 @@ class FeatureView:
 
     def get_feature_vector(
         self,
-        entry: Dict[str, Any],
+        entry: List[Dict[str, Any]],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = False,
     ):

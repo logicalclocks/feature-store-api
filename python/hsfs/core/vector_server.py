@@ -194,99 +194,86 @@ class VectorServer:
 
         return self._generate_vector(result_dict)
 
-    def get_feature_vectors(self, entry, passed_features={}, preview_sample=0):
+    def get_feature_vectors(self, entry, passed_features=[], preview_sample=0):
         """Assembles serving vector from online feature store."""
-
-        if not preview_sample and not all(
-            [isinstance(val, list) for val in entry.values()]
-        ):
-            raise ValueError(
-                "Entry is expected to be list of primary key values. "
-                "If you have already initialised for batch serving and now want to retrieve single vector "
-                "please reinitialise prepared statements with `training_dataset.init_prepared_statement()` "
-                "or `feature_view.init_serving()`"
-            )
-
-        if not preview_sample and not all(
-            [isinstance(val, list) for val in passed_features.values()]
-        ):
-            raise ValueError(
-                "Passed features is expected to be a list of feature values. "
-                "If you have already initialised for batch serving and now want to retrieve single vector "
-                "please reinitialise prepared statements with `training_dataset.init_prepared_statement()` "
-                "or `feature_view.init_serving()`"
-            )
 
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
-        batch_dicts = {}
-
-        self.refresh_mysql_connection()
-        for prepared_statement_index in self._prepared_statements:
-            print(
-                tuple(
-                    zip(
-                        *[
-                            entry.get(key)
-                            for key in self._pkname_by_serving_index[
-                                prepared_statement_index
-                            ]
-                        ]
+        batch_results = {}
+        with self._prepared_statement_engine.connect() as mysql_conn:
+            for prepared_statement_index in self._prepared_statements:
+                prepared_statement = self._prepared_statements[prepared_statement_index]
+                if preview_sample:
+                    prepared_statement = self._make_preview_statement(
+                        prepared_statement, preview_sample
                     )
-                )
-            )
-            order_in_batch = 0
-            prepared_statement = self._prepared_statements[prepared_statement_index]
-            if preview_sample:
-                prepared_statement = self._make_preview_statement(
-                    prepared_statement, preview_sample
-                )
 
-            with self._prepared_statement_engine.connect() as mysql_conn:
-                print(prepared_statement)
-
-                result_proxy = mysql_conn.execute(
-                    prepared_statement,
-                    batch_ids=None
-                    if preview_sample
-                    else tuple(
-                        zip(
-                            *[
-                                entry.get(key)
+                entry_values_tuples = list(
+                    map(
+                        lambda e: tuple(
+                            [
+                                e.get(key)
                                 for key in self._pkname_by_serving_index[
                                     prepared_statement_index
                                 ]
                             ]
-                        )
-                    ),
-                ).fetchall()
-            for row in result_proxy:
-                result_dict = self.deserialize_complex_features(
-                    self._complex_features, dict(row.items())
-                )
-                print(result_dict)
-                if not result_dict:
-                    raise Exception(
-                        "No data was retrieved from online feature store using input "
-                        + entry
+                        ),
+                        entry,
                     )
-                # apply transformation functions
-                result_dict = self._apply_transformation(result_dict)
+                )
 
-                if order_in_batch in batch_dicts:
-                    batch_dicts[order_in_batch] += list(result_dict.values())
-                else:
-                    batch_dicts[order_in_batch] = list(result_dict.values())
-                order_in_batch += 1
+                result_proxy = mysql_conn.execute(
+                    prepared_statement,
+                    batch_ids=None if preview_sample else entry_values_tuples,
+                ).fetchall()
 
-        if not len({len(i) for i in list(batch_dicts.values())}) == 1:
-            raise Exception(
-                "Not all feature vectors have the same length. Please make sure that all primary key values "
-                "are correct."
+                statement_results = []
+                for row in result_proxy:
+                    result_dict = self.deserialize_complex_features(
+                        self._complex_features, dict(row.items())
+                    )
+
+                    if not result_dict:
+                        raise Exception(
+                            "No data was retrieved from online feature store using input "
+                            + entry
+                        )
+
+                    statement_results.append(result_dict)
+
+                # sort the results based on the order of keys provided by the user
+                sorted_results = self._get_sorted_results(
+                    self._pkname_by_serving_index[prepared_statement_index],
+                    entry,
+                    statement_results,
+                )
+
+                # add partial results to the global results
+                for vector_index, results_dict in enumerate(sorted_results):
+                    if vector_index not in batch_results:
+                        batch_results[vector_index] = results_dict
+                    else:
+                        batch_results[vector_index].update(results_dict)
+
+        # apply passed features to each batch result
+        for vector_index, pf in enumerate(passed_features):
+            batch_results[vector_index].update(pf)
+
+        # apply transformation functions
+        batch_transformed = list(
+            map(
+                lambda results_dict: self._apply_transformation(results_dict),
+                batch_results,
             )
+        )
 
-        return list(batch_dicts.values())
+        return list(
+            map(
+                lambda result_dict: self._generate_vector(result_dict),
+                batch_transformed,
+            )
+        )
 
     def get_complex_feature_schemas(self):
         return {
@@ -348,6 +335,19 @@ class VectorServer:
                 ].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
+
+    @staticmethod
+    def _get_sorted_results(pknames, entries, results):
+        sorted_results = []
+        for e in entries:
+            for row in results:
+                if len([1 for pkname in pknames if e[pkname] == row[pkname]]) == len(
+                    pknames
+                ):
+                    sorted_results.append(row)
+                    break
+
+        return sorted_results
 
     @staticmethod
     def _parametrize_query(name, query_online):
