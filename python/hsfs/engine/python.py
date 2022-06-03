@@ -545,7 +545,7 @@ class Engine:
                 keystore=client.get_instance()._get_jks_key_store_path(),
                 keystore_password=client.get_instance()._cert_key,
             )
-        except (TTransportException, AttributeError) as e:
+        except (TTransportException, AttributeError):
             raise ValueError(
                 f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
                 "is correct and make sure port '9085' is open on host server."
