@@ -62,7 +62,9 @@ class FeatureView:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
-        self._vector_server = None
+        self._single_vector_server = None
+        self._batch_vectors_server = None
+        self._batch_scoring_server = None
 
     def delete(self):
         """Delete current feature view and all associated metadata.
@@ -100,10 +102,16 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        self._vector_server = vector_server.VectorServer(
-            self._featurestore_id, training_dataset_version
-        )
-        self._vector_server.init_serving(self, batch, external)
+        if not batch:
+            self._single_vector_server = vector_server.VectorServer(
+                self._featurestore_id, training_dataset_version
+            )
+            self._single_vector_server.init_serving(self, False, external)
+        else:
+            self._batch_vectors_server = vector_server.VectorServer(
+                self._featurestore_id, training_dataset_version
+            )
+            self._batch_vectors_server.init_serving(self, True, external)
 
     def init_batch_scoring(
         self,
@@ -115,10 +123,10 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
-        self._vector_server = vector_server.VectorServer(
+        self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id, training_dataset_version
         )
-        self._vector_server.init_batch_scoring(self)
+        self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
         self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
@@ -153,9 +161,9 @@ class FeatureView:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._single_vector_server is None:
             self.init_serving(external=external)
-        return self._vector_server.get_feature_vector(self, entry, external)
+        return self._single_vector_server.get_feature_vector(self, entry, external)
 
     def get_feature_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
@@ -174,9 +182,9 @@ class FeatureView:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._batch_vectors_server is None:
             self.init_serving(batch=True, external=external)
-        return self._vector_server.get_feature_vectors(self, entry, external)
+        return self._batch_vectors_server.get_feature_vectors(self, entry, external)
 
     def preview_feature_vector(self, external: Optional[bool] = False):
         """Returns a sample of assembled serving vector from online feature store.
@@ -191,9 +199,9 @@ class FeatureView:
             `list` List of feature values, ordered according to positions of this
             features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._single_vector_server is None:
             self.init_serving()
-        return self._vector_server.get_preview_vectors(self, external, 1)
+        return self._single_vector_server.get_preview_vectors(self, external, 1)
 
     def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
         """Returns n samples of assembled serving vectors in batches from online feature store.
@@ -209,9 +217,9 @@ class FeatureView:
             `List[list]` List of lists of feature values , ordered according to
             positions of this features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._single_vector_server is None:
             self.init_serving()
-        return self._vector_server.get_preview_vectors(self, external, n)
+        return self._single_vector_server.get_preview_vectors(self, external, n)
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
@@ -222,14 +230,14 @@ class FeatureView:
         read_options: User provided read options. Defaults to `{}`.
         """
 
-        if self._vector_server is None:
+        if self._batch_scoring_server is None:
             self.init_batch_scoring()
 
         return self._feature_view_engine.get_batch_data(
             self,
             start_time,
             end_time,
-            self._vector_server,
+            self._batch_scoring_server,
             read_options,
         )
 
