@@ -378,7 +378,7 @@ class FeatureViewEngine:
         feature_view_obj,
         start_time,
         end_time,
-        vector_server,
+        training_dataset_version,
         read_options=None,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
@@ -388,7 +388,7 @@ class FeatureViewEngine:
         ).read(read_options=read_options)
 
         training_dataset_obj = self._get_training_data_metadata(
-            feature_view_obj, vector_server.training_dataset_version
+            feature_view_obj, training_dataset_version
         )
 
         return engine.get_instance()._apply_transformation_function(

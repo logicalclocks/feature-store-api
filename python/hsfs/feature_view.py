@@ -237,7 +237,7 @@ class FeatureView:
             self,
             start_time,
             end_time,
-            self._batch_scoring_server,
+            self._batch_scoring_server.training_dataset_version,
             read_options,
         )
 
