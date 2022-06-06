@@ -264,7 +264,7 @@ class VectorServer:
         batch_transformed = list(
             map(
                 lambda results_dict: self._apply_transformation(results_dict),
-                batch_results,
+                batch_results.values(),
             )
         )
 
@@ -341,9 +341,7 @@ class VectorServer:
         sorted_results = []
         for e in entries:
             for row in results:
-                if len([1 for pkname in pknames if e[pkname] == row[pkname]]) == len(
-                    pknames
-                ):
+                if all([e[pkname] == row[pkname] for pkname in pknames]):
                     sorted_results.append(row)
                     break
 
