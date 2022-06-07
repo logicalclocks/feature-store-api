@@ -28,7 +28,8 @@ setup(
         "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL[rsa]",
-        "great_expectations==0.14.3"
+        "great_expectations==0.14.3",
+        "jinja2==3.0.3",
     ],
     extras_require={
         "dev": ["pytest", "flake8", "black"],
