@@ -15,7 +15,7 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.8,<3.10",
+    python_requires=">=3.7,<3.10",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
