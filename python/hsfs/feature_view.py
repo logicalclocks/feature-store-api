@@ -298,7 +298,7 @@ class FeatureView:
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
-            data_format="tsv",
+            data_format="csv",
             location="",
             splits=splits if splits else {},
             statistics_config=statistics_config,
@@ -442,9 +442,13 @@ class FeatureView:
 
         return training_dataset_bundle.TrainingDatasetBundle(td.version, job=td_job)
 
-    def recreate_training_dataset(self, version: int):
-        # TODO fv
-        pass
+    def recreate_training_dataset(
+        self, version: int, write_options: Optional[Dict[Any, Any]] = None
+    ):
+        td, td_job = self._feature_view_engine.recreate_training_dataset(
+            self, version, write_options
+        )
+        return training_dataset_bundle.TrainingDatasetBundle(td.version, job=td_job)
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(
