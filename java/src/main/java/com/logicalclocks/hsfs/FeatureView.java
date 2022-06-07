@@ -295,8 +295,8 @@ public class FeatureView {
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .eventStartTime(startTime)
             .eventEndTime(endTime)
-            .splits(splits != null ?
-                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+            .splits(splits != null
+                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
                 Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .build();
@@ -316,9 +316,9 @@ public class FeatureView {
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
-            .splits(splits != null ?
-                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-                    Collectors.toList()) : null)
+            .splits(splits != null
+                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .statisticsConfig(statisticsConfig)
             .build();
@@ -340,7 +340,7 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
-  public void createTrainingDataset(
+  public TrainingDatasetBundle createTrainingDataset(
       String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector,
       Map<String, Float> splits, String trainSplit
   ) throws IOException, FeatureStoreException, ParseException {
@@ -356,10 +356,10 @@ public class FeatureView {
                 Collectors.toList()))
             .trainSplit(trainSplit)
             .build();
-    featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
   }
 
-  public void createTrainingDataset(
+  public TrainingDatasetBundle createTrainingDataset(
       Integer version, String startTime, String endTime, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location, Map<String, Float> splits,
       String trainSplit, Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
@@ -376,14 +376,14 @@ public class FeatureView {
             .coalesce(coalesce)
             .storageConnector(storageConnector)
             .location(location)
-            .splits(splits != null ?
-                splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-                    Collectors.toList()) : null)
+            .splits(splits != null
+                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+                Collectors.toList()) : null)
             .trainSplit(trainSplit)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
             .build();
-    featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions);
   }
 
   public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
