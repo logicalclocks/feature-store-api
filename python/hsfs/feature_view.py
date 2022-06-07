@@ -102,16 +102,17 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        if not batch:
-            self._single_vector_server = vector_server.VectorServer(
-                self._featurestore_id, training_dataset_version
-            )
-            self._single_vector_server.init_serving(self, False, external)
-        else:
-            self._batch_vectors_server = vector_server.VectorServer(
-                self._featurestore_id, training_dataset_version
-            )
-            self._batch_vectors_server.init_serving(self, True, external)
+        # initiate single vector server
+        self._single_vector_server = vector_server.VectorServer(
+            self._featurestore_id, training_dataset_version
+        )
+        self._single_vector_server.init_serving(self, False, external)
+
+        # initiate batch vector server
+        self._batch_vectors_server = vector_server.VectorServer(
+            self._featurestore_id, training_dataset_version
+        )
+        self._batch_vectors_server.init_serving(self, True, external)
 
     def init_batch_scoring(
         self,
