@@ -1974,7 +1974,7 @@ will not be met.</p>
 </div>
 </div>
 </div>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L644">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L654">[source]</a></span></p>
 <h3 id="create_expectation">create_expectation<a class="headerlink" href="#create_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">rules</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -1997,7 +1997,7 @@ call the <code>save()</code> method of the expectation metadata object.</p>
 <p><code>Expectation</code>: The expectation metadata object.</p>
 <hr />
 <h2 id="retrieval_1">Retrieval<a class="headerlink" href="#retrieval_1" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L323">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L326">[source]</a></span></p>
 <h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2015,7 +2015,7 @@ so you can subsequently add features and/or rules and save it which will overwri
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve the expectation from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L341">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L344">[source]</a></span></p>
 <h3 id="get_expectations">get_expectations<a class="headerlink" href="#get_expectations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
 </code></pre></div>
@@ -2100,23 +2100,37 @@ The list of allowed validation types are:</p>
 </div>
 <h2 id="validate">Validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h2>
 <p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
-<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1100">[source]</a></span></p>
+<span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1142">[source]</a></span></p>
 <h3 id="validate_1">validate<a class="headerlink" href="#validate_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_activity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_activity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_report</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validation_options</span><span class="o">=</span><span class="p">{}</span>
+<span class="p">)</span>
 </code></pre></div>
-<p>Run validation based on the attached expectations</p>
+<p>Run validation based on the attached expectations.</p>
+<p>Runs any expectation attached with Deequ. But also runs attached Great Expectation
+Suites.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>dataframe</strong> <code>Optional[pyspark.sql.DataFrame]</code>: The PySpark dataframe to run the data validation expectations against.</li>
-<li><strong>log_activity</strong>: Whether to log the validation as a feature group activity.
-    If a dataframe is not provided (None),
-    the validation will be logged as a feature store activity.</li>
+<li><strong>dataframe</strong> <code>Optional[Union[pandas.DataFrame, pyspark.sql.DataFrame]]</code>: The PySpark dataframe to run the data validation expectations against.</li>
+<li><strong>log_activity</strong> <code>Optional[bool]</code>: Boolean to indicate whether to persist validation results along
+    with the feature group. Defaults to <code>False</code>.</li>
+<li><strong>expectation_suite</strong>: Optionally provide an Expectation Suite to override the
+    one that is possibly attached to the feature group. This is useful for
+    testing new Expectation suites. When an extra suite is provided, the results
+    will never be persisted. Defaults to <code>None</code>.</li>
+<li><strong>validation_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional validation options as key-value pairs, defaults to <code>{}</code>.<ul>
+<li>key <code>run_validation</code> boolean value, set to <code>False</code> to skip validation temporarily on ingestion.</li>
+<li>key <code>save_report</code> boolean value, set to <code>False</code> to skip upload of the validation report to Hopsworks.</li>
+<li>key <code>ge_validate_kwargs</code> a dictionary containing kwargs for the validate method of Great Expectations.</li>
+</ul>
+</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
+<p><code>FeatureGroupValidation</code>, <code>ValidationReport</code>. The feature group validation metadata object,
+    as well as the Validation Report produced by Great Expectations.</p>
 <hr />
 <h2 id="retrieval_2">Retrieval<a class="headerlink" href="#retrieval_2" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L430">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L439">[source]</a></span></p>
 <h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>

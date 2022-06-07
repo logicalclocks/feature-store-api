@@ -1704,7 +1704,7 @@ methods are called on this training dataset from scala client hsfs will throw an
 <p>Persist transformation function in backend.</p>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L687">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L697">[source]</a></span></p>
 <h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1718,13 +1718,13 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>transformation_function</strong> <code>callable</code>: callable object.</li>
-<li><strong>output_type</strong> <code>Union[str, str, string, bytes, numpy.int8, int8, byte, numpy.int16, int16, short, int, int, numpy.int32, numpy.int64, int64, long, bigint, float, float, numpy.float64, float64, double, datetime.datetime, numpy.datetime64, datetime.date, bool, boolean, bool]</code>: python or numpy output type that will be inferred as pyspark.sql.types type.</li>
+<li><strong>output_type</strong> <code>Union[str, bytes, int, numpy.int8, numpy.int16, numpy.int32, numpy.int64, float, numpy.float64, datetime.datetime, numpy.datetime64, datetime.date, bool]</code>: python or numpy output type that will be inferred as pyspark.sql.types type.</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L746">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L738">[source]</a></span></p>
 <h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1738,7 +1738,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L762">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L754">[source]</a></span></p>
 <h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
 </code></pre></div>
