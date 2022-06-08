@@ -195,9 +195,10 @@ class Engine:
                     self._save_online_dataframe(
                         feature_group, dataframe, online_write_options
                     )
-        except Exception:
+        except Exception as e:
             raise FeatureStoreException(
-                "Error writing to offline and online feature store"
+                "Error writing to offline and online feature store.\n"+
+                "Cause: " + str(e)
             )
 
     def save_stream_dataframe(

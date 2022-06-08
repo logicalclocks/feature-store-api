@@ -345,7 +345,7 @@ class Engine:
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
         elif dtype == np.dtype("bool"):
-            return "bool"
+            return "boolean"
 
         return "string"
 
