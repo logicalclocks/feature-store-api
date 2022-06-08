@@ -554,7 +554,7 @@ class Engine:
             if e.args[0].status.statusCode == 3:
                 raise RuntimeError(
                     f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
-                    f" It is possible to request access from admins of '{feature_store}'."
+                    f" It is possible to request access from data owners of '{feature_store}'."
                 )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
