@@ -15,7 +15,7 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.8,<3.10",
+    python_requires=">=3.7,<3.10",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
@@ -28,7 +28,8 @@ setup(
         "avro==1.10.2",
         "sqlalchemy",
         "PyMySQL[rsa]",
-        "great_expectations==0.14.3"
+        "great_expectations==0.14.3",
+        "jinja2==3.0.3",
     ],
     extras_require={
         "dev": ["pytest", "flake8", "black"],
