@@ -225,9 +225,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
           throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
     codeEngine.saveCode(this);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, featureData, null);
-    }
   }
 
   /*
@@ -239,50 +236,39 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
         jobConfiguration);
     codeEngine.saveCode(this);
-    if (statisticsConfig.getEnabled()) {
-      statisticsEngine.computeStatistics(this, featureData, null);
-    }
   }
 
   public <S> void insert(S featureData) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, null);
+    insert(featureData, false, SaveMode.APPEND, null, null);
   }
 
   public <S> void insert(S featureData, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions, null);
+    insert(featureData, false, SaveMode.APPEND, writeOptions, null);
   }
 
   public <S> void insert(S featureData, JobConfiguration jobConfiguration) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, null, jobConfiguration);
+    insert(featureData, false, SaveMode.APPEND, null, jobConfiguration);
   }
 
-  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
                          Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, writeOptions, null);
+    insert(featureData, false, SaveMode.APPEND, writeOptions, null);
   }
 
-  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
                          JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, HudiOperationType.UPSERT, SaveMode.APPEND, jobConfiguration);
+    insert(featureData, false, SaveMode.APPEND, jobConfiguration);
   }
 
-  public <S> void insert(S featureData, boolean overwrite, HudiOperationType operation, SaveMode saveMode,
+  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
 
-    if (operation == null) {
-      if (overwrite) {
-        operation = HudiOperationType.BULK_INSERT;
-      } else {
-        operation = HudiOperationType.UPSERT;
-      }
-    }
-    streamFeatureGroupEngine.insert(this, featureData, operation, saveMode,  partitionKeys,
+    streamFeatureGroupEngine.insert(this, featureData, saveMode,  partitionKeys,
         hudiPrecombineKey, writeOptions, jobConfiguration);
     codeEngine.saveCode(this);
-    computeStatistics();
   }
 
   public <S> Object insertStream(S featureData) throws FeatureStoreException, IOException, ParseException {

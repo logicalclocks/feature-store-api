@@ -19,12 +19,9 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -67,9 +64,9 @@ public class StreamFeatureGroupEngine {
           throws FeatureStoreException, IOException, ParseException {
 
     StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
-        writeOptions, sparkJobConfiguration, dataset, false);
+        writeOptions, sparkJobConfiguration, dataset);
 
-    insert(updatedFeatureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
+    insert(updatedFeatureGroup, utils.sanitizeFeatureNames(dataset),
         SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
 
     return featureGroup;
@@ -92,7 +89,7 @@ public class StreamFeatureGroupEngine {
 
     if (streamFeatureGroup.getId() == null) {
       streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
-          jobConfiguration, featureData, true);
+          jobConfiguration, featureData);
     }
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
@@ -100,22 +97,14 @@ public class StreamFeatureGroupEngine {
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
-  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData, HudiOperationType operation,
+  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
                          SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
-    Integer validationId = null;
-    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = streamFeatureGroup.validate(featureData, true);
-      if (validation != null) {
-        validationId = validation.getValidationId();
-      }
-    }
-
     if (streamFeatureGroup.getId() == null) {
       streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
-          jobConfiguration, featureData, false);
+          jobConfiguration, featureData);
     }
 
     if (saveMode == SaveMode.OVERWRITE) {
@@ -132,8 +121,7 @@ public class StreamFeatureGroupEngine {
 
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
                                                      String hudiPrecombineKey, Map<String, String> writeOptions,
-                                                     JobConfiguration sparkJobConfiguration, S featureData,
-                                                         boolean saveEmpty)
+                                                     JobConfiguration sparkJobConfiguration, S featureData)
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
@@ -203,15 +191,6 @@ public class StreamFeatureGroupEngine {
       featureGroup.setFeatures(features);
     }
 
-    if (saveEmpty) {
-      // insertStream method was called on feature group object that has not been saved
-      // we will use writeOfflineDataframe method on empty dataframe to create directory structure
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
-          SparkEngine.getInstance().createEmptyDataFrame(featureData),
-          featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
-              ? HudiOperationType.BULK_INSERT : null,
-          null, null);
-    }
     return featureGroup;
   }
 }

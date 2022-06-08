@@ -22,7 +22,10 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
@@ -286,5 +289,81 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
+                                              String description, List<String> primaryKeys, List<String> partitionKeys,
+                                              String hudiPrecombineKey, boolean onlineEnabled,
+                                              TimeTravelFormat timeTravelFormat,
+                                              StatisticsConfig statisticsConfig, ValidationType validationType,
+                                              scala.collection.Seq<Expectation> expectations, String eventTime)
+      throws IOException, FeatureStoreException {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  getFeatureGroup(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
+        featureGroup =  FeatureGroup.builder()
+            .featureStore(featureStore)
+            .name(name)
+            .version(version)
+            .description(description)
+            .primaryKeys(primaryKeys)
+            .partitionKeys(partitionKeys)
+            .hudiPrecombineKey(hudiPrecombineKey)
+            .onlineEnabled(onlineEnabled)
+            .timeTravelFormat(timeTravelFormat)
+            .statisticsConfig(statisticsConfig)
+            .validationType(validationType)
+            .expectations(expectations)
+            .eventTime(eventTime)
+            .build();
+
+        featureGroup.setFeatureStore(featureStore);
+      } else {
+        throw e;
+      }
+    }
+
+    return featureGroup;
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(FeatureStore featureStore, String name, Integer version,
+                                                          String description, List<String> primaryKeys,
+                                                          List<String> partitionKeys, String hudiPrecombineKey,
+                                                          boolean onlineEnabled,
+                                                          StatisticsConfig statisticsConfig,
+                                                          scala.collection.Seq<Expectation> expectations,
+                                                          String eventTime) throws IOException, FeatureStoreException {
+
+
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  getStreamFeatureGroup(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
+        featureGroup =  StreamFeatureGroup.builder()
+            .featureStore(featureStore)
+            .name(name)
+            .version(version)
+            .description(description)
+            .primaryKeys(primaryKeys)
+            .partitionKeys(partitionKeys)
+            .hudiPrecombineKey(hudiPrecombineKey)
+            .onlineEnabled(onlineEnabled)
+            .statisticsConfig(statisticsConfig)
+            .expectations(expectations)
+            .eventTime(eventTime)
+            .build();
+
+        featureGroup.setFeatureStore(featureStore);
+      } else {
+        throw e;
+      }
+    }
+
+    return featureGroup;
   }
 }

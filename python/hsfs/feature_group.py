@@ -919,15 +919,15 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
-        If feature group doesn't exist calling `insert` creates the metadata for the
-        feature group in the feature store and writes the specified `features` dataframe
-        as feature group to the online/offline feature store as specified.
 
-        If feature group already exist `insert` method incrementally insert data to a feature group or
-        overwrite all  data contained in the feature group. By default, the data is inserted into the offline storage
-        as well as the online storage if the feature group is `online_enabled=True`. To
-        insert only into the online storage, set `storage="online"`, or oppositely
+        Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
+        default, the data is inserted into the offline storag as well as the online storage if the feature group is
+        `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
         `storage="offline"`.
+
+        If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+        invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         If statistics are enabled, statistics are recomputed for the entire feature

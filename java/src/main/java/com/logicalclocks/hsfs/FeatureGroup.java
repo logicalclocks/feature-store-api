@@ -237,16 +237,18 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /*
    * @deprecated
-   * `save` method is deprecated and in the next release it will be  replaced by `insert` method.
+   * Save method is deprecated. Use insert method instead.
    */
+  @Deprecated
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
   }
 
   /*
    * @deprecated
-   * In the next release save method will be  replaced by insert method.
+   * Save method is deprecated. Use insert method instead.
    */
+  @Deprecated
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
@@ -327,7 +329,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData)
@@ -339,7 +341,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
@@ -351,7 +353,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
@@ -363,7 +365,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
@@ -376,7 +378,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
@@ -389,7 +391,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,

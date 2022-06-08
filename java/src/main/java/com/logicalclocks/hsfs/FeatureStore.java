@@ -235,181 +235,29 @@ public class FeatureStore {
         .featureStore(this);
   }
 
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version)
-      throws FeatureStoreException {
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (java.io.IOException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .build();
-    }
-
-    return featureGroup;
-
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
+        null, null, false, null, null, null,
+        null, null);
   }
 
-  public FeatureGroup getOrCreateFeatureGroup(String name,
-                                              Integer version,
-                                              List<String> primaryKeys,
-                                              boolean onlineEnabled) {
-
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .onlineEnabled(onlineEnabled)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name,
-                                              Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              boolean onlineEnabled) {
-
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .onlineEnabled(onlineEnabled)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              boolean onlineEnabled,
-                                              String eventTime) {
-
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .onlineEnabled(onlineEnabled)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                              boolean onlineEnabled, String eventTime)
+      throws IOException, FeatureStoreException {
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+        null, null, onlineEnabled, null, null, null,
+        null, eventTime);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
                                               List<String> primaryKeys,
                                               List<String> partitionKeys,
                                               boolean onlineEnabled,
-                                              String eventTime) {
+                                              String eventTime) throws IOException, FeatureStoreException {
 
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .onlineEnabled(onlineEnabled)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              boolean onlineEnabled,
-                                              StatisticsConfig statisticsConfig) {
-
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .onlineEnabled(onlineEnabled)
-          .statisticsConfig(statisticsConfig)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              boolean onlineEnabled,
-                                              TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig,
-                                              String eventTime) {
-
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .onlineEnabled(onlineEnabled)
-          .timeTravelFormat(timeTravelFormat)
-          .statisticsConfig(statisticsConfig)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+        partitionKeys, null, onlineEnabled, null, null, null,
+        null, eventTime);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
@@ -417,204 +265,51 @@ public class FeatureStore {
                                               String hudiPrecombineKey,
                                               boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
                                               StatisticsConfig statisticsConfig,  ValidationType validationType,
-                                              scala.collection.Seq<Expectation> expectations, String eventTime) {
+                                              scala.collection.Seq<Expectation> expectations, String eventTime)
+      throws IOException, FeatureStoreException {
 
-
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  FeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .description(description)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .hudiPrecombineKey(hudiPrecombineKey)
-          .onlineEnabled(onlineEnabled)
-          .timeTravelFormat(timeTravelFormat)
-          .statisticsConfig(statisticsConfig)
-          .validationType(validationType)
-          .expectations(expectations)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
+        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, validationType,
+        expectations, eventTime);
   }
 
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder()
-            .featureStore(this);
+        .featureStore(this);
   }
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
-      throws FeatureStoreException {
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (java.io.IOException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .build();
-    }
-
-    return featureGroup;
-
+      throws IOException, FeatureStoreException {
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        null, null, null, false, null, null, null);
   }
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name,
-                                                          Integer version,
-                                                          List<String> primaryKeys) {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          boolean onlineEnabled, String eventTime)
+      throws IOException, FeatureStoreException {
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        primaryKeys, null, null, onlineEnabled, null, null, eventTime);
   }
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name,
-                                              Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys) {
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          List<String> partitionKeys, boolean onlineEnabled,
+                                                          String eventTime) throws IOException, FeatureStoreException {
 
 
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        primaryKeys, partitionKeys, null, onlineEnabled, null, null, eventTime);
   }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
-                                                          List<String> primaryKeys,
-                                                          String eventTime) {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              String eventTime) {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              StatisticsConfig statisticsConfig) {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .statisticsConfig(statisticsConfig)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
-  }
-
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
-                                              List<String> primaryKeys, List<String> partitionKeys,
-                                              String hudiPrecombineKey, StatisticsConfig statisticsConfig,
-                                              scala.collection.Seq<Expectation> expectations, String eventTime) {
+                                                          List<String> primaryKeys, List<String> partitionKeys,
+                                                          String hudiPrecombineKey, boolean onlineEnabled,
+                                                          StatisticsConfig statisticsConfig,
+                                                          scala.collection.Seq<Expectation> expectations,
+                                                          String eventTime)
+      throws IOException, FeatureStoreException {
 
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  featureGroupApi.getStreamFeatureGroup(this, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      featureGroup =  StreamFeatureGroup.builder()
-          .featureStore(this)
-          .name(name)
-          .version(version)
-          .description(description)
-          .primaryKeys(primaryKeys)
-          .partitionKeys(partitionKeys)
-          .hudiPrecombineKey(hudiPrecombineKey)
-          .statisticsConfig(statisticsConfig)
-          .expectations(expectations)
-          .eventTime(eventTime)
-          .build();
-
-      featureGroup.setFeatureStore(this);
-    }
-
-    return featureGroup;
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, description,
+        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, expectations, eventTime);
   }
 
   public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {

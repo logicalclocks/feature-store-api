@@ -82,9 +82,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if not feature_group._id:
             # this means FG doesn't exist and should create the new one
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
-            )
+            if len(feature_group.features) == 0:
+                # User didn't provide a schema. extract it from the dataframe
+                feature_group._features = (
+                    engine.get_instance().parse_schema_feature_group(feature_dataframe)
+                )
             self._save_feature_group_metadata(feature_group, write_options)
 
         # deequ validation only on spark

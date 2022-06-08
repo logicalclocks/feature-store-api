@@ -66,15 +66,15 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
     dataset = utils.sanitizeFeatureNames(dataset);
 
-    FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+    featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
         dataset, false);
 
-    insert(updatedFeatureGroup, dataset, null,
-        updatedFeatureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
+    insert(featureGroup, dataset, null,
+        featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI
             ? HudiOperationType.BULK_INSERT : null,
         SaveMode.Append, partitionKeys, hudiPrecombineKey, writeOptions);
 
-    return updatedFeatureGroup;
+    return featureGroup;
   }
 
   public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
@@ -125,7 +125,7 @@ public class FeatureGroupEngine {
     }
 
     if (featureGroup.getId() == null) {
-      FeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
+      featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, true);
     }
 
