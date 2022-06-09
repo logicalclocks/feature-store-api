@@ -276,23 +276,30 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if not feature_group._id:
             # this means FG doesn't exist and should create the new one
-            feature_dataframe = engine.get_instance().create_empty_df(dataframe)
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
-            )
+            if len(feature_group.features) == 0:
+                # User didn't provide a schema. extract it from the dataframe
+                feature_group._features = (
+                    engine.get_instance().parse_schema_feature_group(dataframe)
+                )
+
             self._save_feature_group_metadata(feature_group, write_options)
 
-            # insert_stream method was called on feature group object that has not been saved
-            # we will use save_dataframe method on empty dataframe to create directory structure
-            engine.get_instance().save_dataframe(
-                feature_group,
-                feature_dataframe,
-                hudi_engine.HudiEngine.HUDI_BULK_INSERT
-                if feature_group.time_travel_format == "HUDI"
-                else None,
-                feature_group.online_enabled,
-                None,
-            )
+            if not feature_group.stream:
+                # insert_stream method was called on non stream feature group object that has not been saved.
+                # we will use save_dataframe method on empty dataframe to create directory structure
+                offline_write_options = write_options
+                online_write_options = self.get_kafka_config(write_options)
+                engine.get_instance().save_dataframe(
+                    feature_group,
+                    engine.get_instance().create_empty_df(dataframe),
+                    hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                    if feature_group.time_travel_format == "HUDI"
+                    else None,
+                    feature_group.online_enabled,
+                    None,
+                    offline_write_options,
+                    online_write_options,
+                )
 
         if not feature_group.stream:
             warnings.warn(
