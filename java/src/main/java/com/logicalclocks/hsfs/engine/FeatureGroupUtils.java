@@ -115,7 +115,11 @@ public class FeatureGroupUtils {
         .collect(Collectors.joining(";"));
   }
 
-  public Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {
+  public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
+    return new Date(getTimeStampFromDateString(inputDate));
+  }
+
+  public static Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {
 
     HashMap<Pattern, String> dateFormatPatterns = new HashMap<Pattern, String>() {{
         put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})$"), "yyyyMMdd");

@@ -112,6 +112,7 @@ class TagsApi:
             ]
             if training_dataset_version:
                 return path + [
+                    "trainingdatasets",
                     "version",
                     training_dataset_version,
                     "tags",

@@ -68,11 +68,16 @@ public class TrainingDatasetFeature {
     this.label = label;
   }
 
+  public TrainingDatasetFeature(String name, Boolean label) {
+    setName(name);
+    this.label = label;
+  }
+
   public void setName(String name) {
     this.name = name.toLowerCase();
   }
 
   public boolean isComplex() {
-    return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
+    return !label && Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
   }
 }

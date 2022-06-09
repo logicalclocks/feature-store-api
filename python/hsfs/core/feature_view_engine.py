@@ -61,13 +61,13 @@ class FeatureViewEngine:
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
     def save(self, feature_view_obj):
-        if feature_view_obj.label:
+        if feature_view_obj.labels:
             feature_view_obj._features.append(
                 [
                     training_dataset_feature.TrainingDatasetFeature(
                         name=label_name, label=True
                     )
-                    for label_name in feature_view_obj.label
+                    for label_name in feature_view_obj.labels
                 ]
             )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
@@ -217,8 +217,18 @@ class FeatureViewEngine:
 
         return td_updated, split_df
 
-    def recreate_training_dataset(self):
-        pass
+    def recreate_training_dataset(
+        self, feature_view_obj, training_dataset_version, user_write_options
+    ):
+        training_dataset_obj = self._get_training_data_metadata(
+            feature_view_obj, training_dataset_version
+        )
+        td_job = self.compute_training_dataset(
+            feature_view_obj,
+            user_write_options,
+            training_dataset_obj=training_dataset_obj,
+        )
+        return training_dataset_obj, td_job
 
     def _read_from_storage_connector(self, training_data_obj, splits, read_options):
         if splits:
