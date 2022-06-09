@@ -276,35 +276,43 @@ public class FeatureViewEngine {
     return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime).read(false, readOptions);
   }
 
-  public void addTag(FeatureView featureView, String name, Object value) {
-
+  public void addTag(FeatureView featureView, String name, Object value)
+      throws FeatureStoreException, IOException {
+    tagsApi.add(featureView, name, value);
   }
 
-  public void addTag(FeatureView featureView, String name, Object value, Integer trainingDataVersion) {
-
+  public void addTag(FeatureView featureView, String name, Object value, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    tagsApi.add(featureView, trainingDataVersion, name, value);
   }
 
-  public void deleteTag(FeatureView featureView, String name) {
-
+  public void deleteTag(FeatureView featureView, String name)
+      throws FeatureStoreException, IOException {
+    tagsApi.deleteTag(featureView, name);
   }
 
-  public void deleteTag(FeatureView featureView, String name, Integer trainingDataVersion) {
-
+  public void deleteTag(FeatureView featureView, String name, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    tagsApi.deleteTag(featureView, trainingDataVersion, name);
   }
 
-  public Object getTag(FeatureView featureView, String name) {
-    return null;
+  public Object getTag(FeatureView featureView, String name)
+      throws FeatureStoreException, IOException {
+    return tagsApi.get(featureView, name);
   }
 
-  public Object getTag(FeatureView featureView, String name, Integer trainingDataVersion) {
-    return null;
+  public Object getTag(FeatureView featureView, String name, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    return tagsApi.get(featureView, trainingDataVersion, name);
   }
 
-  public Map<String, Object> getTags(FeatureView featureView) {
-    return null;
+  public Map<String, Object> getTags(FeatureView featureView)
+      throws FeatureStoreException, IOException {
+    return tagsApi.get(featureView);
   }
 
-  public Map<String, Object> getTags(FeatureView featureView, Integer trainingDataVersion) {
-    return null;
+  public Map<String, Object> getTags(FeatureView featureView, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    return tagsApi.get(featureView, trainingDataVersion);
   }
 }
