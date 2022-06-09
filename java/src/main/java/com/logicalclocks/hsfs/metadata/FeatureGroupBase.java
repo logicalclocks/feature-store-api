@@ -57,6 +57,7 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
+  //TODO fv: featureGroupDTO does not match this class
   protected FeatureStore featureStore;
 
   @Getter
