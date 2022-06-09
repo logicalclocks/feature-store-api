@@ -105,6 +105,11 @@ public class TagsApi {
     add(getFvUriTemplate(featureView, name), value);
   }
 
+  public void add(FeatureView featureView, Integer trainingDatasetVersion, String name, Object value)
+      throws FeatureStoreException, IOException {
+    add(getFvTdUriTemplate(featureView, trainingDatasetVersion, name), value);
+  }
+
   private UriTemplate getFvUriTemplate(FeatureView featureView) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
         .set("projectId", featureView.getFeatureStore().getProjectId())
@@ -120,11 +125,6 @@ public class TagsApi {
         .set("fvName", featureView.getName())
         .set("fvVersion", featureView.getVersion())
         .set("name", tagName);
-  }
-
-  public void add(FeatureView featureView, Integer trainingDatasetVersion, String name, Object value)
-      throws FeatureStoreException, IOException {
-    add(getFvTdUriTemplate(featureView, trainingDatasetVersion, name), value);
   }
 
   private UriTemplate getFvTdUriTemplate(FeatureView featureView, Integer trainingDatasetVersion) {
