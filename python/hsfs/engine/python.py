@@ -489,7 +489,7 @@ class Engine:
         df[split_column] = groups
         for i, item in enumerate(items):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
-            if item == training_dataset_obj.train_split:
+            if item[0] == training_dataset_obj.train_split:
                 transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                     training_dataset_obj, feature_view_obj, split_df
                 )
