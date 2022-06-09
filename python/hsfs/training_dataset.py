@@ -23,6 +23,7 @@ import pandas as pd
 import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
@@ -55,6 +56,14 @@ class TrainingDataset:
         description=None,
         storage_connector=None,
         splits=None,
+        val_size=None,
+        test_size=None,
+        train_start=None,
+        train_end=None,
+        val_start=None,
+        val_end=None,
+        test_start=None,
+        test_end=None,
         seed=None,
         created=None,
         creator=None,
@@ -115,6 +124,14 @@ class TrainingDataset:
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
+            if val_size or test_size:
+                self.splits = {TrainingDatasetSplit.TRAIN:
+                                   1-(val_size or 0)-(test_size or 0),
+                               TrainingDatasetSplit.VALIDATION: val_size,
+                               TrainingDatasetSplit.TEST: test_size}
+            self._set_time_splits(
+                train_start, train_end, val_start,val_end, test_start, test_end
+            )
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -137,6 +154,51 @@ class TrainingDataset:
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
+    def _set_time_splits(self,
+                        train_start=None,
+                        train_end=None,
+                        val_start=None,
+                        val_end=None,
+                        test_start=None,
+                        test_end=None,
+                        ):
+        time_splits = list()
+        self._append_time_split(
+            time_splits,
+            split_name="train",
+            start_time=train_start,
+            end_time=train_end or val_start
+        )
+        self._append_time_split(
+            time_splits,
+            split_name="validation",
+            start_time=val_start or train_end,
+            end_time=val_end or test_start
+        )
+        self._append_time_split(
+            time_splits,
+            split_name="test",
+            start_time=test_start or val_end,
+            end_time=test_end
+        )
+        # prioritise time split
+        self._splits = time_splits or self._splits
+
+    def _append_time_split(self,
+                           time_splits,
+                           split_name,
+                           start_time=None,
+                           end_time=None,
+                           ):
+        if start_time or end_time:
+            time_splits.append(
+                TrainingDatasetSplit(
+                    name=split_name,
+                    split_type=TrainingDatasetSplit.TIME_SPLIT,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+            )
 
     def _convert_event_time_to_timestamp(self, event_time):
         if not event_time:
@@ -540,13 +602,16 @@ class TrainingDataset:
     @property
     def splits(self):
         """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
-        return {split["name"]: split["percentage"] for split in self._splits}
+        return self._splits
 
     @splits.setter
     def splits(self, splits):
         # user api differs from how the backend expects the splits to be represented
-        splits_list = [{"name": k, "percentage": v} for k, v in splits.items()]
-        self._splits = splits_list
+        self._splits = [TrainingDatasetSplit(
+            name=k,
+            split_type=TrainingDatasetSplit.RANDOM_SPLIT,
+            percentage=v)
+            for k, v in splits.items() if v is not None]
 
     @property
     def location(self):
