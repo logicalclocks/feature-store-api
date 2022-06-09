@@ -802,7 +802,7 @@ class FeatureStore:
         )
         return self._feature_view_engine.save(feat_view)
 
-    def get_feature_view(self, name, version):
+    def get_feature_view(self, name: str, version: int = None):
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -818,6 +818,14 @@ class FeatureStore:
         # Raises
             `RestAPIError`: If unable to retrieve feature view from the feature store.
         """
+        if version is None:
+            warnings.warn(
+                "No version provided for getting feature view `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)
 
     def get_feature_views(self, name):

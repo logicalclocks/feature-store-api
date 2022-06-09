@@ -30,12 +30,15 @@ from hsfs.core import (
 
 
 class VectorServer:
-    def __init__(self, feature_store_id, training_dataset_version=None):
+    def __init__(self, feature_store_id, features=[], training_dataset_version=None):
         self._training_dataset_version = training_dataset_version
+        self._features = features
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = None
         self._pkname_by_serving_index = None
+        self._prefix_by_serving_index = None
+        self._external = True
         self._feature_store_id = feature_store_id
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
@@ -53,42 +56,40 @@ class VectorServer:
             feature_store_id
         )
 
-    def init_serving(self, vector_server, batch, external):
+    def init_serving(self, entity, batch, external):
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
-        self.init_transformation(vector_server)
-        self.init_prepared_statement(vector_server, batch, external)
+        self.init_transformation(entity)
+        self.init_prepared_statement(entity, batch, external)
 
-    def init_transformation(self, vector_server):
+    def init_transformation(self, entity):
         # attach transformation functions
-        vector_server.transformation_functions = self._get_transformation_fns(
-            vector_server
-        )
+        self._transformation_functions = self._get_transformation_fns(entity)
 
-    def init_prepared_statement(self, vector_server, batch, external):
-        if isinstance(vector_server, feature_view.FeatureView):
+    def init_prepared_statement(self, entity, batch, external):
+        if isinstance(entity, feature_view.FeatureView):
             prepared_statements = self._feature_view_api.get_serving_prepared_statement(
-                vector_server.name, vector_server.version, batch
+                entity.name, entity.version, batch
             )
-        elif isinstance(vector_server, training_dataset.TrainingDataset):
+        elif isinstance(entity, training_dataset.TrainingDataset):
             prepared_statements = (
-                self._training_dataset_api.get_serving_prepared_statement(
-                    vector_server, batch
-                )
+                self._training_dataset_api.get_serving_prepared_statement(entity, batch)
             )
         else:
             raise ValueError(
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
         # reset values to default, as user may be re-initialising with different parameters
-        self.prepared_statement_engine = None
-        self.prepared_statements = None
-        self.serving_keys = None
+        self._prepared_statement_engine = None
+        self._prepared_statements = None
+        self._serving_keys = None
+        self._external = external
 
-        self._set_mysql_connection(external)
+        self._set_mysql_connection()
 
         prepared_statements_dict = {}
         pkname_by_serving_index = {}
+        prefix_by_serving_index = {}
         serving_vector_keys = set()
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", " ")
@@ -116,31 +117,36 @@ class VectorServer:
                 query_online = query_online.bindparams(
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
-                pkname_by_serving_index[
-                    prepared_statement.prepared_statement_index
-                ] = pk_names
+
+            pkname_by_serving_index[
+                prepared_statement.prepared_statement_index
+            ] = pk_names
+
+            prefix_by_serving_index[
+                prepared_statement.prepared_statement_index
+            ] = prepared_statement.prefix
 
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
 
-        self.prepared_statements = prepared_statements_dict
-        self.serving_keys = serving_vector_keys
+        self._prepared_statements = prepared_statements_dict
+        self._serving_keys = serving_vector_keys
+        self._pkname_by_serving_index = pkname_by_serving_index
+        self._prefix_by_serving_index = prefix_by_serving_index
 
-        if batch:
-            self._pkname_by_serving_index = pkname_by_serving_index
+        # get schemas for complex features once
+        self._complex_features = self.get_complex_feature_schemas()
 
-    def get_preview_vectors(self, vector_server, external, n):
+    def get_preview_vectors(self, n):
         batch = n > 1
-        if self.prepared_statements is None:
-            self.init_serving(vector_server, batch, external)
-        entry = dict([(key, None) for key in self.serving_keys])
+        entry = dict([(key, None) for key in self._serving_keys])
         if batch:
-            return self.get_feature_vectors(vector_server, entry, external, n)
+            return self.get_feature_vectors(entry, preview_sample=n)
         else:
-            return self.get_feature_vector(vector_server, entry, external, n)
+            return self.get_feature_vector(entry, preview_sample=n)
 
-    def get_feature_vector(self, vector_server, entry, external, preview_sample=0):
+    def get_feature_vector(self, entry, passed_features={}, preview_sample=0):
         """Assembles serving vector from online feature store."""
 
         if not preview_sample and all(
@@ -154,140 +160,137 @@ class VectorServer:
                 "or `feature_view.init_serving()`"
             )
 
-        serving_vector = []
+        # Initialize the set of values
+        serving_vector = {}
+        with self._prepared_statement_engine.connect() as mysql_conn:
 
-        if self.prepared_statements is None:
-            self.init_serving(vector_server, False, external)
+            for prepared_statement_index in self._prepared_statements:
+                if any(
+                    e not in self._pkname_by_serving_index[prepared_statement_index]
+                    for e in entry.keys()
+                ):
+                    # User did not provide the necessary serving keys, we expect they have
+                    # provided the necessary features as passed_features.
+                    # We are going to check later if this is true
+                    continue
 
-        # check if primary key map correspond to serving_keys.
-        if not entry.keys() == self.serving_keys:
-            raise ValueError(
-                "Provided primary key map doesn't correspond to serving_keys"
-            )
-
-        # get schemas for complex features once
-        complex_features = self.get_complex_feature_schemas(vector_server)
-
-        self.refresh_mysql_connection(external)
-        for prepared_statement_index in self.prepared_statements:
-            prepared_statement = self.prepared_statements[prepared_statement_index]
-            if preview_sample:
-                prepared_statement = self._make_preview_statement(
-                    prepared_statement, preview_sample
-                )
-            with self.prepared_statement_engine.connect() as mysql_conn:
-                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
-            result_dict = {}
-            for row in result_proxy:
-                result_dict = self.deserialize_complex_features(
-                    complex_features, dict(row.items())
-                )
-                if not result_dict:
-                    raise Exception(
-                        "No data was retrieved from online feature store using input "
-                        + entry
+                # Fetch the data from the online feature store
+                prepared_statement = self._prepared_statements[prepared_statement_index]
+                if preview_sample:
+                    prepared_statement = self._make_preview_statement(
+                        prepared_statement, preview_sample
                     )
-                # apply transformation functions
-                result_dict = self._apply_transformation(
-                    vector_server.transformation_functions, result_dict
-                )
-            serving_vector += list(result_dict.values())
 
-        return serving_vector
+                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
 
-    def get_feature_vectors(self, vector_server, entry, external, preview_sample=0):
+                for row in result_proxy:
+                    result_dict = self.deserialize_complex_features(
+                        self._complex_features, dict(row.items())
+                    )
+                    if not result_dict:
+                        raise Exception(
+                            "No data was retrieved from online feature store using input "
+                            + entry
+                        )
+
+                    serving_vector.update(result_dict)
+
+        # Add the passed features
+        serving_vector.update(passed_features)
+
+        # apply transformation functions
+        result_dict = self._apply_transformation(serving_vector)
+
+        return self._generate_vector(result_dict)
+
+    def get_feature_vectors(self, entry, passed_features=[], preview_sample=0):
         """Assembles serving vector from online feature store."""
-
-        # initialize prepared statements
-        if self.prepared_statements is None:
-            self.init_serving(vector_server, True, external)
-
-        if not preview_sample and not all(
-            [isinstance(val, list) for val in entry.values()]
-        ):
-            raise ValueError(
-                "Entry is expected to be list of primary key values. "
-                "If you have already initialised for batch serving and now want to retrieve single vector "
-                "please reinitialise prepared statements with `training_dataset.init_prepared_statement()` "
-                "or `feature_view.init_serving()`"
-            )
 
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
-        batch_dicts = {}
+        batch_results = {}
+        with self._prepared_statement_engine.connect() as mysql_conn:
+            for prepared_statement_index in self._prepared_statements:
+                prepared_statement = self._prepared_statements[prepared_statement_index]
+                if preview_sample:
+                    prepared_statement = self._make_preview_statement(
+                        prepared_statement, preview_sample
+                    )
 
-        # check if primary key map correspond to serving_keys.
-        if not entry.keys() == self.serving_keys:
-            raise ValueError(
-                "Provided primary key map doesn't correspond to serving_keys"
-            )
-        if not len({len(i) for i in entry.keys()}) == 1:
-            raise Exception(
-                "Not all primary keys have the same length. Please make sure that all primary key have "
-                "the same length."
-            )
-
-        # get schemas for complex features once
-        complex_features = self.get_complex_feature_schemas(vector_server)
-
-        self.refresh_mysql_connection(external)
-        for prepared_statement_index in self.prepared_statements:
-            order_in_batch = 0
-            prepared_statement = self.prepared_statements[prepared_statement_index]
-            if preview_sample:
-                prepared_statement = self._make_preview_statement(
-                    prepared_statement, preview_sample
-                )
-            with self.prepared_statement_engine.connect() as mysql_conn:
-                result_proxy = mysql_conn.execute(
-                    prepared_statement,
-                    batch_ids=None
-                    if preview_sample
-                    else tuple(
-                        zip(
-                            *[
-                                entry.get(key)
+                entry_values_tuples = list(
+                    map(
+                        lambda e: tuple(
+                            [
+                                e.get(key)
                                 for key in self._pkname_by_serving_index[
                                     prepared_statement_index
                                 ]
                             ]
-                        )
-                    ),
-                ).fetchall()
-            for row in result_proxy:
-                result_dict = self.deserialize_complex_features(
-                    complex_features, dict(row.items())
-                )
-                if not result_dict:
-                    raise Exception(
-                        "No data was retrieved from online feature store using input "
-                        + entry
+                        ),
+                        entry,
                     )
-                # apply transformation functions
-                result_dict = self._apply_transformation(
-                    vector_server.transformation_functions, result_dict
                 )
-                if order_in_batch in batch_dicts:
-                    batch_dicts[order_in_batch] += list(result_dict.values())
-                else:
-                    batch_dicts[order_in_batch] = list(result_dict.values())
-                order_in_batch += 1
 
-        if not len({len(i) for i in list(batch_dicts.values())}) == 1:
-            raise Exception(
-                "Not all feature vectors have the same length. Please make sure that all primary key values "
-                "are correct."
+                result_proxy = mysql_conn.execute(
+                    prepared_statement,
+                    batch_ids=None if preview_sample else entry_values_tuples,
+                ).fetchall()
+
+                statement_results = []
+                for row in result_proxy:
+                    result_dict = self.deserialize_complex_features(
+                        self._complex_features, dict(row.items())
+                    )
+
+                    if not result_dict:
+                        raise Exception(
+                            "No data was retrieved from online feature store using input "
+                            + entry
+                        )
+
+                    statement_results.append(result_dict)
+
+                # sort the results based on the order of keys provided by the user
+                sorted_results = self._get_sorted_results(
+                    self._pkname_by_serving_index[prepared_statement_index],
+                    entry,
+                    statement_results,
+                    self._prefix_by_serving_index[prepared_statement_index],
+                )
+
+                # add partial results to the global results
+                for vector_index, results_dict in enumerate(sorted_results):
+                    if vector_index not in batch_results:
+                        batch_results[vector_index] = results_dict
+                    else:
+                        batch_results[vector_index].update(results_dict)
+
+        # apply passed features to each batch result
+        for vector_index, pf in enumerate(passed_features):
+            batch_results[vector_index].update(pf)
+
+        # apply transformation functions
+        batch_transformed = list(
+            map(
+                lambda results_dict: self._apply_transformation(results_dict),
+                batch_results.values(),
             )
+        )
 
-        return list(batch_dicts.values())
+        return list(
+            map(
+                lambda result_dict: self._generate_vector(result_dict),
+                batch_transformed,
+            )
+        )
 
-    def get_complex_feature_schemas(self, vector_server):
+    def get_complex_feature_schemas(self):
         return {
             f.name: avro.io.DatumReader(
                 avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
             )
-            for f in vector_server.schema
+            for f in self._features
             if f.is_complex()
         }
 
@@ -298,28 +301,66 @@ class VectorServer:
             row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def refresh_mysql_connection(self, external):
+    def refresh_mysql_connection(self):
         try:
-            with self.prepared_statement_engine.connect():
+            with self._prepared_statement_engine.connect():
                 pass
         except exc.OperationalError:
-            self._set_mysql_connection(external)
+            self._set_mysql_connection()
 
     def _make_preview_statement(self, statement, n):
         return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
-    def _set_mysql_connection(self, external):
+    def _set_mysql_connection(self):
         online_conn = self._storage_connector_api.get_online_connector()
-        mysql_engine = util.create_mysql_engine(online_conn, external)
-        self.prepared_statement_engine = mysql_engine
+        self._prepared_statement_engine = util.create_mysql_engine(
+            online_conn, self._external
+        )
 
-    @staticmethod
-    def _apply_transformation(transformation_fns, row_dict):
-        for feature_name in transformation_fns:
+    def _generate_vector(self, result_dict):
+        vector = []
+        for feature in self._features:
+            if feature.label:
+                # Skip the label
+                continue
+
+            if feature.name not in result_dict:
+                raise Exception(
+                    "Feature "
+                    + feature.name
+                    + " is missing from vector. "
+                    + "Please provide the required entry to retrieve it from the feature store "
+                    + " or provide the feature as passed_feature"
+                )
+
+            vector.append(result_dict[feature.name])
+
+        return vector
+
+    def _apply_transformation(self, row_dict):
+        for feature_name in self._transformation_functions:
             if feature_name in row_dict:
-                transformation_fn = transformation_fns[feature_name].transformation_fn
+                transformation_fn = self._transformation_functions[
+                    feature_name
+                ].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
+
+    @staticmethod
+    def _get_sorted_results(pknames, entries, results, prefix):
+        sorted_results = []
+        for e in entries:
+            for row in results:
+                if all(
+                    [
+                        e[pkname] == row[(prefix if prefix else "") + pkname]
+                        for pkname in pknames
+                    ]
+                ):
+                    sorted_results.append(row)
+                    break
+
+        return sorted_results
 
     @staticmethod
     def _parametrize_query(name, query_online):
@@ -338,14 +379,14 @@ class VectorServer:
             query_online,
         )
 
-    def _get_transformation_fns(self, vector_server):
+    def _get_transformation_fns(self, entity):
         # get attached transformation functions
         transformation_functions = (
-            self._transformation_function_engine.get_td_transformation_fn(vector_server)
-            if isinstance(vector_server, training_dataset.TrainingDataset)
+            self._transformation_function_engine.get_td_transformation_fn(entity)
+            if isinstance(entity, training_dataset.TrainingDataset)
             else (
                 self._feature_view_engine.get_attached_transformation_fn(
-                    vector_server.name, vector_server.version
+                    entity.name, entity.version
                 )
             )
         )
@@ -357,7 +398,7 @@ class VectorServer:
             )
             > 0
         )
-        is_feat_view = isinstance(vector_server, feature_view.FeatureView)
+        is_feat_view = isinstance(entity, feature_view.FeatureView)
         if not is_stat_required:
             td_tffn_stats = None
         else:
@@ -370,7 +411,7 @@ class VectorServer:
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
-                vector_server,
+                entity,
                 for_transformation=True,
                 training_dataset_version=self._training_dataset_version,
             )
