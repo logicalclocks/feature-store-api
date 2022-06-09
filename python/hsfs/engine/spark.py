@@ -124,11 +124,10 @@ class Engine:
         )
 
     def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
-            dataframe = self._spark_session.createDataFrame(dataframe)
-        elif isinstance(dataframe, list):
+        if isinstance(dataframe, list):
             dataframe = np.array(dataframe)
-        elif isinstance(dataframe, np.ndarray):
+
+        if isinstance(dataframe, np.ndarray):
             if dataframe.ndim != 2:
                 raise TypeError(
                     "Cannot convert numpy array that do not have two dimensions to a dataframe. "
@@ -141,6 +140,8 @@ class Engine:
                 dataframe_dict[col_name] = dataframe[:, n_col]
             pandas_df = pd.DataFrame(dataframe_dict)
             dataframe = self._spark_session.createDataFrame(pandas_df)
+        elif isinstance(dataframe, pd.DataFrame):
+            dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
 
@@ -259,6 +260,7 @@ class Engine:
                 self._spark_session,
                 self._spark_context,
             )
+
             hudi_engine_instance.save_hudi_fg(
                 dataframe, self.APPEND, operation, write_options, validation_id
             )
