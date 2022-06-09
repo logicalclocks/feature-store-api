@@ -37,6 +37,7 @@ class VectorServer:
         self._prepared_statements = None
         self._serving_keys = None
         self._pkname_by_serving_index = None
+        self._prefix_by_serving_index = None
         self._external = True
         self._feature_store_id = feature_store_id
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -88,6 +89,7 @@ class VectorServer:
 
         prepared_statements_dict = {}
         pkname_by_serving_index = {}
+        prefix_by_serving_index = {}
         serving_vector_keys = set()
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", " ")
@@ -120,6 +122,10 @@ class VectorServer:
                 prepared_statement.prepared_statement_index
             ] = pk_names
 
+            prefix_by_serving_index[
+                prepared_statement.prepared_statement_index
+            ] = prepared_statement.prefix
+
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
@@ -127,6 +133,7 @@ class VectorServer:
         self._prepared_statements = prepared_statements_dict
         self._serving_keys = serving_vector_keys
         self._pkname_by_serving_index = pkname_by_serving_index
+        self._prefix_by_serving_index = prefix_by_serving_index
 
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
@@ -249,6 +256,7 @@ class VectorServer:
                     self._pkname_by_serving_index[prepared_statement_index],
                     entry,
                     statement_results,
+                    self._prefix_by_serving_index[prepared_statement_index],
                 )
 
                 # add partial results to the global results
@@ -339,11 +347,16 @@ class VectorServer:
         return row_dict
 
     @staticmethod
-    def _get_sorted_results(pknames, entries, results):
+    def _get_sorted_results(pknames, entries, results, prefix):
         sorted_results = []
         for e in entries:
             for row in results:
-                if all([e[pkname] == row[pkname] for pkname in pknames]):
+                if all(
+                    [
+                        e[pkname] == row[(prefix if prefix else "") + pkname]
+                        for pkname in pknames
+                    ]
+                ):
                     sorted_results.append(row)
                     break
 
