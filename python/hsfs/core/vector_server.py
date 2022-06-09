@@ -56,8 +56,10 @@ class VectorServer:
         )
 
     def init_serving(self, entity, batch, external):
-        self.init_prepared_statement(entity, batch, external)
+        # `init_prepared_statement` should be the last because other initialisations
+        # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
+        self.init_prepared_statement(entity, batch, external)
 
     def init_transformation(self, entity):
         # attach transformation functions

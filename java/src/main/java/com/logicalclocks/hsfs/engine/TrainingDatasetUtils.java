@@ -31,8 +31,25 @@ import org.apache.spark.sql.types.StructType;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class TrainingDatasetUtils {
+
+  public static void setLabelFeature(List<TrainingDatasetFeature> features, List<String> labels)
+      throws FeatureStoreException {
+    if (labels != null && !labels.isEmpty()) {
+      for (String label : labels) {
+        Optional<TrainingDatasetFeature> feature =
+            features.stream().filter(f -> f.getName().equals(label)).findFirst();
+        if (feature.isPresent()) {
+          feature.get().setLabel(true);
+        } else {
+          throw new FeatureStoreException("The specified label `" + label + "` could not be found among the features: "
+              + features.stream().map(TrainingDatasetFeature::getName) + ".");
+        }
+      }
+    }
+  }
 
 
   public List<TrainingDatasetFeature> parseTrainingDatasetSchema(Dataset<Row> dataset) throws FeatureStoreException {

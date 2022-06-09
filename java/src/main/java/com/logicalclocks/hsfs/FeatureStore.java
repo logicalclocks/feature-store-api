@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.ExpectationsApi;
@@ -54,6 +55,7 @@ public class FeatureStore {
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
   private ExpectationsApi expectationsApi;
+  private FeatureViewEngine featureViewEngine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -64,6 +66,7 @@ public class FeatureStore {
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     expectationsApi = new ExpectationsApi();
+    featureViewEngine = new FeatureViewEngine();
   }
 
   /**
@@ -242,6 +245,38 @@ public class FeatureStore {
   public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
     return OnDemandFeatureGroup.builder()
         .featureStore(this);
+  }
+
+  public FeatureView.FeatureViewBuilder createFeatureView() {
+    return new FeatureView.FeatureViewBuilder(this);
+  }
+
+  /**
+   * Get a feature view object from the selected feature store.
+   *
+   * @param name    name of the feature view
+   * @param version version to get
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureViewEngine.get(this, name, version);
+  }
+
+  /**
+   * Get a feature view object with the default version `1` from the selected feature store.
+   *
+   * @param name name of the feature view
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getFeatureView(name, DEFAULT_VERSION);
   }
 
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {

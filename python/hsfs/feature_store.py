@@ -16,7 +16,7 @@
 
 import warnings
 import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+from typing import Optional, Union, List, Dict
 
 import humps
 import numpy
@@ -699,36 +699,18 @@ class FeatureStore:
         transformation_function: callable,
         output_type: Union[
             str,
-            TypeVar("str"),  # noqa: F821
-            TypeVar("string"),  # noqa: F821
             bytes,
-            numpy.int8,
-            TypeVar("int8"),  # noqa: F821
-            TypeVar("byte"),  # noqa: F821
-            numpy.int16,
-            TypeVar("int16"),  # noqa: F821
-            TypeVar("short"),  # noqa: F821
             int,
-            TypeVar("int"),  # noqa: F821
-            numpy.int,
+            numpy.int8,
+            numpy.int16,
             numpy.int32,
             numpy.int64,
-            TypeVar("int64"),  # noqa: F821
-            TypeVar("long"),  # noqa: F821
-            TypeVar("bigint"),  # noqa: F821
             float,
-            TypeVar("float"),  # noqa: F821
-            numpy.float,
             numpy.float64,
-            TypeVar("float64"),  # noqa: F821
-            TypeVar("double"),  # noqa: F821
             datetime.datetime,
             numpy.datetime64,
             datetime.date,
             bool,
-            TypeVar("boolean"),  # noqa: F821
-            TypeVar("bool"),  # noqa: F821
-            numpy.bool,
         ],
         version: Optional[int] = None,
     ):
@@ -783,7 +765,7 @@ class FeatureStore:
         query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        label: Optional[List[str]] = [],
+        labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
@@ -797,7 +779,7 @@ class FeatureStore:
             description: A string describing the contents of the feature view to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            label: A list of feature names constituting the prediction label/feature of
+            labels: A list of feature names constituting the prediction label/feature of
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
@@ -815,7 +797,7 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            label=label,
+            labels=labels,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)

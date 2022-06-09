@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
 import org.apache.http.HttpHeaders;
@@ -38,6 +39,9 @@ public class StatisticsApi {
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,sort_by,offset,limit}";
+  public static final String FV_STATISTICS_PATH = "/featureview{/fvName}/version{/fvVersion}"
+      + "/trainingdatasets/version{/tdVersion}/statistics{?filter_by,fields,sort_by,offset,limit}";
+
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsApi.class);
 
@@ -61,7 +65,6 @@ public class StatisticsApi {
 
   private Statistics post(Integer projectId, Integer featurestoreId, Integer entityId, Statistics statistics)
       throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
@@ -70,7 +73,26 @@ public class StatisticsApi {
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
         .expand();
+    return post(uri, statistics);
+  }
 
+  public Statistics post(FeatureView featureView,
+      Integer trainingDataVersion, Statistics statistics)
+      throws FeatureStoreException, IOException {
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", featureView.getFeatureStore().getProjectId())
+        .set("fsId", featureView.getFeatureStore().getId())
+        .set("fvName", featureView.getName())
+        .set("fvVersion", featureView.getVersion())
+        .set("tdVersion", trainingDataVersion)
+        .expand();
+    return post(uri, statistics);
+  }
+
+  private Statistics post(String uri, Statistics statistics) throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
     String statisticsJson = hopsworksClient.getObjectMapper().writeValueAsString(statistics);
     HttpPost postRequest = new HttpPost(uri);
     postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -81,6 +103,8 @@ public class StatisticsApi {
 
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
+
+
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
     return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
