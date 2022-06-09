@@ -155,7 +155,7 @@ class FeatureView:
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: List[Dict[str, Any]],
+        passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = False,
     ):
         """Returns assembled serving vectors in batches from online feature store.
@@ -175,7 +175,7 @@ class FeatureView:
         """
         if self._vector_server is None:
             self.init_serving(batch=True, external=external)
-        return self._vector_server.get_feature_vectors(entry)
+        return self._vector_server.get_feature_vectors(entry, passed_features)
 
     def preview_feature_vector(self, external: Optional[bool] = False):
         """Returns a sample of assembled serving vector from online feature store.
