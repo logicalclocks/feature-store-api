@@ -765,7 +765,7 @@ class FeatureStore:
         query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        label: Optional[List[str]] = [],
+        labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
@@ -779,7 +779,7 @@ class FeatureStore:
             description: A string describing the contents of the feature view to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            label: A list of feature names constituting the prediction label/feature of
+            labels: A list of feature names constituting the prediction label/feature of
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
@@ -797,7 +797,7 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            label=label,
+            labels=labels,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)
