@@ -2227,7 +2227,7 @@ DataFrame.</p>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L762">[source]</a></span></p>
 <h3 id="create_feature_view">create_feature_view<a class="headerlink" href="#create_feature_view" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_view</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[],</span> <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[],</span> <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{}</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Create a feature view metadata object and saved it to Hopsworks.</p>
@@ -2241,7 +2241,7 @@ DataFrame.</p>
 <li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the feature view to
     improve discoverability for Data Scientists, defaults to empty string
     <code>""</code>.</li>
-<li><strong>label</strong> <code>Optional[List[str]]</code>: A list of feature names constituting the prediction label/feature of
+<li><strong>labels</strong> <code>Optional[List[str]]</code>: A list of feature names constituting the prediction label/feature of
     the feature view. When replaying a <code>Query</code> during model inference,
     the label features can be omitted from the feature vector retrieval.
     Defaults to <code>[]</code>, no label.</li>
