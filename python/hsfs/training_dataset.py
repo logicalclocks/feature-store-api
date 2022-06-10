@@ -192,6 +192,9 @@ class TrainingDataset:
             end_time=test_end
         )
         if time_splits:
+            raise NotImplementedError(
+                "Time series splits is not supported yet."
+            )
             self._train_split = TrainingDatasetSplit.TRAIN
         # prioritise time split
         self._splits = time_splits or self._splits

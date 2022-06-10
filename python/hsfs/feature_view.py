@@ -677,7 +677,7 @@ class FeatureView:
 
     def train_test_splits(
         self,
-        test_size: Optional[float],
+        test_size: Optional[float] = None,
         train_start: Optional[str] = "",
         train_end: Optional[str] = "",
         test_start: Optional[str] = "",
