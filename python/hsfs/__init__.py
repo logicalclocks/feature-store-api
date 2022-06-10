@@ -31,7 +31,7 @@ warnings.formatwarning = fs_formatwarning
 warnings.simplefilter("always", util.VersionWarning)
 warnings.filterwarnings(
     action='ignore',
-    category=warnings.DeprecationWarning,
+    category=DeprecationWarning,
     module=r'.*ipykernel'
 )
 
