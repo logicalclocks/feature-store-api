@@ -86,6 +86,14 @@ class TrainingDataset:
         self._data_format = data_format
         self._start_time = self._convert_event_time_to_timestamp(event_start_time)
         self._end_time = self._convert_event_time_to_timestamp(event_end_time)
+        self._val_size = val_size
+        self._test_size = test_size
+        self._train_start = train_start
+        self._train_end = train_end
+        self._val_start = val_start
+        self._val_end = val_end
+        self._test_start = test_start
+        self._test_end = test_end
         self._coalesce = coalesce
         self._seed = seed
         self._location = location
@@ -125,12 +133,13 @@ class TrainingDataset:
             self.statistics_config = statistics_config
             self._label = label
             if val_size or test_size:
+                self._train_split = TrainingDatasetSplit.TRAIN
                 self.splits = {TrainingDatasetSplit.TRAIN:
                                    1-(val_size or 0)-(test_size or 0),
                                TrainingDatasetSplit.VALIDATION: val_size,
                                TrainingDatasetSplit.TEST: test_size}
             self._set_time_splits(
-                train_start, train_end, val_start,val_end, test_start, test_end
+                train_start, train_end, val_start, val_end, test_start, test_end
             )
         else:
             # type available -> init from backend response
@@ -145,7 +154,8 @@ class TrainingDataset:
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
                 for feat in features
             ]
-            self._splits = splits
+            self._splits = [TrainingDatasetSplit.from_response_json(split) for
+                            split in splits]
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
@@ -165,22 +175,24 @@ class TrainingDataset:
         time_splits = list()
         self._append_time_split(
             time_splits,
-            split_name="train",
+            split_name=TrainingDatasetSplit.TRAIN,
             start_time=train_start,
             end_time=train_end or val_start
         )
         self._append_time_split(
             time_splits,
-            split_name="validation",
+            split_name=TrainingDatasetSplit.VALIDATION,
             start_time=val_start or train_end,
             end_time=val_end or test_start
         )
         self._append_time_split(
             time_splits,
-            split_name="test",
+            split_name=TrainingDatasetSplit.TEST,
             start_time=test_start or val_end,
             end_time=test_end
         )
+        if time_splits:
+            self._train_split = TrainingDatasetSplit.TRAIN
         # prioritise time split
         self._splits = time_splits or self._splits
 
@@ -822,3 +834,68 @@ class TrainingDataset:
             )
         else:
             self._training_dataset_type = training_dataset_type
+
+    @property
+    def val_size(self):
+        return self._val_size
+
+    @val_size.setter
+    def val_size(self, val_size):
+        self._val_size = val_size
+
+    @property
+    def test_size(self):
+        return self._test_size
+
+    @test_size.setter
+    def test_size(self, test_size):
+        self._test_size = test_size
+
+    @property
+    def train_start(self):
+        return self._train_start
+
+    @train_start.setter
+    def train_start(self, train_start):
+        self._train_start = train_start
+
+    @property
+    def train_end(self):
+        return self._train_end
+
+    @train_end.setter
+    def train_end(self, train_end):
+        self._train_end = train_end
+
+
+    @property
+    def val_start(self):
+        return self._val_start
+
+    @val_start.setter
+    def val_start(self, val_start):
+        self._val_start = val_start
+
+    @property
+    def val_end(self):
+        return self._val_end
+
+    @val_end.setter
+    def val_end(self, val_end):
+        self._val_end = val_end
+
+    @property
+    def test_start(self):
+        return self._test_start
+
+    @test_start.setter
+    def test_start(self, test_start):
+        self._test_start = test_start
+
+    @property
+    def test_end(self):
+        return self._test_end
+
+    @test_end.setter
+    def test_end(self, test_end):
+        self._test_end = test_end

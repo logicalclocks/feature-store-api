@@ -465,6 +465,11 @@ class Engine:
             )
         return split_df
 
+    def split_labels(self, df, labels):
+        labels_df = df[labels]
+        df_new = df.drop(columns=labels)
+        return df_new, labels_df
+
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split

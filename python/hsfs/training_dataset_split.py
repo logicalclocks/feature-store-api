@@ -16,6 +16,7 @@
 
 import json
 from hsfs import util
+import humps
 
 class TrainingDatasetSplit:
 
@@ -89,3 +90,11 @@ class TrainingDatasetSplit:
             "start_time": self._start_time,
             "end_time": self._end_time
         }
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        return cls(name=json_decamelized["name"],
+                   split_type=json_decamelized.get(
+                       "split_type", TrainingDatasetSplit.RANDOM_SPLIT),
+                   percentage=json_decamelized["percentage"])

@@ -340,6 +340,11 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
+    def split_labels(self, df, labels):
+        labels_df = df.select(*labels)
+        df_new = df.drop(*labels)
+        return df_new, labels_df
+
     def write_training_dataset(
         self,
         training_dataset,
@@ -664,6 +669,8 @@ class Engine:
         return options
 
     def read_options(self, data_format, provided_options):
+        if provided_options is None:
+            provided_options = {}
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
             options.update(provided_options)
