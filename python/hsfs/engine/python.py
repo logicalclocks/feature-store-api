@@ -362,11 +362,15 @@ class Engine:
     def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
-            sub_dtype = np.dtype(arrow_type.value_type.to_pandas_dtype())
+            sub_arrow_type = arrow_type.value_type
+            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
             subtype = self._convert_pandas_type(
-                sub_dtype, arrow_type.value_type
+                sub_dtype, sub_arrow_type
             )
             return "array<{}>".format(subtype)
+        if pa.types.is_struct(arrow_type):
+            # best effort, based on pyarrow's string representation
+            return str(arrow_type)
         elif pa.types.is_decimal(arrow_type):
             return arrow_type.replace("decimal128", "decimal")
         elif pa.types.is_date(arrow_type):
