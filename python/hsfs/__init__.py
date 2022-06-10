@@ -29,5 +29,8 @@ def fs_formatwarning(message, category, filename, lineno, line=None):
 
 warnings.formatwarning = fs_formatwarning
 warnings.simplefilter("always", util.VersionWarning)
+warnings.filterwarnings(
+    action="ignore", category=DeprecationWarning, module=r".*ipykernel"
+)
 
 __all__ = ["connection", "setup_databricks"]
