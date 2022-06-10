@@ -385,13 +385,13 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            splits = [(split.name, split.percentage) for
-                  split in training_dataset.splits]
+            splits = [
+                (split.name, split.percentage) for split in training_dataset.splits
+            ]
             split_weights = [split[1] for split in splits]
             split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
             split_dataset = dict(
-                [(split[0], split_dataset[i]) for
-                 i, split in enumerate(splits)]
+                [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
             )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset

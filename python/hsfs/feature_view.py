@@ -456,9 +456,7 @@ class FeatureView:
         """
 
         self._validate_train_test_splits(
-            test_size=test_size,
-            train_end=train_end,
-            test_start=test_start
+            test_size=test_size, train_end=train_end, test_start=test_start
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -586,7 +584,7 @@ class FeatureView:
             train_end=train_end,
             val_start=val_start,
             val_end=val_end,
-            test_start=test_start
+            test_start=test_start,
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -764,9 +762,7 @@ class FeatureView:
 
         """
         self._validate_train_test_splits(
-            test_size=test_size,
-            train_end=train_end,
-            test_start=test_start
+            test_size=test_size, train_end=train_end, test_start=test_start
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -786,9 +782,10 @@ class FeatureView:
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td,
-            splits=[TrainingDatasetSplit.TRAIN,
-                    TrainingDatasetSplit.TEST]
+            self,
+            read_options,
+            training_dataset_obj=td,
+            splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -798,8 +795,7 @@ class FeatureView:
 
     @staticmethod
     def _validate_train_test_splits(test_size, train_end, test_start):
-        if not (test_size or
-                (train_end or test_start)):
+        if not (test_size or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
                 "You should specify either `test_size` or (`train_end` or `test_start`)"
@@ -870,7 +866,7 @@ class FeatureView:
             train_end=train_end,
             val_start=val_start,
             val_end=val_end,
-            test_start=test_start
+            test_start=test_start,
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -893,30 +889,33 @@ class FeatureView:
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td,
-            splits=[TrainingDatasetSplit.TRAIN,
-                    TrainingDatasetSplit.VALIDATION,
-                    TrainingDatasetSplit.TEST]
+            self,
+            read_options,
+            training_dataset_obj=td,
+            splits=[
+                TrainingDatasetSplit.TRAIN,
+                TrainingDatasetSplit.VALIDATION,
+                TrainingDatasetSplit.TEST,
+            ],
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
         )
-        return (df[TrainingDatasetSplit.TRAIN] +
-               df[TrainingDatasetSplit.VALIDATION] +
-                df[TrainingDatasetSplit.TEST])
+        return (
+            df[TrainingDatasetSplit.TRAIN]
+            + df[TrainingDatasetSplit.VALIDATION]
+            + df[TrainingDatasetSplit.TEST]
+        )
 
     @staticmethod
     def _validate_train_validation_test_splits(
-        val_size,
-        test_size,
-        train_end,
-        val_start,
-        val_end,
-        test_start
+        val_size, test_size, train_end, val_start, val_end, test_start
     ):
-        if not ((val_size and test_size) or
-                ((train_end or val_start) and (val_end or test_start))):
+        if not (
+            (val_size and test_size)
+            or ((train_end or val_start) and (val_end or test_start))
+        ):
             raise ValueError(
                 "Invalid split input."
                 "You should specify either (`val_size` and `test_size`)"
@@ -949,8 +948,7 @@ class FeatureView:
 
         """
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options,
-            training_dataset_version=training_dataset_version
+            self, read_options, training_dataset_version=training_dataset_version
         )
         return df
 
@@ -958,7 +956,6 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-
     ):
         """
         Get training data from storage or feature groups.
@@ -982,10 +979,10 @@ class FeatureView:
 
         """
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options,
+            self,
+            read_options,
             training_dataset_version=training_dataset_version,
-            splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST]
-
+            splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
         )
         return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
 
@@ -993,7 +990,6 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-
     ):
         """
         Get training data from storage or feature groups.
@@ -1017,16 +1013,20 @@ class FeatureView:
 
         """
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options,
+            self,
+            read_options,
             training_dataset_version=training_dataset_version,
-            splits=[TrainingDatasetSplit.TRAIN,
-                    TrainingDatasetSplit.VALIDATION,
-                    TrainingDatasetSplit.TEST]
-
+            splits=[
+                TrainingDatasetSplit.TRAIN,
+                TrainingDatasetSplit.VALIDATION,
+                TrainingDatasetSplit.TEST,
+            ],
         )
-        return (df[TrainingDatasetSplit.TRAIN] +
-               df[TrainingDatasetSplit.VALIDATION] +
-                df[TrainingDatasetSplit.TEST])
+        return (
+            df[TrainingDatasetSplit.TRAIN]
+            + df[TrainingDatasetSplit.VALIDATION]
+            + df[TrainingDatasetSplit.TEST]
+        )
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(

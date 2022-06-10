@@ -157,7 +157,7 @@ class FeatureViewEngine:
         read_options=None,
         splits=[],
         training_dataset_obj=None,
-        training_dataset_version=None
+        training_dataset_version=None,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -212,8 +212,8 @@ class FeatureViewEngine:
                 )
         else:
             split_df = engine.get_instance().split_labels(
-                    split_df, feature_view_obj.labels
-                )
+                split_df, feature_view_obj.labels
+            )
 
         return td_updated, split_df
 

@@ -134,10 +134,11 @@ class TrainingDataset:
             self._label = label
             if val_size or test_size:
                 self._train_split = TrainingDatasetSplit.TRAIN
-                self.splits = {TrainingDatasetSplit.TRAIN:
-                                   1-(val_size or 0)-(test_size or 0),
-                               TrainingDatasetSplit.VALIDATION: val_size,
-                               TrainingDatasetSplit.TEST: test_size}
+                self.splits = {
+                    TrainingDatasetSplit.TRAIN: 1 - (val_size or 0) - (test_size or 0),
+                    TrainingDatasetSplit.VALIDATION: val_size,
+                    TrainingDatasetSplit.TEST: test_size,
+                }
             self._set_time_splits(
                 train_start, train_end, val_start, val_end, test_start, test_end
             )
@@ -154,8 +155,9 @@ class TrainingDataset:
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
                 for feat in features
             ]
-            self._splits = [TrainingDatasetSplit.from_response_json(split) for
-                            split in splits]
+            self._splits = [
+                TrainingDatasetSplit.from_response_json(split) for split in splits
+            ]
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
@@ -164,54 +166,55 @@ class TrainingDataset:
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
-    def _set_time_splits(self,
-                        train_start=None,
-                        train_end=None,
-                        val_start=None,
-                        val_end=None,
-                        test_start=None,
-                        test_end=None,
-                        ):
+
+    def _set_time_splits(
+        self,
+        train_start=None,
+        train_end=None,
+        val_start=None,
+        val_end=None,
+        test_start=None,
+        test_end=None,
+    ):
         time_splits = list()
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.TRAIN,
             start_time=train_start,
-            end_time=train_end or val_start
+            end_time=train_end or val_start,
         )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.VALIDATION,
             start_time=val_start or train_end,
-            end_time=val_end or test_start
+            end_time=val_end or test_start,
         )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.TEST,
             start_time=test_start or val_end,
-            end_time=test_end
+            end_time=test_end,
         )
         if time_splits:
-            raise NotImplementedError(
-                "Time series splits is not supported yet."
-            )
+            raise NotImplementedError("Time series splits is not supported yet.")
             self._train_split = TrainingDatasetSplit.TRAIN
         # prioritise time split
         self._splits = time_splits or self._splits
 
-    def _append_time_split(self,
-                           time_splits,
-                           split_name,
-                           start_time=None,
-                           end_time=None,
-                           ):
+    def _append_time_split(
+        self,
+        time_splits,
+        split_name,
+        start_time=None,
+        end_time=None,
+    ):
         if start_time or end_time:
             time_splits.append(
                 TrainingDatasetSplit(
                     name=split_name,
                     split_type=TrainingDatasetSplit.TIME_SPLIT,
                     start_time=start_time,
-                    end_time=end_time
+                    end_time=end_time,
                 )
             )
 
@@ -622,11 +625,13 @@ class TrainingDataset:
     @splits.setter
     def splits(self, splits):
         # user api differs from how the backend expects the splits to be represented
-        self._splits = [TrainingDatasetSplit(
-            name=k,
-            split_type=TrainingDatasetSplit.RANDOM_SPLIT,
-            percentage=v)
-            for k, v in splits.items() if v is not None]
+        self._splits = [
+            TrainingDatasetSplit(
+                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+            )
+            for k, v in splits.items()
+            if v is not None
+        ]
 
     @property
     def location(self):
@@ -869,7 +874,6 @@ class TrainingDataset:
     @train_end.setter
     def train_end(self, train_end):
         self._train_end = train_end
-
 
     @property
     def val_start(self):
