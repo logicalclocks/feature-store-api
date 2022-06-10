@@ -106,10 +106,17 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
+        # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
         self._single_vector_server.init_serving(self, False, external)
+
+        # initiate batch vector server
+        self._batch_vectors_server = vector_server.VectorServer(
+            self._featurestore_id, self._features, training_dataset_version
+        )
+        self._batch_vectors_server.init_serving(self, True, external)
 
         # initiate batch vector server
         self.init_batch_scoring(training_dataset_version)
