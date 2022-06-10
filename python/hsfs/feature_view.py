@@ -242,9 +242,9 @@ class FeatureView:
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
         read_options: User provided read options. Defaults to `{}`.
         """
 
@@ -287,25 +287,25 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
-                !!! info "Data Formats"
-                    The feature store currently supports the following data formats for
-                    training datasets:
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
 
-                    1. tfrecord
-                    2. csv
-                    3. tsv
-                    4. parquet
-                    5. avro
-                    6. orc
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
 
-                    Currently not supported petastorm, hdf5 and npy file formats.
+            Currently not supported petastorm, hdf5 and npy file formats.
 
 
         # Arguments
             start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -342,7 +342,8 @@ class FeatureView:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `python` engine, it returns the Hopsworks Job
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
         td = training_dataset.TrainingDataset(
@@ -389,25 +390,30 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
-                !!! info "Data Formats"
-                    The feature store currently supports the following data formats for
-                    training datasets:
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
 
-                    1. tfrecord
-                    2. csv
-                    3. tsv
-                    4. parquet
-                    5. avro
-                    6. orc
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
 
-                    Currently not supported petastorm, hdf5 and npy file formats.
+            Currently not supported petastorm, hdf5 and npy file formats.
 
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -444,7 +450,8 @@ class FeatureView:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `python` engine, it returns the Hopsworks Job
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
 
@@ -503,25 +510,35 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
-                !!! info "Data Formats"
-                    The feature store currently supports the following data formats for
-                    training datasets:
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
 
-                    1. tfrecord
-                    2. csv
-                    3. tsv
-                    4. parquet
-                    5. avro
-                    6. orc
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
 
-                    Currently not supported petastorm, hdf5 and npy file formats.
+            Currently not supported petastorm, hdf5 and npy file formats.
 
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            val_size: size of validation set.
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -558,7 +575,8 @@ class FeatureView:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `python` engine, it returns the Hopsworks Job
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
 
@@ -605,6 +623,27 @@ class FeatureView:
     def recreate_training_dataset(
         self, version: int, write_options: Optional[Dict[Any, Any]] = None
     ):
+        """
+        Recreate a training dataset.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
+
+        """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
             self, version, write_options
         )
@@ -619,7 +658,7 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data from feature groups.
 
         !!! info
         If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -627,9 +666,9 @@ class FeatureView:
 
         # Arguments
             start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -648,8 +687,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            Training dataset tuple: (`int`, `dict(str, Dataframe)`)
-                Training dataset version and Dictionary of dataframes where split is the key.
+            (X, y): Tuple of dataframe of features and labels
 
         """
         td = training_dataset.TrainingDataset(
@@ -686,7 +724,45 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
+        """
+        Get training data from feature groups.
 
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
         self._validate_train_test_splits(
             test_size=test_size,
             train_end=train_end,
@@ -751,6 +827,20 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
+            val_size: size of validation set.
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -769,8 +859,8 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            Training dataset tuple: (`int`, `dict(str, Dataframe)`)
-                Training dataset version and Dictionary of dataframes where split is the key.
+            (X_train, y_train, X_val, y_val, X_test, y_test):
+                Tuple of dataframe of features and labels
 
         """
 
@@ -838,6 +928,26 @@ class FeatureView:
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X, y): Tuple of dataframe of features and labels
+
+        """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options,
             training_dataset_version=training_dataset_version
@@ -850,6 +960,27 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
 
     ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options,
             training_dataset_version=training_dataset_version,
@@ -864,6 +995,27 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
 
     ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_val, y_val, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options,
             training_dataset_version=training_dataset_version,
