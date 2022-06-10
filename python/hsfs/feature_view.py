@@ -33,7 +33,6 @@ from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
-    training_dataset_bundle,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
