@@ -489,14 +489,20 @@ class Engine:
         df[split_column] = groups
         for i, item in enumerate(items):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
-            if item[0] == training_dataset_obj.train_split:
-                transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                    training_dataset_obj, feature_view_obj, split_df
-                )
-            result_dfs[item[0]] = self._apply_transformation_function(
+            result_dfs[item[0]] = split_df
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
                 training_dataset_obj,
-                split_df,
+                split_name.get(split_name),
             )
+
         return result_dfs
 
     def write_training_dataset(
