@@ -103,7 +103,6 @@ class TrainingDataset:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
-        self._vector_server = vector_server.VectorServer(featurestore_id)
         if training_dataset_type:
             self.training_dataset_type = training_dataset_type
         else:
@@ -134,6 +133,10 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
+
+        self._vector_server = vector_server.VectorServer(
+            featurestore_id, features=self._features
+        )
 
     def _convert_event_time_to_timestamp(self, event_time):
         if not event_time:
@@ -674,7 +677,7 @@ class TrainingDataset:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._vector_server.get_feature_vector(self, entry, external)
+        return self._vector_server.get_feature_vector(entry, external)
 
     def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = False
@@ -693,7 +696,7 @@ class TrainingDataset:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._vector_server.get_feature_vectors(self, entry, external)
+        return self._vector_server.get_feature_vectors(entry, external)
 
     @property
     def label(self):

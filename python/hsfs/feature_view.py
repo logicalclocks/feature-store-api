@@ -90,7 +90,6 @@ class FeatureView:
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
-        batch: Optional[bool] = False,
         external: Optional[bool] = False,
     ):
         """Initialise and cache parametrized prepared statement to
@@ -107,9 +106,8 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
-        # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
-            self._featurestore_id, training_dataset_version
+            self._featurestore_id, self._features, training_dataset_version
         )
         self._single_vector_server.init_serving(self, False, external)
 
@@ -151,13 +149,18 @@ class FeatureView:
         )
 
     def get_feature_vector(
-        self, entry: Dict[str, Any], external: Optional[bool] = False
+        self,
+        entry: List[Dict[str, Any]],
+        passed_features: Optional[Dict[str, Any]] = {},
+        external: Optional[bool] = False,
     ):
         """Returns assembled serving vector from online feature store.
 
         # Arguments
-            entry: dictionary of training dataset feature group primary key names as keys and values provided by
-                serving application.
+            entry: dictionary of feature group primary key and values provided by serving application.
+            passed_features: dictionary of feature values provided by the application at runtime.
+                They can replace features values fetched from the feature store as well as
+                providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
@@ -165,32 +168,36 @@ class FeatureView:
                 which relies on the private IP.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
-            features in training dataset query.
+            features in the feature view query.
         """
         if self._single_vector_server is None:
             self.init_serving(external=external)
-        return self._single_vector_server.get_feature_vector(self, entry, external)
+        return self._single_vector_server.get_feature_vector(entry, passed_features)
 
     def get_feature_vectors(
-        self, entry: Dict[str, List[Any]], external: Optional[bool] = False
+        self,
+        entry: List[Dict[str, Any]],
+        passed_features: Optional[List[Dict[str, Any]]] = {},
+        external: Optional[bool] = False,
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
         # Arguments
-            entry: dict of feature group primary key names as keys and value as list of primary keys provided by
-                serving application.
+            entry: a list of dictionary of feature group primary key and values provided by serving application.
+            passed_features: a list of dictionary of feature values provided by the application at runtime.
+                They can replace features values fetched from the feature store as well as
+                providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         # Returns
-            `List[list]` List of lists of feature values related to provided primary keys, ordered according to
-            positions of this features in training dataset query.
+            `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
         if self._batch_vectors_server is None:
-            self.init_serving(batch=True, external=external)
-        return self._batch_vectors_server.get_feature_vectors(self, entry, external)
+            self.init_serving(external=external)
+        return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
     def preview_feature_vector(self, external: Optional[bool] = False):
         """Returns a sample of assembled serving vector from online feature store.
@@ -205,9 +212,9 @@ class FeatureView:
             `list` List of feature values, ordered according to positions of this
             features in training dataset query.
         """
-        if self._single_vector_server is None:
-            self.init_serving()
-        return self._single_vector_server.get_preview_vectors(self, external, 1)
+        if self._vector_server is None:
+            self.init_serving(external=external)
+        return self._vector_server.get_preview_vectors(1)
 
     def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
         """Returns n samples of assembled serving vectors in batches from online feature store.
@@ -223,9 +230,9 @@ class FeatureView:
             `List[list]` List of lists of feature values , ordered according to
             positions of this features in training dataset query.
         """
-        if self._single_vector_server is None:
-            self.init_serving()
-        return self._single_vector_server.get_preview_vectors(self, external, n)
+        if self._vector_server is None:
+            self.init_serving(external=external)
+        return self._single_vector_server.get_preview_vectors(n)
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """

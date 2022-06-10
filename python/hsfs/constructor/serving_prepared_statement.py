@@ -27,6 +27,7 @@ class ServingPreparedStatement:
         prepared_statement_index=None,
         prepared_statement_parameters=None,
         query_online=None,
+        prefix=None,
         type=None,
         items=None,
         count=None,
@@ -41,6 +42,7 @@ class ServingPreparedStatement:
             for psp in prepared_statement_parameters
         ]
         self._query_online = query_online
+        self._prefix = prefix
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -81,6 +83,10 @@ class ServingPreparedStatement:
     def query_online(self):
         return self._query_online
 
+    @property
+    def prefix(self):
+        return self._prefix
+
     @feature_group_id.setter
     def feature_group_id(self, feature_group_id):
         self._feature_group_id = feature_group_id
@@ -96,3 +102,7 @@ class ServingPreparedStatement:
     @query_online.setter
     def query_online(self, query_online):
         self._query_online = query_online
+
+    @prefix.setter
+    def prefix(self, prefix):
+        self._prefix = prefix
