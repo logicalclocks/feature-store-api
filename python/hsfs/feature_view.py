@@ -248,7 +248,7 @@ class FeatureView:
             start_time,
             end_time,
             self._batch_scoring_server.training_dataset_version,
-            self._batch_scoring_server.transformation_functions,
+            self._batch_scoring_server._transformation_functions,
             read_options,
         )
 
