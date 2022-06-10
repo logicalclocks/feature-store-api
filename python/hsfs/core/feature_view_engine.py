@@ -389,6 +389,7 @@ class FeatureViewEngine:
         start_time,
         end_time,
         training_dataset_version,
+        transformation_functions,
         read_options=None,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
@@ -400,6 +401,7 @@ class FeatureViewEngine:
         training_dataset_obj = self._get_training_data_metadata(
             feature_view_obj, training_dataset_version
         )
+        training_dataset_obj.transformation_functions = transformation_functions
 
         return engine.get_instance()._apply_transformation_function(
             training_dataset_obj, dataset=feature_dataframe

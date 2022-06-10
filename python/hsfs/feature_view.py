@@ -112,10 +112,7 @@ class FeatureView:
         self._single_vector_server.init_serving(self, False, external)
 
         # initiate batch vector server
-        self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id, training_dataset_version
-        )
-        self._batch_vectors_server.init_serving(self, True, external)
+        self.init_batch_scoring(training_dataset_version)
 
     def init_batch_scoring(
         self,
@@ -128,7 +125,7 @@ class FeatureView:
                 are fetched from training dataset and apply in serving vector.
         """
         self._batch_scoring_server = vector_server.VectorServer(
-            self._featurestore_id, training_dataset_version
+            self._featurestore_id, self._features, training_dataset_version
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -212,9 +209,9 @@ class FeatureView:
             `list` List of feature values, ordered according to positions of this
             features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._single_vector_server is None:
             self.init_serving(external=external)
-        return self._vector_server.get_preview_vectors(1)
+        return self._single_vector_server.get_preview_vectors(1)
 
     def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
         """Returns n samples of assembled serving vectors in batches from online feature store.
@@ -230,7 +227,7 @@ class FeatureView:
             `List[list]` List of lists of feature values , ordered according to
             positions of this features in training dataset query.
         """
-        if self._vector_server is None:
+        if self._single_vector_server is None:
             self.init_serving(external=external)
         return self._single_vector_server.get_preview_vectors(n)
 
@@ -251,6 +248,7 @@ class FeatureView:
             start_time,
             end_time,
             self._batch_scoring_server.training_dataset_version,
+            self._batch_scoring_server.transformation_functions,
             read_options,
         )
 

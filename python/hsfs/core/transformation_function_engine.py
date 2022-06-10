@@ -97,7 +97,7 @@ class TransformationFunctionEngine:
                 feature_name,
                 transformation_fn,
             ) in target_obj._transformation_functions.items():
-                if feature_name in target_obj.label:
+                if feature_name in target_obj.labels:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
