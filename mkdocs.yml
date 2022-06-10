@@ -22,6 +22,8 @@ nav:
         - Redshift: integrations/storage-connectors/redshift.md
         - S3: integrations/storage-connectors/s3.md
         - Snowflake: integrations/storage-connectors/snowflake.md
+        - GCS: integrations/storage-connectors/gcs.md
+        - BigQuery: integrations/storage-connectors/bigquery.md
         - AWS Credential passthrough:
           - Resource role to project mapping : integrations/role_mapping.md
           - Assume role : integrations/assume_role.md
