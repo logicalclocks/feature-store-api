@@ -309,7 +309,7 @@ class Engine:
         return [
             feature.Feature(
                 feat_name.lower(),
-                self._convert_pandas_type(feat_name, feat_type, arrow_schema),
+                self._convert_pandas_type(feat_type, arrow_schema.field(feat_name).type),
             )
             for feat_name, feat_type in dataframe.dtypes.items()
         ]
@@ -320,18 +320,16 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
+    def _convert_pandas_type(self, dtype, arrow_type):
+        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
+        # using pyarrow types to convert "O (object)"-typed fields.
+        # In the backend, the types specified here will also be used for mapping to Avro types.
         if dtype == np.dtype("O"):
-            return self._infer_type_pyarrow(feat_name, arrow_schema)
+            return self._infer_type_pyarrow(arrow_type)
 
         return self._convert_simple_pandas_type(dtype)
 
     def _convert_simple_pandas_type(self, dtype):
-        # This is a simple type conversion between pandas type and pyspark types.
-        # In PySpark they use PyArrow to do the schema conversion, but this python layer
-        # should be as thin as possible. Adding PyArrow will make the library less flexible.
-        # If the conversion fails, users can always fall back and provide their own types
-
         if dtype == np.dtype("O"):
             return "string"
         if dtype == np.dtype("uint8"):
@@ -361,15 +359,19 @@ class Engine:
 
         return "string"
 
-    def _infer_type_pyarrow(self, field, schema):
-        arrow_type = schema.field(field).type
-
+    def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
-            subtype = self._convert_simple_pandas_type(
-                arrow_type.value_type.to_pandas_dtype()
+            sub_dtype = np.dtype(arrow_type.value_type.to_pandas_dtype())
+            subtype = self._convert_pandas_type(
+                sub_dtype, arrow_type.value_type
             )
             return "array<{}>".format(subtype)
+        elif pa.types.is_decimal(arrow_type):
+            return arrow_type.replace("decimal128", "decimal")
+        elif pa.types.is_date(arrow_type):
+            return "date"
+
         return "string"
 
     def save_dataframe(
