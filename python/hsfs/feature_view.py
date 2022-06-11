@@ -118,7 +118,7 @@ class FeatureView:
         )
         self._batch_vectors_server.init_serving(self, True, external)
 
-        # initiate batch vector server
+        # initiate batch scoring server
         self.init_batch_scoring(training_dataset_version)
 
     def init_batch_scoring(
