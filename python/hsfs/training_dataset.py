@@ -644,7 +644,7 @@ class TrainingDataset:
         )
 
     def init_prepared_statement(
-        self, batch: Optional[bool] = None, external: Optional[bool] = False
+        self, batch: Optional[bool] = None, external: Optional[bool] = None
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
@@ -661,7 +661,7 @@ class TrainingDataset:
         self._vector_server.init_serving(self, batch, external)
 
     def get_serving_vector(
-        self, entry: Dict[str, Any], external: Optional[bool] = False
+        self, entry: Dict[str, Any], external: Optional[bool] = None
     ):
         """Returns assembled serving vector from online feature store.
 
@@ -680,7 +680,7 @@ class TrainingDataset:
         return self._vector_server.get_feature_vector(entry, external)
 
     def get_serving_vectors(
-        self, entry: Dict[str, List[Any]], external: Optional[bool] = False
+        self, entry: Dict[str, List[Any]], external: Optional[bool] = None
     ):
         """Returns assembled serving vectors in batches from online feature store.
 

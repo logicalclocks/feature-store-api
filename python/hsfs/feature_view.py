@@ -21,12 +21,7 @@ from typing import Optional, Union, List, Dict, Any
 
 import humps
 
-from hsfs import (
-    util,
-    training_dataset_feature,
-    storage_connector,
-    training_dataset,
-)
+from hsfs import util, training_dataset_feature, storage_connector, training_dataset
 from hsfs.constructor import query
 from hsfs.core import (
     feature_view_engine,
@@ -90,7 +85,7 @@ class FeatureView:
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
@@ -156,7 +151,7 @@ class FeatureView:
         self,
         entry: List[Dict[str, Any]],
         passed_features: Optional[Dict[str, Any]] = {},
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Returns assembled serving vector from online feature store.
 
@@ -182,7 +177,7 @@ class FeatureView:
         self,
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
@@ -203,7 +198,7 @@ class FeatureView:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
-    def preview_feature_vector(self, external: Optional[bool] = False):
+    def preview_feature_vector(self, external: Optional[bool] = None):
         """Returns a sample of assembled serving vector from online feature store.
 
         # Arguments
@@ -220,7 +215,7 @@ class FeatureView:
             self.init_serving(external=external)
         return self._single_vector_server.get_preview_vectors(1)
 
-    def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
+    def preview_feature_vectors(self, n: int, external: Optional[bool] = None):
         """Returns n samples of assembled serving vectors in batches from online feature store.
 
         # Arguments
