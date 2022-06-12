@@ -364,7 +364,7 @@ class Engine:
         )
 
         if len(training_dataset.splits) == 0:
-            training_dataset.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
 
@@ -890,6 +890,11 @@ class Engine:
             )
 
         return path
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        unique_values = feature_dataframe.select(feature_name).distinct().collect()
+        return [field[feature_name] for field in unique_values]
 
 
 class SchemaError(Exception):

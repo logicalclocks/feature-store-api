@@ -383,11 +383,29 @@ class FeatureViewEngine:
                 feature_view_obj.name, feature_view_obj.version
             )
 
-    def get_batch_data(self, feature_view_obj, start_time, end_time, read_options=None):
+    def get_batch_data(
+        self,
+        feature_view_obj,
+        start_time,
+        end_time,
+        training_dataset_version,
+        transformation_functions,
+        read_options=None,
+    ):
         self._check_feature_group_accessibility(feature_view_obj)
-        return self.get_batch_query(
+
+        feature_dataframe = self.get_batch_query(
             feature_view_obj, start_time, end_time, with_label=False
         ).read(read_options=read_options)
+
+        training_dataset_obj = self._get_training_data_metadata(
+            feature_view_obj, training_dataset_version
+        )
+        training_dataset_obj.transformation_functions = transformation_functions
+
+        return engine.get_instance()._apply_transformation_function(
+            training_dataset_obj, dataset=feature_dataframe
+        )
 
     def add_tag(
         self, feature_view_obj, name: str, value, training_dataset_version=None

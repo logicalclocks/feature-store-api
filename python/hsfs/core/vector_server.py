@@ -62,6 +62,9 @@ class VectorServer:
         self.init_transformation(entity)
         self.init_prepared_statement(entity, batch, external)
 
+    def init_batch_scoring(self, entity):
+        self.init_transformation(entity)
+
     def init_transformation(self, entity):
         # attach transformation functions
         self._transformation_functions = self._get_transformation_fns(entity)
@@ -407,7 +410,8 @@ class VectorServer:
             # there should be only one statistics object with for_transformation=true
             if is_feat_view and self._training_dataset_version is None:
                 raise ValueError(
-                    "Training data version is required for transformation. Call `feature_view.init_serving(version)` to pass the training dataset version."
+                    "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
+                    "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(

@@ -65,7 +65,6 @@ except ImportError:
 
 
 class Engine:
-
     APP_OP_INSERT_FG = "insert_fg"
 
     def __init__(self):
@@ -264,18 +263,26 @@ class Engine:
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
-        percentiles = [0] * 100
-        percentiles[24] = stat["25%"]
-        percentiles[49] = stat["50%"]
-        percentiles[74] = stat["75%"]
-        return {
-            "mean": stat["mean"],
-            "sum": stat["mean"] * stat["count"],
-            "maximum": stat["max"],
-            "stdDev": stat["std"],
-            "minimum": stat["min"],
-            "approxPercentiles": percentiles,
-        }
+        content_dict = {}
+        percentiles = []
+        if "25%" in stat:
+            percentiles = [0] * 100
+            percentiles[24] = stat["25%"]
+            percentiles[49] = stat["50%"]
+            percentiles[74] = stat["75%"]
+        if "mean" in stat:
+            content_dict["mean"] = stat["mean"]
+        if "mean" in stat and "count" in stat:
+            content_dict["sum"] = stat["mean"] * stat["count"]
+        if "max" in stat:
+            content_dict["maximum"] = stat["max"]
+        if "std" in stat:
+            content_dict["stdDev"] = stat["std"]
+        if "min" in stat:
+            content_dict["minimum"] = stat["min"]
+        if percentiles:
+            content_dict["approxPercentiles"] = percentiles
+        return content_dict
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
@@ -445,25 +452,27 @@ class Engine:
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._split_df(df, training_dataset_obj.splits)
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
+            split_df = self._prepare_transform_split_df(
+                df, training_dataset_obj, feature_view_obj
             )
         else:
             split_df = df
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
-        # TODO: apply transformation
+            split_df = self._apply_transformation_function(
+                training_dataset_obj, split_df
+            )
         return split_df
 
-    def _split_df(self, df, splits):
+    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
+        splits = training_dataset_obj.splits
         items = splits.items()
         if (
             sum(splits.values()) != 1
@@ -481,7 +490,21 @@ class Engine:
         random.shuffle(groups)
         df[split_column] = groups
         for i, item in enumerate(items):
-            result_dfs[item[0]] = df[df[split_column] == i].drop(split_column, axis=1)
+            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            result_dfs[item[0]] = split_df
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
+                training_dataset_obj,
+                split_name.get(split_name),
+            )
+
         return result_dfs
 
     def write_training_dataset(
@@ -656,6 +679,22 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
+
+    @staticmethod
+    def _apply_transformation_function(training_dataset_instance, dataset):
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset_instance.transformation_functions.items():
+            dataset[feature_name] = dataset[feature_name].map(
+                transformation_fn.transformation_fn
+            )
+
+        return dataset
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        return feature_dataframe[feature_name].unique()
 
     def _write_dataframe_kafka(
         self,
