@@ -488,6 +488,7 @@ public class FeatureView {
             .description(description)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions).getDataset(true);
   }
@@ -508,6 +509,7 @@ public class FeatureView {
             .description(description)
             .trainSplit(Split.TRAIN)
             .seed(seed)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
             .build();
     return getDataset(
@@ -535,6 +537,7 @@ public class FeatureView {
             .description(description)
             .trainSplit(Split.TRAIN)
             .seed(seed)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
             .build();
     return getDataset(
