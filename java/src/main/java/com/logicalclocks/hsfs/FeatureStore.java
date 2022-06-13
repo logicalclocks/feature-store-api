@@ -144,40 +144,40 @@ public class FeatureStore {
    *
    * @param name    the name of the feature group
    * @param version the version of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+  public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return featureGroupApi.getOnDemandFeatureGroup(this, name, version);
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
   }
 
   /**
    * Get a external feature group object with default version `1` from the feature store.
    *
    * @param name the name of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+  public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
-    return getOnDemandFeatureGroup(name, DEFAULT_VERSION);
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
   /**
    * Get a list of all versions of an external feature group from the feature store.
    *
    * @param name    the name of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
+  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getOnDemandFeatureGroups(this, name))
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
         .asScala().toSeq();
   }
 
@@ -242,7 +242,7 @@ public class FeatureStore {
             .featureStore(this);
   }
 
-  public ExternalFeatureGroup.ExternalFeatureGroupBuilder createOnDemandFeatureGroup() {
+  public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
     return ExternalFeatureGroup.builder()
         .featureStore(this);
   }

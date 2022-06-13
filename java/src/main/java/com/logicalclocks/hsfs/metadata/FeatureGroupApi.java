@@ -90,7 +90,7 @@ public class FeatureGroupApi {
     return Arrays.asList(streamFeatureGroups);
   }
 
-  public List<ExternalFeatureGroup> getOnDemandFeatureGroups(FeatureStore featureStore, String fgName)
+  public List<ExternalFeatureGroup> getExternalFeatureGroups(FeatureStore featureStore, String fgName)
       throws FeatureStoreException, IOException {
     ExternalFeatureGroup[] offlineFeatureGroups =
         getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
@@ -98,7 +98,7 @@ public class FeatureGroupApi {
     return Arrays.asList(offlineFeatureGroups);
   }
 
-  public ExternalFeatureGroup getOnDemandFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
+  public ExternalFeatureGroup getExternalFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
     ExternalFeatureGroup[] offlineFeatureGroups =
         getInternal(featureStore, fgName, fgVersion, ExternalFeatureGroup[].class);
