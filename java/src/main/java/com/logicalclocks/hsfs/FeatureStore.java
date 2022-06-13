@@ -153,6 +153,12 @@ public class FeatureStore {
     return featureGroupApi.getExternalFeatureGroup(this, name, version);
   }
 
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
+  }
+
   /**
    * Get a external feature group object with default version `1` from the feature store.
    *
@@ -167,6 +173,13 @@ public class FeatureStore {
     return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+  }
+
   /**
    * Get a list of all versions of an external feature group from the feature store.
    *
@@ -176,6 +189,13 @@ public class FeatureStore {
    * @throws IOException
    */
   public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
+  @Deprecated
+  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
         .asScala().toSeq();
@@ -243,6 +263,12 @@ public class FeatureStore {
   }
 
   public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
+    return ExternalFeatureGroup.builder()
+        .featureStore(this);
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup.ExternalFeatureGroupBuilder createOnDemandFeatureGroup() {
     return ExternalFeatureGroup.builder()
         .featureStore(this);
   }
