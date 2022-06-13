@@ -1616,7 +1616,7 @@ class FeatureGroup(FeatureGroupBase):
 
 
 class ExternalFeatureGroup(FeatureGroupBase):
-    EXTERNAL_FEATURE_GROUP = "external_FEATURE_GROUP"
+    EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
