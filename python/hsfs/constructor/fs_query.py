@@ -37,12 +37,12 @@ class FsQuery:
         self._pit_query = pit_query
 
         if on_demand_feature_groups is not None:
-            self._external_fg_aliases = [
+            self._on_demand_fg_aliases = [
                 external_group_alias.ExternalFeatureGroupAlias.from_response_json(fg)
                 for fg in on_demand_feature_groups
             ]
         else:
-            self._external_fg_aliases = []
+            self._on_demand_fg_aliases = []
 
         if hudi_cached_feature_groups is not None:
             self._hudi_cached_feature_groups = [
@@ -70,18 +70,18 @@ class FsQuery:
         return self._pit_query
 
     @property
-    def external_fg_aliases(self):
-        return self._external_fg_aliases
+    def on_demand_fg_aliases(self):
+        return self._on_demand_fg_aliases
 
     @property
     def hudi_cached_feature_groups(self):
         return self._hudi_cached_feature_groups
 
     def register_external(self):
-        if self._external_fg_aliases is None:
+        if self._on_demand_fg_aliases is None:
             return
 
-        for external_fg_alias in self._external_fg_aliases:
+        for external_fg_alias in self._on_demand_fg_aliases:
             engine.get_instance().register_external_temporary_table(
                 external_fg_alias.on_demand_group,
                 external_fg_alias.alias,
