@@ -20,10 +20,10 @@ from hsfs import feature_group
 
 
 class ExternalFeatureGroupAlias:
-    def __init__(self, external_feature_group, alias):
-        self._external_feature_group = (
+    def __init__(self, on_demand_feature_group, alias):
+        self._on_demand_feature_group = (
             feature_group.ExternalFeatureGroup.from_response_json(
-                external_feature_group
+                on_demand_feature_group
             )
         )
         self._alias = alias
@@ -35,7 +35,7 @@ class ExternalFeatureGroupAlias:
 
     @property
     def on_demand_feature_group(self):
-        return self._external_feature_group
+        return self._on_demand_feature_group
 
     @property
     def alias(self):
