@@ -98,8 +98,9 @@ class FeatureView:
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                If set to False, the online feature store storage connector is used which relies on the private IP.
+                Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
+                Sagemaker or Google Colab), otherwise to False.
         """
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
@@ -164,7 +165,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -190,7 +192,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -206,7 +209,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `list` List of feature values, ordered according to positions of this
             features in training dataset query.
@@ -224,7 +228,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `List[list]` List of lists of feature values , ordered according to
             positions of this features in training dataset query.
