@@ -797,7 +797,8 @@ class FeatureView:
         if not (test_size or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
-                "You should specify either `test_size` or (`train_end` or `test_start`)"
+                "You should specify either `test_size` or (`train_end` or `test_start`)."
+                " `test_size` should be greate than 0 if specified"
             )
 
     def train_validation_test_splits(
@@ -917,8 +918,8 @@ class FeatureView:
         ):
             raise ValueError(
                 "Invalid split input."
-                "You should specify either (`val_size` and `test_size`)"
-                " or ((`train_end` or `val_start`) and (`val_end` or `test_start`))"
+                " You should specify either (`val_size` and `test_size`) or ((`train_end` or `val_start`) and (`val_end` or `test_start`))."
+                "`val_size` and `test_size` should be greater than 0 if specified."
             )
 
     def get_training_data(
