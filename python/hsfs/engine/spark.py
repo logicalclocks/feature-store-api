@@ -29,6 +29,7 @@ try:
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
+    from pyspark.sql.types import ByteType, ShortType
 except ImportError:
     pass
 
@@ -628,7 +629,7 @@ class Engine:
         return [
             feature.Feature(
                 feat.name.lower(),
-                feat.dataType.simpleString(),
+                self.convert_spark_type(feat.dataType),
                 feat.metadata.get("description", None),
             )
             for feat in dataframe.schema
@@ -642,6 +643,19 @@ class Engine:
             for feat in dataframe.schema
         ]
 
+    def convert_spark_type(self, hive_type):
+        # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
+        # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
+        # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
+
+        if type(hive_type) == ByteType:
+            return "int"
+        elif type(hive_type) == ShortType:
+            return "int"
+
+        return hive_type.simpleString()
+
+    # TODO: I think this is not used/can be removed
     def parse_schema_dict(self, dataframe):
         return {
             feat.name: feature.Feature(
