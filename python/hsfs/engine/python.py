@@ -481,10 +481,10 @@ class Engine:
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
-        items = splits.items()
         if (
-            sum(splits.values()) != 1
-            or sum([v > 1 or v < 0 for v in splits.values()]) > 1
+            sum([split.percentage for split in splits]) != 1
+            or sum([split.percentage > 1 or split.percentage < 0
+                    for split in splits]) > 1
         ):
             raise ValueError(
                 "Sum of split ratios should be 1 and each values should be in range (0, 1)"
@@ -492,14 +492,14 @@ class Engine:
 
         df_size = len(df)
         groups = []
-        for i, item in enumerate(items):
-            groups += [i] * int(df_size * item[1])
-        groups += [len(items) - 1] * (df_size - len(groups))
+        for i, split in enumerate(splits):
+            groups += [i] * int(df_size * split.percentage)
+        groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
         df[split_column] = groups
-        for i, item in enumerate(items):
+        for i, split in enumerate(splits):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
-            result_dfs[item[0]] = split_df
+            result_dfs[split.name] = split_df
 
         # apply transformations
         # 1st parametrise transformation functions with dt split stats
@@ -510,7 +510,7 @@ class Engine:
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
                 training_dataset_obj,
-                split_name.get(split_name),
+                result_dfs.get(split_name),
             )
 
         return result_dfs
