@@ -340,6 +340,14 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
+    def split_labels(self, df, labels):
+        if labels:
+            labels_df = df.select(*labels)
+            df_new = df.drop(*labels)
+            return df_new, labels_df
+        else:
+            return df, None
+
     def write_training_dataset(
         self,
         training_dataset,
@@ -380,11 +388,13 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            split_names = sorted([*training_dataset.splits])
-            split_weights = [training_dataset.splits[i] for i in split_names]
+            splits = [
+                (split.name, split.percentage) for split in training_dataset.splits
+            ]
+            split_weights = [split[1] for split in splits]
             split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
             split_dataset = dict(
-                [(split_names[i], split_dataset[i]) for i in range(len(split_names))]
+                [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
             )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
@@ -662,6 +672,8 @@ class Engine:
         return options
 
     def read_options(self, data_format, provided_options):
+        if provided_options is None:
+            provided_options = {}
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
             options.update(provided_options)

@@ -145,7 +145,7 @@ class VectorServer:
         batch = n > 1
         entry = dict([(key, None) for key in self._serving_keys])
         if batch:
-            return self.get_feature_vectors(entry, preview_sample=n)
+            return self.get_feature_vectors([entry], preview_sample=n)
         else:
             return self.get_feature_vector(entry, preview_sample=n)
 
