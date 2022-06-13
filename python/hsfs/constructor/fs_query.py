@@ -16,14 +16,14 @@
 
 import humps
 from hsfs import engine
-from hsfs.constructor import hudi_feature_group_alias, on_demand_feature_group_alias
+from hsfs.constructor import hudi_feature_group_alias, external_group_alias
 
 
 class FsQuery:
     def __init__(
         self,
         query,
-        on_demand_feature_groups,
+        on_demand_groups,
         hudi_cached_feature_groups,
         query_online=None,
         pit_query=None,
@@ -36,15 +36,13 @@ class FsQuery:
         self._query_online = query_online
         self._pit_query = pit_query
 
-        if on_demand_feature_groups is not None:
-            self._on_demand_fg_aliases = [
-                on_demand_feature_group_alias.OnDemandFeatureGroupAlias.from_response_json(
-                    fg
-                )
-                for fg in on_demand_feature_groups
+        if on_demand_groups is not None:
+            self._external_fg_aliases = [
+                external_group_alias.ExternalFeatureGroupAlias.from_response_json(fg)
+                for fg in on_demand_groups
             ]
         else:
-            self._on_demand_fg_aliases = []
+            self._external_fg_aliases = []
 
         if hudi_cached_feature_groups is not None:
             self._hudi_cached_feature_groups = [
@@ -72,21 +70,21 @@ class FsQuery:
         return self._pit_query
 
     @property
-    def on_demand_fg_aliases(self):
-        return self._on_demand_fg_aliases
+    def external_fg_aliases(self):
+        return self._external_fg_aliases
 
     @property
     def hudi_cached_feature_groups(self):
         return self._hudi_cached_feature_groups
 
-    def register_on_demand(self):
-        if self._on_demand_fg_aliases is None:
+    def register_external(self):
+        if self._external_fg_aliases is None:
             return
 
-        for on_demand_fg_alias in self._on_demand_fg_aliases:
-            engine.get_instance().register_on_demand_temporary_table(
-                on_demand_fg_alias.on_demand_feature_group,
-                on_demand_fg_alias.alias,
+        for external_fg_alias in self._external_fg_aliases:
+            engine.get_instance().register_external_temporary_table(
+                external_fg_alias.on_demand_group,
+                external_fg_alias.alias,
             )
 
     def register_hudi_tables(self, feature_store_id, feature_store_name, read_options):

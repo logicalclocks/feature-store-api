@@ -33,7 +33,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     data_validation_engine,
-    on_demand_feature_group_engine,
+    external_feature_group_engine,
     expectations_api,
 )
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
@@ -1615,8 +1615,8 @@ class FeatureGroup(FeatureGroupBase):
             )
 
 
-class OnDemandFeatureGroup(FeatureGroupBase):
-    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+class ExternalFeatureGroup(FeatureGroupBase):
+    EXTERNAL_FEATURE_GROUP = "external_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -1665,7 +1665,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         ]
 
         self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+            external_feature_group_engine.ExternalFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:

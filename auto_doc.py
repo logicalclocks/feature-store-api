@@ -42,9 +42,9 @@ PAGES = {
             ],
         ),
     },
-    "on_demand_feature_group.md": {
-        "fg_create": ["hsfs.feature_store.FeatureStore.create_on_demand_feature_group"],
-        "fg_get": ["hsfs.feature_store.FeatureStore.get_on_demand_feature_group"],
+    "external_feature_group.md": {
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_external_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_external_feature_group"],
         "fg_properties": keras_autodoc.get_properties(
             "hsfs.feature_group.OnDemandFeatureGroup"
         ),

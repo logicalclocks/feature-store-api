@@ -209,7 +209,7 @@ class Engine:
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
+    def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
         pass
 

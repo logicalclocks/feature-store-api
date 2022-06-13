@@ -19,11 +19,11 @@ import humps
 from hsfs import feature_group
 
 
-class OnDemandFeatureGroupAlias:
-    def __init__(self, on_demand_feature_group, alias):
-        self._on_demand_feature_group = (
-            feature_group.OnDemandFeatureGroup.from_response_json(
-                on_demand_feature_group
+class ExternalFeatureGroupAlias:
+    def __init__(self, external_feature_group, alias):
+        self._external_feature_group = (
+            feature_group.ExternalFeatureGroup.from_response_json(
+                external_feature_group
             )
         )
         self._alias = alias
@@ -34,8 +34,8 @@ class OnDemandFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
-    def on_demand_feature_group(self):
-        return self._on_demand_feature_group
+    def on_demand_group(self):
+        return self._external_feature_group
 
     @property
     def alias(self):

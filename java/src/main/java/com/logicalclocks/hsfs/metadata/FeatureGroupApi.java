@@ -21,7 +21,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -90,22 +90,22 @@ public class FeatureGroupApi {
     return Arrays.asList(streamFeatureGroups);
   }
 
-  public List<OnDemandFeatureGroup> getOnDemandFeatureGroups(FeatureStore featureStore, String fgName)
+  public List<ExternalFeatureGroup> getOnDemandFeatureGroups(FeatureStore featureStore, String fgName)
       throws FeatureStoreException, IOException {
-    OnDemandFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, null, OnDemandFeatureGroup[].class);
+    ExternalFeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
 
     return Arrays.asList(offlineFeatureGroups);
   }
 
-  public OnDemandFeatureGroup getOnDemandFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
+  public ExternalFeatureGroup getOnDemandFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
       throws IOException, FeatureStoreException {
-    OnDemandFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, fgVersion, OnDemandFeatureGroup[].class);
+    ExternalFeatureGroup[] offlineFeatureGroups =
+        getInternal(featureStore, fgName, fgVersion, ExternalFeatureGroup[].class);
 
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
-    OnDemandFeatureGroup resultFg = offlineFeatureGroups[0];
+    ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
@@ -131,12 +131,12 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
   }
 
-  public OnDemandFeatureGroup save(OnDemandFeatureGroup onDemandFeatureGroup)
+  public ExternalFeatureGroup save(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(onDemandFeatureGroup);
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
 
-    return saveInternal(onDemandFeatureGroup, new StringEntity(featureGroupJson), OnDemandFeatureGroup.class);
+    return saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson), ExternalFeatureGroup.class);
   }
 
   public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {

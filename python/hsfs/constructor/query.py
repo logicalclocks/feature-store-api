@@ -64,7 +64,7 @@ class Query:
             online_conn = None
 
             # Register on demand feature groups as temporary tables
-            query.register_on_demand()
+            query.register_external()
 
             # Register on hudi feature groups as temporary tables
             query.register_hudi_tables(
@@ -251,7 +251,7 @@ class Query:
         json_decamelized = humps.decamelize(json_dict)
         feature_group_json = json_decamelized["left_feature_group"]
         feature_group_obj = (
-            feature_group.OnDemandFeatureGroup.from_response_json(feature_group_json)
+            feature_group.ExternalFeatureGroup.from_response_json(feature_group_json)
             if "storage_connector" in feature_group_json
             else feature_group.FeatureGroup.from_response_json(feature_group_json)
         )

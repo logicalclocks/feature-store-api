@@ -25,7 +25,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
@@ -158,7 +158,7 @@ public class SparkEngine {
     }
   }
 
-  public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
+  public Dataset<Row> registerOnDemandTemporaryTable(ExternalFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException, IOException {
     Dataset<Row> dataset = (Dataset<Row>) onDemandFeatureGroup.getStorageConnector()
         .read(onDemandFeatureGroup.getQuery(),
@@ -173,7 +173,7 @@ public class SparkEngine {
     return dataset;
   }
 
-  private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {
+  private Map<String, String> getOnDemandOptions(ExternalFeatureGroup onDemandFeatureGroup) {
     if (onDemandFeatureGroup.getOptions() == null) {
       return new HashMap<>();
     }

@@ -87,18 +87,18 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        on_demand_dataset = on_demand_fg.storage_connector.read(
-            on_demand_fg.query,
-            on_demand_fg.data_format,
-            on_demand_fg.options,
-            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
+    def register_external_temporary_table(self, external_fg, alias):
+        external_dataset = external_fg.storage_connector.read(
+            external_fg.query,
+            external_fg.data_format,
+            external_fg.options,
+            external_fg.storage_connector._get_path(external_fg.path),
         )
-        if on_demand_fg.location:
-            self._spark_session.sparkContext.textFile(on_demand_fg.location).collect()
+        if external_fg.location:
+            self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
-        on_demand_dataset.createOrReplaceTempView(alias)
-        return on_demand_dataset
+        external_dataset.createOrReplaceTempView(alias)
+        return external_dataset
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
