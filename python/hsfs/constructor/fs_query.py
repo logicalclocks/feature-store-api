@@ -83,7 +83,7 @@ class FsQuery:
 
         for external_fg_alias in self._on_demand_fg_aliases:
             engine.get_instance().register_external_temporary_table(
-                external_fg_alias.on_demand_group,
+                external_fg_alias.on_demand_feature_group,
                 external_fg_alias.alias,
             )
 

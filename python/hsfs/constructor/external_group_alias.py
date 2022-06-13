@@ -34,7 +34,7 @@ class ExternalFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
-    def on_demand_group(self):
+    def on_demand_feature_group(self):
         return self._external_feature_group
 
     @property
