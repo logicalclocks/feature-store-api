@@ -23,7 +23,7 @@ class FsQuery:
     def __init__(
         self,
         query,
-        on_demand_groups,
+        on_demand_feature_groups,
         hudi_cached_feature_groups,
         query_online=None,
         pit_query=None,
@@ -36,10 +36,10 @@ class FsQuery:
         self._query_online = query_online
         self._pit_query = pit_query
 
-        if on_demand_groups is not None:
+        if on_demand_feature_groups is not None:
             self._external_fg_aliases = [
                 external_group_alias.ExternalFeatureGroupAlias.from_response_json(fg)
-                for fg in on_demand_groups
+                for fg in on_demand_feature_groups
             ]
         else:
             self._external_fg_aliases = []
