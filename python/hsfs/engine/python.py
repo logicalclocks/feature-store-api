@@ -483,8 +483,8 @@ class Engine:
         splits = training_dataset_obj.splits
         if (
             sum([split.percentage for split in splits]) != 1
-            or sum([split.percentage > 1 or split.percentage < 0
-                    for split in splits]) > 1
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            > 1
         ):
             raise ValueError(
                 "Sum of split ratios should be 1 and each values should be in range (0, 1)"
