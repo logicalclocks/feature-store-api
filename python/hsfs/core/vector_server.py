@@ -299,9 +299,10 @@ class VectorServer:
 
     def deserialize_complex_features(self, feature_schemas, row_dict):
         for feature_name, schema in feature_schemas.items():
-            bytes_reader = io.BytesIO(row_dict[feature_name])
-            decoder = avro.io.BinaryDecoder(bytes_reader)
-            row_dict[feature_name] = schema.read(decoder)
+            if feature_name in row_dict:
+                bytes_reader = io.BytesIO(row_dict[feature_name])
+                decoder = avro.io.BinaryDecoder(bytes_reader)
+                row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
     def refresh_mysql_connection(self):
