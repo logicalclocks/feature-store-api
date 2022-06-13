@@ -341,9 +341,12 @@ class Engine:
         )
 
     def split_labels(self, df, labels):
-        labels_df = df.select(*labels)
-        df_new = df.drop(*labels)
-        return df_new, labels_df
+        if labels:
+            labels_df = df.select(*labels)
+            df_new = df.drop(*labels)
+            return df_new, labels_df
+        else:
+            return df, None
 
     def write_training_dataset(
         self,

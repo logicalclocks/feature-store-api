@@ -168,9 +168,9 @@ class FeatureViewEngine:
         # check splits
         if len(splits) != len(td_updated.splits):
             if len(td_updated.splits) == 0:
-                method_name = "get_training_dataset"
+                method_name = "get_training_data"
             elif len(td_updated.splits) == 2:
-                method_name = "get_train_test_splits"
+                method_name = "get_train_test_split"
             elif len(td_updated.splits) == 3:
                 method_name = "get_train_validation_test_splits"
             raise ValueError(

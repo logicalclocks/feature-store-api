@@ -466,9 +466,12 @@ class Engine:
         return split_df
 
     def split_labels(self, df, labels):
-        labels_df = df[labels]
-        df_new = df.drop(columns=labels)
-        return df_new, labels_df
+        if labels:
+            labels_df = df[labels]
+            df_new = df.drop(columns=labels)
+            return df_new, labels_df
+        else:
+            return df, None
 
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
@@ -484,7 +487,7 @@ class Engine:
             or sum([v > 1 or v < 0 for v in splits.values()]) > 1
         ):
             raise ValueError(
-                "Sum of split ratios should be 1 and each values should be in range [0, 1)"
+                "Sum of split ratios should be 1 and each values should be in range (0, 1)"
             )
 
         df_size = len(df)

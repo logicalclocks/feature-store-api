@@ -371,7 +371,7 @@ class FeatureView:
 
         return td.version, td_job
 
-    def create_train_test_splits(
+    def create_train_test_split(
         self,
         test_size: Optional[float] = None,
         train_start: Optional[str] = "",
@@ -454,7 +454,7 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
 
-        self._validate_train_test_splits(
+        self._validate_train_test_split(
             test_size=test_size, train_end=train_end, test_start=test_start
         )
         td = training_dataset.TrainingDataset(
@@ -646,7 +646,7 @@ class FeatureView:
         )
         return td_job
 
-    def training_dataset(
+    def training_data(
         self,
         start_time: Optional = None,
         end_time: Optional = None,
@@ -684,7 +684,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X, y): Tuple of dataframe of features and labels
+            (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
 
         """
         td = training_dataset.TrainingDataset(
@@ -710,7 +710,7 @@ class FeatureView:
         )
         return df
 
-    def train_test_splits(
+    def train_test_split(
         self,
         test_size: Optional[float] = None,
         train_start: Optional[str] = "",
@@ -729,7 +729,7 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            test_size: size of test set.
+            test_size: size of test set. Should be between 0 and 1.
             train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
@@ -760,7 +760,7 @@ class FeatureView:
                 Tuple of dataframe of features and labels
 
         """
-        self._validate_train_test_splits(
+        self._validate_train_test_split(
             test_size=test_size, train_end=train_end, test_start=test_start
         )
         td = training_dataset.TrainingDataset(
@@ -793,7 +793,7 @@ class FeatureView:
         return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
 
     @staticmethod
-    def _validate_train_test_splits(test_size, train_end, test_start):
+    def _validate_train_test_split(test_size, train_end, test_start):
         if not (test_size or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
@@ -822,8 +822,8 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            val_size: size of validation set.
-            test_size: size of test set.
+            val_size: size of validation set. Should be between 0 and 1.
+            test_size: size of test set. Should be between 0 and 1.
             train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
@@ -921,7 +921,7 @@ class FeatureView:
                 " or ((`train_end` or `val_start`) and (`val_end` or `test_start`))"
             )
 
-    def get_training_dataset(
+    def get_training_data(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
@@ -951,7 +951,7 @@ class FeatureView:
         )
         return df
 
-    def get_train_test_splits(
+    def get_train_test_split(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
