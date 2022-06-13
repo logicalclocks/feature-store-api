@@ -153,12 +153,6 @@ public class FeatureStore {
     return featureGroupApi.getExternalFeatureGroup(this, name, version);
   }
 
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getExternalFeatureGroup(this, name, version);
-  }
-
   /**
    * Get a external feature group object with default version `1` from the feature store.
    *
@@ -168,13 +162,6 @@ public class FeatureStore {
    * @throws IOException
    */
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getExternalFeatureGroup(name, DEFAULT_VERSION);
@@ -192,6 +179,19 @@ public class FeatureStore {
       throws FeatureStoreException, IOException {
     return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
         .asScala().toSeq();
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
   @Deprecated
