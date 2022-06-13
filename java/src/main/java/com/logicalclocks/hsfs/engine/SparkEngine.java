@@ -20,6 +20,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
@@ -171,6 +172,19 @@ public class SparkEngine {
 
     dataset.createOrReplaceTempView(alias);
     return dataset;
+  }
+
+  public static List<Dataset<Row>> splitLabels(Dataset<Row> dataset, List<String> labels) {
+    List<Dataset<Row>> results = Lists.newArrayList();
+    if (!labels.isEmpty()) {
+      Column[] labelsCol = labels.stream().map(label -> col(label).alias(label.toLowerCase())).toArray(Column[]::new);
+      results.add(dataset.drop(labels.stream().toArray(String[]::new)));
+      results.add(dataset.select(labelsCol));
+    } else {
+      results.add(dataset);
+      results.add(null);
+    }
+    return results;
   }
 
   private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {

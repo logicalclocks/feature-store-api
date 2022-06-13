@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -134,8 +135,10 @@ public class TrainingDataset {
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
-      String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType) throws FeatureStoreException,
-      ParseException {
+      String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
+      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
+      String testStart, String testEnd) 
+      throws FeatureStoreException, ParseException {
     this.name = name;
     this.version = version;
     this.description = description;
@@ -153,6 +156,45 @@ public class TrainingDataset {
     this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
     this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
         utils.getTrainingDatasetType(storageConnector);
+    setValTestSplit(valSize, testSize);
+    setTimeSeriesSplits(trainStart, trainEnd, valStart, valEnd, testStart, testEnd);
+  }
+
+  private void setTimeSeriesSplits(String trainStart, String trainEnd, String valStart, String valEnd,
+      String testStart, String testEnd) throws FeatureStoreException, ParseException {
+    List<Split> splits = Lists.newArrayList();
+    appendTimeSeriesSplit(splits, Split.TRAIN, trainStart, trainEnd != null ? trainEnd : valStart);
+    appendTimeSeriesSplit(splits, Split.VALIDATION,
+        trainEnd != null ? trainEnd : valStart,
+        testStart != null ? testStart : valEnd);
+    appendTimeSeriesSplit(splits, Split.TEST, testStart != null ? testStart : valEnd, testEnd);
+    if (!splits.isEmpty()) {
+      this.splits = splits;
+      throw new FeatureStoreException("Time series split is not supported yet.");
+    }
+  }
+
+  private void appendTimeSeriesSplit(List<Split> splits, String splitName, String startTime, String endTime)
+    throws FeatureStoreException, ParseException {
+    if (startTime != null || endTime != null) {
+      splits.add(
+          new Split(splitName,
+              FeatureGroupUtils.getDateFromDateString(startTime),
+              FeatureGroupUtils.getDateFromDateString(startTime)));
+    }
+  }
+
+  private void setValTestSplit(Float valSize, Float testSize) {
+    if (valSize != null && testSize != null) {
+      this.splits = Lists.newArrayList();
+      this.splits.add(new Split(Split.TRAIN, 1-valSize-testSize));
+      this.splits.add(new Split(Split.VALIDATION, valSize));
+      this.splits.add(new Split(Split.TEST, testSize));
+    } else if (testSize != null) {
+      this.splits = Lists.newArrayList();
+      this.splits.add(new Split(Split.TRAIN, 1-testSize));
+      this.splits.add(new Split(Split.TEST, testSize));
+    }
   }
 
   /**

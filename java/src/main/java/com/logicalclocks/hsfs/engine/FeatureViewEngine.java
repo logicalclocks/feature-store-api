@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -118,20 +119,22 @@ public class FeatureViewEngine {
   }
 
   public TrainingDatasetBundle getTrainingDataset(
+      FeatureView featureView, Integer trainingDatasetVersion, Map<String, String> userReadOptions
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
+        .name(featureView.getName())
+        .version(trainingDatasetVersion)
+        .build();
+    return getTrainingDataset(featureView, trainingDataset, userReadOptions);
+  }
+
+  public TrainingDatasetBundle getTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException {
-    setTrainSplit(trainingDataset);
     TrainingDataset trainingDatasetUpdated = null;
     if (trainingDataset.getVersion() != null) {
-      try {
-        trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
-      } catch (Exception e) {
-        if (!e.getMessage().matches(".*\"errorCode\":270012.*")) {
-          throw e;
-        }
-      }
-    }
-    if (trainingDatasetUpdated == null) {
+      trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
+    } else {
       trainingDatasetUpdated = createTrainingDataMetadata(featureView, trainingDataset);
     }
     if (!IN_MEMORY_TRAINING_DATASET.equals(trainingDatasetUpdated.getTrainingDatasetType())) {
@@ -144,10 +147,10 @@ public class FeatureViewEngine {
                 trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
           }
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              datasets, trainingDatasetUpdated.getTrainSplit());
+              datasets, featureView.getLabels());
         } else {
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions)
+              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions), featureView.getLabels()
           );
         }
       } catch (InvalidInputException e) {
@@ -162,10 +165,11 @@ public class FeatureViewEngine {
         Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, dataset);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
             convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
-            trainingDatasetUpdated.getTrainSplit());
+            featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, datasets);
       } else {
-        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset);
+        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
+            featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
       }
       return trainingDatasetBundle;
