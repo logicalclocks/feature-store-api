@@ -111,7 +111,8 @@ class StatisticsEngine:
         self, td_metadata_instance, feature_view_obj=None, feature_dataframes=None
     ):
         statistics_of_splits = []
-        for split_name in td_metadata_instance.splits:
+        for split in td_metadata_instance.splits:
+            split_name = split.name
             statistics_of_splits.append(
                 split_statistics.SplitStatistics(
                     split_name,

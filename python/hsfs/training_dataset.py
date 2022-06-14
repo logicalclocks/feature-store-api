@@ -23,6 +23,7 @@ import pandas as pd
 import numpy as np
 
 from hsfs import util, engine, training_dataset_feature
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector, HopsFSConnector
 from hsfs.core import (
@@ -55,6 +56,14 @@ class TrainingDataset:
         description=None,
         storage_connector=None,
         splits=None,
+        val_size=None,
+        test_size=None,
+        train_start=None,
+        train_end=None,
+        val_start=None,
+        val_end=None,
+        test_start=None,
+        test_end=None,
         seed=None,
         created=None,
         creator=None,
@@ -77,6 +86,14 @@ class TrainingDataset:
         self._data_format = data_format
         self._start_time = self._convert_event_time_to_timestamp(event_start_time)
         self._end_time = self._convert_event_time_to_timestamp(event_end_time)
+        self._val_size = val_size
+        self._test_size = test_size
+        self._train_start = train_start
+        self._train_end = train_end
+        self._val_start = val_start
+        self._val_end = val_end
+        self._test_start = test_start
+        self._test_end = test_end
         self._coalesce = coalesce
         self._seed = seed
         self._location = location
@@ -115,6 +132,16 @@ class TrainingDataset:
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
+            if val_size or test_size:
+                self._train_split = TrainingDatasetSplit.TRAIN
+                self.splits = {
+                    TrainingDatasetSplit.TRAIN: 1 - (val_size or 0) - (test_size or 0),
+                    TrainingDatasetSplit.VALIDATION: val_size,
+                    TrainingDatasetSplit.TEST: test_size,
+                }
+            self._set_time_splits(
+                train_start, train_end, val_start, val_end, test_start, test_end
+            )
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -128,7 +155,9 @@ class TrainingDataset:
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
                 for feat in features
             ]
-            self._splits = splits
+            self._splits = [
+                TrainingDatasetSplit.from_response_json(split) for split in splits
+            ]
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
@@ -137,6 +166,57 @@ class TrainingDataset:
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
+
+    def _set_time_splits(
+        self,
+        train_start=None,
+        train_end=None,
+        val_start=None,
+        val_end=None,
+        test_start=None,
+        test_end=None,
+    ):
+        time_splits = list()
+        self._append_time_split(
+            time_splits,
+            split_name=TrainingDatasetSplit.TRAIN,
+            start_time=train_start,
+            end_time=train_end or val_start,
+        )
+        self._append_time_split(
+            time_splits,
+            split_name=TrainingDatasetSplit.VALIDATION,
+            start_time=val_start or train_end,
+            end_time=val_end or test_start,
+        )
+        self._append_time_split(
+            time_splits,
+            split_name=TrainingDatasetSplit.TEST,
+            start_time=test_start or val_end,
+            end_time=test_end,
+        )
+        if time_splits:
+            raise NotImplementedError("Time series splits is not supported yet.")
+            self._train_split = TrainingDatasetSplit.TRAIN
+        # prioritise time split
+        self._splits = time_splits or self._splits
+
+    def _append_time_split(
+        self,
+        time_splits,
+        split_name,
+        start_time=None,
+        end_time=None,
+    ):
+        if start_time or end_time:
+            time_splits.append(
+                TrainingDatasetSplit(
+                    name=split_name,
+                    split_type=TrainingDatasetSplit.TIME_SPLIT,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+            )
 
     def _convert_event_time_to_timestamp(self, event_time):
         if not event_time:
@@ -540,13 +620,18 @@ class TrainingDataset:
     @property
     def splits(self):
         """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
-        return {split["name"]: split["percentage"] for split in self._splits}
+        return self._splits
 
     @splits.setter
     def splits(self, splits):
         # user api differs from how the backend expects the splits to be represented
-        splits_list = [{"name": k, "percentage": v} for k, v in splits.items()]
-        self._splits = splits_list
+        self._splits = [
+            TrainingDatasetSplit(
+                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+            )
+            for k, v in splits.items()
+            if v is not None
+        ]
 
     @property
     def location(self):
@@ -760,3 +845,67 @@ class TrainingDataset:
             )
         else:
             self._training_dataset_type = training_dataset_type
+
+    @property
+    def val_size(self):
+        return self._val_size
+
+    @val_size.setter
+    def val_size(self, val_size):
+        self._val_size = val_size
+
+    @property
+    def test_size(self):
+        return self._test_size
+
+    @test_size.setter
+    def test_size(self, test_size):
+        self._test_size = test_size
+
+    @property
+    def train_start(self):
+        return self._train_start
+
+    @train_start.setter
+    def train_start(self, train_start):
+        self._train_start = train_start
+
+    @property
+    def train_end(self):
+        return self._train_end
+
+    @train_end.setter
+    def train_end(self, train_end):
+        self._train_end = train_end
+
+    @property
+    def val_start(self):
+        return self._val_start
+
+    @val_start.setter
+    def val_start(self, val_start):
+        self._val_start = val_start
+
+    @property
+    def val_end(self):
+        return self._val_end
+
+    @val_end.setter
+    def val_end(self, val_end):
+        self._val_end = val_end
+
+    @property
+    def test_start(self):
+        return self._test_start
+
+    @test_start.setter
+    def test_start(self, test_start):
+        self._test_start = test_start
+
+    @property
+    def test_end(self):
+        return self._test_end
+
+    @test_end.setter
+    def test_end(self, test_end):
+        self._test_end = test_end

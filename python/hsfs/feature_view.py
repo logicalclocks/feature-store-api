@@ -18,6 +18,7 @@ import json
 import warnings
 from datetime import datetime
 from typing import Optional, Union, List, Dict, Any
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 
@@ -27,7 +28,6 @@ from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
-    training_dataset_bundle,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
@@ -241,9 +241,9 @@ class FeatureView:
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
         end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
         read_options: User provided read options. Defaults to `{}`.
         """
 
@@ -271,140 +271,40 @@ class FeatureView:
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 
-    def get_training_dataset(
-        self,
-        version: Optional[int] = None,
-        start_time: Optional = None,
-        end_time: Optional = None,
-        description: Optional[str] = "",
-        splits: Optional[Dict[str, float]] = None,
-        train_split: Optional[str] = None,
-        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        read_options: Optional[Dict[Any, Any]] = None,
-    ):
-        """
-        Get training data from storage or feature groups.
-
-        If version is not provided or provided version has not already existed, it creates
-        a new version of training data according to given arguments and returns a dataframe.
-
-        If version is provided and has already existed, it reads training data from storage
-        or feature groups and returns a dataframe. If split is provided, it reads the specific split.
-
-        !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
-
-        # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            version: Version of the training dataset to retrieve, defaults to `None` and
-                will create the training dataset with incremented version from the last
-                version in the feature store.
-            description: A string describing the contents of the training dataset to
-                improve discoverability for Data Scientists, defaults to empty string
-                `""`.
-            splits: A dictionary defining training dataset splits to be created. Keys in
-                the dictionary define the name of the split as `str`, values represent
-                percentage of samples in the split as `float`. Currently, only random
-                splits are supported. Defaults to empty dict`{}`, creating only a single
-                training dataset without splits.
-            statistics_config: A configuration object, or a dictionary with keys
-                "`enabled`" to generally enable descriptive statistics computation for
-                this feature group, `"correlations`" to turn on feature correlation
-                computation and `"histograms"` to compute feature value frequencies. The
-                values should be booleans indicating the setting. To fully turn off
-                statistics computation pass `statistics_config=False`. Defaults to
-                `None` and will compute only descriptive statistics.
-            train_split: If `splits` is set, provide the name of the split that is going
-                to be used for training. The statistics of this split will be used for
-                transformation functions if necessary. Defaults to `None`.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, write_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
-
-        # Returns
-            Training dataset tuple: (`int`, `dict(str, Dataframe)`)
-                Training dataset version and Dictionary of dataframes where split is the key.
-
-        """
-        td = training_dataset.TrainingDataset(
-            name=self.name,
-            version=version,
-            event_start_time=start_time,
-            event_end_time=end_time,
-            description=description,
-            storage_connector=None,
-            featurestore_id=self._featurestore_id,
-            data_format="csv",
-            location="",
-            splits=splits if splits else {},
-            statistics_config=statistics_config,
-            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
-            train_split=train_split,
-        )
-        # td_job is used only if the python engine is used
-        td, df = self._feature_view_engine.get_training_data(
-            self, td, read_options if read_options else {}, splits=splits
-        )
-        if version is None:
-            warnings.warn(
-                "No version provided for creating training dataset, incremented version to `{}`.".format(
-                    td.version
-                ),
-                util.VersionWarning,
-            )
-        if splits:
-            return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, training_dataset_splits=df, train_split=td.train_split
-            )
-        else:
-            return training_dataset_bundle.TrainingDatasetBundle(
-                td.version, training_dataset=df
-            )
-
     def create_training_dataset(
         self,
-        start_time: Optional = None,
-        end_time: Optional = None,
+        start_time: Optional[str] = "",
+        end_time: Optional[str] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
-        version: Optional[int] = None,
         description: Optional[str] = "",
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
-        splits: Optional[Dict[str, float]] = {},
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        train_split: str = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
 
-                !!! info "Data Formats"
-                    The feature store currently supports the following data formats for
-                    training datasets:
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
 
-                    1. tfrecord
-                    2. csv
-                    3. tsv
-                    4. parquet
-                    5. avro
-                    6. orc
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
 
-                    Currently not supported petastorm, hdf5 and npy file formats.
+            Currently not supported petastorm, hdf5 and npy file formats.
 
 
         # Arguments
             start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                    following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -413,9 +313,6 @@ class FeatureView:
                 define a sub-directory inside the bucket to place the training dataset.
                 Defaults to `""`, saving the training dataset at the root defined by the
                 storage connector.
-            version: Version of the training dataset to retrieve, defaults to `None` and
-                will create the training dataset with incremented version from the last
-                version in the feature store.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -424,11 +321,6 @@ class FeatureView:
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
-            splits: A dictionary defining training dataset splits to be created. Keys in
-                the dictionary define the name of the split as `str`, values represent
-                percentage of samples in the split as `float`. Currently, only random
-                splits are supported. Defaults to empty dict`{}`, creating only a single
-                training dataset without splits.
             seed: Optionally, define a seed to create the random splits with, in order
                 to guarantee reproducability, defaults to `None`.
             statistics_config: A configuration object, or a dictionary with keys
@@ -438,9 +330,6 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            train_split: If `splits` is set, provide the name of the split that is going
-                to be used for training. The statistics of this split will be used for
-                transformation functions if necessary. Defaults to `None`.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, write_options can contain the
                 following entries:
@@ -452,12 +341,13 @@ class FeatureView:
                   after the Hopsworks Job has finished. By default it waits.
 
         # Returns
-            `Job`: When using the `python` engine, it returns the Hopsworks Job
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
         td = training_dataset.TrainingDataset(
             name=self.name,
-            version=version,
+            version=None,
             event_start_time=start_time,
             event_end_time=end_time,
             description=description,
@@ -465,33 +355,678 @@ class FeatureView:
             storage_connector=storage_connector,
             location=location,
             featurestore_id=self._featurestore_id,
-            splits=splits,
+            splits={},
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
-            train_split=train_split,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
             self, td, write_options
         )
-        if version is None:
-            warnings.warn(
-                "No version provided for creating training dataset, incremented version to `{}`.".format(
-                    td.version
-                ),
-                util.VersionWarning,
-            )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
 
-        return training_dataset_bundle.TrainingDatasetBundle(td.version, job=td_job)
+        return td.version, td_job
+
+    def create_train_test_split(
+        self,
+        test_size: Optional[float] = None,
+        train_start: Optional[str] = "",
+        train_end: Optional[str] = "",
+        test_start: Optional[str] = "",
+        test_end: Optional[str] = "",
+        storage_connector: Optional[storage_connector.StorageConnector] = None,
+        location: Optional[str] = "",
+        description: Optional[str] = "",
+        data_format: Optional[str] = "csv",
+        coalesce: Optional[bool] = False,
+        seed: Optional[int] = None,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Create a training dataset and save data into `location`.
+
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
+
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
+
+            Currently not supported petastorm, hdf5 and npy file formats.
+
+
+        # Arguments
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            storage_connector: Storage connector defining the sink location for the
+                training dataset, defaults to `None`, and materializes training dataset
+                on HopsFS.
+            location: Path to complement the sink storage connector with, e.g if the
+                storage connector points to an S3 bucket, this path can be used to
+                define a sub-directory inside the bucket to place the training dataset.
+                Defaults to `""`, saving the training dataset at the root defined by the
+                storage connector.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            data_format: The data format used to save the training dataset,
+                defaults to `"csv"`-format.
+            coalesce: If true the training dataset data will be coalesced into
+                a single partition before writing. The resulting training dataset
+                will be a single file per split. Default False.
+            seed: Optionally, define a seed to create the random splits with, in order
+                to guarantee reproducability, defaults to `None`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+
+        # Returns
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
+        """
+
+        self._validate_train_test_split(
+            test_size=test_size, train_end=train_end, test_start=test_start
+        )
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=None,
+            test_size=test_size,
+            train_start=train_start,
+            train_end=train_end,
+            test_start=test_start,
+            test_end=test_end,
+            description=description,
+            data_format=data_format,
+            storage_connector=storage_connector,
+            location=location,
+            featurestore_id=self._featurestore_id,
+            splits={},
+            seed=seed,
+            statistics_config=statistics_config,
+            coalesce=coalesce,
+        )
+        # td_job is used only if the python engine is used
+        td, td_job = self._feature_view_engine.create_training_dataset(
+            self, td, write_options
+        )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
+
+        return td.version, td_job
+
+    def create_train_validation_test_splits(
+        self,
+        val_size: Optional[float] = None,
+        test_size: Optional[float] = None,
+        train_start: Optional[str] = "",
+        train_end: Optional[str] = "",
+        val_start: Optional[str] = "",
+        val_end: Optional[str] = "",
+        test_start: Optional[str] = "",
+        test_end: Optional[str] = "",
+        storage_connector: Optional[storage_connector.StorageConnector] = None,
+        location: Optional[str] = "",
+        description: Optional[str] = "",
+        data_format: Optional[str] = "csv",
+        coalesce: Optional[bool] = False,
+        seed: Optional[int] = None,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        write_options: Optional[Dict[Any, Any]] = {},
+    ):
+        """Create a training dataset and save data into `location`.
+
+        !!! info "Data Formats"
+            The feature store currently supports the following data formats for
+            training datasets:
+
+            1. tfrecord
+            2. csv
+            3. tsv
+            4. parquet
+            5. avro
+            6. orc
+
+            Currently not supported petastorm, hdf5 and npy file formats.
+
+
+        # Arguments
+            val_size: size of validation set.
+            test_size: size of test set.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            storage_connector: Storage connector defining the sink location for the
+                training dataset, defaults to `None`, and materializes training dataset
+                on HopsFS.
+            location: Path to complement the sink storage connector with, e.g if the
+                storage connector points to an S3 bucket, this path can be used to
+                define a sub-directory inside the bucket to place the training dataset.
+                Defaults to `""`, saving the training dataset at the root defined by the
+                storage connector.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            data_format: The data format used to save the training dataset,
+                defaults to `"csv"`-format.
+            coalesce: If true the training dataset data will be coalesced into
+                a single partition before writing. The resulting training dataset
+                will be a single file per split. Default False.
+            seed: Optionally, define a seed to create the random splits with, in order
+                to guarantee reproducability, defaults to `None`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+
+        # Returns
+            (td_version, `Job`): Tuple of training dataset version and job.
+                When using the `python` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
+        """
+
+        self._validate_train_validation_test_splits(
+            val_size=val_size,
+            test_size=test_size,
+            train_end=train_end,
+            val_start=val_start,
+            val_end=val_end,
+            test_start=test_start,
+        )
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=None,
+            val_size=val_size,
+            test_size=test_size,
+            train_start=train_start,
+            train_end=train_end,
+            val_start=val_start,
+            val_end=val_end,
+            test_start=test_start,
+            test_end=test_end,
+            description=description,
+            data_format=data_format,
+            storage_connector=storage_connector,
+            location=location,
+            featurestore_id=self._featurestore_id,
+            splits={},
+            seed=seed,
+            statistics_config=statistics_config,
+            coalesce=coalesce,
+        )
+        # td_job is used only if the python engine is used
+        td, td_job = self._feature_view_engine.create_training_dataset(
+            self, td, write_options
+        )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
+
+        return td.version, td_job
 
     def recreate_training_dataset(
         self, version: int, write_options: Optional[Dict[Any, Any]] = None
     ):
+        """
+        Recreate a training dataset.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            `Job`: When using the `python` engine, it returns the Hopsworks Job
+                that was launched to create the training dataset.
+
+        """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
             self, version, write_options
         )
-        return training_dataset_bundle.TrainingDatasetBundle(td.version, job=td_job)
+        return td_job
+
+    def training_data(
+        self,
+        start_time: Optional = None,
+        end_time: Optional = None,
+        description: Optional[str] = "",
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
+
+        """
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=None,
+            splits={},
+            event_start_time=start_time,
+            event_end_time=end_time,
+            description=description,
+            storage_connector=None,
+            featurestore_id=self._featurestore_id,
+            data_format="tsv",
+            location="",
+            statistics_config=statistics_config,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+        )
+        td, df = self._feature_view_engine.get_training_data(
+            self, read_options, training_dataset_obj=td
+        )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
+        return df
+
+    def train_test_split(
+        self,
+        test_size: Optional[float] = None,
+        train_start: Optional[str] = "",
+        train_end: Optional[str] = "",
+        test_start: Optional[str] = "",
+        test_end: Optional[str] = "",
+        description: Optional[str] = "",
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            test_size: size of test set. Should be between 0 and 1.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
+        self._validate_train_test_split(
+            test_size=test_size, train_end=train_end, test_start=test_start
+        )
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=None,
+            splits={},
+            test_size=test_size,
+            train_start=train_start,
+            train_end=train_end,
+            test_start=test_start,
+            test_end=test_end,
+            description=description,
+            storage_connector=None,
+            featurestore_id=self._featurestore_id,
+            data_format="tsv",
+            location="",
+            statistics_config=statistics_config,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+        )
+        td, df = self._feature_view_engine.get_training_data(
+            self,
+            read_options,
+            training_dataset_obj=td,
+            splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
+        )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
+        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+
+    @staticmethod
+    def _validate_train_test_split(test_size, train_end, test_start):
+        if not (test_size or (train_end or test_start)):
+            raise ValueError(
+                "Invalid split input."
+                "You should specify either `test_size` or (`train_end` or `test_start`)."
+                " `test_size` should be greate than 0 if specified"
+            )
+
+    def train_validation_test_splits(
+        self,
+        val_size: Optional[float] = None,
+        test_size: Optional[float] = None,
+        train_start: Optional[str] = "",
+        train_end: Optional[str] = "",
+        val_start: Optional[str] = "",
+        val_end: Optional[str] = "",
+        test_start: Optional[str] = "",
+        test_end: Optional[str] = "",
+        description: Optional[str] = "",
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            val_size: size of validation set. Should be between 0 and 1.
+            test_size: size of test set. Should be between 0 and 1.
+            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            description: A string describing the contents of the training dataset to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_val, y_val, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
+
+        self._validate_train_validation_test_splits(
+            val_size=val_size,
+            test_size=test_size,
+            train_end=train_end,
+            val_start=val_start,
+            val_end=val_end,
+            test_start=test_start,
+        )
+        td = training_dataset.TrainingDataset(
+            name=self.name,
+            version=None,
+            splits={},
+            val_size=val_size,
+            test_size=test_size,
+            train_start=train_start,
+            train_end=train_end,
+            val_start=val_start,
+            val_end=val_end,
+            test_start=test_start,
+            test_end=test_end,
+            description=description,
+            storage_connector=None,
+            featurestore_id=self._featurestore_id,
+            data_format="tsv",
+            location="",
+            statistics_config=statistics_config,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+        )
+        td, df = self._feature_view_engine.get_training_data(
+            self,
+            read_options,
+            training_dataset_obj=td,
+            splits=[
+                TrainingDatasetSplit.TRAIN,
+                TrainingDatasetSplit.VALIDATION,
+                TrainingDatasetSplit.TEST,
+            ],
+        )
+        warnings.warn(
+            "Incremented version to `{}`.".format(td.version),
+            util.VersionWarning,
+        )
+        return (
+            df[TrainingDatasetSplit.TRAIN]
+            + df[TrainingDatasetSplit.VALIDATION]
+            + df[TrainingDatasetSplit.TEST]
+        )
+
+    @staticmethod
+    def _validate_train_validation_test_splits(
+        val_size, test_size, train_end, val_start, val_end, test_start
+    ):
+        if not (
+            (val_size and test_size)
+            or ((train_end or val_start) and (val_end or test_start))
+        ):
+            raise ValueError(
+                "Invalid split input."
+                " You should specify either (`val_size` and `test_size`) or ((`train_end` or `val_start`) and (`val_end` or `test_start`))."
+                "`val_size` and `test_size` should be greater than 0 if specified."
+            )
+
+    def get_training_data(
+        self,
+        training_dataset_version,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X, y): Tuple of dataframe of features and labels
+
+        """
+        td, df = self._feature_view_engine.get_training_data(
+            self, read_options, training_dataset_version=training_dataset_version
+        )
+        return df
+
+    def get_train_test_split(
+        self,
+        training_dataset_version,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
+        td, df = self._feature_view_engine.get_training_data(
+            self,
+            read_options,
+            training_dataset_version=training_dataset_version,
+            splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
+        )
+        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+
+    def get_train_validation_test_splits(
+        self,
+        training_dataset_version,
+        read_options: Optional[Dict[Any, Any]] = None,
+    ):
+        """
+        Get training data from storage or feature groups.
+
+        !!! info
+        If a materialised training data has deleted. Use `recreate_training_dataset()` to
+        recreate the training data.
+
+        # Arguments
+            version: training dataset version
+            read_options: Additional read options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, read_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to compute the training dataset.
+
+        # Returns
+            (X_train, y_train, X_val, y_val, X_test, y_test):
+                Tuple of dataframe of features and labels
+
+        """
+        td, df = self._feature_view_engine.get_training_data(
+            self,
+            read_options,
+            training_dataset_version=training_dataset_version,
+            splits=[
+                TrainingDatasetSplit.TRAIN,
+                TrainingDatasetSplit.VALIDATION,
+                TrainingDatasetSplit.TEST,
+            ],
+        )
+        return (
+            df[TrainingDatasetSplit.TRAIN]
+            + df[TrainingDatasetSplit.VALIDATION]
+            + df[TrainingDatasetSplit.TEST]
+        )
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(
