@@ -716,6 +716,12 @@ class Engine:
         # setup row writer function
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
+        def acked(err, msg):
+            if err is not None:
+                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+
+        print(feature_group._online_topic_name)
+
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -746,7 +752,10 @@ class Engine:
 
             # produce
             producer.produce(
-                topic=feature_group._online_topic_name, key=key, value=encoded_row
+                topic=feature_group._online_topic_name,
+                key=key,
+                value=encoded_row,
+                callback=acked,
             )
 
             # Trigger internal callbacks to empty op queue
