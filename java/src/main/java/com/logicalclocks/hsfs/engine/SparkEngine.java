@@ -62,6 +62,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.apache.spark.sql.avro.functions.from_avro;
@@ -140,7 +142,20 @@ public class SparkEngine {
   }
 
   public Dataset<Row> sql(String query) {
-    return sparkSession.sql(query);
+    try {
+      return sparkSession.sql(query);
+    } catch (Exception e) {
+      if (e.getMessage().contains("Permission denied")) {
+        Pattern pattern = Pattern.compile("inode=\"/apps/hive/warehouse/(.*)?_featurestore\\.db\"");
+        Matcher matcher = pattern.matcher(e.getMessage());
+        if (matcher.find()) {
+          String featureStore = matcher.group(1);
+          throw new RuntimeException(String.format("Cannot access feature store '%s'. " +
+              "It is possible to request access from data owners of '%s'.", featureStore, featureStore));
+        }
+      }
+      throw e;
+    }
   }
 
   public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
@@ -480,7 +495,8 @@ public class SparkEngine {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
-    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
+    return null;
+//    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {

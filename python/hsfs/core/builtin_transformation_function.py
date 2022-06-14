@@ -81,7 +81,9 @@ class BuiltInTransformationFunction:
     @staticmethod
     def encoder_stats(content, feature_name):
         for col in content["columns"]:
-            if col["column"] == feature_name:
-                unique_data = [i["value"] for i in col["histogram"]]
-                value_to_index = dict((c, i) for i, c in enumerate(unique_data))
-        return value_to_index
+            if col["column"] == feature_name and "unique_values" in col:
+                unique_data = [value for value in col["unique_values"]]
+                value_to_index = dict(
+                    (value, index) for index, value in enumerate(unique_data)
+                )
+                return value_to_index
