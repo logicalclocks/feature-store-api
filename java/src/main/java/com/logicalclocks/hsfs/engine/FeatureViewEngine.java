@@ -146,7 +146,8 @@ public class FeatureViewEngine {
   }
 
   public TrainingDatasetBundle getTrainingDataset(
-      FeatureView featureView, TrainingDataset trainingDataset, List<String> requestedSplits, Map<String, String> userReadOptions
+      FeatureView featureView, TrainingDataset trainingDataset, List<String> requestedSplits,
+      Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException {
     TrainingDataset trainingDatasetUpdated = null;
     if (trainingDataset.getVersion() != null) {
@@ -157,7 +158,7 @@ public class FeatureViewEngine {
     if (requestedSplits != null) {
       int splitSize = trainingDatasetUpdated.getSplits().size();
       String methodName = "";
-      if(splitSize != requestedSplits.size()) {
+      if (splitSize != requestedSplits.size()) {
         if (splitSize == 0) {
           methodName = "getTrainingData";
         } else if (splitSize == 2) {
@@ -202,7 +203,7 @@ public class FeatureViewEngine {
       } else {
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
             featureView.getLabels());
-        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
+        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[]{dataset});
       }
       return trainingDatasetBundle;
     }

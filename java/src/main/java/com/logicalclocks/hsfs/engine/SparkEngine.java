@@ -151,8 +151,8 @@ public class SparkEngine {
         Matcher matcher = pattern.matcher(e.getMessage());
         if (matcher.find()) {
           String featureStore = matcher.group(1);
-          throw new RuntimeException(String.format("Cannot access feature store '%s'. " +
-              "It is possible to request access from data owners of '%s'.", featureStore, featureStore));
+          throw new RuntimeException(String.format("Cannot access feature store '%s'. "
+              + "It is possible to request access from data owners of '%s'.", featureStore, featureStore));
         }
       }
       throw e;

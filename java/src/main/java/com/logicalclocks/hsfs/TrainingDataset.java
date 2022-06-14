@@ -33,7 +33,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -175,7 +174,7 @@ public class TrainingDataset {
   }
 
   private void appendTimeSeriesSplit(List<Split> splits, String splitName, String startTime, String endTime)
-    throws FeatureStoreException, ParseException {
+      throws FeatureStoreException, ParseException {
     if (startTime != null || endTime != null) {
       splits.add(
           new Split(splitName,
@@ -187,12 +186,12 @@ public class TrainingDataset {
   private void setValTestSplit(Float valSize, Float testSize) {
     if (valSize != null && testSize != null) {
       this.splits = Lists.newArrayList();
-      this.splits.add(new Split(Split.TRAIN, 1-valSize-testSize));
+      this.splits.add(new Split(Split.TRAIN, 1 - valSize - testSize));
       this.splits.add(new Split(Split.VALIDATION, valSize));
       this.splits.add(new Split(Split.TEST, testSize));
     } else if (testSize != null) {
       this.splits = Lists.newArrayList();
-      this.splits.add(new Split(Split.TRAIN, 1-testSize));
+      this.splits.add(new Split(Split.TRAIN, 1 - testSize));
       this.splits.add(new Split(Split.TEST, testSize));
     }
   }

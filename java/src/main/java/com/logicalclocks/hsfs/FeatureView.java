@@ -424,7 +424,7 @@ public class FeatureView {
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return featureViewEngine.getTrainingDataset(
-        this, version, Lists.newArrayList(), readOptions)
+            this, version, Lists.newArrayList(), readOptions)
         .getDataset(true);
   }
 
@@ -608,14 +608,14 @@ public class FeatureView {
   private void validateTrainValidationTestSplit(
       Float valSize, Float testSize, String trainEnd, String valStart, String valEnd, String testStart)
       throws FeatureStoreException {
-    if (!((valSize != null && valSize > 0 && testSize != null && testSize > 0 )
+    if (!((valSize != null && valSize > 0 && testSize != null && testSize > 0)
         || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(valStart))
         && (!Strings.isNullOrEmpty(valEnd) || !Strings.isNullOrEmpty(testStart))))) {
       throw new FeatureStoreException(
           "Invalid split input."
-          + " You should specify either (`valSize` and `testSize`) or ((`trainEnd` or `valStart`) and (`valEnd` " +
-              "or `testStart`))."
-          + "`valSize` and `testSize` should be greater than 0 if specified."
+              + " You should specify either (`valSize` and `testSize`) or ((`trainEnd` or `valStart`) and (`valEnd` "
+              + "or `testStart`))."
+              + "`valSize` and `testSize` should be greater than 0 if specified."
       );
     }
   }
