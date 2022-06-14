@@ -720,8 +720,6 @@ class Engine:
             if err is not None:
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
 
-        print(feature_group._online_topic_name)
-
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
