@@ -102,6 +102,14 @@ class FeatureView:
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
         """
+
+        if training_dataset_version is None:
+            training_dataset_version = 1
+            warnings.warn(
+                "No training dataset version was provided to initialise serving. Defaulting to version 1.",
+                util.VersionWarning,
+            )
+
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
@@ -127,6 +135,14 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
+
+        if training_dataset_version is None:
+            training_dataset_version = 1
+            warnings.warn(
+                "No training dataset version was provided to initialise batch scoring . Defaulting to version 1.",
+                util.VersionWarning,
+            )
+
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
