@@ -798,7 +798,7 @@ class FeatureView:
             raise ValueError(
                 "Invalid split input."
                 "You should specify either `test_size` or (`train_end` or `test_start`)."
-                " `test_size` should be greate than 0 if specified"
+                " `test_size` should be greater than 0 if specified"
             )
 
     def train_validation_test_splits(
