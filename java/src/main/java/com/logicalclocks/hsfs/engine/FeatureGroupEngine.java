@@ -83,16 +83,16 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
 
+    if (featureGroup.getId() == null) {
+      featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
+          hudiPrecombineKey, featureData, false);
+    }
+
     if (featureGroup.getValidationType() != ValidationType.NONE) {
       FeatureGroupValidation validation = featureGroup.validate(featureData, true);
       if (validation != null) {
         validationId = validation.getValidationId();
       }
-    }
-
-    if (featureGroup.getId() == null) {
-      featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
-          hudiPrecombineKey, featureData, false);
     }
 
     if (saveMode == SaveMode.Overwrite) {
@@ -119,14 +119,14 @@ public class FeatureGroupEngine {
           + "It is currently only possible to stream to the online storage.");
     }
 
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
-          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
-    }
-
     if (featureGroup.getId() == null) {
       featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, true);
+    }
+
+    if (featureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
+          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
