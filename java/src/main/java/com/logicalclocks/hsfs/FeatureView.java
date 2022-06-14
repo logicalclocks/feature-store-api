@@ -262,104 +262,86 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name);
   }
 
-//  public List<Dataset<Row>> getTrainingDataset(Integer version)
-//      throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .version(version)
-//            .build();
-//    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap()).getDataset(true);
-//  }
-//
-//  public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime)
-//      throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
-//            .eventStartTime(startTime)
-//            .eventEndTime(endTime)
-//            .build();
-//    return
-//        featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
-//  }
-//
-//  public TrainingDatasetBundle getTrainingDataset(
-//      String startTime, String endTime, Map<String, Float> splits, String trainSplit
-//  ) throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
-//            .eventStartTime(startTime)
-//            .eventEndTime(endTime)
-//            .splits(splits != null
-//                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-//                Collectors.toList()) : null)
-//            .trainSplit(trainSplit)
-//            .build();
-//    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
-//  }
-//
-//  public TrainingDatasetBundle getTrainingDataset(
-//      Integer version, String startTime, String endTime, String description, Map<String, Float> splits,
-//      String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
-//  ) throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
-//            .version(version)
-//            .eventStartTime(startTime)
-//            .eventEndTime(endTime)
-//            .description(description)
-//            .splits(splits != null
-//                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-//                Collectors.toList()) : null)
-//            .trainSplit(trainSplit)
-//            .statisticsConfig(statisticsConfig)
-//            .build();
-//    return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions);
-//  }
-//
-//  public TrainingDatasetBundle createTrainingDataset(
-//      String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector
-//  ) throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .eventStartTime(startTime)
-//            .eventEndTime(endTime)
-//            .dataFormat(dataFormat)
-//            .storageConnector(storageConnector)
-//            .build();
-//    return featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
-//  }
-//
-//  public TrainingDatasetBundle createTrainingDataset(
-//      String startTime, String endTime, DataFormat dataFormat, StorageConnector storageConnector,
-//      Map<String, Float> splits, String trainSplit
-//  ) throws IOException, FeatureStoreException, ParseException {
-//    TrainingDataset trainingDataset =
-//        this.featureStore
-//            .createTrainingDataset()
-//            .name("") // name is set in the backend
-//            .eventStartTime(startTime)
-//            .eventEndTime(endTime)
-//            .dataFormat(dataFormat)
-//            .storageConnector(storageConnector)
-//            .splits(splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
-//                Collectors.toList()))
-//            .trainSplit(trainSplit)
-//            .build();
-//    return featureViewEngine.createTrainingDataset(this, trainingDataset, Maps.newHashMap());
-//  }
+  //  public List<Dataset<Row>> getTrainingDataset(Integer version)
+  //      throws IOException, FeatureStoreException, ParseException {
+  //    TrainingDataset trainingDataset =
+  //        this.featureStore
+  //            .createTrainingDataset()
+  //            .name("") // name is set in the backend
+  //            .version(version)
+  //            .build();
+  //    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap()).getDataset(true);
+  //  }
+  //
+  //  public TrainingDatasetBundle getTrainingDataset(String startTime, String endTime)
+  //      throws IOException, FeatureStoreException, ParseException {
+  //    TrainingDataset trainingDataset =
+  //        this.featureStore
+  //            .createTrainingDataset()
+  //            .name("") // name is set in the backend
+  //            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+  //            .eventStartTime(startTime)
+  //            .eventEndTime(endTime)
+  //            .build();
+  //    return
+  //        featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  //  }
+  //
+  //  public TrainingDatasetBundle getTrainingDataset(
+  //      String startTime, String endTime, Map<String, Float> splits, String trainSplit
+  //  ) throws IOException, FeatureStoreException, ParseException {
+  //    TrainingDataset trainingDataset =
+  //        this.featureStore
+  //            .createTrainingDataset()
+  //            .name("") // name is set in the backend
+  //            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+  //            .eventStartTime(startTime)
+  //            .eventEndTime(endTime)
+  //            .splits(splits != null
+  //                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+  //                Collectors.toList()) : null)
+  //            .trainSplit(trainSplit)
+  //            .build();
+  //    return featureViewEngine.getTrainingDataset(this, trainingDataset, Maps.newHashMap());
+  //  }
+  //
+  //  public TrainingDatasetBundle getTrainingDataset(
+  //      Integer version, String startTime, String endTime, String description, Map<String, Float> splits,
+  //      String trainSplit, StatisticsConfig statisticsConfig, Map<String, String> readOptions
+  //  ) throws IOException, FeatureStoreException, ParseException {
+  //    TrainingDataset trainingDataset =
+  //        this.featureStore
+  //            .createTrainingDataset()
+  //            .name("") // name is set in the backend
+  //            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+  //            .version(version)
+  //            .eventStartTime(startTime)
+  //            .eventEndTime(endTime)
+  //            .description(description)
+  //            .splits(splits != null
+  //                ? splits.entrySet().stream().map(entry -> new Split(entry.getKey(), entry.getValue())).collect(
+  //                Collectors.toList()) : null)
+  //            .trainSplit(trainSplit)
+  //            .statisticsConfig(statisticsConfig)
+  //            .build();
+  //    return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions);
+  //  }
+  //
+
+  public Integer createTrainingData(
+      String startTime, String endTime, String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .dataFormat(dataFormat)
+            .build();
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
+  }
 
   public Integer createTrainingData(
       String startTime, String endTime, String description, DataFormat dataFormat,
@@ -381,6 +363,26 @@ public class FeatureView {
             .statisticsConfig(statisticsConfig)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
+  }
+
+  public Integer createTrainTestSplit(
+      Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
+      String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .trainSplit(Split.TRAIN)
+            .build();
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
   public Integer createTrainTestSplit(
@@ -407,6 +409,29 @@ public class FeatureView {
             .statisticsConfig(statisticsConfig)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
+  }
+
+  public Integer createTrainValidationTestSplits(
+      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
+      String testStart, String testEnd, String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .valSize(valSize)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .valStart(valStart)
+            .valEnd(valEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .trainSplit(Split.TRAIN)
+            .build();
+    return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
   public Integer createTrainValidationTestSplits(
@@ -451,9 +476,21 @@ public class FeatureView {
   }
 
   public List<Dataset<Row>> getTrainingData(
+      Integer version
+  ) throws IOException, FeatureStoreException, ParseException {
+    return getTrainingData(version);
+  }
+
+  public List<Dataset<Row>> getTrainingData(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return featureViewEngine.getTrainingDataset(this, version, readOptions).getDataset(true);
+  }
+
+  public List<Dataset<Row>> getTrainTestSplit(
+      Integer version
+  ) throws IOException, FeatureStoreException, ParseException {
+    return getTrainTestSplit(version);
   }
 
   public List<Dataset<Row>> getTrainTestSplit(
@@ -465,11 +502,32 @@ public class FeatureView {
   }
 
   public List<Dataset<Row>> getTrainValidationTestSplits(
+      Integer version
+  ) throws IOException, FeatureStoreException, ParseException {
+    return getTrainValidationTestSplits(version);
+  }
+
+  public List<Dataset<Row>> getTrainValidationTestSplits(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return getDataset(
         featureViewEngine.getTrainingDataset(this, version, readOptions),
         Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
+  }
+
+  public List<Dataset<Row>> trainingData(
+      String startTime, String endTime, String description
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+            .build();
+    return featureViewEngine.getTrainingDataset(this, trainingDataset, null).getDataset(true);
   }
 
   public List<Dataset<Row>> trainingData(
@@ -488,6 +546,28 @@ public class FeatureView {
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions).getDataset(true);
+  }
+
+  public List<Dataset<Row>> trainTestSplit(
+      Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
+      String description
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .trainSplit(Split.TRAIN)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+            .build();
+    return getDataset(
+        featureViewEngine.getTrainingDataset(this, trainingDataset, null),
+        Lists.newArrayList(Split.TRAIN, Split.TEST));
   }
 
   public List<Dataset<Row>> trainTestSplit(
@@ -512,6 +592,31 @@ public class FeatureView {
     return getDataset(
         featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions),
         Lists.newArrayList(Split.TRAIN, Split.TEST));
+  }
+
+  public List<Dataset<Row>> trainValidationTestSplits(
+      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
+      String testStart, String testEnd, String description
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset =
+        this.featureStore
+            .createTrainingDataset()
+            .name("") // name is set in the backend
+            .valSize(valSize)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .valStart(valStart)
+            .valEnd(valEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .trainSplit(Split.TRAIN)
+            .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+            .build();
+    return getDataset(
+        featureViewEngine.getTrainingDataset(this, trainingDataset, null),
+        Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
   }
 
   public List<Dataset<Row>> trainValidationTestSplits(
