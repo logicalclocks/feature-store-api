@@ -750,16 +750,27 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            # produce
-            producer.produce(
-                topic=feature_group._online_topic_name,
-                key=key,
-                value=encoded_row,
-                callback=acked,
-            )
+            while True:
+                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+                try:
+                    # produce
+                    producer.produce(
+                        topic=feature_group._online_topic_name,
+                        key=key,
+                        value=encoded_row,
+                        callback=acked
+                        if offline_write_options.get("debug_kafka", False)
+                        else None,
+                    )
 
-            # Trigger internal callbacks to empty op queue
-            producer.poll(0)
+                    # Trigger internal callbacks to empty op queue
+                    producer.poll(0)
+                    break
+                except BufferError as e:
+                    if offline_write_options.get("debug_kafka", False):
+                        print("Caught: {}".format(e))
+                    # backoff for 1 second
+                    producer.poll(1)
 
         # make sure producer blocks and everything is delivered
         producer.flush()
@@ -804,12 +815,15 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        # producer configuration properties
+        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         config = {
             "security.protocol": "SSL",
             "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
             "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
             "ssl.key.location": client.get_instance()._get_client_key_path(),
             "client.id": socket.gethostname(),
+            **write_options.get("kafka_producer_config", {}),
         }
 
         if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
@@ -832,5 +846,4 @@ class Engine:
                     )
                 ]
             )
-
         return config
