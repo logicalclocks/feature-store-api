@@ -476,7 +476,7 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
     ):
-        """Get feature group metadata object or create a new feature group metadata object if it doesn't exist.
+        """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the

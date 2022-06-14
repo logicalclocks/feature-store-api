@@ -221,6 +221,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @deprecated
    * `save` method is deprecated and in the next release it will be  replaced by `insert` and `insertStream` methods.
    */
+  @Deprecated
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
@@ -231,6 +232,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @deprecated
    * In the next release save method will be  replaced by insert method.
    */
+  @Deprecated
   public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
     streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,

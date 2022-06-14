@@ -925,15 +925,16 @@ class FeatureGroup(FeatureGroupBase):
         `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
         `storage="offline"`.
 
-        If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-        invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
-
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         If statistics are enabled, statistics are recomputed for the entire feature
         group.
         If feature group's time travel format is `HUDI` then `operation` argument can be
         either `insert` or `upsert`.
+
+        If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+        invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+
         !!! example "Upsert new feature data with time travel format `HUDI`:"
             ```python
             fs = conn.get_feature_store();
