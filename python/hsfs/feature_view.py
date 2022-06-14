@@ -106,6 +106,14 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP.
         """
+
+        if training_dataset_version is None:
+            training_dataset_version = 1
+            warnings.warn(
+                "No training dataset version was provided to initialise serving. Defaulting to version 1.",
+                util.VersionWarning,
+            )
+
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
@@ -131,6 +139,14 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
+
+        if training_dataset_version is None:
+            training_dataset_version = 1
+            warnings.warn(
+                "No training dataset version was provided to initialise batch scoring . Defaulting to version 1.",
+                util.VersionWarning,
+            )
+
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
