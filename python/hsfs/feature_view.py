@@ -22,12 +22,7 @@ from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 
-from hsfs import (
-    util,
-    training_dataset_feature,
-    storage_connector,
-    training_dataset,
-)
+from hsfs import util, training_dataset_feature, storage_connector, training_dataset
 from hsfs.constructor import query
 from hsfs.core import (
     feature_view_engine,
@@ -90,7 +85,7 @@ class FeatureView:
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
@@ -103,8 +98,9 @@ class FeatureView:
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                If set to False, the online feature store storage connector is used which relies on the private IP.
+                Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
+                Sagemaker or Google Colab), otherwise to False.
         """
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
@@ -156,7 +152,7 @@ class FeatureView:
         self,
         entry: List[Dict[str, Any]],
         passed_features: Optional[Dict[str, Any]] = {},
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Returns assembled serving vector from online feature store.
 
@@ -169,7 +165,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -182,7 +179,7 @@ class FeatureView:
         self,
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
@@ -195,7 +192,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -203,7 +201,7 @@ class FeatureView:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
-    def preview_feature_vector(self, external: Optional[bool] = False):
+    def preview_feature_vector(self, external: Optional[bool] = None):
         """Returns a sample of assembled serving vector from online feature store.
 
         # Arguments
@@ -211,7 +209,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `list` List of feature values, ordered according to positions of this
             features in training dataset query.
@@ -220,7 +219,7 @@ class FeatureView:
             self.init_serving(external=external)
         return self._single_vector_server.get_preview_vectors(1)
 
-    def preview_feature_vectors(self, n: int, external: Optional[bool] = False):
+    def preview_feature_vectors(self, n: int, external: Optional[bool] = None):
         """Returns n samples of assembled serving vectors in batches from online feature store.
 
         # Arguments
@@ -229,7 +228,8 @@ class FeatureView:
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
                 If set to False, the online feature store storage connector is used
-                which relies on the private IP.
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
         # Returns
             `List[list]` List of lists of feature values , ordered according to
             positions of this features in training dataset query.

@@ -19,7 +19,7 @@ import avro.schema
 import avro.io
 from sqlalchemy import sql, bindparam, exc, text
 from hsfs import util
-from hsfs import training_dataset, feature_view
+from hsfs import training_dataset, feature_view, client
 from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
@@ -57,6 +57,8 @@ class VectorServer:
         )
 
     def init_serving(self, entity, batch, external):
+        if external is None:
+            external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
