@@ -125,7 +125,7 @@ public class FeatureView {
   }
 
   public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    vectorServer.initServing(this, false, false);
+    vectorServer.initServing(this, false);
   }
 
   public void initServing(Boolean batch, Boolean external)
@@ -136,7 +136,7 @@ public class FeatureView {
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry, false);
+    return vectorServer.getFeatureVector(this, entry);
   }
 
   @JsonIgnore
@@ -148,7 +148,7 @@ public class FeatureView {
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry, false);
+    return vectorServer.getFeatureVectors(this, entry);
   }
 
   @JsonIgnore
@@ -159,7 +159,7 @@ public class FeatureView {
 
   public List<Object> previewFeatureVector()
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return previewFeatureVectors(1, false).get(0);
+    return previewFeatureVectors(1).get(0);
   }
 
   public List<Object> previewFeatureVector(boolean external)
@@ -169,7 +169,7 @@ public class FeatureView {
 
   public List<List<Object>> previewFeatureVectors(Integer n)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, false, n);
+    return vectorServer.previewFeatureVectors(this, n);
 
   }
 

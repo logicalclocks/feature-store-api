@@ -13,6 +13,7 @@
 #   limitations under the License.
 #
 import warnings
+import time
 
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
@@ -32,6 +33,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._save_feature_group_metadata(
             feature_group, feature_dataframe, write_options
         )
+
+        # sleep to make sure authorizer added kafka topic
+        time.sleep(1)
 
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(

@@ -499,7 +499,7 @@ public class TrainingDataset {
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
       IOException, ClassNotFoundException {
-    return getServingVector(entry, false);
+    return vectorServer.getFeatureVector(this, entry);
   }
 
   /**
@@ -521,7 +521,7 @@ public class TrainingDataset {
   @JsonIgnore
   public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
           throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return getServingVectors(entry, false);
+    return  vectorServer.getFeatureVectors(this, entry);
   }
 
   @JsonIgnore

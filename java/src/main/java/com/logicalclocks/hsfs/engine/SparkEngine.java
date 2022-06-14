@@ -150,8 +150,8 @@ public class SparkEngine {
         Matcher matcher = pattern.matcher(e.getMessage());
         if (matcher.find()) {
           String featureStore = matcher.group(1);
-          throw new RuntimeException(String.format("Cannot access feature store '%s'. " +
-              "It is possible to request access from data owners of '%s'.", featureStore, featureStore));
+          throw new RuntimeException(String.format("Cannot access feature store '%s'. "
+              + "It is possible to request access from data owners of '%s'.", featureStore, featureStore));
         }
       }
       throw e;
@@ -495,8 +495,7 @@ public class SparkEngine {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
-    return null;
-//    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
+    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
