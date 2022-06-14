@@ -495,8 +495,7 @@ public class SparkEngine {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
-    return null;
-//    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
+    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {
