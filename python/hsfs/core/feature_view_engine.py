@@ -435,7 +435,7 @@ class FeatureViewEngine:
         ) and not feature_view_obj.query.from_cache_feature_group_only():
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_dataset` instead."
+                " Please use `feature_view.create_training_data` instead."
             )
 
     def _get_feature_view_url(self, feature_view):

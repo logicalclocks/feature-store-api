@@ -271,7 +271,7 @@ class FeatureView:
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 
-    def create_training_dataset(
+    def create_training_data(
         self,
         start_time: Optional[str] = "",
         end_time: Optional[str] = "",
