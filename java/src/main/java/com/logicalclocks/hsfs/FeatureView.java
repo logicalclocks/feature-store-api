@@ -423,7 +423,9 @@ public class FeatureView {
   public List<Dataset<Row>> getTrainingData(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
-    return featureViewEngine.getTrainingDataset(this, version, readOptions).getDataset(true);
+    return featureViewEngine.getTrainingDataset(
+        this, version, Lists.newArrayList(), readOptions)
+        .getDataset(true);
   }
 
   public List<Dataset<Row>> getTrainTestSplit(
@@ -436,7 +438,8 @@ public class FeatureView {
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return getDataset(
-        featureViewEngine.getTrainingDataset(this, version, readOptions),
+        featureViewEngine.getTrainingDataset(
+            this, version, Lists.newArrayList(Split.TRAIN, Split.TEST), readOptions),
         Lists.newArrayList(Split.TRAIN, Split.TEST));
   }
 
@@ -450,7 +453,8 @@ public class FeatureView {
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return getDataset(
-        featureViewEngine.getTrainingDataset(this, version, readOptions),
+        featureViewEngine.getTrainingDataset(
+            this, version, Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST), readOptions),
         Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
   }
 

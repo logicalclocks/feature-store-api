@@ -129,23 +129,45 @@ public class FeatureViewEngine {
   }
 
   public TrainingDatasetBundle getTrainingDataset(
-      FeatureView featureView, Integer trainingDatasetVersion, Map<String, String> userReadOptions
+      FeatureView featureView, Integer trainingDatasetVersion, List<String> requestedSplits,
+      Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
         .name(featureView.getName())
         .version(trainingDatasetVersion)
         .build();
-    return getTrainingDataset(featureView, trainingDataset, userReadOptions);
+    return getTrainingDataset(featureView, trainingDataset, requestedSplits, userReadOptions);
   }
 
   public TrainingDatasetBundle getTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userReadOptions
+  ) throws IOException, FeatureStoreException {
+    return getTrainingDataset(featureView, trainingDataset, null, userReadOptions);
+  }
+
+  public TrainingDatasetBundle getTrainingDataset(
+      FeatureView featureView, TrainingDataset trainingDataset, List<String> requestedSplits, Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException {
     TrainingDataset trainingDatasetUpdated = null;
     if (trainingDataset.getVersion() != null) {
       trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
     } else {
       trainingDatasetUpdated = createTrainingDataMetadata(featureView, trainingDataset);
+    }
+    if (requestedSplits != null) {
+      int splitSize = trainingDatasetUpdated.getSplits().size();
+      String methodName = "";
+      if(splitSize != requestedSplits.size()) {
+        if (splitSize == 0) {
+          methodName = "getTrainingData";
+        } else if (splitSize == 2) {
+          methodName = "getTrainTestSplit";
+        } else if (splitSize == 3) {
+          methodName = "getTrainValidationTestSplits";
+        }
+        throw new FeatureStoreException(
+            String.format("Incorrect `get` method is used. Use `FeatureView.%s` instead.", methodName));
+      }
     }
     if (!IN_MEMORY_TRAINING_DATASET.equals(trainingDatasetUpdated.getTrainingDatasetType())) {
       try {

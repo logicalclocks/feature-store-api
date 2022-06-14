@@ -174,7 +174,7 @@ class FeatureViewEngine:
             elif len(td_updated.splits) == 3:
                 method_name = "get_train_validation_test_splits"
             raise ValueError(
-                f"Incorrect `get` method is used. Use `fv.{method_name}` instead."
+                f"Incorrect `get` method is used. Use `feature_view.{method_name}` instead."
             )
 
         read_options = engine.get_instance().read_options(
