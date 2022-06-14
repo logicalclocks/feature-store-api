@@ -19,11 +19,9 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.SaveMode;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -65,8 +63,69 @@ public class StreamFeatureGroupEngine {
                                      JobConfiguration sparkJobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
 
+    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+        writeOptions, sparkJobConfiguration, dataset);
+
+    insert(updatedFeatureGroup, utils.sanitizeFeatureNames(dataset),
+        SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+
+    return featureGroup;
+  }
+
+  @SneakyThrows
+  public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
+                                 String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
+                                 List<String> partitionKeys, String hudiPrecombineKey, Map<String, String>
+                                       writeOptions, JobConfiguration jobConfiguration) {
+
+    if (writeOptions == null) {
+      writeOptions = new HashMap<>();
+    }
+
+    if (streamFeatureGroup.getId() == null) {
+      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    }
+
+    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
+      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
+          + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
+    }
+
+    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
+      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
+      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+  }
+
+  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
+                         SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
+                         Map<String, String> writeOptions, JobConfiguration jobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+
+    if (streamFeatureGroup.getId() == null) {
+      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    }
+
+    if (saveMode == SaveMode.OVERWRITE) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(streamFeatureGroup);
+    }
+
+    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
+        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+  }
+
+  public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
+                                                     String hudiPrecombineKey, Map<String, String> writeOptions,
+                                                     JobConfiguration sparkJobConfiguration, S featureData)
+      throws FeatureStoreException, IOException, ParseException {
+
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(dataset)));
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData)));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
@@ -74,21 +133,21 @@ public class StreamFeatureGroupEngine {
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
       featureGroup.getPrimaryKeys().forEach(pk ->
-              featureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPrimary(true);
-                }
-              }));
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
     }
 
     /* set partition key features */
     if (partitionKeys != null) {
       partitionKeys.forEach(pk ->
-              featureGroup.getFeatures().forEach(f -> {
-                if (f.getName().equals(pk)) {
-                  f.setPartition(true);
-                }
-              }));
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPartition(true);
+            }
+          }));
     }
 
     /* set hudi precombine key name */
@@ -115,8 +174,9 @@ public class StreamFeatureGroupEngine {
 
     if (featureGroup.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-              + "`, incremented version to `" + apiFG.getVersion() + "`.");
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
     }
+
 
     // Update the original object - Hopsworks returns the incremented version
     featureGroup.setId(apiFG.getId());
@@ -131,53 +191,6 @@ public class StreamFeatureGroupEngine {
       featureGroup.setFeatures(features);
     }
 
-    // Write the online dataframe
-    insert(featureGroup, utils.sanitizeFeatureNames(dataset), HudiOperationType.BULK_INSERT,
-        SaveMode.APPEND, writeOptions);
-
     return featureGroup;
-  }
-
-  @SneakyThrows
-  public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
-                                 String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
-                                 Map<String, String> writeOptions) {
-
-    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
-      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
-                    + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
-    }
-
-    if (writeOptions == null) {
-      writeOptions = new HashMap<>();
-    }
-
-    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
-      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
-  }
-
-  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData, HudiOperationType operation,
-                         SaveMode saveMode, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
-      ParseException {
-
-    Integer validationId = null;
-    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = streamFeatureGroup.validate(featureData, true);
-      if (validation != null) {
-        validationId = validation.getValidationId();
-      }
-    }
-
-    if (saveMode == SaveMode.OVERWRITE) {
-      // If we set overwrite, then the directory will be removed and with it all the metadata
-      // related to the feature group will be lost. We need to keep them.
-      // So we call Hopsworks to manage to truncate the table and re-create the metadata
-      // After that it's going to be just a normal append
-      featureGroupApi.deleteContent(streamFeatureGroup);
-    }
-
-    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
-        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 }

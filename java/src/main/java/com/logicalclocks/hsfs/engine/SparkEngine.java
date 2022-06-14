@@ -710,4 +710,10 @@ public class SparkEngine {
       sparkSession.sparkContext().hadoopConfiguration().unset(Constants.PROPERTY_ENCRYPTION_HASH);
     }
   }
+
+  public <S> S createEmptyDataFrame(S datasetGeneric) {
+    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    List<Row> rows = new ArrayList<Row>();
+    return (S) sparkSession.sqlContext().createDataFrame(rows, dataset.schema());
+  }
 }

@@ -26,7 +26,7 @@ import avro
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
@@ -907,6 +907,11 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         unique_values = feature_dataframe.select(feature_name).distinct().collect()
         return [field[feature_name] for field in unique_values]
+
+    def create_empty_df(self, streaming_df):
+        return SQLContext(self._spark_context).createDataFrame(
+            self._spark_context.emptyRDD(), streaming_df.schema
+        )
 
 
 class SchemaError(Exception):

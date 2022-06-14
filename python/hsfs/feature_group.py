@@ -36,6 +36,7 @@ from hsfs.core import (
     on_demand_feature_group_engine,
     expectations_api,
 )
+
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
@@ -822,16 +823,16 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
+        !!! warning "Deprecated"
+            save` method is deprecated. Use the `insert` method instead.
+
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
         online/offline feature store as specified.
-
         By default, this writes the feature group to the offline storage, and if
         `online_enabled` for the feature group, also to the online feature store.
-
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
         # Arguments
             features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
@@ -855,11 +856,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
-
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
@@ -918,22 +917,23 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Insert data from a dataframe into the feature group.
+        """Persist the metadata and materialize the feature group to the feature store
+        or insert data from a dataframe into the existing feature group.
 
-        Incrementally insert data to a feature group or overwrite all data contained
-        in the feature group. By default, the data is inserted into the offline storage
-        as well as the online storage if the feature group is `online_enabled=True`. To
-        insert only into the online storage, set `storage="online"`, or oppositely
+        Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
+        default, the data is inserted into the offline storag as well as the online storage if the feature group is
+        `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
         `storage="offline"`.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
-
         If statistics are enabled, statistics are recomputed for the entire feature
         group.
-
         If feature group's time travel format is `HUDI` then `operation` argument can be
         either `insert` or `upsert`.
+
+        If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+        invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
 
         !!! example "Upsert new feature data with time travel format `HUDI`:"
             ```python
@@ -942,7 +942,6 @@ class FeatureGroup(FeatureGroupBase):
             upsert_df = ...
             fg.insert(upsert_df)
             ```
-
         # Arguments
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
@@ -973,7 +972,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-
         # Returns
             `FeatureGroup`. Updated feature group metadata object.
         """
@@ -1075,6 +1073,7 @@ class FeatureGroup(FeatureGroupBase):
                 ).format(self._name, self._version),
                 util.StatisticsWarning,
             )
+
             return self._feature_group_engine.insert_stream(
                 self,
                 feature_dataframe,
