@@ -176,7 +176,7 @@ public class SparkEngine {
 
   public static List<Dataset<Row>> splitLabels(Dataset<Row> dataset, List<String> labels) {
     List<Dataset<Row>> results = Lists.newArrayList();
-    if (!labels.isEmpty()) {
+    if (labels != null && !labels.isEmpty()) {
       Column[] labelsCol = labels.stream().map(label -> col(label).alias(label.toLowerCase())).toArray(Column[]::new);
       results.add(dataset.drop(labels.stream().toArray(String[]::new)));
       results.add(dataset.select(labelsCol));
@@ -509,8 +509,7 @@ public class SparkEngine {
       runner.restrictToColumns(JavaConverters.asScalaIteratorConverter(restrictToColumns.iterator()).asScala().toSeq());
     }
     ColumnProfiles result = runner.run();
-    return null;
-//    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
+    return ColumnProfiles.toJson(result.profiles().values().toSeq(), result.numRecords());
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation, Boolean histogram) {

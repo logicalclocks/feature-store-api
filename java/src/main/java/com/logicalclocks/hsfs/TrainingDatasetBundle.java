@@ -39,19 +39,6 @@ public class TrainingDatasetBundle {
   }
 
   @JsonIgnore
-  public Dataset<Row> getDataset() {
-    if (inMemory) {
-      if (hasSplit) {
-        return getDataset(Split.TRAIN);
-      } else {
-        return dataset;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  @JsonIgnore
   public List<Dataset<Row>> getDataset(Boolean splitLabels) {
     if (inMemory) {
       if (hasSplit) {
@@ -69,19 +56,10 @@ public class TrainingDatasetBundle {
   }
 
   @JsonIgnore
-  public Dataset<Row> getDataset(String split) {
-    if (inMemory) {
-      return datasetSplits.get(split);
-    } else {
-      return null;
-    }
-  }
-
-  @JsonIgnore
   public List<Dataset<Row>> getDataset(String split, Boolean splitLabels) {
     if (inMemory) {
       if (splitLabels) {
-        return SparkEngine.splitLabels(dataset, labels);
+        return SparkEngine.splitLabels(datasetSplits.get(split), labels);
       } else {
         return Lists.newArrayList(datasetSplits.get(split));
       }

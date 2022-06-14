@@ -71,6 +71,11 @@ public class FeatureViewEngine {
         .filter(f -> f.getFeaturegroup() != null)
         .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
     featureView.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
+    featureView.setLabels(
+        featureView.getFeatures().stream()
+            .filter(TrainingDatasetFeature::getLabel)
+            .map(TrainingDatasetFeature::getName)
+            .collect(Collectors.toList()));
     return featureView;
   }
 
@@ -83,6 +88,11 @@ public class FeatureViewEngine {
           .filter(f -> f.getFeaturegroup() != null)
           .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
+      fv.setLabels(
+          fv.getFeatures().stream()
+              .filter(TrainingDatasetFeature::getLabel)
+              .map(TrainingDatasetFeature::getName)
+              .collect(Collectors.toList()));
     }
     return featureViews;
   }
@@ -229,7 +239,8 @@ public class FeatureViewEngine {
   private Dataset<Row> readDataset(FeatureView featureView, TrainingDataset trainingDataset,
       Map<String, String> userReadOptions) throws IOException,
       FeatureStoreException {
-    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime());
+    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
+        true);
     return (Dataset<Row>) query.read(false, userReadOptions);
   }
 
@@ -257,18 +268,19 @@ public class FeatureViewEngine {
 
   public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime)
       throws FeatureStoreException, IOException {
-    Query query = getBatchQuery(featureView, startTime, endTime);
+    Query query = getBatchQuery(featureView, startTime, endTime, false);
     return query.sql();
   }
 
-  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime)
+  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels)
       throws FeatureStoreException, IOException {
     Query query = featureViewApi.getBatchQuery(
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),
         startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime()
+        endTime == null ? null : endTime.getTime(),
+        withLabels
     );
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
@@ -277,7 +289,7 @@ public class FeatureViewEngine {
   public Dataset<Row> getBatchData(
       FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions
   ) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime).read(false, readOptions);
+    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime, false).read(false, readOptions);
   }
 
   public void addTag(FeatureView featureView, String name, Object value)
