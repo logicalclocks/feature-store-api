@@ -78,6 +78,7 @@ class TrainingDataset:
         label=None,
         transformation_functions=None,
         train_split=None,
+        time_split_size=None
     ):
         self._id = id
         self._name = name
@@ -139,7 +140,7 @@ class TrainingDataset:
                     TrainingDatasetSplit.VALIDATION: val_size,
                     TrainingDatasetSplit.TEST: test_size,
                 }
-            self._set_time_splits(
+            self._set_time_splits(time_split_size,
                 train_start, train_end, val_start, val_end, test_start, test_end
             )
         else:
@@ -169,6 +170,7 @@ class TrainingDataset:
 
     def _set_time_splits(
         self,
+        time_split_size,
         train_start=None,
         train_end=None,
         val_start=None,
@@ -181,18 +183,19 @@ class TrainingDataset:
             time_splits,
             split_name=TrainingDatasetSplit.TRAIN,
             start_time=train_start,
-            end_time=train_end or val_start,
+            end_time=train_end or val_start or test_start,
         )
-        self._append_time_split(
-            time_splits,
-            split_name=TrainingDatasetSplit.VALIDATION,
-            start_time=val_start or train_end,
-            end_time=val_end or test_start,
-        )
+        if time_split_size == 3:
+            self._append_time_split(
+                time_splits,
+                split_name=TrainingDatasetSplit.VALIDATION,
+                start_time=val_start or train_end,
+                end_time=val_end or test_start,
+            )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.TEST,
-            start_time=test_start or val_end,
+            start_time=test_start or val_end or train_end,
             end_time=test_end,
         )
         if time_splits:
@@ -828,9 +831,17 @@ class TrainingDataset:
     def event_start_time(self):
         return self._start_time
 
+    @event_start_time.setter
+    def event_start_time(self, start_time):
+        self._start_time = start_time
+
     @property
     def event_end_time(self):
         return self._end_time
+
+    @event_end_time.setter
+    def event_end_time(self, end_time):
+        self._end_time = end_time
 
     @property
     def training_dataset_type(self):
