@@ -372,7 +372,7 @@ class Engine:
             # best effort, based on pyarrow's string representation
             return str(arrow_type)
         elif pa.types.is_decimal(arrow_type):
-            return arrow_type.replace("decimal128", "decimal")
+            return str(arrow_type).replace("decimal128", "decimal")
         elif pa.types.is_date(arrow_type):
             return "date"
 
