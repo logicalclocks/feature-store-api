@@ -227,18 +227,34 @@ class FeatureViewEngine:
                         split.name == TrainingDatasetSplit.TRAIN
                         and not split.start_time
                     ):
-                        df = feature_view_obj.query.read() if df is None else df
+                        df = (
+                            feature_view_obj.query._left_feature_group.select_all().read()
+                            if df is None
+                            else df
+                        )
                         split.start_time = self._get_start_time(df, event_time)
                     if split.name == TrainingDatasetSplit.TEST and not split.end_time:
-                        df = feature_view_obj.query.read() if df is None else df
+                        df = (
+                            feature_view_obj.query._left_feature_group.select_all().read()
+                            if df is None
+                            else df
+                        )
                         split.end_time = self._get_end_time(df, event_time)
             else:
                 if not training_dataset_obj.event_start_time:
-                    df = feature_view_obj.query.read() if df is None else df
+                    df = (
+                        feature_view_obj.query._left_feature_group.select_all().read()
+                        if df is None
+                        else df
+                    )
                     training_dataset_obj.event_start_time = self._get_start_time(
                         df, event_time
                     )
-                    df = feature_view_obj.query.read() if df is None else df
+                    df = (
+                        feature_view_obj.query._left_feature_group.select_all().read()
+                        if df is None
+                        else df
+                    )
                     training_dataset_obj.event_end_time = self._get_end_time(
                         df, event_time
                     )
