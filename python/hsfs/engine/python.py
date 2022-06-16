@@ -131,10 +131,8 @@ class Engine:
         # providing more informative error
         try:
             from pydoop import hdfs
-        except ImportError as err:
-            raise ModuleNotFoundError(
-                "Reading training dataset from HopsFS requires `pydoop`"
-            ) from err
+        except ModuleNotFoundError:
+            return self._read_hopsfs_rest(location, data_format)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
@@ -147,6 +145,29 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    # This is a version of the read method that uses the Hopsworks REST APIs
+    # To read the training dataset content, this to avoid the pydoop dependency
+    # requirement and allow users to read Hopsworks training dataset from outside
+    def _read_hopsfs_rest(self, location, data_format):
+        total_count = 10000
+        offset = 0
+        df_list = []
+
+        while offset < total_count:
+            total_count, inode_list = self._dataset_api.list_files(
+                location, offset, 100
+            )
+
+            for inode in inode_list:
+                if not inode.path.endswith("_SUCCESS"):
+                    content_stream = self._dataset_api.read_content(inode.path)
+                    df_list.append(
+                        self._read_pandas(data_format, BytesIO(content_stream.content))
+                    )
+                offset += 1
+
         return df_list
 
     def _read_s3(self, storage_connector, location, data_format):
