@@ -504,6 +504,7 @@ class TrainingDataset:
         elif (
             connector_type == StorageConnector.S3
             or connector_type == StorageConnector.ADLS
+            or connector_type == StorageConnector.GCS
         ):
             return self.EXTERNAL
         else:
