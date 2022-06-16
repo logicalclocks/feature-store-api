@@ -90,8 +90,11 @@ class Engine:
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
                 connector,
-                ("external" in read_options and read_options["external"] or
-                 isinstance(client.get_instance(), client.external.Client))
+                (
+                    "external" in read_options
+                    and read_options["external"]
+                    or isinstance(client.get_instance(), client.external.Client)
+                ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
