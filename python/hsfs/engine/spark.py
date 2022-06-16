@@ -189,7 +189,10 @@ class Engine:
                     )
                 elif online_enabled and storage is None:
                     self._save_offline_dataframe(
-                        feature_group, dataframe, operation, offline_write_options,
+                        feature_group,
+                        dataframe,
+                        operation,
+                        offline_write_options,
                     )
                     self._save_online_dataframe(
                         feature_group, dataframe, online_write_options
@@ -244,7 +247,12 @@ class Engine:
         return query
 
     def _save_offline_dataframe(
-        self, feature_group, dataframe, operation, write_options, validation_id=None,
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        write_options,
+        validation_id=None,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -457,7 +465,12 @@ class Engine:
         )
 
     def read_stream(
-        self, storage_connector, message_format, schema, options, include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ):
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
@@ -520,12 +533,14 @@ class Engine:
         exact_uniqueness=True,
     ):
         """Profile a dataframe with Deequ."""
-        return self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-            dataframe._jdf,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness,
+        return (
+            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
+                dataframe._jdf,
+                relevant_columns,
+                correlations,
+                histograms,
+                exact_uniqueness,
+            )
         )
 
     def validate(self, dataframe, expectations, log_activity=True):
@@ -711,7 +726,8 @@ class Engine:
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token", storage_connector.session_token,
+                "fs.s3a.session.token",
+                storage_connector.session_token,
             )
         return path.replace("s3", "s3a", 1) if path is not None else None
 

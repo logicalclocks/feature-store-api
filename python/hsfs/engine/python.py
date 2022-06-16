@@ -174,13 +174,16 @@ class Engine:
                 )
             else:
                 object_list = s3.list_objects_v2(
-                    Bucket=storage_connector.bucket, Prefix=prefix, MaxKeys=1000,
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
                 )
 
             for obj in object_list["Contents"]:
                 if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
                     obj = s3.get_object(
-                        Bucket=storage_connector.bucket, Key=obj["Key"],
+                        Bucket=storage_connector.bucket,
+                        Key=obj["Key"],
                     )
                     df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
@@ -189,7 +192,12 @@ class Engine:
         return {}
 
     def read_stream(
-        self, storage_connector, message_format, schema, options, include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ):
         raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
@@ -222,7 +230,12 @@ class Engine:
         self._wait_for_job(job)
 
     def profile(
-        self, df, relevant_columns, correlations, histograms, exact_uniqueness=True,
+        self,
+        df,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
