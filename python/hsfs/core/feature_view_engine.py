@@ -223,28 +223,25 @@ class FeatureViewEngine:
         if event_time:
             if training_dataset_obj.splits:
                 for split in training_dataset_obj.splits:
-                    if (split.name == TrainingDatasetSplit.TRAIN and
-                        not split.start_time):
-                        df = (feature_view_obj.query.read()
-                              if df is None else df)
-                        split.start_time = self._get_start_time(
-                            df, event_time)
-                    if (split.name == TrainingDatasetSplit.TEST and
-                        not split.end_time):
-                        df = (feature_view_obj.query.read()
-                              if df is None else df)
-                        split.end_time = self._get_end_time(
-                            df, event_time)
+                    if (
+                        split.name == TrainingDatasetSplit.TRAIN
+                        and not split.start_time
+                    ):
+                        df = feature_view_obj.query.read() if df is None else df
+                        split.start_time = self._get_start_time(df, event_time)
+                    if split.name == TrainingDatasetSplit.TEST and not split.end_time:
+                        df = feature_view_obj.query.read() if df is None else df
+                        split.end_time = self._get_end_time(df, event_time)
             else:
                 if not training_dataset_obj.event_start_time:
-                    df = (feature_view_obj.query.read()
-                          if df is None else df)
+                    df = feature_view_obj.query.read() if df is None else df
                     training_dataset_obj.event_start_time = self._get_start_time(
-                        df, event_time)
-                    df = (feature_view_obj.query.read()
-                          if df is None else df)
+                        df, event_time
+                    )
+                    df = feature_view_obj.query.read() if df is None else df
                     training_dataset_obj.event_end_time = self._get_end_time(
-                        df, event_time)
+                        df, event_time
+                    )
 
     def _get_start_time(self, df, event_time):
         if engine.get_type() == "spark":

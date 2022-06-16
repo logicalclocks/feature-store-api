@@ -78,7 +78,7 @@ class TrainingDataset:
         label=None,
         transformation_functions=None,
         train_split=None,
-        time_split_size=None
+        time_split_size=None,
     ):
         self._id = id
         self._name = name
@@ -140,8 +140,14 @@ class TrainingDataset:
                     TrainingDatasetSplit.VALIDATION: val_size,
                     TrainingDatasetSplit.TEST: test_size,
                 }
-            self._set_time_splits(time_split_size,
-                train_start, train_end, val_start, val_end, test_start, test_end
+            self._set_time_splits(
+                time_split_size,
+                train_start,
+                train_end,
+                val_start,
+                val_end,
+                test_start,
+                test_end,
             )
         else:
             # type available -> init from backend response
