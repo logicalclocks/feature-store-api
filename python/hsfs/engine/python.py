@@ -373,6 +373,8 @@ class Engine:
             return str(arrow_type).replace("decimal128", "decimal")
         elif pa.types.is_date(arrow_type):
             return "date"
+        elif pa.types.is_binary(arrow_type):
+            return "binary"
 
         return "string"
 
