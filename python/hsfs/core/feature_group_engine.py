@@ -35,7 +35,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         # sleep to make sure authorizer added kafka topic
-        time.sleep(1)
+        time.sleep(1.2)
 
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
