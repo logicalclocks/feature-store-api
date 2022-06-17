@@ -338,16 +338,14 @@ class Engine:
             return "int"
         elif dtype == np.dtype("uint16"):
             return "int"
-        elif dtype == np.dtype("uint32"):
-            return "int"
-        elif dtype == np.dtype("uint64"):
-            return "int"
         elif dtype == np.dtype("int8"):
             return "int"
         elif dtype == np.dtype("int16"):
             return "int"
         elif dtype == np.dtype("int32"):
             return "int"
+        elif dtype == np.dtype("uint32"):
+            return "bigint"
         elif dtype == np.dtype("int64"):
             return "bigint"
         elif dtype == np.dtype("float32"):
