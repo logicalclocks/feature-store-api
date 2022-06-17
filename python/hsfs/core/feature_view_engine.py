@@ -70,7 +70,7 @@ class FeatureViewEngine:
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
-            "Feature view created successfully, explore it at "
+            "Feature view created successfully, explore it at \n"
             + self._get_feature_view_url(updated_fv)
         )
         return updated_fv

@@ -347,7 +347,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         self._feature_group_api.save(feature_group)
         print(
-            "Feature Group created successfully, explore it at "
+            "Feature Group created successfully, explore it at \n"
             + self._get_feature_group_url(feature_group)
         )
 
