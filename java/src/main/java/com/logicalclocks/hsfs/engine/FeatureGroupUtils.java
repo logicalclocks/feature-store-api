@@ -116,7 +116,11 @@ public class FeatureGroupUtils {
   }
 
   public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
-    return new Date(getTimeStampFromDateString(inputDate));
+    if (inputDate != null) {
+      return new Date(getTimeStampFromDateString(inputDate));
+    } else {
+      return null;
+    }
   }
 
   public static Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {

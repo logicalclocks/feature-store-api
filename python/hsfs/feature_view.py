@@ -287,7 +287,7 @@ class FeatureView:
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 
-    def create_training_dataset(
+    def create_training_data(
         self,
         start_time: Optional[str] = "",
         end_time: Optional[str] = "",
@@ -814,7 +814,7 @@ class FeatureView:
             raise ValueError(
                 "Invalid split input."
                 "You should specify either `test_size` or (`train_end` or `test_start`)."
-                " `test_size` should be greate than 0 if specified"
+                " `test_size` should be greater than 0 if specified"
             )
 
     def train_validation_test_splits(
