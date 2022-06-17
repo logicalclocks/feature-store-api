@@ -473,6 +473,9 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
+        expectation_suite: Optional[
+            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+        ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
     ):
@@ -522,12 +525,16 @@ class FeatureStore:
             expectations: Optionally, a list of expectations to be attached to the feature group.
                 The expectations list contains Expectation metadata objects which can be retrieved with
                 the `get_expectation()` and `get_expectations()` functions.
+            expectation_suite: Optionally, attach an expectation suite to the feature
+                group which dataframes should be validated against upon insertion.
+                Defaults to `None`.
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
+
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -559,6 +566,7 @@ class FeatureStore:
                     expectations=expectations,
                     event_time=event_time,
                     stream=stream,
+                    expectation_suite=expectation_suite,
                 )
             else:
                 raise e
