@@ -251,7 +251,7 @@ class Engine:
         )
         job = stat_api.compute(metadata_instance)
         print(
-            "Statistics Job started successfully, you can follow the progress at {}".format(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(job.href)
             )
         )
@@ -464,7 +464,7 @@ class Engine:
         print("Launching ingestion job...")
         self._job_api.launch(ingestion_job.job.name)
         print(
-            "Ingestion Job started successfully, you can follow the progress at {}".format(
+            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
@@ -579,7 +579,7 @@ class Engine:
             )
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
-            "Training dataset job started successfully, you can follow the progress at {}".format(
+            "Training dataset job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(td_job.href)
             )
         )
@@ -819,7 +819,7 @@ class Engine:
             print("Launching offline feature group backfill job...")
             self._job_api.launch(job_name)
             print(
-                "Backfill Job started successfully, you can follow the progress at {}".format(
+                "Backfill Job started successfully, you can follow the progress at \n{}".format(
                     self._get_job_url(job.href)
                 )
             )
