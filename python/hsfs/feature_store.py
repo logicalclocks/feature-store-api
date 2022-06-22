@@ -424,8 +424,6 @@ class FeatureStore:
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        validation_type: Optional[str] = "NONE",
-        expectations: Optional[List[expectation.Expectation]] = [],
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
@@ -472,12 +470,6 @@ class FeatureStore:
                 The values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
-                "WARNING", "ALL". Determines the mode in which data validation is applied on
-                 ingested or already existing feature group data.
-            expectations: Optionally, a list of expectations to be attached to the feature group.
-                The expectations list contains Expectation metadata objects which can be retrieved with
-                the `get_expectation()` and `get_expectations()` functions.
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -515,8 +507,6 @@ class FeatureStore:
                     featurestore_name=self._name,
                     features=features,
                     statistics_config=statistics_config,
-                    validation_type=validation_type,
-                    expectations=expectations,
                     event_time=event_time,
                     stream=stream,
                     expectation_suite=expectation_suite,
