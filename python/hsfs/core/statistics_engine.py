@@ -75,7 +75,7 @@ class StatisticsEngine:
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group.",
-                category=util.FeatureGroupWarning,
+                category=util.StatisticsWarning,
             )
         return engine.get_instance().profile(
             feature_dataframe,
