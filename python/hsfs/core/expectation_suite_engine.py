@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import expectation_suite_api
+from hsfs import client, util
 
 
 class ExpectationSuiteEngine:
@@ -30,10 +31,27 @@ class ExpectationSuiteEngine:
         )
 
     def save(self, feature_group, expectation_suite):
-        return self._expectation_suite_api.create(feature_group.id, expectation_suite)
+        saved_suite = self._expectation_suite_api.create(
+            feature_group.id, expectation_suite
+        )
+        url = self._get_expectation_suite_url(feature_group=feature_group)
+        print(f"Attached expectation suite to featuregroup, edit it at {url}")
+        return saved_suite
 
     def get(self, feature_group):
         return self._expectation_suite_api.get(feature_group.id)
 
     def delete(self, feature_group):
         self._expectation_suite_api.delete(feature_group.id)
+
+    def _get_expectation_suite_url(self, feature_group):
+        """Build url to land on Hopsworks UI page which summarizes validation results"""
+        sub_path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_group.feature_store_id)
+            + "/fg/"
+            + str(feature_group.id)
+        )
+        return util.get_hostname_replaced_url(sub_path)

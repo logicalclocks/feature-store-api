@@ -59,8 +59,8 @@ class FeatureGroupBase:
         self._data_validation_engine = data_validation_engine.DataValidationEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._great_expectation_engine = (
-            great_expectation_engine.GreatExpectationEngine(featurestore_id)
+        self._great_expectation_engine = great_expectation_engine.GreatExpectationEngine(
+            featurestore_id
         )
 
     def delete(self):
@@ -676,11 +676,11 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
-        self._expectation_suite_engine = (
-            expectation_suite_engine.ExpectationSuiteEngine(self._feature_store_id)
+        self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
+            self._feature_store_id
         )
-        self._validation_report_engine = (
-            validation_report_engine.ValidationReportEngine(self._feature_store_id)
+        self._validation_report_engine = validation_report_engine.ValidationReportEngine(
+            self._feature_store_id
         )
 
     def read(
@@ -742,18 +742,10 @@ class FeatureGroup(FeatureGroupBase):
             return (
                 self.select_all()
                 .as_of(wallclock_time)
-                .read(
-                    online,
-                    dataframe_type,
-                    read_options,
-                )
+                .read(online, dataframe_type, read_options,)
             )
         else:
-            return self.select_all().read(
-                online,
-                dataframe_type,
-                read_options,
-            )
+            return self.select_all().read(online, dataframe_type, read_options,)
 
     def read_changes(
         self,
@@ -1176,10 +1168,11 @@ class FeatureGroup(FeatureGroupBase):
             dataframe = self.read()
             log_activity = True
 
-        return self._data_validation_engine.validate(
-            self, dataframe, log_activity
-        ), self._great_expectation_engine.validate(
-            self, dataframe, save_report, validation_options
+        return (
+            self._data_validation_engine.validate(self, dataframe, log_activity),
+            self._great_expectation_engine.validate(
+                self, dataframe, save_report, validation_options
+            ),
         )
 
     def get_expectation_suite(self, ge_type: bool = True):
@@ -1209,7 +1202,8 @@ class FeatureGroup(FeatureGroupBase):
         validation_ingestion_policy="ALWAYS",
     ):
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
-        suite is already attached, it is replaced.
+        suite is already attached, it is replaced. Note that the provided expectation suite is modified 
+        inplace to include expectationId fields.
 
         # Arguments
             expectation_suite: The expectation suite to attach to the featuregroup.
@@ -1239,9 +1233,8 @@ class FeatureGroup(FeatureGroupBase):
         self._expectation_suite = self._expectation_suite_engine.save(
             self, tmp_expectation_suite
         )
-        # TODO Moritz: do we want to modify the user provided Suite?
 
-        return self._expectation_suite.to_ge_type()
+        expectation_suite = self._expectation_suite.to_ge_type()
 
     def delete_expectation_suite(self):
         """Delete the expectation suite attached to the featuregroup.
@@ -1663,8 +1656,8 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+        self._feature_group_engine = on_demand_feature_group_engine.OnDemandFeatureGroupEngine(
+            featurestore_id
         )
 
         if self._id:
