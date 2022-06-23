@@ -16,6 +16,7 @@
 
 import datetime
 import json
+import warnings
 
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
@@ -70,10 +71,11 @@ class StatisticsEngine:
     @staticmethod
     def profile_statistics(metadata_instance, feature_dataframe):
         if len(feature_dataframe.head(1)) == 0:
-            raise exceptions.FeatureStoreException(
+            warnings.warn(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
-                "to the online storage of a feature group."
+                "to the online storage of a feature group.",
+                category=util.FeatureGroupWarning,
             )
         return engine.get_instance().profile(
             feature_dataframe,
