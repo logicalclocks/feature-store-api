@@ -14,10 +14,7 @@
 #   limitations under the License.
 #
 
-import warnings
-
 from hsfs import engine, training_dataset_feature, client, util
-from hsfs.client import exceptions
 from hsfs.core import (
     tags_api,
     storage_connector_api,
@@ -73,7 +70,7 @@ class FeatureViewEngine:
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
-            "Feature view created successfully, explore it at "
+            "Feature view created successfully, explore it at \n"
             + self._get_feature_view_url(updated_fv)
         )
         return updated_fv
@@ -141,17 +138,6 @@ class FeatureViewEngine:
     def create_training_dataset(
         self, feature_view_obj, training_dataset_obj, user_write_options
     ):
-        if (
-            len(training_dataset_obj.splits) > 0
-            and training_dataset_obj.train_split is None
-        ):
-            training_dataset_obj.train_split = "train"
-            warnings.warn(
-                "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
-                "used for training) was provided. Setting this property to `train`. The statistics of this "
-                "split will be used for transformation functions."
-            )
-
         updated_instance = self._create_training_data_metadata(
             feature_view_obj, training_dataset_obj
         )
@@ -163,42 +149,41 @@ class FeatureViewEngine:
         return updated_instance, td_job
 
     def get_training_data(
-        self, feature_view_obj, training_dataset_obj, read_options, splits=None
+        self,
+        feature_view_obj,
+        read_options=None,
+        splits=[],
+        training_dataset_obj=None,
+        training_dataset_version=None,
     ):
-        if (
-            len(training_dataset_obj.splits) > 0
-            and training_dataset_obj.train_split is None
-        ):
-            training_dataset_obj.train_split = "train"
-            warnings.warn(
-                "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
-                "used for training) was provided. Setting this property to `train`. The statistics of this "
-                "split will be used for transformation functions."
-            )
-        td_updated = None
         # check if provided td version has already existed.
-        if training_dataset_obj.version:
-            try:
-                td_updated = self._get_training_data_metadata(
-                    feature_view_obj, training_dataset_obj.version
-                )
-            except exceptions.RestAPIError as e:
-                # error code: 270012, error msg: Training dataset wasn't found.
-                if e.response.json().get("errorCode", "") != 270012:
-                    raise e
-
-        if td_updated is None:
+        if training_dataset_version:
+            td_updated = self._get_training_data_metadata(
+                feature_view_obj, training_dataset_version
+            )
+        else:
             td_updated = self._create_training_data_metadata(
                 feature_view_obj, training_dataset_obj
+            )
+        # check splits
+        if len(splits) != len(td_updated.splits):
+            if len(td_updated.splits) == 0:
+                method_name = "get_training_data"
+            elif len(td_updated.splits) == 2:
+                method_name = "get_train_test_split"
+            elif len(td_updated.splits) == 3:
+                method_name = "get_train_validation_test_splits"
+            raise ValueError(
+                f"Incorrect `get` method is used. Use `feature_view.{method_name}` instead."
             )
 
         read_options = engine.get_instance().read_options(
             td_updated.data_format, read_options
         )
 
-        if td_updated.training_dataset_type != training_dataset_obj.IN_MEMORY:
+        if td_updated.training_dataset_type != td_updated.IN_MEMORY:
             split_df = self._read_from_storage_connector(
-                td_updated, splits, read_options
+                td_updated, td_updated.splits, read_options
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -213,6 +198,18 @@ class FeatureViewEngine:
             )
             self.compute_training_dataset_statistics(
                 feature_view_obj, td_updated, split_df, calc_stat=True
+            )
+
+        # split df into features and labels df
+        if td_updated.splits:
+            for split in td_updated.splits:
+                split_name = split.name
+                split_df[split_name] = engine.get_instance().split_labels(
+                    split_df[split_name], feature_view_obj.labels
+                )
+        else:
+            split_df = engine.get_instance().split_labels(
+                split_df, feature_view_obj.labels
             )
 
         return td_updated, split_df
@@ -234,8 +231,8 @@ class FeatureViewEngine:
         if splits:
             result = {}
             for split in splits:
-                path = training_data_obj.location + "/" + str(split)
-                result[split] = self._read_dir_from_storage_connector(
+                path = training_data_obj.location + "/" + str(split.name)
+                result[split.name] = self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
                 )
             return result
@@ -299,9 +296,9 @@ class FeatureViewEngine:
                 td_df = dict(
                     [
                         (
-                            split,
+                            split.name,
                             self._training_dataset_engine.read(
-                                training_dataset_obj, split, {}
+                                training_dataset_obj, split.name, {}
                             ),
                         )
                         for split in training_dataset_obj.splits
@@ -438,7 +435,7 @@ class FeatureViewEngine:
         ) and not feature_view_obj.query.from_cache_feature_group_only():
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_dataset` instead."
+                " Please use `feature_view.create_training_data` instead."
             )
 
     def _get_feature_view_url(self, feature_view):

@@ -10,6 +10,7 @@ import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.util.Constants;
@@ -57,6 +58,12 @@ public class VectorServer {
     this.isBatch = isBatch;
   }
 
+  public List<Object> getFeatureVector(TrainingDataset trainingDataset, Map<String, Object> entry)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return getFeatureVector(trainingDataset, entry,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
+  }
+
   public List<Object> getFeatureVector(TrainingDataset trainingDataset, Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     // init prepared statement if it has not been already set. Or if a prepare statement for serving
@@ -65,6 +72,12 @@ public class VectorServer {
       initPreparedStatement(trainingDataset, false, external);
     }
     return getFeatureVector(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
+  }
+
+  public List<Object> getFeatureVector(FeatureView featureView, Map<String, Object> entry)
+      throws FeatureStoreException, SQLException, IOException, ClassNotFoundException {
+    return getFeatureVector(featureView, entry,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
   public List<Object> getFeatureVector(FeatureView featureView, Map<String, Object> entry, boolean external)
@@ -122,6 +135,13 @@ public class VectorServer {
     return servingVector;
   }
 
+  public List<List<Object>> getFeatureVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+
+    return getFeatureVectors(trainingDataset, entry,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
+  }
+
   public List<List<Object>> getFeatureVectors(TrainingDataset trainingDataset, Map<String, List<Object>> entry,
       boolean external) throws SQLException, FeatureStoreException, IOException,
       ClassNotFoundException {
@@ -134,6 +154,12 @@ public class VectorServer {
     return getFeatureVectors(trainingDataset.getFeatureStore(), trainingDataset.getFeatures(), entry, external);
   }
 
+  public List<List<Object>> getFeatureVectors(FeatureView featureView, Map<String, List<Object>> entry)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    return getFeatureVectors(featureView.getFeatureStore(), featureView.getFeatures(), entry,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
+  }
+
   public List<List<Object>> getFeatureVectors(FeatureView featureView, Map<String, List<Object>> entry,
       boolean external) throws SQLException, FeatureStoreException, IOException,
       ClassNotFoundException {
@@ -141,6 +167,13 @@ public class VectorServer {
       initPreparedStatement(featureView, true, external);
     }
     return getFeatureVectors(featureView.getFeatureStore(), featureView.getFeatures(), entry, external);
+  }
+
+  private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+                                               Map<String, List<Object>> entry)
+      throws SQLException, FeatureStoreException, IOException {
+    return getFeatureVectors(featureStore, features, entry,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
   private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
@@ -210,6 +243,13 @@ public class VectorServer {
     return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
 
+  public List<List<Object>> previewFeatureVectors(FeatureView featureView, int size)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+
+    return previewFeatureVectors(featureView,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient, size);
+  }
+
   public List<List<Object>> previewFeatureVectors(FeatureView featureView,
       boolean external, int size) throws SQLException, FeatureStoreException, IOException,
       ClassNotFoundException {
@@ -224,14 +264,30 @@ public class VectorServer {
     return getFeatureVectors(featureView.getFeatureStore(), featureView.getFeatures(), queries, external);
   }
 
+  public void initServing(TrainingDataset trainingDataset, boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    initPreparedStatement(trainingDataset, batch);
+  }
+
   public void initServing(TrainingDataset trainingDataset, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    initPreparedStatement(trainingDataset, batch, external);
+    initPreparedStatement(trainingDataset, batch);
+  }
+
+  public void initServing(FeatureView featureView, boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    initPreparedStatement(featureView, batch);
   }
 
   public void initServing(FeatureView featureView, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     initPreparedStatement(featureView, batch, external);
+  }
+
+  public void initPreparedStatement(TrainingDataset trainingDataset, boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    initPreparedStatement(trainingDataset, batch,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
   public void initPreparedStatement(TrainingDataset trainingDataset, boolean batch, boolean external)
@@ -244,6 +300,12 @@ public class VectorServer {
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDataset, batch);
     initPreparedStatement(trainingDataset.getFeatureStore(), servingPreparedStatements, batch, external);
+  }
+
+  public void initPreparedStatement(FeatureView featureView, boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    initPreparedStatement(featureView, batch, HopsworksClient.getInstance().getHopsworksHttpClient()
+        instanceof HopsworksExternalClient);
   }
 
   public void initPreparedStatement(FeatureView featureView, boolean batch, boolean external)
@@ -259,9 +321,17 @@ public class VectorServer {
   }
 
   private void initPreparedStatement(FeatureStore featureStore,
+                                     List<ServingPreparedStatement> servingPreparedStatements, boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    initPreparedStatement(featureStore, servingPreparedStatements, batch,
+        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
+  }
+
+  private void initPreparedStatement(FeatureStore featureStore,
       List<ServingPreparedStatement> servingPreparedStatements, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
+
     this.isBatch = batch;
     setupJdbcConnection(featureStore, external);
     // map of prepared statement index and its corresponding parameter indices

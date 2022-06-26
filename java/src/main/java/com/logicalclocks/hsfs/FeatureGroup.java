@@ -235,10 +235,20 @@ public class FeatureGroup extends FeatureGroupBase {
     read(online).show(numRows);
   }
 
+  /*
+   * @deprecated
+   * Save method is deprecated. Use insert method instead.
+   */
+  @Deprecated
   public void save(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
     save(featureData, null);
   }
 
+  /*
+   * @deprecated
+   * Save method is deprecated. Use insert method instead.
+   */
+  @Deprecated
   public void save(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey,
@@ -309,7 +319,8 @@ public class FeatureGroup extends FeatureGroupBase {
     }
 
     featureGroupEngine.insert(this, featureData, storage, operation,
-        overwrite ? SaveMode.Overwrite : SaveMode.Append, writeOptions);
+        overwrite ? SaveMode.Overwrite : SaveMode.Append, partitionKeys, hudiPrecombineKey, writeOptions);
+
     codeEngine.saveCode(this);
     computeStatistics();
   }
@@ -318,11 +329,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, null);
   }
 
@@ -330,11 +341,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, "append");
   }
 
@@ -342,11 +353,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
@@ -354,12 +365,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
@@ -367,12 +378,12 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, String checkpointLocation)
-      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException {
+      throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, null, checkpointLocation, null);
   }
 
@@ -380,21 +391,22 @@ public class FeatureGroup extends FeatureGroupBase {
    * insert streaming dataframe in the Feature group.
    *
    * @deprecated
-   * In the next release stream ingestion will be only available for StreamFeatureGroups.
+   * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, String checkpointLocation,
                                      Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
     if (!featureData.isStreaming()) {
       throw new FeatureStoreException(
           "Features have to be a streaming type spark dataframe. Use `insert()` method instead.");
     }
     LOGGER.info("StatisticsWarning: Stream ingestion for feature group `" + name + "`, with version `" + version
         + "` will not compute statistics.");
+
     return featureGroupEngine.insertStream(this, featureData, queryName, outputMode, awaitTermination,
-        timeout, checkpointLocation, writeOptions);
+        timeout, checkpointLocation, partitionKeys, hudiPrecombineKey, writeOptions);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData)

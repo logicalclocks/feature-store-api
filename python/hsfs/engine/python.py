@@ -89,7 +89,12 @@ class Engine:
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
-                connector, "external" in read_options and read_options["external"]
+                connector,
+                (
+                    isinstance(client.get_instance(), client.external.Client)
+                    if "external" not in read_options
+                    else read_options["external"]
+                ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
@@ -126,10 +131,8 @@ class Engine:
         # providing more informative error
         try:
             from pydoop import hdfs
-        except ImportError as err:
-            raise ModuleNotFoundError(
-                "Reading training dataset from HopsFS requires `pydoop`"
-            ) from err
+        except ModuleNotFoundError:
+            return self._read_hopsfs_rest(location, data_format)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
@@ -142,6 +145,29 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    # This is a version of the read method that uses the Hopsworks REST APIs
+    # To read the training dataset content, this to avoid the pydoop dependency
+    # requirement and allow users to read Hopsworks training dataset from outside
+    def _read_hopsfs_rest(self, location, data_format):
+        total_count = 10000
+        offset = 0
+        df_list = []
+
+        while offset < total_count:
+            total_count, inode_list = self._dataset_api.list_files(
+                location, offset, 100
+            )
+
+            for inode in inode_list:
+                if not inode.path.endswith("_SUCCESS"):
+                    content_stream = self._dataset_api.read_content(inode.path)
+                    df_list.append(
+                        self._read_pandas(data_format, BytesIO(content_stream.content))
+                    )
+                offset += 1
+
         return df_list
 
     def _read_s3(self, storage_connector, location, data_format):
@@ -225,7 +251,7 @@ class Engine:
         )
         job = stat_api.compute(metadata_instance)
         print(
-            "Statistics Job started successfully, you can follow the progress at {}".format(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(job.href)
             )
         )
@@ -438,7 +464,7 @@ class Engine:
         print("Launching ingestion job...")
         self._job_api.launch(ingestion_job.job.name)
         print(
-            "Ingestion Job started successfully, you can follow the progress at {}".format(
+            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
@@ -465,6 +491,14 @@ class Engine:
             )
         return split_df
 
+    def split_labels(self, df, labels):
+        if labels:
+            labels_df = df[labels]
+            df_new = df.drop(columns=labels)
+            return df_new, labels_df
+        else:
+            return df, None
+
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -473,25 +507,25 @@ class Engine:
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
-        items = splits.items()
         if (
-            sum(splits.values()) != 1
-            or sum([v > 1 or v < 0 for v in splits.values()]) > 1
+            sum([split.percentage for split in splits]) != 1
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            > 1
         ):
             raise ValueError(
-                "Sum of split ratios should be 1 and each values should be in range [0, 1)"
+                "Sum of split ratios should be 1 and each values should be in range (0, 1)"
             )
 
         df_size = len(df)
         groups = []
-        for i, item in enumerate(items):
-            groups += [i] * int(df_size * item[1])
-        groups += [len(items) - 1] * (df_size - len(groups))
+        for i, split in enumerate(splits):
+            groups += [i] * int(df_size * split.percentage)
+        groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
         df[split_column] = groups
-        for i, item in enumerate(items):
+        for i, split in enumerate(splits):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
-            result_dfs[item[0]] = split_df
+            result_dfs[split.name] = split_df
 
         # apply transformations
         # 1st parametrise transformation functions with dt split stats
@@ -502,7 +536,7 @@ class Engine:
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
                 training_dataset_obj,
-                split_name.get(split_name),
+                result_dfs.get(split_name),
             )
 
         return result_dfs
@@ -545,7 +579,7 @@ class Engine:
             )
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
-            "Training dataset job started successfully, you can follow the progress at {}".format(
+            "Training dataset job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(td_job.href)
             )
         )
@@ -716,6 +750,10 @@ class Engine:
         # setup row writer function
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
+        def acked(err, msg):
+            if err is not None:
+                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -744,13 +782,27 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            # produce
-            producer.produce(
-                topic=feature_group._online_topic_name, key=key, value=encoded_row
-            )
+            while True:
+                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+                try:
+                    # produce
+                    producer.produce(
+                        topic=feature_group._online_topic_name,
+                        key=key,
+                        value=encoded_row,
+                        callback=acked
+                        if offline_write_options.get("debug_kafka", False)
+                        else None,
+                    )
 
-            # Trigger internal callbacks to empty op queue
-            producer.poll(0)
+                    # Trigger internal callbacks to empty op queue
+                    producer.poll(0)
+                    break
+                except BufferError as e:
+                    if offline_write_options.get("debug_kafka", False):
+                        print("Caught: {}".format(e))
+                    # backoff for 1 second
+                    producer.poll(1)
 
         # make sure producer blocks and everything is delivered
         producer.flush()
@@ -767,7 +819,7 @@ class Engine:
             print("Launching offline feature group backfill job...")
             self._job_api.launch(job_name)
             print(
-                "Backfill Job started successfully, you can follow the progress at {}".format(
+                "Backfill Job started successfully, you can follow the progress at \n{}".format(
                     self._get_job_url(job.href)
                 )
             )
@@ -795,12 +847,15 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        # producer configuration properties
+        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         config = {
             "security.protocol": "SSL",
             "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
             "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
             "ssl.key.location": client.get_instance()._get_client_key_path(),
             "client.id": socket.gethostname(),
+            **write_options.get("kafka_producer_config", {}),
         }
 
         if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
@@ -823,5 +878,4 @@ class Engine:
                     )
                 ]
             )
-
         return config

@@ -13,6 +13,7 @@
 #   limitations under the License.
 #
 import warnings
+import time
 
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
@@ -28,33 +29,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._online_conn = None
 
     def save(self, feature_group, feature_dataframe, write_options, validation_options):
-        if len(feature_group.features) == 0:
-            # User didn't provide a schema. extract it from the dataframe
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
-            )
 
-        # set primary and partition key columns
-        # we should move this to the backend
-        for feat in feature_group.features:
-            if feat.name in feature_group.primary_key:
-                feat.primary = True
-            if feat.name in feature_group.partition_key:
-                feat.partition = True
-            if (
-                feature_group.hudi_precombine_key is not None
-                and feat.name == feature_group.hudi_precombine_key
-            ):
-                feat.hudi_precombine_key = True
-
-        if feature_group.stream:
-            feature_group._options = write_options
-
-        self._feature_group_api.save(feature_group)
-        print(
-            "Feature Group created successfully, explore it at "
-            + self._get_feature_group_url(feature_group)
+        self._save_feature_group_metadata(
+            feature_group, feature_dataframe, write_options
         )
+
+        # sleep to make sure authorizer added kafka topic
+        time.sleep(1.2)
 
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
@@ -99,6 +80,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
         validation_options,
     ):
+
+        if not feature_group._id:
+            self._save_feature_group_metadata(
+                feature_group, feature_dataframe, write_options
+            )
+
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
             feature_group, feature_dataframe
@@ -284,9 +271,30 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
+        if not feature_group._id:
+            self._save_feature_group_metadata(feature_group, dataframe, write_options)
+
+            if not feature_group.stream:
+                # insert_stream method was called on non stream feature group object that has not been saved.
+                # we will use save_dataframe method on empty dataframe to create directory structure
+                offline_write_options = write_options
+                online_write_options = self.get_kafka_config(write_options)
+                engine.get_instance().save_dataframe(
+                    feature_group,
+                    engine.get_instance().create_empty_df(dataframe),
+                    hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                    if feature_group.time_travel_format == "HUDI"
+                    else None,
+                    feature_group.online_enabled,
+                    None,
+                    offline_write_options,
+                    online_write_options,
+                )
+
         if not feature_group.stream:
             warnings.warn(
-                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
+                "`insert_stream` method in the next release be available only for feature groups created with "
+                "`stream=True`."
             )
 
         if feature_group.validation_type != "NONE":
@@ -309,6 +317,39 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         return streaming_query
+
+    def _save_feature_group_metadata(
+        self, feature_group, feature_dataframe, write_options
+    ):
+
+        # this means FG doesn't exist and should create the new one
+        if len(feature_group.features) == 0:
+            # User didn't provide a schema. extract it from the dataframe
+            feature_group._features = engine.get_instance().parse_schema_feature_group(
+                feature_dataframe
+            )
+
+        # set primary and partition key columns
+        # we should move this to the backend
+        for feat in feature_group.features:
+            if feat.name in feature_group.primary_key:
+                feat.primary = True
+            if feat.name in feature_group.partition_key:
+                feat.partition = True
+            if (
+                feature_group.hudi_precombine_key is not None
+                and feat.name == feature_group.hudi_precombine_key
+            ):
+                feat.hudi_precombine_key = True
+
+        if feature_group.stream:
+            feature_group._options = write_options
+
+        self._feature_group_api.save(feature_group)
+        print(
+            "Feature Group created successfully, explore it at \n"
+            + self._get_feature_group_url(feature_group)
+        )
 
     def _get_feature_group_url(self, feature_group):
         sub_path = (

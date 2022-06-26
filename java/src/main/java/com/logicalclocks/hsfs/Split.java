@@ -21,9 +21,38 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @AllArgsConstructor
 @NoArgsConstructor
 public class Split {
+
+  public static final String TRAIN = "train";
+  public static final String VALIDATION = "validataion";
+  public static final String TEST = "test";
+
+  public enum SplitType {
+    RANDOM_SPLIT,
+    TIME_SPLIT;
+  }
+
+  public Split(String name, Float percentage) {
+    this.name = name;
+    this.percentage = percentage;
+    this.splitType = SplitType.RANDOM_SPLIT;
+  }
+
+  public Split(String name, Date startTime, Date endTime) {
+    this.name = name;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.splitType = SplitType.TIME_SPLIT;
+  }
+
+  @Getter
+  @Setter
+  private SplitType splitType;
+
   @Getter
   @Setter
   private String name;
@@ -31,4 +60,12 @@ public class Split {
   @Getter
   @Setter
   private Float percentage;
+
+  @Getter
+  @Setter
+  private Date startTime;
+
+  @Getter
+  @Setter
+  private Date endTime;
 }

@@ -19,7 +19,7 @@ import avro.schema
 import avro.io
 from sqlalchemy import sql, bindparam, exc, text
 from hsfs import util
-from hsfs import training_dataset, feature_view
+from hsfs import training_dataset, feature_view, client
 from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
@@ -57,6 +57,8 @@ class VectorServer:
         )
 
     def init_serving(self, entity, batch, external):
+        if external is None:
+            external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
@@ -145,7 +147,7 @@ class VectorServer:
         batch = n > 1
         entry = dict([(key, None) for key in self._serving_keys])
         if batch:
-            return self.get_feature_vectors(entry, preview_sample=n)
+            return self.get_feature_vectors([entry], preview_sample=n)
         else:
             return self.get_feature_vector(entry, preview_sample=n)
 
@@ -299,9 +301,10 @@ class VectorServer:
 
     def deserialize_complex_features(self, feature_schemas, row_dict):
         for feature_name, schema in feature_schemas.items():
-            bytes_reader = io.BytesIO(row_dict[feature_name])
-            decoder = avro.io.BinaryDecoder(bytes_reader)
-            row_dict[feature_name] = schema.read(decoder)
+            if feature_name in row_dict:
+                bytes_reader = io.BytesIO(row_dict[feature_name])
+                decoder = avro.io.BinaryDecoder(bytes_reader)
+                row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
     def refresh_mysql_connection(self):

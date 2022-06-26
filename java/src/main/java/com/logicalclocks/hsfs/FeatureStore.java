@@ -24,6 +24,7 @@ import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
+import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -257,9 +258,81 @@ public class FeatureStore {
         .featureStore(this);
   }
 
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
+        null, null, false, null, null, null,
+        null, null);
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                              boolean onlineEnabled, String eventTime)
+      throws IOException, FeatureStoreException {
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+        null, null, onlineEnabled, null, null, null,
+        null, eventTime);
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
+                                              List<String> primaryKeys,
+                                              List<String> partitionKeys,
+                                              boolean onlineEnabled,
+                                              String eventTime) throws IOException, FeatureStoreException {
+
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+        partitionKeys, null, onlineEnabled, null, null, null,
+        null, eventTime);
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
+                                              List<String> primaryKeys, List<String> partitionKeys,
+                                              String hudiPrecombineKey,
+                                              boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                              StatisticsConfig statisticsConfig,  ValidationType validationType,
+                                              scala.collection.Seq<Expectation> expectations, String eventTime)
+      throws IOException, FeatureStoreException {
+
+    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
+        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, validationType,
+        expectations, eventTime);
+  }
+
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder()
-            .featureStore(this);
+        .featureStore(this);
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
+      throws IOException, FeatureStoreException {
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        null, null, null, false, null, null, null);
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          boolean onlineEnabled, String eventTime)
+      throws IOException, FeatureStoreException {
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        primaryKeys, null, null, onlineEnabled, null, null, eventTime);
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          List<String> partitionKeys, boolean onlineEnabled,
+                                                          String eventTime) throws IOException, FeatureStoreException {
+
+
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
+        primaryKeys, partitionKeys, null, onlineEnabled, null, null, eventTime);
+  }
+
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+                                                          List<String> primaryKeys, List<String> partitionKeys,
+                                                          String hudiPrecombineKey, boolean onlineEnabled,
+                                                          StatisticsConfig statisticsConfig,
+                                                          scala.collection.Seq<Expectation> expectations,
+                                                          String eventTime)
+      throws IOException, FeatureStoreException {
+
+    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, description,
+        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, expectations, eventTime);
   }
 
   public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
