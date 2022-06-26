@@ -26,7 +26,7 @@ When the external feature group is defined on top of an external database capaba
     !!! example "Connecting from Hopsworks"
         ```scala
         val redshiftConn = fs.getRedshiftConnector("telco_redshift_cluster")
-        val telcoOnDmd = (fs.createOnDemandFeatureGroup()
+        val telcoExt = (fs.createExternalFeatureGroup()
                     .name("telco_redshift_scala")
                     .version(2)
                     .query("select * from telco")
@@ -34,7 +34,7 @@ When the external feature group is defined on top of an external database capaba
                     .storageConnector(redshiftConn)
                     .statisticsEnabled(true)
                     .build())
-        telcoOnDmd.save()
+        telcoExt.save()
         ```
 
 
@@ -60,15 +60,15 @@ When defining an external feature group on top of a object store/external filesy
     !!! example "Connecting from Hopsworks"
         ```scala
         val s3Conn = fs.getS3Connector("telco_s3_bucket")
-        val telcoOnDmd = (fs.createOnDemandFeatureGroup()
+        val telcoExt = (fs.createExtrenalFeatureGroup()
                     .name("telco_s3")
                     .version(1)
-                    .dataFormat(OnDemandDataFormat.PARQUET)
+                    .dataFormat(ExternalDataFormat.PARQUET)
                     .description("External feature group for telecom customer data")
                     .storageConnector(s3Conn)
                     .statisticsEnabled(true)
                     .build())
-        telcoOnDmd.save()
+        telcoExt.save()
         ```
 
 ## Use cases

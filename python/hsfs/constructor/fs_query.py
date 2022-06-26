@@ -38,7 +38,9 @@ class FsQuery:
 
         if on_demand_feature_groups is not None:
             self._on_demand_fg_aliases = [
-                external_group_alias.ExternalFeatureGroupAlias.from_response_json(fg)
+                external_feature_group_alias.ExternalFeatureGroupAlias.from_response_json(
+                    fg
+                )
                 for fg in on_demand_feature_groups
             ]
         else:
