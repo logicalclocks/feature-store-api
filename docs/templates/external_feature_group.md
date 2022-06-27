@@ -32,7 +32,7 @@ When the external feature group is defined on top of an external database capaba
                     .query("select * from telco")
                     .description("External feature group for telecom customer data")
                     .storageConnector(redshiftConn)
-                    .statisticsEnabled(true)
+                    .statisticsConfig(new StatisticsConfig(true, true, true, false))
                     .build())
         telcoExt.save()
         ```
@@ -66,7 +66,7 @@ When defining an external feature group on top of a object store/external filesy
                     .dataFormat(ExternalDataFormat.PARQUET)
                     .description("External feature group for telecom customer data")
                     .storageConnector(s3Conn)
-                    .statisticsEnabled(true)
+                    .statisticsConfig(new StatisticsConfig(true, true, true, false))
                     .build())
         telcoExt.save()
         ```
