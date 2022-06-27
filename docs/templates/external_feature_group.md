@@ -12,13 +12,13 @@ When the external feature group is defined on top of an external database capaba
         ```python
         # Retrieve the storage connector defined before
         redshift_conn = fs.get_storage_connector("telco_redshift_cluster")
-        telco_on_dmd = fs.create_external_feature_group(name="telco_redshift",
+        telco_ext = fs.create_external_feature_group(name="telco_redshift",
                                                 version=1,
                                                 query="select * from telco",
                                                 description="External feature group for telecom customer data",
                                                 storage_connector=redshift_conn,
                                                 statistics_config=True)
-        telco_on_dmd.save()
+        telco_ext.save()
         ```
 
 === "Scala"
@@ -46,13 +46,13 @@ When defining an external feature group on top of a object store/external filesy
         ```python
         # Retrieve the storage connector defined before
         s3_conn = fs.get_storage_connector("telco_s3_bucket")
-        telco_on_dmd = fs.create_external_feature_group(name="telco_s3",
+        telco_ext = fs.create_external_feature_group(name="telco_s3",
                                                 version=1,
                                                 data_format="parquet",
                                                 description="External feature group for telecom customer data",
                                                 storage_connector=s3_conn,
                                                 statistics_config=True)
-        telco_on_dmd.save()
+        telco_ext.save()
         ```
 
 === "Scala"
