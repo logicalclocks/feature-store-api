@@ -386,7 +386,7 @@ class FeatureGroupBase:
         """
         # Turn on validation for this FG and set stricter setting
         if self._validation_type == "NONE":
-            self._validation_type = "STRICT"
+            self.validation_type = "STRICT"
 
         return self._expectations_api.attach(self, expectation.name)
 
