@@ -259,6 +259,7 @@ class S3Connector(StorageConnector):
 
 class RedshiftConnector(StorageConnector):
     type = StorageConnector.REDSHIFT
+    JDBC_FORMAT = "jdbc"
 
     def __init__(
         self,
