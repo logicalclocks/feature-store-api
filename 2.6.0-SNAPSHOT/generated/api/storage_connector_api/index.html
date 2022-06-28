@@ -3815,13 +3815,13 @@ arguments.</p>
 <hr />
 <h2 id="jdbc">JDBC<a class="headerlink" href="#jdbc" title="Permanent link">#</a></h2>
 <h3 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L727">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L728">[source]</a></span></p>
 <h3 id="arguments">arguments<a class="headerlink" href="#arguments" title="Permanent link">#</a></h3>
 <p>Additional JDBC arguments. When running hsfs with PySpark/Spark in Hopsworks,
 the driver is automatically provided in the classpath but you need to set the <code>driver</code> argument to
 <code>com.mysql.cj.jdbc.Driver</code> when creating the Storage Connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L722">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L723">[source]</a></span></p>
 <h3 id="connection_string">connection_string<a class="headerlink" href="#connection_string" title="Permanent link">#</a></h3>
 <p>JDBC connection string.</p>
 <hr />
@@ -3838,7 +3838,7 @@ the driver is automatically provided in the classpath but you need to set the <c
 <p>Name of the storage connector.</p>
 <hr />
 <h3 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L748">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L749">[source]</a></span></p>
 <h3 id="read_1">read<a class="headerlink" href="#read_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -3850,7 +3850,7 @@ the driver is automatically provided in the classpath but you need to set the <c
 </code></pre></div>
 <p>Refetch storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L734">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L735">[source]</a></span></p>
 <h3 id="spark_options_1">spark_options<a class="headerlink" href="#spark_options_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
@@ -3964,43 +3964,43 @@ arguments.</p>
 <hr />
 <h2 id="redshift">Redshift<a class="headerlink" href="#redshift" title="Permanent link">#</a></h2>
 <h3 id="properties_3">Properties<a class="headerlink" href="#properties_3" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L365">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L366">[source]</a></span></p>
 <h3 id="arguments_1">arguments<a class="headerlink" href="#arguments_1" title="Permanent link">#</a></h3>
 <p>Additional JDBC, REDSHIFT, or Snowflake arguments.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L340">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L341">[source]</a></span></p>
 <h3 id="auto_create">auto_create<a class="headerlink" href="#auto_create" title="Permanent link">#</a></h3>
 <p>Database username for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L305">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L306">[source]</a></span></p>
 <h3 id="cluster_identifier">cluster_identifier<a class="headerlink" href="#cluster_identifier" title="Permanent link">#</a></h3>
 <p>Cluster identifier for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L310">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L311">[source]</a></span></p>
 <h3 id="database_driver">database_driver<a class="headerlink" href="#database_driver" title="Permanent link">#</a></h3>
 <p>Database endpoint for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L315">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L316">[source]</a></span></p>
 <h3 id="database_endpoint">database_endpoint<a class="headerlink" href="#database_endpoint" title="Permanent link">#</a></h3>
 <p>Database endpoint for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L345">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L346">[source]</a></span></p>
 <h3 id="database_group">database_group<a class="headerlink" href="#database_group" title="Permanent link">#</a></h3>
 <p>Database username for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L320">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L321">[source]</a></span></p>
 <h3 id="database_name">database_name<a class="headerlink" href="#database_name" title="Permanent link">#</a></h3>
 <p>Database name for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L350">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L351">[source]</a></span></p>
 <h3 id="database_password">database_password<a class="headerlink" href="#database_password" title="Permanent link">#</a></h3>
 <p>Database password for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L325">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L326">[source]</a></span></p>
 <h3 id="database_port">database_port<a class="headerlink" href="#database_port" title="Permanent link">#</a></h3>
 <p>Database port for redshift cluster.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L335">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L336">[source]</a></span></p>
 <h3 id="database_user_name">database_user_name<a class="headerlink" href="#database_user_name" title="Permanent link">#</a></h3>
 <p>Database username for redshift cluster.</p>
 <hr />
@@ -4008,11 +4008,11 @@ arguments.</p>
 <h3 id="description_3">description<a class="headerlink" href="#description_3" title="Permanent link">#</a></h3>
 <p>User provided description of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L360">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L361">[source]</a></span></p>
 <h3 id="expiration">expiration<a class="headerlink" href="#expiration" title="Permanent link">#</a></h3>
 <p>Cluster temporary credential expiration time.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L355">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L356">[source]</a></span></p>
 <h3 id="iam_role_1">iam_role<a class="headerlink" href="#iam_role_1" title="Permanent link">#</a></h3>
 <p>IAM role.</p>
 <hr />
@@ -4024,24 +4024,24 @@ arguments.</p>
 <h3 id="name_3">name<a class="headerlink" href="#name_3" title="Permanent link">#</a></h3>
 <p>Name of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L330">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L331">[source]</a></span></p>
 <h3 id="table_name">table_name<a class="headerlink" href="#table_name" title="Permanent link">#</a></h3>
 <p>Table name for redshift cluster.</p>
 <hr />
 <h3 id="methods_3">Methods<a class="headerlink" href="#methods_3" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L400">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L401">[source]</a></span></p>
 <h3 id="read_3">read<a class="headerlink" href="#read_3" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Reads a query into a dataframe using the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L420">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L421">[source]</a></span></p>
 <h3 id="refetch_3">refetch<a class="headerlink" href="#refetch_3" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
 </code></pre></div>
 <p>Refetch storage connector in order to retrieve updated temporary credentials.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L374">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L375">[source]</a></span></p>
 <h3 id="spark_options_3">spark_options<a class="headerlink" href="#spark_options_3" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
@@ -4060,15 +4060,15 @@ arguments.</p>
 <hr />
 <h2 id="azure-data-lake-storage">Azure Data Lake Storage<a class="headerlink" href="#azure-data-lake-storage" title="Permanent link">#</a></h2>
 <h3 id="properties_4">Properties<a class="headerlink" href="#properties_4" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L476">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L477">[source]</a></span></p>
 <h3 id="account_name">account_name<a class="headerlink" href="#account_name" title="Permanent link">#</a></h3>
 <p>Account name of the ADLS storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L471">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L472">[source]</a></span></p>
 <h3 id="application_id">application_id<a class="headerlink" href="#application_id" title="Permanent link">#</a></h3>
 <p>Application ID of the ADLS storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L481">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L482">[source]</a></span></p>
 <h3 id="container_name">container_name<a class="headerlink" href="#container_name" title="Permanent link">#</a></h3>
 <p>Container name of the ADLS storage connector</p>
 <hr />
@@ -4076,11 +4076,11 @@ arguments.</p>
 <h3 id="description_4">description<a class="headerlink" href="#description_4" title="Permanent link">#</a></h3>
 <p>User provided description of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L466">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L467">[source]</a></span></p>
 <h3 id="directory_id">directory_id<a class="headerlink" href="#directory_id" title="Permanent link">#</a></h3>
 <p>Directory ID of the ADLS storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L461">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L462">[source]</a></span></p>
 <h3 id="generation">generation<a class="headerlink" href="#generation" title="Permanent link">#</a></h3>
 <p>Generation of the ADLS storage connector</p>
 <hr />
@@ -4092,16 +4092,16 @@ arguments.</p>
 <h3 id="name_4">name<a class="headerlink" href="#name_4" title="Permanent link">#</a></h3>
 <p>Name of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L491">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L492">[source]</a></span></p>
 <h3 id="path_1">path<a class="headerlink" href="#path_1" title="Permanent link">#</a></h3>
 <p>If the connector refers to a path (e.g. ADLS) - return the path of the connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L486">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L487">[source]</a></span></p>
 <h3 id="service_credential">service_credential<a class="headerlink" href="#service_credential" title="Permanent link">#</a></h3>
 <p>Service credential of the ADLS storage connector</p>
 <hr />
 <h3 id="methods_4">Methods<a class="headerlink" href="#methods_4" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L507">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L508">[source]</a></span></p>
 <h3 id="prepare_spark_1">prepare_spark<a class="headerlink" href="#prepare_spark_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -4132,7 +4132,7 @@ queries are meant for JDBC or databases like Redshift and Snowflake.</p>
 </code></pre></div>
 <p>Refetch storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L501">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L502">[source]</a></span></p>
 <h3 id="spark_options_4">spark_options<a class="headerlink" href="#spark_options_4" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
@@ -4151,15 +4151,15 @@ arguments.</p>
 <hr />
 <h2 id="snowflake">Snowflake<a class="headerlink" href="#snowflake" title="Permanent link">#</a></h2>
 <h3 id="properties_5">Properties<a class="headerlink" href="#properties_5" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L614">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L615">[source]</a></span></p>
 <h3 id="account">account<a class="headerlink" href="#account" title="Permanent link">#</a></h3>
 <p>Account of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L619">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L620">[source]</a></span></p>
 <h3 id="application">application<a class="headerlink" href="#application" title="Permanent link">#</a></h3>
 <p>Application of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L579">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L580">[source]</a></span></p>
 <h3 id="database">database<a class="headerlink" href="#database" title="Permanent link">#</a></h3>
 <p>Database of the Snowflake storage connector</p>
 <hr />
@@ -4175,44 +4175,44 @@ arguments.</p>
 <h3 id="name_5">name<a class="headerlink" href="#name_5" title="Permanent link">#</a></h3>
 <p>Name of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L624">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L625">[source]</a></span></p>
 <h3 id="options">options<a class="headerlink" href="#options" title="Permanent link">#</a></h3>
 <p>Additional options for the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L589">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L590">[source]</a></span></p>
 <h3 id="password">password<a class="headerlink" href="#password" title="Permanent link">#</a></h3>
 <p>Password of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L609">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L610">[source]</a></span></p>
 <h3 id="role">role<a class="headerlink" href="#role" title="Permanent link">#</a></h3>
 <p>Role of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L599">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L600">[source]</a></span></p>
 <h3 id="schema">schema<a class="headerlink" href="#schema" title="Permanent link">#</a></h3>
 <p>Schema of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L604">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L605">[source]</a></span></p>
 <h3 id="table">table<a class="headerlink" href="#table" title="Permanent link">#</a></h3>
 <p>Table of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L594">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L595">[source]</a></span></p>
 <h3 id="token">token<a class="headerlink" href="#token" title="Permanent link">#</a></h3>
 <p>OAuth token of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L569">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L570">[source]</a></span></p>
 <h3 id="url">url<a class="headerlink" href="#url" title="Permanent link">#</a></h3>
 <p>URL of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L584">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L585">[source]</a></span></p>
 <h3 id="user">user<a class="headerlink" href="#user" title="Permanent link">#</a></h3>
 <p>User of the Snowflake storage connector</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L574">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L575">[source]</a></span></p>
 <h3 id="warehouse">warehouse<a class="headerlink" href="#warehouse" title="Permanent link">#</a></h3>
 <p>Warehouse of the Snowflake storage connector</p>
 <hr />
 <h3 id="methods_5">Methods<a class="headerlink" href="#methods_5" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L683">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L684">[source]</a></span></p>
 <h3 id="read_5">read<a class="headerlink" href="#read_5" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -4224,7 +4224,7 @@ arguments.</p>
 </code></pre></div>
 <p>Refetch storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L629">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L630">[source]</a></span></p>
 <h3 id="snowflake_connector_options">snowflake_connector_options<a class="headerlink" href="#snowflake_connector_options" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">snowflake_connector_options</span><span class="p">()</span>
 </code></pre></div>
@@ -4237,7 +4237,7 @@ a Snowflake database.</p>
 <span class="n">ctx</span> <span class="o">=</span> <span class="n">snowflake</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">sc</span><span class="o">.</span><span class="n">snowflake_connector_options</span><span class="p">())</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L658">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L659">[source]</a></span></p>
 <h3 id="spark_options_5">spark_options<a class="headerlink" href="#spark_options_5" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
@@ -4265,11 +4265,11 @@ The encryption details are stored as <code>Secrets</code> in the FeatureStore fo
 Read more about encryption on <a href="https://cloud.google.com/storage/docs/encryption#customer-supplied_encryption_keys">Google Documentation.</a></p>
 <p>The storage connector uses the Google <code>gcs-connector-hadoop</code> behind the scenes. For more information, check out <a href="https://github.com/GoogleCloudDataproc/hadoop-connectors/tree/master/gcs#google-cloud-storage-connector-for-spark-and-hadoop" title="google-cloud-storage-connector-for-spark-and-hadoop">Google Cloud Storage Connector for Spark and Hadoop</a></p>
 <h3 id="properties_6">Properties<a class="headerlink" href="#properties_6" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L961">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L962">[source]</a></span></p>
 <h3 id="algorithm">algorithm<a class="headerlink" href="#algorithm" title="Permanent link">#</a></h3>
 <p>Encryption Algorithm</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L981">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L982">[source]</a></span></p>
 <h3 id="bucket_1">bucket<a class="headerlink" href="#bucket_1" title="Permanent link">#</a></h3>
 <p>GCS Bucket</p>
 <hr />
@@ -4277,11 +4277,11 @@ Read more about encryption on <a href="https://cloud.google.com/storage/docs/enc
 <h3 id="description_6">description<a class="headerlink" href="#description_6" title="Permanent link">#</a></h3>
 <p>User provided description of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L966">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L967">[source]</a></span></p>
 <h3 id="encryption_key">encryption_key<a class="headerlink" href="#encryption_key" title="Permanent link">#</a></h3>
 <p>Encryption Key</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L971">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L972">[source]</a></span></p>
 <h3 id="encryption_key_hash">encryption_key_hash<a class="headerlink" href="#encryption_key_hash" title="Permanent link">#</a></h3>
 <p>Encryption Key Hash</p>
 <hr />
@@ -4289,7 +4289,7 @@ Read more about encryption on <a href="https://cloud.google.com/storage/docs/enc
 <h3 id="id_6">id<a class="headerlink" href="#id_6" title="Permanent link">#</a></h3>
 <p>Id of the storage connector uniquely identifying it in the Feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L956">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L957">[source]</a></span></p>
 <h3 id="key_path">key_path<a class="headerlink" href="#key_path" title="Permanent link">#</a></h3>
 <p>JSON keyfile for service account</p>
 <hr />
@@ -4297,12 +4297,12 @@ Read more about encryption on <a href="https://cloud.google.com/storage/docs/enc
 <h3 id="name_6">name<a class="headerlink" href="#name_6" title="Permanent link">#</a></h3>
 <p>Name of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L976">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L977">[source]</a></span></p>
 <h3 id="path_2">path<a class="headerlink" href="#path_2" title="Permanent link">#</a></h3>
 <p>the path of the connector along with gs file system prefixed</p>
 <hr />
 <h3 id="methods_6">Methods<a class="headerlink" href="#methods_6" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1024">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1025">[source]</a></span></p>
 <h3 id="prepare_spark_2">prepare_spark<a class="headerlink" href="#prepare_spark_2" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -4317,7 +4317,7 @@ Read more about encryption on <a href="https://cloud.google.com/storage/docs/enc
 <li><strong>path</strong> <code>Optional[str]</code>: Path to prepare for reading from Google cloud storage. Defaults to <code>None</code>.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L998">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L999">[source]</a></span></p>
 <h3 id="read_6">read<a class="headerlink" href="#read_6" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -4343,7 +4343,7 @@ Read more about encryption on <a href="https://cloud.google.com/storage/docs/enc
 </code></pre></div>
 <p>Refetch storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L992">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L993">[source]</a></span></p>
 <h3 id="spark_options_6">spark_options<a class="headerlink" href="#spark_options_6" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
@@ -4368,11 +4368,11 @@ on service accounts and creating keyfile in GCP, read <a href="https://cloud.goo
 <p>The storage connector uses the Google <code>spark-bigquery-connector</code> behind the scenes.
 To read more about the spark connector, like the spark options or usage, check <a href="https://github.com/GoogleCloudDataproc/spark-bigquery-connector#usage" title="github.com/GoogleCloudDataproc/spark-bigquery-connector">Apache Spark SQL connector for Google BigQuery.</a></p>
 <h3 id="properties_7">Properties<a class="headerlink" href="#properties_7" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1107">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1108">[source]</a></span></p>
 <h3 id="arguments_2">arguments<a class="headerlink" href="#arguments_2" title="Permanent link">#</a></h3>
 <p>Additional spark options</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1086">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1087">[source]</a></span></p>
 <h3 id="dataset">dataset<a class="headerlink" href="#dataset" title="Permanent link">#</a></h3>
 <p>BigQuery dataset (The dataset containing the table)</p>
 <hr />
@@ -4384,11 +4384,11 @@ To read more about the spark connector, like the spark options or usage, check <
 <h3 id="id_7">id<a class="headerlink" href="#id_7" title="Permanent link">#</a></h3>
 <p>Id of the storage connector uniquely identifying it in the Feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1076">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1077">[source]</a></span></p>
 <h3 id="key_path_1">key_path<a class="headerlink" href="#key_path_1" title="Permanent link">#</a></h3>
 <p>JSON keyfile for service account</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1101">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1102">[source]</a></span></p>
 <h3 id="materialization_dataset">materialization_dataset<a class="headerlink" href="#materialization_dataset" title="Permanent link">#</a></h3>
 <p>BigQuery materialization dataset (The dataset where the materialized view is going to be created,
 used in case of query)</p>
@@ -4397,20 +4397,20 @@ used in case of query)</p>
 <h3 id="name_7">name<a class="headerlink" href="#name_7" title="Permanent link">#</a></h3>
 <p>Name of the storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1081">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1082">[source]</a></span></p>
 <h3 id="parent_project">parent_project<a class="headerlink" href="#parent_project" title="Permanent link">#</a></h3>
 <p>BigQuery parent project (Google Cloud Project ID of the table to bill for the export)</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1096">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1097">[source]</a></span></p>
 <h3 id="query_project">query_project<a class="headerlink" href="#query_project" title="Permanent link">#</a></h3>
 <p>BigQuery project (The Google Cloud Project ID of the table)</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1091">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1092">[source]</a></span></p>
 <h3 id="query_table">query_table<a class="headerlink" href="#query_table" title="Permanent link">#</a></h3>
 <p>BigQuery table name</p>
 <hr />
 <h3 id="methods_7">Methods<a class="headerlink" href="#methods_7" title="Permanent link">#</a></h3>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1130">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1131">[source]</a></span></p>
 <h3 id="read_7">read<a class="headerlink" href="#read_7" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -4451,7 +4451,7 @@ used in case of query)</p>
 </code></pre></div>
 <p>Refetch storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1112">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/storage_connector.py#L1113">[source]</a></span></p>
 <h3 id="spark_options_7">spark_options<a class="headerlink" href="#spark_options_7" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
 </code></pre></div>
