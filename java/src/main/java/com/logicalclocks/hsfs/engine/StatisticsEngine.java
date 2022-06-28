@@ -34,6 +34,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class StatisticsEngine {
 
@@ -47,48 +48,65 @@ public class StatisticsEngine {
 
   public Statistics computeStatistics(TrainingDataset trainingDataset, Dataset<Row> dataFrame)
       throws FeatureStoreException, IOException {
-    return statisticsApi.post(trainingDataset, computeStatistics(dataFrame,
+    Optional<Statistics> statistics = computeStatistics(dataFrame,
         trainingDataset.getStatisticsConfig().getColumns(),
         trainingDataset.getStatisticsConfig().getHistograms(),
         trainingDataset.getStatisticsConfig().getCorrelations(),
         trainingDataset.getStatisticsConfig().getExactUniqueness(),
-        null));
+        null);
+
+    if (statistics.isPresent()) {
+      return statisticsApi.post(trainingDataset, statistics.get());
+    }
+
+    return null;
   }
 
   public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
       throws FeatureStoreException, IOException {
-    return statisticsApi.post(featureGroup, computeStatistics(dataFrame,
+    Optional<Statistics> statistics = computeStatistics(dataFrame,
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),
         featureGroup.getStatisticsConfig().getCorrelations(),
         featureGroup.getStatisticsConfig().getExactUniqueness(),
-        commitId));
+        commitId);
+
+    if (statistics.isPresent()) {
+      return statisticsApi.post(featureGroup, statistics.get());
+    }
+
+    return null;
   }
 
-  private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
-                                       Boolean correlations, Boolean exactUniqueness, Long commitId)
+  private Optional<Statistics> computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns,
+                                                 Boolean histograms,
+                                                 Boolean correlations, Boolean exactUniqueness, Long commitId)
       throws FeatureStoreException {
     if (dataFrame.isEmpty()) {
-      throw new FeatureStoreException("There is no data in the entity that you are trying to compute statistics for. A "
+      LOGGER.warn("There is no data in the entity that you are trying to compute statistics for. A "
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
+      return Optional.empty();
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     String content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations,
                                                        exactUniqueness);
-    return new Statistics(commitTime, commitId, content, null);
+    return Optional.of(new Statistics(commitTime, commitId, content, null));
   }
 
   public Statistics registerSplitStatistics(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     List<SplitStatistics> splitStatistics = new ArrayList<>();
     for (Split split : trainingDataset.getSplits()) {
-      splitStatistics.add(new SplitStatistics(split.getName(),
-          computeStatistics(trainingDataset.read(split.getName()),
-              trainingDataset.getStatisticsConfig().getColumns(),
-              trainingDataset.getStatisticsConfig().getHistograms(),
-              trainingDataset.getStatisticsConfig().getCorrelations(),
-              trainingDataset.getStatisticsConfig().getExactUniqueness(),
-              null).getContent()));
+      Optional<Statistics> statistics = computeStatistics(trainingDataset.read(split.getName()),
+          trainingDataset.getStatisticsConfig().getColumns(),
+          trainingDataset.getStatisticsConfig().getHistograms(),
+          trainingDataset.getStatisticsConfig().getCorrelations(),
+          trainingDataset.getStatisticsConfig().getExactUniqueness(),
+          null);
+
+      if (statistics.isPresent()) {
+        splitStatistics.add(new SplitStatistics(split.getName(), statistics.get().getContent()));
+      }
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
     Statistics statistics = new Statistics(commitTime, null, null, splitStatistics);

@@ -15,6 +15,7 @@
 #
 
 import datetime
+import warnings
 
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.core import statistics_api
@@ -52,14 +53,14 @@ class StatisticsEngine:
 
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
             content_str = self.profile_statistics(metadata_instance, feature_dataframe)
-            stats = statistics.Statistics(
-                commit_time=commit_time,
-                content=content_str,
-                feature_group_commit_id=feature_group_commit_id,
-            )
-            self._statistics_api.post(metadata_instance, stats)
-            return stats
-
+            if content_str:
+                stats = statistics.Statistics(
+                    commit_time=commit_time,
+                    content=content_str,
+                    feature_group_commit_id=feature_group_commit_id,
+                )
+                self._statistics_api.post(metadata_instance, stats)
+                return stats
         else:
             # Hive engine
             engine.get_instance().profile(metadata_instance)
@@ -67,11 +68,14 @@ class StatisticsEngine:
     @staticmethod
     def profile_statistics(metadata_instance, feature_dataframe):
         if len(feature_dataframe.head(1)) == 0:
-            raise exceptions.FeatureStoreException(
+            warnings.warn(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
-                "to the online storage of a feature group."
+                "to the online storage of a feature group.",
+                util.StatisticsWarning,
             )
+            return None
+
         content_str = engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,
