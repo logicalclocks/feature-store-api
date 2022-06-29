@@ -17,6 +17,7 @@
 import os
 import json
 import importlib.util
+from typing import Optional, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -25,7 +26,7 @@ import avro
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
@@ -38,6 +39,13 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
+
+from great_expectations.core.batch import RuntimeBatchRequest
+from great_expectations.data_context import BaseDataContext
+from great_expectations.data_context.types.base import (
+    DataContextConfig,
+    InMemoryStoreBackendDefaults,
+)
 
 
 class Engine:
@@ -337,6 +345,14 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
+    def split_labels(self, df, labels):
+        if labels:
+            labels_df = df.select(*labels)
+            df_new = df.drop(*labels)
+            return df_new, labels_df
+        else:
+            return df, None
+
     def write_training_dataset(
         self,
         training_dataset,
@@ -361,7 +377,7 @@ class Engine:
         )
 
         if len(training_dataset.splits) == 0:
-            training_dataset.transformation_functions = transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
 
@@ -377,11 +393,13 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            split_names = sorted([*training_dataset.splits])
-            split_weights = [training_dataset.splits[i] for i in split_names]
+            splits = [
+                (split.name, split.percentage) for split in training_dataset.splits
+            ]
+            split_weights = [split[1] for split in splits]
             split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
             split_dataset = dict(
-                [(split_names[i], split_dataset[i]) for i in range(len(split_names))]
+                [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
             )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
@@ -453,6 +471,7 @@ class Engine:
 
             if data_format.lower() == "tsv":
                 data_format = "csv"
+
         else:
             path = None
 
@@ -590,6 +609,55 @@ class Engine:
             dataframe._jdf, expectations_java
         )
 
+    def validate_with_great_expectations(
+        self,
+        dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
+        ge_validate_kwargs: Optional[dict],
+    ):
+        # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
+        # may experience data loss as it persists nothing. It is used here for testing.
+        # Please refer to docs to learn how to instantiate your DataContext.
+        store_backend_defaults = InMemoryStoreBackendDefaults()
+        data_context_config = DataContextConfig(
+            store_backend_defaults=store_backend_defaults,
+            checkpoint_store_name=store_backend_defaults.checkpoint_store_name,
+        )
+        context = BaseDataContext(project_config=data_context_config)
+
+        datasource = {
+            "name": "my_spark_dataframe",
+            "class_name": "Datasource",
+            "execution_engine": {
+                "class_name": "SparkDFExecutionEngine",
+                "force_reuse_spark_context": True,
+            },
+            "data_connectors": {
+                "default_runtime_data_connector_name": {
+                    "class_name": "RuntimeDataConnector",
+                    "batch_identifiers": ["batch_id"],
+                }
+            },
+        }
+        context.add_datasource(**datasource)
+
+        # Here is a RuntimeBatchRequest using a dataframe
+        batch_request = RuntimeBatchRequest(
+            datasource_name="my_spark_dataframe",
+            data_connector_name="default_runtime_data_connector_name",
+            data_asset_name="<YOUR_MEANGINGFUL_NAME>",  # This can be anything that identifies this data_asset for you
+            batch_identifiers={"batch_id": "default_identifier"},
+            runtime_parameters={"batch_data": dataframe},  # Your dataframe goes here
+        )
+        context.save_expectation_suite(expectation_suite)
+        validator = context.get_validator(
+            batch_request=batch_request,
+            expectation_suite_name=expectation_suite.expectation_suite_name,
+        )
+        report = validator.validate(**ge_validate_kwargs)
+
+        return report
+
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")
@@ -609,6 +677,8 @@ class Engine:
         return options
 
     def read_options(self, data_format, provided_options):
+        if provided_options is None:
+            provided_options = {}
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example", **provided_options)
             options.update(provided_options)
@@ -850,6 +920,16 @@ class Engine:
             )
 
         return path
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        unique_values = feature_dataframe.select(feature_name).distinct().collect()
+        return [field[feature_name] for field in unique_values]
+
+    def create_empty_df(self, streaming_df):
+        return SQLContext(self._spark_context).createDataFrame(
+            self._spark_context.emptyRDD(), streaming_df.schema
+        )
 
 
 class SchemaError(Exception):

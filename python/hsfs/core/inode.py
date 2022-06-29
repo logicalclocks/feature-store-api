@@ -1,4 +1,3 @@
-#
 #   Copyright 2020 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +13,20 @@
 #   limitations under the License.
 #
 
-import warnings
-
-from hsfs import util
-from hsfs.connection import Connection
-
-connection = Connection.connection
-setup_databricks = Connection.setup_databricks
+import humps
 
 
-def fs_formatwarning(message, category, filename, lineno, line=None):
-    return "{}: {}\n".format(category.__name__, message)
+class Inode:
+    def __init__(self, href=None, attributes=None, zip_state=None, tags=None):
+        self._path = attributes["path"]
 
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)["items"]
+        for inode in json_decamelized:
+            _ = inode.pop("type")
+        return [cls(**inode) for inode in json_decamelized]
 
-warnings.formatwarning = fs_formatwarning
-warnings.simplefilter("always", util.VersionWarning)
-warnings.filterwarnings(
-    action="ignore", category=DeprecationWarning, module=r".*ipykernel"
-)
-
-__all__ = ["connection", "setup_databricks"]
+    @property
+    def path(self):
+        return self._path

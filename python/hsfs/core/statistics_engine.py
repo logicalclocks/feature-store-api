@@ -15,6 +15,8 @@
 #
 
 import datetime
+import json
+import warnings
 
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
@@ -56,12 +58,13 @@ class StatisticsEngine:
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
 
             content_str = self.profile_statistics(metadata_instance, feature_dataframe)
-            stats = statistics.Statistics(
-                commit_time=commit_time,
-                content=content_str,
-                feature_group_commit_id=feature_group_commit_id,
-            )
-            self._save_statistics(stats, metadata_instance, feature_view_obj)
+            if content_str:
+                stats = statistics.Statistics(
+                    commit_time=commit_time,
+                    content=content_str,
+                    feature_group_commit_id=feature_group_commit_id,
+                )
+                self._save_statistics(stats, metadata_instance, feature_view_obj)
         else:
             # Python engine
             engine.get_instance().profile_by_spark(metadata_instance)
@@ -69,11 +72,13 @@ class StatisticsEngine:
     @staticmethod
     def profile_statistics(metadata_instance, feature_dataframe):
         if len(feature_dataframe.head(1)) == 0:
-            raise exceptions.FeatureStoreException(
+            warnings.warn(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
-                "to the online storage of a feature group."
+                "to the online storage of a feature group.",
+                category=util.StatisticsWarning,
             )
+            return None
         return engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,
@@ -82,8 +87,9 @@ class StatisticsEngine:
             metadata_instance.statistics_config.exact_uniqueness,
         )
 
-    @staticmethod
-    def profile_transformation_fn_statistics(feature_dataframe, columns):
+    def profile_transformation_fn_statistics(
+        self, feature_dataframe, columns, label_encoder_features
+    ):
         if (
             engine.get_type() == "spark"
             and len(feature_dataframe.select(*columns).head(1)) == 0
@@ -96,15 +102,21 @@ class StatisticsEngine:
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group."
             )
-        return engine.get_instance().profile(
+        content_str = engine.get_instance().profile(
             feature_dataframe, columns, False, True, False
+        )
+
+        # add unique value profile to String type columns
+        return self.profile_unique_values(
+            feature_dataframe, label_encoder_features, content_str
         )
 
     def register_split_statistics(
         self, td_metadata_instance, feature_view_obj=None, feature_dataframes=None
     ):
         statistics_of_splits = []
-        for split_name in td_metadata_instance.splits:
+        for split in td_metadata_instance.splits:
+            split_name = split.name
             statistics_of_splits.append(
                 split_statistics.SplitStatistics(
                     split_name,
@@ -131,14 +143,14 @@ class StatisticsEngine:
         self,
         td_metadata_instance,
         columns,
+        label_encoder_features,
         feature_dataframe=None,
         feature_view_obj=None,
     ):
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         content_str = self.profile_transformation_fn_statistics(
-            feature_dataframe, columns
+            feature_dataframe, columns, label_encoder_features
         )
-
         stats = statistics.Statistics(
             commit_time=commit_time,
             content=content_str,
@@ -178,3 +190,23 @@ class StatisticsEngine:
             )
         else:
             self._statistics_api.post(td_metadata_instance, stats, None)
+
+    @staticmethod
+    def profile_unique_values(feature_dataframe, label_encoder_features, content_str):
+        # parsing JSON string:
+        content_dict = json.loads(content_str)
+        if not content_dict:
+            content_dict = {"columns": []}
+        for column in label_encoder_features:
+            unique_values = {
+                "column": column,
+                "unique_values": [
+                    value
+                    for value in engine.get_instance().get_unique_values(
+                        feature_dataframe, column
+                    )
+                ],
+            }
+            content_dict["columns"].append(unique_values)
+        # the result is a JSON string:
+        return json.dumps(content_dict)

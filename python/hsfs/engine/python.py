@@ -27,10 +27,12 @@ import json
 import random
 import uuid
 
+import great_expectations as ge
+
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
-from typing import Dict
+from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 
 from hsfs import client, feature, util
@@ -49,6 +51,8 @@ from hsfs.core import (
 from hsfs.constructor import query
 from hsfs.client import exceptions, external, hopsworks
 from hsfs.feature_group import FeatureGroup
+from thrift.transport.TTransport import TTransportException
+from pyhive.exc import OperationalError
 
 HAS_FAST = False
 try:
@@ -61,7 +65,6 @@ except ImportError:
 
 
 class Engine:
-
     APP_OP_INSERT_FG = "insert_fg"
 
     def __init__(self):
@@ -86,7 +89,12 @@ class Engine:
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
-                connector, "external" in read_options and read_options["external"]
+                connector,
+                (
+                    isinstance(client.get_instance(), client.external.Client)
+                    if "external" not in read_options
+                    else read_options["external"]
+                ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
@@ -114,7 +122,7 @@ class Engine:
             return pd.read_parquet(BytesIO(obj.read()))
         else:
             raise TypeError(
-                "{} training dataset format is not supported to read as pandas dataframe. If you are using `tfrecord` use the `.tf_data` helper functions.".format(
+                "{} training dataset format is not supported to read as pandas dataframe.".format(
                     data_format
                 )
             )
@@ -123,10 +131,8 @@ class Engine:
         # providing more informative error
         try:
             from pydoop import hdfs
-        except ImportError as err:
-            raise ModuleNotFoundError(
-                "Reading training dataset from HopsFS requires `pydoop`"
-            ) from err
+        except ModuleNotFoundError:
+            return self._read_hopsfs_rest(location, data_format)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
@@ -139,6 +145,29 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    # This is a version of the read method that uses the Hopsworks REST APIs
+    # To read the training dataset content, this to avoid the pydoop dependency
+    # requirement and allow users to read Hopsworks training dataset from outside
+    def _read_hopsfs_rest(self, location, data_format):
+        total_count = 10000
+        offset = 0
+        df_list = []
+
+        while offset < total_count:
+            total_count, inode_list = self._dataset_api.list_files(
+                location, offset, 100
+            )
+
+            for inode in inode_list:
+                if not inode.path.endswith("_SUCCESS"):
+                    content_stream = self._dataset_api.read_content(inode.path)
+                    df_list.append(
+                        self._read_pandas(data_format, BytesIO(content_stream.content))
+                    )
+                offset += 1
+
         return df_list
 
     def _read_s3(self, storage_connector, location, data_format):
@@ -222,7 +251,7 @@ class Engine:
         )
         job = stat_api.compute(metadata_instance)
         print(
-            "Statistics Job started successfully, you can follow the progress at {}".format(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(job.href)
             )
         )
@@ -260,23 +289,42 @@ class Engine:
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
-        percentiles = [0] * 100
-        percentiles[24] = stat["25%"]
-        percentiles[49] = stat["50%"]
-        percentiles[74] = stat["75%"]
-        return {
-            "mean": stat["mean"],
-            "sum": stat["mean"] * stat["count"],
-            "maximum": stat["max"],
-            "stdDev": stat["std"],
-            "minimum": stat["min"],
-            "approxPercentiles": percentiles,
-        }
+        content_dict = {}
+        percentiles = []
+        if "25%" in stat:
+            percentiles = [0] * 100
+            percentiles[24] = stat["25%"]
+            percentiles[49] = stat["50%"]
+            percentiles[74] = stat["75%"]
+        if "mean" in stat:
+            content_dict["mean"] = stat["mean"]
+        if "mean" in stat and "count" in stat:
+            content_dict["sum"] = stat["mean"] * stat["count"]
+        if "max" in stat:
+            content_dict["maximum"] = stat["max"]
+        if "std" in stat:
+            content_dict["stdDev"] = stat["std"]
+        if "min" in stat:
+            content_dict["minimum"] = stat["min"]
+        if percentiles:
+            content_dict["approxPercentiles"] = percentiles
+        return content_dict
 
-    def validate(self, dataframe, expectations, log_activity=True):
+    def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
-            "Deequ data validation is only available with Spark Engine."
+            "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
+
+    def validate_with_great_expectations(
+        self,
+        dataframe: pd.DataFrame,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+    ):
+        report = ge.from_pandas(
+            dataframe, expectation_suite=expectation_suite
+        ).validate(**ge_validate_kwargs)
+        return report
 
     def set_job_group(self, group_id, description):
         pass
@@ -437,7 +485,7 @@ class Engine:
         print("Launching ingestion job...")
         self._job_api.launch(ingestion_job.job.name)
         print(
-            "Ingestion Job started successfully, you can follow the progress at {}".format(
+            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
@@ -451,43 +499,67 @@ class Engine:
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._split_df(df, training_dataset_obj.splits)
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
+            split_df = self._prepare_transform_split_df(
+                df, training_dataset_obj, feature_view_obj
             )
         else:
             split_df = df
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, split_df
             )
-        # TODO: apply transformation
+            split_df = self._apply_transformation_function(
+                training_dataset_obj, split_df
+            )
         return split_df
 
-    def _split_df(self, df, splits):
+    def split_labels(self, df, labels):
+        if labels:
+            labels_df = df[labels]
+            df_new = df.drop(columns=labels)
+            return df_new, labels_df
+        else:
+            return df, None
+
+    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
-        items = splits.items()
+        splits = training_dataset_obj.splits
         if (
-            sum(splits.values()) != 1
-            or sum([v > 1 or v < 0 for v in splits.values()]) > 1
+            sum([split.percentage for split in splits]) != 1
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            > 1
         ):
             raise ValueError(
-                "Sum of split ratios should be 1 and each values should be in range [0, 1)"
+                "Sum of split ratios should be 1 and each values should be in range (0, 1)"
             )
 
         df_size = len(df)
         groups = []
-        for i, item in enumerate(items):
-            groups += [i] * int(df_size * item[1])
-        groups += [len(items) - 1] * (df_size - len(groups))
+        for i, split in enumerate(splits):
+            groups += [i] * int(df_size * split.percentage)
+        groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
         df[split_column] = groups
-        for i, item in enumerate(items):
-            result_dfs[item[0]] = df[df[split_column] == i].drop(split_column, axis=1)
+        for i, split in enumerate(splits):
+            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            result_dfs[split.name] = split_df
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
+                training_dataset_obj,
+                result_dfs.get(split_name),
+            )
+
         return result_dfs
 
     def write_training_dataset(
@@ -528,7 +600,7 @@ class Engine:
             )
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
-            "Training dataset job started successfully, you can follow the progress at {}".format(
+            "Training dataset job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(td_job.href)
             )
         )
@@ -540,16 +612,28 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store):
-        return hive.Connection(
-            host=client.get_instance()._host,
-            port=9085,
-            # database needs to be set every time, 'default' doesn't work in pyhive
-            database=feature_store,
-            auth="CERTIFICATES",
-            truststore=client.get_instance()._get_jks_trust_store_path(),
-            keystore=client.get_instance()._get_jks_key_store_path(),
-            keystore_password=client.get_instance()._cert_key,
-        )
+        try:
+            return hive.Connection(
+                host=client.get_instance()._host,
+                port=9085,
+                # database needs to be set every time, 'default' doesn't work in pyhive
+                database=feature_store,
+                auth="CERTIFICATES",
+                truststore=client.get_instance()._get_jks_trust_store_path(),
+                keystore=client.get_instance()._get_jks_key_store_path(),
+                keystore_password=client.get_instance()._cert_key,
+            )
+        except (TTransportException, AttributeError):
+            raise ValueError(
+                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
+                "is correct and make sure port '9085' is open on host server."
+            )
+        except OperationalError as e:
+            if e.args[0].status.statusCode == 3:
+                raise RuntimeError(
+                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
+                    f" It is possible to request access from data owners of '{feature_store}'."
+                )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
@@ -602,6 +686,7 @@ class Engine:
         ui_url = url._replace(
             path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
         )
+        ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
 
     def _get_app_options(self, user_write_options={}):
@@ -650,6 +735,22 @@ class Engine:
         # can be used to materialize certificates locally
         return file
 
+    @staticmethod
+    def _apply_transformation_function(training_dataset_instance, dataset):
+        for (
+            feature_name,
+            transformation_fn,
+        ) in training_dataset_instance.transformation_functions.items():
+            dataset[feature_name] = dataset[feature_name].map(
+                transformation_fn.transformation_fn
+            )
+
+        return dataset
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        return feature_dataframe[feature_name].unique()
+
     def _write_dataframe_kafka(
         self,
         feature_group: FeatureGroup,
@@ -669,6 +770,10 @@ class Engine:
 
         # setup row writer function
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+
+        def acked(err, msg):
+            if err is not None:
+                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
 
         # loop over rows
         for r in dataframe.itertuples(index=False):
@@ -698,13 +803,27 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            # produce
-            producer.produce(
-                topic=feature_group._online_topic_name, key=key, value=encoded_row
-            )
+            while True:
+                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+                try:
+                    # produce
+                    producer.produce(
+                        topic=feature_group._online_topic_name,
+                        key=key,
+                        value=encoded_row,
+                        callback=acked
+                        if offline_write_options.get("debug_kafka", False)
+                        else None,
+                    )
 
-            # Trigger internal callbacks to empty op queue
-            producer.poll(0)
+                    # Trigger internal callbacks to empty op queue
+                    producer.poll(0)
+                    break
+                except BufferError as e:
+                    if offline_write_options.get("debug_kafka", False):
+                        print("Caught: {}".format(e))
+                    # backoff for 1 second
+                    producer.poll(1)
 
         # make sure producer blocks and everything is delivered
         producer.flush()
@@ -721,7 +840,7 @@ class Engine:
             print("Launching offline feature group backfill job...")
             self._job_api.launch(job_name)
             print(
-                "Backfill Job started successfully, you can follow the progress at {}".format(
+                "Backfill Job started successfully, you can follow the progress at \n{}".format(
                     self._get_job_url(job.href)
                 )
             )
@@ -749,12 +868,15 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        # producer configuration properties
+        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         config = {
             "security.protocol": "SSL",
             "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
             "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
             "ssl.key.location": client.get_instance()._get_client_key_path(),
             "client.id": socket.gethostname(),
+            **write_options.get("kafka_producer_config", {}),
         }
 
         if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
@@ -777,5 +899,4 @@ class Engine:
                     )
                 ]
             )
-
         return config

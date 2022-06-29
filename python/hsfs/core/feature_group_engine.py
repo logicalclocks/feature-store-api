@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 import warnings
 
 from hsfs import engine, client, util
@@ -28,53 +27,45 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
-    def save(self, feature_group, feature_dataframe, write_options):
-        if len(feature_group.features) == 0:
-            # User didn't provide a schema. extract it from the dataframe
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
-            )
+    def save(self, feature_group, feature_dataframe, write_options, validation_options):
 
-        # set primary and partition key columns
-        # we should move this to the backend
-        for feat in feature_group.features:
-            if feat.name in feature_group.primary_key:
-                feat.primary = True
-            if feat.name in feature_group.partition_key:
-                feat.partition = True
-            if (
-                feature_group.hudi_precombine_key is not None
-                and feat.name == feature_group.hudi_precombine_key
-            ):
-                feat.hudi_precombine_key = True
+        self._save_feature_group_metadata(
+            feature_group, feature_dataframe, write_options
+        )
 
-        if feature_group.stream:
-            feature_group._options = write_options
+        # deequ validation only on spark
+        validation = feature_group._data_validation_engine.ingest_validate(
+            feature_group, feature_dataframe
+        )
+        validation_id = validation.validation_id if validation is not None else None
 
         # TODO: check primary key data types
-        self._feature_group_api.save(feature_group)
-        validation_id = None
-        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
-            # If the engine is Python, the validation will be executed by
-            # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe, True)
-            validation_id = validation.validation_id
+        # ge validation on python and non stream feature groups on spark
+        ge_report = feature_group._great_expectation_engine.validate(
+            feature_group, feature_dataframe, True, validation_options
+        )
+
+        if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            return None, ge_report
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
         # TODO: check df vs schema
-        return engine.get_instance().save_dataframe(
-            feature_group,
-            feature_dataframe,
-            hudi_engine.HudiEngine.HUDI_BULK_INSERT
-            if feature_group.time_travel_format == "HUDI"
-            else None,
-            feature_group.online_enabled,
-            None,
-            offline_write_options,
-            online_write_options,
-            validation_id,
+        return (
+            engine.get_instance().save_dataframe(
+                feature_group,
+                feature_dataframe,
+                hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                if feature_group.time_travel_format == "HUDI"
+                else None,
+                feature_group.online_enabled,
+                None,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            ),
+            ge_report,
         )
 
     def insert(
@@ -85,13 +76,27 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
+        validation_options,
     ):
-        validation_id = None
-        if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
-            # If the engine is Python, the validation will be executed by
-            # the Hopsworks job ingesting the data
-            validation = feature_group.validate(feature_dataframe, True)
-            validation_id = validation.validation_id
+
+        if not feature_group._id:
+            self._save_feature_group_metadata(
+                feature_group, feature_dataframe, write_options
+            )
+
+        # deequ validation only on spark
+        validation = feature_group._data_validation_engine.ingest_validate(
+            feature_group, feature_dataframe
+        )
+        validation_id = validation.validation_id if validation is not None else None
+
+        # ge validation on python and non stream feature groups on spark
+        ge_report = feature_group._great_expectation_engine.validate(
+            feature_group, feature_dataframe, True, validation_options
+        )
+
+        if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            return None, ge_report
 
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
@@ -104,15 +109,18 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if overwrite:
             self._feature_group_api.delete_content(feature_group)
 
-        return engine.get_instance().save_dataframe(
-            feature_group,
-            feature_dataframe,
-            "bulk_insert" if overwrite else operation,
-            feature_group.online_enabled,
-            storage,
-            offline_write_options,
-            online_write_options,
-            validation_id,
+        return (
+            engine.get_instance().save_dataframe(
+                feature_group,
+                feature_dataframe,
+                "bulk_insert" if overwrite else operation,
+                feature_group.online_enabled,
+                storage,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            ),
+            ge_report,
         )
 
     def delete(self, feature_group):
@@ -178,6 +186,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=None,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=features,
         )
         self._feature_group_api.update_metadata(
@@ -214,6 +223,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             featurestore_id=None,
             description=description,
             id=feature_group.id,
+            stream=feature_group.stream,
             features=feature_group.features,
         )
         self._feature_group_api.update_metadata(
@@ -259,9 +269,30 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
+        if not feature_group._id:
+            self._save_feature_group_metadata(feature_group, dataframe, write_options)
+
+            if not feature_group.stream:
+                # insert_stream method was called on non stream feature group object that has not been saved.
+                # we will use save_dataframe method on empty dataframe to create directory structure
+                offline_write_options = write_options
+                online_write_options = self.get_kafka_config(write_options)
+                engine.get_instance().save_dataframe(
+                    feature_group,
+                    engine.get_instance().create_empty_df(dataframe),
+                    hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                    if feature_group.time_travel_format == "HUDI"
+                    else None,
+                    feature_group.online_enabled,
+                    None,
+                    offline_write_options,
+                    online_write_options,
+                )
+
         if not feature_group.stream:
             warnings.warn(
-                "`insert_stream` method In the next release available for feature groups created with `stream=True`."
+                "`insert_stream` method in the next release be available only for feature groups created with "
+                "`stream=True`."
             )
 
         if feature_group.validation_type != "NONE":
@@ -284,3 +315,47 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         return streaming_query
+
+    def _save_feature_group_metadata(
+        self, feature_group, feature_dataframe, write_options
+    ):
+
+        # this means FG doesn't exist and should create the new one
+        if len(feature_group.features) == 0:
+            # User didn't provide a schema. extract it from the dataframe
+            feature_group._features = engine.get_instance().parse_schema_feature_group(
+                feature_dataframe
+            )
+
+        # set primary and partition key columns
+        # we should move this to the backend
+        for feat in feature_group.features:
+            if feat.name in feature_group.primary_key:
+                feat.primary = True
+            if feat.name in feature_group.partition_key:
+                feat.partition = True
+            if (
+                feature_group.hudi_precombine_key is not None
+                and feat.name == feature_group.hudi_precombine_key
+            ):
+                feat.hudi_precombine_key = True
+
+        if feature_group.stream:
+            feature_group._options = write_options
+
+        self._feature_group_api.save(feature_group)
+        print(
+            "Feature Group created successfully, explore it at \n"
+            + self._get_feature_group_url(feature_group)
+        )
+
+    def _get_feature_group_url(self, feature_group):
+        sub_path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_group.feature_store_id)
+            + "/fg/"
+            + str(feature_group.id)
+        )
+        return util.get_hostname_replaced_url(sub_path)

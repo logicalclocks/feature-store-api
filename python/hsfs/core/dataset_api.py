@@ -17,6 +17,7 @@
 import math
 
 from hsfs import client, util
+from hsfs.core import inode
 
 
 class DatasetApi:
@@ -69,3 +70,36 @@ class DatasetApi:
         _client._send_request(
             "POST", path_params, data=params, files={"file": (file_name, chunk)}
         )
+
+    def list_files(self, path, offset, limit):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "dataset",
+            path[(path.index("/", 10) + 1) :],
+        ]
+        query_params = {
+            "action": "listing",
+            "offset": offset,
+            "limit": limit,
+            "sort_by": "ID:asc",
+        }
+
+        inode_lst = _client._send_request("GET", path_params, query_params)
+
+        return inode_lst["count"], inode.Inode.from_response_json(inode_lst)
+
+    def read_content(self, path):
+        _client = client.get_instance()
+
+        path_params = [
+            "project",
+            _client._project_id,
+            "dataset",
+            "download",
+            "with_auth",
+            path[1:],
+        ]
+
+        return _client._send_request("GET", path_params, stream=True)

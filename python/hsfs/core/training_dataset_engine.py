@@ -17,13 +17,13 @@
 import warnings
 
 from hsfs import engine, training_dataset_feature
+from hsfs.constructor import query
 from hsfs.core import (
     training_dataset_api,
     tags_api,
     storage_connector_api,
     transformation_function_engine,
 )
-from hsfs.constructor import query
 
 
 class TrainingDatasetEngine:

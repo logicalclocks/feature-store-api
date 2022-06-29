@@ -7,7 +7,8 @@
 #
 #       http://www.apache.org/licenses/LICENSE-2.0
 #
-#   Unless required by applicable law or agreed to in writing, software
+#   Unless required by applicable law or agreed to in
+#   writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
@@ -15,12 +16,15 @@
 #
 
 import warnings
+import datetime
+from typing import Optional, Union, List, Dict
+
 import humps
 import numpy
-import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+import great_expectations as ge
 
 from hsfs.transformation_function import TransformationFunction
+from hsfs.client import exceptions
 from hsfs.core import transformation_function_engine
 
 from hsfs import (
@@ -31,6 +35,7 @@ from hsfs import (
     storage_connector,
     expectation,
     rule,
+    expectation_suite,
     feature_view,
 )
 from hsfs.core import (
@@ -369,6 +374,9 @@ class FeatureStore:
         expectations: Optional[List[expectation.Expectation]] = [],
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
+        expectation_suite: Optional[
+            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+        ] = None,
     ):
         """Create a feature group metadata object.
 
@@ -424,6 +432,9 @@ class FeatureStore:
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
+            expectation_suite: Optionally, attach an expectation suite to the feature
+                group which dataframes should be validated against upon insertion.
+                Defaults to `None`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -445,7 +456,120 @@ class FeatureStore:
             expectations=expectations,
             event_time=event_time,
             stream=stream,
+            expectation_suite=expectation_suite,
         )
+
+    def get_or_create_feature_group(
+        self,
+        name: str,
+        version: int,
+        description: Optional[str] = "",
+        online_enabled: Optional[bool] = False,
+        time_travel_format: Optional[str] = "HUDI",
+        partition_key: Optional[List[str]] = [],
+        primary_key: Optional[List[str]] = [],
+        hudi_precombine_key: Optional[str] = None,
+        features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
+        expectation_suite: Optional[
+            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+        ] = None,
+        event_time: Optional[str] = None,
+        stream: Optional[bool] = False,
+    ):
+        """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata or feature data in the
+            feature store on its own. To persist the feature group and save feature data
+            along the metadata in the feature store, call the `insert()` method with a
+            DataFrame.
+
+        # Arguments
+            name: Name of the feature group to create.
+            version: Version of the feature group to retrieve or create.
+            description: A string describing the contents of the feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            online_enabled: Define whether the feature group should be made available
+                also in the online feature store for low latency access, defaults to
+                `False`.
+            time_travel_format: Format used for time travel, defaults to `"HUDI"`.
+            partition_key: A list of feature names to be used as partition key when
+                writing the feature data to the offline storage, defaults to empty list
+                `[]`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
+            hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
+                feature group. Defaults to `None`. If feature group has time travel format
+                `"HUDI"` and hudi precombine key was not specified then the first primary key of
+                the feature group will be used as hudi precombine key.
+            features: Optionally, define the schema of the feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame provided in the `save` method.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
+            expectation_suite: Optionally, attach an expectation suite to the feature
+                group which dataframes should be validated against upon insertion.
+                Defaults to `None`.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+            stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
+                Stream enabled Feature Groups have unified single API for writing streaming features transparently
+                to both online and offline store.
+
+
+        # Returns
+            `FeatureGroup`. The feature group metadata object.
+        """
+
+        try:
+            return self._feature_group_api.get(
+                name, version, feature_group_api.FeatureGroupApi.CACHED
+            )
+        except exceptions.RestAPIError as e:
+            if (
+                e.response.json().get("errorCode", "") == 270009
+                and e.response.status_code == 404
+            ):
+                return feature_group.FeatureGroup(
+                    name=name,
+                    version=version,
+                    description=description,
+                    online_enabled=online_enabled,
+                    time_travel_format=time_travel_format,
+                    partition_key=partition_key,
+                    primary_key=primary_key,
+                    hudi_precombine_key=hudi_precombine_key,
+                    featurestore_id=self._id,
+                    featurestore_name=self._name,
+                    features=features,
+                    statistics_config=statistics_config,
+                    validation_type=validation_type,
+                    expectations=expectations,
+                    event_time=event_time,
+                    stream=stream,
+                    expectation_suite=expectation_suite,
+                )
+            else:
+                raise e
 
     def create_on_demand_feature_group(
         self,
@@ -689,36 +813,18 @@ class FeatureStore:
         transformation_function: callable,
         output_type: Union[
             str,
-            TypeVar("str"),  # noqa: F821
-            TypeVar("string"),  # noqa: F821
             bytes,
-            numpy.int8,
-            TypeVar("int8"),  # noqa: F821
-            TypeVar("byte"),  # noqa: F821
-            numpy.int16,
-            TypeVar("int16"),  # noqa: F821
-            TypeVar("short"),  # noqa: F821
             int,
-            TypeVar("int"),  # noqa: F821
-            numpy.int,
+            numpy.int8,
+            numpy.int16,
             numpy.int32,
             numpy.int64,
-            TypeVar("int64"),  # noqa: F821
-            TypeVar("long"),  # noqa: F821
-            TypeVar("bigint"),  # noqa: F821
             float,
-            TypeVar("float"),  # noqa: F821
-            numpy.float,
             numpy.float64,
-            TypeVar("float64"),  # noqa: F821
-            TypeVar("double"),  # noqa: F821
             datetime.datetime,
             numpy.datetime64,
             datetime.date,
             bool,
-            TypeVar("boolean"),  # noqa: F821
-            TypeVar("bool"),  # noqa: F821
-            numpy.bool,
         ],
         version: Optional[int] = None,
     ):
@@ -773,7 +879,7 @@ class FeatureStore:
         query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        label: Optional[List[str]] = [],
+        labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
@@ -787,7 +893,7 @@ class FeatureStore:
             description: A string describing the contents of the feature view to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            label: A list of feature names constituting the prediction label/feature of
+            labels: A list of feature names constituting the prediction label/feature of
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
@@ -805,12 +911,12 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            label=label,
+            labels=labels,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)
 
-    def get_feature_view(self, name, version):
+    def get_feature_view(self, name: str, version: int = None):
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -826,6 +932,14 @@ class FeatureStore:
         # Raises
             `RestAPIError`: If unable to retrieve feature view from the feature store.
         """
+        if version is None:
+            warnings.warn(
+                "No version provided for getting feature view `{}`, defaulting to `{}`.".format(
+                    name, self.DEFAULT_VERSION
+                ),
+                util.VersionWarning,
+            )
+            version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)
 
     def get_feature_views(self, name):
