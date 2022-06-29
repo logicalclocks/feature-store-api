@@ -502,14 +502,14 @@ class FeatureView:
 
         return td.version, td_job
 
-    def create_train_validation_test_splits(
+    def create_train_validation_test_split(
         self,
-        val_size: Optional[float] = None,
+        validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
         train_start: Optional[str] = "",
         train_end: Optional[str] = "",
-        val_start: Optional[str] = "",
-        val_end: Optional[str] = "",
+        validation_start: Optional[str] = "",
+        validation_end: Optional[str] = "",
         test_start: Optional[str] = "",
         test_end: Optional[str] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
@@ -538,15 +538,15 @@ class FeatureView:
 
 
         # Arguments
-            val_size: size of validation set.
+            validation_size: size of validation set.
             test_size: size of test set.
             train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
@@ -593,23 +593,23 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
 
-        self._validate_train_validation_test_splits(
-            val_size=val_size,
+        self._validate_train_validation_test_split(
+            validation_size=validation_size,
             test_size=test_size,
             train_end=train_end,
-            val_start=val_start,
-            val_end=val_end,
+            validation_start=validation_start,
+            validation_end=validation_end,
             test_start=test_start,
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
             version=None,
-            val_size=val_size,
+            validation_size=validation_size,
             test_size=test_size,
             train_start=train_start,
             train_end=train_end,
-            val_start=val_start,
-            val_end=val_end,
+            validation_start=validation_start,
+            validation_end=validation_end,
             test_start=test_start,
             test_end=test_end,
             description=description,
@@ -817,14 +817,14 @@ class FeatureView:
                 " `test_size` should be greater than 0 if specified"
             )
 
-    def train_validation_test_splits(
+    def train_validation_test_split(
         self,
-        val_size: Optional[float] = None,
+        validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
         train_start: Optional[str] = "",
         train_end: Optional[str] = "",
-        val_start: Optional[str] = "",
-        val_end: Optional[str] = "",
+        validation_start: Optional[str] = "",
+        validation_end: Optional[str] = "",
         test_start: Optional[str] = "",
         test_end: Optional[str] = "",
         description: Optional[str] = "",
@@ -839,15 +839,15 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            val_size: size of validation set. Should be between 0 and 1.
+            validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
             train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            val_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            val_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
+            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
             test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
@@ -876,24 +876,24 @@ class FeatureView:
 
         """
 
-        self._validate_train_validation_test_splits(
-            val_size=val_size,
+        self._validate_train_validation_test_split(
+            validation_size=validation_size,
             test_size=test_size,
             train_end=train_end,
-            val_start=val_start,
-            val_end=val_end,
+            validation_start=validation_start,
+            validation_end=validation_end,
             test_start=test_start,
         )
         td = training_dataset.TrainingDataset(
             name=self.name,
             version=None,
             splits={},
-            val_size=val_size,
+            validation_size=validation_size,
             test_size=test_size,
             train_start=train_start,
             train_end=train_end,
-            val_start=val_start,
-            val_end=val_end,
+            validation_start=validation_start,
+            validation_end=validation_end,
             test_start=test_start,
             test_end=test_end,
             description=description,
@@ -925,17 +925,17 @@ class FeatureView:
         )
 
     @staticmethod
-    def _validate_train_validation_test_splits(
-        val_size, test_size, train_end, val_start, val_end, test_start
+    def _validate_train_validation_test_split(
+        validation_size, test_size, train_end, validation_start, validation_end, test_start
     ):
         if not (
-            (val_size and test_size)
-            or ((train_end or val_start) and (val_end or test_start))
+            (validation_size and test_size)
+            or ((train_end or validation_start) and (validation_end or test_start))
         ):
             raise ValueError(
                 "Invalid split input."
-                " You should specify either (`val_size` and `test_size`) or ((`train_end` or `val_start`) and (`val_end` or `test_start`))."
-                "`val_size` and `test_size` should be greater than 0 if specified."
+                " You should specify either (`validation_size` and `test_size`) or ((`train_end` or `validation_start`) and (`validation_end` or `test_start`))."
+                "`validation_size` and `test_size` should be greater than 0 if specified."
             )
 
     def get_training_data(
@@ -1002,7 +1002,7 @@ class FeatureView:
         )
         return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
 
-    def get_train_validation_test_splits(
+    def get_train_validation_test_split(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,

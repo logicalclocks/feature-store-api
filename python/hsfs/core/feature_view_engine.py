@@ -172,7 +172,7 @@ class FeatureViewEngine:
             elif len(td_updated.splits) == 2:
                 method_name = "get_train_test_split"
             elif len(td_updated.splits) == 3:
-                method_name = "get_train_validation_test_splits"
+                method_name = "get_train_validation_test_split"
             raise ValueError(
                 f"Incorrect `get` method is used. Use `feature_view.{method_name}` instead."
             )
