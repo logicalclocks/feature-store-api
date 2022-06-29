@@ -332,8 +332,6 @@ class Engine:
         return self._convert_simple_pandas_type(dtype)
 
     def _convert_simple_pandas_type(self, dtype):
-        if dtype == np.dtype("O"):
-            return "string"
         if dtype == np.dtype("uint8"):
             return "int"
         elif dtype == np.dtype("uint16"):
@@ -348,6 +346,8 @@ class Engine:
             return "bigint"
         elif dtype == np.dtype("int64"):
             return "bigint"
+        elif dtype == np.dtype("float16"):
+            return "float"
         elif dtype == np.dtype("float32"):
             return "float"
         elif dtype == np.dtype("float64"):
@@ -376,6 +376,9 @@ class Engine:
         elif pa.types.is_binary(arrow_type):
             return "binary"
 
+        # TODO: I would actually throw an acception here.
+        # optimistically returning a string will lead to downstream
+        # casting issues in hudi
         return "string"
 
     def save_dataframe(

@@ -51,6 +51,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.stream:
             feature_group._options = write_options
 
+        # TODO: check primary key data types
         self._feature_group_api.save(feature_group)
         validation_id = None
         if feature_group.validation_type != "NONE" and engine.get_type() == "spark":
@@ -62,6 +63,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
+        # TODO: check df vs schema
         return engine.get_instance().save_dataframe(
             feature_group,
             feature_dataframe,
