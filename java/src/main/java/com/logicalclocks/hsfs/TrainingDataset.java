@@ -135,8 +135,8 @@ public class TrainingDataset {
       Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
       String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
-      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd) 
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd)
       throws FeatureStoreException, ParseException {
     this.name = name;
     this.version = version;
@@ -155,8 +155,8 @@ public class TrainingDataset {
     this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
     this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
         utils.getTrainingDatasetType(storageConnector);
-    setValTestSplit(valSize, testSize);
-    setTimeSeriesSplits(trainStart, trainEnd, valStart, valEnd, testStart, testEnd);
+    setValTestSplit(validationSize, testSize);
+    setTimeSeriesSplits(trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
   }
 
   private void setTimeSeriesSplits(String trainStart, String trainEnd, String valStart, String valEnd,
