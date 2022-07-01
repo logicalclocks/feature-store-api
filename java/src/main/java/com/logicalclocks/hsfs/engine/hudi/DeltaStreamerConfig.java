@@ -91,7 +91,6 @@ public class DeltaStreamerConfig implements Serializable {
         writeOptions.entrySet().stream().filter(e -> e.getKey().startsWith("kafka."))
             .forEach(e -> add(e.getKey().replace("kafka.", "") + "=" + e.getValue()));
       }};
-
     return cfg;
   }
 

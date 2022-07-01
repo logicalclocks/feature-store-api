@@ -252,6 +252,32 @@ public class HudiEngine {
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
     hudiArgs.putAll(HUDI_DEFAULT_PARALLELISM);
 
+    // enable hudi multi write concurrency control
+    // HiveMetastoreBasedLockProvider
+    /*
+    hudiArgs.put("hoodie.write.concurrency.mode", "optimistic_concurrency_control");
+    hudiArgs.put("hoodie.cleaner.policy.failed.writes", "LAZY");
+    hudiArgs.put("hoodie.write.lock.provider", "org.apache.hudi.hive.HiveMetastoreBasedLockProvider");
+    hudiArgs.put("hoodie.write.lock.hivemetastore.uris", "thrift://10.0.2.15:9083");
+    hudiArgs.put("hoodie.write.lock.hivemetastore.database", featureGroup.getFeatureStore().getName());
+    hudiArgs.put("hoodie.write.lock.hivemetastore.table", tableName);
+    hudiArgs.put("hoodie.write.lock.wait_time_ms", "1200000");
+    hudiArgs.put("hoodie.write.lock.num_retries", "10");
+    */
+
+    //ZookeeperBasedLockProvider
+    hudiArgs.put("hoodie.write.concurrency.mode", "optimistic_concurrency_control");
+    hudiArgs.put("hoodie.cleaner.policy.failed.writes", "LAZY");
+    hudiArgs.put("hoodie.write.lock.provider", "org.apache.hudi.client.transaction.lock.ZookeeperBasedLockProvider");
+    hudiArgs.put("hoodie.write.lock.hivemetastore.database", featureGroup.getFeatureStore().getName());
+    hudiArgs.put("hoodie.write.lock.hivemetastore.table", tableName);
+    hudiArgs.put("hoodie.write.lock.zookeeper.url", "10.0.2.15");
+    hudiArgs.put("hoodie.write.lock.zookeeper.port", "2181");
+    hudiArgs.put("hoodie.write.lock.wait_time_ms", "1200000");
+    hudiArgs.put("hoodie.write.lock.num_retries", "10");
+    hudiArgs.put("hoodie.write.lock.zookeeper.lock_key", tableName);
+    hudiArgs.put("hoodie.write.lock.zookeeper.base_path", "/" + HUDI_BASE_PATH);
+
     // Overwrite with user provided options if any
     if (writeOptions != null && !writeOptions.isEmpty()) {
       hudiArgs.putAll(writeOptions);
