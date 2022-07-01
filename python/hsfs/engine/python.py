@@ -51,6 +51,7 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.constructor import query
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.client import exceptions, external, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
@@ -532,12 +533,37 @@ class Engine:
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
+        if (training_dataset_obj.splits[0].split_type ==
+            TrainingDatasetSplit.TIME_SERIES_SPLIT):
+            event_time = feature_view_obj.query._left_feature_group.event_time
+            result_dfs = self._time_series_split(
+                df, training_dataset_obj, event_time
+            )
+        else:
+            result_dfs = self._random_split(df, training_dataset_obj)
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
+                training_dataset_obj,
+                result_dfs.get(split_name),
+            )
+
+        return result_dfs
+
+    def _random_split(self, df, training_dataset_obj):
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
         if (
             sum([split.percentage for split in splits]) != 1
-            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            or sum(
+            [split.percentage > 1 or split.percentage < 0 for split in splits])
             > 1
         ):
             raise ValueError(
@@ -554,19 +580,17 @@ class Engine:
         for i, split in enumerate(splits):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
             result_dfs[split.name] = split_df
+        return result_dfs
 
-        # apply transformations
-        # 1st parametrise transformation functions with dt split stats
-        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-            training_dataset_obj, feature_view_obj, result_dfs
-        )
-        # and the apply them
-        for split_name in result_dfs:
-            result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj,
-                result_dfs.get(split_name),
-            )
-
+    def _time_series_split(self, df, training_dataset_obj, event_time):
+        result_dfs = {}
+        for split in training_dataset_obj.splits:
+            result_dfs[split.name] = df[
+                # TODO: check date type
+                # pandas.timestamp represents millisecond in decimal
+                [split.start_time <= t.timestamp()*1000 < split.end_time
+                 for t in df[event_time]]
+            ]
         return result_dfs
 
     def write_training_dataset(
