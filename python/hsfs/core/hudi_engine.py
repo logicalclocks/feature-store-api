@@ -52,6 +52,7 @@ class HudiEngine:
     HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type"
     HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot"
     HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental"
+    HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot"
     HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime"
     HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime"
     PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
@@ -132,15 +133,11 @@ class HudiEngine:
         )
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
-    def register_temporary_table(
-        self, alias, start_timestamp, end_timestamp, read_options
-    ):
-        hudi_options = self._setup_hudi_read_opts(
-            start_timestamp, end_timestamp, read_options
-        )
+    def register_temporary_table(self, hudi_fg_alias, read_options):
+        hudi_options = self._setup_hudi_read_opts(hudi_fg_alias, read_options)
         self._spark_session.read.format(self.HUDI_SPARK_FORMAT).options(
             **hudi_options
-        ).load(self._base_path).createOrReplaceTempView(alias)
+        ).load(self._base_path).createOrReplaceTempView(hudi_fg_alias.alias)
 
     def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
@@ -182,15 +179,24 @@ class HudiEngine:
 
         return hudi_options
 
-    def _setup_hudi_read_opts(self, start_timestamp, end_timestamp, read_options):
-        _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(start_timestamp)
-        _hudi_commit_end_time = util.get_hudi_datestr_from_timestamp(end_timestamp)
+    def _setup_hudi_read_opts(self, hudi_fg_alias, read_options):
+        if hudi_fg_alias.end_timestamp:
+            _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(
+                hudi_fg_alias.start_timestamp
+            )
+            _hudi_commit_end_time = util.get_hudi_datestr_from_timestamp(
+                hudi_fg_alias.end_timestamp
+            )
 
-        hudi_options = {
-            self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
-            self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
-            self.HUDI_END_INSTANTTIME_OPT_KEY: _hudi_commit_end_time,
-        }
+            hudi_options = {
+                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
+                self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
+                self.HUDI_END_INSTANTTIME_OPT_KEY: _hudi_commit_end_time,
+            }
+        else:
+            hudi_options = {
+                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL,
+            }
 
         if read_options:
             hudi_options.update(read_options)
