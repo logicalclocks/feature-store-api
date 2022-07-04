@@ -31,7 +31,7 @@ try:
     from pyspark.sql import SparkSession, DataFrame, SQLContext, window
     from pyspark.rdd import RDD
     from pyspark.sql.functions import (
-        struct, concat, col, lit, from_json, percent_rank
+        struct, concat, col, lit, from_json, percent_rank, unix_timestamp
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
@@ -454,8 +454,8 @@ class Engine:
         for split in training_dataset.splits:
             result_dfs[split.name] = (
                 dataset
-                .filter(col(event_time).cast('double') * 1000 >= split.start_time)
-                .filter(col(event_time).cast('double') * 1000 < split.end_time)
+                .filter(unix_timestamp(col(event_time)) * 1000 >= split.start_time)
+                .filter(unix_timestamp(col(event_time)) * 1000 < split.end_time)
             )
 
         return result_dfs
