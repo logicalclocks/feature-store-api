@@ -588,10 +588,20 @@ class Engine:
             result_dfs[split.name] = df[
                 # TODO: check date type
                 # pandas.timestamp represents millisecond in decimal
-                [split.start_time <= t.timestamp()*1000 < split.end_time
+                [split.start_time
+                 <= self._convert_to_unix_timestamp(t) < split.end_time
                  for t in df[event_time]]
             ]
         return result_dfs
+
+    def _convert_to_unix_timestamp(self, t):
+        if isinstance(t, pd._libs.tslibs.timestamps.Timestamp):
+            return t.timestamp() * 1000
+        elif isinstance(t, str):
+            return util.get_timestamp_from_date_string(t)
+        else:
+            return t * 1000
+
 
     def write_training_dataset(
         self,

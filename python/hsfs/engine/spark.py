@@ -451,13 +451,18 @@ class Engine:
 
     def _time_series_split(self, training_dataset, dataset, event_time):
         result_dfs = {}
+        ts_type = dataset.select('ts').dtypes[0][1]
+        ts_col = (
+            unix_timestamp(col(event_time)) * 1000
+            if ts_type in ["date", "timestamp"]
+            else col(event_time) * 1000
+        )
         for split in training_dataset.splits:
             result_dfs[split.name] = (
                 dataset
-                .filter(unix_timestamp(col(event_time)) * 1000 >= split.start_time)
-                .filter(unix_timestamp(col(event_time)) * 1000 < split.end_time)
+                .filter(ts_col >= split.start_time)
+                .filter(ts_col < split.end_time)
             )
-
         return result_dfs
 
     def _write_training_dataset_splits(
