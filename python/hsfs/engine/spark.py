@@ -455,6 +455,7 @@ class Engine:
         ts_col = (
             unix_timestamp(col(event_time)) * 1000
             if ts_type in ["date", "timestamp"]
+            # jdbc supports timestamp precision up to second only.
             else col(event_time) * 1000
         )
         for split in training_dataset.splits:

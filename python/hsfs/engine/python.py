@@ -586,8 +586,6 @@ class Engine:
         result_dfs = {}
         for split in training_dataset_obj.splits:
             result_dfs[split.name] = df[
-                # TODO: check date type
-                # pandas.timestamp represents millisecond in decimal
                 [split.start_time
                  <= self._convert_to_unix_timestamp(t) < split.end_time
                  for t in df[event_time]]
@@ -596,10 +594,12 @@ class Engine:
 
     def _convert_to_unix_timestamp(self, t):
         if isinstance(t, pd._libs.tslibs.timestamps.Timestamp):
+            # pandas.timestamp represents millisecond in decimal
             return t.timestamp() * 1000
         elif isinstance(t, str):
             return util.get_timestamp_from_date_string(t)
         else:
+            # jdbc supports timestamp precision up to second only.
             return t * 1000
 
 

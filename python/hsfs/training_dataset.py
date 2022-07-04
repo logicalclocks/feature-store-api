@@ -231,14 +231,15 @@ class TrainingDataset:
             )
 
     def _convert_event_time_to_timestamp(self, event_time):
-        if not event_time:
+        if event_time is None:
             return None
         if isinstance(event_time, str):
             return util.get_timestamp_from_date_string(event_time, timezone.utc)
         elif isinstance(event_time, int):
-            if event_time < 1000:
-                raise ValueError("Timestamp should be greater than or equal to 1000 ms")
-            return event_time
+            if event_time == 0:
+                raise ValueError("Event time should be greater than 0.")
+            # jdbc supports timestamp precision up to second only.
+            return event_time * 1000
         else:
             raise ValueError("Given event time should be in `str` or `int` type")
 
@@ -518,6 +519,7 @@ class TrainingDataset:
             )
 
     def json(self):
+        print(json.dumps(self, cls=util.FeatureStoreEncoder))
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
