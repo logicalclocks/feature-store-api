@@ -28,9 +28,11 @@ import avro
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame, SQLContext
+    from pyspark.sql import SparkSession, DataFrame, SQLContext, window
     from pyspark.rdd import RDD
-    from pyspark.sql.functions import struct, concat, col, lit, from_json
+    from pyspark.sql.functions import (
+        struct, concat, col, lit, from_json, percent_rank
+    )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
         ByteType,
@@ -56,6 +58,7 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
@@ -415,13 +418,8 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            splits = [
-                (split.name, split.percentage) for split in training_dataset.splits
-            ]
-            split_weights = [split[1] for split in splits]
-            split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
-            split_dataset = dict(
-                [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
+            split_dataset = self._split_df(
+                dataset, training_dataset, feature_view_obj
             )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
@@ -429,6 +427,38 @@ class Engine:
             return self._write_training_dataset_splits(
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
+
+    def _split_df(self, dataset, training_dataset, feature_view_obj):
+        if (training_dataset.splits[0].split_type ==
+            TrainingDatasetSplit.TIME_SERIES_SPLIT):
+            event_time = feature_view_obj.query._left_feature_group.event_time
+            return self._time_series_split(
+                training_dataset, dataset, event_time
+            )
+        else:
+            return self._random_split(dataset, training_dataset)
+
+    def _random_split(self, dataset, training_dataset):
+        splits = [
+            (split.name, split.percentage) for split in training_dataset.splits
+        ]
+        split_weights = [split[1] for split in splits]
+        split_dataset = dataset.randomSplit(split_weights,
+                                            training_dataset.seed)
+        return dict(
+            [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
+        )
+
+    def _time_series_split(self, training_dataset, dataset, event_time):
+        result_dfs = {}
+        for split in training_dataset.splits:
+            result_dfs[split.name] = (
+                dataset
+                .filter(col(event_time).cast('double') * 1000 >= split.start_time)
+                .filter(col(event_time).cast('double') * 1000 < split.end_time)
+            )
+
+        return result_dfs
 
     def _write_training_dataset_splits(
         self,
