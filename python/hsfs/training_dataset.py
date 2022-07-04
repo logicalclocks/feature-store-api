@@ -234,7 +234,8 @@ class TrainingDataset:
         if event_time is None:
             return None
         if isinstance(event_time, str):
-            return util.get_timestamp_from_date_string(event_time, timezone.utc)
+            if event_time:
+                return util.get_timestamp_from_date_string(event_time, timezone.utc)
         elif isinstance(event_time, int):
             if event_time == 0:
                 raise ValueError("Event time should be greater than 0.")
@@ -519,7 +520,6 @@ class TrainingDataset:
             )
 
     def json(self):
-        print(json.dumps(self, cls=util.FeatureStoreEncoder))
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
