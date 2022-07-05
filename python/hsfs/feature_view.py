@@ -926,7 +926,12 @@ class FeatureView:
 
     @staticmethod
     def _validate_train_validation_test_split(
-        validation_size, test_size, train_end, validation_start, validation_end, test_start
+        validation_size,
+        test_size,
+        train_end,
+        validation_start,
+        validation_end,
+        test_start,
     ):
         if not (
             (validation_size and test_size)

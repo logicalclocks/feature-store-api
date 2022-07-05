@@ -135,12 +135,19 @@ class TrainingDataset:
             if validation_size or test_size:
                 self._train_split = TrainingDatasetSplit.TRAIN
                 self.splits = {
-                    TrainingDatasetSplit.TRAIN: 1 - (validation_size or 0) - (test_size or 0),
+                    TrainingDatasetSplit.TRAIN: 1
+                    - (validation_size or 0)
+                    - (test_size or 0),
                     TrainingDatasetSplit.VALIDATION: validation_size,
                     TrainingDatasetSplit.TEST: test_size,
                 }
             self._set_time_splits(
-                train_start, train_end, validation_start, validation_end, test_start, test_end
+                train_start,
+                train_end,
+                validation_start,
+                validation_end,
+                test_start,
+                test_end,
             )
         else:
             # type available -> init from backend response
