@@ -348,21 +348,21 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
 
-  public Integer createTrainValidationTestSplits(
-      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd, String description, DataFormat dataFormat
+  public Integer createTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat
   ) throws IOException, FeatureStoreException, ParseException {
-    validateTrainValidationTestSplit(valSize, testSize, trainEnd, valStart, valEnd, testStart);
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
-            .valSize(valSize)
+            .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
-            .valStart(valStart)
-            .valEnd(valEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
             .testStart(testStart)
             .testEnd(testEnd)
             .description(description)
@@ -372,23 +372,23 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
-  public Integer createTrainValidationTestSplits(
-      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd, String description, DataFormat dataFormat,
+  public Integer createTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location,
       Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
   ) throws IOException, FeatureStoreException, ParseException {
-    validateTrainValidationTestSplit(valSize, testSize, trainEnd, valStart, valEnd, testStart);
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
-            .valSize(valSize)
+            .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
-            .valStart(valStart)
-            .valEnd(valEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
             .testStart(testStart)
             .testEnd(testEnd)
             .description(description)
@@ -443,13 +443,13 @@ public class FeatureView {
         Lists.newArrayList(Split.TRAIN, Split.TEST));
   }
 
-  public List<Dataset<Row>> getTrainValidationTestSplits(
+  public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version
   ) throws IOException, FeatureStoreException, ParseException {
-    return getTrainValidationTestSplits(version);
+    return getTrainValidationTestSplit(version);
   }
 
-  public List<Dataset<Row>> getTrainValidationTestSplits(
+  public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
     return getDataset(
@@ -539,21 +539,21 @@ public class FeatureView {
         Lists.newArrayList(Split.TRAIN, Split.TEST));
   }
 
-  public List<Dataset<Row>> trainValidationTestSplits(
-      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd, String description
+  public List<Dataset<Row>> trainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description
   ) throws IOException, FeatureStoreException, ParseException {
-    validateTrainValidationTestSplit(valSize, testSize, trainEnd, valStart, valEnd, testStart);
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
-            .valSize(valSize)
+            .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
-            .valStart(valStart)
-            .valEnd(valEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
             .testStart(testStart)
             .testEnd(testEnd)
             .description(description)
@@ -565,22 +565,22 @@ public class FeatureView {
         Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
   }
 
-  public List<Dataset<Row>> trainValidationTestSplits(
-      Float valSize, Float testSize, String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd, String description,
+  public List<Dataset<Row>> trainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description,
       Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
-    validateTrainValidationTestSplit(valSize, testSize, trainEnd, valStart, valEnd, testStart);
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
-            .valSize(valSize)
+            .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
-            .valStart(valStart)
-            .valEnd(valEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
             .testStart(testStart)
             .testEnd(testEnd)
             .description(description)
@@ -606,16 +606,18 @@ public class FeatureView {
   }
 
   private void validateTrainValidationTestSplit(
-      Float valSize, Float testSize, String trainEnd, String valStart, String valEnd, String testStart)
+      Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
+      String testStart)
       throws FeatureStoreException {
-    if (!((valSize != null && valSize > 0 && testSize != null && testSize > 0)
-        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(valStart))
-        && (!Strings.isNullOrEmpty(valEnd) || !Strings.isNullOrEmpty(testStart))))) {
+    if (!((validationSize != null && validationSize > 0 && testSize != null && testSize > 0)
+        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
+        && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
       throw new FeatureStoreException(
           "Invalid split input."
-              + " You should specify either (`valSize` and `testSize`) or ((`trainEnd` or `valStart`) and (`valEnd` "
+              + " You should specify either (`validationSize` and `testSize`) or "
+              + "((`trainEnd` or `validationStart`) and (`validationEnd` "
               + "or `testStart`))."
-              + "`valSize` and `testSize` should be greater than 0 if specified."
+              + "`validationSize` and `testSize` should be greater than 0 if specified."
       );
     }
   }

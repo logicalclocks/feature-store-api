@@ -56,12 +56,12 @@ class TrainingDataset:
         description=None,
         storage_connector=None,
         splits=None,
-        val_size=None,
+        validation_size=None,
         test_size=None,
         train_start=None,
         train_end=None,
-        val_start=None,
-        val_end=None,
+        validation_start=None,
+        validation_end=None,
         test_start=None,
         test_end=None,
         seed=None,
@@ -86,12 +86,12 @@ class TrainingDataset:
         self._data_format = data_format
         self._start_time = self._convert_event_time_to_timestamp(event_start_time)
         self._end_time = self._convert_event_time_to_timestamp(event_end_time)
-        self._val_size = val_size
+        self._validation_size = validation_size
         self._test_size = test_size
         self._train_start = train_start
         self._train_end = train_end
-        self._val_start = val_start
-        self._val_end = val_end
+        self._validation_start = validation_start
+        self._validation_end = validation_end
         self._test_start = test_start
         self._test_end = test_end
         self._coalesce = coalesce
@@ -132,15 +132,22 @@ class TrainingDataset:
             self.splits = splits
             self.statistics_config = statistics_config
             self._label = label
-            if val_size or test_size:
+            if validation_size or test_size:
                 self._train_split = TrainingDatasetSplit.TRAIN
                 self.splits = {
-                    TrainingDatasetSplit.TRAIN: 1 - (val_size or 0) - (test_size or 0),
-                    TrainingDatasetSplit.VALIDATION: val_size,
+                    TrainingDatasetSplit.TRAIN: 1
+                    - (validation_size or 0)
+                    - (test_size or 0),
+                    TrainingDatasetSplit.VALIDATION: validation_size,
                     TrainingDatasetSplit.TEST: test_size,
                 }
             self._set_time_splits(
-                train_start, train_end, val_start, val_end, test_start, test_end
+                train_start,
+                train_end,
+                validation_start,
+                validation_end,
+                test_start,
+                test_end,
             )
         else:
             # type available -> init from backend response
@@ -171,8 +178,8 @@ class TrainingDataset:
         self,
         train_start=None,
         train_end=None,
-        val_start=None,
-        val_end=None,
+        validation_start=None,
+        validation_end=None,
         test_start=None,
         test_end=None,
     ):
@@ -181,18 +188,18 @@ class TrainingDataset:
             time_splits,
             split_name=TrainingDatasetSplit.TRAIN,
             start_time=train_start,
-            end_time=train_end or val_start,
+            end_time=train_end or validation_start,
         )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.VALIDATION,
-            start_time=val_start or train_end,
-            end_time=val_end or test_start,
+            start_time=validation_start or train_end,
+            end_time=validation_end or test_start,
         )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.TEST,
-            start_time=test_start or val_end,
+            start_time=test_start or validation_end,
             end_time=test_end,
         )
         if time_splits:
@@ -848,12 +855,12 @@ class TrainingDataset:
             self._training_dataset_type = training_dataset_type
 
     @property
-    def val_size(self):
-        return self._val_size
+    def validation_size(self):
+        return self._validation_size
 
-    @val_size.setter
-    def val_size(self, val_size):
-        self._val_size = val_size
+    @validation_size.setter
+    def validation_size(self, validation_size):
+        self._validation_size = validation_size
 
     @property
     def test_size(self):
@@ -880,20 +887,20 @@ class TrainingDataset:
         self._train_end = train_end
 
     @property
-    def val_start(self):
-        return self._val_start
+    def validation_start(self):
+        return self._validation_start
 
-    @val_start.setter
-    def val_start(self, val_start):
-        self._val_start = val_start
+    @validation_start.setter
+    def validation_start(self, validation_start):
+        self._validation_start = validation_start
 
     @property
-    def val_end(self):
-        return self._val_end
+    def validation_end(self):
+        return self._validation_end
 
-    @val_end.setter
-    def val_end(self, val_end):
-        self._val_end = val_end
+    @validation_end.setter
+    def validation_end(self, validation_end):
+        self._validation_end = validation_end
 
     @property
     def test_start(self):
