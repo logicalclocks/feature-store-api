@@ -13,18 +13,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: set release version
+      - name: set major/minor/bugfix release version
         working-directory: ./java
         run: echo "RELEASE_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev 'Download|INFO|WARNING')" >> $GITHUB_ENV
+
+      - name: set major/minor release version
+        run: echo "MAJOR_VERSION=$(echo $RELEASE_VERSION | sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-      - run: pip3 install pip==22.0.3
 
       - name: install deps
         working-directory: ./python
-        run: cp ../README.md . && pip3 install -e .[python,dev,docs]
+        run: cp ../README.md . && pip3 install pip==22.0.3 && pip3 install -e .[dev,docs]
 
       - name: generate autodoc
         run: python3 auto_doc.py
@@ -33,6 +35,5 @@ jobs:
         run: |
           git config --global user.name Mike
           git config --global user.email mike@docs.hopsworks.ai
-
       - name: mike deploy docs
-        run: mike deploy ${{ env.RELEASE_VERSION }} latest -u --push
+        run: mike deploy ${{ env.RELEASE_VERSION }} ${{ env.MAJOR_VERSION }} -u --push
