@@ -14,8 +14,8 @@ window.addEventListener("DOMContentLoaded", function () {
         var majorVersion = apiVersion.match(majorVersionRegex)[0];
 
         document.getElementsByClassName("md-tabs__link")[0].href = "https://docs.hopsworks.ai/" + majorVersion;
-        document.getElementsByClassName("md-tabs__link")[1].href = "https://docs.hopsworks.ai/" + majorVersion + "/getting_started/";
-        document.getElementsByClassName("md-tabs__link")[2].href = "https://docs.hopsworks.ai/" + majorVersion + "/tutorials/";
+        document.getElementsByClassName("md-tabs__link")[1].href = "https://docs.hopsworks.ai/" + majorVersion + "/getting_started/quickstart/";
+        document.getElementsByClassName("md-tabs__link")[2].href = "https://docs.hopsworks.ai/" + majorVersion + "/tutorials/fraud_batch/1_feature_groups/";
         document.getElementsByClassName("md-tabs__link")[3].href = "https://docs.hopsworks.ai/" + majorVersion + "/concepts/hopsworks/";
         document.getElementsByClassName("md-tabs__link")[4].href = "https://docs.hopsworks.ai/" + majorVersion + "/user_guides/"
         document.getElementsByClassName("md-tabs__link")[5].href = "https://docs.hopsworks.ai/" + majorVersion; + "/setup_installation/aws/getting_started/"
