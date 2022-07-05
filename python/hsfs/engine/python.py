@@ -34,6 +34,7 @@ from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
+from tqdm.auto import tqdm
 
 from hsfs import client, feature, util
 from hsfs.core import (
@@ -753,7 +754,20 @@ class Engine:
         def acked(err, msg):
             if err is not None:
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+            else:
+                try:
+                    if progress_bar is not None:
+                        progress_bar.update()
+                except Exception as e:
+                    print("Failed tp update progress bar: {}".format(e))
 
+        # initialize progress bar
+        progress_bar = tqdm(
+            total=dataframe.shape[0],
+            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+            desc="Publishing Dataframe",
+        )
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -806,6 +820,8 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         producer.flush()
+        if progress_bar:
+            progress_bar.close()
 
         # start backfilling job
         job_name = "{fg_name}_{version}_offline_fg_backfill".format(
