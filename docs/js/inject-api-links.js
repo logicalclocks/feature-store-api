@@ -16,7 +16,7 @@ window.addEventListener("DOMContentLoaded", function () {
         document.getElementsByClassName("md-tabs__link")[3].href = "https://docs.hopsworks.ai/" + majorVersion + "/concepts/hopsworks/";
         document.getElementsByClassName("md-tabs__link")[4].href = "https://docs.hopsworks.ai/" + majorVersion + "/user_guides/";
         document.getElementsByClassName("md-tabs__link")[5].href = "https://docs.hopsworks.ai/" + majorVersion + "/setup_installation/aws/getting_started/";
-        document.getElementsByClassName("md-tabs__link")[6].href = "https://docs.hopsworks.ai/" + majorVersion; + "/admin/";
+        document.getElementsByClassName("md-tabs__link")[6].href = "https://docs.hopsworks.ai/" + majorVersion + "/admin/";
         // Version API dropdown
         document.getElementById("hopsworks_api_link").href = "https://docs.hopsworks.ai/hopsworks-api/" + majorVersion + "/generated/api/connection/";
         document.getElementById("hsfs_api_link").href = "https://docs.hopsworks.ai/feature-store-api/" + majorVersion + "/generated/api/connection/";
