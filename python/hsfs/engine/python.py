@@ -423,8 +423,9 @@ class Engine:
         if pa.types.is_struct(arrow_type):
             # best effort, based on pyarrow's string representation
             return str(arrow_type)
-        elif pa.types.is_decimal(arrow_type):
-            return str(arrow_type).replace("decimal128", "decimal")
+        # Currently not supported
+        # elif pa.types.is_decimal(arrow_type):
+        #    return str(arrow_type).replace("decimal128", "decimal")
         elif pa.types.is_date(arrow_type):
             return "date"
         elif pa.types.is_binary(arrow_type):
