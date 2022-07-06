@@ -340,7 +340,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             # raise exception if any errors were found.
             if len(err) > 0:
                 raise FeatureStoreException(
-                    f"Features are not compatible with Feature Group schema: "
+                    "Features are not compatible with Feature Group schema: "
                     + "".join(["\n -" + e for e in err])
                 )
 
