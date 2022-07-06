@@ -36,6 +36,7 @@ from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 
 from hsfs import client, feature, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_group_api,
     dataset_api,
@@ -336,7 +337,8 @@ class Engine:
             ]
             if len(upper_case_features) > 0:
                 warnings.warn(
-                    "The ingested dataframe contains upper case letters in feature names: `{}`. Feature names are sanitized to lower case in the feature store.".format(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
@@ -352,17 +354,19 @@ class Engine:
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe):
+    def parse_schema_feature_group(self, dataframe, is_streaming):
         arrow_schema = pa.Schema.from_pandas(dataframe)
-        return [
-            feature.Feature(
-                feat_name.lower(),
-                self._convert_pandas_type(
+        features = []
+        for feat_name, feat_type in dataframe.dtypes.items():
+            name = feat_name.lower()
+            try:
+                converted_type = self._convert_pandas_type(
                     feat_type, arrow_schema.field(feat_name).type
-                ),
-            )
-            for feat_name, feat_type in dataframe.dtypes.items()
-        ]
+                )
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(feature.Feature(name, converted_type))
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         raise NotImplementedError(
@@ -404,8 +408,10 @@ class Engine:
             return "timestamp"
         elif dtype == np.dtype("bool"):
             return "boolean"
+        elif dtype == "category":
+            return "string"
 
-        return "string"
+        raise ValueError(f"dtype '{dtype}' not supported")
 
     def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
@@ -423,11 +429,10 @@ class Engine:
             return "date"
         elif pa.types.is_binary(arrow_type):
             return "binary"
+        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
+            return "string"
 
-        # TODO: I would actually throw an acception here.
-        # optimistically returning a string will lead to downstream
-        # casting issues in hudi
-        return "string"
+        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     def save_dataframe(
         self,

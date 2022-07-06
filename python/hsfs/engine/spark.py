@@ -30,7 +30,8 @@ try:
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
-    from pyspark.sql.types import ByteType, ShortType
+    from pyspark.sql.types import ByteType, ShortType, IntegerType, LongType, FloatType, DoubleType, \
+    DecimalType, DateType, StringType, TimestampType, ArrayType, StructType, BinaryType, BooleanType
 except ImportError:
     pass
 
@@ -54,6 +55,10 @@ class Engine:
 
     APPEND = "append"
     OVERWRITE = "overwrite"
+
+    SUPPORTED_STREAMING_TYPES = [BooleanType, ByteType, ShortType, IntegerType, LongType,
+                                 FloatType, DoubleType, DecimalType, TimestampType, DateType,
+                                 StringType, ArrayType, StructType, BinaryType]
 
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
@@ -696,15 +701,18 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe):
-        return [
-            feature.Feature(
-                feat.name.lower(),
-                self.convert_spark_type(feat.dataType),
-                feat.metadata.get("description", None),
-            )
-            for feat in dataframe.schema
-        ]
+    def parse_schema_feature_group(self, dataframe, is_streaming):
+        features = []
+        for feat in dataframe.schema:
+            name = feat.name.lower()
+            try:
+                converted_type = self.convert_spark_type(feat.dataType, is_streaming),
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(feature.Feature(name,
+                                            converted_type,
+                                            feat.metadata.get("description", None)))
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         return [
@@ -714,7 +722,7 @@ class Engine:
             for feat in dataframe.schema
         ]
 
-    def convert_spark_type(self, hive_type):
+    def convert_spark_type(self, hive_type, is_streaming):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
@@ -723,19 +731,11 @@ class Engine:
             return "int"
         elif type(hive_type) == ShortType:
             return "int"
+        elif not is_streaming or type(hive_type) in self.SUPPORTED_STREAMING_TYPES:
+            return hive_type.simpleString()
 
-        return hive_type.simpleString()
+        raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
-    # TODO: I think this is not used/can be removed
-    def parse_schema_dict(self, dataframe):
-        return {
-            feat.name: feature.Feature(
-                feat.name.lower(),
-                feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
-            )
-            for feat in dataframe.schema
-        }
 
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)

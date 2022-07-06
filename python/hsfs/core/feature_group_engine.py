@@ -17,6 +17,7 @@ import warnings
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine, hudi_engine
 
 
@@ -29,7 +30,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def save(self, feature_group, feature_dataframe, write_options, validation_options):
 
-        self._save_feature_group_metadata(
+        self._check_and_save_feature_group_metadata(
             feature_group, feature_dataframe, write_options
         )
 
@@ -39,7 +40,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
         validation_id = validation.validation_id if validation is not None else None
 
-        # TODO: check primary key data types
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group, feature_dataframe, True, validation_options
@@ -51,7 +51,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         offline_write_options = write_options
         online_write_options = self.get_kafka_config(write_options)
 
-        # TODO: check df vs schema
         return (
             engine.get_instance().save_dataframe(
                 feature_group,
@@ -79,10 +78,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         validation_options,
     ):
 
-        if not feature_group._id:
-            self._save_feature_group_metadata(
-                feature_group, feature_dataframe, write_options
-            )
+        self._check_and_save_feature_group_metadata(
+            feature_group, feature_dataframe, write_options, overwrite_if_exists=False
+        )
 
         # deequ validation only on spark
         validation = feature_group._data_validation_engine.ingest_validate(
@@ -269,9 +267,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
-        if not feature_group._id:
-            self._save_feature_group_metadata(feature_group, dataframe, write_options)
+        self._check_and_save_feature_group_metadata(feature_group, dataframe, write_options,
+                                                    overwrite_if_exists=False)
 
+        if not feature_group._id:
             if not feature_group.stream:
                 # insert_stream method was called on non stream feature group object that has not been saved.
                 # we will use save_dataframe method on empty dataframe to create directory structure
@@ -316,17 +315,67 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         return streaming_query
 
-    def _save_feature_group_metadata(
-        self, feature_group, feature_dataframe, write_options
+    def _check_and_save_feature_group_metadata(
+        self, feature_group, feature_dataframe, write_options, overwrite_if_exists=True
     ):
+        feature_group_not_exists = not feature_group.id
+        features_not_specified = len(feature_group.features) == 0
 
-        # this means FG doesn't exist and should create the new one
-        if len(feature_group.features) == 0:
-            # User didn't provide a schema. extract it from the dataframe
+        if features_not_specified:
+            # User didn't provide a schema. extract schema from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
+                feature_dataframe, feature_group.stream
             )
+        else:
+            # get schema from current dataframe
+            schema_dataframe = engine.get_instance().parse_schema_feature_group(
+                feature_dataframe, feature_group.stream
+            )
+            # check for compatibility with feature group schema
+            err = self._check_schema_compatibility(feature_group.features, schema_dataframe)
 
+            # raise exception if any errors were found.
+            if len(err) > 0:
+                raise FeatureStoreException(
+                    f"Features are not compatible with Feature Group schema: " +
+                    "".join(["\n -"+e for e in err]))
+
+        # check not more than 500 columns with online_enabled=True
+        if feature_group.online_enabled and len(feature_group._features) > 500:
+            raise FeatureStoreException(f"Failed to create Feature Group. With "
+                                        f"'online_enabled=True', a maximum of 500 features "
+                                        f"is allowed, found {len(feature_group._features)}.")
+
+        # save if the feature group does not exist or if overwrite_if_exists is true
+        if feature_group_not_exists or overwrite_if_exists:
+            self._save_feature_group_metadata(feature_group, write_options)
+
+    def _check_schema_compatibility(self, schema_feature_group, schema_dataframe):
+        err = []
+        feature_df_dict = { feat.name : feat.type for feat in schema_dataframe}
+        for feature_fg in schema_feature_group:
+            # check if feature exists dataframe
+            if feature_fg.name in feature_df_dict:
+                # check if types match
+                if feature_fg.type != feature_df_dict[feature_fg.name]:
+                    err += f"Feature '{feature_fg.name}' (" \
+                           f"expected by schema: '{feature_fg.type}', " \
+                           f"provided as input: '{feature_df_dict[feature_fg.name]}')"
+
+                # remove from lookup table
+                del feature_df_dict[feature_fg.name]
+            else:
+                err += f"Feature '{feature_fg.name}' (type: '{feature_fg.type}') is missing from " \
+                       f"input."
+
+        # any features that are left in lookup table are superfluous
+        for feature_df_name, feature_df_type in feature_df_dict.items():
+            err += f"Feature '{feature_df_name}' (type: '{feature_df_type}') does not exist " \
+                   f"in schema."
+
+        return err
+
+    def _save_feature_group_metadata(self, feature_group, write_options):
         # set primary and partition key columns
         # we should move this to the backend
         for feat in feature_group.features:
@@ -348,6 +397,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             "Feature Group created successfully, explore it at \n"
             + self._get_feature_group_url(feature_group)
         )
+
 
     def _get_feature_group_url(self, feature_group):
         sub_path = (
