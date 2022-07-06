@@ -267,8 +267,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
-        self._check_and_save_feature_group_metadata(feature_group, dataframe, write_options,
-                                                    overwrite_if_exists=False)
+        self._check_and_save_feature_group_metadata(
+            feature_group, dataframe, write_options, overwrite_if_exists=False
+        )
 
         if not feature_group._id:
             if not feature_group.stream:
@@ -332,19 +333,24 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_dataframe, feature_group.stream
             )
             # check for compatibility with feature group schema
-            err = self._check_schema_compatibility(feature_group.features, schema_dataframe)
+            err = self._check_schema_compatibility(
+                feature_group.features, schema_dataframe
+            )
 
             # raise exception if any errors were found.
             if len(err) > 0:
                 raise FeatureStoreException(
-                    f"Features are not compatible with Feature Group schema: " +
-                    "".join(["\n -"+e for e in err]))
+                    f"Features are not compatible with Feature Group schema: "
+                    + "".join(["\n -" + e for e in err])
+                )
 
         # check not more than 500 columns with online_enabled=True
         if feature_group.online_enabled and len(feature_group._features) > 500:
-            raise FeatureStoreException(f"Failed to create Feature Group. With "
-                                        f"'online_enabled=True', a maximum of 500 features "
-                                        f"is allowed, found {len(feature_group._features)}.")
+            raise FeatureStoreException(
+                f"Failed to create Feature Group. With "
+                f"'online_enabled=True', a maximum of 500 features "
+                f"is allowed, found {len(feature_group._features)}."
+            )
 
         # save if the feature group does not exist or if overwrite_if_exists is true
         if feature_group_not_exists or overwrite_if_exists:
@@ -352,26 +358,32 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def _check_schema_compatibility(self, schema_feature_group, schema_dataframe):
         err = []
-        feature_df_dict = { feat.name : feat.type for feat in schema_dataframe}
+        feature_df_dict = {feat.name: feat.type for feat in schema_dataframe}
         for feature_fg in schema_feature_group:
             # check if feature exists dataframe
             if feature_fg.name in feature_df_dict:
                 # check if types match
                 if feature_fg.type != feature_df_dict[feature_fg.name]:
-                    err += f"Feature '{feature_fg.name}' (" \
-                           f"expected by schema: '{feature_fg.type}', " \
-                           f"provided as input: '{feature_df_dict[feature_fg.name]}')"
+                    err += (
+                        f"Feature '{feature_fg.name}' ("
+                        f"expected by schema: '{feature_fg.type}', "
+                        f"provided as input: '{feature_df_dict[feature_fg.name]}')"
+                    )
 
                 # remove from lookup table
                 del feature_df_dict[feature_fg.name]
             else:
-                err += f"Feature '{feature_fg.name}' (type: '{feature_fg.type}') is missing from " \
-                       f"input."
+                err += (
+                    f"Feature '{feature_fg.name}' (type: '{feature_fg.type}') is missing from "
+                    f"input."
+                )
 
         # any features that are left in lookup table are superfluous
         for feature_df_name, feature_df_type in feature_df_dict.items():
-            err += f"Feature '{feature_df_name}' (type: '{feature_df_type}') does not exist " \
-                   f"in schema."
+            err += (
+                f"Feature '{feature_df_name}' (type: '{feature_df_type}') does not exist "
+                f"in schema."
+            )
 
         return err
 
@@ -397,7 +409,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             "Feature Group created successfully, explore it at \n"
             + self._get_feature_group_url(feature_group)
         )
-
 
     def _get_feature_group_url(self, feature_group):
         sub_path = (

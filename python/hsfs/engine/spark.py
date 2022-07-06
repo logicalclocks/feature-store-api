@@ -30,8 +30,22 @@ try:
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
-    from pyspark.sql.types import ByteType, ShortType, IntegerType, LongType, FloatType, DoubleType, \
-    DecimalType, DateType, StringType, TimestampType, ArrayType, StructType, BinaryType, BooleanType
+    from pyspark.sql.types import (
+        ByteType,
+        ShortType,
+        IntegerType,
+        LongType,
+        FloatType,
+        DoubleType,
+        DecimalType,
+        DateType,
+        StringType,
+        TimestampType,
+        ArrayType,
+        StructType,
+        BinaryType,
+        BooleanType,
+    )
 except ImportError:
     pass
 
@@ -56,9 +70,22 @@ class Engine:
     APPEND = "append"
     OVERWRITE = "overwrite"
 
-    SUPPORTED_STREAMING_TYPES = [BooleanType, ByteType, ShortType, IntegerType, LongType,
-                                 FloatType, DoubleType, DecimalType, TimestampType, DateType,
-                                 StringType, ArrayType, StructType, BinaryType]
+    SUPPORTED_STREAMING_TYPES = [
+        BooleanType,
+        ByteType,
+        ShortType,
+        IntegerType,
+        LongType,
+        FloatType,
+        DoubleType,
+        DecimalType,
+        TimestampType,
+        DateType,
+        StringType,
+        ArrayType,
+        StructType,
+        BinaryType,
+    ]
 
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
@@ -534,7 +561,7 @@ class Engine:
             if include_metadata is True:
                 return df.select(
                     *kafka_cols,
-                    from_json(df.value.cast("string"), schema).alias("value")
+                    from_json(df.value.cast("string"), schema).alias("value"),
                 ).select(*kafka_cols, col("value.*"))
             return df.select(
                 from_json(df.value.cast("string"), schema).alias("value")
@@ -706,12 +733,14 @@ class Engine:
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = self.convert_spark_type(feat.dataType, is_streaming),
+                converted_type = self.convert_spark_type(feat.dataType, is_streaming)
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
-            features.append(feature.Feature(name,
-                                            converted_type,
-                                            feat.metadata.get("description", None)))
+            features.append(
+                feature.Feature(
+                    name, converted_type, feat.metadata.get("description", None)
+                )
+            )
         return features
 
     def parse_schema_training_dataset(self, dataframe):
@@ -735,7 +764,6 @@ class Engine:
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
-
 
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)
