@@ -756,9 +756,9 @@ class Engine:
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
 
-        if type(hive_type) == ByteType:
+        if type(hive_type) == ByteType and is_streaming:
             return "int"
-        elif type(hive_type) == ShortType:
+        elif type(hive_type) == ShortType and is_streaming:
             return "int"
         elif not is_streaming or type(hive_type) in self.SUPPORTED_STREAMING_TYPES:
             return hive_type.simpleString()
