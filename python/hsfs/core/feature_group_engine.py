@@ -360,30 +360,37 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         err = []
         feature_df_dict = {feat.name: feat.type for feat in schema_dataframe}
         for feature_fg in schema_feature_group:
+            fg_type = feature_fg.type.lower()
             # check if feature exists dataframe
             if feature_fg.name in feature_df_dict:
+                df_type = feature_df_dict[feature_fg.name].lower()
+                # remove match from lookup table
+                del feature_df_dict[feature_fg.name]
+
                 # check if types match
-                if feature_fg.type != feature_df_dict[feature_fg.name]:
-                    err += (
+                if fg_type != df_type:
+                    if (
+                        fg_type.startswith("struct") and df_type.startswith("struct")
+                    ) or (fg_type.startswith("array") and df_type.startswith("array")):
+                        continue
+                    err += [
                         f"Feature '{feature_fg.name}' ("
                         f"expected by schema: '{feature_fg.type}', "
                         f"provided as input: '{feature_df_dict[feature_fg.name]}')"
-                    )
+                    ]
 
-                # remove from lookup table
-                del feature_df_dict[feature_fg.name]
             else:
-                err += (
+                err += [
                     f"Feature '{feature_fg.name}' (type: '{feature_fg.type}') is missing from "
                     f"input."
-                )
+                ]
 
         # any features that are left in lookup table are superfluous
         for feature_df_name, feature_df_type in feature_df_dict.items():
-            err += (
+            err += [
                 f"Feature '{feature_df_name}' (type: '{feature_df_type}') does not exist "
                 f"in schema."
-            )
+            ]
 
         return err
 
