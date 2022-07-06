@@ -70,23 +70,6 @@ class Engine:
     APPEND = "append"
     OVERWRITE = "overwrite"
 
-    SUPPORTED_STREAMING_TYPES = [
-        BooleanType,
-        ByteType,
-        ShortType,
-        IntegerType,
-        LongType,
-        FloatType,
-        DoubleType,
-        DecimalType,
-        TimestampType,
-        DateType,
-        StringType,
-        ArrayType,
-        StructType,
-        BinaryType,
-    ]
-
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
@@ -760,7 +743,26 @@ class Engine:
             return "int"
         elif type(hive_type) == ShortType and is_streaming:
             return "int"
-        elif not is_streaming or type(hive_type) in self.SUPPORTED_STREAMING_TYPES:
+        elif (
+            type(hive_type)
+            in [
+                BooleanType,
+                ByteType,
+                ShortType,
+                IntegerType,
+                LongType,
+                FloatType,
+                DoubleType,
+                DecimalType,
+                TimestampType,
+                DateType,
+                StringType,
+                ArrayType,
+                StructType,
+                BinaryType,
+            ]
+            or not is_streaming
+        ):
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
