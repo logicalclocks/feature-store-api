@@ -711,12 +711,12 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe, is_streaming):
+    def parse_schema_feature_group(self, dataframe):
         features = []
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = self.convert_spark_type(feat.dataType, is_streaming)
+                converted_type = self.convert_spark_type(feat.dataType)
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
             features.append(
@@ -734,14 +734,14 @@ class Engine:
             for feat in dataframe.schema
         ]
 
-    def convert_spark_type(self, hive_type, is_streaming):
+    def convert_spark_type(self, hive_type):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
 
-        if type(hive_type) == ByteType and is_streaming:
+        if type(hive_type) == ByteType:
             return "int"
-        elif type(hive_type) == ShortType and is_streaming:
+        elif type(hive_type) == ShortType:
             return "int"
         elif (
             type(hive_type)
@@ -761,7 +761,6 @@ class Engine:
                 StructType,
                 BinaryType,
             ]
-            or not is_streaming
         ):
             return hive_type.simpleString()
 

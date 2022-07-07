@@ -354,7 +354,7 @@ class Engine:
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe, is_streaming):
+    def parse_schema_feature_group(self, dataframe):
         arrow_schema = pa.Schema.from_pandas(dataframe)
         features = []
         for feat_name, feat_type in dataframe.dtypes.items():

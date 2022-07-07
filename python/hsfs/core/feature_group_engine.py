@@ -325,12 +325,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if features_not_specified:
             # User didn't provide a schema. extract schema from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe, feature_group.stream
+                feature_dataframe
             )
         else:
             # get schema from current dataframe
             schema_dataframe = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe, feature_group.stream
+                feature_dataframe
             )
             # check for compatibility with feature group schema
             err = self._check_schema_compatibility(
