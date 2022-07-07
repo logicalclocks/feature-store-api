@@ -360,10 +360,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         err = []
         feature_df_dict = {feat.name: feat.type for feat in schema_dataframe}
         for feature_fg in schema_feature_group:
-            fg_type = feature_fg.type.lower()
+            fg_type = feature_fg.type.lower().replace(" ", "")
             # check if feature exists dataframe
             if feature_fg.name in feature_df_dict:
-                df_type = feature_df_dict[feature_fg.name].lower()
+                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
                 # remove match from lookup table
                 del feature_df_dict[feature_fg.name]
 
