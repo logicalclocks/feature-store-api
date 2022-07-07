@@ -321,16 +321,17 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     ):
         feature_group_not_exists = not feature_group.id
         features_not_specified = len(feature_group.features) == 0
+        using_hudi = feature_group.time_travel_format == "HUDI"
 
         if features_not_specified:
             # User didn't provide a schema. extract schema from the dataframe
             feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
+                feature_dataframe, using_hudi
             )
         else:
             # get schema from current dataframe
             schema_dataframe = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
+                feature_dataframe, using_hudi
             )
             # check for compatibility with feature group schema
             err = self._check_schema_compatibility(
@@ -343,14 +344,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                     "Features are not compatible with Feature Group schema: "
                     + "".join(["\n -" + e for e in err])
                 )
-
-        # check not more than 500 columns with online_enabled=True
-        if feature_group.online_enabled and len(feature_group._features) > 500:
-            raise FeatureStoreException(
-                f"Failed to create Feature Group. With "
-                f"'online_enabled=True', a maximum of 500 features "
-                f"is allowed, found {len(feature_group._features)}."
-            )
 
         # save if the feature group does not exist or if overwrite_if_exists is true
         if feature_group_not_exists or overwrite_if_exists:
