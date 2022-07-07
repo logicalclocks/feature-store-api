@@ -55,6 +55,7 @@ setup(
             "pyarrow",
             "confluent-kafka==1.8.2",
             "fastavro==1.4.11",
+            "tqdm"
         ],
     },
     author="Hopsworks AB",
