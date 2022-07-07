@@ -755,11 +755,8 @@ class Engine:
             if err is not None and offline_write_options.get("debug_kafka", False):
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
             else:
-                try:
-                    if progress_bar is not None:
-                        progress_bar.update()
-                except Exception as e:
-                    print("Failed tp update progress bar: {}".format(e))
+                if progress_bar is not None:
+                    progress_bar.update()
 
         # initialize progress bar
         progress_bar = tqdm(
