@@ -752,7 +752,7 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
-            if err is not None:
+            if err is not None and offline_write_options.get("debug_kafka", False):
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
             else:
                 try:
@@ -766,7 +766,7 @@ class Engine:
             total=dataframe.shape[0],
             bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
             "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-            desc="Publishing Dataframe",
+            desc="Uploading Dataframe",
         )
         # loop over rows
         for r in dataframe.itertuples(index=False):
@@ -804,9 +804,7 @@ class Engine:
                         topic=feature_group._online_topic_name,
                         key=key,
                         value=encoded_row,
-                        callback=acked
-                        if offline_write_options.get("debug_kafka", False)
-                        else None,
+                        callback=acked,
                     )
 
                     # Trigger internal callbacks to empty op queue
@@ -820,7 +818,7 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         producer.flush()
-        if progress_bar:
+        if progress_bar is not None:
             progress_bar.close()
 
         # start backfilling job
