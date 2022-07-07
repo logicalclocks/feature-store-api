@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", function () {
         document.getElementsByClassName("md-tabs__link")[6].href = "https://docs.hopsworks.ai/" + majorVersion + "/admin/";
         // Version API dropdown
         document.getElementById("hopsworks_api_link").href = "https://docs.hopsworks.ai/hopsworks-api/" + majorVersion + "/generated/api/connection/";
-        document.getElementById("hsfs_api_link").href = "https://docs.hopsworks.ai/feature-store-api/" + majorVersion + "/generated/api/connection/";
+        document.getElementById("hsfs_api_link").href = "https://docs.hopsworks.ai/feature-store-api/" + majorVersion + "/generated/api/connection_api/";
         document.getElementById("hsml_api_link").href = "https://docs.hopsworks.ai/machine-learning-api/" + majorVersion + "/generated/connection_api/";
     }
 });
