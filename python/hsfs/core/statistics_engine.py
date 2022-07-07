@@ -78,7 +78,7 @@ class StatisticsEngine:
                 "to the online storage of a feature group.",
                 category=util.StatisticsWarning,
             )
-            return None
+            return "{}"
         return engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,

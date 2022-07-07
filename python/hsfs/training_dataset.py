@@ -34,7 +34,7 @@ from hsfs.core import (
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query
+from hsfs.constructor import query, filter
 
 
 class TrainingDataset:
@@ -79,6 +79,7 @@ class TrainingDataset:
         transformation_functions=None,
         train_split=None,
         time_split_size=None,
+        extra_filter=None
     ):
         self._id = id
         self._name = name
@@ -103,7 +104,6 @@ class TrainingDataset:
         self._feature_store_id = featurestore_id
         self._transformation_functions = transformation_functions
         self._train_split = train_split
-
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
         )
@@ -151,6 +151,11 @@ class TrainingDataset:
                 test_start,
                 test_end,
             )
+            self._extra_filter = (
+                filter.Logic(filter.Logic.SINGLE, left_f=extra_filter)
+                if isinstance(extra_filter, filter.Filter)
+                else extra_filter
+            )
         else:
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
@@ -171,7 +176,7 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
-
+            self._extra_filter = filter.Logic.from_response_json(extra_filter)
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
@@ -538,6 +543,7 @@ class TrainingDataset:
             "trainSplit": self._train_split,
             "eventStartTime": self._start_time,
             "eventEndTime": self._end_time,
+            "extraFilter": self._extra_filter
         }
 
     @property
@@ -935,7 +941,6 @@ class TrainingDataset:
     def test_end(self, test_end):
         self._test_end = test_end
 
-    @property
     def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
         if self._vector_server.serving_keys:
@@ -946,3 +951,11 @@ class TrainingDataset:
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.serving_keys
+
+    @property
+    def extra_filter(self):
+        return self._extra_filter
+
+    @extra_filter.setter
+    def extra_filter(self, extra_filter):
+        self._extra_filter = extra_filter

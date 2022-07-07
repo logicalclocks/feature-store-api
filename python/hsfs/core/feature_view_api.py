@@ -90,6 +90,7 @@ class FeatureViewApi:
         version,
         start_time,
         end_time,
+        training_dataset_version=None,
         with_label=False,
         is_python_engine=False,
     ):
@@ -109,6 +110,7 @@ class FeatureViewApi:
                     "end_time": end_time,
                     "with_label": with_label,
                     "is_hive_engine": is_python_engine,
+                    "td_version": training_dataset_version
                 },
             )
         )

@@ -95,22 +95,26 @@ class FeatureViewEngine:
         else:
             return self._feature_view_api.delete_by_name(name)
 
-    def get_batch_query(self, feature_view_obj, start_time, end_time, with_label=False):
+    def get_batch_query(self, feature_view_obj, start_time, end_time,
+                        with_label=False, training_dataset_version=None):
         return self._feature_view_api.get_batch_query(
             feature_view_obj.name,
             feature_view_obj.version,
             start_time,
             end_time,
+            training_dataset_version=training_dataset_version,
             is_python_engine=engine.get_type() == "python",
             with_label=with_label,
         )
 
-    def get_batch_query_string(self, feature_view_obj, start_time, end_time):
+    def get_batch_query_string(self, feature_view_obj, start_time,
+                               end_time, training_dataset_version=None):
         query_obj = self._feature_view_api.get_batch_query(
             feature_view_obj.name,
             feature_view_obj.version,
             start_time,
             end_time,
+            training_dataset_version=training_dataset_version,
             is_python_engine=engine.get_type() == "python",
         )
         fs_query = self._query_constructor_api.construct_query(query_obj)
@@ -191,6 +195,7 @@ class FeatureViewEngine:
             self._check_feature_group_accessibility(feature_view_obj)
             query = self.get_batch_query(
                 feature_view_obj,
+                training_dataset_version=td_updated.version,
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
@@ -430,7 +435,8 @@ class FeatureViewEngine:
         self._check_feature_group_accessibility(feature_view_obj)
 
         feature_dataframe = self.get_batch_query(
-            feature_view_obj, start_time, end_time, with_label=False
+            feature_view_obj, start_time, end_time, with_label=False,
+            training_dataset_version=training_dataset_version
         ).read(read_options=read_options)
 
         training_dataset_obj = self._get_training_data_metadata(
