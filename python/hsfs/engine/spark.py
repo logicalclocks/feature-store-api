@@ -743,25 +743,22 @@ class Engine:
             return "int"
         elif type(hive_type) == ShortType:
             return "int"
-        elif (
-            type(hive_type)
-            in [
-                BooleanType,
-                ByteType,
-                ShortType,
-                IntegerType,
-                LongType,
-                FloatType,
-                DoubleType,
-                DecimalType,
-                TimestampType,
-                DateType,
-                StringType,
-                ArrayType,
-                StructType,
-                BinaryType,
-            ]
-        ):
+        elif type(hive_type) in [
+            BooleanType,
+            ByteType,
+            ShortType,
+            IntegerType,
+            LongType,
+            FloatType,
+            DoubleType,
+            DecimalType,
+            TimestampType,
+            DateType,
+            StringType,
+            ArrayType,
+            StructType,
+            BinaryType,
+        ]:
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")

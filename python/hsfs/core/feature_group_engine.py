@@ -369,14 +369,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
                 # check if types match
                 if fg_type != df_type:
+                    # don't check structs and arrays for exact match
                     if (
                         fg_type.startswith("struct") and df_type.startswith("struct")
                     ) or (fg_type.startswith("array") and df_type.startswith("array")):
                         continue
 
-                    if (fg_type == "int" and df_type.startswith("struct")) or (
-                        fg_type.startswith("array") and df_type.startswith("array")
-                    ):
+                    # allow downcast for tinyint and smallint
+                    if (
+                        fg_type == "tinyint" or fg_type == "smallint"
+                    ) and df_type == "int":
                         continue
 
                     err += [
