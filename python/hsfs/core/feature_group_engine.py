@@ -375,12 +375,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                     ) or (fg_type.startswith("array") and df_type.startswith("array")):
                         continue
 
-                    # allow downcast for tinyint and smallint
-                    if (
-                        fg_type == "tinyint" or fg_type == "smallint"
-                    ) and df_type == "int":
-                        continue
-
                     err += [
                         f"Feature '{feature_fg.name}' ("
                         f"expected by schema: '{fg_type}', "
