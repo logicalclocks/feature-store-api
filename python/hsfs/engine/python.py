@@ -767,6 +767,7 @@ class Engine:
             bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
             "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
             desc="Uploading Dataframe",
+            mininterval=1,
         )
         # loop over rows
         for r in dataframe.itertuples(index=False):
