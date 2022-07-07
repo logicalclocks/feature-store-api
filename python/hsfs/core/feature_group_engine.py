@@ -373,10 +373,16 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                         fg_type.startswith("struct") and df_type.startswith("struct")
                     ) or (fg_type.startswith("array") and df_type.startswith("array")):
                         continue
+
+                    if (fg_type == "int" and df_type.startswith("struct")) or (
+                        fg_type.startswith("array") and df_type.startswith("array")
+                    ):
+                        continue
+
                     err += [
                         f"Feature '{feature_fg.name}' ("
-                        f"expected by schema: '{feature_fg.type}', "
-                        f"provided as input: '{feature_df_dict[feature_fg.name]}')"
+                        f"expected by schema: '{fg_type}', "
+                        f"provided as input: '{df_type}')"
                     ]
 
             else:
