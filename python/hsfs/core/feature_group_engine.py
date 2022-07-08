@@ -367,8 +367,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                         continue
 
                     err += [
-                        f"Feature {feature_fg.name}' ("
-                        f"expected by schema: '{fg_type}', "
+                        f"Feature {feature_fg.name} ("
+                        f"expected type: '{fg_type}', "
                         f"derived from input: '{df_type}')"
                     ]
 
