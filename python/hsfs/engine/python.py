@@ -755,8 +755,8 @@ class Engine:
             if err is not None and offline_write_options.get("debug_kafka", False):
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
             else:
-                if progress_bar is not None:
-                    progress_bar.update()
+                # update progress bar for each msg
+                progress_bar.update()
 
         # initialize progress bar
         progress_bar = tqdm(
@@ -816,8 +816,7 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         producer.flush()
-        if progress_bar is not None:
-            progress_bar.close()
+        progress_bar.close()
 
         # start backfilling job
         job_name = "{fg_name}_{version}_offline_fg_backfill".format(
