@@ -367,21 +367,21 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                         continue
 
                     err += [
-                        f"Feature {feature_fg.name} ("
+                        f"{feature_fg.name} ("
                         f"expected type: '{fg_type}', "
                         f"derived from input: '{df_type}')"
                     ]
 
             else:
                 err += [
-                    f"Feature {feature_fg.name} (type: '{feature_fg.type}') is missing from "
+                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
                     f"input dataframe."
                 ]
 
         # any features that are left in lookup table are superfluous
         for feature_df_name, feature_df_type in feature_df_dict.items():
             err += [
-                f"Feature {feature_df_name} (type: '{feature_df_type}') does not exist "
+                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
                 f"in feature group."
             ]
 
