@@ -369,7 +369,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                     err += [
                         f"{feature_fg.name} ("
                         f"expected type: '{fg_type}', "
-                        f"derived from input: '{df_type}')"
+                        f"derived from input: '{df_type}') has the wrong type."
                     ]
 
             else:
