@@ -15,7 +15,7 @@ import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.TagsApi;
-import org.apache.hadoop.mapreduce.lib.input.InvalidInputException;
+import org.apache.hadoop.mapred.InvalidInputException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -123,7 +123,7 @@ public class FeatureViewEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
     Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(),
-        trainingDataset.getEventEndTime(), true);
+        trainingDataset.getEventEndTime(), true, trainingDataset.getVersion());
     Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, query, Maps.newHashMap(),
         writeOptions, SaveMode.Overwrite);
     computeStatistics(featureView, trainingDataset, datasets);
@@ -196,7 +196,7 @@ public class FeatureViewEngine {
       TrainingDatasetBundle trainingDatasetBundle;
       if (trainingDatasetUpdated.getSplits() != null && !trainingDatasetUpdated.getSplits().isEmpty()) {
         Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
-            true);
+            true, trainingDataset.getVersion());
         Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, query,
             userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
@@ -303,7 +303,7 @@ public class FeatureViewEngine {
       Map<String, String> userReadOptions) throws IOException,
       FeatureStoreException {
     Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
-        true);
+        true, trainingDataset.getVersion());
     return (Dataset<Row>) query.read(false, userReadOptions);
   }
 
@@ -329,13 +329,14 @@ public class FeatureViewEngine {
         featureView.getVersion());
   }
 
-  public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime)
+  public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = getBatchQuery(featureView, startTime, endTime, false);
+    Query query = getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion);
     return query.sql();
   }
 
-  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels)
+  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
+      Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     Query query = featureViewApi.getBatchQuery(
         featureView.getFeatureStore(),
@@ -343,16 +344,19 @@ public class FeatureViewEngine {
         featureView.getVersion(),
         startTime == null ? null : startTime.getTime(),
         endTime == null ? null : endTime.getTime(),
-        withLabels
+        withLabels,
+        trainingDataVersion
     );
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
   }
 
   public Dataset<Row> getBatchData(
-      FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions
+      FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions,
+      Integer trainingDataVersion
   ) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime, false).read(false, readOptions);
+    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion)
+        .read(false, readOptions);
   }
 
   public void addTag(FeatureView featureView, String name, Object value)

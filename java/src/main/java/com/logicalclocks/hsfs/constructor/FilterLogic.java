@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.constructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 @NoArgsConstructor
 public class FilterLogic {
 
@@ -38,30 +37,30 @@ public class FilterLogic {
   @Getter @Setter
   private FilterLogic rightLogic;
 
-  FilterLogic(Filter leftFilter) {
+  public FilterLogic(Filter leftFilter) {
     this.type = SqlFilterLogic.SINGLE;
     this.leftFilter = leftFilter;
   }
 
-  FilterLogic(SqlFilterLogic type, Filter leftFilter, Filter rightFilter) {
+  public FilterLogic(SqlFilterLogic type, Filter leftFilter, Filter rightFilter) {
     this.type = type;
     this.leftFilter = leftFilter;
     this.rightFilter = rightFilter;
   }
 
-  FilterLogic(SqlFilterLogic type, Filter leftFilter, FilterLogic rightLogic) {
+  public FilterLogic(SqlFilterLogic type, Filter leftFilter, FilterLogic rightLogic) {
     this.type = type;
     this.leftFilter = leftFilter;
     this.rightLogic = rightLogic;
   }
 
-  FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, Filter rightFilter) {
+  public FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, Filter rightFilter) {
     this.type = type;
     this.leftLogic = leftLogic;
     this.rightFilter = rightFilter;
   }
 
-  FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, FilterLogic rightLogic) {
+  public FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, FilterLogic rightLogic) {
     this.type = type;
     this.leftLogic = leftLogic;
     this.rightLogic = rightLogic;

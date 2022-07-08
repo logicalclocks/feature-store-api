@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
@@ -124,6 +126,10 @@ public class TrainingDataset {
   @Setter
   private Date eventEndTime;
 
+  @Getter
+  @Setter
+  private FilterLogic extraFilter;
+
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
@@ -136,7 +142,8 @@ public class TrainingDataset {
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
       String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
-      String validationEnd, String testStart, String testEnd, Integer timeSplitSize)
+      String validationEnd, String testStart, String testEnd, Integer timeSplitSize, FilterLogic extraFilterLogic,
+      Filter extraFilter)
       throws FeatureStoreException, ParseException {
     this.name = name;
     this.version = version;
@@ -157,6 +164,12 @@ public class TrainingDataset {
         utils.getTrainingDatasetType(storageConnector);
     setValTestSplit(validationSize, testSize);
     setTimeSeriesSplits(timeSplitSize, trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
+    if (extraFilter != null) {
+      this.extraFilter = new FilterLogic(extraFilter);
+    }
+    if (extraFilterLogic != null) {
+      this.extraFilter = extraFilterLogic;
+    }
   }
 
   private void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
