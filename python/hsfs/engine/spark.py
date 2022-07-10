@@ -111,9 +111,7 @@ class Engine:
             self._spark_session,
         )
         hudi_engine_instance.register_temporary_table(
-            hudi_fg_alias.alias,
-            hudi_fg_alias.left_feature_group_start_timestamp,
-            hudi_fg_alias.left_feature_group_end_timestamp,
+            hudi_fg_alias,
             read_options,
         )
 
@@ -203,10 +201,8 @@ class Engine:
                     self._save_online_dataframe(
                         feature_group, dataframe, online_write_options
                     )
-        except Exception:
-            raise FeatureStoreException(
-                "Error writing to offline and online feature store"
-            )
+        except Exception as e:
+            raise FeatureStoreException(e)
 
     def save_stream_dataframe(
         self,

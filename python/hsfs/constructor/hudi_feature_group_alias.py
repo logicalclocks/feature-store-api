@@ -15,7 +15,6 @@
 #
 
 import humps
-import time
 
 from hsfs import feature_group as feature_group_module
 
@@ -33,14 +32,7 @@ class HudiFeatureGroupAlias:
         )
         self._alias = alias
         self._left_feature_group_start_timestamp = left_feature_group_start_timestamp
-        self._left_feature_group_end_timestamp = (
-            left_feature_group_end_timestamp
-            if left_feature_group_end_timestamp
-            # if there is no end commit, set the time to now.
-            # *1000 as Hudi deals with commit times in milliseconds and
-            # later on HSFS does /1000
-            else time.time() * 1000
-        )
+        self._left_feature_group_end_timestamp = left_feature_group_end_timestamp
 
     @classmethod
     def from_response_json(cls, json_dict):
