@@ -90,13 +90,7 @@ public class FsQuery {
 
   public void registerHudiFeatureGroups(Map<String, String> readOptions) {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiCachedFeatureGroups) {
-      String alias = hudiFeatureGroupAlias.getAlias();
-      FeatureGroupBase featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
-
-      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
-          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
-          readOptions);
+      SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }
   }
 }

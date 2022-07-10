@@ -157,6 +157,14 @@ class Query:
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time.
+
+        !!! warning
+            The wallclock_time needs to be a time included into the Hudi active timeline.
+            By default Hudi keeps the last 20 to 30 commits in the active timeline.
+            If you need to keep a longer active timeline, you can overwrite the options:
+            `hoodie.keep.min.commits` and `hoodie.keep.max.commits`
+            when calling the `insert()` method.
+
         This can then either be read into a Dataframe or used further to perform joins
         or construct a training dataset.
 
