@@ -1176,10 +1176,11 @@ class FeatureGroup(FeatureGroupBase):
             dataframe = self.read()
             log_activity = True
 
-        return self._data_validation_engine.validate(
-            self, dataframe, log_activity
-        ), self._great_expectation_engine.validate(
-            self, dataframe, save_report, validation_options
+        return (
+            self._data_validation_engine.validate(self, dataframe, log_activity),
+            self._great_expectation_engine.validate(
+                self, dataframe, save_report, validation_options
+            ),
         )
 
     def get_expectation_suite(self, ge_type: bool = True):
@@ -1209,7 +1210,8 @@ class FeatureGroup(FeatureGroupBase):
         validation_ingestion_policy="ALWAYS",
     ):
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
-        suite is already attached, it is replaced.
+        suite is already attached, it is replaced. Note that the provided expectation suite is modified
+        inplace to include expectationId fields.
 
         # Arguments
             expectation_suite: The expectation suite to attach to the featuregroup.
@@ -1239,9 +1241,8 @@ class FeatureGroup(FeatureGroupBase):
         self._expectation_suite = self._expectation_suite_engine.save(
             self, tmp_expectation_suite
         )
-        # TODO Moritz: do we want to modify the user provided Suite?
 
-        return self._expectation_suite.to_ge_type()
+        expectation_suite = self._expectation_suite.to_ge_type()
 
     def delete_expectation_suite(self):
         """Delete the expectation suite attached to the featuregroup.
