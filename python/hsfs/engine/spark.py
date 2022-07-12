@@ -31,7 +31,13 @@ try:
     from pyspark.sql import SparkSession, DataFrame, SQLContext, window
     from pyspark.rdd import RDD
     from pyspark.sql.functions import (
-        struct, concat, col, lit, from_json, percent_rank, unix_timestamp
+        struct,
+        concat,
+        col,
+        lit,
+        from_json,
+        percent_rank,
+        unix_timestamp,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
@@ -418,9 +424,7 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            split_dataset = self._split_df(
-                dataset, training_dataset, feature_view_obj
-            )
+            split_dataset = self._split_df(dataset, training_dataset, feature_view_obj)
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
@@ -429,29 +433,24 @@ class Engine:
             )
 
     def _split_df(self, dataset, training_dataset, feature_view_obj):
-        if (training_dataset.splits[0].split_type ==
-            TrainingDatasetSplit.TIME_SERIES_SPLIT):
+        if (
+            training_dataset.splits[0].split_type
+            == TrainingDatasetSplit.TIME_SERIES_SPLIT
+        ):
             event_time = feature_view_obj.query._left_feature_group.event_time
-            return self._time_series_split(
-                training_dataset, dataset, event_time
-            )
+            return self._time_series_split(training_dataset, dataset, event_time)
         else:
             return self._random_split(dataset, training_dataset)
 
     def _random_split(self, dataset, training_dataset):
-        splits = [
-            (split.name, split.percentage) for split in training_dataset.splits
-        ]
+        splits = [(split.name, split.percentage) for split in training_dataset.splits]
         split_weights = [split[1] for split in splits]
-        split_dataset = dataset.randomSplit(split_weights,
-                                            training_dataset.seed)
-        return dict(
-            [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
-        )
+        split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
+        return dict([(split[0], split_dataset[i]) for i, split in enumerate(splits)])
 
     def _time_series_split(self, training_dataset, dataset, event_time):
         result_dfs = {}
-        ts_type = dataset.select('ts').dtypes[0][1]
+        ts_type = dataset.select("ts").dtypes[0][1]
         ts_col = (
             unix_timestamp(col(event_time)) * 1000
             if ts_type in ["date", "timestamp"]
@@ -459,10 +458,8 @@ class Engine:
             else col(event_time) * 1000
         )
         for split in training_dataset.splits:
-            result_dfs[split.name] = (
-                dataset
-                .filter(ts_col >= split.start_time)
-                .filter(ts_col < split.end_time)
+            result_dfs[split.name] = dataset.filter(ts_col >= split.start_time).filter(
+                ts_col < split.end_time
             )
         return result_dfs
 

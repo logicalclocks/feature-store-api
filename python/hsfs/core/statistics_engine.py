@@ -118,13 +118,13 @@ class StatisticsEngine:
         for split in td_metadata_instance.splits:
             split_name = split.name
             stat_content = self.profile_statistics(
-                        td_metadata_instance,
-                        (
-                            feature_dataframes.get(split_name)
-                            if feature_dataframes
-                            else td_metadata_instance.read(split_name)
-                        ),
-                    )
+                td_metadata_instance,
+                (
+                    feature_dataframes.get(split_name)
+                    if feature_dataframes
+                    else td_metadata_instance.read(split_name)
+                ),
+            )
             statistics_of_splits.append(
                 split_statistics.SplitStatistics(
                     split_name,

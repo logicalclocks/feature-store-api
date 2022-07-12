@@ -533,12 +533,12 @@ class Engine:
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
-        if (training_dataset_obj.splits[0].split_type ==
-            TrainingDatasetSplit.TIME_SERIES_SPLIT):
+        if (
+            training_dataset_obj.splits[0].split_type
+            == TrainingDatasetSplit.TIME_SERIES_SPLIT
+        ):
             event_time = feature_view_obj.query._left_feature_group.event_time
-            result_dfs = self._time_series_split(
-                df, training_dataset_obj, event_time
-            )
+            result_dfs = self._time_series_split(df, training_dataset_obj, event_time)
         else:
             result_dfs = self._random_split(df, training_dataset_obj)
 
@@ -562,8 +562,7 @@ class Engine:
         splits = training_dataset_obj.splits
         if (
             sum([split.percentage for split in splits]) != 1
-            or sum(
-            [split.percentage > 1 or split.percentage < 0 for split in splits])
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
             > 1
         ):
             raise ValueError(
@@ -586,9 +585,12 @@ class Engine:
         result_dfs = {}
         for split in training_dataset_obj.splits:
             result_dfs[split.name] = df[
-                [split.start_time
-                 <= self._convert_to_unix_timestamp(t) < split.end_time
-                 for t in df[event_time]]
+                [
+                    split.start_time
+                    <= self._convert_to_unix_timestamp(t)
+                    < split.end_time
+                    for t in df[event_time]
+                ]
             ]
         return result_dfs
 
@@ -601,7 +603,6 @@ class Engine:
         else:
             # jdbc supports timestamp precision up to second only.
             return t * 1000
-
 
     def write_training_dataset(
         self,

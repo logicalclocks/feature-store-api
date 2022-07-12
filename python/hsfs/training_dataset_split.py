@@ -98,5 +98,5 @@ class TrainingDatasetSplit:
             ),
             percentage=json_decamelized.get("percentage", None),
             start_time=json_decamelized.get("start_time", None),
-            end_time=json_decamelized.get("end_time", None)
+            end_time=json_decamelized.get("end_time", None),
         )
