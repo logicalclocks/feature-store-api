@@ -28,7 +28,7 @@ import avro
 # in case importing in %%local
 try:
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame, SQLContext, window
+    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
     from pyspark.sql.functions import (
         struct,
@@ -36,7 +36,6 @@ try:
         col,
         lit,
         from_json,
-        percent_rank,
         unix_timestamp,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
