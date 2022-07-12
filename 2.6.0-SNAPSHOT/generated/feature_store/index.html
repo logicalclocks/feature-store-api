@@ -1145,6 +1145,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#create_external_feature_group" class="md-nav__link">
+    create_external_feature_group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#create_feature_group" class="md-nav__link">
     create_feature_group
   </a>
@@ -1196,6 +1203,20 @@
           <li class="md-nav__item">
   <a href="#get_expectations" class="md-nav__link">
     get_expectations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_external_feature_group" class="md-nav__link">
+    get_external_feature_group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_external_feature_groups" class="md-nav__link">
+    get_external_feature_groups
   </a>
   
 </li>
@@ -1334,48 +1355,48 @@ Shared feature stores, the project name of the feature store is required.</p>
 <p><code>FeatureStore</code>. A feature store handle object to perform operations on.</p>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L981">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1118">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <p>Description of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1001">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1138">[source]</a></span></p>
 <h3 id="hive_endpoint">hive_endpoint<a class="headerlink" href="#hive_endpoint" title="Permanent link">#</a></h3>
 <p>Hive endpoint for the offline feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L961">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1098">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Id of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L991">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1128">[source]</a></span></p>
 <h3 id="mysql_server_endpoint">mysql_server_endpoint<a class="headerlink" href="#mysql_server_endpoint" title="Permanent link">#</a></h3>
 <p>MySQL server endpoint for the online feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L966">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1103">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1006">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1143">[source]</a></span></p>
 <h3 id="offline_featurestore_name">offline_featurestore_name<a class="headerlink" href="#offline_featurestore_name" title="Permanent link">#</a></h3>
 <p>Name of the offline feature store database.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L996">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1133">[source]</a></span></p>
 <h3 id="online_enabled">online_enabled<a class="headerlink" href="#online_enabled" title="Permanent link">#</a></h3>
 <p>Indicator whether online feature store is enabled.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L986">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1123">[source]</a></span></p>
 <h3 id="online_featurestore_name">online_featurestore_name<a class="headerlink" href="#online_featurestore_name" title="Permanent link">#</a></h3>
 <p>Name of the online feature store database.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L976">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1113">[source]</a></span></p>
 <h3 id="project_id">project_id<a class="headerlink" href="#project_id" title="Permanent link">#</a></h3>
 <p>Id of the project in which the feature store is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L971">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1108">[source]</a></span></p>
 <h3 id="project_name">project_name<a class="headerlink" href="#project_name" title="Permanent link">#</a></h3>
 <p>Name of the project in which the feature store is located.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L768">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L905">[source]</a></span></p>
 <h3 id="create_expectation">create_expectation<a class="headerlink" href="#create_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">rules</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -1397,7 +1418,80 @@ call the <code>save()</code> method of the expectation metadata object.</p>
 <p><strong>Returns:</strong></p>
 <p><code>Expectation</code>: The expectation metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L361">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L711">[source]</a></span></p>
+<h3 id="create_external_feature_group">create_external_feature_group<a class="headerlink" href="#create_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">storage_connector</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">primary_key</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">features</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_type</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span><span class="p">,</span>
+    <span class="n">expectations</span><span class="o">=</span><span class="p">[],</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Create a external feature group metadata object.</p>
+<div class="admonition note">
+<p class="admonition-title">Lazy</p>
+<p>This method is lazy and does not persist any metadata in the
+feature store on its own. To persist the feature group metadata in the feature store,
+call the <code>save()</code> method.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to create.</li>
+<li><strong>query</strong> <code>Optional[str]</code>: A string containing a SQL query valid for the target data source.
+    the query will be used to pull data from the data sources when the
+    feature group is used.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: If the external feature groups refers to a directory with data,
+    the data format to use when reading it</li>
+<li><strong>path</strong> <code>Optional[str]</code>: The location within the scope of the storage connector, from where to read
+    the data for the external feature group</li>
+<li><strong>storage_connector</strong> <code>hsfs.StorageConnector</code>: the storage connector to use to establish connectivity
+    with the data source.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve, defaults to <code>None</code> and
+    will create the feature group with incremented version from the last
+    version in the feature store.</li>
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the external feature group to
+    improve discoverability for Data Scientists, defaults to empty string
+    <code>""</code>.</li>
+<li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
+    feature group. This primary key can be a composite key of multiple
+    features and will be used as joining key, if not specified otherwise.
+    Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
+<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the external feature group manually as a
+    list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
+    schema information of the DataFrame resulting by executing the provided query
+    against the data source.</li>
+<li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
+    "<code>enabled</code>" to generally enable descriptive statistics computation for
+    this external feature group, <code>"correlations</code>" to turn on feature correlation
+    computation, <code>"histograms"</code> to compute feature value frequencies and
+    <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
+    The values should be booleans indicating the setting. To fully turn off
+    statistics computation pass <code>statistics_config=False</code>. Defaults to
+    <code>None</code> and will compute only descriptive statistics.</li>
+<li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
+    time for the features in this feature group. If event_time is set
+    the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
+<li><strong>validation_type</strong> <code>Optional[str]</code>: Optionally, set the validation type to one of "NONE", "STRICT",
+    "WARNING", "ALL". Determines the mode in which data validation is applied on
+     ingested or already existing feature group data.</li>
+<li><strong>expectations</strong> <code>Optional[List[hsfs.expectation.Expectation]]</code>: Optionally, a list of expectations to be attached to the feature group.
+    The expectations list contains Expectation metadata objects which can be retrieved with
+    the <code>get_expectation()</code> and <code>get_expectations()</code> functions.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>ExternalFeatureGroup</code>. The external feature group metadata object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L406">[source]</a></span></p>
 <h3 id="create_feature_group">create_feature_group<a class="headerlink" href="#create_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1479,7 +1573,7 @@ DataFrame.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L876">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1013">[source]</a></span></p>
 <h3 id="create_feature_view">create_feature_view<a class="headerlink" href="#create_feature_view" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_view</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[],</span> <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{}</span>
@@ -1508,7 +1602,7 @@ DataFrame.</p>
 <p><strong>Returns:</strong></p>
 <p><code>FeatureView</code>: The feature view metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L574">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L619">[source]</a></span></p>
 <h3 id="create_on_demand_feature_group">create_on_demand_feature_group<a class="headerlink" href="#create_on_demand_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_on_demand_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1527,7 +1621,11 @@ DataFrame.</p>
     <span class="n">expectations</span><span class="o">=</span><span class="p">[],</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Create a on-demand feature group metadata object.</p>
+<p>Create a external feature group metadata object.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deprecated</p>
+<p><code>create_on_demand_feature_group</code> method is deprecated. Use the <code>create_external_feature_group</code> method instead.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Lazy</p>
 <p>This method is lazy and does not persist any metadata in the
@@ -1536,33 +1634,33 @@ call the <code>save()</code> method.</p>
 </div>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the on-demand feature group to create.</li>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to create.</li>
 <li><strong>query</strong> <code>Optional[str]</code>: A string containing a SQL query valid for the target data source.
     the query will be used to pull data from the data sources when the
     feature group is used.</li>
-<li><strong>data_format</strong> <code>Optional[str]</code>: If the on-demand feature groups refers to a directory with data,
+<li><strong>data_format</strong> <code>Optional[str]</code>: If the external feature groups refers to a directory with data,
     the data format to use when reading it</li>
 <li><strong>path</strong> <code>Optional[str]</code>: The location within the scope of the storage connector, from where to read
-    the data for the on-demand feature group</li>
+    the data for the external feature group</li>
 <li><strong>storage_connector</strong> <code>hsfs.StorageConnector</code>: the storage connector to use to establish connectivity
     with the data source.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the on-demand feature group to retrieve, defaults to <code>None</code> and
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve, defaults to <code>None</code> and
     will create the feature group with incremented version from the last
     version in the feature store.</li>
-<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the on-demand feature group to
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the external feature group to
     improve discoverability for Data Scientists, defaults to empty string
     <code>""</code>.</li>
 <li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
     feature group. This primary key can be a composite key of multiple
     features and will be used as joining key, if not specified otherwise.
     Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
-<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the on-demand feature group manually as a
+<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the external feature group manually as a
     list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
     schema information of the DataFrame resulting by executing the provided query
     against the data source.</li>
 <li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
     "<code>enabled</code>" to generally enable descriptive statistics computation for
-    this on-demand feature group, <code>"correlations</code>" to turn on feature correlation
+    this external feature group, <code>"correlations</code>" to turn on feature correlation
     computation, <code>"histograms"</code> to compute feature value frequencies and
     <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
     The values should be booleans indicating the setting. To fully turn off
@@ -1579,9 +1677,9 @@ call the <code>save()</code> method.</p>
     the <code>get_expectation()</code> and <code>get_expectations()</code> functions.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>OnDemandFeatureGroup</code>. The on-demand feature group metadata object.</p>
+<p><code>ExternalFeatureGroup</code>. The external feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L663">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L800">[source]</a></span></p>
 <h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1672,7 +1770,7 @@ training datasets:</p>
 <p><strong>Returns:</strong></p>
 <p><code>TrainingDataset</code>: The training dataset metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L811">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L948">[source]</a></span></p>
 <h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1691,7 +1789,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L800">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L937">[source]</a></span></p>
 <h3 id="delete_expectation">delete_expectation<a class="headerlink" href="#delete_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">delete_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1701,7 +1799,7 @@ call the <code>save()</code> method of the transformation function metadata obje
 <li><strong>name</strong> <code>str</code>: Name of the training dataset to create.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L328">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L373">[source]</a></span></p>
 <h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1719,7 +1817,7 @@ so you can subsequently add features and/or rules and save it which will overwri
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve the expectation from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L346">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L391">[source]</a></span></p>
 <h3 id="get_expectations">get_expectations<a class="headerlink" href="#get_expectations" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
 </code></pre></div>
@@ -1731,6 +1829,46 @@ so you can subsequently add features and/or rules and save it which will overwri
 <p><strong>Raises</strong></p>
 <ul>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve the expectations from the feature store.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L189">[source]</a></span></p>
+<h3 id="get_external_feature_group">get_external_feature_group<a class="headerlink" href="#get_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a external feature group entity from the feature store.</p>
+<p>Getting a external feature group from the Feature Store means getting its
+metadata handle so you can subsequently read the data into a Spark or
+Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve,
+    defaults to <code>None</code> and will return the <code>version=1</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>ExternalFeatureGroup</code>: The external feature group metadata object.</p>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L242">[source]</a></span></p>
+<h3 id="get_external_feature_groups">get_external_feature_groups<a class="headerlink" href="#get_external_feature_groups" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_external_feature_groups</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a list of all versions of an external feature group entity from the feature store.</p>
+<p>Getting a external feature group from the Feature Store means getting its
+metadata handle so you can subsequently read the data into a Spark or
+Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>ExternalFeatureGroup</code>: List of external feature group metadata objects.</p>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L113">[source]</a></span></p>
@@ -1773,7 +1911,7 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L919">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1056">[source]</a></span></p>
 <h3 id="get_feature_view">get_feature_view<a class="headerlink" href="#get_feature_view" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_view</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1792,7 +1930,7 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature view from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L945">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1082">[source]</a></span></p>
 <h3 id="get_feature_views">get_feature_views<a class="headerlink" href="#get_feature_views" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_views</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1813,43 +1951,51 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <h3 id="get_on_demand_feature_group">get_on_demand_feature_group<a class="headerlink" href="#get_on_demand_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_on_demand_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-<p>Get a on-demand feature group entity from the feature store.</p>
-<p>Getting a on-demand feature group from the Feature Store means getting its
+<p>Get a external feature group entity from the feature store.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deprecated</p>
+<p><code>get_on_demand_feature_group</code> method is deprecated. Use the <code>get_external_feature_group</code> method instead.</p>
+</div>
+<p>Getting a external feature group from the Feature Store means getting its
 metadata handle so you can subsequently read the data into a Spark or
 Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the on-demand feature group to get.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the on-demand feature group to retrieve,
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve,
     defaults to <code>None</code> and will return the <code>version=1</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>OnDemandFeatureGroup</code>: The on-demand feature group metadata object.</p>
+<p><code>ExternalFeatureGroup</code>: The external feature group metadata object.</p>
 <p><strong>Raises</strong></p>
 <ul>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L197">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L221">[source]</a></span></p>
 <h3 id="get_on_demand_feature_groups">get_on_demand_feature_groups<a class="headerlink" href="#get_on_demand_feature_groups" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_on_demand_feature_groups</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
-<p>Get a list of all versions of an on-demand feature group entity from the feature store.</p>
-<p>Getting a on-demand feature group from the Feature Store means getting its
+<p>Get a list of all versions of an external feature group entity from the feature store.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deprecated</p>
+<p><code>get_on_demand_feature_groups</code> method is deprecated. Use the <code>get_external_feature_groups</code> method instead.</p>
+</div>
+<p>Getting a external feature group from the Feature Store means getting its
 metadata handle so you can subsequently read the data into a Spark or
 Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the on-demand feature group to get.</li>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>OnDemandFeatureGroup</code>: List of on-demand feature group metadata objects.</p>
+<p><code>ExternalFeatureGroup</code>: List of external feature group metadata objects.</p>
 <p><strong>Raises</strong></p>
 <ul>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L317">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L362">[source]</a></span></p>
 <h3 id="get_online_storage_connector">get_online_storage_connector<a class="headerlink" href="#get_online_storage_connector" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_online_storage_connector</span><span class="p">()</span>
 </code></pre></div>
@@ -1859,7 +2005,7 @@ project's feature store.</p>
 <p><strong>Returns</strong></p>
 <p><code>StorageConnector</code>. JDBC storage connector to the Online Feature Store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L462">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L507">[source]</a></span></p>
 <h3 id="get_or_create_feature_group">get_or_create_feature_group<a class="headerlink" href="#get_or_create_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_or_create_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1939,7 +2085,7 @@ DataFrame.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L262">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L307">[source]</a></span></p>
 <h3 id="get_storage_connector">get_storage_connector<a class="headerlink" href="#get_storage_connector" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1964,7 +2110,7 @@ Feature Store.</p>
 <p><strong>Returns</strong></p>
 <p><code>StorageConnector</code>. Storage connector object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L217">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L262">[source]</a></span></p>
 <h3 id="get_training_dataset">get_training_dataset<a class="headerlink" href="#get_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1984,7 +2130,7 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L245">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L290">[source]</a></span></p>
 <h3 id="get_training_datasets">get_training_datasets<a class="headerlink" href="#get_training_datasets" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_datasets</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2002,7 +2148,7 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L852">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L989">[source]</a></span></p>
 <h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2016,7 +2162,7 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <p><strong>Returns:</strong></p>
 <p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L868">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L1005">[source]</a></span></p>
 <h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
 </code></pre></div>
@@ -2024,7 +2170,7 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <p><strong>Returns:</strong></p>
 <p><code>List[TransformationFunction]</code>. List of transformation function instances.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L289">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L334">[source]</a></span></p>
 <h3 id="sql">sql<a class="headerlink" href="#sql" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>

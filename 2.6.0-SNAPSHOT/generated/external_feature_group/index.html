@@ -12,14 +12,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/on_demand_feature_group/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/external_feature_group/">
       
       <link rel="icon" href="../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
     
     
       
-        <title>On-Demand (External) Feature Groups - Hopsworks Documentation</title>
+        <title>External feature group - Hopsworks Documentation</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#on-demand-external-feature-groups" class="md-skip">
+        <a href="#external-feature-groups" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              On-Demand (External) Feature Groups
+              External feature group
             
           </span>
         </div>
@@ -1049,8 +1049,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#create_on_demand_feature_group" class="md-nav__link">
-    create_on_demand_feature_group
+  <a href="#create_external_feature_group" class="md-nav__link">
+    create_external_feature_group
   </a>
   
 </li>
@@ -1069,8 +1069,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get_on_demand_feature_group" class="md-nav__link">
-    get_on_demand_feature_group
+  <a href="#get_external_feature_group" class="md-nav__link">
+    get_external_feature_group
   </a>
   
 </li>
@@ -1435,25 +1435,25 @@
                 
 
 
-<h1 id="on-demand-external-feature-groups">On-Demand (External) Feature Groups<a class="headerlink" href="#on-demand-external-feature-groups" title="Permanent link">#</a></h1>
-<p>On-demand (External) Feature Groups are Feature Groups for which the data is stored on an external storage system (e.g. Data Warehouse, S3, ADLS).
-From an API perspective, on-demand feature groups can be used in the same way as regular feature groups. Users can pick features from on-demand feature groups to create training datasets. On-demand feature groups can be also used as data source to create derived features, meaning features on which additional feature engineering is applied.</p>
-<p>On-demand feature groups rely on <a href="../../integrations/storage-connectors/">Storage Connectors</a> to identify the location and to authenticate with the external storage.
-When the on-demand feature group is defined on top of an external database capabale of running SQL statements (i.e. when using the JDBC, Redshift or Snowflake connectors), the on-demand feature group needs to be defined as a SQL statement. SQL statements can contain feature engineering transformations, when reading the on-demand feature group, the SQL statement is pushed down to the storage for execution.</p>
+<h1 id="external-feature-groups">External Feature Groups<a class="headerlink" href="#external-feature-groups" title="Permanent link">#</a></h1>
+<p>External Feature Groups are Feature Groups for which the data is stored on an external storage system (e.g. Data Warehouse, S3, ADLS).
+From an API perspective, external feature groups can be used in the same way as regular feature groups. Users can pick features from external feature groups to create training datasets. External feature groups can be also used as data source to create derived features, meaning features on which additional feature engineering is applied.</p>
+<p>External feature groups rely on <a href="../../integrations/storage-connectors/">Storage Connectors</a> to identify the location and to authenticate with the external storage.
+When the external feature group is defined on top of an external database capabale of running SQL statements (i.e. when using the JDBC, Redshift or Snowflake connectors), the external feature group needs to be defined as a SQL statement. SQL statements can contain feature engineering transformations, when reading the external feature group, the SQL statement is pushed down to the storage for execution.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label><label for="__tabbed_1_2">Scala</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="admonition example">
-<p class="admonition-title">Define a SQL based on-demand feature group</p>
+<p class="admonition-title">Define a SQL based external feature group</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Retrieve the storage connector defined before</span>
 <span class="n">redshift_conn</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="s2">&quot;telco_redshift_cluster&quot;</span><span class="p">)</span>
-<span class="n">telco_on_dmd</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_on_demand_feature_group</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;telco_redshift&quot;</span><span class="p">,</span>
+<span class="n">telco_ext</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;telco_redshift&quot;</span><span class="p">,</span>
                                         <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                                         <span class="n">query</span><span class="o">=</span><span class="s2">&quot;select * from telco&quot;</span><span class="p">,</span>
-                                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">,</span>
+                                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;External feature group for telecom customer data&quot;</span><span class="p">,</span>
                                         <span class="n">storage_connector</span><span class="o">=</span><span class="n">redshift_conn</span><span class="p">,</span>
                                         <span class="n">statistics_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">telco_on_dmd</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="n">telco_ext</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -1461,35 +1461,35 @@ When the on-demand feature group is defined on top of an external database capab
 <div class="admonition example">
 <p class="admonition-title">Connecting from Hopsworks</p>
 <div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="n">redshiftConn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fs</span><span class="p">.</span><span class="n">getRedshiftConnector</span><span class="p">(</span><span class="s">&quot;telco_redshift_cluster&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="kd">val</span><span class="w"> </span><span class="n">telcoOnDmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createOnDemandFeatureGroup</span><span class="p">()</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">telcoExt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createExternalFeatureGroup</span><span class="p">()</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;telco_redshift_scala&quot;</span><span class="p">)</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;select * from telco&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;External feature group for telecom customer data&quot;</span><span class="p">)</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">storageConnector</span><span class="p">(</span><span class="n">redshiftConn</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">.</span><span class="n">statisticsEnabled</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">statisticsConfig</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="nc">StatisticsConfig</span><span class="p">(</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">))</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">build</span><span class="p">())</span><span class="w"></span>
-<span class="n">telcoOnDmd</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
+<span class="n">telcoExt</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
 </code></pre></div>
 </div>
 </div>
 </div>
 </div>
-<p>When defining an on-demand feature group on top of a object store/external filesystem (i.e. when using the S3 or the ADLS connector) the underlying data is required to have a schema. The underlying data can be stored in ORC, Parquet, Delta, Hudi or Avro, and the schema for the feature group will be extracted by the files metadata.</p>
+<p>When defining an external feature group on top of a object store/external filesystem (i.e. when using the S3 or the ADLS connector) the underlying data is required to have a schema. The underlying data can be stored in ORC, Parquet, Delta, Hudi or Avro, and the schema for the feature group will be extracted by the files metadata.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Python</label><label for="__tabbed_2_2">Scala</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="admonition example">
-<p class="admonition-title">Define a SQL based on-demand feature group</p>
+<p class="admonition-title">Define a SQL based external feature group</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Retrieve the storage connector defined before</span>
 <span class="n">s3_conn</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="s2">&quot;telco_s3_bucket&quot;</span><span class="p">)</span>
-<span class="n">telco_on_dmd</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_on_demand_feature_group</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;telco_s3&quot;</span><span class="p">,</span>
+<span class="n">telco_ext</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;telco_s3&quot;</span><span class="p">,</span>
                                         <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                                         <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
-                                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">,</span>
+                                        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;External feature group for telecom customer data&quot;</span><span class="p">,</span>
                                         <span class="n">storage_connector</span><span class="o">=</span><span class="n">s3_conn</span><span class="p">,</span>
                                         <span class="n">statistics_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">telco_on_dmd</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="n">telco_ext</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 </div>
 </div>
@@ -1497,41 +1497,41 @@ When the on-demand feature group is defined on top of an external database capab
 <div class="admonition example">
 <p class="admonition-title">Connecting from Hopsworks</p>
 <div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="n">s3Conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fs</span><span class="p">.</span><span class="n">getS3Connector</span><span class="p">(</span><span class="s">&quot;telco_s3_bucket&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="kd">val</span><span class="w"> </span><span class="n">telcoOnDmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createOnDemandFeatureGroup</span><span class="p">()</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">telcoExt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createExtrenalFeatureGroup</span><span class="p">()</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;telco_s3&quot;</span><span class="p">)</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">version</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">.</span><span class="n">dataFormat</span><span class="p">(</span><span class="nc">OnDemandDataFormat</span><span class="p">.</span><span class="nc">PARQUET</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;On-demand feature group for telecom customer data&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">dataFormat</span><span class="p">(</span><span class="nc">ExternalDataFormat</span><span class="p">.</span><span class="nc">PARQUET</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;External feature group for telecom customer data&quot;</span><span class="p">)</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">storageConnector</span><span class="p">(</span><span class="n">s3Conn</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">.</span><span class="n">statisticsEnabled</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">statisticsConfig</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="nc">StatisticsConfig</span><span class="p">(</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">))</span><span class="w"></span>
 <span class="w">            </span><span class="p">.</span><span class="n">build</span><span class="p">())</span><span class="w"></span>
-<span class="n">telcoOnDmd</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
+<span class="n">telcoExt</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
 </code></pre></div>
 </div>
 </div>
 </div>
 </div>
 <h2 id="use-cases">Use cases<a class="headerlink" href="#use-cases" title="Permanent link">#</a></h2>
-<p>There are two use cases in which a user can benefit from on-demand feature groups:</p>
+<p>There are two use cases in which a user can benefit from external feature groups:</p>
 <ul>
 <li>
-<p><strong>Existing feature engineering pipelines</strong>: in case users have recently migrated to Hopsworks Feature Store and they have existing feature engineering pipelines in production. Users can register the output of the existing pipelines as on-demand feature groups in Hopsworks, and immediately use their features to build training datasets. With on-demand feature groups, users do not have to modify the existing pipelines to write to the Hopsworks Feature Store.</p>
+<p><strong>Existing feature engineering pipelines</strong>: in case users have recently migrated to Hopsworks Feature Store and they have existing feature engineering pipelines in production. Users can register the output of the existing pipelines as external feature groups in Hopsworks, and immediately use their features to build training datasets. With external feature groups, users do not have to modify the existing pipelines to write to the Hopsworks Feature Store.</p>
 </li>
 <li>
-<p><strong>Data Ingestion</strong>: on-demand feature groups can be used as a data source. The benefit of using on-demand feature groups to ingest data from external sources is that the Hopsworks Feature Store keeps track of where the data is located and how to authenticate with the external storage system. In addition to that, the Hopsworks Feature Store tracks also the schema of the underlying data and will make sure that, if something changes in the underlying schema, the ingestion pipeline fails with a clear error.</p>
+<p><strong>Data Ingestion</strong>: external feature groups can be used as a data source. The benefit of using external feature groups to ingest data from external sources is that the Hopsworks Feature Store keeps track of where the data is located and how to authenticate with the external storage system. In addition to that, the Hopsworks Feature Store tracks also the schema of the underlying data and will make sure that, if something changes in the underlying schema, the ingestion pipeline fails with a clear error.</p>
 </li>
 </ul>
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">#</a></h2>
-<p>Hopsworks Feature Store does not support time-travel capabilities for on-demand feature groups. Moreover, as the data resides on external systems, on-demand feature groups cannot be made available online for low latency serving. To make data from an on-demand feature group available online, users need to define an online enabled feature group and hava a job that periodically reads data from the on-demand feature group and writes in the online feature group.</p>
+<p>Hopsworks Feature Store does not support time-travel capabilities for external feature groups. Moreover, as the data resides on external systems, external feature groups cannot be made available online for low latency serving. To make data from an external feature group available online, users need to define an online enabled feature group and hava a job that periodically reads data from the external feature group and writes in the online feature group.</p>
 <div class="admonition warning">
 <p class="admonition-title">Python support</p>
-<p>Currently the HSFS library does not support calling the <code>read()</code> or <code>show()</code> methods on on-demand feature groups. Likewise it is not possibile to call the <code>read()</code> or <code>show()</code> methods on queries containing on-demand feature groups.
-Nevertheless, on-demand feature groups can be used from a Python engine to create training datasets.</p>
+<p>Currently the HSFS library does not support calling the <code>read()</code> or <code>show()</code> methods on external feature groups. Likewise it is not possibile to call the <code>read()</code> or <code>show()</code> methods on queries containing external feature groups.
+Nevertheless, external feature groups can be used from a Python engine to create training datasets.</p>
 </div>
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L574">[source]</a></span></p>
-<h3 id="create_on_demand_feature_group">create_on_demand_feature_group<a class="headerlink" href="#create_on_demand_feature_group" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_on_demand_feature_group</span><span class="p">(</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L711">[source]</a></span></p>
+<h3 id="create_external_feature_group">create_external_feature_group<a class="headerlink" href="#create_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
     <span class="n">storage_connector</span><span class="p">,</span>
     <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1548,7 +1548,7 @@ Nevertheless, on-demand feature groups can be used from a Python engine to creat
     <span class="n">expectations</span><span class="o">=</span><span class="p">[],</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Create a on-demand feature group metadata object.</p>
+<p>Create a external feature group metadata object.</p>
 <div class="admonition note">
 <p class="admonition-title">Lazy</p>
 <p>This method is lazy and does not persist any metadata in the
@@ -1557,33 +1557,33 @@ call the <code>save()</code> method.</p>
 </div>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the on-demand feature group to create.</li>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to create.</li>
 <li><strong>query</strong> <code>Optional[str]</code>: A string containing a SQL query valid for the target data source.
     the query will be used to pull data from the data sources when the
     feature group is used.</li>
-<li><strong>data_format</strong> <code>Optional[str]</code>: If the on-demand feature groups refers to a directory with data,
+<li><strong>data_format</strong> <code>Optional[str]</code>: If the external feature groups refers to a directory with data,
     the data format to use when reading it</li>
 <li><strong>path</strong> <code>Optional[str]</code>: The location within the scope of the storage connector, from where to read
-    the data for the on-demand feature group</li>
+    the data for the external feature group</li>
 <li><strong>storage_connector</strong> <code>hsfs.StorageConnector</code>: the storage connector to use to establish connectivity
     with the data source.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the on-demand feature group to retrieve, defaults to <code>None</code> and
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve, defaults to <code>None</code> and
     will create the feature group with incremented version from the last
     version in the feature store.</li>
-<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the on-demand feature group to
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the external feature group to
     improve discoverability for Data Scientists, defaults to empty string
     <code>""</code>.</li>
 <li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
     feature group. This primary key can be a composite key of multiple
     features and will be used as joining key, if not specified otherwise.
     Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
-<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the on-demand feature group manually as a
+<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the external feature group manually as a
     list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
     schema information of the DataFrame resulting by executing the provided query
     against the data source.</li>
 <li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
     "<code>enabled</code>" to generally enable descriptive statistics computation for
-    this on-demand feature group, <code>"correlations</code>" to turn on feature correlation
+    this external feature group, <code>"correlations</code>" to turn on feature correlation
     computation, <code>"histograms"</code> to compute feature value frequencies and
     <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
     The values should be booleans indicating the setting. To fully turn off
@@ -1600,25 +1600,25 @@ call the <code>save()</code> method.</p>
     the <code>get_expectation()</code> and <code>get_expectations()</code> functions.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>OnDemandFeatureGroup</code>. The on-demand feature group metadata object.</p>
+<p><code>ExternalFeatureGroup</code>. The external feature group metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L165">[source]</a></span></p>
-<h3 id="get_on_demand_feature_group">get_on_demand_feature_group<a class="headerlink" href="#get_on_demand_feature_group" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_on_demand_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L189">[source]</a></span></p>
+<h3 id="get_external_feature_group">get_external_feature_group<a class="headerlink" href="#get_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-<p>Get a on-demand feature group entity from the feature store.</p>
-<p>Getting a on-demand feature group from the Feature Store means getting its
+<p>Get a external feature group entity from the feature store.</p>
+<p>Getting a external feature group from the Feature Store means getting its
 metadata handle so you can subsequently read the data into a Spark or
 Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the on-demand feature group to get.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the on-demand feature group to retrieve,
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve,
     defaults to <code>None</code> and will return the <code>version=1</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>OnDemandFeatureGroup</code>: The on-demand feature group metadata object.</p>
+<p><code>ExternalFeatureGroup</code>: The external feature group metadata object.</p>
 <p><strong>Raises</strong></p>
 <ul>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
@@ -1692,7 +1692,7 @@ computation of the feature group.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L176">[source]</a></span></p>
 <h3 id="add_tag">add_tag<a class="headerlink" href="#add_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </code></pre></div>
 <p>Attach a tag to a feature group.</p>
 <p>A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
@@ -1707,7 +1707,7 @@ The value of a tag can be any valid json - primitives, arrays or json objects.</
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L347">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
 <p>Append features to the schema of the feature group.</p>
 <div class="admonition info">
@@ -1728,7 +1728,7 @@ features is considered a breaking change.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L387">[source]</a></span></p>
 <h3 id="attach_expectation">attach_expectation<a class="headerlink" href="#attach_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">attach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">attach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
 </code></pre></div>
 <p>Attach a feature group expectation. If feature group validation is not already enabled, it will be enabled
 and set to the stricter setting.</p>
@@ -1741,7 +1741,7 @@ and set to the stricter setting.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L533">[source]</a></span></p>
 <h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
 </code></pre></div>
 <p>Recompute the statistics for the feature group and save them to the
 feature store.
@@ -1754,7 +1754,7 @@ group.
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L66">[source]</a></span></p>
 <h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </code></pre></div>
 <p>Drop the entire feature group along with its feature data.</p>
 <div class="admonition danger">
@@ -1768,7 +1768,7 @@ associated with it.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L192">[source]</a></span></p>
 <h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
 <p>Delete a tag attached to a feature group.</p>
 <p><strong>Arguments</strong></p>
@@ -1780,7 +1780,7 @@ associated with it.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L404">[source]</a></span></p>
 <h3 id="detach_expectation">detach_expectation<a class="headerlink" href="#detach_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">detach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">detach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
 </code></pre></div>
 <p>Remove an expectation from a feature group.</p>
 <p><strong>Arguments</strong></p>
@@ -1792,7 +1792,7 @@ associated with it.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L145">[source]</a></span></p>
 <h3 id="filter">filter<a class="headerlink" href="#filter" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </code></pre></div>
 <p>Apply filter to the feature group.</p>
 <p>Selects all features and returns the resulting <code>Query</code> with the applied filter.</p>
@@ -1817,7 +1817,7 @@ respective feature group:
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L428">[source]</a></span></p>
 <h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
 <p>Get attached expectation by name for this feature group. Name is unique across a feature store.</p>
 <p><strong>Arguments</strong></p>
@@ -1829,7 +1829,7 @@ respective feature group:
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L416">[source]</a></span></p>
 <h3 id="get_expectations">get_expectations<a class="headerlink" href="#get_expectations" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
 </code></pre></div>
 <p>Get all feature group expectations.</p>
 <p><strong>Arguments</strong></p>
@@ -1841,7 +1841,7 @@ respective feature group:
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L228">[source]</a></span></p>
 <h3 id="get_feature">get_feature<a class="headerlink" href="#get_feature" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
 <p>Retrieve a <code>Feature</code> object from the schema of the feature group.</p>
 <p>There are several ways to access features of a feature group:</p>
@@ -1863,7 +1863,7 @@ the <code>get_feature</code> method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L514">[source]</a></span></p>
 <h3 id="get_statistics">get_statistics<a class="headerlink" href="#get_statistics" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns the statistics for this feature group at a specific time.</p>
 <p>If <code>commit_time</code> is <code>None</code>, the most recent statistics are returned.</p>
@@ -1878,7 +1878,7 @@ the <code>get_feature</code> method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L203">[source]</a></span></p>
 <h3 id="get_tag">get_tag<a class="headerlink" href="#get_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
 <p>Get the tags of a feature group.</p>
 <p><strong>Arguments</strong></p>
@@ -1892,7 +1892,7 @@ the <code>get_feature</code> method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L217">[source]</a></span></p>
 <h3 id="get_tags">get_tags<a class="headerlink" href="#get_tags" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
 </code></pre></div>
 <p>Retrieves all tags attached to a feature group.</p>
 <p><strong>Returns</strong></p>
@@ -1902,7 +1902,7 @@ the <code>get_feature</code> method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L440">[source]</a></span></p>
 <h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Get feature group data validation results based on the attached expectations.</p>
 <p><strong>Arguments</strong></p>
@@ -1915,18 +1915,18 @@ the <code>get_feature</code> method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1721">[source]</a></span></p>
 <h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Get the feature group as a DataFrame.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1712">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L95">[source]</a></span></p>
 <h3 id="select">select<a class="headerlink" href="#select" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
 <p>Select a subset of features of the feature group and return a query object.</p>
 <p>The query can be used to construct joins of feature groups or create a training
@@ -1941,7 +1941,7 @@ dataset with a subset of features of the feature group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L79">[source]</a></span></p>
 <h3 id="select_all">select_all<a class="headerlink" href="#select_all" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
 </code></pre></div>
 <p>Select all features in the feature group and return a query object.</p>
 <p>The query can be used to construct joins of feature groups or create a
@@ -1951,7 +1951,7 @@ training dataset immediately.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L115">[source]</a></span></p>
 <h3 id="select_except">select_except<a class="headerlink" href="#select_except" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">select_except</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_except</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
 <p>Select all features of the feature group except a few and return a query
 object.</p>
@@ -1968,13 +1968,13 @@ dataset with a subset of features of the feature group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1731">[source]</a></span></p>
 <h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 </code></pre></div>
 <p>Show the first n rows of the feature group.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L273">[source]</a></span></p>
 <h3 id="update_description">update_description<a class="headerlink" href="#update_description" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">update_description</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_description</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 </code></pre></div>
 <p>Update the description of the feature group.</p>
 <div class="admonition info">
@@ -1991,7 +1991,7 @@ your local metadata object will keep the old description.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L328">[source]</a></span></p>
 <h3 id="update_feature_description">update_feature_description<a class="headerlink" href="#update_feature_description" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">update_feature_description</span><span class="p">(</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_feature_description</span><span class="p">(</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
 </code></pre></div>
 <p>Update the description of a single feature in this feature group.</p>
 <div class="admonition info">
@@ -2009,7 +2009,7 @@ your local metadata object will keep the old description.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L289">[source]</a></span></p>
 <h3 id="update_features">update_features<a class="headerlink" href="#update_features" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">update_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
 <p>Update metadata of features in this feature group.</p>
 <p>Currently it's only supported to update the description of a feature.</p>
@@ -2029,7 +2029,7 @@ corrupted state if the update fails.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L258">[source]</a></span></p>
 <h3 id="update_statistics_config">update_statistics_config<a class="headerlink" href="#update_statistics_config" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
 </code></pre></div>
 <p>Update the statistics configuration of the feature group.</p>
 <p>Change the <code>statistics_config</code> object and persist the changes by calling
@@ -2041,7 +2041,7 @@ this method.</p>
 <hr />
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1741">[source]</a></span></p>
 <h3 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">OnDemandFeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 </code></pre></div>
 <p>Run validation based on the attached expectations</p>
 <p><strong>Returns</strong></p>
