@@ -48,7 +48,8 @@ import java.util.Map;
 
 public class HudiEngine {
 
-  private static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
+  public static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
+
   private static final String HUDI_TABLE_NAME = "hoodie.table.name";
   private static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
   private static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
@@ -81,6 +82,7 @@ public class HudiEngine {
   private static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
   private static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   private static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
+  private static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
   private static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   private static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
@@ -130,15 +132,6 @@ public class HudiEngine {
     apiFgCommit.setCommitID(apiFgCommit.getCommitID());
 
     return apiFgCommit;
-  }
-
-  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroup featureGroup, String alias,
-                                     Long startTimestamp, Long endTimestamp, Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = setupHudiReadOpts(startTimestamp, endTimestamp, readOptions);
-    sparkSession.read()
-        .format(HUDI_SPARK_FORMAT)
-        .options(hudiArgs)
-        .load(featureGroup.getLocation()).createOrReplaceTempView(alias);
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
@@ -213,18 +206,23 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-  private Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
+  public Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = new HashMap<String, String>();
+    Map<String, String> hudiArgs = new HashMap<>();
+    if (endTimestamp != null) {
+      // if endTimestamp was specified, trigger an incremental query.
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
 
-    if (startTimestamp != null) {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
+      if (startTimestamp != null) {
+        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(startTimestamp));
+      } else {
+        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
+      }
     } else {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(0L));
+      // if endTimestamp was not specified, trigger a snapshot query
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
     }
-
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, timeStampToHudiFormat(endTimestamp));
-    hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
     if (readOptions != null && !readOptions.isEmpty()) {
