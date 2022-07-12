@@ -110,7 +110,7 @@ class FeatureViewApi:
                     "end_time": end_time,
                     "with_label": with_label,
                     "is_hive_engine": is_python_engine,
-                    "td_version": training_dataset_version
+                    "td_version": training_dataset_version,
                 },
             )
         )

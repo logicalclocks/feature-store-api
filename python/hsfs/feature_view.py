@@ -142,9 +142,7 @@ class FeatureView:
         self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
-        self,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ):
         """Get a query string of batch query.
 
@@ -156,12 +154,14 @@ class FeatureView:
             `str`: batch query
         """
         return self._feature_view_engine.get_batch_query_string(
-            self, start_time, end_time,
+            self,
+            start_time,
+            end_time,
             training_dataset_version=(
                 self._batch_scoring_server.training_dataset_version
                 if self._batch_scoring_server
                 else None
-            )
+            ),
         )
 
     def get_feature_vector(
@@ -339,7 +339,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -457,7 +457,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -591,7 +591,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -688,7 +688,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_obj=td
@@ -770,7 +770,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -881,7 +881,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
-            extra_filter=extra_filter
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,

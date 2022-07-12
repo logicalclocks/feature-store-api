@@ -79,7 +79,7 @@ class TrainingDataset:
         transformation_functions=None,
         train_split=None,
         time_split_size=None,
-        extra_filter=None
+        extra_filter=None,
     ):
         self._id = id
         self._name = name
@@ -543,7 +543,7 @@ class TrainingDataset:
             "trainSplit": self._train_split,
             "eventStartTime": self._start_time,
             "eventEndTime": self._end_time,
-            "extraFilter": self._extra_filter
+            "extraFilter": self._extra_filter,
         }
 
     @property
