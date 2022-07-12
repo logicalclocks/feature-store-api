@@ -14,13 +14,23 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.constructor;
 
-public enum OnDemandDataFormat {
-  ORC,
-  PARQUET,
-  AVRO,
-  CSV,
-  HUDI,
-  DELTA
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@NoArgsConstructor
+public class ExternalFeatureGroupAlias {
+
+  @Getter
+  @Setter
+  private ExternalFeatureGroup onDemandFeatureGroup;
+
+  @Getter
+  @Setter
+  private String alias;
 }
