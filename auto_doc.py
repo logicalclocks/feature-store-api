@@ -46,10 +46,10 @@ PAGES = {
         "fg_create": ["hsfs.feature_store.FeatureStore.create_external_feature_group"],
         "fg_get": ["hsfs.feature_store.FeatureStore.get_external_feature_group"],
         "fg_properties": keras_autodoc.get_properties(
-            "hsfs.feature_group.OnDemandFeatureGroup"
+            "hsfs.feature_group.ExternalFeatureGroup"
         ),
         "fg_methods": keras_autodoc.get_methods(
-            "hsfs.feature_group.OnDemandFeatureGroup",
+            "hsfs.feature_group.ExternalFeatureGroup",
             exclude=[
                 "from_response_json",
                 "update_from_response_json",
