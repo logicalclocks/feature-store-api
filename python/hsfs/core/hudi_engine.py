@@ -102,7 +102,7 @@ class HudiEngine:
         hudi_options = self._setup_hudi_read_opts(hudi_fg_alias, read_options)
         self._spark_session.read.format(self.HUDI_SPARK_FORMAT).options(
             **hudi_options
-        ).load(self._feature_group.location).createOrReplaceTempView(
+        ).load("{}/**".format(self._feature_group.location)).createOrReplaceTempView(
             hudi_fg_alias.alias
         )
 
