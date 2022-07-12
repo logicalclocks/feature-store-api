@@ -66,6 +66,7 @@ class FeatureStore:
         num_feature_groups=None,
         num_training_datasets=None,
         num_storage_connectors=None,
+        num_feature_views=None,
         online_featurestore_name=None,
         mysql_server_endpoint=None,
         online_featurestore_size=None,
@@ -87,6 +88,7 @@ class FeatureStore:
         self._num_feature_groups = num_feature_groups
         self._num_training_datasets = num_training_datasets
         self._num_storage_connectors = num_storage_connectors
+        self._num_feature_views = num_feature_views
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
