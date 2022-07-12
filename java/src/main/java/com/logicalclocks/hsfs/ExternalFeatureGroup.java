@@ -17,7 +17,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.logicalclocks.hsfs.engine.OnDemandFeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.ExternalFeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OnDemandFeatureGroup extends FeatureGroupBase {
+public class ExternalFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
@@ -52,7 +52,7 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  private OnDemandDataFormat dataFormat;
+  private ExternalDataFormat dataFormat;
 
   @Getter
   @Setter
@@ -66,12 +66,12 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "onDemandFeaturegroupDTO";
 
-  private OnDemandFeatureGroupEngine onDemandFeatureGroupEngine = new OnDemandFeatureGroupEngine();
+  private ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   @Builder
-  public OnDemandFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
-                              OnDemandDataFormat dataFormat, String path, Map<String, String> options,
+  public ExternalFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
+                              ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig,
                               scala.collection.Seq<Expectation> expectations,
@@ -101,16 +101,16 @@ public class OnDemandFeatureGroup extends FeatureGroupBase {
     }
   }
 
-  public OnDemandFeatureGroup() {
+  public ExternalFeatureGroup() {
   }
 
-  public OnDemandFeatureGroup(FeatureStore featureStore, int id) {
+  public ExternalFeatureGroup(FeatureStore featureStore, int id) {
     this.featureStore = featureStore;
     this.id = id;
   }
 
   public void save() throws FeatureStoreException, IOException {
-    onDemandFeatureGroupEngine.saveFeatureGroup(this);
+    externalFeatureGroupEngine.saveFeatureGroup(this);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, read(), null);

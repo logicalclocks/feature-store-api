@@ -90,7 +90,7 @@ The Hadoop and Spark installations of the HDInsight cluster need to be configure
 
 !!! attention "Using Hive and the Feature Store"
 
-    HDInsight clusters cannot use their local Hive when being configured for the Feature Store as the Feature Store relies on custom Hive binaries and its own Metastore which will overwrite the local one. If you rely on Hive for feature engineering then it is advised to write your data to an external data storage such as ADLS from your main HDInsight cluster and in the Feature Store, create an [on-demand](https://docs.hopsworks.ai/overview/#feature-groups) Feature Group on the storage container in ADLS.
+    HDInsight clusters cannot use their local Hive when being configured for the Feature Store as the Feature Store relies on custom Hive binaries and its own Metastore which will overwrite the local one. If you rely on Hive for feature engineering then it is advised to write your data to an external data storage such as ADLS from your main HDInsight cluster and in the Feature Store, create an [external](https://docs.hopsworks.ai/overview/#feature-groups) Feature Group on the storage container in ADLS.
 
 Hadoop hadoop-env.sh:
 ```

@@ -125,10 +125,10 @@ class TrainingDatasetEngine:
             return fs_query.query_online
 
         # The offline queries could be referencing temporary tables
-        # like on-demand feature groups/hudi feature groups
+        # like external feature groups/hudi feature groups
         # Here we register those tables before returning the query to the user
         # In this way, if they execute the query, it will be valid
-        fs_query.register_on_demand()
+        fs_query.register_external()
         fs_query.register_hudi_tables(
             self._feature_store_id,
             None,  # No need to provide the feature store name for read operations

@@ -163,19 +163,43 @@ class FeatureStore:
         )
 
     def get_on_demand_feature_group(self, name: str, version: int = None):
-        """Get a on-demand feature group entity from the feature store.
+        """Get a external feature group entity from the feature store.
 
-        Getting a on-demand feature group from the Feature Store means getting its
+        !!! warning "Deprecated"
+            `get_on_demand_feature_group` method is deprecated. Use the `get_external_feature_group` method instead.
+
+        Getting a external feature group from the Feature Store means getting its
         metadata handle so you can subsequently read the data into a Spark or
         Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
         # Arguments
-            name: Name of the on-demand feature group to get.
-            version: Version of the on-demand feature group to retrieve,
+            name: Name of the external feature group to get.
+            version: Version of the external feature group to retrieve,
                 defaults to `None` and will return the `version=1`.
 
         # Returns
-            `OnDemandFeatureGroup`: The on-demand feature group metadata object.
+            `ExternalFeatureGroup`: The external feature group metadata object.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+
+        """
+        return self.get_external_feature_group(name, version)
+
+    def get_external_feature_group(self, name: str, version: int = None):
+        """Get a external feature group entity from the feature store.
+
+        Getting a external feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the external feature group to get.
+            version: Version of the external feature group to retrieve,
+                defaults to `None` and will return the `version=1`.
+
+        # Returns
+            `ExternalFeatureGroup`: The external feature group metadata object.
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
@@ -195,17 +219,38 @@ class FeatureStore:
         )
 
     def get_on_demand_feature_groups(self, name: str):
-        """Get a list of all versions of an on-demand feature group entity from the feature store.
+        """Get a list of all versions of an external feature group entity from the feature store.
 
-        Getting a on-demand feature group from the Feature Store means getting its
+        !!! warning "Deprecated"
+            `get_on_demand_feature_groups` method is deprecated. Use the `get_external_feature_groups` method instead.
+
+        Getting a external feature group from the Feature Store means getting its
         metadata handle so you can subsequently read the data into a Spark or
         Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
         # Arguments
-            name: Name of the on-demand feature group to get.
+            name: Name of the external feature group to get.
 
         # Returns
-            `OnDemandFeatureGroup`: List of on-demand feature group metadata objects.
+            `ExternalFeatureGroup`: List of external feature group metadata objects.
+
+        # Raises
+            `RestAPIError`: If unable to retrieve feature group from the feature store.
+        """
+        return self.get_external_feature_groups(name)
+
+    def get_external_feature_groups(self, name: str):
+        """Get a list of all versions of an external feature group entity from the feature store.
+
+        Getting a external feature group from the Feature Store means getting its
+        metadata handle so you can subsequently read the data into a Spark or
+        Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+
+        # Arguments
+            name: Name of the external feature group to get.
+
+        # Returns
+            `ExternalFeatureGroup`: List of external feature group metadata objects.
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
@@ -588,7 +633,10 @@ class FeatureStore:
         validation_type: Optional[str] = "NONE",
         expectations: Optional[List[expectation.Expectation]] = [],
     ):
-        """Create a on-demand feature group metadata object.
+        """Create a external feature group metadata object.
+
+        !!! warning "Deprecated"
+            `create_on_demand_feature_group` method is deprecated. Use the `create_external_feature_group` method instead.
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata in the
@@ -596,33 +644,33 @@ class FeatureStore:
             call the `save()` method.
 
         # Arguments
-            name: Name of the on-demand feature group to create.
+            name: Name of the external feature group to create.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
-            data_format: If the on-demand feature groups refers to a directory with data,
+            data_format: If the external feature groups refers to a directory with data,
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
-                the data for the on-demand feature group
+                the data for the external feature group
             storage_connector: the storage connector to use to establish connectivity
                 with the data source.
-            version: Version of the on-demand feature group to retrieve, defaults to `None` and
+            version: Version of the external feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.
-            description: A string describing the contents of the on-demand feature group to
+            description: A string describing the contents of the external feature group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             primary_key: A list of feature names to be used as primary key for the
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the feature group won't have any primary key.
-            features: Optionally, define the schema of the on-demand feature group manually as a
+            features: Optionally, define the schema of the external feature group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
-                this on-demand feature group, `"correlations`" to turn on feature correlation
+                this external feature group, `"correlations`" to turn on feature correlation
                 computation, `"histograms"` to compute feature value frequencies and
                 `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
                 The values should be booleans indicating the setting. To fully turn off
@@ -639,9 +687,98 @@ class FeatureStore:
                 the `get_expectation()` and `get_expectations()` functions.
 
         # Returns
-            `OnDemandFeatureGroup`. The on-demand feature group metadata object.
+            `ExternalFeatureGroup`. The external feature group metadata object.
         """
-        return feature_group.OnDemandFeatureGroup(
+        return feature_group.ExternalFeatureGroup(
+            name=name,
+            query=query,
+            data_format=data_format,
+            path=path,
+            options=options,
+            storage_connector=storage_connector,
+            version=version,
+            description=description,
+            primary_key=primary_key,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+            features=features,
+            statistics_config=statistics_config,
+            event_time=event_time,
+            validation_type=validation_type,
+            expectations=expectations,
+        )
+
+    def create_external_feature_group(
+        self,
+        name: str,
+        storage_connector: storage_connector.StorageConnector,
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = "",
+        options: Optional[Dict[str, str]] = {},
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
+        features: Optional[List[feature.Feature]] = [],
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        event_time: Optional[str] = None,
+        validation_type: Optional[str] = "NONE",
+        expectations: Optional[List[expectation.Expectation]] = [],
+    ):
+        """Create a external feature group metadata object.
+
+        !!! note "Lazy"
+            This method is lazy and does not persist any metadata in the
+            feature store on its own. To persist the feature group metadata in the feature store,
+            call the `save()` method.
+
+        # Arguments
+            name: Name of the external feature group to create.
+            query: A string containing a SQL query valid for the target data source.
+                the query will be used to pull data from the data sources when the
+                feature group is used.
+            data_format: If the external feature groups refers to a directory with data,
+                the data format to use when reading it
+            path: The location within the scope of the storage connector, from where to read
+                the data for the external feature group
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
+            version: Version of the external feature group to retrieve, defaults to `None` and
+                will create the feature group with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the external feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
+            features: Optionally, define the schema of the external feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame resulting by executing the provided query
+                against the data source.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this external feature group, `"correlations`" to turn on feature correlation
+                computation, `"histograms"` to compute feature value frequencies and
+                `"exact_uniqueness"` to compute uniqueness, distinctness and entropy.
+                The values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+            validation_type: Optionally, set the validation type to one of "NONE", "STRICT",
+                "WARNING", "ALL". Determines the mode in which data validation is applied on
+                 ingested or already existing feature group data.
+            expectations: Optionally, a list of expectations to be attached to the feature group.
+                The expectations list contains Expectation metadata objects which can be retrieved with
+                the `get_expectation()` and `get_expectations()` functions.
+
+        # Returns
+            `ExternalFeatureGroup`. The external feature group metadata object.
+        """
+        return feature_group.ExternalFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
