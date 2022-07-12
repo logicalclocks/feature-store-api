@@ -1167,7 +1167,7 @@ features is considered a breaking change.</p>
 <p>Setting the default version to 1 will make sure that, even when the user does not specify the version number, Hopsworks can still guarantee a degree of safety for pipelines and models. This is because, even if new breaking changes are introduced (and so new versions are created), existing pipelines will still use the same version they have been build or trained with.</p>
 <h3 id="retrieving-all-the-versions">Retrieving all the versions<a class="headerlink" href="#retrieving-all-the-versions" title="Permanent link">#</a></h3>
 <p>It is also possible to retrieve the metadata of all the versions of a feature group or training dataset based on its name using the following methods:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L144">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L146">[source]</a></span></p>
 <h3 id="get_feature_groups">get_feature_groups<a class="headerlink" href="#get_feature_groups" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_groups</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1186,7 +1186,7 @@ the <code>Query</code>-API to perform joins between feature groups.</p>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L290">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L292">[source]</a></span></p>
 <h3 id="get_training_datasets">get_training_datasets<a class="headerlink" href="#get_training_datasets" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_datasets</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
