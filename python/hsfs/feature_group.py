@@ -32,7 +32,7 @@ from hsfs.core import (
     expectation_suite_engine,
     validation_report_engine,
     code_engine,
-    on_demand_feature_group_engine,
+    external_feature_group_engine,
 )
 
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
@@ -402,7 +402,8 @@ class FeatureGroupBase:
         validation_ingestion_policy="ALWAYS",
     ):
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
-        suite is already attached, it is replaced.
+        suite is already attached, it is replaced. Note that the provided expectation suite is modified
+        inplace to include expectationId fields.
 
         # Arguments
             expectation_suite: The expectation suite to attach to the featuregroup.
@@ -432,9 +433,8 @@ class FeatureGroupBase:
         self._expectation_suite = self._expectation_suite_engine.save(
             self, tmp_expectation_suite
         )
-        # TODO Moritz: do we want to modify the user provided Suite?
 
-        return self._expectation_suite.to_ge_type()
+        expectation_suite = self._expectation_suite.to_ge_type()
 
     def delete_expectation_suite(self):
         """Delete the expectation suite attached to the featuregroup.
@@ -1498,8 +1498,8 @@ class FeatureGroup(FeatureGroupBase):
         self._stream = stream
 
 
-class OnDemandFeatureGroup(FeatureGroupBase):
-    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+class ExternalFeatureGroup(FeatureGroupBase):
+    EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -1546,7 +1546,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         ]
 
         self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+            external_feature_group_engine.ExternalFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:

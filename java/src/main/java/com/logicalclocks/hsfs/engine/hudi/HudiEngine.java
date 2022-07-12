@@ -21,8 +21,8 @@ import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 
@@ -57,8 +57,9 @@ import java.util.stream.Collectors;
 
 public class HudiEngine {
 
+  public static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
+
   protected static final String HUDI_BASE_PATH = "hoodie.base.path";
-  protected static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
   protected static final String HUDI_TABLE_NAME = "hoodie.table.name";
   protected static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
   protected static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
@@ -90,6 +91,7 @@ public class HudiEngine {
   protected static final String HUDI_COPY_ON_WRITE = "COPY_ON_WRITE";
   protected static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   protected static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
+  protected static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
   protected static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   protected static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
@@ -179,13 +181,9 @@ public class HudiEngine {
     }
   }
 
-  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroupBase featureGroup, String alias,
-                                     Long startTimestamp, Long endTimestamp, Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = setupHudiReadOpts(startTimestamp, endTimestamp, readOptions);
-    sparkSession.read()
-        .format(HUDI_SPARK_FORMAT)
-        .options(hudiArgs)
-        .load(featureGroup.getLocation()).createOrReplaceTempView(alias);
+  public void registerTemporaryTable(SparkSession sparkSession, HudiFeatureGroupAlias hudiFeatureGroupAlias,
+                                     Map<String, String> readOptions) {
+
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
@@ -260,18 +258,23 @@ public class HudiEngine {
     return hudiArgs;
   }
 
-  private Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
+  public Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
-    Map<String, String> hudiArgs = new HashMap<String, String>();
+    Map<String, String> hudiArgs = new HashMap<>();
+    if (endTimestamp != null) {
+      // if endTimestamp was specified, trigger an incremental query.
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
 
-    if (startTimestamp != null) {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
+      if (startTimestamp != null) {
+        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
+      } else {
+        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(0L));
+      }
     } else {
-      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(0L));
+      // if endTimestamp was not specified, trigger a snapshot query
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
     }
-
-    hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
-    hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
 
     // Overwrite with user provided options if any
     if (readOptions != null && !readOptions.isEmpty()) {
@@ -282,7 +285,7 @@ public class HudiEngine {
 
   private void createEmptyTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup)
       throws IOException, FeatureStoreException {
-    Configuration configuration = SparkEngine.getInstance().getSparkSession().sparkContext().hadoopConfiguration();
+    Configuration configuration = sparkSession.sparkContext().hadoopConfiguration();
     Properties properties = new Properties();
     properties.putAll(setupHudiWriteOpts((FeatureGroupBase) streamFeatureGroup,
         HudiOperationType.BULK_INSERT, null));

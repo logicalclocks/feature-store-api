@@ -81,7 +81,7 @@ class FeatureGroupApi:
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
         else:
-            fg_list = feature_group.OnDemandFeatureGroup.from_response_json(json_list)
+            fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
 
         if version is not None:
             return fg_list[0]
