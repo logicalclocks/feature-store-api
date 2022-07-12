@@ -100,9 +100,7 @@ class Engine:
             self._spark_session,
         )
         hudi_engine_instance.register_temporary_table(
-            hudi_fg_alias.alias,
-            hudi_fg_alias.left_feature_group_start_timestamp,
-            hudi_fg_alias.left_feature_group_end_timestamp,
+            hudi_fg_alias,
             read_options,
         )
 

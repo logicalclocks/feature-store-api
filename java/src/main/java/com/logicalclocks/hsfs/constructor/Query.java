@@ -273,13 +273,7 @@ public class Query {
   private void registerHudiFeatureGroups(List<HudiFeatureGroupAlias> hudiFeatureGroups,
                                          Map<String, String> readOptions) {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiFeatureGroups) {
-      String alias = hudiFeatureGroupAlias.getAlias();
-      FeatureGroup featureGroup = hudiFeatureGroupAlias.getFeatureGroup();
-
-      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroup, alias,
-          hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-          hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
-          readOptions);
+      SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }
   }
 
