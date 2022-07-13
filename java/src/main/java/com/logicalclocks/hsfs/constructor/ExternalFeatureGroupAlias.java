@@ -14,19 +14,23 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.logicalclocks.hsfs.engine;
+package com.logicalclocks.hsfs.constructor;
 
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.metadata.Expectation;
-import com.logicalclocks.hsfs.metadata.ExpectationsApi;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.io.IOException;
+@AllArgsConstructor
+@NoArgsConstructor
+public class ExternalFeatureGroupAlias {
 
-public class ExpectationsEngine {
+  @Getter
+  @Setter
+  private ExternalFeatureGroup onDemandFeatureGroup;
 
-  private final ExpectationsApi expectationsApi = new ExpectationsApi();
-
-  public Expectation save(Expectation expectation) throws FeatureStoreException, IOException {
-    return expectationsApi.put(expectation.getFeatureStore(), expectation);
-  }
+  @Getter
+  @Setter
+  private String alias;
 }

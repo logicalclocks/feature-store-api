@@ -64,7 +64,7 @@ class Query:
             online_conn = None
 
             # Register on demand feature groups as temporary tables
-            query.register_on_demand()
+            query.register_external()
 
             # Register on hudi feature groups as temporary tables
             query.register_hudi_tables(
@@ -157,6 +157,14 @@ class Query:
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time.
+
+        !!! warning
+            The wallclock_time needs to be a time included into the Hudi active timeline.
+            By default Hudi keeps the last 20 to 30 commits in the active timeline.
+            If you need to keep a longer active timeline, you can overwrite the options:
+            `hoodie.keep.min.commits` and `hoodie.keep.max.commits`
+            when calling the `insert()` method.
+
         This can then either be read into a Dataframe or used further to perform joins
         or construct a training dataset.
 
@@ -251,7 +259,7 @@ class Query:
         json_decamelized = humps.decamelize(json_dict)
         feature_group_json = json_decamelized["left_feature_group"]
         feature_group_obj = (
-            feature_group.OnDemandFeatureGroup.from_response_json(feature_group_json)
+            feature_group.ExternalFeatureGroup.from_response_json(feature_group_json)
             if "storage_connector" in feature_group_json
             else feature_group.FeatureGroup.from_response_json(feature_group_json)
         )

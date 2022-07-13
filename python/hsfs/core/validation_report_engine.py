@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import validation_report_api
+from hsfs import client, util
 
 
 class ValidationReportEngine:
@@ -32,15 +33,42 @@ class ValidationReportEngine:
         )
 
     def save(self, feature_group, validation_report):
-        return self._validation_report_api.create(feature_group.id, validation_report)
+        saved_report = self._validation_report_api.create(
+            feature_group.id, validation_report
+        )
+        url = self._get_validation_report_url(feature_group)
+        print(f"Validation Report saved successfully, explore a summary at {url}")
+        return saved_report
 
     def get_last(self, feature_group):
         """Get the most recent Validation Report of a Feature Group."""
+        url = self._get_validation_report_url(feature_group)
+        print(
+            f"""Long reports can be truncated when fetching from Hopsworks.
+        \nYou can download the full report at {url}"""
+        )
         return self._validation_report_api.get_last(feature_group.id)
 
     def get_all(self, feature_group):
         """Get all Validation Report of a FeaturevGroup."""
+        url = self._get_validation_report_url(feature_group)
+        print(
+            f"""Long reports can be truncated when fetching from Hopsworks.
+        \nYou can download full reports at {url}"""
+        )
         return self._validation_report_api.get_all(feature_group.id)
 
     def delete(self, feature_group, validation_report):
         self._validation_report_api.delete(feature_group.id, validation_report.id)
+
+    def _get_validation_report_url(self, feature_group):
+        """Build url to land on Hopsworks UI page which summarizes validation results"""
+        sub_path = (
+            "/p/"
+            + str(client.get_instance()._project_id)
+            + "/fs/"
+            + str(feature_group.feature_store_id)
+            + "/fg/"
+            + str(feature_group.id)
+        )
+        return util.get_hostname_replaced_url(sub_path)

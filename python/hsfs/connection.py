@@ -21,7 +21,7 @@ from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
 from hsfs import engine, client, util
-from hsfs.core import feature_store_api, project_api, hosts_api, services_api, rules_api
+from hsfs.core import feature_store_api, project_api, hosts_api, services_api
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443
@@ -135,7 +135,6 @@ class Connection:
         self._api_key_file = api_key_file
         self._api_key_value = api_key_value
         self._connected = False
-        self._rules_api = rules_api.RulesApi()
 
         self.connect()
 
@@ -485,16 +484,6 @@ class Connection:
     @not_connected
     def api_key_value(self, api_key_value):
         self._api_key_value = api_key_value
-
-    def get_rules(self):
-        """Get a rule with a certain name or all rules available for data validation."""
-
-        return self._rules_api.get()
-
-    def get_rule(self, name: str):
-        """Get a rule with a certain name or all rules available for data validation."""
-
-        return self._rules_api.get(name)
 
     def __enter__(self):
         self.connect()

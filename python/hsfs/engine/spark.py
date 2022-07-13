@@ -105,18 +105,18 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        on_demand_dataset = on_demand_fg.storage_connector.read(
-            on_demand_fg.query,
-            on_demand_fg.data_format,
-            on_demand_fg.options,
-            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
+    def register_external_temporary_table(self, external_fg, alias):
+        external_dataset = external_fg.storage_connector.read(
+            external_fg.query,
+            external_fg.data_format,
+            external_fg.options,
+            external_fg.storage_connector._get_path(external_fg.path),
         )
-        if on_demand_fg.location:
-            self._spark_session.sparkContext.textFile(on_demand_fg.location).collect()
+        if external_fg.location:
+            self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
-        on_demand_dataset.createOrReplaceTempView(alias)
-        return on_demand_dataset
+        external_dataset.createOrReplaceTempView(alias)
+        return external_dataset
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
@@ -129,9 +129,7 @@ class Engine:
             self._spark_session,
         )
         hudi_engine_instance.register_temporary_table(
-            hudi_fg_alias.alias,
-            hudi_fg_alias.left_feature_group_start_timestamp,
-            hudi_fg_alias.left_feature_group_end_timestamp,
+            hudi_fg_alias,
             read_options,
         )
 
@@ -234,11 +232,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(
-                "Error writing to offline and online feature store.\n"
-                + "Cause: "
-                + str(e)
-            )
+            raise FeatureStoreException(e)
 
     def save_stream_dataframe(
         self,
@@ -588,53 +582,6 @@ class Engine:
                 histograms,
                 exact_uniqueness,
             )
-        )
-
-    def validate(self, dataframe, expectations, log_activity=True):
-        """Run data validation on the dataframe with Deequ."""
-
-        expectations_java = []
-        for expectation in expectations:
-            rules = []
-            for rule in expectation.rules:
-                rules.append(
-                    self._jvm.com.logicalclocks.hsfs.metadata.validation.Rule.builder()
-                    .name(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.RuleName.valueOf(
-                            rule.get("name")
-                        )
-                    )
-                    .level(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.Level.valueOf(
-                            rule.get("level")
-                        )
-                    )
-                    .min(rule.get("min", None))
-                    .max(rule.get("max", None))
-                    .pattern(rule.get("pattern", None))
-                    .acceptedType(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.AcceptedType.valueOf(
-                            rule.get("accepted_type")
-                        )
-                        if rule.get("accepted_type") is not None
-                        else None
-                    )
-                    .feature((rule.get("feature", None)))
-                    .legalValues(rule.get("legal_values", None))
-                    .build()
-                )
-            expectation = (
-                self._jvm.com.logicalclocks.hsfs.metadata.Expectation.builder()
-                .name(expectation.name)
-                .description(expectation.description)
-                .features(expectation.features)
-                .rules(rules)
-                .build()
-            )
-            expectations_java.append(expectation)
-
-        return self._jvm.com.logicalclocks.hsfs.engine.DataValidationEngine.getInstance().validate(
-            dataframe._jdf, expectations_java
         )
 
     def validate_with_great_expectations(

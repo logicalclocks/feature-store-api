@@ -24,9 +24,7 @@ import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
-import com.logicalclocks.hsfs.metadata.Expectation;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,11 +36,9 @@ import lombok.Setter;
 import org.apache.avro.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -105,8 +101,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                             List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                             boolean onlineEnabled, List<Feature> features,
-                            StatisticsConfig statisticsConfig, ValidationType validationType,
-                            scala.collection.Seq<Expectation> expectations, String onlineTopicName, String eventTime) {
+                            StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -119,12 +114,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.onlineEnabled = onlineEnabled;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.validationType = validationType != null ? validationType : ValidationType.NONE;
-    if (expectations != null && !expectations.isEmpty()) {
-      this.expectationsNames = new ArrayList<>();
-      this.expectations = JavaConverters.seqAsJavaListConverter(expectations).asJava();
-      this.expectations.forEach(expectation -> this.expectationsNames.add(expectation.getName()));
-    }
     this.onlineTopicName = onlineTopicName;
     this.eventTime = eventTime;
   }

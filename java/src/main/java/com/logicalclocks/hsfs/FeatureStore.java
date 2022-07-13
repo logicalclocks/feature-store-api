@@ -19,12 +19,9 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.metadata.Expectation;
-import com.logicalclocks.hsfs.metadata.ExpectationsApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -33,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class FeatureStore {
@@ -55,7 +51,6 @@ public class FeatureStore {
   private FeatureGroupApi featureGroupApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
-  private ExpectationsApi expectationsApi;
   private FeatureViewEngine featureViewEngine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
@@ -66,7 +61,6 @@ public class FeatureStore {
     featureGroupApi = new FeatureGroupApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
-    expectationsApi = new ExpectationsApi();
     featureViewEngine = new FeatureViewEngine();
   }
 
@@ -141,44 +135,64 @@ public class FeatureStore {
   }
 
   /**
-   * Get a on-demand feature group object from the feature store.
+   * Get a external feature group object from the feature store.
    *
    * @param name    the name of the feature group
    * @param version the version of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public OnDemandFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+  public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return featureGroupApi.getOnDemandFeatureGroup(this, name, version);
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
   }
 
   /**
-   * Get a on-demand feature group object with default version `1` from the feature store.
+   * Get a external feature group object with default version `1` from the feature store.
    *
    * @param name the name of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public OnDemandFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+  public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
-    return getOnDemandFeatureGroup(name, DEFAULT_VERSION);
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
   /**
-   * Get a list of all versions of an on-demand feature group from the feature store.
+   * Get a list of all versions of an external feature group from the feature store.
    *
    * @param name    the name of the feature group
-   * @return OnDemandFeatureGroup
+   * @return ExternalFeatureGroup
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public scala.collection.Seq<OnDemandFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
+  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getOnDemandFeatureGroups(this, name))
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  @Deprecated
+  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
         .asScala().toSeq();
   }
 
@@ -240,16 +254,14 @@ public class FeatureStore {
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
-        null, null, false, null, null, null,
-        null, null);
+        null, null, false, null, null, null);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
     return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        null, null, onlineEnabled, null, null, null,
-        null, eventTime);
+        null, null, onlineEnabled, null, null, eventTime);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
@@ -259,21 +271,18 @@ public class FeatureStore {
                                               String eventTime) throws IOException, FeatureStoreException {
 
     return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        partitionKeys, null, onlineEnabled, null, null, null,
-        null, eventTime);
+        partitionKeys, null, onlineEnabled, null, null, eventTime);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
                                               List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey,
                                               boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig,  ValidationType validationType,
-                                              scala.collection.Seq<Expectation> expectations, String eventTime)
+                                              StatisticsConfig statisticsConfig, String eventTime)
       throws IOException, FeatureStoreException {
 
     return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
-        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, validationType,
-        expectations, eventTime);
+        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
   }
 
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
@@ -284,14 +293,14 @@ public class FeatureStore {
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
     return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        null, null, null, false, null, null, null);
+        null, null, null, false, null, null);
   }
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
     return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, null, null, onlineEnabled, null, null, eventTime);
+        primaryKeys, null, null, onlineEnabled, null, eventTime);
   }
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
@@ -300,23 +309,28 @@ public class FeatureStore {
 
 
     return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, partitionKeys, null, onlineEnabled, null, null, eventTime);
+        primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
   }
 
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          scala.collection.Seq<Expectation> expectations,
                                                           String eventTime)
       throws IOException, FeatureStoreException {
 
     return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, description,
-        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, expectations, eventTime);
+        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime);
   }
 
-  public OnDemandFeatureGroup.OnDemandFeatureGroupBuilder createOnDemandFeatureGroup() {
-    return OnDemandFeatureGroup.builder()
+  public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
+    return ExternalFeatureGroup.builder()
+        .featureStore(this);
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup.ExternalFeatureGroupBuilder createOnDemandFeatureGroup() {
+    return ExternalFeatureGroup.builder()
         .featureStore(this);
   }
 
@@ -354,12 +368,6 @@ public class FeatureStore {
 
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
     return TrainingDataset.builder()
-        .featureStore(this);
-  }
-
-
-  public Expectation.ExpectationBuilder createExpectation() {
-    return Expectation.builder()
         .featureStore(this);
   }
 
@@ -402,42 +410,6 @@ public class FeatureStore {
   public scala.collection.Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
       throws FeatureStoreException, IOException {
     return JavaConverters.asScalaBufferConverter(trainingDatasetApi.get(this, name, null)).asScala().toSeq();
-  }
-
-  public scala.collection.Seq<Expectation> createExpectations(scala.collection.Seq<Expectation> expectations)
-      throws FeatureStoreException, IOException {
-    List<Expectation> newExpectations = new ArrayList<>();
-    List<Expectation> expectationsList =
-        (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava();
-    for (Expectation expectation :  expectationsList) {
-      expectation = expectationsApi.put(this, expectation);
-      newExpectations.add(expectation);
-    }
-    return JavaConverters.asScalaBufferConverter(newExpectations).asScala().toSeq();
-  }
-
-  public Expectation getExpectation(String name)
-      throws FeatureStoreException, IOException {
-    return expectationsApi.get(this, name);
-  }
-
-  public scala.collection.Seq<Expectation> getExpectations() throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(expectationsApi.get(this)).asScala().toSeq();
-  }
-
-  public void deleteExpectation(Expectation expectation) throws FeatureStoreException, IOException {
-    deleteExpectation(expectation.getName());
-  }
-
-  public void deleteExpectation(String name) throws FeatureStoreException, IOException {
-    expectationsApi.delete(this, name);
-  }
-
-  public void deleteExpectations(scala.collection.Seq<Expectation> expectations)
-      throws FeatureStoreException, IOException {
-    for (Expectation expectation :  (List<Expectation>) JavaConverters.seqAsJavaListConverter(expectations).asJava()) {
-      deleteExpectation(expectation);
-    }
   }
 
   @Override

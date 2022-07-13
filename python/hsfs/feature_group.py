@@ -32,9 +32,7 @@ from hsfs.core import (
     expectation_suite_engine,
     validation_report_engine,
     code_engine,
-    data_validation_engine,
-    on_demand_feature_group_engine,
-    expectations_api,
+    external_feature_group_engine,
 )
 
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
@@ -46,19 +44,12 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, validation_type, location):
-        self._validation_type = validation_type.upper()
+    def __init__(self, featurestore_id, location):
         self._location = location
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
         self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
-        self._expectations_api = expectations_api.ExpectationsApi(
-            featurestore_id, "featuregroups"
-        )
-        self._data_validation_engine = data_validation_engine.DataValidationEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
@@ -384,73 +375,149 @@ class FeatureGroupBase:
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def attach_expectation(self, expectation):
-        """Attach a feature group expectation. If feature group validation is not already enabled, it will be enabled
-        and set to the stricter setting.
+    def get_expectation_suite(self, ge_type: bool = True):
+        """Return the expectation suite attached to the feature group if it exists.
 
         # Arguments
-            name: The expectation name.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
 
         # Returns
-            `Expectation`. The expectation metadata object.
+            `ExpectationSuite`. The expectation suite attached to the feature group.
 
+        # Raises
+            `RestAPIException`.
         """
-        # Turn on validation for this FG and set stricter setting
-        if self._validation_type == "NONE":
-            self._validation_type = "STRICT"
+        self._expectation_suite = self._expectation_suite_engine.get(self)
+        if self._expectation_suite is not None and ge_type is True:
+            return self._expectation_suite.to_ge_type()
+        else:
+            return self._expectation_suite
 
-        return self._expectations_api.attach(self, expectation.name)
-
-    def detach_expectation(self, expectation):
-        """Remove an expectation from a feature group.
+    def save_expectation_suite(
+        self,
+        expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
+        run_validation=True,
+        validation_ingestion_policy="ALWAYS",
+    ):
+        """Attach an expectation suite to a feature group and saves it for future use. If an expectation
+        suite is already attached, it is replaced. Note that the provided expectation suite is modified
+        inplace to include expectationId fields.
 
         # Arguments
-            name: The expectation name.
+            expectation_suite: The expectation suite to attach to the featuregroup.
+            run_validation: Set whether the expectation_suite will run on ingestion
+            validation_ingestion_policy: Set the policy for ingestion to the featuregroup.
+                - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
+                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
 
-        # Returns
-            `Expectation`. The expectation metadata object.
-
+        # Raises
+            `RestAPIException`.
         """
-        return self._expectations_api.detach(self, expectation.name)
+        if isinstance(expectation_suite, ge.core.ExpectationSuite):
+            tmp_expectation_suite = ExpectationSuite.from_ge_type(
+                ge_expectation_suite=expectation_suite,
+                run_validation=run_validation,
+                validation_ingestion_policy=validation_ingestion_policy,
+            )
+        elif isinstance(expectation_suite, ExpectationSuite):
+            tmp_expectation_suite = expectation_suite
+        else:
+            raise TypeError(
+                "The provided expectation suite type `{}` is not supported. Use Great Expectation `ExpectationSuite` or HSFS' own `ExpectationSuite` object.".format(
+                    type(expectation_suite)
+                )
+            )
 
-    def get_expectations(self):
-        """Get all feature group expectations.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. A list of expectation metadata objects.
-
-        """
-        return self._expectations_api.get(feature_group=self)
-
-    def get_expectation(self, name: str):
-        """Get attached expectation by name for this feature group. Name is unique across a feature store.
-
-        # Arguments
-            name: The expectation name.
-
-        # Returns
-            `Expectation`. The expectation metadata object.
-
-        """
-        return self._expectations_api.get(name, self)
-
-    def get_validations(self, validation_time=None, commit_time=None):
-        """Get feature group data validation results based on the attached expectations.
-
-        # Arguments
-           validation_time: The data validation time, when the data validation started.
-           commit_time: The commit time of a time travel enabled feature group.
-
-        # Returns
-           `FeatureGroupValidation`. The feature group validation metadata object.
-
-        """
-        return self._data_validation_engine.get_validations(
-            self, validation_time, commit_time
+        self._expectation_suite = self._expectation_suite_engine.save(
+            self, tmp_expectation_suite
         )
+
+        expectation_suite = self._expectation_suite.to_ge_type()
+
+    def delete_expectation_suite(self):
+        """Delete the expectation suite attached to the featuregroup.
+
+        # Raises
+            `RestAPIException`.
+        """
+        self._expectation_suite_engine.delete(self)
+        self._expectation_suite = None
+
+    def get_latest_validation_report(self, ge_type: bool = True):
+        """Return the latest validation report attached to the feature group if it exists.
+
+        # Arguments
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
+
+        # Returns
+            `ValidationReport`. The latest validation report attached to the feature group.
+
+        # Raises
+            `RestAPIException`.
+        """
+        if ge_type is True:
+            return self._validation_report_engine.get_last(self).to_ge_type()
+        else:
+            return self._validation_report_engine.get_last(self)
+
+    def get_all_validation_reports(self, ge_type: bool = True):
+        """Return the latest validation report attached to the feature group if it exists.
+
+        # Arguments
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
+
+        # Returns
+            `ValidationReport`. The latest validation report attached to the feature group.
+
+        # Raises
+            `RestAPIException`.
+        """
+        if ge_type is True:
+            return [
+                report.to_ge_type()
+                for report in self._validation_report_engine.get_all(self)
+            ]
+        return self._validation_report_engine.get_all(self)
+
+    def save_validation_report(
+        self,
+        validation_report: Union[
+            dict,
+            ValidationReport,
+            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+        ],
+        ge_type: bool = True,
+    ):
+        """Save validation report to hopsworks platform along previous reports of the same featuregroup.
+
+        # Arguments
+            validation_report: The validation report to attach to the featuregroup.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True`.
+
+        # Raises
+            `RestAPIException`.
+        """
+        if isinstance(
+            validation_report,
+            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+        ):
+            report = ValidationReport(**validation_report.to_json_dict())
+        elif isinstance(validation_report, dict):
+            report = ValidationReport(**validation_report)
+        elif isinstance(validation_report, ValidationReport):
+            report = validation_report
+
+        if ge_type:
+            return self._validation_report_engine.save(self, report).to_ge_type()
+        return self._validation_report_engine.save(self, report)
 
     def __getattr__(self, name):
         try:
@@ -567,6 +634,31 @@ class FeatureGroupBase:
     def location(self):
         return self._location
 
+    @property
+    def expectation_suite(self):
+        """Expectation Suite configuration object defining the settings for
+        data validation of the feature group."""
+        return self._expectation_suite
+
+    @expectation_suite.setter
+    def expectation_suite(self, expectation_suite):
+        if isinstance(expectation_suite, ExpectationSuite):
+            self._expectation_suite = expectation_suite
+        elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
+            self._expectation_suite = ExpectationSuite(
+                **expectation_suite.to_json_dict()
+            )
+        elif isinstance(expectation_suite, dict):
+            self._expectation_suite = ExpectationSuite(**expectation_suite)
+        elif expectation_suite is None:
+            self._expectation_suite = expectation_suite
+        else:
+            raise TypeError(
+                "The argument `expectation_suite` has to be `None` of type `ExpectationSuite` or `dict`, but is of type: `{}`".format(
+                    type(expectation_suite)
+                )
+            )
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -591,14 +683,12 @@ class FeatureGroup(FeatureGroupBase):
         online_enabled=False,
         time_travel_format=None,
         statistics_config=None,
-        validation_type="NONE",
-        expectations=None,
         online_topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
     ):
-        super().__init__(featurestore_id, validation_type, location)
+        super().__init__(featurestore_id, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -665,13 +755,6 @@ class FeatureGroup(FeatureGroupBase):
             )
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
-
-        if expectations is not None:
-            self._expectations_names = [
-                expectation.name for expectation in expectations
-            ]
-        else:
-            self._expectations_names = []
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -1143,7 +1226,6 @@ class FeatureGroup(FeatureGroupBase):
         dataframe: Optional[
             Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
         ] = None,
-        log_activity: Optional[bool] = False,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
     ):
@@ -1154,8 +1236,6 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             dataframe: The PySpark dataframe to run the data validation expectations against.
-            log_activity: Boolean to indicate whether to persist validation results along
-                with the feature group. Defaults to `False`.
             expectation_suite: Optionally provide an Expectation Suite to override the
                 one that is possibly attached to the feature group. This is useful for
                 testing new Expectation suites. When an extra suite is provided, the results
@@ -1174,157 +1254,10 @@ class FeatureGroup(FeatureGroupBase):
         # Activity is logged only if a the validation concerts the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
-            log_activity = True
 
-        return self._data_validation_engine.validate(
-            self, dataframe, log_activity
-        ), self._great_expectation_engine.validate(
+        return self._great_expectation_engine.validate(
             self, dataframe, save_report, validation_options
         )
-
-    def get_expectation_suite(self, ge_type: bool = True):
-        """Return the expectation suite attached to the feature group if it exists.
-
-        # Arguments
-            ge_type: If `True` returns a native Great Expectation type, Hopsworks
-                custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
-
-        # Returns
-            `ExpectationSuite`. The expectation suite attached to the feature group.
-
-        # Raises
-            `RestAPIException`.
-        """
-        self._expectation_suite = self._expectation_suite_engine.get(self)
-        if self._expectation_suite is not None and ge_type is True:
-            return self._expectation_suite.to_ge_type()
-        else:
-            return self._expectation_suite
-
-    def save_expectation_suite(
-        self,
-        expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
-        run_validation=True,
-        validation_ingestion_policy="ALWAYS",
-    ):
-        """Attach an expectation suite to a feature group and saves it for future use. If an expectation
-        suite is already attached, it is replaced.
-
-        # Arguments
-            expectation_suite: The expectation suite to attach to the featuregroup.
-            run_validation: Set whether the expectation_suite will run on ingestion
-            validation_ingestion_policy: Set the policy for ingestion to the featuregroup.
-                - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
-                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
-
-        # Raises
-            `RestAPIException`.
-        """
-        if isinstance(expectation_suite, ge.core.ExpectationSuite):
-            tmp_expectation_suite = ExpectationSuite.from_ge_type(
-                ge_expectation_suite=expectation_suite,
-                run_validation=run_validation,
-                validation_ingestion_policy=validation_ingestion_policy,
-            )
-        elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite
-        else:
-            raise TypeError(
-                "The provided expectation suite type `{}` is not supported. Use Great Expectation `ExpectationSuite` or HSFS' own `ExpectationSuite` object.".format(
-                    type(expectation_suite)
-                )
-            )
-
-        self._expectation_suite = self._expectation_suite_engine.save(
-            self, tmp_expectation_suite
-        )
-        # TODO Moritz: do we want to modify the user provided Suite?
-
-        return self._expectation_suite.to_ge_type()
-
-    def delete_expectation_suite(self):
-        """Delete the expectation suite attached to the featuregroup.
-
-        # Raises
-            `RestAPIException`.
-        """
-        self._expectation_suite_engine.delete(self)
-        self._expectation_suite = None
-
-    def get_latest_validation_report(self, ge_type: bool = True):
-        """Return the latest validation report attached to the feature group if it exists.
-
-        # Arguments
-            ge_type: If `True` returns a native Great Expectation type, Hopsworks
-                custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
-
-        # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
-
-        # Raises
-            `RestAPIException`.
-        """
-        if ge_type is True:
-            return self._validation_report_engine.get_last(self).to_ge_type()
-        else:
-            return self._validation_report_engine.get_last(self)
-
-    def get_all_validation_reports(self, ge_type: bool = True):
-        """Return the latest validation report attached to the feature group if it exists.
-
-        # Arguments
-            ge_type: If `True` returns a native Great Expectation type, Hopsworks
-                custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
-
-        # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
-
-        # Raises
-            `RestAPIException`.
-        """
-        if ge_type is True:
-            return [
-                report.to_ge_type()
-                for report in self._validation_report_engine.get_all(self)
-            ]
-        return self._validation_report_engine.get_all(self)
-
-    def save_validation_report(
-        self,
-        validation_report: Union[
-            dict,
-            ValidationReport,
-            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
-        ],
-        ge_type: bool = True,
-    ):
-        """Save validation report to hopsworks platform along previous reports of the same featuregroup.
-
-        # Arguments
-            validation_report: The validation report to attach to the featuregroup.
-            ge_type: If `True` returns a native Great Expectation type, Hopsworks
-                custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
-
-        # Raises
-            `RestAPIException`.
-        """
-        if isinstance(
-            validation_report,
-            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
-        ):
-            report = ValidationReport(**validation_report.to_json_dict())
-        elif isinstance(validation_report, dict):
-            report = ValidationReport(**validation_report)
-        elif isinstance(validation_report, ValidationReport):
-            report = validation_report
-
-        if ge_type:
-            return self._validation_report_engine.save(self, report).to_ge_type()
-        return self._validation_report_engine.save(self, report)
 
     def compute_statistics(self, wallclock_time: Optional[str] = None):
         """Recompute the statistics for the feature group and save them to the
@@ -1416,8 +1349,6 @@ class FeatureGroup(FeatureGroupBase):
             if not self._stream
             else "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
-            "validationType": self._validation_type,
-            "expectationsNames": self._expectations_names,
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
         }
@@ -1530,25 +1461,9 @@ class FeatureGroup(FeatureGroupBase):
         return self._avro_schema
 
     @property
-    def validation_type(self):
-        """Validation type, one of "STRICT", "WARNING", "ALL", "NONE"."""
-        return self._validation_type
-
-    @property
-    def expectations_names(self):
-        """The names of expectations attached to this feature group."""
-        return self._expectations_names
-
-    @property
     def stream(self):
         """Whether to enable real time stream writing capabilities."""
         return self._stream
-
-    @property
-    def expectation_suite(self):
-        """Expectation Suite configuration object defining the settings for
-        data validation of the feature group."""
-        return self._expectation_suite
 
     @version.setter
     def version(self, version):
@@ -1578,44 +1493,13 @@ class FeatureGroup(FeatureGroupBase):
     def online_enabled(self, new_online_enabled):
         self._online_enabled = new_online_enabled
 
-    @validation_type.setter
-    def validation_type(self, new_validation_type):
-        if new_validation_type is None:
-            self._validation_type = "NONE"
-        else:
-            self._validation_type = new_validation_type.upper()
-        self._feature_group_engine.update_validation_type(self)
-
-    @expectations_names.setter
-    def expectations_names(self, new_expectations_names):
-        self._expectations_names = new_expectations_names
-
     @stream.setter
     def stream(self, stream):
         self._stream = stream
 
-    @expectation_suite.setter
-    def expectation_suite(self, expectation_suite):
-        if isinstance(expectation_suite, ExpectationSuite):
-            self._expectation_suite = expectation_suite
-        elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite.to_json_dict()
-            )
-        elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(**expectation_suite)
-        elif expectation_suite is None:
-            self._expectation_suite = expectation_suite
-        else:
-            raise TypeError(
-                "The argument `expectation_suite` has to be `None` of type `ExpectationSuite` or `dict`, but is of type: `{}`".format(
-                    type(expectation_suite)
-                )
-            )
 
-
-class OnDemandFeatureGroup(FeatureGroupBase):
-    ON_DEMAND_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+class ExternalFeatureGroup(FeatureGroupBase):
+    EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
 
     def __init__(
@@ -1638,11 +1522,9 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         location=None,
         statistics_config=None,
         event_time=None,
-        validation_type="NONE",
-        expectations=None,
         expectation_suite=None,
     ):
-        super().__init__(featurestore_id, validation_type, location)
+        super().__init__(featurestore_id, location)
 
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
@@ -1664,7 +1546,7 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         ]
 
         self._feature_group_engine = (
-            on_demand_feature_group_engine.OnDemandFeatureGroupEngine(featurestore_id)
+            external_feature_group_engine.ExternalFeatureGroupEngine(featurestore_id)
         )
 
         if self._id:
@@ -1701,18 +1583,11 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         else:
             self._storage_connector = storage_connector
 
-        if expectations is not None:
-            self._expectations_names = [
-                expectation.name for expectation in expectations
-            ]
-        else:
-            self._expectations_names = []
+        self.expectation_suite = expectation_suite
 
     def save(self):
         self._feature_group_engine.save(self)
         self._code_engine.save_code(self)
-        if self._validation_type != "NONE":
-            self.validate()
 
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self, self.read())
@@ -1737,14 +1612,20 @@ class OnDemandFeatureGroup(FeatureGroupBase):
         )
         return self.select_all().show(n)
 
-    def validate(self):  # noqa: F821
+    def validate(
+        self,
+        save_report: Optional[bool] = False,
+        validation_options: Optional[Dict[Any, Any]] = {},
+    ):
         """Run validation based on the attached expectations
 
         # Returns
             `FeatureGroupValidation`. The feature group validation metadata object.
 
         """
-        return self._data_validation_engine.validate(self, self.read(), True)
+        return self._great_expectation_engine.validate(
+            self, self.read(), save_report, validation_options
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -1786,8 +1667,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
-            "validationType": self._validation_type,
-            "expectationsNames": self._expectations_names,
             "expectationSuite": self._expectation_suite,
         }
 
@@ -1839,16 +1718,6 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     def created(self):
         return self._created
 
-    @property
-    def validation_type(self):
-        """Validation type, one of "STRICT", "WARNING", "ALL", "NONE"."""
-        return self._validation_type
-
-    @property
-    def expectations_names(self):
-        """The names of expectations attached to this feature group."""
-        return self._expectations_names
-
     @version.setter
     def version(self, version):
         self._version = version
@@ -1860,15 +1729,3 @@ class OnDemandFeatureGroup(FeatureGroupBase):
     @features.setter
     def features(self, new_features):
         self._features = new_features
-
-    @validation_type.setter
-    def validation_type(self, new_validation_type):
-        if new_validation_type is None:
-            self._validation_type = "NONE"
-        else:
-            self._validation_type = new_validation_type.upper()
-        self._feature_group_engine.update_validation_type(self)
-
-    @expectations_names.setter
-    def expectations_names(self, new_expectations_names):
-        self._expectations_names = new_expectations_names

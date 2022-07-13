@@ -164,7 +164,7 @@ public class FeatureViewEngine {
         } else if (splitSize == 2) {
           methodName = "getTrainTestSplit";
         } else if (splitSize == 3) {
-          methodName = "getTrainValidationTestSplits";
+          methodName = "getTrainValidationTestSplit";
         }
         throw new FeatureStoreException(
             String.format("Incorrect `get` method is used. Use `FeatureView.%s` instead.", methodName));

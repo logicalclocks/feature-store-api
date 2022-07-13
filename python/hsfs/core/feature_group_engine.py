@@ -38,12 +38,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group, dataframe_features, write_options
         )
 
-        # deequ validation only on spark
-        validation = feature_group._data_validation_engine.ingest_validate(
-            feature_group, feature_dataframe
-        )
-        validation_id = validation.validation_id if validation is not None else None
-
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group, feature_dataframe, True, validation_options
@@ -66,7 +60,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 None,
                 offline_write_options,
                 online_write_options,
-                validation_id,
             ),
             ge_report,
         )
@@ -93,13 +86,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             )
         else:
             # else, just verify that feature group schema matches user-provided dataframe
-            self._verify_schema_compatibility(feature_group.features, dataframe_features)
-
-        # deequ validation only on spark
-        validation = feature_group._data_validation_engine.ingest_validate(
-            feature_group, feature_dataframe
-        )
-        validation_id = validation.validation_id if validation is not None else None
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
+            )
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
@@ -129,7 +118,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 storage,
                 offline_write_options,
                 online_write_options,
-                validation_id,
             ),
             ge_report,
         )
@@ -285,7 +273,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         if not feature_group._id:
-            self._save_feature_group_metadata(feature_group, dataframe_features, write_options)
+            self._save_feature_group_metadata(
+                feature_group, dataframe_features, write_options
+            )
 
             if not feature_group.stream:
                 # insert_stream method was called on non stream feature group object that has not been saved.
@@ -305,7 +295,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 )
         else:
             # else, just verify that feature group schema matches user-provided dataframe
-            self._verify_schema_compatibility(feature_group.features, dataframe_features)
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
+            )
 
         if not feature_group.stream:
             warnings.warn(
@@ -377,7 +369,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 + "".join(["\n - " + e for e in err])
             )
 
-    def _save_feature_group_metadata(self, feature_group, dataframe_features, write_options):
+    def _save_feature_group_metadata(
+        self, feature_group, dataframe_features, write_options
+    ):
 
         # this means FG doesn't exist and should create the new one
         if len(feature_group.features) == 0:
@@ -385,8 +379,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group._features = dataframe_features
         else:
             # User provided a schema; check if it is valid.
-            self._verify_schema_compatibility(feature_group.features, dataframe_features)
-
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
+            )
 
         # set primary and partition key columns
         # we should move this to the backend
