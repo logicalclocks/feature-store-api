@@ -36,7 +36,8 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
     if (externalFeatureGroup.getFeatures() == null) {
       onDemandDataset = SparkEngine.getInstance()
           .registerOnDemandTemporaryTable(externalFeatureGroup, "read_ondmd");
-      externalFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
+      externalFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset,
+          externalFeatureGroup.getTimeTravelFormat()));
     }
 
     /* set primary features */
