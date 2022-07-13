@@ -17,6 +17,8 @@
 import os
 import json
 import importlib.util
+import re
+import warnings
 from typing import Optional, TypeVar
 
 import numpy as np
@@ -170,6 +172,17 @@ class Engine:
             dataframe = dataframe.toDF()
 
         if isinstance(dataframe, DataFrame):
+            upper_case_features = [
+                c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
             return dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
