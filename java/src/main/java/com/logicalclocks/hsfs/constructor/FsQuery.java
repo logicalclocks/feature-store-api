@@ -22,7 +22,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
