@@ -279,14 +279,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "`stream=True`."
             )
 
-        if feature_group.validation_type != "NONE":
-            warnings.warn(
-                "Stream ingestion for feature group `{}`, with version `{}` will not perform validation.".format(
-                    feature_group.name, feature_group.version
-                ),
-                util.ValidationWarning,
-            )
-
         streaming_query = engine.get_instance().save_stream_dataframe(
             feature_group,
             dataframe,
