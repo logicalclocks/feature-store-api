@@ -165,7 +165,8 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData));
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData,
+          featureGroup.getTimeTravelFormat()));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());

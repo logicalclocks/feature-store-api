@@ -52,7 +52,21 @@ import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
+import org.apache.spark.sql.types.ArrayType;
+import org.apache.spark.sql.types.BinaryType;
+import org.apache.spark.sql.types.BooleanType;
+import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DateType;
+import org.apache.spark.sql.types.DecimalType;
+import org.apache.spark.sql.types.DoubleType;
+import org.apache.spark.sql.types.FloatType;
+import org.apache.spark.sql.types.IntegerType;
+import org.apache.spark.sql.types.LongType;
+import org.apache.spark.sql.types.ShortType;
+import org.apache.spark.sql.types.StringType;
 import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.TimestampType;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
@@ -607,16 +621,43 @@ public class SparkEngine {
     writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
-
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric) throws FeatureStoreException {
+  
+  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
+      TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    Boolean usingHudi = timeTravelFormat == TimeTravelFormat.HUDI;
     for (StructField structField : dataset.schema().fields()) {
-      // TODO(Fabio): unit test this one for complext types
-      Feature f = new Feature(structField.name().toLowerCase(), structField.dataType().catalogString(), false, false);
+      String featureType = "";
+      if (!usingHudi) {
+        featureType = structField.dataType().catalogString();
+      } else if (structField.dataType() instanceof ByteType) {
+        featureType = "int";
+      } else if (structField.dataType() instanceof ShortType) {
+        featureType = "int";
+      } else if (structField.dataType() instanceof BooleanType
+          || structField.dataType() instanceof IntegerType
+          || structField.dataType() instanceof LongType
+          || structField.dataType() instanceof FloatType
+          || structField.dataType() instanceof DoubleType
+          || structField.dataType() instanceof DecimalType
+          || structField.dataType() instanceof TimestampType
+          || structField.dataType() instanceof DateType
+          || structField.dataType() instanceof StringType
+          || structField.dataType() instanceof ArrayType
+          || structField.dataType() instanceof StructType
+          || structField.dataType() instanceof BinaryType) {
+        featureType = structField.dataType().catalogString();
+      } else {
+        throw new FeatureStoreException("Feature '" + structField.name().toLowerCase() + "': "
+            + "spark type " + structField.dataType().catalogString() + " not supported.");
+      }
+  
+      Feature f = new Feature(structField.name().toLowerCase(), featureType, false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
+      
       features.add(f);
     }
 

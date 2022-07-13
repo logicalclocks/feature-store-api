@@ -37,7 +37,8 @@ public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
     if (onDemandFeatureGroup.getFeatures() == null) {
       onDemandDataset = SparkEngine.getInstance()
           .registerOnDemandTemporaryTable(onDemandFeatureGroup, "read_ondmd");
-      onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
+      onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset,
+          onDemandFeatureGroup.getTimeTravelFormat()));
     }
 
     /* set primary features */
