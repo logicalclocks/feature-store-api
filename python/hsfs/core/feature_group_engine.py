@@ -378,7 +378,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             # User didn't provide a schema; extract it from the dataframe
             feature_group._features = dataframe_features
         else:
-            # User provided a schema; check if it is valid.
+            # User provided a schema; check if it is compatible with dataframe.
             self._verify_schema_compatibility(
                 feature_group.features, dataframe_features
             )
