@@ -146,9 +146,7 @@ class HudiEngine:
         jdbc_url = self._get_conn_str()
         hudi_options = {
             self.HUDI_KEY_GENERATOR_OPT_KEY: self.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL,
-            self.HUDI_PRECOMBINE_FIELD: self._pre_combine_key[0]
-            if isinstance(pre_combine_key, list)
-            else pre_combine_key,
+            self.HUDI_PRECOMBINE_FIELD: pre_combine_key,
             self.HUDI_RECORD_KEY: primary_key,
             self.HUDI_PARTITION_FIELD: partition_path,
             self.HUDI_TABLE_NAME: table_name,
