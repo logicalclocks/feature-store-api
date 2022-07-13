@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -52,10 +51,6 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
 
     ExternalFeatureGroup apiFg = featureGroupApi.save(externalFeatureGroup);
     externalFeatureGroup.setId(apiFg.getId());
-
-    if (externalFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
-      externalFeatureGroup.validate(onDemandDataset, true);
-    }
 
     return externalFeatureGroup;
   }
