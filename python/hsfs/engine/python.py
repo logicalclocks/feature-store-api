@@ -37,6 +37,7 @@ from confluent_kafka import Producer
 from tqdm.auto import tqdm
 
 from hsfs import client, feature, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_group_api,
     dataset_api,
@@ -337,7 +338,8 @@ class Engine:
             ]
             if len(upper_case_features) > 0:
                 warnings.warn(
-                    "The ingested dataframe contains upper case letters in feature names: `{}`. Feature names are sanitized to lower case in the feature store.".format(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
@@ -353,15 +355,19 @@ class Engine:
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe):
+    def parse_schema_feature_group(self, dataframe, time_travel_format):
         arrow_schema = pa.Schema.from_pandas(dataframe)
-        return [
-            feature.Feature(
-                feat_name.lower(),
-                self._convert_pandas_type(feat_name, feat_type, arrow_schema),
-            )
-            for feat_name, feat_type in dataframe.dtypes.items()
-        ]
+        features = []
+        for feat_name, feat_type in dataframe.dtypes.items():
+            name = feat_name.lower()
+            try:
+                converted_type = self._convert_pandas_type(
+                    feat_type, arrow_schema.field(feat_name).type
+                )
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(feature.Feature(name, converted_type))
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         raise NotImplementedError(
@@ -369,24 +375,32 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
+    def _convert_pandas_type(self, dtype, arrow_type):
+        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
+        # using pyarrow types to convert "O (object)"-typed fields.
+        # In the backend, the types specified here will also be used for mapping to Avro types.
         if dtype == np.dtype("O"):
-            return self._infer_type_pyarrow(feat_name, arrow_schema)
+            return self._infer_type_pyarrow(arrow_type)
 
         return self._convert_simple_pandas_type(dtype)
 
     def _convert_simple_pandas_type(self, dtype):
-        # This is a simple type conversion between pandas type and pyspark types.
-        # In PySpark they use PyArrow to do the schema conversion, but this python layer
-        # should be as thin as possible. Adding PyArrow will make the library less flexible.
-        # If the conversion fails, users can always fall back and provide their own types
-
-        if dtype == np.dtype("O"):
-            return "string"
+        if dtype == np.dtype("uint8"):
+            return "int"
+        elif dtype == np.dtype("uint16"):
+            return "int"
+        elif dtype == np.dtype("int8"):
+            return "int"
+        elif dtype == np.dtype("int16"):
+            return "int"
         elif dtype == np.dtype("int32"):
             return "int"
+        elif dtype == np.dtype("uint32"):
+            return "bigint"
         elif dtype == np.dtype("int64"):
             return "bigint"
+        elif dtype == np.dtype("float16"):
+            return "float"
         elif dtype == np.dtype("float32"):
             return "float"
         elif dtype == np.dtype("float64"):
@@ -394,20 +408,33 @@ class Engine:
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
         elif dtype == np.dtype("bool"):
-            return "bool"
+            return "boolean"
+        elif dtype == "category":
+            return "string"
 
-        return "string"
+        raise ValueError(f"dtype '{dtype}' not supported")
 
-    def _infer_type_pyarrow(self, field, schema):
-        arrow_type = schema.field(field).type
-
+    def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
-            subtype = self._convert_simple_pandas_type(
-                arrow_type.value_type.to_pandas_dtype()
-            )
+            sub_arrow_type = arrow_type.value_type
+            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            subtype = self._convert_pandas_type(sub_dtype, sub_arrow_type)
             return "array<{}>".format(subtype)
-        return "string"
+        if pa.types.is_struct(arrow_type):
+            # best effort, based on pyarrow's string representation
+            return str(arrow_type)
+        # Currently not supported
+        # elif pa.types.is_decimal(arrow_type):
+        #    return str(arrow_type).replace("decimal128", "decimal")
+        elif pa.types.is_date(arrow_type):
+            return "date"
+        elif pa.types.is_binary(arrow_type):
+            return "binary"
+        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
+            return "string"
+
+        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     def save_dataframe(
         self,

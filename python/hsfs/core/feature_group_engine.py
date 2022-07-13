@@ -17,6 +17,7 @@ import warnings
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine, hudi_engine
 
 
@@ -29,8 +30,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def save(self, feature_group, feature_dataframe, write_options, validation_options):
 
+        dataframe_features = engine.get_instance().parse_schema_feature_group(
+            feature_dataframe, feature_group.time_travel_format
+        )
+
         self._save_feature_group_metadata(
-            feature_group, feature_dataframe, write_options
+            feature_group, dataframe_features, write_options
         )
 
         # ge validation on python and non stream feature groups on spark
@@ -70,9 +75,19 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         validation_options,
     ):
 
+        dataframe_features = engine.get_instance().parse_schema_feature_group(
+            feature_dataframe, feature_group.time_travel_format
+        )
+
         if not feature_group._id:
+            # only save metadata if feature group does not exist
             self._save_feature_group_metadata(
-                feature_group, feature_dataframe, write_options
+                feature_group, dataframe_features, write_options
+            )
+        else:
+            # else, just verify that feature group schema matches user-provided dataframe
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
             )
 
         # ge validation on python and non stream feature groups on spark
@@ -253,8 +268,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "It is currently only possible to stream to the online storage."
             )
 
+        dataframe_features = engine.get_instance().parse_schema_feature_group(
+            dataframe, feature_group.time_travel_format
+        )
+
         if not feature_group._id:
-            self._save_feature_group_metadata(feature_group, dataframe, write_options)
+            self._save_feature_group_metadata(
+                feature_group, dataframe_features, write_options
+            )
 
             if not feature_group.stream:
                 # insert_stream method was called on non stream feature group object that has not been saved.
@@ -272,6 +293,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                     offline_write_options,
                     online_write_options,
                 )
+        else:
+            # else, just verify that feature group schema matches user-provided dataframe
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
+            )
 
         if not feature_group.stream:
             warnings.warn(
@@ -292,15 +318,61 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         return streaming_query
 
+    def _verify_schema_compatibility(self, feature_group_features, dataframe_features):
+        err = []
+        feature_df_dict = {feat.name: feat.type for feat in dataframe_features}
+        for feature_fg in feature_group_features:
+            fg_type = feature_fg.type.lower().replace(" ", "")
+            # check if feature exists dataframe
+            if feature_fg.name in feature_df_dict:
+                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
+                # remove match from lookup table
+                del feature_df_dict[feature_fg.name]
+
+                # check if types match
+                if fg_type != df_type:
+                    # don't check structs for exact match
+                    if fg_type.startswith("struct") and df_type.startswith("struct"):
+                        continue
+
+                    err += [
+                        f"{feature_fg.name} ("
+                        f"expected type: '{fg_type}', "
+                        f"derived from input: '{df_type}') has the wrong type."
+                    ]
+
+            else:
+                err += [
+                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
+                    f"input dataframe."
+                ]
+
+        # any features that are left in lookup table are superfluous
+        for feature_df_name, feature_df_type in feature_df_dict.items():
+            err += [
+                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
+                f"in feature group."
+            ]
+
+        # raise exception if any errors were found.
+        if len(err) > 0:
+            raise FeatureStoreException(
+                "Features are not compatible with Feature Group schema: "
+                + "".join(["\n - " + e for e in err])
+            )
+
     def _save_feature_group_metadata(
-        self, feature_group, feature_dataframe, write_options
+        self, feature_group, dataframe_features, write_options
     ):
 
         # this means FG doesn't exist and should create the new one
         if len(feature_group.features) == 0:
-            # User didn't provide a schema. extract it from the dataframe
-            feature_group._features = engine.get_instance().parse_schema_feature_group(
-                feature_dataframe
+            # User didn't provide a schema; extract it from the dataframe
+            feature_group._features = dataframe_features
+        else:
+            # User provided a schema; check if it is compatible with dataframe.
+            self._verify_schema_compatibility(
+                feature_group.features, dataframe_features
             )
 
         # set primary and partition key columns
