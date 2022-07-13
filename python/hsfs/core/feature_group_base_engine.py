@@ -62,12 +62,3 @@ class FeatureGroupBaseEngine:
             ):
                 new_features.append(feature)
         return new_features + updated_features
-
-    def update_validation_type(self, feature_group):
-        """Update the metadata attribute specified of the feature group ."""
-        self._feature_group_api.update_metadata(
-            feature_group,
-            feature_group,
-            "validationType",
-            feature_group.validation_type,
-        )
