@@ -17,6 +17,8 @@
 import os
 import json
 import importlib.util
+import re
+import warnings
 from typing import Optional, TypeVar
 
 import numpy as np
@@ -30,6 +32,22 @@ try:
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
+    from pyspark.sql.types import (
+        ByteType,
+        ShortType,
+        IntegerType,
+        LongType,
+        FloatType,
+        DoubleType,
+        DecimalType,
+        DateType,
+        StringType,
+        TimestampType,
+        ArrayType,
+        StructType,
+        BinaryType,
+        BooleanType,
+    )
 except ImportError:
     pass
 
@@ -130,11 +148,10 @@ class Engine:
         )
 
     def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
-            dataframe = self._spark_session.createDataFrame(dataframe)
-        elif isinstance(dataframe, list):
+        if isinstance(dataframe, list):
             dataframe = np.array(dataframe)
-        elif isinstance(dataframe, np.ndarray):
+
+        if isinstance(dataframe, np.ndarray):
             if dataframe.ndim != 2:
                 raise TypeError(
                     "Cannot convert numpy array that do not have two dimensions to a dataframe. "
@@ -147,10 +164,23 @@ class Engine:
                 dataframe_dict[col_name] = dataframe[:, n_col]
             pandas_df = pd.DataFrame(dataframe_dict)
             dataframe = self._spark_session.createDataFrame(pandas_df)
+        elif isinstance(dataframe, pd.DataFrame):
+            dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
 
         if isinstance(dataframe, DataFrame):
+            upper_case_features = [
+                c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
             return dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
@@ -262,6 +292,7 @@ class Engine:
                 self._spark_session,
                 self._spark_context,
             )
+
             hudi_engine_instance.save_hudi_fg(
                 dataframe, self.APPEND, operation, write_options, validation_id
             )
@@ -520,7 +551,7 @@ class Engine:
             if include_metadata is True:
                 return df.select(
                     *kafka_cols,
-                    from_json(df.value.cast("string"), schema).alias("value")
+                    from_json(df.value.cast("string"), schema).alias("value"),
                 ).select(*kafka_cols, col("value.*"))
             return df.select(
                 from_json(df.value.cast("string"), schema).alias("value")
@@ -640,15 +671,21 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe):
-        return [
-            feature.Feature(
-                feat.name.lower(),
-                feat.dataType.simpleString(),
-                feat.metadata.get("description", None),
+    def parse_schema_feature_group(self, dataframe, time_travel_format):
+        features = []
+        using_hudi = time_travel_format == "HUDI"
+        for feat in dataframe.schema:
+            name = feat.name.lower()
+            try:
+                converted_type = self.convert_spark_type(feat.dataType, using_hudi)
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(
+                feature.Feature(
+                    name, converted_type, feat.metadata.get("description", None)
+                )
             )
-            for feat in dataframe.schema
-        ]
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         return [
@@ -658,15 +695,34 @@ class Engine:
             for feat in dataframe.schema
         ]
 
-    def parse_schema_dict(self, dataframe):
-        return {
-            feat.name: feature.Feature(
-                feat.name.lower(),
-                feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
-            )
-            for feat in dataframe.schema
-        }
+    def convert_spark_type(self, hive_type, using_hudi):
+        # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
+        # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
+        # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
+
+        if not using_hudi:
+            return hive_type.simpleString()
+        elif type(hive_type) == ByteType:
+            return "int"
+        elif type(hive_type) == ShortType:
+            return "int"
+        elif type(hive_type) in [
+            BooleanType,
+            IntegerType,
+            LongType,
+            FloatType,
+            DoubleType,
+            DecimalType,
+            TimestampType,
+            DateType,
+            StringType,
+            ArrayType,
+            StructType,
+            BinaryType,
+        ]:
+            return hive_type.simpleString()
+
+        raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)

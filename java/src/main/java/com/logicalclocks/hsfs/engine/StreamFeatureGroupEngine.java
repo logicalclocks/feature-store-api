@@ -119,7 +119,9 @@ public class StreamFeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData)));
+      featureGroup.setFeatures(utils
+          .parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData),
+            featureGroup.getTimeTravelFormat()));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
