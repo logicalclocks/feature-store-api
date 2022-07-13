@@ -724,8 +724,9 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe, using_hudi):
+    def parse_schema_feature_group(self, dataframe, time_travel_format):
         features = []
+        using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
