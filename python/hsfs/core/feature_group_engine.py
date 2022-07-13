@@ -13,7 +13,6 @@
 #   limitations under the License.
 #
 import warnings
-import time
 
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
