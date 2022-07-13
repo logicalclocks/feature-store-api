@@ -754,14 +754,6 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
       
       
         <label class="md-nav__link" for="__nav_8_1">
@@ -868,62 +860,6 @@
     <li class="md-nav__item">
       <a href="../api/query_api/" class="md-nav__link">
         Query
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/rule_definition_api/" class="md-nav__link">
-        Rule Definiton
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/rule_api/" class="md-nav__link">
-        Rule
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/expectation_api/" class="md-nav__link">
-        Expectation
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/validation_api/" class="md-nav__link">
-        Validation
       </a>
     </li>
   
@@ -1085,20 +1021,6 @@
           <li class="md-nav__item">
   <a href="#get_feature_store" class="md-nav__link">
     get_feature_store
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#get_rule" class="md-nav__link">
-    get_rule
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#get_rules" class="md-nav__link">
-    get_rules
   </a>
   
 </li>
@@ -1354,7 +1276,7 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
     Hopsworks project.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L228">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L227">[source]</a></span></p>
 <h3 id="close">close<a class="headerlink" href="#close" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
@@ -1363,7 +1285,7 @@ For more information, see the <a href="../../setup/">integration guides</a>.</p>
 external environments such as AWS SageMaker.</p>
 <p>Usage is recommended but optional.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L159">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L158">[source]</a></span></p>
 <h3 id="connect">connect<a class="headerlink" href="#connect" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 </code></pre></div>
@@ -1383,7 +1305,7 @@ connection.</p>
 </code></pre></div>
 </div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L142">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L141">[source]</a></span></p>
 <h3 id="get_feature_store">get_feature_store<a class="headerlink" href="#get_feature_store" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1397,19 +1319,7 @@ Shared feature stores, the project name of the feature store is required.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureStore</code>. A feature store handle object to perform operations on.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L494">[source]</a></span></p>
-<h3 id="get_rule">get_rule<a class="headerlink" href="#get_rule" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_rule</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</code></pre></div>
-<p>Get a rule with a certain name or all rules available for data validation.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L489">[source]</a></span></p>
-<h3 id="get_rules">get_rules<a class="headerlink" href="#get_rules" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">get_rules</span><span class="p">()</span>
-</code></pre></div>
-<p>Get a rule with a certain name or all rules available for data validation.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L242">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/connection.py#L241">[source]</a></span></p>
 <h3 id="setup_databricks">setup_databricks<a class="headerlink" href="#setup_databricks" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Connection</span><span class="o">.</span><span class="n">setup_databricks</span><span class="p">(</span>
     <span class="n">host</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

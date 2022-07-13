@@ -754,14 +754,6 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
       
       
         <label class="md-nav__link" for="__nav_8_1">
@@ -868,62 +860,6 @@
     <li class="md-nav__item">
       <a href="../api/query_api/" class="md-nav__link">
         Query
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/rule_definition_api/" class="md-nav__link">
-        Rule Definiton
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/rule_api/" class="md-nav__link">
-        Rule
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/expectation_api/" class="md-nav__link">
-        Expectation
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/validation_api/" class="md-nav__link">
-        Validation
       </a>
     </li>
   
@@ -1124,8 +1060,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#expectations_names" class="md-nav__link">
-    expectations_names
+  <a href="#expectation_suite" class="md-nav__link">
+    expectation_suite
   </a>
   
 </li>
@@ -1208,13 +1144,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#validation_type" class="md-nav__link">
-    validation_type
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#version" class="md-nav__link">
     version
   </a>
@@ -1249,13 +1178,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#attach_expectation" class="md-nav__link">
-    attach_expectation
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#compute_statistics" class="md-nav__link">
     compute_statistics
   </a>
@@ -1270,15 +1192,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#delete_tag" class="md-nav__link">
-    delete_tag
+  <a href="#delete_expectation_suite" class="md-nav__link">
+    delete_expectation_suite
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#detach_expectation" class="md-nav__link">
-    detach_expectation
+  <a href="#delete_tag" class="md-nav__link">
+    delete_tag
   </a>
   
 </li>
@@ -1291,15 +1213,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_expectation" class="md-nav__link">
-    get_expectation
+  <a href="#get_all_validation_reports" class="md-nav__link">
+    get_all_validation_reports
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_expectations" class="md-nav__link">
-    get_expectations
+  <a href="#get_expectation_suite" class="md-nav__link">
+    get_expectation_suite
   </a>
   
 </li>
@@ -1307,6 +1229,13 @@
           <li class="md-nav__item">
   <a href="#get_feature" class="md-nav__link">
     get_feature
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_latest_validation_report" class="md-nav__link">
+    get_latest_validation_report
   </a>
   
 </li>
@@ -1333,13 +1262,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_validations" class="md-nav__link">
-    get_validations
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#read" class="md-nav__link">
     read
   </a>
@@ -1349,6 +1271,20 @@
           <li class="md-nav__item">
   <a href="#save" class="md-nav__link">
     save
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_expectation_suite" class="md-nav__link">
+    save_expectation_suite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_validation_report" class="md-nav__link">
+    save_validation_report
   </a>
   
 </li>
@@ -1529,7 +1465,7 @@ When the external feature group is defined on top of an external database capaba
 Nevertheless, external feature groups can be used from a Python engine to create training datasets.</p>
 </div>
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L713">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L652">[source]</a></span></p>
 <h3 id="create_external_feature_group">create_external_feature_group<a class="headerlink" href="#create_external_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1544,8 +1480,7 @@ Nevertheless, external feature groups can be used from a Python engine to create
     <span class="n">features</span><span class="o">=</span><span class="p">[],</span>
     <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">validation_type</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span><span class="p">,</span>
-    <span class="n">expectations</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">expectation_suite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Create a external feature group metadata object.</p>
@@ -1592,18 +1527,15 @@ call the <code>save()</code> method.</p>
 <li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
     time for the features in this feature group. If event_time is set
     the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
-<li><strong>validation_type</strong> <code>Optional[str]</code>: Optionally, set the validation type to one of "NONE", "STRICT",
-    "WARNING", "ALL". Determines the mode in which data validation is applied on
-     ingested or already existing feature group data.</li>
-<li><strong>expectations</strong> <code>Optional[List[hsfs.expectation.Expectation]]</code>: Optionally, a list of expectations to be attached to the feature group.
-    The expectations list contains Expectation metadata objects which can be retrieved with
-    the <code>get_expectation()</code> and <code>get_expectations()</code> functions.</li>
+<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
+    group which dataframes should be validated against upon insertion.
+    Defaults to <code>None</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>ExternalFeatureGroup</code>. The external feature group metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L191">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L187">[source]</a></span></p>
 <h3 id="get_external_feature_group">get_external_feature_group<a class="headerlink" href="#get_external_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1625,72 +1557,69 @@ Pandas DataFrame or use the <code>Query</code>-API to perform joins between feat
 </ul>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1839">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1717">[source]</a></span></p>
 <h3 id="created">created<a class="headerlink" href="#created" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1835">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1713">[source]</a></span></p>
 <h3 id="creator">creator<a class="headerlink" href="#creator" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1819">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1697">[source]</a></span></p>
 <h3 id="data_format">data_format<a class="headerlink" href="#data_format" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1807">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1685">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L557">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L624">[source]</a></span></p>
 <h3 id="event_time">event_time<a class="headerlink" href="#event_time" title="Permanent link">#</a></h3>
 <p>Event time feature in the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1848">[source]</a></span></p>
-<h3 id="expectations_names">expectations_names<a class="headerlink" href="#expectations_names" title="Permanent link">#</a></h3>
-<p>The names of expectations attached to this feature group.</p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L637">[source]</a></span></p>
+<h3 id="expectation_suite">expectation_suite<a class="headerlink" href="#expectation_suite" title="Permanent link">#</a></h3>
+<p>Expectation Suite configuration object defining the settings for
+data validation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1811">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1689">[source]</a></span></p>
 <h3 id="features">features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1795">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1673">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L566">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L633">[source]</a></span></p>
 <h3 id="location">location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1799">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1677">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1827">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1705">[source]</a></span></p>
 <h3 id="options">options<a class="headerlink" href="#options" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1823">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1701">[source]</a></span></p>
 <h3 id="path">path<a class="headerlink" href="#path" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L505">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L572">[source]</a></span></p>
 <h3 id="primary_key">primary_key<a class="headerlink" href="#primary_key" title="Permanent link">#</a></h3>
 <p>List of features building the primary key.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1815">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1693">[source]</a></span></p>
 <h3 id="query">query<a class="headerlink" href="#query" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L500">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L567">[source]</a></span></p>
 <h3 id="statistics">statistics<a class="headerlink" href="#statistics" title="Permanent link">#</a></h3>
 <p>Get the latest computed statistics for the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L477">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L544">[source]</a></span></p>
 <h3 id="statistics_config">statistics_config<a class="headerlink" href="#statistics_config" title="Permanent link">#</a></h3>
 <p>Statistics configuration object defining the settings for statistics
 computation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1831">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1709">[source]</a></span></p>
 <h3 id="storage_connector">storage_connector<a class="headerlink" href="#storage_connector" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1843">[source]</a></span></p>
-<h3 id="validation_type">validation_type<a class="headerlink" href="#validation_type" title="Permanent link">#</a></h3>
-<p>Validation type, one of "STRICT", "WARNING", "ALL", "NONE".</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1803">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1681">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L176">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L167">[source]</a></span></p>
 <h3 id="add_tag">add_tag<a class="headerlink" href="#add_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </code></pre></div>
@@ -1705,7 +1634,7 @@ The value of a tag can be any valid json - primitives, arrays or json objects.</
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to add the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L347">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L338">[source]</a></span></p>
 <h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
@@ -1726,20 +1655,7 @@ features is considered a breaking change.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L387">[source]</a></span></p>
-<h3 id="attach_expectation">attach_expectation<a class="headerlink" href="#attach_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">attach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
-</code></pre></div>
-<p>Attach a feature group expectation. If feature group validation is not already enabled, it will be enabled
-and set to the stricter setting.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>name</strong>: The expectation name.</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p><code>Expectation</code>. The expectation metadata object.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L533">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L600">[source]</a></span></p>
 <h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
 </code></pre></div>
@@ -1752,7 +1668,7 @@ group.
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>. Unable to persist the statistics.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L66">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L57">[source]</a></span></p>
 <h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </code></pre></div>
@@ -1766,7 +1682,15 @@ associated with it.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L192">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L439">[source]</a></span></p>
+<h3 id="delete_expectation_suite">delete_expectation_suite<a class="headerlink" href="#delete_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete_expectation_suite</span><span class="p">()</span>
+</code></pre></div>
+<p>Delete the expectation suite attached to the featuregroup.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L183">[source]</a></span></p>
 <h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1778,19 +1702,7 @@ associated with it.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to delete the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L404">[source]</a></span></p>
-<h3 id="detach_expectation">detach_expectation<a class="headerlink" href="#detach_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">detach_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span>
-</code></pre></div>
-<p>Remove an expectation from a feature group.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>name</strong>: The expectation name.</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p><code>Expectation</code>. The expectation metadata object.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L145">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L136">[source]</a></span></p>
 <h3 id="filter">filter<a class="headerlink" href="#filter" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </code></pre></div>
@@ -1815,31 +1727,39 @@ respective feature group:
 <p><strong>Returns</strong></p>
 <p><code>Query</code>. The query object with the applied filter.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L428">[source]</a></span></p>
-<h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L467">[source]</a></span></p>
+<h3 id="get_all_validation_reports">get_all_validation_reports<a class="headerlink" href="#get_all_validation_reports" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_all_validation_reports</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Get attached expectation by name for this feature group. Name is unique across a feature store.</p>
+<p>Return the latest validation report attached to the feature group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: The expectation name.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Expectation</code>. The expectation metadata object.</p>
+<p><code>ValidationReport</code>. The latest validation report attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L416">[source]</a></span></p>
-<h3 id="get_expectations">get_expectations<a class="headerlink" href="#get_expectations" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectations</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L378">[source]</a></span></p>
+<h3 id="get_expectation_suite">get_expectation_suite<a class="headerlink" href="#get_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectation_suite</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Get all feature group expectations.</p>
+<p>Return the expectation suite attached to the feature group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong>: The expectation name.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Expectation</code>. A list of expectation metadata objects.</p>
+<p><code>ExpectationSuite</code>. The expectation suite attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L228">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L219">[source]</a></span></p>
 <h3 id="get_feature">get_feature<a class="headerlink" href="#get_feature" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1861,7 +1781,23 @@ the <code>get_feature</code> method.</p>
 <p>Returns:
     [type]: [description]</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L514">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L448">[source]</a></span></p>
+<h3 id="get_latest_validation_report">get_latest_validation_report<a class="headerlink" href="#get_latest_validation_report" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_latest_validation_report</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Return the latest validation report attached to the feature group if it exists.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>ValidationReport</code>. The latest validation report attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L581">[source]</a></span></p>
 <h3 id="get_statistics">get_statistics<a class="headerlink" href="#get_statistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1876,7 +1812,7 @@ the <code>get_feature</code> method.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L203">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L194">[source]</a></span></p>
 <h3 id="get_tag">get_tag<a class="headerlink" href="#get_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -1890,7 +1826,7 @@ the <code>get_feature</code> method.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to retrieve the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L217">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L208">[source]</a></span></p>
 <h3 id="get_tags">get_tags<a class="headerlink" href="#get_tags" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
 </code></pre></div>
@@ -1900,31 +1836,55 @@ the <code>get_feature</code> method.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to retrieve the tags.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L440">[source]</a></span></p>
-<h3 id="get_validations">get_validations<a class="headerlink" href="#get_validations" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_validations</span><span class="p">(</span><span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-<p>Get feature group data validation results based on the attached expectations.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>validation_time</strong>: The data validation time, when the data validation started.
-   commit_time: The commit time of a time travel enabled feature group.</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1721">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1595">[source]</a></span></p>
 <h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Get the feature group as a DataFrame.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1712">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1588">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L95">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L398">[source]</a></span></p>
+<h3 id="save_expectation_suite">save_expectation_suite<a class="headerlink" href="#save_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save_expectation_suite</span><span class="p">(</span>
+    <span class="n">expectation_suite</span><span class="p">,</span> <span class="n">run_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validation_ingestion_policy</span><span class="o">=</span><span class="s2">&quot;ALWAYS&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Attach an expectation suite to a feature group and saves it for future use. If an expectation
+suite is already attached, it is replaced. Note that the provided expectation suite is modified
+inplace to include expectationId fields.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation_suite</strong> <code>Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]</code>: The expectation suite to attach to the featuregroup.</li>
+<li><strong>run_validation</strong>: Set whether the expectation_suite will run on ingestion</li>
+<li><strong>validation_ingestion_policy</strong>: Set the policy for ingestion to the featuregroup.<ul>
+<li>"STRICT" only allows DataFrame passing validation to be inserted into featuregroup.</li>
+<li>"ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L488">[source]</a></span></p>
+<h3 id="save_validation_report">save_validation_report<a class="headerlink" href="#save_validation_report" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save_validation_report</span><span class="p">(</span><span class="n">validation_report</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Save validation report to hopsworks platform along previous reports of the same featuregroup.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>validation_report</strong> <code>Union[dict, hsfs.validation_report.ValidationReport, great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult]</code>: The validation report to attach to the featuregroup.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L86">[source]</a></span></p>
 <h3 id="select">select<a class="headerlink" href="#select" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -1939,7 +1899,7 @@ dataset with a subset of features of the feature group.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>: A query object with the selected features of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L79">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L70">[source]</a></span></p>
 <h3 id="select_all">select_all<a class="headerlink" href="#select_all" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
 </code></pre></div>
@@ -1949,7 +1909,7 @@ training dataset immediately.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>. A query object with all features of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L115">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L106">[source]</a></span></p>
 <h3 id="select_except">select_except<a class="headerlink" href="#select_except" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_except</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
 </code></pre></div>
@@ -1966,13 +1926,13 @@ dataset with a subset of features of the feature group.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>: A query object with the selected features of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1731">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1605">[source]</a></span></p>
 <h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 </code></pre></div>
 <p>Show the first n rows of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L273">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L264">[source]</a></span></p>
 <h3 id="update_description">update_description<a class="headerlink" href="#update_description" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_description</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 </code></pre></div>
@@ -1989,7 +1949,7 @@ your local metadata object will keep the old description.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L328">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L319">[source]</a></span></p>
 <h3 id="update_feature_description">update_feature_description<a class="headerlink" href="#update_feature_description" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_feature_description</span><span class="p">(</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
 </code></pre></div>
@@ -2007,7 +1967,7 @@ your local metadata object will keep the old description.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L289">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L280">[source]</a></span></p>
 <h3 id="update_features">update_features<a class="headerlink" href="#update_features" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
@@ -2027,7 +1987,7 @@ corrupted state if the update fails.</p>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The updated feature group object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L258">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L249">[source]</a></span></p>
 <h3 id="update_statistics_config">update_statistics_config<a class="headerlink" href="#update_statistics_config" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
 </code></pre></div>
@@ -2039,9 +1999,9 @@ this method.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1741">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1615">[source]</a></span></p>
 <h3 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">save_report</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validation_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
 <p>Run validation based on the attached expectations</p>
 <p><strong>Returns</strong></p>
