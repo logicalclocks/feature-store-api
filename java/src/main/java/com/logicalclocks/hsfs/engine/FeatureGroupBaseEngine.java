@@ -118,10 +118,4 @@ public class FeatureGroupBaseEngine {
     }
     return new FeatureGroupBase();
   }
-
-  public <T extends FeatureGroupBase> void updateValidationType(FeatureGroupBase featureGroupBase, Class<T> fgClass)
-      throws FeatureStoreException, IOException {
-    featureGroupApi.updateMetadata(
-        featureGroupBase, "validationType", featureGroupBase.getValidationType(), fgClass);
-  }
 }
