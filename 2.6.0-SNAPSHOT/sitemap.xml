@@ -2,262 +2,262 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/CONTRIBUTING/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/overview/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/quickstart/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/setup/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/external_feature_group/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/feature/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/feature_group/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/feature_store/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/feature_validation/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/project/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/query_vs_dataframe/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/statistics/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/storage_connector/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/tags/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/training_dataset/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/transformation_functions/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/versioning/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/connection_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/expectation_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/feature_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/feature_group_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/feature_store_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/job_configuration/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/query_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/rule_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/rule_definition_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/statistics_config_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/storage_connector_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/training_dataset_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/transformation_functions_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/generated/api/validation_api/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/assume_role/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/hdinsight/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/mlstudio_designer/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/mlstudio_notebooks/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/python/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/role_mapping/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/sagemaker/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/spark/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/databricks/api_key/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/databricks/configuration/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/databricks/networking/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/emr/emr_configuration/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/emr/networking/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/adls/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/hopsfs/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/jdbc/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/redshift/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/s3/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/2.6.0-SNAPSHOT/integrations/storage-connectors/snowflake/</loc>
-         <lastmod>2022-07-13</lastmod>
+         <lastmod>2022-07-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
