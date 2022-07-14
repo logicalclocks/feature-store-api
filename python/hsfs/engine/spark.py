@@ -449,7 +449,7 @@ class Engine:
 
     def _time_series_split(self, training_dataset, dataset, event_time):
         result_dfs = {}
-        ts_type = dataset.select("ts").dtypes[0][1]
+        ts_type = dataset.select(event_time).dtypes[0][1]
         ts_col = (
             unix_timestamp(col(event_time)) * 1000
             if ts_type in ["date", "timestamp"]
