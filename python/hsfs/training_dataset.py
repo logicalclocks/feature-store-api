@@ -772,7 +772,9 @@ class TrainingDataset:
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in training dataset query.
         """
-        return self._vector_server.get_feature_vector(entry, external)
+        if self._vector_server.prepared_statements is None:
+            self.init_prepared_statement(None, external)
+        return self._vector_server.get_feature_vector(entry)
 
     def get_serving_vectors(
         self, entry: Dict[str, List[Any]], external: Optional[bool] = None
@@ -792,7 +794,9 @@ class TrainingDataset:
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to
             positions of this features in training dataset query.
         """
-        return self._vector_server.get_feature_vectors(entry, external)
+        if self._vector_server.prepared_statements is None:
+            self.init_prepared_statement(None, external)
+        return self._vector_server.get_feature_vectors(entry)
 
     @property
     def label(self):
