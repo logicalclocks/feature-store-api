@@ -14,6 +14,7 @@ import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.util.Constants;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
@@ -51,6 +52,7 @@ public class VectorServer {
   private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
   private TreeMap<Integer, PreparedStatement> preparedStatements;
   private TreeMap<Integer, String> preparedQueryString;
+  @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
 

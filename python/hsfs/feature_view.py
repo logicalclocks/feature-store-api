@@ -1227,3 +1227,16 @@ class FeatureView:
     @schema.setter
     def schema(self, features):
         self._features = features
+
+    @property
+    def primary_keys(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        _vector_server = self._single_vector_server or self._batch_vectors_server
+        if _vector_server:
+            return _vector_server.serving_keys
+        else:
+            _vector_server = vector_server.VectorServer(
+                self._featurestore_id, self._features
+            )
+            _vector_server.init_prepared_statement(self, False, False)
+            return _vector_server.serving_keys
