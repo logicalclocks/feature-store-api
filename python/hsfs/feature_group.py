@@ -732,7 +732,7 @@ class FeatureGroup(FeatureGroupBase):
                     feat.name
                     for feat in self._features
                     if feat.hudi_precombine_key is True
-                ]
+                ][0]
             else:
                 self._hudi_precombine_key = None
 
