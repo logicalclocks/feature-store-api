@@ -171,8 +171,8 @@ class VectorServer:
 
             for prepared_statement_index in self._prepared_statements:
                 if any(
-                    e not in self._pkname_by_serving_index[prepared_statement_index]
-                    for e in entry.keys()
+                    e not in entry.keys()
+                    for e in self._pkname_by_serving_index[prepared_statement_index]
                 ):
                     # User did not provide the necessary serving keys, we expect they have
                     # provided the necessary features as passed_features.
