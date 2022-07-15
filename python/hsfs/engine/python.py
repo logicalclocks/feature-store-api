@@ -505,20 +505,18 @@ class Engine:
     def get_training_data(
         self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
-        df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._prepare_transform_split_df(
-                df, training_dataset_obj, feature_view_obj
+            return self._prepare_transform_split_df(
+                query_obj, training_dataset_obj, feature_view_obj, read_options
             )
         else:
-            split_df = df
+            df = query_obj.read(read_options=read_options)
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
+                training_dataset_obj, feature_view_obj, df
             )
-            split_df = self._apply_transformation_function(
-                training_dataset_obj, split_df
+            return self._apply_transformation_function(
+                training_dataset_obj, df
             )
-        return split_df
 
     def split_labels(self, df, labels):
         if labels:
@@ -528,7 +526,8 @@ class Engine:
         else:
             return df, None
 
-    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
+    def _prepare_transform_split_df(
+        self, query_obj, training_dataset_obj, feature_view_obj, read_option):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
@@ -537,10 +536,27 @@ class Engine:
             training_dataset_obj.splits[0].split_type
             == TrainingDatasetSplit.TIME_SERIES_SPLIT
         ):
-            event_time = feature_view_obj.query._left_feature_group.event_time
-            result_dfs = self._time_series_split(df, training_dataset_obj, event_time)
+            event_time = query_obj._left_feature_group.event_time
+            if event_time not in [_feature.name for _feature in query_obj.features]:
+                query_obj.append_feature(
+                    query_obj._left_feature_group.__getattr__(event_time)
+                )
+                result_dfs = self._time_series_split(
+                    query_obj.read(read_options=read_option),
+                    training_dataset_obj,
+                    event_time,
+                    drop_event_time=True
+                )
+            else:
+                result_dfs = self._time_series_split(
+                    query_obj.read(read_options=read_option),
+                    training_dataset_obj,
+                    event_time
+                )
         else:
-            result_dfs = self._random_split(df, training_dataset_obj)
+            result_dfs = self._random_split(
+                query_obj.read(read_options=read_option), training_dataset_obj
+            )
 
         # apply transformations
         # 1st parametrise transformation functions with dt split stats
@@ -581,17 +597,26 @@ class Engine:
             result_dfs[split.name] = split_df
         return result_dfs
 
-    def _time_series_split(self, df, training_dataset_obj, event_time):
+    def _time_series_split(
+        self, df, training_dataset_obj, event_time, drop_event_time=False
+    ):
         result_dfs = {}
         for split in training_dataset_obj.splits:
-            result_dfs[split.name] = df[
-                [
-                    split.start_time
-                    <= self._convert_to_unix_timestamp(t)
-                    < split.end_time
-                    for t in df[event_time]
+            if len(df[event_time]) > 0:
+                result_df = df[
+                    [
+                        split.start_time
+                        <= self._convert_to_unix_timestamp(t)
+                        < split.end_time
+                        for t in df[event_time]
+                    ]
                 ]
-            ]
+            else:
+                # if df[event_time] is empty, it returns an empty dataframe
+                result_df = df
+            if drop_event_time:
+                result_df = result_df.drop([event_time], axis=1)
+            result_dfs[split.name] = result_df
         return result_dfs
 
     def _convert_to_unix_timestamp(self, t):

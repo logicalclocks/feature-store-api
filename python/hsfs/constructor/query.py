@@ -327,3 +327,10 @@ class Query:
     @left_feature_group_end_time.setter
     def left_feature_group_end_time(self, left_feature_group_end_time):
         self._left_feature_group_end_time = left_feature_group_end_time
+
+    @property
+    def features(self):
+        return self._left_features
+
+    def append_feature(self, feature):
+        self._left_features.append(feature)
