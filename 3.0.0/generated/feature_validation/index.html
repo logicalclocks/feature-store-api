@@ -1,0 +1,1478 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale.">
+      
+      
+        <meta name="author" content="Logical Clocks">
+      
+      
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.0.0/generated/feature_validation/">
+      
+      <link rel="icon" href="../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
+    
+    
+      
+        <title>Feature Validation with the Hopsworks Feature Store - Hopsworks Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.644de097.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/custom.css">
+    
+      <link rel="stylesheet" href="../../css/version-select.css">
+    
+      <link rel="stylesheet" href="../../css/dropdown.css">
+    
+      <link rel="stylesheet" href="../../css/marctech.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+
+  <script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-64FEEXPSDN"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&gtag("event","search",{search_term:this.value})}),"undefined"!=typeof location$&&location$.subscribe(function(e){gtag("config","G-64FEEXPSDN",{page_path:e.pathname})})})</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-64FEEXPSDN"></script>
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="teal">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#feature-validation-with-the-hopsworks-feature-store" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Hopsworks Documentation" class="md-header__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hopsworks Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Feature Validation with the Hopsworks Feature Store
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Home
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Getting Started
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Tutorials
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Concepts
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Guides
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Setup and Installation
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Administration
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+  
+  
+
+  <!-- Recurse, if the first item has further nested items -->
+  
+    <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+<!-- Main navigation item with nested items -->
+
+  
+  
+
+  <!-- Recurse, if the first item has further nested items -->
+  
+  <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link"> API </button>
+    <div id="myDropdown" class="dropdown-content-api">
+      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/dev">Hopsworks API</a>
+      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/dev">Feature Store API</a>
+      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/dev">MLOps API</a>
+    </div>
+  </li>
+
+  
+
+<!-- Main navigation item -->
+
+
+  <!-- Render item -->
+  
+
+<!-- Main navigation item -->
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://community.hopsworks.ai/" class="md-tabs__link">
+    Community
+  </a>
+</li>
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    Hopsworks Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Getting Started
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Tutorials
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Concepts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Guides
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Setup and Installation
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Administration
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1" type="checkbox" id="__nav_8_1" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1">
+          API Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API Reference" data-md-level="2">
+        <label class="md-nav__title" for="__nav_8_1">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/connection_api/" class="md-nav__link">
+        Connection
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/feature_store_api/" class="md-nav__link">
+        FeatureStore
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/feature_group_api/" class="md-nav__link">
+        FeatureGroup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/training_dataset_api/" class="md-nav__link">
+        TrainingDataset
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/storage_connector_api/" class="md-nav__link">
+        Storage Connector
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/feature_api/" class="md-nav__link">
+        Feature
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/query_api/" class="md-nav__link">
+        Query
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/transformation_functions_api/" class="md-nav__link">
+        Transformation Functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/job_configuration/" class="md-nav__link">
+        Job configuration
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://community.hopsworks.ai/" class="md-nav__link">
+        Community
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+
+<h1 id="feature-validation-with-the-hopsworks-feature-store">Feature Validation with the Hopsworks Feature Store<a class="headerlink" href="#feature-validation-with-the-hopsworks-feature-store" title="Permanent link">#</a></h1>
+<p>Correct feature data is essential for developing accurate machine learning models.
+Raw data being ingested into the feature store maybe suffer from incorrect or corrupt values, may need to be validated
+against certain features depending on the domain. For example, a feature representing the customer's age should not be a
+negative number and should always have a value set.</p>
+<p>HSFS provides an API to define expectations on data being inserted into feature groups and also view results over time
+of these expectations in the form of feature validations.</p>
+<p>Feature validations can therefore be easily integrated with existing feature ingestion pipelines.
+HSFS utilizes the <a href="https://github.com/awslabs/deequ">Deequ</a> open source library and support is currently being added for
+working with the <a href="https://github.com/great-expectations/great_expectations">Great Expectations</a>.</p>
+<p>Below we describe the different API components of the hsfs feature validation API and we walk you through Feature
+validation is part of the HSFS Java/Scala and Python API for working with Feature Groups. Users work with the abstractions:</p>
+<h1 id="rule-definitions">Rule definitions<a class="headerlink" href="#rule-definitions" title="Permanent link">#</a></h1>
+<p>Rule definitions is a set of pre-defined and immutable rules  (<code>RuleDefiniton</code>) that are unique by name and are used for
+creating validation rules (<code>Rule</code>) and expectations (<code>Expectation</code>) applied on a dataframe that is ingested into a
+Feature Group.</p>
+<p>All rules are asserted based on a value provided by the users which can be set using the <code>min</code> and <code>max</code> rule properties. 
+That means users must provide an exact value, or a range of values, that the rule's computed value needs to match in order for the rule to be asserted as successful. For example:
+- <code>min(10)</code> and <code>max(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful only if the minimum value of a feature is exactly <code>10</code>.
+- <code>min(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful if the minimum value of a feature is at least <code>10</code>.
+- <code>max(10)</code> for the <code>HAS_MIN</code> rule means the rule will be successful if the maximum value of a feature is at most <code>10</code>.</p>
+<p>Default value for min/max is <code>0.0</code>, except for compliance rules which is <code>1.0</code>.</p>
+<p>The following table describes all the supported rule definitions along with their properties (code examples are shown in the section below).
+- Name: The name of the rule.
+- Predicate: The type of the predicate type of value this rule expects. 
+    - Example: 
+      - <code>IS_CONTAINED_IN</code> expects the <code>LEGAL_VALUES</code> property to be set.
+      - Compliance rules such as <code>IS_LESS_THAN</code> expect the <code>feature</code> property to be set. That means all the expectation's features will be evaluated against the provided feature. 
+- Accepted type: The data type of value set for the rules predicate or min/max properties.
+    - Examples: 
+      - <code>HAS_MIN</code> uses min() and max() with fractional values like min(2.5) max (5.0).
+      - <code>HAS_SIZE</code> uses min() and max() with integral values like min(10) max(10)
+      - <code>HAS_DATATYPE</code> expects <code>String</code> values to be provided as input to the <code>ACCEPTED_TYPE</code> predicate, <code>ACCEPTED_TYPE="Boolean"</code>.
+- Feature type: The data type of the feature this rule is evaluated against. If a rule is to be applied to an incompatible feature type, an error will be thrown when the expectation is attached on the feature group.
+    - Example, <code>HAS_MIN</code> can only be applied on numerical features but <code>HAS_DISTINCTNESS</code> can be applied on both numerical and categorical features.
+- Description: A short description of what the rule validates.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Predicate</th>
+<th>Accepted type</th>
+<th>Feature type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HAS_APPROX_COUNT_DISTINCT</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the approximate count distinct of a feature.</td>
+</tr>
+<tr>
+<td>HAS_APPROX_QUANTILE</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the approximate quantile of a feature.</td>
+</tr>
+<tr>
+<td>HAS_COMPLETENESS</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the uniqueness of a single or combined set of features.</td>
+</tr>
+<tr>
+<td>HAS_CORRELATION</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the pearson correlation between two features.</td>
+</tr>
+<tr>
+<td>HAS_DATATYPE</td>
+<td>ACCEPTED_TYPE</td>
+<td>String</td>
+<td></td>
+<td>Assert on the fraction of rows that conform to the given data type.</td>
+</tr>
+<tr>
+<td>HAS_DISTINCTNESS</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the distinctness of a single or combined set of features.</td>
+</tr>
+<tr>
+<td>HAS_ENTROPY</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the entropy of a feature.</td>
+</tr>
+<tr>
+<td>HAS_MAX</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the max of a feature.</td>
+</tr>
+<tr>
+<td>HAS_MAX_LENGTH</td>
+<td></td>
+<td>String</td>
+<td>Categorical</td>
+<td>Assert on the maximum length of the feature value.</td>
+</tr>
+<tr>
+<td>HAS_MEAN</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the mean of a feature.</td>
+</tr>
+<tr>
+<td>HAS_MIN</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the min of a feature.</td>
+</tr>
+<tr>
+<td>HAS_MIN_LENGTH</td>
+<td></td>
+<td>String</td>
+<td>Categorical</td>
+<td>Assert on the minimum length of the feature value.</td>
+</tr>
+<tr>
+<td>HAS_MUTUAL_INFORMATION</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the mutual information between two features.</td>
+</tr>
+<tr>
+<td>HAS_NUMBER_OF_DISTINCT_VALUES</td>
+<td></td>
+<td>Integral</td>
+<td></td>
+<td>Assert on the number of distinct values of a feature.</td>
+</tr>
+<tr>
+<td>HAS_PATTERN</td>
+<td></td>
+<td>String</td>
+<td>Categorical</td>
+<td>Assert on the average compliance of the feature to the regular expression.</td>
+</tr>
+<tr>
+<td>HAS_SIZE</td>
+<td></td>
+<td>Integral</td>
+<td></td>
+<td>Assert on the number of rows of the dataframe.</td>
+</tr>
+<tr>
+<td>HAS_STANDARD_DEVIATION</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the standard deviation of a feature.</td>
+</tr>
+<tr>
+<td>HAS_SUM</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on the sum of a feature.</td>
+</tr>
+<tr>
+<td>HAS_UNIQUENESS</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the uniqueness of a feature, that is the fraction of unique values over the number of all its values.</td>
+</tr>
+<tr>
+<td>HAS_UNIQUE_VALUE_RATIO</td>
+<td></td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on the unique value ratio of a feature, that is the fraction of unique values over the number of all distinct values.</td>
+</tr>
+<tr>
+<td>IS_CONTAINED_IN</td>
+<td>LEGAL_VALUES</td>
+<td>String</td>
+<td></td>
+<td>Assert that every non-null value of feature is contained in a set of predefined values.</td>
+</tr>
+<tr>
+<td>IS_GREATER_THAN</td>
+<td>feature</td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on feature A values being greater than feature B.</td>
+</tr>
+<tr>
+<td>IS_GREATER_THAN_OR_EQUAL_TO</td>
+<td>feature</td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on feature A values being greater than or equal to those of feature B.</td>
+</tr>
+<tr>
+<td>IS_LESS_THAN</td>
+<td>feature</td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on feature A values being less that feature B.</td>
+</tr>
+<tr>
+<td>IS_LESS_THAN_OR_EQUAL_TO</td>
+<td>feature</td>
+<td>Fractional</td>
+<td></td>
+<td>Assert on feature A values being less or equal to those of feature B.</td>
+</tr>
+<tr>
+<td>IS_NON_NEGATIVE</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on feature containing non negative values.</td>
+</tr>
+<tr>
+<td>IS_POSITIVE</td>
+<td></td>
+<td>Fractional</td>
+<td>Numerical</td>
+<td>Assert on a feature containing non negative values.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
+<p>{{ruledefinition_getall}}</p>
+<p>{{ruledefinition_get}}</p>
+<p>For example, to get all available rule definitions in hsfs:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label><label for="__tabbed_1_2">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">hsfs</span>
+<span class="n">connection</span> <span class="o">=</span> <span class="n">hsfs</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+<span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_rules</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">();</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connection</span><span class="p">.</span><span class="n">getRules</span><span class="p">()</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>and to get a rule definition by name:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Python</label><label for="__tabbed_2_2">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">hsfs</span>
+<span class="n">connection</span> <span class="o">=</span> <span class="n">hsfs</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span>
+<span class="n">rules</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_rules</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="n">_</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HopsworksConnection</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">build</span><span class="p">();</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connection</span><span class="p">.</span><span class="n">getRules</span><span class="p">()</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p>{{ruledefinition}}</p>
+<p>{{ruledefinition_properties}}</p>
+<h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">#</a></h1>
+<p>Used as part of expectations that are applied on ingested features. Rule names correspond to the names of the
+rule definitions (see section above) and you can set the severity level and the actual values that the feature should
+respect.</p>
+<h2 id="defining-expectation-rules">Defining expectation rules<a class="headerlink" href="#defining-expectation-rules" title="Permanent link">#</a></h2>
+<p>In general, rule values can be an exact value or a range of values. For example, if you need a feature to be ingested
+if its minimum value is below zero, then you can set <code>min(0)</code> and <code>max(0)</code> but if you want the minimum to fall within
+a range of <code>0</code> and <code>1000</code> then you need to set <code>min(0)</code> and <code>max(1000)</code>. See section <code>Expectations</code> below for a detailed example.</p>
+<p>Rules that operate on tuples of features, for example <code>HAS_CORRELEATION</code>, are applied on the first two features as
+defined in the expectation (as ordered within the expectation).</p>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Python</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be at least 10</span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be at most 10</span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">10</span><span class="p">)]</span> <span class="c1"># the minimum value of the feature needs to be between 0 and 10</span>
+
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_DATATYPE&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">accepted_type</span><span class="o">=</span><span class="s2">&quot;String&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># At least 10% of all instances of the feature need to be of type String</span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_DATATYPE&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">accepted_type</span><span class="o">=</span><span class="s2">&quot;String&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)]</span> <span class="c1"># 10-50% of all instances of the feature need to of type String</span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_DATATYPE&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">accepted_type</span><span class="o">=</span><span class="s2">&quot;String&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># Exactly 10% of all instances of the feature need to be of type String</span>
+
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_CONTAINED_IN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">legal_values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># Exactly 10% of all instances of the feature need to be contained in the legal_values list</span>
+
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_PATTERN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;a+&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span> <span class="c1"># Exactly 10% of all instances of the feature need to match the given pattern</span>
+
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_LESS_THAN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="s2">&quot;graduation_date&quot;</span><span class="p">)]</span> <span class="c1"># All values of the expectation&#39;s features must be less than the graduation_date feature values (comparison is done on a per-row basis) </span>
+<span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;IS_LESS_THAN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="s2">&quot;graduation_date&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)]</span> <span class="c1"># Same as above but only 50% of the expectation&#39;s feature values need to be less that the graduation_date feature values</span>
+</code></pre></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_MIN</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">WARNING</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// the mininum value of the feature needs to be at least 10</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_MIN</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">WARNING</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// the minimum value of the feature needs to be at most 10</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_MIN</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">WARNING</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// the minimum value of the feature needs to be between 0 and 10</span>
+
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_DATATYPE</span><span class="p">).</span><span class="n">acceptedType</span><span class="p">(</span><span class="nc">AcceptedType</span><span class="p">.</span><span class="nc">String</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// At least 10% of all instances of the feature need to be of type String</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_DATATYPE</span><span class="p">).</span><span class="n">acceptedType</span><span class="p">(</span><span class="nc">AcceptedType</span><span class="p">.</span><span class="nc">String</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// At most 10% of all instances of the feature need to be of type String</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_DATATYPE</span><span class="p">).</span><span class="n">acceptedType</span><span class="p">(</span><span class="nc">AcceptedType</span><span class="p">.</span><span class="nc">String</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// Exactly 10% of all instances of the feature need to be of type String</span>
+
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_CONTAINED_IN</span><span class="p">).</span><span class="n">legalValues</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">)).</span><span class="n">min</span><span class="p">(</span><span class="mf">0.1</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mf">0.1</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// # Exactly 10% of all instances of the feature need to be contained in the legal_values list</span>
+
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_PATTERN</span><span class="p">).</span><span class="n">pattern</span><span class="p">(</span><span class="s">&quot;a+&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">10</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// Exactly 10% of all instances of the feature need to match the given pattern</span>
+
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_LESS_THAN</span><span class="p">).</span><span class="n">feature</span><span class="p">(</span><span class="s">&quot;graduation_date&quot;</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// All values of the expectation&#39;s features must be less than the graduation_date feature values (comparison is done on a per-row basis)</span>
+<span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">IS_LESS_THAN</span><span class="p">).</span><span class="n">feature</span><span class="p">(</span><span class="s">&quot;graduation_date&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mf">0.5</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mf">0.5</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()</span><span class="w"> </span><span class="c1">// Same as above but only 50% of the expectation&#39;s feature values need to be less that the graduation_date feature values</span>
+</code></pre></div>
+<h2 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">#</a></h2>
+<p>{{rule}}</p>
+<p>{{rule_properties}}</p>
+<h1 id="expectations">Expectations<a class="headerlink" href="#expectations" title="Permanent link">#</a></h1>
+<p>A set of rule instances that are applied on a set of features. Expectations are created at the feature store level
+and can be attached to multiple feature groups. If an expectation contains no features, it will be applied to all the
+features of the feature group when the validation is done An expectation contains a list of features it is applied to.
+If the feature group the expectation is attached to, does not contain all the expectations features, the expectation
+will not be met.</p>
+<h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
+<p>Create an expectation with two rules for ensuring the min and max of the features are valid:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Python</label><label for="__tabbed_5_2">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">expectation_sales</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="s2">&quot;sales&quot;</span><span class="p">,</span>
+                                           <span class="n">description</span><span class="o">=</span><span class="s2">&quot;min and max sales limits&quot;</span><span class="p">,</span>
+                                           <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;salary&quot;</span><span class="p">,</span> <span class="s2">&quot;commission&quot;</span><span class="p">],</span>
+                                           <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MIN&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_MAX&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1000000</span><span class="p">)])</span>
+<span class="n">expectation_sales</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Create an expectation for the &quot;salary&quot; and &quot;commissio&quot; features so that their min value is &quot;10&quot; and their max is &quot;100&quot;</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">expectationSales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createExpectation</span><span class="p">()</span><span class="w"></span>
+<span class="w">                          </span><span class="p">.</span><span class="n">rules</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="w"></span>
+<span class="w">                              </span><span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_MIN</span><span class="p">).</span><span class="n">min</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">WARNING</span><span class="p">).</span><span class="n">build</span><span class="p">(),</span><span class="w"> </span><span class="c1">//Set rule by name</span>
+<span class="w">                              </span><span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="n">ruleMax</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">1000000</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()))</span><span class="w"> </span><span class="c1">//Set rule by passing the RuleDefinition metadata</span>
+<span class="w">                          </span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                          </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;min and max sales limits&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                          </span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;salary&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;commission&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="w">                          </span><span class="p">.</span><span class="n">build</span><span class="p">())</span><span class="w"></span>
+<span class="n">expectationSales</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Create an expectation with a rule to assert that no feature has a null value:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Python</label><label for="__tabbed_6_2">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">expectation_notnull</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">create_expectation</span><span class="p">(</span><span class="s2">&quot;not_null&quot;</span><span class="p">,</span>
+                                            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Assert no feature is null&quot;</span><span class="p">,</span>
+                                            <span class="n">rules</span><span class="o">=</span><span class="p">[</span><span class="n">Rule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;HAS_DATATYPE&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">accepted_type</span><span class="o">=</span><span class="s2">&quot;Null&quot;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">expectation_notnull</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">val</span><span class="w"> </span><span class="n">expectationNotNull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">createExpectation</span><span class="p">()</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">rules</span><span class="p">(</span><span class="nc">Seq</span><span class="p">(</span><span class="w"></span>
+<span class="w">                                </span><span class="nc">Rule</span><span class="p">.</span><span class="n">createRule</span><span class="p">(</span><span class="nc">RuleName</span><span class="p">.</span><span class="nc">HAS_DATATYPE</span><span class="p">).</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">acceptedType</span><span class="p">(</span><span class="nc">AcceptedType</span><span class="p">.</span><span class="nc">Null</span><span class="p">).</span><span class="n">level</span><span class="p">(</span><span class="nc">Level</span><span class="p">.</span><span class="nc">ERROR</span><span class="p">).</span><span class="n">build</span><span class="p">()))</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;not_null&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">description</span><span class="p">(</span><span class="s">&quot;Assert no feature is null&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">                            </span><span class="p">.</span><span class="n">build</span><span class="p">())</span><span class="w"></span>
+<span class="n">expectationNotNull</span><span class="p">.</span><span class="n">save</span><span class="p">()</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>{{expectation_create}}</p>
+<h2 id="retrieval_1">Retrieval<a class="headerlink" href="#retrieval_1" title="Permanent link">#</a></h2>
+<p>{{expectation_get}}
+{{expectation_getall}}</p>
+<h2 id="properties_2">Properties<a class="headerlink" href="#properties_2" title="Permanent link">#</a></h2>
+<p>{{expectation}}</p>
+<p>{{expectation_properties}}</p>
+<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
+<p>{{expectation_methods}}</p>
+<h1 id="validations">Validations<a class="headerlink" href="#validations" title="Permanent link">#</a></h1>
+<p>The results of expectations against the ingested dataframe are assigned a validation time and are persisted within the
+Feature Store. Users can then retrieve validation results by validation time and by commit time for time-travel enabled
+feature groups.</p>
+<h2 id="validation-type">Validation Type<a class="headerlink" href="#validation-type" title="Permanent link">#</a></h2>
+<p>Feature Validation is disabled by default, by having the validation_type feature group attribute set to NONE.
+The list of allowed validation types are:</p>
+<ul>
+<li>STRICT: Data validation is performed and feature group is updated only if validation status is "Success"</li>
+<li>WARNING: Data validation is performed and feature group is updated only if validation status is "Warning" or lower</li>
+<li>ALL: Data validation is performed and feature group is updated only if validation status is "Failure" or lower</li>
+<li>NONE: Data validation not performed on feature group</li>
+</ul>
+<p>For example, to update the validation type to all:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Python</label><label for="__tabbed_7_2">Scala</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">fg</span><span class="o">.</span><span class="n">validation_type</span> <span class="o">=</span> <span class="s2">&quot;ALL&quot;</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">logicalclocks</span><span class="p">.</span><span class="nn">hsfs</span><span class="p">.</span><span class="nn">metadata</span><span class="p">.</span><span class="nn">validation</span><span class="p">.</span><span class="n">_</span>
+<span class="n">fg</span><span class="p">.</span><span class="n">updateValidationType</span><span class="p">(</span><span class="nc">ValidationType</span><span class="p">.</span><span class="nc">ALL</span><span class="p">)</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="validate">Validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h2>
+<p>You can also apply the expectations on a dataframe without inserting data, that can be helpful for debugging.
+{{validate}}</p>
+<h2 id="retrieval_2">Retrieval<a class="headerlink" href="#retrieval_2" title="Permanent link">#</a></h2>
+<p>{{validation_result_get}}</p>
+<h2 id="properties_3">Properties<a class="headerlink" href="#properties_3" title="Permanent link">#</a></h2>
+<p>{{validation_result}}</p>
+<p>{{validation_result_properties}}</p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/logicalclocks" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://github.com/logicalclocks/hopsworks" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://community.hopsworks.ai/" target="_blank" rel="noopener" title="community.hopsworks.ai" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M225.9 32C103.3 32 0 130.5 0 252.1 0 256 .1 480 .1 480l225.8-.2c122.7 0 222.1-102.3 222.1-223.9C448 134.3 348.6 32 225.9 32zM224 384c-19.4 0-37.9-4.3-54.4-12.1L88.5 392l22.9-75c-9.8-18.1-15.4-38.9-15.4-61 0-70.7 57.3-128 128-128s128 57.3 128 128-57.3 128-128 128z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/logicalclocks/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c44cc438.min.js"></script>
+      
+        <script src="../../js/version-select.js"></script>
+      
+        <script src="../../js/inject-api-links.js"></script>
+      
+    
+  </body>
+</html>
