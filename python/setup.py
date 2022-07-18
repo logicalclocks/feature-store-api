@@ -43,6 +43,7 @@ setup(
             "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include",
             "mkdocs-jupyter==0.21.0",
+            "pymdown-extensions",
         ],
         "hive": [
             "pyhopshive[thrift]",
