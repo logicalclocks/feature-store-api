@@ -169,6 +169,7 @@ public class SparkEngine {
     sparkSession.read()
         .format(HudiEngine.HUDI_SPARK_FORMAT)
         .options(hudiArgs)
+        .option("recursiveFileLookup", true)
         .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
   }
