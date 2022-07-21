@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark
-from hsfs.client import exceptions
+from python.hsfs.engine import spark
+from python.hsfs.client import exceptions
 
 _engine = None
 _engine_type = None

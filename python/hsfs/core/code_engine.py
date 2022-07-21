@@ -17,8 +17,8 @@
 import datetime
 import importlib.util
 
-from hsfs import code
-from hsfs.core import code_api
+from python.hsfs import code
+from python.hsfs.core import code_api
 import json
 import os
 

@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, training_dataset_feature, client, util
-from hsfs.core import (
+from python.hsfs import engine, training_dataset_feature, client, util
+from python.hsfs.core import (
     tags_api,
     storage_connector_api,
     transformation_function_engine,

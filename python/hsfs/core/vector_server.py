@@ -18,9 +18,8 @@ import io
 import avro.schema
 import avro.io
 from sqlalchemy import sql, bindparam, exc, text
-from hsfs import util
-from hsfs import training_dataset, feature_view, client
-from hsfs.core import (
+from python.hsfs import util, training_dataset, feature_view, client
+from python.hsfs.core import (
     training_dataset_api,
     storage_connector_api,
     transformation_function_engine,

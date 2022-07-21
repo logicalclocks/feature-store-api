@@ -14,14 +14,14 @@
 #   limitations under the License.
 #
 
-from hsfs import (
+from python.hsfs import (
     client,
     feature_view,
     transformation_function_attached,
     training_dataset,
 )
-from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement, query
+from python.hsfs.core import job
+from python.hsfs.constructor import serving_prepared_statement, query
 
 
 class FeatureViewApi:
