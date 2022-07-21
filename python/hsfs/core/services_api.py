@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client
+from python.hsfs import client
 
 
 class ServicesApi:

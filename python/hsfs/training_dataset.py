@@ -22,11 +22,11 @@ import humps
 import pandas as pd
 import numpy as np
 
-from hsfs import util, engine, training_dataset_feature
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector, HopsFSConnector
-from hsfs.core import (
+from python.hsfs import util, engine, training_dataset_feature
+from python.hsfs.training_dataset_split import TrainingDatasetSplit
+from python.hsfs.statistics_config import StatisticsConfig
+from python.hsfs.storage_connector import StorageConnector, HopsFSConnector
+from python.hsfs.core import (
     training_dataset_api,
     training_dataset_engine,
     statistics_engine,
@@ -34,7 +34,7 @@ from hsfs.core import (
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query
+from python.hsfs.constructor import query
 
 
 class TrainingDataset:

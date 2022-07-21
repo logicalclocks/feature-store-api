@@ -21,8 +21,8 @@ from abc import ABC, abstractmethod
 import requests
 import urllib3
 
-from hsfs.client import exceptions, auth
-from hsfs.decorators import connected
+from python.hsfs.client import exceptions, auth
+from python.hsfs.decorators import connected
 
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)

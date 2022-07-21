@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, validation_report
+from python.hsfs import engine, validation_report
 
 
 class GreatExpectationEngine:

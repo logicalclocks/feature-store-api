@@ -14,7 +14,7 @@
 
 import humps
 
-from hsfs import transformation_function as transformation_fn
+from python.hsfs import transformation_function as transformation_fn
 
 
 class TransformationFunctionAttached:

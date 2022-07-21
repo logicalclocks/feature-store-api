@@ -21,7 +21,7 @@ from pathlib import Path
 
 import requests
 
-from hsfs.client import base, auth
+from python.hsfs.client import base, auth
 
 try:
     import jks

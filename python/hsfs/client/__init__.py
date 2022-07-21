@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.client import external, hopsworks
+from python.hsfs.client import external, hopsworks
 
 _client = None
 

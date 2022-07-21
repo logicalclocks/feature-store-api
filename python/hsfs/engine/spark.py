@@ -51,11 +51,11 @@ try:
 except ImportError:
     pass
 
-from hsfs import feature, training_dataset_feature, client, util
-from hsfs.storage_connector import StorageConnector
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine, transformation_function_engine
-from hsfs.constructor import query
+from python.hsfs import feature, training_dataset_feature, client, util
+from python.hsfs.storage_connector import StorageConnector
+from python.hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.core import hudi_engine, transformation_function_engine
+from python.hsfs.constructor import query
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext

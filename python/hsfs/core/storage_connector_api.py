@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client, storage_connector
+from python.hsfs import client, storage_connector
 
 
 class StorageConnectorApi:

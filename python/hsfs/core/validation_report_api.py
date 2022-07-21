@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.validation_report import ValidationReport
+from python.hsfs import client
+from python.hsfs.validation_report import ValidationReport
 
 
 class ValidationReportApi:

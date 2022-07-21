@@ -25,8 +25,8 @@ try:
 except ImportError:
     pass
 
-from hsfs.client import base, auth, exceptions
-from hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.client import base, auth, exceptions
+from python.hsfs.client.exceptions import FeatureStoreException
 
 
 class Client(base.Client):

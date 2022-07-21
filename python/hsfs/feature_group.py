@@ -35,12 +35,12 @@ from python.hsfs.core import (
     external_feature_group_engine,
 )
 
-from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.expectation_suite import ExpectationSuite
-from hsfs.validation_report import ValidationReport
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
+from python.hsfs.statistics_config import StatisticsConfig
+from python.hsfs.expectation_suite import ExpectationSuite
+from python.hsfs.validation_report import ValidationReport
+from python.hsfs.constructor import query, filter
+from python.hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBase:

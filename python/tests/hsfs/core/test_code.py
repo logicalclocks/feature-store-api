@@ -19,11 +19,8 @@ import sys
 import unittest
 from unittest.mock import Mock, patch
 
-from python.hsfs import engine
-from python.hsfs.core.code_engine import CodeEngine, RunType
-from python.hsfs.training_dataset import TrainingDataset
-from python.hsfs.core.code_api import CodeApi
-from python.hsfs.feature_group import FeatureGroup
+from python.hsfs import engine, training_dataset, feature_group
+from python.hsfs.core import code_engine, code_api
 
 
 class TestCodeTrainingDataset(unittest.TestCase):
@@ -33,13 +30,13 @@ class TestCodeTrainingDataset(unittest.TestCase):
         sys.modules.pop("pyspark.dbutils", None)
 
     def test_save_jupyter(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ):
             # Arrange
             os.environ.setdefault("HOPSWORKS_KERNEL_ID", "1")
 
-            td = TrainingDataset(
+            td = training_dataset.TrainingDataset(
                 name="test",
                 version=1,
                 data_format="CSV",
@@ -47,7 +44,7 @@ class TestCodeTrainingDataset(unittest.TestCase):
                 splits={},
                 id=0,
             )
-            codeEngine = CodeEngine(99, "trainingdatasets")
+            codeEngine = code_engine.CodeEngine(99, "trainingdatasets")
 
             # Act
             codeEngine.save_code(td)
@@ -55,17 +52,17 @@ class TestCodeTrainingDataset(unittest.TestCase):
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
             self.assertEqual(
-                RunType.JUPYTER, mock_code_api.call_args.kwargs["code_type"]
+                code_engine.RunType.JUPYTER, mock_code_api.call_args.kwargs["code_type"]
             )
 
     def test_save_job(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ):
             # Arrange
             os.environ.setdefault("HOPSWORKS_JOB_NAME", "1")
 
-            td = TrainingDataset(
+            td = training_dataset.TrainingDataset(
                 name="test",
                 version=1,
                 data_format="CSV",
@@ -73,17 +70,19 @@ class TestCodeTrainingDataset(unittest.TestCase):
                 splits={},
                 id=0,
             )
-            codeEngine = CodeEngine(99, "trainingdatasets")
+            codeEngine = code_engine.CodeEngine(99, "trainingdatasets")
 
             # Act
             codeEngine.save_code(td)
 
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
-            self.assertEqual(RunType.JOB, mock_code_api.call_args.kwargs["code_type"])
+            self.assertEqual(
+                code_engine.RunType.JOB, mock_code_api.call_args.kwargs["code_type"]
+            )
 
     def test_save_databricks(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ):
             # Arrange
@@ -97,7 +96,7 @@ class TestCodeTrainingDataset(unittest.TestCase):
                 return_value=json
             )
 
-            td = TrainingDataset(
+            td = training_dataset.TrainingDataset(
                 name="test",
                 version=1,
                 data_format="CSV",
@@ -105,7 +104,7 @@ class TestCodeTrainingDataset(unittest.TestCase):
                 splits={},
                 id=0,
             )
-            codeEngine = CodeEngine(99, "trainingdatasets")
+            codeEngine = code_engine.CodeEngine(99, "trainingdatasets")
 
             # Act
             codeEngine.save_code(td)
@@ -113,7 +112,8 @@ class TestCodeTrainingDataset(unittest.TestCase):
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
             self.assertEqual(
-                RunType.DATABRICKS, mock_code_api.call_args.kwargs["code_type"]
+                code_engine.RunType.DATABRICKS,
+                mock_code_api.call_args.kwargs["code_type"],
             )
 
 
@@ -124,13 +124,13 @@ class TestCodeFeatureGroup(unittest.TestCase):
         sys.modules.pop("pyspark.dbutils", None)
 
     def test_save_jupyter(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ), patch.object(engine, "get_type"):
             # Arrange
             os.environ.setdefault("HOPSWORKS_KERNEL_ID", "1")
 
-            fg = FeatureGroup(
+            fg = feature_group.FeatureGroup(
                 name="test",
                 version=1,
                 featurestore_id=99,
@@ -138,7 +138,7 @@ class TestCodeFeatureGroup(unittest.TestCase):
                 partition_key=[],
                 id=0,
             )
-            codeEngine = CodeEngine(99, "featuregroups")
+            codeEngine = code_engine.CodeEngine(99, "featuregroups")
 
             # Act
             codeEngine.save_code(fg)
@@ -146,17 +146,17 @@ class TestCodeFeatureGroup(unittest.TestCase):
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
             self.assertEqual(
-                RunType.JUPYTER, mock_code_api.call_args.kwargs["code_type"]
+                code_engine.RunType.JUPYTER, mock_code_api.call_args.kwargs["code_type"]
             )
 
     def test_save_job(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ), patch.object(engine, "get_type"):
             # Arrange
             os.environ.setdefault("HOPSWORKS_JOB_NAME", "1")
 
-            fg = FeatureGroup(
+            fg = feature_group.FeatureGroup(
                 name="test",
                 version=1,
                 featurestore_id=99,
@@ -164,17 +164,19 @@ class TestCodeFeatureGroup(unittest.TestCase):
                 partition_key=[],
                 id=0,
             )
-            codeEngine = CodeEngine(99, "featuregroups")
+            codeEngine = code_engine.CodeEngine(99, "featuregroups")
 
             # Act
             codeEngine.save_code(fg)
 
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
-            self.assertEqual(RunType.JOB, mock_code_api.call_args.kwargs["code_type"])
+            self.assertEqual(
+                code_engine.RunType.JOB, mock_code_api.call_args.kwargs["code_type"]
+            )
 
     def test_save_databricks(self):
-        with patch.object(CodeApi, "post") as mock_code_api, patch(
+        with patch.object(code_api.CodeApi, "post") as mock_code_api, patch(
             "python.hsfs.core.feature_view_api.FeatureViewApi"
         ), patch.object(engine, "get_type"):
             # Arrange
@@ -188,7 +190,7 @@ class TestCodeFeatureGroup(unittest.TestCase):
                 return_value=json
             )
 
-            fg = FeatureGroup(
+            fg = feature_group.FeatureGroup(
                 name="test",
                 version=1,
                 featurestore_id=99,
@@ -196,7 +198,7 @@ class TestCodeFeatureGroup(unittest.TestCase):
                 partition_key=[],
                 id=0,
             )
-            codeEngine = CodeEngine(99, "featuregroups")
+            codeEngine = code_engine.CodeEngine(99, "featuregroups")
 
             # Act
             codeEngine.save_code(fg)
@@ -204,5 +206,6 @@ class TestCodeFeatureGroup(unittest.TestCase):
             # Assert
             self.assertEqual(1, mock_code_api.call_count)
             self.assertEqual(
-                RunType.DATABRICKS, mock_code_api.call_args.kwargs["code_type"]
+                code_engine.RunType.DATABRICKS,
+                mock_code_api.call_args.kwargs["code_type"],
             )

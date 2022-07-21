@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.storage_connector import JdbcConnector, SnowflakeConnector
+from python.hsfs.storage_connector import JdbcConnector, SnowflakeConnector
 
 
 class TestJdbcConnector:

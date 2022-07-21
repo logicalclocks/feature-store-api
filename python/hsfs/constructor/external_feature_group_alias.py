@@ -16,7 +16,7 @@
 
 import humps
 
-from hsfs import feature_group
+from python.hsfs import feature_group
 
 
 class ExternalFeatureGroupAlias:

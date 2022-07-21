@@ -18,10 +18,10 @@ import json
 import humps
 from typing import Optional, List, Union
 
-from hsfs import util, engine, feature_group
-from hsfs.core import query_constructor_api, storage_connector_api
-from hsfs.constructor import join
-from hsfs.constructor.filter import Filter, Logic
+from python.hsfs import util, engine, feature_group
+from python.hsfs.core import query_constructor_api, storage_connector_api
+from python.hsfs.constructor import join
+from python.hsfs.constructor.filter import Filter, Logic
 
 
 class Query:

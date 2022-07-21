@@ -30,7 +30,7 @@ def init(engine_type):
             _engine = spark.Engine()
         elif engine_type in ["hive", "python", "training"]:
             try:
-                from hsfs.engine import python
+                from python.hsfs.engine import python
             except ImportError:
                 raise exceptions.FeatureStoreException(
                     "Trying to instantiate Python as engine, but 'python' extras are "

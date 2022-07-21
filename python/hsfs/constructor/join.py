@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import util
-from hsfs.constructor import query
+from python.hsfs import util
+from python.hsfs.constructor import query
 import humps
 
 

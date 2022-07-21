@@ -19,8 +19,8 @@ import json
 import humps
 import great_expectations as ge
 
-from hsfs import util
-from hsfs.ge_validation_result import ValidationResult
+from python.hsfs import util
+from python.hsfs.ge_validation_result import ValidationResult
 
 
 class ValidationReport:

@@ -16,7 +16,7 @@
 
 import json
 
-from hsfs import util
+from python.hsfs import util
 
 
 class JobConfiguration:

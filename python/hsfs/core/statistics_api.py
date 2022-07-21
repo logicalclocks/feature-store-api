@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client, statistics, feature_view
-from hsfs.core import job
+from python.hsfs import client, statistics, feature_view
+from python.hsfs.core import job
 
 
 class StatisticsApi:

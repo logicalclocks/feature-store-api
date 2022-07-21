@@ -19,8 +19,8 @@ from typing import Optional
 
 import humps
 
-from hsfs import engine
-from hsfs.core import storage_connector_api
+from python.hsfs import engine
+from python.hsfs.core import storage_connector_api
 
 
 class StorageConnector(ABC):

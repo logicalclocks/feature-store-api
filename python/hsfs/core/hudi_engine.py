@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group_commit, util, client
-from hsfs.core import feature_group_api, storage_connector_api
+from python.hsfs import feature_group_commit, util, client
+from python.hsfs.core import feature_group_api, storage_connector_api
 
 
 class HudiEngine:

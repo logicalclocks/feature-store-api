@@ -13,9 +13,9 @@
 #   limitations under the License.
 #
 
-from hsfs import engine
-from hsfs import feature_group as fg
-from hsfs.core import feature_group_base_engine
+from python.hsfs import engine
+from python.hsfs import feature_group as fg
+from python.hsfs.core import feature_group_base_engine
 
 
 class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):

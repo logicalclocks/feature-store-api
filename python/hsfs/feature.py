@@ -17,8 +17,8 @@
 import humps
 import json
 
-from hsfs import util
-from hsfs.constructor import filter
+from python.hsfs import util
+from python.hsfs.constructor import filter
 
 
 class Feature:

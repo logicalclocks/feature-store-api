@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.constructor import fs_query
+from python.hsfs import client
+from python.hsfs.constructor import fs_query
 
 
 class QueryConstructorApi:

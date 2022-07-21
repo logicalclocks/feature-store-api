@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.core import expectation_suite_api
-from hsfs import client, util
+from python.hsfs.core import expectation_suite_api
+from python.hsfs import util, client
 
 
 class ExpectationSuiteEngine:
@@ -54,4 +54,5 @@ class ExpectationSuiteEngine:
             + "/fg/"
             + str(feature_group.id)
         )
+        print(util)
         return util.get_hostname_replaced_url(sub_path)

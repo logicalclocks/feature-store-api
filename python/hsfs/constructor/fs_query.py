@@ -15,8 +15,8 @@
 #
 
 import humps
-from hsfs import engine
-from hsfs.constructor import hudi_feature_group_alias, external_feature_group_alias
+from python.hsfs import engine
+from python.hsfs.constructor import hudi_feature_group_alias, external_feature_group_alias
 
 
 class FsQuery:

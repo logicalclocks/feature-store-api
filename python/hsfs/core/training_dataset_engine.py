@@ -16,9 +16,9 @@
 
 import warnings
 
-from hsfs import engine, training_dataset_feature
-from hsfs.constructor import query
-from hsfs.core import (
+from python.hsfs import engine, training_dataset_feature
+from python.hsfs.constructor import query
+from python.hsfs.core import (
     training_dataset_api,
     tags_api,
     storage_connector_api,

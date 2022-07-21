@@ -20,8 +20,8 @@ from typing import Optional
 import humps
 import great_expectations as ge
 
-from hsfs import util
-from hsfs.ge_expectation import GeExpectation
+from python.hsfs import util
+from python.hsfs.ge_expectation import GeExpectation
 
 
 class ExpectationSuite:

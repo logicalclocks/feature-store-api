@@ -16,8 +16,8 @@
 import humps
 import json
 
-from hsfs import util
-from hsfs.constructor import prepared_statement_parameter
+from python.hsfs import util
+from python.hsfs.constructor import prepared_statement_parameter
 
 
 class ServingPreparedStatement:

@@ -19,7 +19,7 @@ import json
 import humps
 from great_expectations.core import ExpectationConfiguration
 
-from hsfs import util
+from python.hsfs import util
 
 
 class GeExpectation:

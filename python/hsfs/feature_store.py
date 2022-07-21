@@ -23,11 +23,11 @@ import humps
 import numpy
 import great_expectations as ge
 
-from hsfs.transformation_function import TransformationFunction
-from hsfs.client import exceptions
-from hsfs.core import transformation_function_engine
+from python.hsfs.transformation_function import TransformationFunction
+from python.hsfs.client import exceptions
+from python.hsfs.core import transformation_function_engine
 
-from hsfs import (
+from python.hsfs import (
     training_dataset,
     feature_group,
     feature,
@@ -36,15 +36,15 @@ from hsfs import (
     expectation_suite,
     feature_view,
 )
-from hsfs.core import (
+from python.hsfs.core import (
     feature_group_api,
     storage_connector_api,
     training_dataset_api,
     feature_group_engine,
     feature_view_engine,
 )
-from hsfs.constructor.query import Query
-from hsfs.statistics_config import StatisticsConfig
+from python.hsfs.constructor.query import Query
+from python.hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureStore:

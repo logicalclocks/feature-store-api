@@ -17,8 +17,8 @@
 import json
 import humps
 
-from hsfs import util
-from hsfs.split_statistics import SplitStatistics
+from python.hsfs import util
+from python.hsfs.split_statistics import SplitStatistics
 
 
 class Statistics:

@@ -18,9 +18,9 @@ import datetime
 import json
 import warnings
 
-from hsfs import engine, statistics, util, split_statistics
-from hsfs.client import exceptions
-from hsfs.core import statistics_api
+from python.hsfs import engine, statistics, util, split_statistics
+from python.hsfs.client import exceptions
+from python.hsfs.core import statistics_api
 
 
 class StatisticsEngine:

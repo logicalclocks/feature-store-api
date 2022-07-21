@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.expectation_suite import ExpectationSuite
+from python.hsfs import client
+from python.hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteApi:

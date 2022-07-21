@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.feature_store import FeatureStore
+from python.hsfs import client
+from python.hsfs.feature_store import FeatureStore
 
 
 class FeatureStoreApi:

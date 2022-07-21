@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.client.exceptions import FeatureStoreException
 
 
 class BuiltInTransformationFunction:

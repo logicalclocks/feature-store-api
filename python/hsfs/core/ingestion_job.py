@@ -15,7 +15,7 @@
 #
 
 import humps
-from hsfs.core.job import Job
+from python.hsfs.core.job import Job
 
 
 class IngestionJob:

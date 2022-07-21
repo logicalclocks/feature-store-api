@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs import client, training_dataset
-from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement, fs_query
+from python.hsfs import client, training_dataset
+from python.hsfs.core import job
+from python.hsfs.constructor import serving_prepared_statement, fs_query
 
 
 class TrainingDatasetApi:

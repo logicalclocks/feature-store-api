@@ -16,9 +16,9 @@
 
 import humps
 
-import hsfs.feature_group as feature_group
-from hsfs.feature import Feature
-from hsfs.transformation_function import TransformationFunction
+import python.hsfs.feature_group as feature_group
+from python.hsfs.feature import Feature
+from python.hsfs.transformation_function import TransformationFunction
 
 
 class TrainingDatasetFeature:

@@ -36,9 +36,9 @@ from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
 
-from hsfs import client, feature, util
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import (
+from python.hsfs import client, feature, util
+from python.hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.core import (
     feature_group_api,
     dataset_api,
     job_api,
@@ -50,9 +50,9 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
 )
-from hsfs.constructor import query
-from hsfs.client import exceptions, external, hopsworks
-from hsfs.feature_group import FeatureGroup
+from python.hsfs.constructor import query
+from python.hsfs.client import exceptions, external, hopsworks
+from python.hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
 

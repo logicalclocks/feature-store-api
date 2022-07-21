@@ -22,7 +22,7 @@ from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
 
-from hsfs import client, feature
+from python.hsfs import client, feature
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -172,7 +172,6 @@ def setup_pydoop():
 def get_hostname_replaced_url(sub_path: str):
     """
     construct and return an url with public hopsworks hostname and sub path
-    :param self:
     :param sub_path: url sub-path after base url
     :return: href url
     """

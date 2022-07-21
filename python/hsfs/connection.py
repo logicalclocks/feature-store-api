@@ -19,9 +19,9 @@ import importlib.util
 
 from requests.exceptions import ConnectionError
 
-from hsfs.decorators import connected, not_connected
-from hsfs import engine, client, util
-from hsfs.core import feature_store_api, project_api, hosts_api, services_api
+from python.hsfs.decorators import connected, not_connected
+from python.hsfs import engine, client, util
+from python.hsfs.core import feature_store_api, project_api, hosts_api, services_api
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443

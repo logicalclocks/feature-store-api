@@ -14,11 +14,11 @@
 #
 import warnings
 
-from hsfs import engine, client, util
-from hsfs import feature_group as fg
-from hsfs.client import exceptions
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import feature_group_base_engine, hudi_engine
+from python.hsfs import engine, client, util
+from python.hsfs import feature_group as fg
+from python.hsfs.client import exceptions
+from python.hsfs.client.exceptions import FeatureStoreException
+from python.hsfs.core import feature_group_base_engine, hudi_engine
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):

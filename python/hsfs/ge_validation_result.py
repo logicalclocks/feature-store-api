@@ -19,7 +19,7 @@ import json
 import humps
 import great_expectations as ge
 
-from hsfs import util
+from python.hsfs import util
 
 
 class ValidationResult:

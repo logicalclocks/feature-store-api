@@ -18,19 +18,19 @@ import json
 import warnings
 from datetime import datetime
 from typing import Optional, Union, List, Dict, Any
-from hsfs.training_dataset_split import TrainingDatasetSplit
+from python.hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 
-from hsfs import util, training_dataset_feature, storage_connector, training_dataset
-from hsfs.constructor import query
-from hsfs.core import (
+from python.hsfs import util, training_dataset_feature, storage_connector, training_dataset
+from python.hsfs.constructor import query
+from python.hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
 )
-from hsfs.transformation_function import TransformationFunction
-from hsfs.statistics_config import StatisticsConfig
+from python.hsfs.transformation_function import TransformationFunction
+from python.hsfs.statistics_config import StatisticsConfig
 
 
 class FeatureView:

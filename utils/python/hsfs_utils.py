@@ -1,13 +1,13 @@
 import argparse
 import json
-import hsfs
 
-from hsfs.constructor import query
+from python import hsfs
+from python.hsfs.constructor import query
 from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
-from hsfs.core import feature_view_engine
+from python.hsfs.core import feature_view_engine
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:

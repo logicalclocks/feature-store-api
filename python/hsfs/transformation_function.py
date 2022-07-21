@@ -18,8 +18,8 @@ import json
 import inspect
 import ast
 
-from hsfs import util
-from hsfs.core import transformation_function_engine
+from python.hsfs import util
+from python.hsfs.core import transformation_function_engine
 
 
 class TransformationFunction:

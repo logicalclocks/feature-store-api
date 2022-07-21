@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.core import job, execution
+from python.hsfs import client
+from python.hsfs.core import job, execution
 
 
 class JobApi:

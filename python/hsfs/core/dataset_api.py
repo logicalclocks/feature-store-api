@@ -16,8 +16,8 @@
 
 import math
 
-from hsfs import client, util
-from hsfs.core import inode
+from python.hsfs import client, util
+from python.hsfs.core import inode
 
 
 class DatasetApi:
