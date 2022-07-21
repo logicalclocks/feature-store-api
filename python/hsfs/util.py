@@ -108,22 +108,22 @@ def check_timestamp_format_from_date_string(input_date):
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
     }
-    input_date = (
+    normalized_date = (
         input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
     )
 
     date_format = None
     for pattern in date_format_patterns:
-        date_format_pattern = re.match(pattern, input_date)
+        date_format_pattern = re.match(pattern, normalized_date)
         if date_format_pattern:
             date_format = date_format_patterns[pattern]
             break
 
     if date_format is None:
         raise ValueError(
-            "Unable to identify format of the provided date value : " + input_date
+            "Unable to identify format of the provided date value : " + normalized_date
         )
-    return date_format
+    return date_format, normalized_date
 
 
 def get_timestamp_from_date_string(input_date, time_zone=None):
