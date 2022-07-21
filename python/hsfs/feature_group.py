@@ -763,6 +763,11 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
+        !!! warning "Deprecated"
+                    `read_changes` method is deprecated. Use
+                    `as_of(end_wallclock_time, exclude_before=start_wallclock_time).read(read_options=read_options)`
+                    instead.
+
         This function only works on feature groups with `HUDI` time travel format.
 
         !!! example "Reading commits incrementally between specified points in time:"
@@ -1122,21 +1127,30 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def as_of(self, wallclock_time):
+    def as_of(self, wallclock_time, exclude_before=None):
         """Get Query object to retrieve all features of the group at a point in the past.
 
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. This can then either be read into a Dataframe
-        or used further to perform joins or construct a training dataset.
+        or used further to perform joins or construct a training dataset. Optionally,
+        commits before the specified point in time can be excluded from the query.
+
+        !!! example "Reading commits incrementally between specified points in time:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.as_of("2020-10-20 07:34:11", exclude_before="2020-10-20 07:31:38").read().show()
 
         # Arguments
             wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+            exclude_before: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time)
+        return self.select_all().as_of(wallclock_time, exclude_before)
 
     def validate(
         self,
