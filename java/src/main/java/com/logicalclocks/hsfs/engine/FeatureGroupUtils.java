@@ -58,9 +58,9 @@ public class FeatureGroupUtils {
   private KafkaApi kafkaApi = new KafkaApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric)
+  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
       throws FeatureStoreException {
-    return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric);
+    return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
   }
 
   public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
@@ -116,7 +116,11 @@ public class FeatureGroupUtils {
   }
 
   public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
-    return new Date(getTimeStampFromDateString(inputDate));
+    if (inputDate != null) {
+      return new Date(getTimeStampFromDateString(inputDate));
+    } else {
+      return null;
+    }
   }
 
   public static Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {

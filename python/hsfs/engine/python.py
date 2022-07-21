@@ -34,8 +34,10 @@ from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
+from tqdm.auto import tqdm
 
 from hsfs import client, feature, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_group_api,
     dataset_api,
@@ -131,10 +133,8 @@ class Engine:
         # providing more informative error
         try:
             from pydoop import hdfs
-        except ImportError as err:
-            raise ModuleNotFoundError(
-                "Reading training dataset from HopsFS requires `pydoop`"
-            ) from err
+        except ModuleNotFoundError:
+            return self._read_hopsfs_rest(location, data_format)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
@@ -147,6 +147,29 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    # This is a version of the read method that uses the Hopsworks REST APIs
+    # To read the training dataset content, this to avoid the pydoop dependency
+    # requirement and allow users to read Hopsworks training dataset from outside
+    def _read_hopsfs_rest(self, location, data_format):
+        total_count = 10000
+        offset = 0
+        df_list = []
+
+        while offset < total_count:
+            total_count, inode_list = self._dataset_api.list_files(
+                location, offset, 100
+            )
+
+            for inode in inode_list:
+                if not inode.path.endswith("_SUCCESS"):
+                    content_stream = self._dataset_api.read_content(inode.path)
+                    df_list.append(
+                        self._read_pandas(data_format, BytesIO(content_stream.content))
+                    )
+                offset += 1
+
         return df_list
 
     def _read_s3(self, storage_connector, location, data_format):
@@ -214,7 +237,7 @@ class Engine:
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
+    def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
         pass
 
@@ -230,7 +253,7 @@ class Engine:
         )
         job = stat_api.compute(metadata_instance)
         print(
-            "Statistics Job started successfully, you can follow the progress at {}".format(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(job.href)
             )
         )
@@ -315,7 +338,8 @@ class Engine:
             ]
             if len(upper_case_features) > 0:
                 warnings.warn(
-                    "The ingested dataframe contains upper case letters in feature names: `{}`. Feature names are sanitized to lower case in the feature store.".format(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
@@ -331,15 +355,19 @@ class Engine:
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe):
+    def parse_schema_feature_group(self, dataframe, time_travel_format):
         arrow_schema = pa.Schema.from_pandas(dataframe)
-        return [
-            feature.Feature(
-                feat_name.lower(),
-                self._convert_pandas_type(feat_name, feat_type, arrow_schema),
-            )
-            for feat_name, feat_type in dataframe.dtypes.items()
-        ]
+        features = []
+        for feat_name, feat_type in dataframe.dtypes.items():
+            name = feat_name.lower()
+            try:
+                converted_type = self._convert_pandas_type(
+                    feat_type, arrow_schema.field(feat_name).type
+                )
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(feature.Feature(name, converted_type))
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         raise NotImplementedError(
@@ -347,24 +375,32 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def _convert_pandas_type(self, feat_name, dtype, arrow_schema):
+    def _convert_pandas_type(self, dtype, arrow_type):
+        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
+        # using pyarrow types to convert "O (object)"-typed fields.
+        # In the backend, the types specified here will also be used for mapping to Avro types.
         if dtype == np.dtype("O"):
-            return self._infer_type_pyarrow(feat_name, arrow_schema)
+            return self._infer_type_pyarrow(arrow_type)
 
         return self._convert_simple_pandas_type(dtype)
 
     def _convert_simple_pandas_type(self, dtype):
-        # This is a simple type conversion between pandas type and pyspark types.
-        # In PySpark they use PyArrow to do the schema conversion, but this python layer
-        # should be as thin as possible. Adding PyArrow will make the library less flexible.
-        # If the conversion fails, users can always fall back and provide their own types
-
-        if dtype == np.dtype("O"):
-            return "string"
+        if dtype == np.dtype("uint8"):
+            return "int"
+        elif dtype == np.dtype("uint16"):
+            return "int"
+        elif dtype == np.dtype("int8"):
+            return "int"
+        elif dtype == np.dtype("int16"):
+            return "int"
         elif dtype == np.dtype("int32"):
             return "int"
+        elif dtype == np.dtype("uint32"):
+            return "bigint"
         elif dtype == np.dtype("int64"):
             return "bigint"
+        elif dtype == np.dtype("float16"):
+            return "float"
         elif dtype == np.dtype("float32"):
             return "float"
         elif dtype == np.dtype("float64"):
@@ -372,20 +408,33 @@ class Engine:
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
         elif dtype == np.dtype("bool"):
-            return "bool"
+            return "boolean"
+        elif dtype == "category":
+            return "string"
 
-        return "string"
+        raise ValueError(f"dtype '{dtype}' not supported")
 
-    def _infer_type_pyarrow(self, field, schema):
-        arrow_type = schema.field(field).type
-
+    def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
-            subtype = self._convert_simple_pandas_type(
-                arrow_type.value_type.to_pandas_dtype()
-            )
+            sub_arrow_type = arrow_type.value_type
+            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            subtype = self._convert_pandas_type(sub_dtype, sub_arrow_type)
             return "array<{}>".format(subtype)
-        return "string"
+        if pa.types.is_struct(arrow_type):
+            # best effort, based on pyarrow's string representation
+            return str(arrow_type)
+        # Currently not supported
+        # elif pa.types.is_decimal(arrow_type):
+        #    return str(arrow_type).replace("decimal128", "decimal")
+        elif pa.types.is_date(arrow_type):
+            return "date"
+        elif pa.types.is_binary(arrow_type):
+            return "binary"
+        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
+            return "string"
+
+        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     def save_dataframe(
         self,
@@ -443,7 +492,7 @@ class Engine:
         print("Launching ingestion job...")
         self._job_api.launch(ingestion_job.job.name)
         print(
-            "Ingestion Job started successfully, you can follow the progress at {}".format(
+            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
@@ -558,7 +607,7 @@ class Engine:
             )
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
-            "Training dataset job started successfully, you can follow the progress at {}".format(
+            "Training dataset job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(td_job.href)
             )
         )
@@ -730,9 +779,20 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
-            if err is not None:
+            if err is not None and offline_write_options.get("debug_kafka", False):
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+            else:
+                # update progress bar for each msg
+                progress_bar.update()
 
+        # initialize progress bar
+        progress_bar = tqdm(
+            total=dataframe.shape[0],
+            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+            desc="Uploading Dataframe",
+            mininterval=1,
+        )
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -769,9 +829,7 @@ class Engine:
                         topic=feature_group._online_topic_name,
                         key=key,
                         value=encoded_row,
-                        callback=acked
-                        if offline_write_options.get("debug_kafka", False)
-                        else None,
+                        callback=acked,
                     )
 
                     # Trigger internal callbacks to empty op queue
@@ -785,6 +843,7 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         producer.flush()
+        progress_bar.close()
 
         # start backfilling job
         job_name = "{fg_name}_{version}_offline_fg_backfill".format(
@@ -798,7 +857,7 @@ class Engine:
             print("Launching offline feature group backfill job...")
             self._job_api.launch(job_name)
             print(
-                "Backfill Job started successfully, you can follow the progress at {}".format(
+                "Backfill Job started successfully, you can follow the progress at \n{}".format(
                     self._get_job_url(job.href)
                 )
             )

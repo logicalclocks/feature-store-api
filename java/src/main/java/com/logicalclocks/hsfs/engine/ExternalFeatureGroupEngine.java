@@ -17,46 +17,42 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.io.IOException;
 
-public class OnDemandFeatureGroupEngine extends FeatureGroupBaseEngine {
+public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
-  public OnDemandFeatureGroup saveFeatureGroup(OnDemandFeatureGroup onDemandFeatureGroup)
+  public ExternalFeatureGroup saveFeatureGroup(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
     Dataset<Row> onDemandDataset = null;
-    if (onDemandFeatureGroup.getFeatures() == null) {
+    if (externalFeatureGroup.getFeatures() == null) {
       onDemandDataset = SparkEngine.getInstance()
-          .registerOnDemandTemporaryTable(onDemandFeatureGroup, "read_ondmd");
-      onDemandFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset));
+          .registerOnDemandTemporaryTable(externalFeatureGroup, "read_ondmd");
+      externalFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset,
+          externalFeatureGroup.getTimeTravelFormat()));
     }
 
     /* set primary features */
-    if (onDemandFeatureGroup.getPrimaryKeys() != null) {
-      onDemandFeatureGroup.getPrimaryKeys().forEach(pk ->
-          onDemandFeatureGroup.getFeatures().forEach(f -> {
+    if (externalFeatureGroup.getPrimaryKeys() != null) {
+      externalFeatureGroup.getPrimaryKeys().forEach(pk ->
+          externalFeatureGroup.getFeatures().forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPrimary(true);
             }
           }));
     }
 
-    OnDemandFeatureGroup apiFg = featureGroupApi.save(onDemandFeatureGroup);
-    onDemandFeatureGroup.setId(apiFg.getId());
+    ExternalFeatureGroup apiFg = featureGroupApi.save(externalFeatureGroup);
+    externalFeatureGroup.setId(apiFg.getId());
 
-    if (onDemandFeatureGroup.getValidationType() != ValidationType.NONE && onDemandDataset != null) {
-      onDemandFeatureGroup.validate(onDemandDataset, true);
-    }
-
-    return onDemandFeatureGroup;
+    return externalFeatureGroup;
   }
 }

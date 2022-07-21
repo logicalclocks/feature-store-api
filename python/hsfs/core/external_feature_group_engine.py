@@ -18,17 +18,15 @@ from hsfs import feature_group as fg
 from hsfs.core import feature_group_base_engine
 
 
-class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
+class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def save(self, feature_group):
         if len(feature_group.features) == 0:
             # If the user didn't specify the schema, parse it from the query
-            on_demand_dataset = (
-                engine.get_instance().register_on_demand_temporary_table(
-                    feature_group, "read_ondmd"
-                )
+            external_dataset = engine.get_instance().register_external_temporary_table(
+                feature_group, "read_ondmd"
             )
             feature_group._features = engine.get_instance().parse_schema_feature_group(
-                on_demand_dataset
+                external_dataset
             )
 
         # set primary and partition key columns
@@ -42,7 +40,7 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
     def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
-        copy_feature_group = fg.OnDemandFeatureGroup(
+        copy_feature_group = fg.ExternalFeatureGroup(
             storage_connector=feature_group.storage_connector,
             id=feature_group.id,
             features=features,
@@ -65,7 +63,7 @@ class OnDemandFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
-        copy_feature_group = fg.OnDemandFeatureGroup(
+        copy_feature_group = fg.ExternalFeatureGroup(
             storage_connector=feature_group.storage_connector,
             id=feature_group.id,
             description=description,

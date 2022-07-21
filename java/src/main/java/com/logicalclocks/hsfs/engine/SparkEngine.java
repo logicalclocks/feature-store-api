@@ -20,17 +20,19 @@ import com.amazon.deequ.profiles.ColumnProfilerRunBuilder;
 import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
@@ -51,7 +53,21 @@ import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
+import org.apache.spark.sql.types.ArrayType;
+import org.apache.spark.sql.types.BinaryType;
+import org.apache.spark.sql.types.BooleanType;
+import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DateType;
+import org.apache.spark.sql.types.DecimalType;
+import org.apache.spark.sql.types.DoubleType;
+import org.apache.spark.sql.types.FloatType;
+import org.apache.spark.sql.types.IntegerType;
+import org.apache.spark.sql.types.LongType;
+import org.apache.spark.sql.types.ShortType;
+import org.apache.spark.sql.types.StringType;
 import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.TimestampType;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
@@ -158,7 +174,7 @@ public class SparkEngine {
     }
   }
 
-  public Dataset<Row> registerOnDemandTemporaryTable(OnDemandFeatureGroup onDemandFeatureGroup, String alias)
+  public Dataset<Row> registerOnDemandTemporaryTable(ExternalFeatureGroup onDemandFeatureGroup, String alias)
       throws FeatureStoreException, IOException {
     Dataset<Row> dataset = (Dataset<Row>) onDemandFeatureGroup.getStorageConnector()
         .read(onDemandFeatureGroup.getQuery(),
@@ -173,20 +189,39 @@ public class SparkEngine {
     return dataset;
   }
 
-  private Map<String, String> getOnDemandOptions(OnDemandFeatureGroup onDemandFeatureGroup) {
-    if (onDemandFeatureGroup.getOptions() == null) {
+  public static List<Dataset<Row>> splitLabels(Dataset<Row> dataset, List<String> labels) {
+    List<Dataset<Row>> results = Lists.newArrayList();
+    if (labels != null && !labels.isEmpty()) {
+      Column[] labelsCol = labels.stream().map(label -> col(label).alias(label.toLowerCase())).toArray(Column[]::new);
+      results.add(dataset.drop(labels.stream().toArray(String[]::new)));
+      results.add(dataset.select(labelsCol));
+    } else {
+      results.add(dataset);
+      results.add(null);
+    }
+    return results;
+  }
+
+  private Map<String, String> getOnDemandOptions(ExternalFeatureGroup externalFeatureGroup) {
+    if (externalFeatureGroup.getOptions() == null) {
       return new HashMap<>();
     }
 
-    return onDemandFeatureGroup.getOptions().stream()
+    return externalFeatureGroup.getOptions().stream()
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(FeatureGroupBase featureGroup, String alias,
-                                         Long leftFeaturegroupStartTimestamp,
-                                         Long leftFeaturegroupEndTimestamp, Map<String, String> readOptions) {
-    hudiEngine.registerTemporaryTable(sparkSession, featureGroup, alias,
-        leftFeaturegroupStartTimestamp, leftFeaturegroupEndTimestamp, readOptions);
+  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions) {
+    Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
+        hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+        hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
+        readOptions);
+
+    sparkSession.read()
+        .format(HudiEngine.HUDI_SPARK_FORMAT)
+        .options(hudiArgs)
+        .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
+        .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
   }
 
   /**
@@ -593,16 +628,43 @@ public class SparkEngine {
     writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
-
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric) throws FeatureStoreException {
+  
+  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
+      TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
+    Boolean usingHudi = timeTravelFormat == TimeTravelFormat.HUDI;
     for (StructField structField : dataset.schema().fields()) {
-      // TODO(Fabio): unit test this one for complext types
-      Feature f = new Feature(structField.name().toLowerCase(), structField.dataType().catalogString(), false, false);
+      String featureType = "";
+      if (!usingHudi) {
+        featureType = structField.dataType().catalogString();
+      } else if (structField.dataType() instanceof ByteType) {
+        featureType = "int";
+      } else if (structField.dataType() instanceof ShortType) {
+        featureType = "int";
+      } else if (structField.dataType() instanceof BooleanType
+          || structField.dataType() instanceof IntegerType
+          || structField.dataType() instanceof LongType
+          || structField.dataType() instanceof FloatType
+          || structField.dataType() instanceof DoubleType
+          || structField.dataType() instanceof DecimalType
+          || structField.dataType() instanceof TimestampType
+          || structField.dataType() instanceof DateType
+          || structField.dataType() instanceof StringType
+          || structField.dataType() instanceof ArrayType
+          || structField.dataType() instanceof StructType
+          || structField.dataType() instanceof BinaryType) {
+        featureType = structField.dataType().catalogString();
+      } else {
+        throw new FeatureStoreException("Feature '" + structField.name().toLowerCase() + "': "
+            + "spark type " + structField.dataType().catalogString() + " not supported.");
+      }
+  
+      Feature f = new Feature(structField.name().toLowerCase(), featureType, false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
+      
       features.add(f);
     }
 

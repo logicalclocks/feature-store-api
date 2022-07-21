@@ -16,6 +16,7 @@
 
 import datetime
 import json
+import warnings
 
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
@@ -57,12 +58,13 @@ class StatisticsEngine:
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
 
             content_str = self.profile_statistics(metadata_instance, feature_dataframe)
-            stats = statistics.Statistics(
-                commit_time=commit_time,
-                content=content_str,
-                feature_group_commit_id=feature_group_commit_id,
-            )
-            self._save_statistics(stats, metadata_instance, feature_view_obj)
+            if content_str:
+                stats = statistics.Statistics(
+                    commit_time=commit_time,
+                    content=content_str,
+                    feature_group_commit_id=feature_group_commit_id,
+                )
+                self._save_statistics(stats, metadata_instance, feature_view_obj)
         else:
             # Python engine
             engine.get_instance().profile_by_spark(metadata_instance)
@@ -70,11 +72,13 @@ class StatisticsEngine:
     @staticmethod
     def profile_statistics(metadata_instance, feature_dataframe):
         if len(feature_dataframe.head(1)) == 0:
-            raise exceptions.FeatureStoreException(
+            warnings.warn(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
-                "to the online storage of a feature group."
+                "to the online storage of a feature group.",
+                category=util.StatisticsWarning,
             )
+            return None
         return engine.get_instance().profile(
             feature_dataframe,
             metadata_instance.statistics_config.columns,

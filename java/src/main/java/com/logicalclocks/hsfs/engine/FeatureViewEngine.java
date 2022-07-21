@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,11 @@ public class FeatureViewEngine {
         .filter(f -> f.getFeaturegroup() != null)
         .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
     featureView.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
+    featureView.setLabels(
+        featureView.getFeatures().stream()
+            .filter(TrainingDatasetFeature::getLabel)
+            .map(TrainingDatasetFeature::getName)
+            .collect(Collectors.toList()));
     return featureView;
   }
 
@@ -82,6 +88,11 @@ public class FeatureViewEngine {
           .filter(f -> f.getFeaturegroup() != null)
           .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
+      fv.setLabels(
+          fv.getFeatures().stream()
+              .filter(TrainingDatasetFeature::getLabel)
+              .map(TrainingDatasetFeature::getName)
+              .collect(Collectors.toList()));
     }
     return featureViews;
   }
@@ -118,21 +129,46 @@ public class FeatureViewEngine {
   }
 
   public TrainingDatasetBundle getTrainingDataset(
+      FeatureView featureView, Integer trainingDatasetVersion, List<String> requestedSplits,
+      Map<String, String> userReadOptions
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
+        .name(featureView.getName())
+        .version(trainingDatasetVersion)
+        .build();
+    return getTrainingDataset(featureView, trainingDataset, requestedSplits, userReadOptions);
+  }
+
+  public TrainingDatasetBundle getTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException {
-    setTrainSplit(trainingDataset);
+    return getTrainingDataset(featureView, trainingDataset, null, userReadOptions);
+  }
+
+  public TrainingDatasetBundle getTrainingDataset(
+      FeatureView featureView, TrainingDataset trainingDataset, List<String> requestedSplits,
+      Map<String, String> userReadOptions
+  ) throws IOException, FeatureStoreException {
     TrainingDataset trainingDatasetUpdated = null;
     if (trainingDataset.getVersion() != null) {
-      try {
-        trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
-      } catch (Exception e) {
-        if (!e.getMessage().matches(".*\"errorCode\":270012.*")) {
-          throw e;
-        }
-      }
-    }
-    if (trainingDatasetUpdated == null) {
+      trainingDatasetUpdated = getTrainingDataMetadata(featureView, trainingDataset.getVersion());
+    } else {
       trainingDatasetUpdated = createTrainingDataMetadata(featureView, trainingDataset);
+    }
+    if (requestedSplits != null) {
+      int splitSize = trainingDatasetUpdated.getSplits().size();
+      String methodName = "";
+      if (splitSize != requestedSplits.size()) {
+        if (splitSize == 0) {
+          methodName = "getTrainingData";
+        } else if (splitSize == 2) {
+          methodName = "getTrainTestSplit";
+        } else if (splitSize == 3) {
+          methodName = "getTrainValidationTestSplit";
+        }
+        throw new FeatureStoreException(
+            String.format("Incorrect `get` method is used. Use `FeatureView.%s` instead.", methodName));
+      }
     }
     if (!IN_MEMORY_TRAINING_DATASET.equals(trainingDatasetUpdated.getTrainingDatasetType())) {
       try {
@@ -144,10 +180,10 @@ public class FeatureViewEngine {
                 trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
           }
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              datasets, trainingDatasetUpdated.getTrainSplit());
+              datasets, featureView.getLabels());
         } else {
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions)
+              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions), featureView.getLabels()
           );
         }
       } catch (InvalidInputException e) {
@@ -162,11 +198,12 @@ public class FeatureViewEngine {
         Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, dataset);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
             convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
-            trainingDatasetUpdated.getTrainSplit());
+            featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, datasets);
       } else {
-        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset);
-        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
+        trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
+            featureView.getLabels());
+        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[]{dataset});
       }
       return trainingDatasetBundle;
     }
@@ -225,7 +262,8 @@ public class FeatureViewEngine {
   private Dataset<Row> readDataset(FeatureView featureView, TrainingDataset trainingDataset,
       Map<String, String> userReadOptions) throws IOException,
       FeatureStoreException {
-    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime());
+    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
+        true);
     return (Dataset<Row>) query.read(false, userReadOptions);
   }
 
@@ -253,18 +291,19 @@ public class FeatureViewEngine {
 
   public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime)
       throws FeatureStoreException, IOException {
-    Query query = getBatchQuery(featureView, startTime, endTime);
+    Query query = getBatchQuery(featureView, startTime, endTime, false);
     return query.sql();
   }
 
-  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime)
+  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels)
       throws FeatureStoreException, IOException {
     Query query = featureViewApi.getBatchQuery(
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),
         startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime()
+        endTime == null ? null : endTime.getTime(),
+        withLabels
     );
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
@@ -273,7 +312,7 @@ public class FeatureViewEngine {
   public Dataset<Row> getBatchData(
       FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions
   ) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime).read(false, readOptions);
+    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime, false).read(false, readOptions);
   }
 
   public void addTag(FeatureView featureView, String name, Object value)

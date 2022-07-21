@@ -1,4 +1,3 @@
-#
 #   Copyright 2020 Logical Clocks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,27 +15,18 @@
 
 import humps
 
-from hsfs import feature_group
 
-
-class OnDemandFeatureGroupAlias:
-    def __init__(self, on_demand_feature_group, alias):
-        self._on_demand_feature_group = (
-            feature_group.OnDemandFeatureGroup.from_response_json(
-                on_demand_feature_group
-            )
-        )
-        self._alias = alias
+class Inode:
+    def __init__(self, href=None, attributes=None, zip_state=None, tags=None):
+        self._path = attributes["path"]
 
     @classmethod
     def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)
-        return cls(**json_decamelized)
+        json_decamelized = humps.decamelize(json_dict)["items"]
+        for inode in json_decamelized:
+            _ = inode.pop("type")
+        return [cls(**inode) for inode in json_decamelized]
 
     @property
-    def on_demand_feature_group(self):
-        return self._on_demand_feature_group
-
-    @property
-    def alias(self):
-        return self._alias
+    def path(self):
+        return self._path

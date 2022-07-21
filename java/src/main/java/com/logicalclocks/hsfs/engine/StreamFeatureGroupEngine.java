@@ -25,7 +25,6 @@ import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.Option;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 
 import lombok.SneakyThrows;
 
@@ -87,11 +86,6 @@ public class StreamFeatureGroupEngine {
           jobConfiguration, featureData);
     }
 
-    if (streamFeatureGroup.getValidationType() != ValidationType.NONE) {
-      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + streamFeatureGroup.getName()
-          + "`, with version `" + streamFeatureGroup.getVersion() + "` will not perform validation.");
-    }
-
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
@@ -125,7 +119,9 @@ public class StreamFeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData)));
+      featureGroup.setFeatures(utils
+          .parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData),
+            featureGroup.getTimeTravelFormat()));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());

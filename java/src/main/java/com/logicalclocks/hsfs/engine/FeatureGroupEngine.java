@@ -25,8 +25,6 @@ import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupValidation;
-import com.logicalclocks.hsfs.metadata.validation.ValidationType;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -88,13 +86,6 @@ public class FeatureGroupEngine {
           hudiPrecombineKey, featureData, false);
     }
 
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      FeatureGroupValidation validation = featureGroup.validate(featureData, true);
-      if (validation != null) {
-        validationId = validation.getValidationId();
-      }
-    }
-
     if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
@@ -122,11 +113,6 @@ public class FeatureGroupEngine {
     if (featureGroup.getId() == null) {
       featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, true);
-    }
-
-    if (featureGroup.getValidationType() != ValidationType.NONE) {
-      LOGGER.info("ValidationWarning: Stream ingestion for feature group `" + featureGroup.getName()
-          + "`, with version `" + featureGroup.getVersion() + "` will not perform validation.");
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
@@ -165,7 +151,8 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData));
+      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData,
+          featureGroup.getTimeTravelFormat()));
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());

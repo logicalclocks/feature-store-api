@@ -15,7 +15,6 @@
 #
 
 from hsfs import engine, training_dataset_feature, client, util
-from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
     tags_api,
     storage_connector_api,
@@ -71,7 +70,7 @@ class FeatureViewEngine:
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
-            "Feature view created successfully, explore it at "
+            "Feature view created successfully, explore it at \n"
             + self._get_feature_view_url(updated_fv)
         )
         return updated_fv
@@ -139,7 +138,6 @@ class FeatureViewEngine:
     def create_training_dataset(
         self, feature_view_obj, training_dataset_obj, user_write_options
     ):
-        self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
             feature_view_obj, training_dataset_obj
         )
@@ -164,7 +162,6 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_version
             )
         else:
-            self._set_event_time(feature_view_obj, training_dataset_obj)
             td_updated = self._create_training_data_metadata(
                 feature_view_obj, training_dataset_obj
             )
@@ -175,9 +172,9 @@ class FeatureViewEngine:
             elif len(td_updated.splits) == 2:
                 method_name = "get_train_test_split"
             elif len(td_updated.splits) == 3:
-                method_name = "get_train_validation_test_splits"
+                method_name = "get_train_validation_test_split"
             raise ValueError(
-                f"Incorrect `get` method is used. Use `fv.{method_name}` instead."
+                f"Incorrect `get` method is used. Use `feature_view.{method_name}` instead."
             )
 
         read_options = engine.get_instance().read_options(
@@ -216,60 +213,6 @@ class FeatureViewEngine:
             )
 
         return td_updated, split_df
-
-    def _set_event_time(self, feature_view_obj, training_dataset_obj):
-        event_time = feature_view_obj.query._left_feature_group.event_time
-        df = None
-        if event_time:
-            if training_dataset_obj.splits:
-                for split in training_dataset_obj.splits:
-                    if (
-                        split.name == TrainingDatasetSplit.TRAIN
-                        and not split.start_time
-                    ):
-                        df = (
-                            feature_view_obj.query._left_feature_group.select_all().read()
-                            if df is None
-                            else df
-                        )
-                        split.start_time = self._get_start_time(df, event_time)
-                    if split.name == TrainingDatasetSplit.TEST and not split.end_time:
-                        df = (
-                            feature_view_obj.query._left_feature_group.select_all().read()
-                            if df is None
-                            else df
-                        )
-                        split.end_time = self._get_end_time(df, event_time)
-            else:
-                if not training_dataset_obj.event_start_time:
-                    df = (
-                        feature_view_obj.query._left_feature_group.select_all().read()
-                        if df is None
-                        else df
-                    )
-                    training_dataset_obj.event_start_time = self._get_start_time(
-                        df, event_time
-                    )
-                    df = (
-                        feature_view_obj.query._left_feature_group.select_all().read()
-                        if df is None
-                        else df
-                    )
-                    training_dataset_obj.event_end_time = self._get_end_time(
-                        df, event_time
-                    )
-
-    def _get_start_time(self, df, event_time):
-        if engine.get_type() == "spark":
-            return df.agg({event_time: "min"}).collect()[0][0]
-        else:
-            return df[event_time].min()
-
-    def _get_end_time(self, df, event_time):
-        if engine.get_type() == "spark":
-            return df.agg({event_time: "max"}).collect()[0][0]
-        else:
-            return df[event_time].max()
 
     def recreate_training_dataset(
         self, feature_view_obj, training_dataset_version, user_write_options
@@ -492,7 +435,7 @@ class FeatureViewEngine:
         ) and not feature_view_obj.query.from_cache_feature_group_only():
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_dataset` instead."
+                " Please use `feature_view.create_training_data` instead."
             )
 
     def _get_feature_view_url(self, feature_view):

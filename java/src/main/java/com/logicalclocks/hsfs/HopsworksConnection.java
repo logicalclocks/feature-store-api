@@ -20,9 +20,6 @@ import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.ProjectApi;
-import com.logicalclocks.hsfs.metadata.RuleDefinition;
-import com.logicalclocks.hsfs.metadata.RulesApi;
-import com.logicalclocks.hsfs.metadata.validation.RuleName;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,7 +66,6 @@ public class HopsworksConnection implements Closeable {
 
   private FeatureStoreApi featureStoreApi = new FeatureStoreApi();
   private ProjectApi projectApi = new ProjectApi();
-  private RulesApi rulesApi = new RulesApi();
 
   private Project projectObj;
 
@@ -147,13 +143,5 @@ public class HopsworksConnection implements Closeable {
       return System.getProperty(Constants.PROJECTNAME_ENV);
     }
     return project;
-  }
-
-  public scala.collection.Seq<RuleDefinition> getRules() throws FeatureStoreException, IOException {
-    return rulesApi.get();
-  }
-
-  public RuleDefinition getRule(RuleName name) throws FeatureStoreException, IOException {
-    return rulesApi.get(name);
   }
 }

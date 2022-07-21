@@ -17,6 +17,8 @@
 import os
 import json
 import importlib.util
+import re
+import warnings
 from typing import Optional, TypeVar
 
 import numpy as np
@@ -30,6 +32,22 @@ try:
     from pyspark.rdd import RDD
     from pyspark.sql.functions import struct, concat, col, lit, from_json
     from pyspark.sql.avro.functions import from_avro, to_avro
+    from pyspark.sql.types import (
+        ByteType,
+        ShortType,
+        IntegerType,
+        LongType,
+        FloatType,
+        DoubleType,
+        DecimalType,
+        DateType,
+        StringType,
+        TimestampType,
+        ArrayType,
+        StructType,
+        BinaryType,
+        BooleanType,
+    )
 except ImportError:
     pass
 
@@ -87,18 +105,18 @@ class Engine:
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def register_on_demand_temporary_table(self, on_demand_fg, alias):
-        on_demand_dataset = on_demand_fg.storage_connector.read(
-            on_demand_fg.query,
-            on_demand_fg.data_format,
-            on_demand_fg.options,
-            on_demand_fg.storage_connector._get_path(on_demand_fg.path),
+    def register_external_temporary_table(self, external_fg, alias):
+        external_dataset = external_fg.storage_connector.read(
+            external_fg.query,
+            external_fg.data_format,
+            external_fg.options,
+            external_fg.storage_connector._get_path(external_fg.path),
         )
-        if on_demand_fg.location:
-            self._spark_session.sparkContext.textFile(on_demand_fg.location).collect()
+        if external_fg.location:
+            self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
-        on_demand_dataset.createOrReplaceTempView(alias)
-        return on_demand_dataset
+        external_dataset.createOrReplaceTempView(alias)
+        return external_dataset
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
@@ -111,9 +129,7 @@ class Engine:
             self._spark_session,
         )
         hudi_engine_instance.register_temporary_table(
-            hudi_fg_alias.alias,
-            hudi_fg_alias.left_feature_group_start_timestamp,
-            hudi_fg_alias.left_feature_group_end_timestamp,
+            hudi_fg_alias,
             read_options,
         )
 
@@ -132,11 +148,10 @@ class Engine:
         )
 
     def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
-            dataframe = self._spark_session.createDataFrame(dataframe)
-        elif isinstance(dataframe, list):
+        if isinstance(dataframe, list):
             dataframe = np.array(dataframe)
-        elif isinstance(dataframe, np.ndarray):
+
+        if isinstance(dataframe, np.ndarray):
             if dataframe.ndim != 2:
                 raise TypeError(
                     "Cannot convert numpy array that do not have two dimensions to a dataframe. "
@@ -149,10 +164,23 @@ class Engine:
                 dataframe_dict[col_name] = dataframe[:, n_col]
             pandas_df = pd.DataFrame(dataframe_dict)
             dataframe = self._spark_session.createDataFrame(pandas_df)
+        elif isinstance(dataframe, pd.DataFrame):
+            dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
 
         if isinstance(dataframe, DataFrame):
+            upper_case_features = [
+                c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
             return dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
@@ -203,10 +231,8 @@ class Engine:
                     self._save_online_dataframe(
                         feature_group, dataframe, online_write_options
                     )
-        except Exception:
-            raise FeatureStoreException(
-                "Error writing to offline and online feature store"
-            )
+        except Exception as e:
+            raise FeatureStoreException(e)
 
     def save_stream_dataframe(
         self,
@@ -266,6 +292,7 @@ class Engine:
                 self._spark_session,
                 self._spark_context,
             )
+
             hudi_engine_instance.save_hudi_fg(
                 dataframe, self.APPEND, operation, write_options, validation_id
             )
@@ -524,7 +551,7 @@ class Engine:
             if include_metadata is True:
                 return df.select(
                     *kafka_cols,
-                    from_json(df.value.cast("string"), schema).alias("value")
+                    from_json(df.value.cast("string"), schema).alias("value"),
                 ).select(*kafka_cols, col("value.*"))
             return df.select(
                 from_json(df.value.cast("string"), schema).alias("value")
@@ -555,53 +582,6 @@ class Engine:
                 histograms,
                 exact_uniqueness,
             )
-        )
-
-    def validate(self, dataframe, expectations, log_activity=True):
-        """Run data validation on the dataframe with Deequ."""
-
-        expectations_java = []
-        for expectation in expectations:
-            rules = []
-            for rule in expectation.rules:
-                rules.append(
-                    self._jvm.com.logicalclocks.hsfs.metadata.validation.Rule.builder()
-                    .name(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.RuleName.valueOf(
-                            rule.get("name")
-                        )
-                    )
-                    .level(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.Level.valueOf(
-                            rule.get("level")
-                        )
-                    )
-                    .min(rule.get("min", None))
-                    .max(rule.get("max", None))
-                    .pattern(rule.get("pattern", None))
-                    .acceptedType(
-                        self._jvm.com.logicalclocks.hsfs.metadata.validation.AcceptedType.valueOf(
-                            rule.get("accepted_type")
-                        )
-                        if rule.get("accepted_type") is not None
-                        else None
-                    )
-                    .feature((rule.get("feature", None)))
-                    .legalValues(rule.get("legal_values", None))
-                    .build()
-                )
-            expectation = (
-                self._jvm.com.logicalclocks.hsfs.metadata.Expectation.builder()
-                .name(expectation.name)
-                .description(expectation.description)
-                .features(expectation.features)
-                .rules(rules)
-                .build()
-            )
-            expectations_java.append(expectation)
-
-        return self._jvm.com.logicalclocks.hsfs.engine.DataValidationEngine.getInstance().validate(
-            dataframe._jdf, expectations_java
         )
 
     def validate_with_great_expectations(
@@ -691,15 +671,21 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe):
-        return [
-            feature.Feature(
-                feat.name.lower(),
-                feat.dataType.simpleString(),
-                feat.metadata.get("description", None),
+    def parse_schema_feature_group(self, dataframe, time_travel_format):
+        features = []
+        using_hudi = time_travel_format == "HUDI"
+        for feat in dataframe.schema:
+            name = feat.name.lower()
+            try:
+                converted_type = self.convert_spark_type(feat.dataType, using_hudi)
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(
+                feature.Feature(
+                    name, converted_type, feat.metadata.get("description", None)
+                )
             )
-            for feat in dataframe.schema
-        ]
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         return [
@@ -709,15 +695,34 @@ class Engine:
             for feat in dataframe.schema
         ]
 
-    def parse_schema_dict(self, dataframe):
-        return {
-            feat.name: feature.Feature(
-                feat.name.lower(),
-                feat.dataType.simpleString(),
-                feat.metadata.get("description", ""),
-            )
-            for feat in dataframe.schema
-        }
+    def convert_spark_type(self, hive_type, using_hudi):
+        # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
+        # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
+        # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
+
+        if not using_hudi:
+            return hive_type.simpleString()
+        elif type(hive_type) == ByteType:
+            return "int"
+        elif type(hive_type) == ShortType:
+            return "int"
+        elif type(hive_type) in [
+            BooleanType,
+            IntegerType,
+            LongType,
+            FloatType,
+            DoubleType,
+            DecimalType,
+            TimestampType,
+            DateType,
+            StringType,
+            ArrayType,
+            StructType,
+            BinaryType,
+        ]:
+            return hive_type.simpleString()
+
+        raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)

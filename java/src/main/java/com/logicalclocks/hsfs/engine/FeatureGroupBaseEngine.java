@@ -20,7 +20,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.OnDemandFeatureGroup;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
@@ -113,15 +113,9 @@ public class FeatureGroupBaseEngine {
       return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     } else if (featureGroup instanceof StreamFeatureGroup) {
       return new StreamFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
-    } else if (featureGroup instanceof OnDemandFeatureGroup) {
-      return new OnDemandFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
+    } else if (featureGroup instanceof ExternalFeatureGroup) {
+      return new ExternalFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
     }
     return new FeatureGroupBase();
-  }
-
-  public <T extends FeatureGroupBase> void updateValidationType(FeatureGroupBase featureGroupBase, Class<T> fgClass)
-      throws FeatureStoreException, IOException {
-    featureGroupApi.updateMetadata(
-        featureGroupBase, "validationType", featureGroupBase.getValidationType(), fgClass);
   }
 }

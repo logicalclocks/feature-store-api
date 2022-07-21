@@ -16,14 +16,14 @@
 
 import warnings
 
-from hsfs import engine, training_dataset_feature, client, util
+from hsfs import engine, training_dataset_feature
+from hsfs.constructor import query
 from hsfs.core import (
     training_dataset_api,
     tags_api,
     storage_connector_api,
     transformation_function_engine,
 )
-from hsfs.constructor import query
 
 
 class TrainingDatasetEngine:
@@ -85,10 +85,6 @@ class TrainingDatasetEngine:
             )
 
         updated_instance = self._training_dataset_api.post(training_dataset)
-        print(
-            "Training dataset created successfully, explore it at "
-            + self._get_training_dataset_url(updated_instance)
-        )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset, features, user_write_options, self.OVERWRITE
         )
@@ -129,10 +125,10 @@ class TrainingDatasetEngine:
             return fs_query.query_online
 
         # The offline queries could be referencing temporary tables
-        # like on-demand feature groups/hudi feature groups
+        # like external feature groups/hudi feature groups
         # Here we register those tables before returning the query to the user
         # In this way, if they execute the query, it will be valid
-        fs_query.register_on_demand()
+        fs_query.register_external()
         fs_query.register_hudi_tables(
             self._feature_store_id,
             None,  # No need to provide the feature store name for read operations
@@ -164,14 +160,3 @@ class TrainingDatasetEngine:
         self._training_dataset_api.update_metadata(
             training_dataset, training_dataset, "updateStatsConfig"
         )
-
-    def _get_training_dataset_url(self, training_dataset):
-        path = (
-            "/p/"
-            + str(client.get_instance()._project_id)
-            + "/fs/"
-            + str(training_dataset.feature_store_id)
-            + "/td/"
-            + str(training_dataset.id)
-        )
-        return util.get_hostname_replaced_url(path)

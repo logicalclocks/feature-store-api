@@ -16,23 +16,17 @@
 
 import humps
 
-from hsfs import feature_group as feature_group_module
+from hsfs import feature_group
 
 
-class HudiFeatureGroupAlias:
-    def __init__(
-        self,
-        feature_group,
-        alias,
-        left_feature_group_end_timestamp=None,
-        left_feature_group_start_timestamp=0,
-    ):
-        self._feature_group = feature_group_module.FeatureGroup.from_response_json(
-            feature_group
+class ExternalFeatureGroupAlias:
+    def __init__(self, on_demand_feature_group, alias):
+        self._on_demand_feature_group = (
+            feature_group.ExternalFeatureGroup.from_response_json(
+                on_demand_feature_group
+            )
         )
         self._alias = alias
-        self._left_feature_group_start_timestamp = left_feature_group_start_timestamp
-        self._left_feature_group_end_timestamp = left_feature_group_end_timestamp
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -40,17 +34,9 @@ class HudiFeatureGroupAlias:
         return cls(**json_decamelized)
 
     @property
-    def feature_group(self):
-        return self._feature_group
+    def on_demand_feature_group(self):
+        return self._on_demand_feature_group
 
     @property
     def alias(self):
         return self._alias
-
-    @property
-    def left_feature_group_start_timestamp(self):
-        return self._left_feature_group_start_timestamp
-
-    @property
-    def left_feature_group_end_timestamp(self):
-        return self._left_feature_group_end_timestamp
