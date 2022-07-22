@@ -127,8 +127,8 @@ def check_timestamp_format_from_date_string(input_date):
 
 
 def get_timestamp_from_date_string(input_date, time_zone=None):
-    date_format = check_timestamp_format_from_date_string(input_date)
-    date_time = datetime.strptime(input_date, date_format)
+    date_format, normalized_date = check_timestamp_format_from_date_string(input_date)
+    date_time = datetime.strptime(normalized_date, date_format)
     date_time = date_time.replace(tzinfo=time_zone)
     return int(float(date_time.timestamp()) * 1000)
 
