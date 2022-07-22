@@ -23,9 +23,7 @@ class ValidationReportEngine:
         """Validation Report engine.
 
         :param feature_store_id: id of the respective featurestore
-        :param feature_group_id: id of the featuregroup it is attached to
         :type feature_store_id: int
-        :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
         self._validation_report_api = validation_report_api.ValidationReportApi(
