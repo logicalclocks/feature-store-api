@@ -56,7 +56,7 @@ class TestJdbcConnector:
         connection_string = (
             "jdbc:mysql://mysql_server_ip:1433;database=test;loginTimeout=30;"
         )
-        arguments = "arg1=value1,arg2=value2"
+        arguments = [{"name": "arg1", "value": "value1"}, {"name": "arg2", "value": "value2"}]
 
         jdbc_connector = JdbcConnector(
             id=1,
