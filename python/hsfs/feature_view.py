@@ -22,7 +22,12 @@ from python.hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 
-from python.hsfs import util, training_dataset_feature, storage_connector, training_dataset
+from python.hsfs import (
+    util,
+    training_dataset_feature,
+    storage_connector,
+    training_dataset,
+)
 from python.hsfs.constructor import query
 from python.hsfs.core import (
     feature_view_engine,

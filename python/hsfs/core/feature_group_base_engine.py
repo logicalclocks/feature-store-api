@@ -14,7 +14,12 @@
 #   limitations under the License.
 #
 
-from python.hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
+from python.hsfs.core import (
+    feature_group_api,
+    storage_connector_api,
+    tags_api,
+    kafka_api,
+)
 
 
 class FeatureGroupBaseEngine:

@@ -14,7 +14,11 @@
 #   limitations under the License.
 #
 
-from python.hsfs import client, transformation_function, transformation_function_attached
+from python.hsfs import (
+    client,
+    transformation_function,
+    transformation_function_attached,
+)
 
 
 class TransformationFunctionApi:
