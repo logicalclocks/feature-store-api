@@ -18,17 +18,16 @@ import unittest
 from unittest.mock import patch
 
 from python.hsfs import util, client, engine, feature_group, validation_report
-from python.hsfs.core import (
-    validation_report_engine,
-    validation_report_api
-)
+from python.hsfs.core import validation_report_engine, validation_report_api
+
 
 class TestValidationReport(unittest.TestCase):
     def test_validation_report_save(self):
         with patch.object(
             validation_report_api.ValidationReportApi, "create"
         ) as mock_validation_report_api, patch.object(engine, "get_type"), patch.object(
-            validation_report_engine.ValidationReportEngine, "_get_validation_report_url"
+            validation_report_engine.ValidationReportEngine,
+            "_get_validation_report_url",
         ) as mock_validation_report_url:
             # Arrange
             fg = feature_group.FeatureGroup(
@@ -51,9 +50,10 @@ class TestValidationReport(unittest.TestCase):
 
     def test_validation_report_get_last(self):
         with patch.object(
-                validation_report_api.ValidationReportApi, "get_last"
+            validation_report_api.ValidationReportApi, "get_last"
         ) as mock_validation_report_api, patch.object(engine, "get_type"), patch.object(
-            validation_report_engine.ValidationReportEngine, "_get_validation_report_url"
+            validation_report_engine.ValidationReportEngine,
+            "_get_validation_report_url",
         ) as mock_validation_report_url:
             # Arrange
             fg = feature_group.FeatureGroup(
@@ -75,9 +75,10 @@ class TestValidationReport(unittest.TestCase):
 
     def test_validation_report_get_all(self):
         with patch.object(
-                validation_report_api.ValidationReportApi, "get_all"
+            validation_report_api.ValidationReportApi, "get_all"
         ) as mock_validation_report_api, patch.object(engine, "get_type"), patch.object(
-            validation_report_engine.ValidationReportEngine, "_get_validation_report_url"
+            validation_report_engine.ValidationReportEngine,
+            "_get_validation_report_url",
         ) as mock_validation_report_url:
             # Arrange
             fg = feature_group.FeatureGroup(
@@ -99,7 +100,7 @@ class TestValidationReport(unittest.TestCase):
 
     def test_validation_report_delete(self):
         with patch.object(
-                validation_report_api.ValidationReportApi, "delete"
+            validation_report_api.ValidationReportApi, "delete"
         ) as mock_validation_report_api, patch.object(engine, "get_type"):
             # Arrange
             fg = feature_group.FeatureGroup(
@@ -121,7 +122,7 @@ class TestValidationReport(unittest.TestCase):
 
     def test_validation_report_get_url(self):
         with patch.object(client, "get_instance") as mock_client, patch.object(
-                util, "get_hostname_replaced_url"
+            util, "get_hostname_replaced_url"
         ) as mock_util, patch.object(engine, "get_type"):
             # Arrange
             mock_client.return_value._project_id = 10
