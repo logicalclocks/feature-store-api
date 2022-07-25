@@ -20,7 +20,9 @@ from functools import partial
 
 from python.hsfs import training_dataset, training_dataset_feature
 from python.hsfs.core import transformation_function_api, statistics_api
-from python.hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
+from python.hsfs.core.builtin_transformation_function import (
+    BuiltInTransformationFunction,
+)
 
 
 class TransformationFunctionEngine:
@@ -60,6 +62,7 @@ class TransformationFunctionEngine:
         )
         return transformation_fn_instances[0]
 
+    # todo is for loop necessary?
     def get_transformation_fns(self):
         transformation_fn_instances = (
             self._transformation_function_api.get_transformation_fn(
@@ -74,6 +77,7 @@ class TransformationFunctionEngine:
     def delete(self, transformation_function_instance):
         self._transformation_function_api.delete(transformation_function_instance)
 
+    # todo transformation_fn should be used instead of transformation_function
     def get_td_transformation_fn(self, training_dataset):
         attached_transformation_fns = (
             self._transformation_function_api.get_td_transformation_fn(training_dataset)
@@ -82,9 +86,11 @@ class TransformationFunctionEngine:
         for attached_transformation_fn in attached_transformation_fns:
             transformation_fn_dict[
                 attached_transformation_fn.name
-            ] = attached_transformation_fn.transformation_function
+            ] = attached_transformation_fn.transformation_fn
         return transformation_fn_dict
 
+    # todo why have 2 separate params that end up as "target_obj"?
+    # todo 'TrainingDataset' object has no attribute 'labels'
     def attach_transformation_fn(
         self, training_dataset_obj=None, feature_view_obj=None
     ):
