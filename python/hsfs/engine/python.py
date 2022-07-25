@@ -355,7 +355,7 @@ class Engine:
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format):
+    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
         arrow_schema = pa.Schema.from_pandas(dataframe)
         features = []
         for feat_name, feat_type in dataframe.dtypes.items():
