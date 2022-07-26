@@ -116,6 +116,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://docs.hopsworks.ai/feature-store-api/latest/3.0.0/generated/api/feature_view_api/</loc>
+         <lastmod>2022-07-26</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://docs.hopsworks.ai/feature-store-api/latest/3.0.0/generated/api/job_configuration/</loc>
          <lastmod>2022-07-26</lastmod>
          <changefreq>daily</changefreq>
