@@ -664,8 +664,8 @@ class FeatureView:
 
     def training_data(
         self,
-        start_time: Optional = None,
-        end_time: Optional = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
