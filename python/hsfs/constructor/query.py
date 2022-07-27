@@ -179,7 +179,11 @@ class Query:
             `Query`. The query object with the applied time travel condition.
         """
         wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
-        exclude_before_timestamp = util.get_timestamp_from_date_string(exclude_before) if exclude_before else None
+        exclude_before_timestamp = (
+            util.get_timestamp_from_date_string(exclude_before)
+            if exclude_before
+            else None
+        )
         for join in self._joins:
             join.query.left_feature_group_end_time = wallclock_timestamp
             if exclude_before_timestamp:
