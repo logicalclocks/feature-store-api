@@ -514,9 +514,7 @@ class Engine:
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
-            return self._apply_transformation_function(
-                training_dataset_obj, df
-            )
+            return self._apply_transformation_function(training_dataset_obj, df)
 
     def split_labels(self, df, labels):
         if labels:
@@ -527,7 +525,8 @@ class Engine:
             return df, None
 
     def _prepare_transform_split_df(
-        self, query_obj, training_dataset_obj, feature_view_obj, read_option):
+        self, query_obj, training_dataset_obj, feature_view_obj, read_option
+    ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
@@ -545,13 +544,13 @@ class Engine:
                     query_obj.read(read_options=read_option),
                     training_dataset_obj,
                     event_time,
-                    drop_event_time=True
+                    drop_event_time=True,
                 )
             else:
                 result_dfs = self._time_series_split(
                     query_obj.read(read_options=read_option),
                     training_dataset_obj,
-                    event_time
+                    event_time,
                 )
         else:
             result_dfs = self._random_split(

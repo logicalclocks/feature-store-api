@@ -422,8 +422,9 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            split_dataset = self._split_df(query_obj, training_dataset,
-                                           read_options=read_options)
+            split_dataset = self._split_df(
+                query_obj, training_dataset, read_options=read_options
+            )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
@@ -431,8 +432,7 @@ class Engine:
                 for key in split_dataset:
                     split_dataset[key] = split_dataset[key].coalesce(1)
             return self._write_training_dataset_splits(
-                training_dataset, split_dataset, write_options, save_mode,
-                to_df=to_df
+                training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
 
     def _split_df(self, query_obj, training_dataset, read_options={}):
@@ -441,24 +441,26 @@ class Engine:
             == TrainingDatasetSplit.TIME_SERIES_SPLIT
         ):
             event_time = query_obj._left_feature_group.event_time
-            if event_time not in [_feature.name for _feature in
-                                  query_obj.features]:
+            if event_time not in [_feature.name for _feature in query_obj.features]:
                 query_obj.append_feature(
                     query_obj._left_feature_group.__getattr__(event_time)
                 )
-                return self._time_series_split(training_dataset,
-                                               query_obj.read(
-                                                   read_options=read_options),
-                                               event_time,
-                                               drop_event_time=True)
+                return self._time_series_split(
+                    training_dataset,
+                    query_obj.read(read_options=read_options),
+                    event_time,
+                    drop_event_time=True,
+                )
             else:
-                return self._time_series_split(training_dataset,
-                                               query_obj.read(
-                                                   read_options=read_options),
-                                               event_time)
+                return self._time_series_split(
+                    training_dataset,
+                    query_obj.read(read_options=read_options),
+                    event_time,
+                )
         else:
-            return self._random_split(query_obj.read(read_options=read_options),
-                                      training_dataset)
+            return self._random_split(
+                query_obj.read(read_options=read_options), training_dataset
+            )
 
     def _random_split(self, dataset, training_dataset):
         splits = [(split.name, split.percentage) for split in training_dataset.splits]
