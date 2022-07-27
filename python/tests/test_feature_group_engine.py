@@ -45,8 +45,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[],
-            id=0,
+            partition_key=[]
         )
 
         # Act
@@ -76,8 +75,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[],
-            id=0,
+            partition_key=[]
         )
 
         vr = validation_report.ValidationReport(success=None,
