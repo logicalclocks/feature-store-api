@@ -169,8 +169,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
+
   /**
    * Reads changes that occurred between specified points in time.
+   *
+   * @deprecated
+   *   `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read()` instead.
    *
    * @param wallclockStartTime start date.
    * @param wallclockEndTime   end date.
@@ -179,12 +183,17 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @throws IOException
    * @throws ParseException
    */
-
+  @Deprecated
   public Object readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
+  /*
+   * @deprecated
+   * `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read(readOptions)` instead.
+   */
+  @Deprecated
   public Object readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
@@ -204,6 +213,24 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime);
+  }
+
+  /**
+   * Get Query object to retrieve all features of the group at a point in the past.
+   * This method selects all features in the feature group and returns a Query object
+   * at the specified point in time. This can then either be read into a Dataframe
+   * or used further to perform joins or construct a training dataset.
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @param excludeBefore Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @return Query. The query object with the applied time travel condition
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime, String excludeBefore) throws FeatureStoreException, ParseException {
+    return selectAll().asOf(wallclockTime, excludeBefore);
   }
 
   /*

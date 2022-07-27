@@ -178,13 +178,39 @@ public class Query {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return asOf(wallclockTime, null);
+  }
+
+  /**
+   * Perform time travel on the given Query.
+   * This method returns a new Query object at the specified point in time.
+   * This can then either be read into a Dataframe or used further to perform joins
+   * or construct a training dataset.
+   *
+   * @param wallclockTime point in time
+   * @param excludeBefore point in time
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime, String excludeBefore) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
+    Long excludeBeforeTimestamp = null;
+    if (excludeBefore != null) {
+      excludeBeforeTimestamp = utils.getTimeStampFromDateString(excludeBefore);
+    }
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
       queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
+      if (excludeBeforeTimestamp != null) {
+        queryWithTimeStamp.setLeftFeatureGroupStartTime(excludeBeforeTimestamp);
+      }
       join.setQuery(queryWithTimeStamp);
     }
     this.setLeftFeatureGroupEndTime(wallclockTimestamp);
+    if (excludeBeforeTimestamp != null) {
+      this.setLeftFeatureGroupStartTime(excludeBeforeTimestamp);
+    }
     return this;
   }
 
