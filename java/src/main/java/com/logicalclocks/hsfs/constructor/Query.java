@@ -188,28 +188,28 @@ public class Query {
    * or construct a training dataset.
    *
    * @param wallclockTime point in time
-   * @param excludeBefore point in time
+   * @param excludeUntil point in time
    * @return Query
    * @throws FeatureStoreException
    * @throws ParseException
    */
-  public Query asOf(String wallclockTime, String excludeBefore) throws FeatureStoreException, ParseException {
+  public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
-    Long excludeBeforeTimestamp = null;
-    if (excludeBefore != null) {
-      excludeBeforeTimestamp = utils.getTimeStampFromDateString(excludeBefore);
+    Long excludeUntilTimestamp = null;
+    if (excludeUntil != null) {
+      excludeUntilTimestamp = utils.getTimeStampFromDateString(excludeUntil);
     }
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
       queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
-      if (excludeBeforeTimestamp != null) {
-        queryWithTimeStamp.setLeftFeatureGroupStartTime(excludeBeforeTimestamp);
+      if (excludeUntilTimestamp != null) {
+        queryWithTimeStamp.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
       }
       join.setQuery(queryWithTimeStamp);
     }
     this.setLeftFeatureGroupEndTime(wallclockTimestamp);
-    if (excludeBeforeTimestamp != null) {
-      this.setLeftFeatureGroupStartTime(excludeBeforeTimestamp);
+    if (excludeUntilTimestamp != null) {
+      this.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
     }
     return this;
   }
