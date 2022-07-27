@@ -19,7 +19,7 @@
     
     
       
-        <title>Feature View - Hopsworks Documentation</title>
+        <title>FeatureView - Hopsworks Documentation</title>
       
     
     
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Feature View
+              FeatureView
             
           </span>
         </div>
@@ -443,6 +443,8 @@
 
 
 
+
+
 <!-- Main navigation item with nested items -->
 
   
@@ -479,7 +481,7 @@
 
   <!-- Recurse, if the first item has further nested items -->
   
-  <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link"> API </button>
+  <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link md-tabs__link--active"> API </button>
     <div id="myDropdown" class="dropdown-content-api">
       <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/dev">Hopsworks API</a>
       <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/dev">Feature Store API</a>
@@ -692,12 +694,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
       
       
       
@@ -724,17 +728,21 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1" type="checkbox" id="__nav_8_1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1" type="checkbox" id="__nav_8_1" checked>
       
       
       
+        
+          
         
           
         
@@ -805,6 +813,449 @@
       <a href="../feature_group_api/" class="md-nav__link">
         FeatureGroup
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          FeatureView
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        FeatureView
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#featureview" class="md-nav__link">
+    FeatureView
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation" class="md-nav__link">
+    Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create_feature_view" class="md-nav__link">
+    create_feature_view
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    Retrieval
+  </a>
+  
+    <nav class="md-nav" aria-label="Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_feature_view" class="md-nav__link">
+    get_feature_view
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_feature_views" class="md-nav__link">
+    get_feature_views
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#featurestore_id" class="md-nav__link">
+    featurestore_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    labels
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query" class="md-nav__link">
+    query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transformation_functions" class="md-nav__link">
+    transformation_functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    version
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_tag" class="md-nav__link">
+    add_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add_training_dataset_tag" class="md-nav__link">
+    add_training_dataset_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_train_test_split" class="md-nav__link">
+    create_train_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_train_validation_test_split" class="md-nav__link">
+    create_train_validation_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_training_data" class="md-nav__link">
+    create_training_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    delete
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_all_training_datasets" class="md-nav__link">
+    delete_all_training_datasets
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_tag" class="md-nav__link">
+    delete_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_training_dataset" class="md-nav__link">
+    delete_training_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_training_dataset_tag" class="md-nav__link">
+    delete_training_dataset_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from_response_json" class="md-nav__link">
+    from_response_json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_batch_data" class="md-nav__link">
+    get_batch_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_batch_query" class="md-nav__link">
+    get_batch_query
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_feature_vector" class="md-nav__link">
+    get_feature_vector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_feature_vectors" class="md-nav__link">
+    get_feature_vectors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tag" class="md-nav__link">
+    get_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_tags" class="md-nav__link">
+    get_tags
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_train_test_split" class="md-nav__link">
+    get_train_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_train_validation_test_split" class="md-nav__link">
+    get_train_validation_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_training_data" class="md-nav__link">
+    get_training_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_training_dataset_tag" class="md-nav__link">
+    get_training_dataset_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_training_dataset_tags" class="md-nav__link">
+    get_training_dataset_tags
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init_batch_scoring" class="md-nav__link">
+    init_batch_scoring
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init_serving" class="md-nav__link">
+    init_serving
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preview_feature_vector" class="md-nav__link">
+    preview_feature_vector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preview_feature_vectors" class="md-nav__link">
+    preview_feature_vectors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#purge_all_training_data" class="md-nav__link">
+    purge_all_training_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#purge_training_data" class="md-nav__link">
+    purge_training_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recreate_training_dataset" class="md-nav__link">
+    recreate_training_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#train_test_split" class="md-nav__link">
+    train_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#train_validation_test_split" class="md-nav__link">
+    train_validation_test_split
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training_data" class="md-nav__link">
+    training_data
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update" class="md-nav__link">
+    update
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2246,6 +2697,41 @@ recreate the training data.</p>
       </main>
       
         <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../feature_group_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: FeatureGroup" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              FeatureGroup
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../training_dataset_api/" class="md-footer__link md-footer__link--next" aria-label="Next: TrainingDataset" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              TrainingDataset
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
