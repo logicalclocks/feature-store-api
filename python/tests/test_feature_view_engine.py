@@ -31,6 +31,7 @@ class TestFeatureViewEngine:
         mock_fv_api = mocker.patch('hsfs.core.feature_view_api.FeatureViewApi')
         mock_fv_engine_get_url = mocker.patch('hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url', return_value=feature_view_url)
         mock_print = mocker.patch('builtins.print')
+
         fv_engine = feature_view_engine.FeatureViewEngine(feature_store_id=feature_store_id)
 
         fv = feature_view.FeatureView(name='fv_name',
