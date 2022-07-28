@@ -330,12 +330,12 @@ class Query:
 
     @property
     def left_feature_group_end_time(self):
-        return self._left_feature_group_start_time
+        return self._left_feature_group_end_time
 
     @left_feature_group_start_time.setter
     def left_feature_group_start_time(self, left_feature_group_start_time):
         self._left_feature_group_start_time = left_feature_group_start_time
 
     @left_feature_group_end_time.setter
-    def left_feature_group_end_time(self, left_feature_group_start_time):
-        self._left_feature_group_end_time = left_feature_group_start_time
+    def left_feature_group_end_time(self, left_feature_group_end_time):
+        self._left_feature_group_end_time = left_feature_group_end_time
