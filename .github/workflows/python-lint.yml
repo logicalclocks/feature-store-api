@@ -43,7 +43,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python/.[python,dev,docs]
+      - run: pip install -e python[python,dev,docs]
 
       - name: Display Python version
         run: python --version
