@@ -16,43 +16,67 @@
 
 import pytest
 
-from hsfs import engine, feature_group, util, feature_group_commit, client, validation_report, feature
+from hsfs import (
+    engine,
+    feature_group,
+    util,
+    feature_group_commit,
+    client,
+    validation_report,
+    feature,
+)
 from hsfs.client import exceptions
 from hsfs.core import (
     feature_group_api,
     feature_group_engine,
     great_expectation_engine,
     storage_connector_api,
-    kafka_api
+    kafka_api,
 )
 
-class TestFeatureGroupEngine:
 
+class TestFeatureGroupEngine:
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
-        fg_engine.save(feature_group=fg, feature_dataframe=None, write_options=None, validation_options=None)
+        fg_engine.save(
+            feature_group=fg,
+            feature_dataframe=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_ge_engine_validate.call_count == 1
         assert mock_fg_engine_get_kafka_config.call_count == 1
@@ -62,35 +86,53 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
-        vr = validation_report.ValidationReport(success=None,
-                                                results=[],
-                                                meta=None,
-                                                statistics=None,
-                                                ingestion_result="REJECTED")
+        vr = validation_report.ValidationReport(
+            success=None,
+            results=[],
+            meta=None,
+            statistics=None,
+            ingestion_result="REJECTED",
+        )
 
         mock_ge_engine_validate.return_value = vr
 
         # Act
-        fg_engine.save(feature_group=fg, feature_dataframe=None, write_options=None, validation_options=None)
+        fg_engine.save(
+            feature_group=fg,
+            feature_dataframe=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_ge_engine_validate.call_count == 1
         assert mock_fg_engine_get_kafka_config.call_count == 0
@@ -100,35 +142,52 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_api_delete_content = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete_content')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_api_delete_content = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete_content"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
-        fg_engine.insert(feature_group=fg,
-                         feature_dataframe=None,
-                         overwrite=None,
-                         operation=None,
-                         storage=None,
-                         write_options=None,
-                         validation_options=None)
+        fg_engine.insert(
+            feature_group=fg,
+            feature_dataframe=None,
+            overwrite=None,
+            operation=None,
+            storage=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_ge_engine_validate.call_count == 1
@@ -140,15 +199,27 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_api_delete_content = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete_content')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_api_delete_content = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete_content"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -160,16 +231,21 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine.insert(feature_group=fg,
-                         feature_dataframe=None,
-                         overwrite=None,
-                         operation=None,
-                         storage=None,
-                         write_options=None,
-                         validation_options=None)
+        fg_engine.insert(
+            feature_group=fg,
+            feature_dataframe=None,
+            overwrite=None,
+            operation=None,
+            storage=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 0
         assert mock_fg_engine_verify_schema_compatibility.call_count == 1
         assert mock_ge_engine_validate.call_count == 1
@@ -181,43 +257,62 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_api_delete_content = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete_content')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_api_delete_content = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete_content"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
-        vr = validation_report.ValidationReport(success=None,
-                                                results=[],
-                                                meta=None,
-                                                statistics=None,
-                                                ingestion_result="REJECTED")
+        vr = validation_report.ValidationReport(
+            success=None,
+            results=[],
+            meta=None,
+            statistics=None,
+            ingestion_result="REJECTED",
+        )
 
         mock_ge_engine_validate.return_value = vr
 
         # Act
-        fg_engine.insert(feature_group=fg,
-                         feature_dataframe=None,
-                         overwrite=None,
-                         operation=None,
-                         storage=None,
-                         write_options=None,
-                         validation_options=None)
+        fg_engine.insert(
+            feature_group=fg,
+            feature_dataframe=None,
+            overwrite=None,
+            operation=None,
+            storage=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_ge_engine_validate.call_count == 1
@@ -229,77 +324,113 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_api_delete_content = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete_content')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_api_delete_content = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete_content"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            fg_engine.insert(feature_group=fg,
-                             feature_dataframe=None,
-                             overwrite=None,
-                             operation=None,
-                             storage="online",
-                             write_options=None,
-                             validation_options=None)
+            fg_engine.insert(
+                feature_group=fg,
+                feature_dataframe=None,
+                overwrite=None,
+                operation=None,
+                storage="online",
+                write_options=None,
+                validation_options=None,
+            )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_ge_engine_validate.call_count == 1
         assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_fg_api_delete_content.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
-        assert str(e_info.value) == "Online storage is not enabled for this feature group."
+        assert (
+            str(e_info.value) == "Online storage is not enabled for this feature group."
+        )
 
     def test_insert_overwrite(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_ge_engine_validate = mocker.patch('hsfs.core.great_expectation_engine.GreatExpectationEngine.validate')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_api_delete_content = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete_content')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_ge_engine_validate = mocker.patch(
+            "hsfs.core.great_expectation_engine.GreatExpectationEngine.validate"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_api_delete_content = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete_content"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
-        fg_engine.insert(feature_group=fg,
-                         feature_dataframe=None,
-                         overwrite=True,
-                         operation=None,
-                         storage=None,
-                         write_options=None,
-                         validation_options=None)
+        fg_engine.insert(
+            feature_group=fg,
+            feature_dataframe=None,
+            overwrite=True,
+            operation=None,
+            storage=None,
+            write_options=None,
+            validation_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 1
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_ge_engine_validate.call_count == 1
@@ -311,17 +442,21 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_api_delete = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_api_delete = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -334,19 +469,27 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_util_get_timestamp_from_date_string = mocker.patch('hsfs.util.get_timestamp_from_date_string')
-        mock_fg_api_get_commit_details = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details')
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch('hsfs.util.get_hudi_datestr_from_timestamp')
+        mocker.patch("hsfs.engine.get_type")
+        mock_util_get_timestamp_from_date_string = mocker.patch(
+            "hsfs.util.get_timestamp_from_date_string"
+        )
+        mock_fg_api_get_commit_details = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details"
+        )
+        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+            "hsfs.util.get_hudi_datestr_from_timestamp"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -357,18 +500,29 @@ class TestFeatureGroupEngine:
         assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api_get_commit_details.call_count == 0
         assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
-        assert str(e_info.value) == "commit_details can only be used on time travel enabled feature groups"
+        assert (
+            str(e_info.value)
+            == "commit_details can only be used on time travel enabled feature groups"
+        )
 
     def test_commit_details_time_travel_format(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_util_get_timestamp_from_date_string = mocker.patch('hsfs.util.get_timestamp_from_date_string')
-        mock_fg_api_get_commit_details = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details')
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch('hsfs.util.get_hudi_datestr_from_timestamp')
+        mocker.patch("hsfs.engine.get_type")
+        mock_util_get_timestamp_from_date_string = mocker.patch(
+            "hsfs.util.get_timestamp_from_date_string"
+        )
+        mock_fg_api_get_commit_details = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details"
+        )
+        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+            "hsfs.util.get_hudi_datestr_from_timestamp"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -376,7 +530,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            time_travel_format="wrong"
+            time_travel_format="wrong",
         )
 
         # Act
@@ -387,18 +541,29 @@ class TestFeatureGroupEngine:
         assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api_get_commit_details.call_count == 0
         assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
-        assert str(e_info.value) == "commit_details can only be used on time travel enabled feature groups"
+        assert (
+            str(e_info.value)
+            == "commit_details can only be used on time travel enabled feature groups"
+        )
 
     def test_commit_details_time_travel_format_hudi(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_util_get_timestamp_from_date_string = mocker.patch('hsfs.util.get_timestamp_from_date_string')
-        mock_fg_api_get_commit_details = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details')
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch('hsfs.util.get_hudi_datestr_from_timestamp')
+        mocker.patch("hsfs.engine.get_type")
+        mock_util_get_timestamp_from_date_string = mocker.patch(
+            "hsfs.util.get_timestamp_from_date_string"
+        )
+        mock_fg_api_get_commit_details = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details"
+        )
+        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+            "hsfs.util.get_hudi_datestr_from_timestamp"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -406,7 +571,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            time_travel_format="HUDI"
+            time_travel_format="HUDI",
         )
 
         # Act
@@ -421,12 +586,20 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_util_get_timestamp_from_date_string = mocker.patch('hsfs.util.get_timestamp_from_date_string')
-        mock_fg_api_get_commit_details = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details')
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch('hsfs.util.get_hudi_datestr_from_timestamp')
+        mocker.patch("hsfs.engine.get_type")
+        mock_util_get_timestamp_from_date_string = mocker.patch(
+            "hsfs.util.get_timestamp_from_date_string"
+        )
+        mock_fg_api_get_commit_details = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.get_commit_details"
+        )
+        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+            "hsfs.util.get_hudi_datestr_from_timestamp"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -434,41 +607,51 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            time_travel_format="HUDI"
+            time_travel_format="HUDI",
         )
 
-        fg_commit = feature_group_commit.FeatureGroupCommit(commitid=1,
-                                                            rows_inserted=2,
-                                                            rows_updated=3,
-                                                            rows_deleted=4)
+        fg_commit = feature_group_commit.FeatureGroupCommit(
+            commitid=1, rows_inserted=2, rows_updated=3, rows_deleted=4
+        )
         mock_fg_api_get_commit_details.return_value = [fg_commit]
-        mock_util_get_hudi_datestr_from_timestamp.return_value = '123'
+        mock_util_get_hudi_datestr_from_timestamp.return_value = "123"
 
         # Act
-        result = fg_engine.commit_details(feature_group=fg, wallclock_time=None, limit=None)
+        result = fg_engine.commit_details(
+            feature_group=fg, wallclock_time=None, limit=None
+        )
 
         # Assert
         assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api_get_commit_details.call_count == 1
         assert mock_util_get_hudi_datestr_from_timestamp.call_count == 1
-        assert result == {1: {'committedOn': '123', 'rowsUpdated': 3, 'rowsInserted': 2, 'rowsDeleted': 4}}
+        assert result == {
+            1: {
+                "committedOn": "123",
+                "rowsUpdated": 3,
+                "rowsInserted": 2,
+                "rowsDeleted": 4,
+            }
+        }
 
     def test_commit_delete(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mocker.patch('hsfs.engine.get_instance')
-        mock_hudi_engine = mocker.patch('hsfs.core.hudi_engine.HudiEngine')
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+        mock_hudi_engine = mocker.patch("hsfs.core.hudi_engine.HudiEngine")
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -481,14 +664,24 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_sc_api_get_online_connector = mocker.patch('hsfs.core.storage_connector_api.StorageConnectorApi.get_online_connector')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
+        mocker.patch("hsfs.engine.get_type")
+        mock_sc_api_get_online_connector = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi.get_online_connector"
+        )
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
-        fg_engine.sql(query=None, feature_store_name=None, dataframe_type=None, online=None, read_options=None)
+        fg_engine.sql(
+            query=None,
+            feature_store_name=None,
+            dataframe_type=None,
+            online=None,
+            read_options=None,
+        )
 
         # Assert
         assert mock_sc_api_get_online_connector.call_count == 0
@@ -498,14 +691,24 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_sc_api_get_online_connector = mocker.patch('hsfs.core.storage_connector_api.StorageConnectorApi.get_online_connector')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
+        mocker.patch("hsfs.engine.get_type")
+        mock_sc_api_get_online_connector = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi.get_online_connector"
+        )
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
-        fg_engine.sql(query=None, feature_store_name=None, dataframe_type=None, online=True, read_options=None)
+        fg_engine.sql(
+            query=None,
+            feature_store_name=None,
+            dataframe_type=None,
+            online=True,
+            read_options=None,
+        )
 
         # Assert
         assert mock_sc_api_get_online_connector.call_count == 1
@@ -515,17 +718,21 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_api_update_metadata = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.update_metadata')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_api_update_metadata = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -538,11 +745,17 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_engine_new_feature_list = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.new_feature_list')
-        mock_fg_engine_update_features_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._update_features_metadata')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_engine_new_feature_list = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.new_feature_list"
+        )
+        mock_fg_engine_update_features_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._update_features_metadata"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_engine.update_features(feature_group=None, updated_features=None)
@@ -555,18 +768,22 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_update_features_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._update_features_metadata')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_update_features_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._update_features_metadata"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         fg.read = mocker.Mock()
@@ -575,25 +792,34 @@ class TestFeatureGroupEngine:
         fg_engine.append_features(feature_group=fg, new_features=[])
 
         # Assert
-        assert mock_engine_get_instance.return_value.get_empty_appended_dataframe.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.get_empty_appended_dataframe.call_count
+            == 1
+        )
         assert mock_fg_engine_update_features_metadata.call_count == 1
-        assert mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
+        )
 
     def test_update_description(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_api_update_metadata = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.update_metadata')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_api_update_metadata = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -606,17 +832,21 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_kafka_api_get_topic_subject = mocker.patch('hsfs.core.kafka_api.KafkaApi.get_topic_subject')
+        mocker.patch("hsfs.engine.get_type")
+        mock_kafka_api_get_topic_subject = mocker.patch(
+            "hsfs.core.kafka_api.KafkaApi.get_topic_subject"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -629,14 +859,20 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_client_get_instance = mocker.patch('hsfs.client.get_instance')
-        mock_kafka_api_get_broker_endpoints = mocker.patch('hsfs.core.kafka_api.KafkaApi.get_broker_endpoints')
+        mocker.patch("hsfs.engine.get_type")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_kafka_api_get_broker_endpoints = mocker.patch(
+            "hsfs.core.kafka_api.KafkaApi.get_broker_endpoints"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         mock_kafka_api_get_broker_endpoints.return_value = ["url1", "url2"]
-        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = "1"
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
         mock_client_get_instance.return_value._cert_key = "2"
         mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
         mock_client_get_instance.return_value._cert_key = "4"
@@ -645,152 +881,97 @@ class TestFeatureGroupEngine:
         results = fg_engine.get_kafka_config(online_write_options={})
 
         # Assert
-        assert results == {'kafka.bootstrap.servers': 'url1,url2',
-                          'kafka.security.protocol': 'SSL',
-                          'kafka.ssl.endpoint.identification.algorithm': '',
-                          'kafka.ssl.key.password': '4',
-                          'kafka.ssl.keystore.location': '3',
-                          'kafka.ssl.keystore.password': '4',
-                          'kafka.ssl.truststore.location': '1',
-                          'kafka.ssl.truststore.password': '4'}
+        assert results == {
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+        }
         assert mock_kafka_api_get_broker_endpoints.call_count == 1
 
     def test_insert_stream(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            fg_engine.insert_stream(feature_group=fg,
-                                    dataframe=None,
-                                    query_name=None,
-                                    output_mode=None,
-                                    await_termination=None,
-                                    timeout=None,
-                                    checkpoint_dir=None,
-                                    write_options=None)
+            fg_engine.insert_stream(
+                feature_group=fg,
+                dataframe=None,
+                query_name=None,
+                output_mode=None,
+                await_termination=None,
+                timeout=None,
+                checkpoint_dir=None,
+                write_options=None,
+            )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 0
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 0
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 0
         assert mock_fg_engine_get_kafka_config.call_count == 0
         assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 0
-        assert str(e_info.value) == "Online storage is not enabled for this feature group. It is currently only possible to stream to the online storage."
+        assert (
+            mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 0
+        )
+        assert (
+            str(e_info.value)
+            == "Online storage is not enabled for this feature group. It is currently only possible to stream to the online storage."
+        )
 
     def test_insert_stream_online_enabled(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_warnings_warn = mocker.patch('warnings.warn')
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            online_enabled=True
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-
-        # Act
-        fg_engine.insert_stream(feature_group=fg,
-                                dataframe=None,
-                                query_name=None,
-                                output_mode=None,
-                                await_termination=None,
-                                timeout=None,
-                                checkpoint_dir=None,
-                                write_options=None)
-
-        # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 2
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 1
-        assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
-        assert mock_warnings_warn.call_count == 1
-        assert mock_warnings_warn.call_args.args[0] == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
-
-    def test_insert_stream_stream(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            stream=True
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_warnings_warn = mocker.patch("warnings.warn")
 
-        # Act
-        fg_engine.insert_stream(feature_group=fg,
-                                dataframe=None,
-                                query_name=None,
-                                output_mode=None,
-                                await_termination=None,
-                                timeout=None,
-                                checkpoint_dir=None,
-                                write_options=None)
-
-        # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
-        assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
-
-    def test_insert_stream_online_enabled_id(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch('hsfs.engine.get_type')
-        mock_engine_get_instance = mocker.patch('hsfs.engine.get_instance')
-        mock_fg_engine_save_feature_group_metadata = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata')
-        mock_fg_engine_get_kafka_config = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_warnings_warn = mocker.patch('warnings.warn')
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -799,41 +980,171 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             online_enabled=True,
-            id=10
         )
 
         # Act
-        fg_engine.insert_stream(feature_group=fg,
-                                dataframe=None,
-                                query_name=None,
-                                output_mode=None,
-                                await_termination=None,
-                                timeout=None,
-                                checkpoint_dir=None,
-                                write_options=None)
+        fg_engine.insert_stream(
+            feature_group=fg,
+            dataframe=None,
+            query_name=None,
+            output_mode=None,
+            await_termination=None,
+            timeout=None,
+            checkpoint_dir=None,
+            write_options=None,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.parse_schema_feature_group.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
+        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
+        assert mock_fg_engine_get_kafka_config.call_count == 2
+        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 1
+        assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
+        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
+        assert (
+            mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
+        )
+        assert mock_warnings_warn.call_count == 1
+        assert (
+            mock_warnings_warn.call_args.args[0]
+            == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
+        )
+
+    def test_insert_stream_stream(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            stream=True,
+        )
+
+        # Act
+        fg_engine.insert_stream(
+            feature_group=fg,
+            dataframe=None,
+            query_name=None,
+            output_mode=None,
+            await_termination=None,
+            timeout=None,
+            checkpoint_dir=None,
+            write_options=None,
+        )
+
+        # Assert
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
+        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
+        assert mock_fg_engine_get_kafka_config.call_count == 1
+        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
+        assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
+        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
+        assert (
+            mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
+        )
+
+    def test_insert_stream_online_enabled_id(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+        )
+        mock_fg_engine_get_kafka_config = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
+        )
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_warnings_warn = mocker.patch("warnings.warn")
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            online_enabled=True,
+            id=10,
+        )
+
+        # Act
+        fg_engine.insert_stream(
+            feature_group=fg,
+            dataframe=None,
+            query_name=None,
+            output_mode=None,
+            await_termination=None,
+            timeout=None,
+            checkpoint_dir=None,
+            write_options=None,
+        )
+
+        # Assert
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
+            == 1
+        )
         assert mock_fg_engine_save_feature_group_metadata.call_count == 0
         assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
         assert mock_fg_engine_verify_schema_compatibility.call_count == 1
-        assert mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
+        )
         assert mock_warnings_warn.call_count == 1
-        assert mock_warnings_warn.call_args.args[0] == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
+        assert (
+            mock_warnings_warn.call_args.args[0]
+            == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
+        )
 
     def test_verify_schema_compatibility(self):
         # Arrange
         feature_store_id = 99
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg_features = []
         df_features = []
 
         # Act
-        fg_engine._verify_schema_compatibility(feature_group_features=fg_features, dataframe_features=df_features)
+        fg_engine._verify_schema_compatibility(
+            feature_group_features=fg_features, dataframe_features=df_features
+        )
 
         # Assert
         assert len(fg_features) == 0
@@ -843,7 +1154,9 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
         f1 = feature.Feature(name="f1", type="int")
@@ -853,20 +1166,27 @@ class TestFeatureGroupEngine:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            fg_engine._verify_schema_compatibility(feature_group_features=fg_features, dataframe_features=df_features)
+            fg_engine._verify_schema_compatibility(
+                feature_group_features=fg_features, dataframe_features=df_features
+            )
 
         # Assert
         assert len(fg_features) == 2
         assert len(df_features) == 0
-        assert str(e_info.value) == "Features are not compatible with Feature Group schema: \n" \
-                                    " - f (type: 'str') is missing from input dataframe.\n" \
-                                    " - f1 (type: 'int') is missing from input dataframe."
+        assert (
+            str(e_info.value)
+            == "Features are not compatible with Feature Group schema: \n"
+            " - f (type: 'str') is missing from input dataframe.\n"
+            " - f1 (type: 'int') is missing from input dataframe."
+        )
 
     def test_verify_schema_compatibility_dataframe_features(self):
         # Arrange
         feature_store_id = 99
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
         f1 = feature.Feature(name="f1", type="int")
@@ -876,20 +1196,29 @@ class TestFeatureGroupEngine:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            fg_engine._verify_schema_compatibility(feature_group_features=fg_features, dataframe_features=df_features)
+            fg_engine._verify_schema_compatibility(
+                feature_group_features=fg_features, dataframe_features=df_features
+            )
 
         # Assert
         assert len(fg_features) == 0
         assert len(df_features) == 2
-        assert str(e_info.value) == "Features are not compatible with Feature Group schema: \n" \
-                                    " - f (type: 'str') does not exist in feature group.\n" \
-                                    " - f1 (type: 'int') does not exist in feature group."
+        assert (
+            str(e_info.value)
+            == "Features are not compatible with Feature Group schema: \n"
+            " - f (type: 'str') does not exist in feature group.\n"
+            " - f1 (type: 'int') does not exist in feature group."
+        )
 
-    def test_verify_schema_compatibility_feature_group_features_dataframe_features(self):
+    def test_verify_schema_compatibility_feature_group_features_dataframe_features(
+        self,
+    ):
         # Arrange
         feature_store_id = 99
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
         f1 = feature.Feature(name="f1", type="int  ")
@@ -899,17 +1228,23 @@ class TestFeatureGroupEngine:
         df_features = [f, f1_2]
 
         # Act
-        fg_engine._verify_schema_compatibility(feature_group_features=fg_features, dataframe_features=df_features)
+        fg_engine._verify_schema_compatibility(
+            feature_group_features=fg_features, dataframe_features=df_features
+        )
 
         # Assert
         assert len(fg_features) == 2
         assert len(df_features) == 2
 
-    def test_verify_schema_compatibility_feature_group_features_dataframe_features_wrong_type(self):
+    def test_verify_schema_compatibility_feature_group_features_dataframe_features_wrong_type(
+        self,
+    ):
         # Arrange
         feature_store_id = 99
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
         f1 = feature.Feature(name="f1", type="int")
@@ -920,24 +1255,37 @@ class TestFeatureGroupEngine:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            fg_engine._verify_schema_compatibility(feature_group_features=fg_features, dataframe_features=df_features)
+            fg_engine._verify_schema_compatibility(
+                feature_group_features=fg_features, dataframe_features=df_features
+            )
 
         # Assert
         assert len(fg_features) == 2
         assert len(df_features) == 2
-        assert str(e_info.value) == "Features are not compatible with Feature Group schema: \n" \
-                                    " - f1 (expected type: 'int', derived from input: 'bool') has the wrong type."
+        assert (
+            str(e_info.value)
+            == "Features are not compatible with Feature Group schema: \n"
+            " - f1 (expected type: 'int', derived from input: 'bool') has the wrong type."
+        )
 
     def test_save_feature_group_metadata(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_fg_api_save = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.save')
-        mock_fg_engine_get_feature_group_url = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_fg_api_save = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        )
+        mock_fg_engine_get_feature_group_url = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
 
@@ -946,11 +1294,13 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(feature_group=fg, dataframe_features=[f], write_options=None)
+        fg_engine._save_feature_group_metadata(
+            feature_group=fg, dataframe_features=[f], write_options=None
+        )
 
         # Assert
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
@@ -964,12 +1314,20 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_fg_api_save = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.save')
-        mock_fg_engine_get_feature_group_url = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_fg_api_save = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        )
+        mock_fg_engine_get_feature_group_url = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
 
@@ -979,11 +1337,13 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            features=[f]
+            features=[f],
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(feature_group=fg, dataframe_features=None, write_options=None)
+        fg_engine._save_feature_group_metadata(
+            feature_group=fg, dataframe_features=None, write_options=None
+        )
 
         # Assert
         assert mock_fg_engine_verify_schema_compatibility.call_count == 1
@@ -996,15 +1356,24 @@ class TestFeatureGroupEngine:
     def test_save_feature_group_metadata_primary_partition_precombine(self, mocker):
         # Arrange
         feature_store_id = 99
-        feature_group_url = 'test_url'
+        feature_group_url = "test_url"
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_fg_api_save = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.save')
-        mock_fg_engine_get_feature_group_url = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url', return_value=feature_group_url)
-        mock_print = mocker.patch('builtins.print')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_fg_api_save = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        )
+        mock_fg_engine_get_feature_group_url = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value=feature_group_url,
+        )
+        mock_print = mocker.patch("builtins.print")
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
 
@@ -1015,11 +1384,13 @@ class TestFeatureGroupEngine:
             primary_key=["f"],
             partition_key=["f"],
             hudi_precombine_key="f",
-            time_travel_format="HUDI"
+            time_travel_format="HUDI",
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(feature_group=fg, dataframe_features=[f], write_options=None)
+        fg_engine._save_feature_group_metadata(
+            feature_group=fg, dataframe_features=[f], write_options=None
+        )
 
         # Assert
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
@@ -1029,19 +1400,31 @@ class TestFeatureGroupEngine:
         assert f.partition == True
         assert f.hudi_precombine_key == True
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[0] == 'Feature Group created successfully, explore it at \n{}'.format(feature_group_url)
+        assert mock_print.call_args.args[
+            0
+        ] == "Feature Group created successfully, explore it at \n{}".format(
+            feature_group_url
+        )
 
     def test_save_feature_group_metadata_write_options(self, mocker):
         # Arrange
         feature_store_id = 99
         write_options = "test"
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_fg_engine_verify_schema_compatibility = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility')
-        mock_fg_api_save = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.save')
-        mock_fg_engine_get_feature_group_url = mocker.patch('hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url')
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+        mock_fg_api_save = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        )
+        mock_fg_engine_get_feature_group_url = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f", type="str")
 
@@ -1051,11 +1434,13 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            stream=True
+            stream=True,
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(feature_group=fg, dataframe_features=[f], write_options=write_options)
+        fg_engine._save_feature_group_metadata(
+            feature_group=fg, dataframe_features=[f], write_options=write_options
+        )
 
         # Assert
         assert mock_fg_engine_verify_schema_compatibility.call_count == 0
@@ -1070,11 +1455,15 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
-        mock_client_get_instance = mocker.patch('hsfs.client.get_instance')
-        mock_util_get_hostname_replaced_url = mocker.patch('hsfs.util.get_hostname_replaced_url')
+        mocker.patch("hsfs.engine.get_type")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_util_get_hostname_replaced_url = mocker.patch(
+            "hsfs.util.get_hostname_replaced_url"
+        )
 
-        fg_engine = feature_group_engine.FeatureGroupEngine(feature_store_id=feature_store_id)
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -1082,7 +1471,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_client_get_instance.return_value._project_id = 50
@@ -1092,4 +1481,6 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1
-        assert mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+        assert (
+            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+        )

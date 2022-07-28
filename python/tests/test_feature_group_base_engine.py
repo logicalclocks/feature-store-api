@@ -14,24 +14,36 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, feature_group, util, feature_group_commit, client, validation_report, feature
+from hsfs import (
+    engine,
+    feature_group,
+    util,
+    feature_group_commit,
+    client,
+    validation_report,
+    feature,
+)
 from hsfs.core import (
     feature_group_api,
     feature_group_base_engine,
     great_expectation_engine,
     storage_connector_api,
-    kafka_api
+    kafka_api,
 )
 
-class TestFeatureGroupBaseEngine:
 
+class TestFeatureGroupBaseEngine:
     def test_delete(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api_delete = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.delete')
+        mock_fg_api_delete = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.delete"
+        )
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.delete(feature_group=None)
@@ -43,9 +55,11 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_add = mocker.patch('hsfs.core.tags_api.TagsApi.add')
+        mock_tags_api_add = mocker.patch("hsfs.core.tags_api.TagsApi.add")
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.add_tag(feature_group=None, name=None, value=None)
@@ -57,9 +71,11 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_delete = mocker.patch('hsfs.core.tags_api.TagsApi.delete')
+        mock_tags_api_delete = mocker.patch("hsfs.core.tags_api.TagsApi.delete")
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.delete_tag(feature_group=None, name=None)
@@ -71,9 +87,11 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_get = mocker.patch('hsfs.core.tags_api.TagsApi.get')
+        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.get_tag(feature_group=None, name=None)
@@ -85,9 +103,11 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_get = mocker.patch('hsfs.core.tags_api.TagsApi.get')
+        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.get_tags(feature_group=None)
@@ -99,9 +119,13 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api_update_metadata = mocker.patch('hsfs.core.feature_group_api.FeatureGroupApi.update_metadata')
+        mock_fg_api_update_metadata = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        )
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         # Act
         fg_base_engine.update_statistics_config(feature_group=None)
@@ -113,9 +137,11 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.engine.get_type')
+        mocker.patch("hsfs.engine.get_type")
 
-        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(feature_store_id=feature_store_id)
+        fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
+            feature_store_id=feature_store_id
+        )
 
         f = feature.Feature(name="f")
         f1 = feature.Feature(name="f1")
@@ -127,11 +153,13 @@ class TestFeatureGroupBaseEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            features=[f, f1]
+            features=[f, f1],
         )
 
         # Act
-        result = fg_base_engine.new_feature_list(feature_group=fg, updated_features=[f1, f2])
+        result = fg_base_engine.new_feature_list(
+            feature_group=fg, updated_features=[f1, f2]
+        )
 
         # Assert
         assert len(result) == 3
