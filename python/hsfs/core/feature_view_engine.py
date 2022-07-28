@@ -59,14 +59,12 @@ class FeatureViewEngine:
 
     def save(self, feature_view_obj):
         if feature_view_obj.labels:
-            feature_view_obj._features.append(
-                [
-                    training_dataset_feature.TrainingDatasetFeature(
-                        name=label_name, label=True
-                    )
-                    for label_name in feature_view_obj.labels
-                ]
-            )
+            feature_view_obj._features += [
+                training_dataset_feature.TrainingDatasetFeature(
+                    name=label_name, label=True
+                )
+                for label_name in feature_view_obj.labels
+            ]
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
