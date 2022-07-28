@@ -59,7 +59,7 @@ class FeatureViewEngine:
 
     def save(self, feature_view_obj):
         if feature_view_obj.labels:
-            feature_view_obj._features.append(
+            feature_view_obj._features += (
                 [
                     training_dataset_feature.TrainingDatasetFeature(
                         name=label_name, label=True
