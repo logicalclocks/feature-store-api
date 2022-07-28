@@ -778,18 +778,23 @@ class TestFeatureGroupEngine:
             feature_store_id=feature_store_id
         )
 
+        f = feature.Feature(name="f", type="str")
+        f1 = feature.Feature(name="f1", type="str")
+        f2 = feature.Feature(name="f2", type="str")
+
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
+            features=[f, f1]
         )
 
         fg.read = mocker.Mock()
 
         # Act
-        fg_engine.append_features(feature_group=fg, new_features=[])
+        fg_engine.append_features(feature_group=fg, new_features=[f1, f2])
 
         # Assert
         assert (
@@ -800,6 +805,9 @@ class TestFeatureGroupEngine:
         assert (
             mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
         )
+        assert (
+                len(mock_fg_engine_update_features_metadata.call_args.args[1]) == 4
+        )  # todo why are there duplicates?
 
     def test_update_description(self, mocker):
         # Arrange
