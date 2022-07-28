@@ -20,7 +20,7 @@ from hsfs.core import feature_view_engine
 
 class TestFeatureViewEngine:
     def test_save(self, mocker):
-        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
             "hsfs.transformation_function.TransformationFunction._extract_source_code"
         )
@@ -46,6 +46,7 @@ class TestFeatureViewEngine:
 
         target.save(fv)
 
+        assert mock_fv_api.return_value.post.call_count == 1
         assert len(fv._features) == 3
         assert fv._features[0].name == "label1" and fv._features[0].label
         assert fv._features[1].name == "label2" and fv._features[1].label
