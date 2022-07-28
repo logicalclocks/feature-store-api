@@ -1,10 +1,10 @@
-name: pre-commit
+name: python
 
 on: pull_request
 
 jobs:
   lint_stylecheck:
-    name: Python Lint and Stylecheck
+    name: Lint and Stylecheck
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +28,7 @@ jobs:
         run: end-of-file-fixer $(find python/hsfs -type f) || exit 1
 
   unit_tests:
-    name: Python Unit Testing
+    name: Unit Testing
     needs: lint_stylecheck
     runs-on: ubuntu-latest
     strategy:
@@ -43,7 +43,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e .[python,dev,docs]
+      - run: pip install -e python/.[python,dev,docs]
 
       - name: Display Python version
         run: python --version
