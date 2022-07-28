@@ -50,6 +50,7 @@ class TestExternalFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
+            id=10
         )
 
         mock_engine_get_instance.return_value.parse_schema_feature_group.return_value = [
@@ -93,7 +94,7 @@ class TestExternalFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=["f"],
-            partition_key=[],
+            partition_key=[]
         )
 
         mock_engine_get_instance.return_value.parse_schema_feature_group.return_value = [
@@ -139,6 +140,7 @@ class TestExternalFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             features=[f],
+            id=10
         )
 
         # Act
@@ -178,11 +180,11 @@ class TestExternalFeatureGroupEngine:
             arguments="",
         )
 
-        f = feature.Feature(name="f", type="str")
+        f = {"name": "f"}
         features = [f]
 
         external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=jdbc_connector, primary_key=[]
+            storage_connector=jdbc_connector, id=10
         )
 
         # Act
@@ -268,7 +270,8 @@ class TestExternalFeatureGroupEngine:
         )
 
         external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=None, primary_key=[]
+            storage_connector=None, primary_key=[],
+            id=10
         )
 
         # Act
