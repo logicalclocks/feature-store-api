@@ -53,7 +53,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.JUPYTER) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JUPYTER
 
     def test_td_save_job(self, mocker, reset):
         # Arrange
@@ -79,7 +79,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.JOB) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
 
     def test_td_save_databricks(self, mocker, reset):
         # Arrange
@@ -113,7 +113,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.DATABRICKS) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.DATABRICKS
 
     def test_fg_save_jupyter(self, mocker, reset):
         # Arrange
@@ -139,7 +139,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.JUPYTER) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JUPYTER
 
     def test_fg_save_job(self, mocker, reset):
         # Arrange
@@ -165,7 +165,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.JOB) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
 
     def test_fg_save_databricks(self, mocker, reset):
         # Arrange
@@ -198,4 +198,4 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert "code_type='{}'".format(code_engine.RunType.DATABRICKS) in str(mock_code_api_post.call_args)
+        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.DATABRICKS
