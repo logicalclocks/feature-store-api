@@ -18,20 +18,33 @@ import pytest
 import numpy
 import datetime
 
-from hsfs import engine, training_dataset, feature_group, training_dataset_feature, transformation_function, transformation_function_attached, feature_view
+from hsfs import (
+    engine,
+    training_dataset,
+    feature_group,
+    training_dataset_feature,
+    transformation_function,
+    transformation_function_attached,
+    feature_view,
+)
 from hsfs.core import transformation_function_engine, training_dataset_api
 
 
 class TestTransformationFunctionEngine:
-
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin")
-        mock_tf_api_register_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_api_register_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
             feature_store_id, builtin_source_code="", output_type="str", name="tf_name"
@@ -45,19 +58,25 @@ class TestTransformationFunctionEngine:
         assert mock_tf_engine_is_builtin.call_count == 1
         assert mock_tf_api_register_transformation_fn.call_count == 0
         assert (
-                str(e_info.value)
-                == "Transformation function name 'tf_name' with version 1 is reserved for built-in "
-                   "hsfs functions. Please use other name or version"
+            str(e_info.value)
+            == "Transformation function name 'tf_name' with version 1 is reserved for built-in "
+            "hsfs functions. Please use other name or version"
         )
 
     def test_save_is_builtin(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin")
-        mock_tf_api_register_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_api_register_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
             feature_store_id, builtin_source_code="", output_type="str", name="tf_name"
@@ -72,10 +91,7 @@ class TestTransformationFunctionEngine:
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 1
         assert mock_tf_api_register_transformation_fn.call_count == 0
-        assert (
-                str(e_info.value)
-                == "transformer must be callable"
-        )
+        assert str(e_info.value) == "transformer must be callable"
 
     def test_save_is_builtin_callable(self, mocker):
         # Arrange
@@ -84,10 +100,16 @@ class TestTransformationFunctionEngine:
         mocker.patch(
             "hsfs.transformation_function.TransformationFunction._extract_source_code"
         )
-        mock_tf_engine_is_builtin = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin")
-        mock_tf_api_register_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_api_register_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -112,9 +134,13 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn")
+        mock_tf_api_get_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
             feature_store_id, builtin_source_code="", output_type="str", name="tf_name"
@@ -137,9 +163,13 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn")
+        mock_tf_api_get_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
             feature_store_id, builtin_source_code="", output_type="str", name="tf_name"
@@ -162,9 +192,13 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_delete = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.delete")
+        mock_tf_api_delete = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.delete"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         tf_engine.delete(transformation_function_instance=None)
@@ -176,20 +210,22 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_td_transformation_fn = mocker.patch("hsfs.core.transformation_function_api.TransformationFunctionApi.get_td_transformation_fn")
+        mock_tf_api_get_td_transformation_fn = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_td_transformation_fn"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def plus_one(a):
             return a + 1
 
         tf_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name",
-            transformation_function=plus_one
+            name="tf_name", transformation_function=plus_one
         )
         tf1_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf1_name",
-            transformation_function=plus_one
+            name="tf1_name", transformation_function=plus_one
         )
 
         transformations_attached = [tf_attached, tf1_attached]
@@ -210,7 +246,9 @@ class TestTransformationFunctionEngine:
 
         mocker.patch("hsfs.client.get_instance")
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -234,12 +272,14 @@ class TestTransformationFunctionEngine:
             featurestore_id=feature_store_id,
             splits={},
             id=10,
-            transformation_functions=transformation_fn_dict
+            transformation_functions=transformation_fn_dict,
         )
 
         # Act
         with pytest.raises(AttributeError) as e_info:
-            tf_engine.attach_transformation_fn(training_dataset_obj=td, feature_view_obj=None)
+            tf_engine.attach_transformation_fn(
+                training_dataset_obj=td, feature_view_obj=None
+            )
 
         # Assert
         assert str(e_info.value) == "'TrainingDataset' object has no attribute 'labels'"
@@ -250,7 +290,9 @@ class TestTransformationFunctionEngine:
 
         mocker.patch("hsfs.client.get_instance")
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -272,11 +314,13 @@ class TestTransformationFunctionEngine:
             query="",
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
-            labels=[]
+            labels=[],
         )
 
         # Act
-        tf_engine.attach_transformation_fn(training_dataset_obj=None, feature_view_obj=fv)
+        tf_engine.attach_transformation_fn(
+            training_dataset_obj=None, feature_view_obj=fv
+        )
 
         # Assert
         assert len(fv._features) == 2
@@ -289,7 +333,9 @@ class TestTransformationFunctionEngine:
 
         mocker.patch("hsfs.client.get_instance")
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -311,24 +357,35 @@ class TestTransformationFunctionEngine:
             query="",
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
-            labels=["tf_name"]
+            labels=["tf_name"],
         )
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            tf_engine.attach_transformation_fn(training_dataset_obj=None, feature_view_obj=fv)
+            tf_engine.attach_transformation_fn(
+                training_dataset_obj=None, feature_view_obj=fv
+            )
 
         # Assert
-        assert str(e_info.value) == "Online transformations for training dataset labels are not supported."
+        assert (
+            str(e_info.value)
+            == "Online transformations for training dataset labels are not supported."
+        )
 
     def test_is_builtin(self):
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="tf_name", version=1
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="tf_name",
+            version=1,
         )
 
         # Act
@@ -341,10 +398,16 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="min_max_scaler", version=1
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="min_max_scaler",
+            version=1,
         )
 
         # Act
@@ -357,10 +420,16 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="min_max_scaler", version=2
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="min_max_scaler",
+            version=2,
         )
 
         # Act
@@ -373,10 +442,16 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="standard_scaler", version=1
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="standard_scaler",
+            version=1,
         )
 
         # Act
@@ -389,10 +464,16 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="robust_scaler", version=1
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="robust_scaler",
+            version=1,
         )
 
         # Act
@@ -405,10 +486,16 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         tf = transformation_function.TransformationFunction(
-            feature_store_id, builtin_source_code="", output_type="str", name="label_encoder", version=1
+            feature_store_id,
+            builtin_source_code="",
+            output_type="str",
+            name="label_encoder",
+            version=1,
         )
 
         # Act
@@ -421,7 +508,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def tf_name():
             print("Test")
@@ -432,7 +521,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            tf_engine.populate_builtin_fn_arguments(feature_name=None, transformation_function_instance=tf, stat_content=None)
+            tf_engine.populate_builtin_fn_arguments(
+                feature_name=None,
+                transformation_function_instance=tf,
+                stat_content=None,
+            )
 
         # Assert
         assert str(e_info.value) == "Not implemented"
@@ -441,9 +534,14 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_min_max_scaler_stats = mocker.patch("hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.min_max_scaler_stats", return_value=(1, 100))
+        mock_builtin_tf_fn_min_max_scaler_stats = mocker.patch(
+            "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.min_max_scaler_stats",
+            return_value=(1, 100),
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def min_max_scaler():
             print("Test")
@@ -453,7 +551,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        tf_engine.populate_builtin_fn_arguments(feature_name=None, transformation_function_instance=tf, stat_content=None)
+        tf_engine.populate_builtin_fn_arguments(
+            feature_name=None, transformation_function_instance=tf, stat_content=None
+        )
 
         # Assert
         assert mock_builtin_tf_fn_min_max_scaler_stats.call_count == 1
@@ -464,9 +564,14 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_standard_scaler_stats = mocker.patch("hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.standard_scaler_stats", return_value=(1, 100))
+        mock_builtin_tf_fn_standard_scaler_stats = mocker.patch(
+            "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.standard_scaler_stats",
+            return_value=(1, 100),
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def standard_scaler():
             print("Test")
@@ -476,7 +581,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        tf_engine.populate_builtin_fn_arguments(feature_name=None, transformation_function_instance=tf, stat_content=None)
+        tf_engine.populate_builtin_fn_arguments(
+            feature_name=None, transformation_function_instance=tf, stat_content=None
+        )
 
         # Assert
         assert mock_builtin_tf_fn_standard_scaler_stats.call_count == 1
@@ -487,9 +594,14 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_robust_scaler_stats = mocker.patch("hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.robust_scaler_stats", return_value={24: 1, 49: 2, 74: 3})
+        mock_builtin_tf_fn_robust_scaler_stats = mocker.patch(
+            "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.robust_scaler_stats",
+            return_value={24: 1, 49: 2, 74: 3},
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def robust_scaler():
             print("Test")
@@ -499,7 +611,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        tf_engine.populate_builtin_fn_arguments(feature_name=None, transformation_function_instance=tf, stat_content=None)
+        tf_engine.populate_builtin_fn_arguments(
+            feature_name=None, transformation_function_instance=tf, stat_content=None
+        )
 
         # Assert
         assert mock_builtin_tf_fn_robust_scaler_stats.call_count == 1
@@ -511,9 +625,14 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_encoder_stats = mocker.patch("hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.encoder_stats", return_value="test")
+        mock_builtin_tf_fn_encoder_stats = mocker.patch(
+            "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.encoder_stats",
+            return_value="test",
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def label_encoder():
             print("Test")
@@ -523,7 +642,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        tf_engine.populate_builtin_fn_arguments(feature_name=None, transformation_function_instance=tf, stat_content=None)
+        tf_engine.populate_builtin_fn_arguments(
+            feature_name=None, transformation_function_instance=tf, stat_content=None
+        )
 
         # Assert
         assert mock_builtin_tf_fn_encoder_stats.call_count == 1
@@ -533,21 +654,26 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin", return_value=False)
-        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin",
+            return_value=False,
+        )
+        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
 
         tf_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name",
-            transformation_function=testFunction
+            name="tf_name", transformation_function=testFunction
         )
         tf1_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf1_name",
-            transformation_function=testFunction
+            name="tf1_name", transformation_function=testFunction
         )
 
         transformation_fn_dict = dict()
@@ -556,7 +682,9 @@ class TestTransformationFunctionEngine:
         transformation_fn_dict["tf1_name"] = tf1_attached
 
         # Act
-        tf_engine.populate_builtin_attached_fns(attached_transformation_fns=transformation_fn_dict, stat_content=None)
+        tf_engine.populate_builtin_attached_fns(
+            attached_transformation_fns=transformation_fn_dict, stat_content=None
+        )
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 2
@@ -568,21 +696,25 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin")
-        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch("hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
 
         tf_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name",
-            transformation_function=testFunction
+            name="tf_name", transformation_function=testFunction
         )
         tf1_attached = transformation_function_attached.TransformationFunctionAttached(
-            name="tf1_name",
-            transformation_function=testFunction
+            name="tf1_name", transformation_function=testFunction
         )
 
         transformation_fn_dict = dict()
@@ -591,7 +723,9 @@ class TestTransformationFunctionEngine:
         transformation_fn_dict["tf1_name"] = tf1_attached
 
         # Act
-        tf_engine.populate_builtin_attached_fns(attached_transformation_fns=transformation_fn_dict, stat_content=None)
+        tf_engine.populate_builtin_attached_fns(
+            attached_transformation_fns=transformation_fn_dict, stat_content=None
+        )
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 2
@@ -603,7 +737,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(str)
@@ -615,7 +751,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("str")
@@ -627,7 +765,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("string")
@@ -639,7 +779,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(bytes)
@@ -651,7 +793,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int8)
@@ -663,7 +807,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("int8")
@@ -675,7 +821,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("byte")
@@ -687,7 +835,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int16)
@@ -699,7 +849,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("int16")
@@ -711,7 +863,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("short")
@@ -723,7 +877,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(int)
@@ -735,7 +891,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("int")
@@ -747,7 +905,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int)
@@ -759,7 +919,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int32)
@@ -771,7 +933,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int64)
@@ -783,7 +947,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("int64")
@@ -795,7 +961,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("long")
@@ -807,7 +975,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("bigint")
@@ -819,7 +989,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(float)
@@ -831,7 +1003,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("float")
@@ -843,7 +1017,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.float)
@@ -855,7 +1031,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.float64)
@@ -867,7 +1045,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("float64")
@@ -879,7 +1059,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("double")
@@ -891,7 +1073,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(datetime.datetime)
@@ -903,7 +1087,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.datetime64)
@@ -915,7 +1101,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(datetime.date)
@@ -927,7 +1115,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(bool)
@@ -939,7 +1129,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("boolean")
@@ -951,7 +1143,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type("bool")
@@ -963,7 +1157,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         result = tf_engine.infer_spark_type(numpy.bool)
@@ -975,7 +1171,9 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         # Act
         with pytest.raises(TypeError) as e_info:
@@ -988,10 +1186,14 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.client.get_instance')
-        mock_s_engine_compute_transformation_fn_statistics = mocker.patch('hsfs.core.statistics_engine.StatisticsEngine.compute_transformation_fn_statistics')
+        mocker.patch("hsfs.client.get_instance")
+        mock_s_engine_compute_transformation_fn_statistics = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine.compute_transformation_fn_statistics"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -999,15 +1201,17 @@ class TestTransformationFunctionEngine:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            id=10
+            id=10,
         )
 
         # Act
-        tf_engine.compute_transformation_fn_statistics(training_dataset_obj=td,
-                                                       builtin_tffn_features=None,
-                                                       label_encoder_features=None,
-                                                       feature_dataframe=None,
-                                                       feature_view_obj=None)
+        tf_engine.compute_transformation_fn_statistics(
+            training_dataset_obj=td,
+            builtin_tffn_features=None,
+            label_encoder_features=None,
+            feature_dataframe=None,
+            feature_view_obj=None,
+        )
 
         # Assert
         assert mock_s_engine_compute_transformation_fn_statistics.call_count == 1
@@ -1016,12 +1220,20 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.client.get_instance')
-        mock_tf_engine_is_builtin = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin')
-        mock_tf_engine_compute_transformation_fn_statistics = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.compute_transformation_fn_statistics')
-        mock_tf_engine_populate_builtin_attached_fns = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_attached_fns')
+        mocker.patch("hsfs.client.get_instance")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_engine_compute_transformation_fn_statistics = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.compute_transformation_fn_statistics"
+        )
+        mock_tf_engine_populate_builtin_attached_fns = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_attached_fns"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -1055,13 +1267,15 @@ class TestTransformationFunctionEngine:
             featurestore_id=feature_store_id,
             splits={},
             id=10,
-            transformation_functions=transformation_fn_dict
+            transformation_functions=transformation_fn_dict,
         )
 
         dataset = mocker.Mock()
 
         # Act
-        tf_engine.populate_builtin_transformation_functions(training_dataset=td, feature_view_obj=None, dataset=dataset)
+        tf_engine.populate_builtin_transformation_functions(
+            training_dataset=td, feature_view_obj=None, dataset=dataset
+        )
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 4
@@ -1073,12 +1287,20 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch('hsfs.client.get_instance')
-        mock_tf_engine_is_builtin = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin')
-        mock_tf_engine_compute_transformation_fn_statistics = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.compute_transformation_fn_statistics')
-        mock_tf_engine_populate_builtin_attached_fns = mocker.patch('hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_attached_fns')
+        mocker.patch("hsfs.client.get_instance")
+        mock_tf_engine_is_builtin = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
+        )
+        mock_tf_engine_compute_transformation_fn_statistics = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.compute_transformation_fn_statistics"
+        )
+        mock_tf_engine_populate_builtin_attached_fns = mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_attached_fns"
+        )
 
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(feature_store_id)
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
 
         def testFunction():
             print("Test")
@@ -1112,13 +1334,15 @@ class TestTransformationFunctionEngine:
             featurestore_id=feature_store_id,
             splits={"key": "value"},
             id=10,
-            transformation_functions=transformation_fn_dict
+            transformation_functions=transformation_fn_dict,
         )
 
         dataset = mocker.Mock()
 
         # Act
-        tf_engine.populate_builtin_transformation_functions(training_dataset=td, feature_view_obj=None, dataset=dataset)
+        tf_engine.populate_builtin_transformation_functions(
+            training_dataset=td, feature_view_obj=None, dataset=dataset
+        )
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 4

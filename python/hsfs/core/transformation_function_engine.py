@@ -67,7 +67,9 @@ class TransformationFunctionEngine:
             )
         )
         transformation_fns = []
-        for transformation_fn_instance in transformation_fn_instances:  # todo what is the point of this?
+        for (
+            transformation_fn_instance
+        ) in transformation_fn_instances:  # todo what is the point of this?
             transformation_fns.append(transformation_fn_instance)
         return transformation_fns
 

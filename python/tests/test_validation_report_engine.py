@@ -14,19 +14,29 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, training_dataset, feature_group, training_dataset_feature, transformation_function, validation_report
+from hsfs import (
+    engine,
+    training_dataset,
+    feature_group,
+    training_dataset_feature,
+    transformation_function,
+    validation_report,
+)
 from hsfs.core import validation_report_engine, training_dataset_api
 
 
 class TestValidationReportEngine:
-
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_create = mocker.patch("hsfs.core.validation_report_api.ValidationReportApi.create")
-        mock_vr_engine_get_validation_report_url = mocker.patch("hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url")
+        mock_vr_api_create = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi.create"
+        )
+        mock_vr_engine_get_validation_report_url = mocker.patch(
+            "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
+        )
         mock_print = mocker.patch("builtins.print")
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
@@ -37,7 +47,7 @@ class TestValidationReportEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
@@ -50,8 +60,8 @@ class TestValidationReportEngine:
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args.args[
-                   0
-               ] == "Validation Report saved successfully, explore a summary at {}".format(
+            0
+        ] == "Validation Report saved successfully, explore a summary at {}".format(
             validation_report_url
         )
 
@@ -60,8 +70,12 @@ class TestValidationReportEngine:
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_get_last = mocker.patch("hsfs.core.validation_report_api.ValidationReportApi.get_last")
-        mock_vr_engine_get_validation_report_url = mocker.patch("hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url")
+        mock_vr_api_get_last = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi.get_last"
+        )
+        mock_vr_engine_get_validation_report_url = mocker.patch(
+            "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
+        )
         mock_print = mocker.patch("builtins.print")
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
@@ -72,7 +86,7 @@ class TestValidationReportEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
@@ -85,9 +99,8 @@ class TestValidationReportEngine:
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args.args[
-                   0
-               ] == "Long reports can be truncated when fetching from Hopsworks.\n" \
-                    "        \nYou can download the full report at {}".format(
+            0
+        ] == "Long reports can be truncated when fetching from Hopsworks.\n" "        \nYou can download the full report at {}".format(
             validation_report_url
         )
 
@@ -96,8 +109,12 @@ class TestValidationReportEngine:
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_get_all = mocker.patch("hsfs.core.validation_report_api.ValidationReportApi.get_all")
-        mock_vr_engine_get_validation_report_url = mocker.patch("hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url")
+        mock_vr_api_get_all = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi.get_all"
+        )
+        mock_vr_engine_get_validation_report_url = mocker.patch(
+            "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
+        )
         mock_print = mocker.patch("builtins.print")
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
@@ -108,7 +125,7 @@ class TestValidationReportEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
@@ -121,9 +138,8 @@ class TestValidationReportEngine:
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args.args[
-                   0
-               ] == "Long reports can be truncated when fetching from Hopsworks.\n" \
-                    "        \nYou can download full reports at {}".format(
+            0
+        ] == "Long reports can be truncated when fetching from Hopsworks.\n" "        \nYou can download full reports at {}".format(
             validation_report_url
         )
 
@@ -131,7 +147,9 @@ class TestValidationReportEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_vr_api_delete = mocker.patch("hsfs.core.validation_report_api.ValidationReportApi.delete")
+        mock_vr_api_delete = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi.delete"
+        )
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
 
@@ -141,7 +159,7 @@ class TestValidationReportEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         vr = validation_report.ValidationReport(True, [], {}, {})
@@ -157,7 +175,9 @@ class TestValidationReportEngine:
         feature_store_id = 99
 
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_util_get_hostname_replaced_url = mocker.patch("hsfs.util.get_hostname_replaced_url")
+        mock_util_get_hostname_replaced_url = mocker.patch(
+            "hsfs.util.get_hostname_replaced_url"
+        )
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
 
@@ -167,7 +187,7 @@ class TestValidationReportEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_client_get_instance.return_value._project_id = 50
@@ -177,4 +197,6 @@ class TestValidationReportEngine:
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1
-        assert mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+        assert (
+            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+        )

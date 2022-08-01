@@ -21,8 +21,8 @@ import pytest
 from hsfs import engine, training_dataset, feature_group
 from hsfs.core import code_engine, code_api
 
-class TestCodeEngine:
 
+class TestCodeEngine:
     @pytest.fixture
     def reset(self):
         os.environ.pop("HOPSWORKS_KERNEL_ID", None)
@@ -53,7 +53,10 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JUPYTER
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"]
+            == code_engine.RunType.JUPYTER
+        )
 
     def test_td_save_job(self, mocker, reset):
         # Arrange
@@ -79,7 +82,9 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+        )
 
     def test_td_save_databricks(self, mocker, reset):
         # Arrange
@@ -113,7 +118,10 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.DATABRICKS
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"]
+            == code_engine.RunType.DATABRICKS
+        )
 
     def test_fg_save_jupyter(self, mocker, reset):
         # Arrange
@@ -139,7 +147,10 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JUPYTER
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"]
+            == code_engine.RunType.JUPYTER
+        )
 
     def test_fg_save_job(self, mocker, reset):
         # Arrange
@@ -165,7 +176,9 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+        )
 
     def test_fg_save_databricks(self, mocker, reset):
         # Arrange
@@ -198,4 +211,7 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.DATABRICKS
+        assert (
+            mock_code_api_post.call_args.kwargs["code_type"]
+            == code_engine.RunType.DATABRICKS
+        )

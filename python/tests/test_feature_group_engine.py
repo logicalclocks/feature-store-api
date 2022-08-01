@@ -62,7 +62,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -109,7 +109,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         vr = validation_report.ValidationReport(
@@ -171,7 +171,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -286,7 +286,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         vr = validation_report.ValidationReport(
@@ -353,7 +353,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -414,7 +414,7 @@ class TestFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[]
+            partition_key=[],
         )
 
         # Act
@@ -459,7 +459,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -493,7 +493,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -535,7 +535,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             time_travel_format="wrong",
-            id=10
+            id=10,
         )
 
         # Act
@@ -577,7 +577,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             time_travel_format="HUDI",
-            id=10
+            id=10,
         )
 
         # Act
@@ -614,7 +614,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             time_travel_format="HUDI",
-            id=10
+            id=10,
         )
 
         fg_commit = feature_group_commit.FeatureGroupCommit(
@@ -659,7 +659,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -741,7 +741,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -798,7 +798,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             features=[f, f1],
-            id=10
+            id=10,
         )
 
         fg.read = mocker.Mock()
@@ -816,7 +816,7 @@ class TestFeatureGroupEngine:
             mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
         )
         assert (
-                len(mock_fg_engine_update_features_metadata.call_args.args[1]) == 4
+            len(mock_fg_engine_update_features_metadata.call_args.args[1]) == 4
         )  # todo why are there duplicates?
 
     def test_update_description(self, mocker):
@@ -838,7 +838,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -866,7 +866,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -939,7 +939,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -1000,7 +1000,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            online_enabled=True
+            online_enabled=True,
         )
 
         # Act
@@ -1060,7 +1060,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            stream=True
+            stream=True,
         )
 
         # Act
@@ -1316,7 +1316,7 @@ class TestFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -1360,7 +1360,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             features=[f],
-            id=10
+            id=10,
         )
 
         # Act
@@ -1407,7 +1407,7 @@ class TestFeatureGroupEngine:
             primary_key=["f"],
             partition_key=["f"],
             hudi_precombine_key="f",
-            time_travel_format="HUDI"
+            time_travel_format="HUDI",
         )
 
         # Act
@@ -1458,7 +1458,7 @@ class TestFeatureGroupEngine:
             primary_key=[],
             partition_key=[],
             stream=True,
-            id=10
+            id=10,
         )
 
         # Act

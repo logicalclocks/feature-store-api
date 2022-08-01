@@ -34,8 +34,12 @@ class TestExpectationSuiteEngine:
         expectation_suite_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_create = mocker.patch("hsfs.core.expectation_suite_api.ExpectationSuiteApi.create")
-        mock_es_engine_get_expectation_suite_url = mocker.patch("hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url")
+        mock_es_api_create = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.create"
+        )
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
         mock_print = mocker.patch("builtins.print")
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
@@ -59,7 +63,9 @@ class TestExpectationSuiteEngine:
         assert mock_es_api_create.call_count == 1
         assert mock_es_engine_get_expectation_suite_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[0] == "Attached expectation suite to featuregroup, edit it at {}".format(
+        assert mock_print.call_args.args[
+            0
+        ] == "Attached expectation suite to featuregroup, edit it at {}".format(
             expectation_suite_url
         )
 
@@ -68,7 +74,9 @@ class TestExpectationSuiteEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_get = mocker.patch("hsfs.core.expectation_suite_api.ExpectationSuiteApi.get")
+        mock_es_api_get = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.get"
+        )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
             feature_store_id=feature_store_id
@@ -80,7 +88,7 @@ class TestExpectationSuiteEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -94,7 +102,9 @@ class TestExpectationSuiteEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_delete = mocker.patch("hsfs.core.expectation_suite_api.ExpectationSuiteApi.delete")
+        mock_es_api_delete = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.delete"
+        )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
             feature_store_id=feature_store_id
@@ -106,7 +116,7 @@ class TestExpectationSuiteEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         # Act
@@ -121,7 +131,9 @@ class TestExpectationSuiteEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_util_get_hostname_replaced_url = mocker.patch("hsfs.util.get_hostname_replaced_url")
+        mock_util_get_hostname_replaced_url = mocker.patch(
+            "hsfs.util.get_hostname_replaced_url"
+        )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
             feature_store_id=feature_store_id
@@ -133,7 +145,7 @@ class TestExpectationSuiteEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            id=10
+            id=10,
         )
 
         mock_client_get_instance.return_value._project_id = 50
@@ -145,6 +157,5 @@ class TestExpectationSuiteEngine:
         assert mock_client_get_instance.call_count == 1
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
-                mock_util_get_hostname_replaced_url.call_args.args[0]
-                == "/p/50/fs/99/fg/10"
+            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
         )

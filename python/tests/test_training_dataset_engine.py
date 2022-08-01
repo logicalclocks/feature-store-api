@@ -16,22 +16,30 @@
 
 import pytest
 
-from hsfs import engine, training_dataset, feature_group, training_dataset_feature, transformation_function
+from hsfs import (
+    engine,
+    training_dataset,
+    feature_group,
+    training_dataset_feature,
+    transformation_function,
+)
 from hsfs.core import training_dataset_engine, training_dataset_api
 from hsfs.constructor import query
 
 
 class TestTrainingDatasetEngine:
-
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
         mock_tf_engine_attach_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn")
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn"
+        )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api_post = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.post")
+        mock_td_api_post = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.post"
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -39,26 +47,40 @@ class TestTrainingDatasetEngine:
             data_format="CSV",
             featurestore_id=feature_store_id,
             splits={},
-            label=["f", "f_wrong"]
+            label=["f", "f_wrong"],
         )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        f = training_dataset_feature.TrainingDatasetFeature(name="f", type="str", label=False)
-        f1 = training_dataset_feature.TrainingDatasetFeature(name="f1", type="int", label=False)
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="f", type="str", label=False
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="f1", type="int", label=False
+        )
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
+            features
+        )
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
 
         # Assert
         assert mock_tf_engine_attach_transformation_fn.call_count == 0
-        assert mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count == 1
-        assert mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count == 1
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        )
         assert mock_td_api_post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -72,9 +94,12 @@ class TestTrainingDatasetEngine:
         mocker.patch("hsfs.engine.get_type")
 
         mock_tf_engine_attach_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn")
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn"
+        )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api_post = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.post")
+        mock_td_api_post = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.post"
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -82,22 +107,29 @@ class TestTrainingDatasetEngine:
             data_format="CSV",
             featurestore_id=feature_store_id,
             splits={},
-            label=["f", "f_wrong"]
+            label=["f", "f_wrong"],
         )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        q = query.Query(left_feature_group=None,
-                        left_features=None)
+        q = query.Query(left_feature_group=None, left_features=None)
 
         # Act
         td_engine.save(training_dataset=td, features=q, user_write_options=None)
 
         # Assert
         assert mock_tf_engine_attach_transformation_fn.call_count == 1
-        assert mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count == 0
-        assert mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count == 0
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
+            == 0
+        )
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
+            == 0
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        )
         assert mock_td_api_post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -112,9 +144,12 @@ class TestTrainingDatasetEngine:
             "hsfs.transformation_function.TransformationFunction._extract_source_code"
         )
         mock_tf_engine_attach_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn")
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn"
+        )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api_post = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.post")
+        mock_td_api_post = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.post"
+        )
 
         def plus_one(a):
             return a + 1
@@ -130,17 +165,23 @@ class TestTrainingDatasetEngine:
             featurestore_id=feature_store_id,
             splits={},
             label=["f", "f_wrong"],
-            transformation_functions=tf
+            transformation_functions=tf,
         )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        f = training_dataset_feature.TrainingDatasetFeature(name="f", type="str", label=False)
-        f1 = training_dataset_feature.TrainingDatasetFeature(name="f1", type="int", label=False)
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="f", type="str", label=False
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="f1", type="int", label=False
+        )
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
+            features
+        )
 
         # Act
         with pytest.raises(ValueError) as e_info:
@@ -148,14 +189,25 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_tf_engine_attach_transformation_fn.call_count == 0
-        assert mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count == 1
-        assert mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count == 1
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 0
+        assert (
+            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 0
+        )
         assert mock_td_api_post.call_count == 0
         assert len(td._features) == 2
         assert td._features[0].label is True
         assert td._features[1].label is False
-        assert str(e_info.value) == 'Transformation functions can only be applied to training datasets generated from Query object'
+        assert (
+            str(e_info.value)
+            == "Transformation functions can only be applied to training datasets generated from Query object"
+        )
 
     def test_save_splits(self, mocker):
         # Arrange
@@ -163,9 +215,12 @@ class TestTrainingDatasetEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mock_tf_engine_attach_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn")
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.attach_transformation_fn"
+        )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api_post = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.post")
+        mock_td_api_post = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.post"
+        )
         mock_warning = mocker.patch("warnings.warn")
 
         td = training_dataset.TrainingDataset(
@@ -174,34 +229,51 @@ class TestTrainingDatasetEngine:
             data_format="CSV",
             featurestore_id=feature_store_id,
             splits={"name": "value"},
-            label=["f", "f_wrong"]
+            label=["f", "f_wrong"],
         )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        f = training_dataset_feature.TrainingDatasetFeature(name="f", type="str", label=False)
-        f1 = training_dataset_feature.TrainingDatasetFeature(name="f1", type="int", label=False)
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="f", type="str", label=False
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="f1", type="int", label=False
+        )
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
+            features
+        )
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
 
         # Assert
         assert mock_tf_engine_attach_transformation_fn.call_count == 0
-        assert mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count == 1
-        assert mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count == 1
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
+            == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        )
         assert mock_td_api_post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
         assert td._features[1].label is False
         assert td.train_split == "train"
-        assert mock_warning.call_args.args[0] == "Training dataset splits were defined but no `train_split` (the name of the split that is going to be " \
-                                                 "used for training) was provided. Setting this property to `train`. The statistics of this " \
-                                                 "split will be used for transformation functions."
+        assert (
+            mock_warning.call_args.args[0]
+            == "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
+            "used for training) was provided. Setting this property to `train`. The statistics of this "
+            "split will be used for transformation functions."
+        )
 
     def test_insert(self, mocker):
         # Arrange
@@ -212,11 +284,23 @@ class TestTrainingDatasetEngine:
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        td_engine.insert(training_dataset=None, dataset=None, user_write_options=None, overwrite=False)
+        td_engine.insert(
+            training_dataset=None,
+            dataset=None,
+            user_write_options=None,
+            overwrite=False,
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_args.args[3] == td_engine.APPEND
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_args.args[
+                3
+            ]
+            == td_engine.APPEND
+        )
 
     def test_insert_overwrite(self, mocker):
         # Arrange
@@ -227,11 +311,20 @@ class TestTrainingDatasetEngine:
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        td_engine.insert(training_dataset=None, dataset=None, user_write_options=None, overwrite=True)
+        td_engine.insert(
+            training_dataset=None, dataset=None, user_write_options=None, overwrite=True
+        )
 
         # Assert
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        assert mock_engine_get_instance.return_value.write_training_dataset.call_args.args[3] == td_engine.OVERWRITE
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
+        )
+        assert (
+            mock_engine_get_instance.return_value.write_training_dataset.call_args.args[
+                3
+            ]
+            == td_engine.OVERWRITE
+        )
 
     def test_read(self, mocker):
         # Arrange
@@ -239,7 +332,9 @@ class TestTrainingDatasetEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_storage_connector_read = mocker.patch("hsfs.storage_connector.StorageConnector.read")
+        mock_storage_connector_read = mocker.patch(
+            "hsfs.storage_connector.StorageConnector.read"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -250,7 +345,7 @@ class TestTrainingDatasetEngine:
             featurestore_id=feature_store_id,
             location="td_location",
             splits={},
-            label=[]
+            label=[],
         )
 
         # Act
@@ -259,7 +354,9 @@ class TestTrainingDatasetEngine:
         # Assert
         assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
-        assert mock_storage_connector_read.call_args.kwargs["path"] == "td_location/test"
+        assert (
+            mock_storage_connector_read.call_args.kwargs["path"] == "td_location/test"
+        )
 
     def test_read_split(self, mocker):
         # Arrange
@@ -267,7 +364,9 @@ class TestTrainingDatasetEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_storage_connector_read = mocker.patch("hsfs.storage_connector.StorageConnector.read")
+        mock_storage_connector_read = mocker.patch(
+            "hsfs.storage_connector.StorageConnector.read"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -278,7 +377,7 @@ class TestTrainingDatasetEngine:
             featurestore_id=feature_store_id,
             location="td_location",
             splits={},
-            label=[]
+            label=[],
         )
 
         # Act
@@ -287,20 +386,26 @@ class TestTrainingDatasetEngine:
         # Assert
         assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
-        assert mock_storage_connector_read.call_args.kwargs["path"] == "td_location/split"
+        assert (
+            mock_storage_connector_read.call_args.kwargs["path"] == "td_location/split"
+        )
 
     def test_query(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_td_api_get_query = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.get_query")
+        mock_td_api_get_query = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.get_query"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         mock_td_api_get_query.return_value.pit_query = None
 
         # Act
-        result = td_engine.query(training_dataset=None, online=None, with_label=None, is_hive_query=None)
+        result = td_engine.query(
+            training_dataset=None, online=None, with_label=None, is_hive_query=None
+        )
 
         # Assert
         assert mock_td_api_get_query.call_count == 1
@@ -312,12 +417,16 @@ class TestTrainingDatasetEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_td_api_get_query = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.get_query")
+        mock_td_api_get_query = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.get_query"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        result = td_engine.query(training_dataset=None, online=None, with_label=None, is_hive_query=None)
+        result = td_engine.query(
+            training_dataset=None, online=None, with_label=None, is_hive_query=None
+        )
 
         # Assert
         assert mock_td_api_get_query.call_count == 1
@@ -329,12 +438,16 @@ class TestTrainingDatasetEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_td_api_get_query = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.get_query")
+        mock_td_api_get_query = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.get_query"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        result = td_engine.query(training_dataset=None, online=True, with_label=None, is_hive_query=None)
+        result = td_engine.query(
+            training_dataset=None, online=True, with_label=None, is_hive_query=None
+        )
 
         # Assert
         assert mock_td_api_get_query.call_count == 1
@@ -351,9 +464,7 @@ class TestTrainingDatasetEngine:
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        td_engine.add_tag(
-            training_dataset=None, name=None, value=None
-        )
+        td_engine.add_tag(training_dataset=None, name=None, value=None)
 
         # Assert
         assert mock_tags_api_add.call_count == 1
@@ -367,9 +478,7 @@ class TestTrainingDatasetEngine:
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        td_engine.delete_tag(
-            training_dataset=None, name=None
-        )
+        td_engine.delete_tag(training_dataset=None, name=None)
 
         # Assert
         assert mock_tags_api_delete.call_count == 1
@@ -383,9 +492,7 @@ class TestTrainingDatasetEngine:
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
         # Act
-        td_engine.get_tag(
-            training_dataset=None, name=None
-        )
+        td_engine.get_tag(training_dataset=None, name=None)
 
         # Assert
         assert mock_tags_api_get.call_count == 1
@@ -408,7 +515,9 @@ class TestTrainingDatasetEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_td_api_update_metadata = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi.update_metadata")
+        mock_td_api_update_metadata = mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.update_metadata"
+        )
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
