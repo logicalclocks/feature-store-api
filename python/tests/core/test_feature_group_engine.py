@@ -1322,8 +1322,8 @@ class TestFeatureGroupEngine:
         assert f.hudi_precombine_key == False
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
-                   0
-               ] == "Feature Group created successfully, explore it at \n{}".format(
+            0
+        ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
         )
 
@@ -1375,8 +1375,8 @@ class TestFeatureGroupEngine:
         assert f.hudi_precombine_key == False
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
-                   0
-               ] == "Feature Group created successfully, explore it at \n{}".format(
+            0
+        ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
         )
 
@@ -1483,8 +1483,8 @@ class TestFeatureGroupEngine:
         assert fg._options == write_options
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
-                   0
-               ] == "Feature Group created successfully, explore it at \n{}".format(
+            0
+        ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
         )
 

@@ -208,7 +208,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         self._update_features_metadata(
-            feature_group, feature_group.features + new_features  # todo allows for duplicates
+            feature_group,
+            feature_group.features + new_features,  # todo allows for duplicates
         )
 
         # write empty dataframe to update parquet schema
