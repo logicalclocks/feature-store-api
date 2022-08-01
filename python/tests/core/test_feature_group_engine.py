@@ -1278,6 +1278,7 @@ class TestFeatureGroupEngine:
     def test_save_feature_group_metadata(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
         mock_fg_engine_verify_schema_compatibility = mocker.patch(
@@ -1287,8 +1288,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_api.FeatureGroupApi.save"
         )
         mock_fg_engine_get_feature_group_url = mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value=feature_group_url,
         )
+        mock_print = mocker.patch("builtins.print")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -1317,10 +1320,17 @@ class TestFeatureGroupEngine:
         assert f.primary == False
         assert f.partition == False
         assert f.hudi_precombine_key == False
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+                   0
+               ] == "Feature Group created successfully, explore it at \n{}".format(
+            feature_group_url
+        )
 
     def test_save_feature_group_metadata_features(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
         mock_fg_engine_verify_schema_compatibility = mocker.patch(
@@ -1330,8 +1340,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_api.FeatureGroupApi.save"
         )
         mock_fg_engine_get_feature_group_url = mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value=feature_group_url,
         )
+        mock_print = mocker.patch("builtins.print")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -1361,6 +1373,12 @@ class TestFeatureGroupEngine:
         assert f.primary == False
         assert f.partition == False
         assert f.hudi_precombine_key == False
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+                   0
+               ] == "Feature Group created successfully, explore it at \n{}".format(
+            feature_group_url
+        )
 
     def test_save_feature_group_metadata_primary_partition_precombine(self, mocker):
         # Arrange
@@ -1418,6 +1436,7 @@ class TestFeatureGroupEngine:
     def test_save_feature_group_metadata_write_options(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_url = "test_url"
         write_options = "test"
 
         mocker.patch("hsfs.engine.get_type")
@@ -1428,8 +1447,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_api.FeatureGroupApi.save"
         )
         mock_fg_engine_get_feature_group_url = mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value=feature_group_url,
         )
+        mock_print = mocker.patch("builtins.print")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -1460,6 +1481,12 @@ class TestFeatureGroupEngine:
         assert f.partition == False
         assert f.hudi_precombine_key == False
         assert fg._options == write_options
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+                   0
+               ] == "Feature Group created successfully, explore it at \n{}".format(
+            feature_group_url
+        )
 
     def test_get_feature_group_url(self, mocker):
         # Arrange

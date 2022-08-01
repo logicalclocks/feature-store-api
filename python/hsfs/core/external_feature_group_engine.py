@@ -58,7 +58,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
     def append_features(self, feature_group, new_features):
         """Appends features to a feature group."""
         self._update_features_metadata(
-            feature_group, feature_group.features + new_features
+            feature_group, feature_group.features + new_features  # todo allows for duplicates
         )
 
     def update_description(self, feature_group, description):
