@@ -36,7 +36,7 @@ class TestCodeEngine:
         os.environ.setdefault("HOPSWORKS_KERNEL_ID", "1")
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -52,9 +52,9 @@ class TestCodeEngine:
         c_engine.save_code(td)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
+        assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
+            mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
         )
 
     def test_td_save_job(self, mocker, reset):
@@ -64,7 +64,7 @@ class TestCodeEngine:
         os.environ.setdefault("HOPSWORKS_JOB_NAME", "1")
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -80,8 +80,8 @@ class TestCodeEngine:
         c_engine.save_code(td)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JOB
+        assert mock_code_api.return_value.post.call_count == 1
+        assert mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JOB
 
     def test_td_save_databricks(self, mocker, reset):
         # Arrange
@@ -98,7 +98,7 @@ class TestCodeEngine:
         )
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -114,9 +114,9 @@ class TestCodeEngine:
         c_engine.save_code(td)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
+        assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api_post.call_args[1]["code_type"]
+            mock_code_api.return_value.post.call_args[1]["code_type"]
             == code_engine.RunType.DATABRICKS
         )
 
@@ -127,7 +127,7 @@ class TestCodeEngine:
         os.environ.setdefault("HOPSWORKS_KERNEL_ID", "1")
 
         mocker.patch("hsfs.engine.get_type")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -143,9 +143,9 @@ class TestCodeEngine:
         c_engine.save_code(fg)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
+        assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
+            mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
         )
 
     def test_fg_save_job(self, mocker, reset):
@@ -155,7 +155,7 @@ class TestCodeEngine:
         os.environ.setdefault("HOPSWORKS_JOB_NAME", "1")
 
         mocker.patch("hsfs.engine.get_type")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -171,8 +171,8 @@ class TestCodeEngine:
         c_engine.save_code(fg)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
-        assert mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JOB
+        assert mock_code_api.return_value.post.call_count == 1
+        assert mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JOB
 
     def test_fg_save_databricks(self, mocker, reset):
         # Arrange
@@ -188,7 +188,7 @@ class TestCodeEngine:
             return_value=json
         )
         mocker.patch("hsfs.engine.get_type")
-        mock_code_api_post = mocker.patch("hsfs.core.code_api.CodeApi.post")
+        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -204,8 +204,8 @@ class TestCodeEngine:
         c_engine.save_code(fg)
 
         # Assert
-        assert mock_code_api_post.call_count == 1
+        assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api_post.call_args[1]["code_type"]
+            mock_code_api.return_value.post.call_args[1]["code_type"]
             == code_engine.RunType.DATABRICKS
         )

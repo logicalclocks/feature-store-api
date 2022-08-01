@@ -23,8 +23,8 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api_delete = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.delete"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
@@ -35,13 +35,13 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.delete(feature_group=None)
 
         # Assert
-        assert mock_fg_api_delete.call_count == 1
+        assert mock_fg_api.return_value.delete.call_count == 1
 
     def test_add_tag(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_add = mocker.patch("hsfs.core.tags_api.TagsApi.add")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id
@@ -51,13 +51,13 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.add_tag(feature_group=None, name=None, value=None)
 
         # Assert
-        assert mock_tags_api_add.call_count == 1
+        assert mock_tags_api.return_value.add.call_count == 1
 
     def test_delete_tag(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_delete = mocker.patch("hsfs.core.tags_api.TagsApi.delete")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id
@@ -67,13 +67,13 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.delete_tag(feature_group=None, name=None)
 
         # Assert
-        assert mock_tags_api_delete.call_count == 1
+        assert mock_tags_api.return_value.delete.call_count == 1
 
     def test_get_tag(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id
@@ -83,13 +83,13 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.get_tag(feature_group=None, name=None)
 
         # Assert
-        assert mock_tags_api_get.call_count == 1
+        assert mock_tags_api.return_value.get.call_count == 1
 
     def test_get_tags(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id
@@ -99,14 +99,14 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.get_tags(feature_group=None)
 
         # Assert
-        assert mock_tags_api_get.call_count == 1
+        assert mock_tags_api.return_value.get.call_count == 1
 
     def test_update_statistics_config(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api_update_metadata = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
@@ -117,7 +117,7 @@ class TestFeatureGroupBaseEngine:
         fg_base_engine.update_statistics_config(feature_group=None)
 
         # Assert
-        assert mock_fg_api_update_metadata.call_count == 1
+        assert mock_fg_api.return_value.update_metadata.call_count == 1
 
     def test_new_feature_list(self, mocker):
         # Arrange

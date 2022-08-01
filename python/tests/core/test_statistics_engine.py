@@ -765,8 +765,8 @@ class TestStatisticsEngine:
         mock_util_get_timestamp_from_date_string = mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
-        mock_statistics_api_get = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi.get"
+        mock_statistics_api = mocker.patch(
+            "hsfs.core.statistics_api.StatisticsApi"
         )
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
@@ -781,15 +781,15 @@ class TestStatisticsEngine:
 
         # Assert
         assert mock_util_get_timestamp_from_date_string.call_count == 1
-        assert mock_statistics_api_get.call_count == 1
+        assert mock_statistics_api.return_value.get.call_count == 1
 
     def test_save_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_statistics_api_post = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi.post"
+        mock_statistics_api = mocker.patch(
+            "hsfs.core.statistics_api.StatisticsApi"
         )
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
@@ -810,16 +810,16 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_statistics_api_post.call_count == 1
-        assert mock_statistics_api_post.call_args[0][0] == td
+        assert mock_statistics_api.return_value.post.call_count == 1
+        assert mock_statistics_api.return_value.post.call_args[0][0] == td
 
     def test_save_statistics_fv(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_statistics_api_post = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi.post"
+        mock_statistics_api = mocker.patch(
+            "hsfs.core.statistics_api.StatisticsApi"
         )
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
@@ -848,8 +848,8 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_statistics_api_post.call_count == 1
-        assert mock_statistics_api_post.call_args[0][0] == fv
+        assert mock_statistics_api.return_value.post.call_count == 1
+        assert mock_statistics_api.return_value.post.call_args[0][0] == fv
 
     def test_profile_unique_values(self, mocker):
         # Arrange

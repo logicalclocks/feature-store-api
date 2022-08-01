@@ -27,8 +27,8 @@ class TestHudiEngine:
         mock_hudi_engine_write_hudi_dataset = mocker.patch(
             "hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset"
         )
-        mock_fg_api_commit = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.commit"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         h_engine = hudi_engine.HudiEngine(
@@ -50,8 +50,8 @@ class TestHudiEngine:
 
         # Assert
         assert mock_hudi_engine_write_hudi_dataset.call_count == 1
-        assert mock_fg_api_commit.call_count == 1
-        assert mock_fg_api_commit.call_args[0][1].validation_id == 10
+        assert mock_fg_api.return_value.commit.call_count == 1
+        assert mock_fg_api.return_value.commit.call_args[0][1].validation_id == 10
 
     def test_delete_record(self, mocker):
         # Arrange
@@ -60,8 +60,8 @@ class TestHudiEngine:
         mock_hudi_engine_write_hudi_dataset = mocker.patch(
             "hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset"
         )
-        mock_fg_api_commit = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.commit"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         h_engine = hudi_engine.HudiEngine(
@@ -77,7 +77,7 @@ class TestHudiEngine:
 
         # Assert
         assert mock_hudi_engine_write_hudi_dataset.call_count == 1
-        assert mock_fg_api_commit.call_count == 1
+        assert mock_fg_api.return_value.commit.call_count == 1
         assert (
             "hoodie.datasource.write.payload.class"
             in mock_hudi_engine_write_hudi_dataset.call_args[0][3]
@@ -443,9 +443,7 @@ class TestHudiEngine:
         mock_client_get_instance.return_value._cert_key = "4"
 
         # Act
-        result = (
-            h_engine._get_conn_str()
-        )  # todo this method assumes that _connstr ends with ";", but is it a fair assumption (since the generated results doesnt end with ";")?
+        result = h_engine._get_conn_str()
 
         # Assert
         assert (

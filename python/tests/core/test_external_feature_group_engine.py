@@ -25,8 +25,8 @@ class TestExternalFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_api_save = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
@@ -60,9 +60,9 @@ class TestExternalFeatureGroupEngine:
             mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
             == 1
         )
-        assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args[0][0].features) == 1
-        assert not mock_fg_api_save.call_args[0][0].features[0].primary
+        assert mock_fg_api.return_value.save.call_count == 1
+        assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
+        assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
 
     def test_save_primary_key(self, mocker):
         # Arrange
@@ -70,8 +70,8 @@ class TestExternalFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_api_save = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
@@ -104,9 +104,9 @@ class TestExternalFeatureGroupEngine:
             mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
             == 1
         )
-        assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args[0][0].features) == 1
-        assert mock_fg_api_save.call_args[0][0].features[0].primary
+        assert mock_fg_api.return_value.save.call_count == 1
+        assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
+        assert mock_fg_api.return_value.save.call_args[0][0].features[0].primary
 
     def test_save_features(self, mocker):
         # Arrange
@@ -114,8 +114,8 @@ class TestExternalFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_api_save = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.save"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
@@ -146,17 +146,17 @@ class TestExternalFeatureGroupEngine:
             mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
             == 0
         )
-        assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args[0][0].features) == 1
-        assert not mock_fg_api_save.call_args[0][0].features[0].primary
+        assert mock_fg_api.return_value.save.call_count == 1
+        assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
+        assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
 
     def test_update_features_metadata(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_api_update_metadata = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
@@ -184,13 +184,13 @@ class TestExternalFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_api_update_metadata.call_count == 1
+        assert mock_fg_api.return_value.update_metadata.call_count == 1
         assert (
-            mock_fg_api_update_metadata.call_args[0][1].storage_connector
+            mock_fg_api.return_value.update_metadata.call_args[0][1].storage_connector
             == external_fg.storage_connector
         )
-        assert mock_fg_api_update_metadata.call_args[0][1].id == external_fg.id
-        assert mock_fg_api_update_metadata.call_args[0][1].features == features
+        assert mock_fg_api.return_value.update_metadata.call_args[0][1].id == external_fg.id
+        assert mock_fg_api.return_value.update_metadata.call_args[0][1].features == features
 
     def test_update_features(self, mocker):
         # Arrange
@@ -252,8 +252,8 @@ class TestExternalFeatureGroupEngine:
         description = "temp_description"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_api_update_metadata = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.update_metadata"
+        mock_fg_api = mocker.patch(
+            "hsfs.core.feature_group_api.FeatureGroupApi"
         )
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
@@ -270,5 +270,5 @@ class TestExternalFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_api_update_metadata.call_count == 1
-        assert mock_fg_api_update_metadata.call_args[0][1].description == description
+        assert mock_fg_api.return_value.update_metadata.call_count == 1
+        assert mock_fg_api.return_value.update_metadata.call_args[0][1].description == description

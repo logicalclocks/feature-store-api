@@ -150,7 +150,7 @@ class TestFeatureViewEngine:
         )
 
         # Act
-        result = fv_engine.delete(name="test")
+        fv_engine.delete(name="test")
 
         # Assert
         assert mock_fv_api.return_value.delete_by_name_version.call_count == 0
@@ -205,8 +205,8 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_qc_api_construct_query = mocker.patch(
-            "hsfs.core.query_constructor_api.QueryConstructorApi.construct_query"
+        mock_qc_api = mocker.patch(
+            "hsfs.core.query_constructor_api.QueryConstructorApi"
         )
         mocker.patch("hsfs.engine.get_type")
 
@@ -227,7 +227,7 @@ class TestFeatureViewEngine:
             hudi_cached_feature_groups=None,
             pit_query=None,
         )
-        mock_qc_api_construct_query.return_value = query
+        mock_qc_api.return_value.construct_query.return_value = query
 
         # Act
         result = fv_engine.get_batch_query_string(
@@ -237,15 +237,15 @@ class TestFeatureViewEngine:
         # Assert
         assert "query" == result
         assert mock_fv_api.return_value.get_batch_query.call_count == 1
-        assert mock_qc_api_construct_query.call_count == 1
+        assert mock_qc_api.return_value.construct_query.call_count == 1
 
     def test_get_batch_query_string_pit_query(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_qc_api_construct_query = mocker.patch(
-            "hsfs.core.query_constructor_api.QueryConstructorApi.construct_query"
+        mock_qc_api = mocker.patch(
+            "hsfs.core.query_constructor_api.QueryConstructorApi"
         )
         mocker.patch("hsfs.engine.get_type")
 
@@ -267,7 +267,7 @@ class TestFeatureViewEngine:
             pit_query="pit_query",
         )
 
-        mock_qc_api_construct_query.return_value = query
+        mock_qc_api.return_value.construct_query.return_value = query
 
         # Act
         result = fv_engine.get_batch_query_string(
@@ -277,7 +277,7 @@ class TestFeatureViewEngine:
         # Assert
         assert "pit_query" == result
         assert mock_fv_api.return_value.get_batch_query.call_count == 1
-        assert mock_qc_api_construct_query.call_count == 1
+        assert mock_qc_api.return_value.construct_query.call_count == 1
 
     def test_get_attached_transformation_fn(self, mocker):
         # Arrange
@@ -943,11 +943,11 @@ class TestFeatureViewEngine:
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_code_engine_save_code = mocker.patch(
-            "hsfs.core.code_engine.CodeEngine.save_code"
+        mock_code_engine = mocker.patch(
+            "hsfs.core.code_engine.CodeEngine"
         )
-        mock_td_engine_read = mocker.patch(
-            "hsfs.core.training_dataset_engine.TrainingDatasetEngine.read"
+        mock_td_engine = mocker.patch(
+            "hsfs.core.training_dataset_engine.TrainingDatasetEngine"
         )
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
@@ -973,9 +973,9 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 0
         )
-        assert mock_code_engine_save_code.call_count == 0
+        assert mock_code_engine.return_value.save_code.call_count == 0
         assert mock_engine_get_type.call_count == 0
-        assert mock_td_engine_read.call_count == 0
+        assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_compute_training_dataset_td(self, mocker):
@@ -991,11 +991,11 @@ class TestFeatureViewEngine:
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_code_engine_save_code = mocker.patch(
-            "hsfs.core.code_engine.CodeEngine.save_code"
+        mock_code_engine = mocker.patch(
+            "hsfs.core.code_engine.CodeEngine"
         )
-        mock_td_engine_read = mocker.patch(
-            "hsfs.core.training_dataset_engine.TrainingDatasetEngine.read"
+        mock_td_engine = mocker.patch(
+            "hsfs.core.training_dataset_engine.TrainingDatasetEngine"
         )
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
@@ -1028,9 +1028,9 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
-        assert mock_code_engine_save_code.call_count == 1
+        assert mock_code_engine.return_value.save_code.call_count == 1
         assert mock_engine_get_type.call_count == 2
-        assert mock_td_engine_read.call_count == 0
+        assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
     def test_compute_training_dataset_td_version(self, mocker):
@@ -1046,11 +1046,11 @@ class TestFeatureViewEngine:
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_code_engine_save_code = mocker.patch(
-            "hsfs.core.code_engine.CodeEngine.save_code"
+        mock_code_engine = mocker.patch(
+            "hsfs.core.code_engine.CodeEngine"
         )
-        mock_td_engine_read = mocker.patch(
-            "hsfs.core.training_dataset_engine.TrainingDatasetEngine.read"
+        mock_td_engine = mocker.patch(
+            "hsfs.core.training_dataset_engine.TrainingDatasetEngine"
         )
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
@@ -1085,9 +1085,9 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
-        assert mock_code_engine_save_code.call_count == 1
+        assert mock_code_engine.return_value.save_code.call_count == 1
         assert mock_engine_get_type.call_count == 2
-        assert mock_td_engine_read.call_count == 0
+        assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
     def test_compute_training_dataset_td_spark_type_split(self, mocker):
@@ -1105,11 +1105,11 @@ class TestFeatureViewEngine:
         mock_engine_get_type = mocker.patch(
             "hsfs.engine.get_type", return_value="spark"
         )
-        mock_code_engine_save_code = mocker.patch(
-            "hsfs.core.code_engine.CodeEngine.save_code"
+        mock_code_engine = mocker.patch(
+            "hsfs.core.code_engine.CodeEngine"
         )
-        mock_td_engine_read = mocker.patch(
-            "hsfs.core.training_dataset_engine.TrainingDatasetEngine.read"
+        mock_td_engine = mocker.patch(
+            "hsfs.core.training_dataset_engine.TrainingDatasetEngine"
         )
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
@@ -1142,9 +1142,9 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
-        assert mock_code_engine_save_code.call_count == 1
+        assert mock_code_engine.return_value.save_code.call_count == 1
         assert mock_engine_get_type.call_count == 2
-        assert mock_td_engine_read.call_count == 1
+        assert mock_td_engine.return_value.read.call_count == 1
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
     def test_compute_training_dataset_td_spark_type(self, mocker):
@@ -1162,11 +1162,11 @@ class TestFeatureViewEngine:
         mock_engine_get_type = mocker.patch(
             "hsfs.engine.get_type", return_value="spark"
         )
-        mock_code_engine_save_code = mocker.patch(
-            "hsfs.core.code_engine.CodeEngine.save_code"
+        mock_code_engine = mocker.patch(
+            "hsfs.core.code_engine.CodeEngine"
         )
-        mock_td_engine_read = mocker.patch(
-            "hsfs.core.training_dataset_engine.TrainingDatasetEngine.read"
+        mock_td_engine = mocker.patch(
+            "hsfs.core.training_dataset_engine.TrainingDatasetEngine"
         )
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
@@ -1199,9 +1199,9 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
-        assert mock_code_engine_save_code.call_count == 1
+        assert mock_code_engine.return_value.save_code.call_count == 1
         assert mock_engine_get_type.call_count == 2
-        assert mock_td_engine_read.call_count == 2
+        assert mock_td_engine.return_value.read.call_count == 2
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
     def test_compute_training_dataset_statistics(self, mocker):
@@ -1209,11 +1209,8 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1235,19 +1232,16 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine_register_split_statistics.call_count == 0
-        assert mock_s_engine_compute_statistics.call_count == 0
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
+        assert mock_s_engine.return_value.compute_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1270,19 +1264,16 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine_register_split_statistics.call_count == 0
-        assert mock_s_engine_compute_statistics.call_count == 0
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
+        assert mock_s_engine.return_value.compute_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1305,19 +1296,16 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine_register_split_statistics.call_count == 0
-        assert mock_s_engine_compute_statistics.call_count == 1
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
+        assert mock_s_engine.return_value.compute_statistics.call_count == 1
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1348,19 +1336,16 @@ class TestFeatureViewEngine:
             str(e_info.value)
             == "Provided dataframes should be in dict format 'split': dataframe"
         )
-        assert mock_s_engine_register_split_statistics.call_count == 0
-        assert mock_s_engine_compute_statistics.call_count == 0
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
+        assert mock_s_engine.return_value.compute_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1383,8 +1368,8 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine_register_split_statistics.call_count == 0
-        assert mock_s_engine_compute_statistics.call_count == 1
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
+        assert mock_s_engine.return_value.compute_statistics.call_count == 1
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits_td_df(
         self, mocker
@@ -1393,11 +1378,8 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_s_engine_register_split_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.register_split_statistics"
-        )
-        mock_s_engine_compute_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -1420,8 +1402,8 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine_register_split_statistics.call_count == 1
-        assert mock_s_engine_compute_statistics.call_count == 0
+        assert mock_s_engine.return_value.register_split_statistics.call_count == 1
+        assert mock_s_engine.return_value.compute_statistics.call_count == 0
 
     def test_get_training_data_metadata(self, mocker):
         # Arrange
@@ -1665,7 +1647,7 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_tags_api_add = mocker.patch("hsfs.core.tags_api.TagsApi.add")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -1677,14 +1659,14 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_tags_api_add.call_count == 1
+        assert mock_tags_api.return_value.add.call_count == 1
 
     def test_delete_tag(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_tags_api_delete = mocker.patch("hsfs.core.tags_api.TagsApi.delete")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -1696,14 +1678,14 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_tags_api_delete.call_count == 1
+        assert mock_tags_api.return_value.delete.call_count == 1
 
     def test_get_tag(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -1715,14 +1697,14 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_tags_api_get.call_count == 1
+        assert mock_tags_api.return_value.get.call_count == 1
 
     def test_get_tags(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_tags_api_get = mocker.patch("hsfs.core.tags_api.TagsApi.get")
+        mock_tags_api = mocker.patch("hsfs.core.tags_api.TagsApi")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -1732,7 +1714,7 @@ class TestFeatureViewEngine:
         fv_engine.get_tags(feature_view_obj=None, training_dataset_version=None)
 
         # Assert
-        assert mock_tags_api_get.call_count == 1
+        assert mock_tags_api.return_value.get.call_count == 1
 
     def test_check_feature_group_accessibility(self, mocker):
         # Arrange

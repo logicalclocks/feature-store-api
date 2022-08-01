@@ -24,8 +24,8 @@ class TestValidationReportEngine:
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_create = mocker.patch(
-            "hsfs.core.validation_report_api.ValidationReportApi.create"
+        mock_vr_api = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi"
         )
         mock_vr_engine_get_validation_report_url = mocker.patch(
             "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
@@ -49,7 +49,7 @@ class TestValidationReportEngine:
         vr_engine.save(feature_group=fg, validation_report=None)
 
         # Assert
-        assert mock_vr_api_create.call_count == 1
+        assert mock_vr_api.return_value.create.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -63,8 +63,8 @@ class TestValidationReportEngine:
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_get_last = mocker.patch(
-            "hsfs.core.validation_report_api.ValidationReportApi.get_last"
+        mock_vr_api = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi"
         )
         mock_vr_engine_get_validation_report_url = mocker.patch(
             "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
@@ -88,7 +88,7 @@ class TestValidationReportEngine:
         vr_engine.get_last(feature_group=fg)
 
         # Assert
-        assert mock_vr_api_get_last.call_count == 1
+        assert mock_vr_api.return_value.get_last.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -102,8 +102,8 @@ class TestValidationReportEngine:
         feature_store_id = 99
         validation_report_url = "test_url"
 
-        mock_vr_api_get_all = mocker.patch(
-            "hsfs.core.validation_report_api.ValidationReportApi.get_all"
+        mock_vr_api = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi"
         )
         mock_vr_engine_get_validation_report_url = mocker.patch(
             "hsfs.core.validation_report_engine.ValidationReportEngine._get_validation_report_url"
@@ -127,7 +127,7 @@ class TestValidationReportEngine:
         vr_engine.get_all(feature_group=fg)
 
         # Assert
-        assert mock_vr_api_get_all.call_count == 1
+        assert mock_vr_api.return_value.get_all.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -140,8 +140,8 @@ class TestValidationReportEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_vr_api_delete = mocker.patch(
-            "hsfs.core.validation_report_api.ValidationReportApi.delete"
+        mock_vr_api = mocker.patch(
+            "hsfs.core.validation_report_api.ValidationReportApi"
         )
 
         vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
@@ -161,7 +161,7 @@ class TestValidationReportEngine:
         vr_engine.delete(feature_group=fg, validation_report=vr)
 
         # Assert
-        assert mock_vr_api_delete.call_count == 1
+        assert mock_vr_api.return_value.delete.call_count == 1
 
     def test_get_validation_report_url(self, mocker):
         # Arrange

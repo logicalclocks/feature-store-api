@@ -25,8 +25,8 @@ class TestExpectationSuiteEngine:
         expectation_suite_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_create = mocker.patch(
-            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.create"
+        mock_es_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi"
         )
         mock_es_engine_get_expectation_suite_url = mocker.patch(
             "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
@@ -51,7 +51,7 @@ class TestExpectationSuiteEngine:
         es_engine.save(feature_group=fg, expectation_suite=None)
 
         # Assert
-        assert mock_es_api_create.call_count == 1
+        assert mock_es_api.return_value.create.call_count == 1
         assert mock_es_engine_get_expectation_suite_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -65,8 +65,8 @@ class TestExpectationSuiteEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_get = mocker.patch(
-            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.get"
+        mock_es_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi"
         )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
@@ -86,15 +86,15 @@ class TestExpectationSuiteEngine:
         es_engine.get(feature_group=fg)
 
         # Assert
-        assert mock_es_api_get.call_count == 1
+        assert mock_es_api.return_value.get.call_count == 1
 
     def test_delete(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_es_api_delete = mocker.patch(
-            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.delete"
+        mock_es_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi"
         )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
@@ -114,7 +114,7 @@ class TestExpectationSuiteEngine:
         es_engine.delete(feature_group=fg)
 
         # Assert
-        assert mock_es_api_delete.call_count == 1
+        assert mock_es_api.return_value.delete.call_count == 1
 
     def test_get_expectation_suite_url(self, mocker):
         # Arrange

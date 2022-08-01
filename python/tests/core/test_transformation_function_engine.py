@@ -35,8 +35,8 @@ class TestTransformationFunctionEngine:
         mock_tf_engine_is_builtin = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
-        mock_tf_api_register_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -53,7 +53,7 @@ class TestTransformationFunctionEngine:
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 1
-        assert mock_tf_api_register_transformation_fn.call_count == 0
+        assert mock_tf_api.return_value.register_transformation_fn.call_count == 0
         assert (
             str(e_info.value)
             == "Transformation function name 'tf_name' with version 1 is reserved for built-in "
@@ -67,8 +67,8 @@ class TestTransformationFunctionEngine:
         mock_tf_engine_is_builtin = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
-        mock_tf_api_register_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -87,7 +87,7 @@ class TestTransformationFunctionEngine:
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 1
-        assert mock_tf_api_register_transformation_fn.call_count == 0
+        assert mock_tf_api.return_value.register_transformation_fn.call_count == 0
         assert str(e_info.value) == "transformer must be callable"
 
     def test_save_is_builtin_callable(self, mocker):
@@ -100,8 +100,8 @@ class TestTransformationFunctionEngine:
         mock_tf_engine_is_builtin = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
-        mock_tf_api_register_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.register_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -125,14 +125,14 @@ class TestTransformationFunctionEngine:
 
         # Assert
         assert mock_tf_engine_is_builtin.call_count == 1
-        assert mock_tf_api_register_transformation_fn.call_count == 1
+        assert mock_tf_api.return_value.register_transformation_fn.call_count == 1
 
     def test_get_transformation_fn(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -147,21 +147,21 @@ class TestTransformationFunctionEngine:
         )
         transformations = [tf, tf1]
 
-        mock_tf_api_get_transformation_fn.return_value = transformations
+        mock_tf_api.return_value.get_transformation_fn.return_value = transformations
 
         # Act
         result = tf_engine.get_transformation_fn(name=None, version=None)
 
         # Assert
-        assert mock_tf_api_get_transformation_fn.call_count == 1
+        assert mock_tf_api.return_value.get_transformation_fn.call_count == 1
         assert result == tf
 
     def test_get_transformation_fns(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -176,21 +176,21 @@ class TestTransformationFunctionEngine:
         )
         transformations = [tf, tf1]
 
-        mock_tf_api_get_transformation_fn.return_value = transformations
+        mock_tf_api.return_value.get_transformation_fn.return_value = transformations
 
         # Act
         result = tf_engine.get_transformation_fns()
 
         # Assert
-        assert mock_tf_api_get_transformation_fn.call_count == 1
+        assert mock_tf_api.return_value.get_transformation_fn.call_count == 1
         assert result == transformations
 
     def test_delete(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_delete = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.delete"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -201,14 +201,14 @@ class TestTransformationFunctionEngine:
         tf_engine.delete(transformation_function_instance=None)
 
         # Assert
-        assert mock_tf_api_delete.call_count == 1
+        assert mock_tf_api.return_value.delete.call_count == 1
 
     def test_get_td_transformation_fn(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_tf_api_get_td_transformation_fn = mocker.patch(
-            "hsfs.core.transformation_function_api.TransformationFunctionApi.get_td_transformation_fn"
+        mock_tf_api = mocker.patch(
+            "hsfs.core.transformation_function_api.TransformationFunctionApi"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -227,7 +227,7 @@ class TestTransformationFunctionEngine:
 
         transformations_attached = [tf_attached, tf1_attached]
 
-        mock_tf_api_get_td_transformation_fn.return_value = transformations_attached
+        mock_tf_api.return_value.get_td_transformation_fn.return_value = transformations_attached
 
         # Act
         result = tf_engine.get_td_transformation_fn(training_dataset=None)
@@ -235,7 +235,7 @@ class TestTransformationFunctionEngine:
         # Assert
         assert "tf_name" in result
         assert "tf1_name" in result
-        assert mock_tf_api_get_td_transformation_fn.call_count == 1
+        assert mock_tf_api.return_value.get_td_transformation_fn.call_count == 1
 
     def test_attach_transformation_fn_td(self, mocker):
         # Arrange
@@ -1184,8 +1184,8 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_s_engine_compute_transformation_fn_statistics = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.compute_transformation_fn_statistics"
+        mock_s_engine = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine"
         )
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
@@ -1211,7 +1211,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_s_engine_compute_transformation_fn_statistics.call_count == 1
+        assert mock_s_engine.return_value.compute_transformation_fn_statistics.call_count == 1
 
     def test_populate_builtin_transformation_functions(self, mocker):
         # Arrange
