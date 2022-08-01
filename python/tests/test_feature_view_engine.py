@@ -57,6 +57,8 @@ class TestFeatureViewEngine:
 
         # Assert
         assert len(fv._features) == 2
+        assert fv._features[0].name == "label1" and fv._features[0].label
+        assert fv._features[1].name == "label2" and fv._features[1].label
         assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 1
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_fv_engine_get_url.call_count == 1
