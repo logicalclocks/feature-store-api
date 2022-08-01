@@ -31,9 +31,7 @@ class TestTrainingDatasetEngine:
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -91,9 +89,7 @@ class TestTrainingDatasetEngine:
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -141,9 +137,7 @@ class TestTrainingDatasetEngine:
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         def plus_one(a):
             return a + 1
@@ -212,9 +206,7 @@ class TestTrainingDatasetEngine:
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
         mock_warning = mocker.patch("warnings.warn")
 
         td = training_dataset.TrainingDataset(
@@ -380,9 +372,7 @@ class TestTrainingDatasetEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -395,17 +385,21 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_td_api.return_value.get_query.call_count == 1
-        assert mock_td_api.return_value.get_query.return_value.register_external.call_count == 1
-        assert mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count == 1
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_external.call_count
+            == 1
+        )
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count
+            == 1
+        )
         assert result == mock_td_api.return_value.get_query.return_value.query
 
     def test_query_pit(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -416,17 +410,21 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_td_api.return_value.get_query.call_count == 1
-        assert mock_td_api.return_value.get_query.return_value.register_external.call_count == 1
-        assert mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count == 1
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_external.call_count
+            == 1
+        )
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count
+            == 1
+        )
         assert result == mock_td_api.return_value.get_query.return_value.pit_query
 
     def test_query_online(self, mocker):
         # Arrange
         feature_store_id = 99
 
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -437,8 +435,14 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_td_api.return_value.get_query.call_count == 1
-        assert mock_td_api.return_value.get_query.return_value.register_external.call_count == 0
-        assert mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count == 0
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_external.call_count
+            == 0
+        )
+        assert (
+            mock_td_api.return_value.get_query.return_value.register_hudi_tables.call_count
+            == 0
+        )
         assert result == mock_td_api.return_value.get_query.return_value.query_online
 
     def test_add_tag(self, mocker):
@@ -501,9 +505,7 @@ class TestTrainingDatasetEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_td_api = mocker.patch(
-            "hsfs.core.training_dataset_api.TrainingDatasetApi"
-        )
+        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
@@ -512,4 +514,7 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_td_api.return_value.update_metadata.call_count == 1
-        assert mock_td_api.return_value.update_metadata.call_args[0][2] == "updateStatsConfig"
+        assert (
+            mock_td_api.return_value.update_metadata.call_args[0][2]
+            == "updateStatsConfig"
+        )

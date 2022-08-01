@@ -23,9 +23,7 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi"
-        )
+        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id
@@ -105,9 +103,7 @@ class TestFeatureGroupBaseEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_fg_api = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi"
-        )
+        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_base_engine = feature_group_base_engine.FeatureGroupBaseEngine(
             feature_store_id=feature_store_id

@@ -227,7 +227,9 @@ class TestTransformationFunctionEngine:
 
         transformations_attached = [tf_attached, tf1_attached]
 
-        mock_tf_api.return_value.get_td_transformation_fn.return_value = transformations_attached
+        mock_tf_api.return_value.get_td_transformation_fn.return_value = (
+            transformations_attached
+        )
 
         # Act
         result = tf_engine.get_td_transformation_fn(training_dataset=None)
@@ -1184,9 +1186,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_s_engine = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine"
-        )
+        mock_s_engine = mocker.patch("hsfs.core.statistics_engine.StatisticsEngine")
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
             feature_store_id
@@ -1211,7 +1211,10 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.compute_transformation_fn_statistics.call_count == 1
+        assert (
+            mock_s_engine.return_value.compute_transformation_fn_statistics.call_count
+            == 1
+        )
 
     def test_populate_builtin_transformation_functions(self, mocker):
         # Arrange

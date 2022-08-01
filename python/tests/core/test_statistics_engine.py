@@ -765,9 +765,7 @@ class TestStatisticsEngine:
         mock_util_get_timestamp_from_date_string = mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
-        mock_statistics_api = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi"
-        )
+        mock_statistics_api = mocker.patch("hsfs.core.statistics_api.StatisticsApi")
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
@@ -788,9 +786,7 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_statistics_api = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi"
-        )
+        mock_statistics_api = mocker.patch("hsfs.core.statistics_api.StatisticsApi")
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
@@ -818,9 +814,7 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_statistics_api = mocker.patch(
-            "hsfs.core.statistics_api.StatisticsApi"
-        )
+        mock_statistics_api = mocker.patch("hsfs.core.statistics_api.StatisticsApi")
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 

@@ -27,9 +27,7 @@ class TestHudiEngine:
         mock_hudi_engine_write_hudi_dataset = mocker.patch(
             "hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset"
         )
-        mock_fg_api = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi"
-        )
+        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         h_engine = hudi_engine.HudiEngine(
             feature_store_id=feature_store_id,
@@ -60,9 +58,7 @@ class TestHudiEngine:
         mock_hudi_engine_write_hudi_dataset = mocker.patch(
             "hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset"
         )
-        mock_fg_api = mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi"
-        )
+        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         h_engine = hudi_engine.HudiEngine(
             feature_store_id=feature_store_id,

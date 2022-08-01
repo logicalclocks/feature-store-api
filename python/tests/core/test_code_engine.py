@@ -54,7 +54,8 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
+            mock_code_api.return_value.post.call_args[1]["code_type"]
+            == code_engine.RunType.JUPYTER
         )
 
     def test_td_save_job(self, mocker, reset):
@@ -81,7 +82,10 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api.return_value.post.call_count == 1
-        assert mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JOB
+        assert (
+            mock_code_api.return_value.post.call_args[1]["code_type"]
+            == code_engine.RunType.JOB
+        )
 
     def test_td_save_databricks(self, mocker, reset):
         # Arrange
@@ -145,7 +149,8 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api.return_value.post.call_count == 1
         assert (
-            mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JUPYTER
+            mock_code_api.return_value.post.call_args[1]["code_type"]
+            == code_engine.RunType.JUPYTER
         )
 
     def test_fg_save_job(self, mocker, reset):
@@ -172,7 +177,10 @@ class TestCodeEngine:
 
         # Assert
         assert mock_code_api.return_value.post.call_count == 1
-        assert mock_code_api.return_value.post.call_args[1]["code_type"] == code_engine.RunType.JOB
+        assert (
+            mock_code_api.return_value.post.call_args[1]["code_type"]
+            == code_engine.RunType.JOB
+        )
 
     def test_fg_save_databricks(self, mocker, reset):
         # Arrange
