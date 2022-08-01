@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from python.hsfs import feature_group, feature
-from python.hsfs.core import feature_group_base_engine
+from hsfs import feature_group, feature
+from hsfs.core import feature_group_base_engine
 
 
 class TestFeatureGroupBaseEngine:
