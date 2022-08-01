@@ -67,7 +67,7 @@ class TransformationFunctionEngine:
             )
         )
         transformation_fns = []
-        for transformation_fn_instance in transformation_fn_instances:
+        for transformation_fn_instance in transformation_fn_instances:  # todo what is the point of this?
             transformation_fns.append(transformation_fn_instance)
         return transformation_fns
 
@@ -89,7 +89,7 @@ class TransformationFunctionEngine:
         self, training_dataset_obj=None, feature_view_obj=None
     ):
         if training_dataset_obj:
-            target_obj = training_dataset_obj
+            target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
         else:
             target_obj = feature_view_obj
         if target_obj._transformation_functions:
@@ -97,7 +97,7 @@ class TransformationFunctionEngine:
                 feature_name,
                 transformation_fn,
             ) in target_obj._transformation_functions.items():
-                if feature_name in target_obj.labels:
+                if feature_name in target_obj.labels:  # todo td does not have labels
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
