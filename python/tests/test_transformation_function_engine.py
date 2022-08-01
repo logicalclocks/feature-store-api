@@ -19,15 +19,12 @@ import numpy
 import datetime
 
 from hsfs import (
-    engine,
     training_dataset,
-    feature_group,
-    training_dataset_feature,
     transformation_function,
     transformation_function_attached,
     feature_view,
 )
-from hsfs.core import transformation_function_engine, training_dataset_api
+from hsfs.core import transformation_function_engine
 
 
 class TestTransformationFunctionEngine:

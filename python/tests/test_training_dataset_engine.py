@@ -16,14 +16,8 @@
 
 import pytest
 
-from hsfs import (
-    engine,
-    training_dataset,
-    feature_group,
-    training_dataset_feature,
-    transformation_function,
-)
-from hsfs.core import training_dataset_engine, training_dataset_api
+from hsfs import training_dataset, training_dataset_feature, transformation_function
+from hsfs.core import training_dataset_engine
 from hsfs.constructor import query
 
 
@@ -269,7 +263,7 @@ class TestTrainingDatasetEngine:
         assert td._features[1].label is False
         assert td.train_split == "train"
         assert (
-            mock_warning.call_args.args[0]
+            mock_warning.call_args[0][0]
             == "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
             "used for training) was provided. Setting this property to `train`. The statistics of this "
             "split will be used for transformation functions."
@@ -296,9 +290,7 @@ class TestTrainingDatasetEngine:
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
         assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_args.args[
-                3
-            ]
+            mock_engine_get_instance.return_value.write_training_dataset.call_args[0][3]
             == td_engine.APPEND
         )
 
@@ -320,9 +312,7 @@ class TestTrainingDatasetEngine:
             mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
         )
         assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_args.args[
-                3
-            ]
+            mock_engine_get_instance.return_value.write_training_dataset.call_args[0][3]
             == td_engine.OVERWRITE
         )
 
@@ -354,9 +344,7 @@ class TestTrainingDatasetEngine:
         # Assert
         assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
-        assert (
-            mock_storage_connector_read.call_args.kwargs["path"] == "td_location/test"
-        )
+        assert mock_storage_connector_read.call_args[1]["path"] == "td_location/test"
 
     def test_read_split(self, mocker):
         # Arrange
@@ -386,9 +374,7 @@ class TestTrainingDatasetEngine:
         # Assert
         assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
-        assert (
-            mock_storage_connector_read.call_args.kwargs["path"] == "td_location/split"
-        )
+        assert mock_storage_connector_read.call_args[1]["path"] == "td_location/split"
 
     def test_query(self, mocker):
         # Arrange
@@ -526,4 +512,4 @@ class TestTrainingDatasetEngine:
 
         # Assert
         assert mock_td_api_update_metadata.call_count == 1
-        assert mock_td_api_update_metadata.call_args.args[2] == "updateStatsConfig"
+        assert mock_td_api_update_metadata.call_args[0][2] == "updateStatsConfig"

@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import engine, training_dataset, feature_group, expectation_suite
+from hsfs import feature_group, expectation_suite
 from hsfs.core import great_expectation_engine
 
 

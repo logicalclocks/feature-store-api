@@ -17,14 +17,7 @@
 import pytest
 
 from hsfs.client import exceptions
-from hsfs import (
-    engine,
-    training_dataset,
-    feature_group,
-    feature_view,
-    feature,
-    statistics_config,
-)
+from hsfs import training_dataset, feature_group, feature_view, statistics_config
 from hsfs.core import statistics_engine
 
 
@@ -454,7 +447,7 @@ class TestStatisticsEngine:
         assert mock_engine_get_instance.call_count == 0
         assert mock_warning.call_count == 1
         assert (
-            mock_warning.call_args.args[0]
+            mock_warning.call_args[0][0]
             == "There is no data in the entity that you are trying to compute statistics "
             "for. A possible cause might be that you inserted only data to the online "
             "storage of a feature group."
@@ -494,19 +487,18 @@ class TestStatisticsEngine:
         # Assert
         assert mock_engine_get_instance.call_count == 1
         assert (
-            mock_engine_get_instance.return_value.profile.call_args.args[1]
-            == sc.columns
+            mock_engine_get_instance.return_value.profile.call_args[0][1] == sc.columns
         )
         assert (
-            mock_engine_get_instance.return_value.profile.call_args.args[2]
+            mock_engine_get_instance.return_value.profile.call_args[0][2]
             == sc.correlations
         )
         assert (
-            mock_engine_get_instance.return_value.profile.call_args.args[3]
+            mock_engine_get_instance.return_value.profile.call_args[0][3]
             == sc.histograms
         )
         assert (
-            mock_engine_get_instance.return_value.profile.call_args.args[4]
+            mock_engine_get_instance.return_value.profile.call_args[0][4]
             == sc.exact_uniqueness
         )
 
@@ -675,7 +667,7 @@ class TestStatisticsEngine:
         assert mock_split_statistics.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_td_read.call_count == 1
-        assert mock_split_statistics.call_args.args[0] == "split_name"
+        assert mock_split_statistics.call_args[0][0] == "split_name"
 
     def test_register_split_statistics_feature_dataframes(self, mocker):
         # Arrange
@@ -714,7 +706,7 @@ class TestStatisticsEngine:
         assert mock_split_statistics.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_td_read.call_count == 0
-        assert mock_split_statistics.call_args.args[0] == "split_name"
+        assert mock_split_statistics.call_args[0][0] == "split_name"
 
     def test_compute_transformation_fn_statistics(self, mocker):
         # Arrange
@@ -819,7 +811,7 @@ class TestStatisticsEngine:
 
         # Assert
         assert mock_statistics_api_post.call_count == 1
-        assert mock_statistics_api_post.call_args.args[0] == td
+        assert mock_statistics_api_post.call_args[0][0] == td
 
     def test_save_statistics_fv(self, mocker):
         # Arrange
@@ -857,7 +849,7 @@ class TestStatisticsEngine:
 
         # Assert
         assert mock_statistics_api_post.call_count == 1
-        assert mock_statistics_api_post.call_args.args[0] == fv
+        assert mock_statistics_api_post.call_args[0][0] == fv
 
     def test_profile_unique_values(self, mocker):
         # Arrange

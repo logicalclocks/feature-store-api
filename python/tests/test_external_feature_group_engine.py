@@ -14,16 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import (
-    engine,
-    feature_group,
-    util,
-    feature_group_commit,
-    client,
-    validation_report,
-    feature,
-    storage_connector,
-)
+from hsfs import feature_group, feature, storage_connector
 from hsfs.core import external_feature_group_engine
 
 
@@ -70,8 +61,8 @@ class TestExternalFeatureGroupEngine:
             == 1
         )
         assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args.args[0].features) == 1
-        assert not mock_fg_api_save.call_args.args[0].features[0].primary
+        assert len(mock_fg_api_save.call_args[0][0].features) == 1
+        assert not mock_fg_api_save.call_args[0][0].features[0].primary
 
     def test_save_primary_key(self, mocker):
         # Arrange
@@ -114,8 +105,8 @@ class TestExternalFeatureGroupEngine:
             == 1
         )
         assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args.args[0].features) == 1
-        assert mock_fg_api_save.call_args.args[0].features[0].primary
+        assert len(mock_fg_api_save.call_args[0][0].features) == 1
+        assert mock_fg_api_save.call_args[0][0].features[0].primary
 
     def test_save_features(self, mocker):
         # Arrange
@@ -156,8 +147,8 @@ class TestExternalFeatureGroupEngine:
             == 0
         )
         assert mock_fg_api_save.call_count == 1
-        assert len(mock_fg_api_save.call_args.args[0].features) == 1
-        assert not mock_fg_api_save.call_args.args[0].features[0].primary
+        assert len(mock_fg_api_save.call_args[0][0].features) == 1
+        assert not mock_fg_api_save.call_args[0][0].features[0].primary
 
     def test_update_features_metadata(self, mocker):
         # Arrange
@@ -195,11 +186,11 @@ class TestExternalFeatureGroupEngine:
         # Assert
         assert mock_fg_api_update_metadata.call_count == 1
         assert (
-            mock_fg_api_update_metadata.call_args.args[1].storage_connector
+            mock_fg_api_update_metadata.call_args[0][1].storage_connector
             == external_fg.storage_connector
         )
-        assert mock_fg_api_update_metadata.call_args.args[1].id == external_fg.id
-        assert mock_fg_api_update_metadata.call_args.args[1].features == features
+        assert mock_fg_api_update_metadata.call_args[0][1].id == external_fg.id
+        assert mock_fg_api_update_metadata.call_args[0][1].features == features
 
     def test_update_features(self, mocker):
         # Arrange
@@ -252,7 +243,7 @@ class TestExternalFeatureGroupEngine:
         # Assert
         assert mock_external_fg_engine_update_features_metadata.call_count == 1
         assert (
-            len(mock_external_fg_engine_update_features_metadata.call_args.args[1]) == 4
+            len(mock_external_fg_engine_update_features_metadata.call_args[0][1]) == 4
         )  # todo why are there duplicates?
 
     def test_update_description(self, mocker):
@@ -280,4 +271,4 @@ class TestExternalFeatureGroupEngine:
 
         # Assert
         assert mock_fg_api_update_metadata.call_count == 1
-        assert mock_fg_api_update_metadata.call_args.args[1].description == description
+        assert mock_fg_api_update_metadata.call_args[0][1].description == description

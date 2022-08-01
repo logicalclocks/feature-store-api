@@ -21,7 +21,7 @@ from hsfs import (
     training_dataset,
     split_statistics,
 )
-from hsfs.constructor import fs_query, query
+from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 
 
@@ -61,7 +61,7 @@ class TestFeatureViewEngine:
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_fv_engine_get_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Feature view created successfully, explore it at \n{}".format(
             feature_view_url
@@ -819,7 +819,7 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_read_dir_from_storage_connector.call_count == 1
         assert (
-            mock_fv_engine_read_dir_from_storage_connector.call_args.args[1]
+            mock_fv_engine_read_dir_from_storage_connector.call_args[0][1]
             == "location/test"
         )
 
@@ -856,11 +856,11 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_read_dir_from_storage_connector.call_count == 2
         assert (
-            mock_fv_engine_read_dir_from_storage_connector.mock_calls[0].args[1]
+            mock_fv_engine_read_dir_from_storage_connector.mock_calls[0][1][1]
             == "location/ss"
         )
         assert (
-            mock_fv_engine_read_dir_from_storage_connector.mock_calls[1].args[1]
+            mock_fv_engine_read_dir_from_storage_connector.mock_calls[1][1][1]
             == "location/ss1"
         )
 
@@ -1646,7 +1646,9 @@ class TestFeatureViewEngine:
 
         # Assert
         assert (
-            mock_engine_get_instance.return_value._apply_transformation_function.call_args.args[
+            mock_engine_get_instance.return_value._apply_transformation_function.call_args[
+                0
+            ][
                 0
             ].transformation_functions
             == tf_value
@@ -1947,6 +1949,6 @@ class TestFeatureViewEngine:
         assert mock_client_get_instance.call_count == 1
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
-            mock_util_get_hostname_replaced_url.call_args.args[0]
+            mock_util_get_hostname_replaced_url.call_args[0][0]
             == "/p/50/fs/99/fv/fv_name/version/1"
         )

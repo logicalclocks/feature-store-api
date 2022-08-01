@@ -14,16 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import (
-    engine,
-    feature_group,
-    util,
-    feature_group_commit,
-    client,
-    validation_report,
-    feature,
-    storage_connector,
-)
+from hsfs import feature_group
 from hsfs.core import expectation_suite_engine
 
 
@@ -63,7 +54,7 @@ class TestExpectationSuiteEngine:
         assert mock_es_api_create.call_count == 1
         assert mock_es_engine_get_expectation_suite_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Attached expectation suite to featuregroup, edit it at {}".format(
             expectation_suite_url
@@ -157,5 +148,5 @@ class TestExpectationSuiteEngine:
         assert mock_client_get_instance.call_count == 1
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
-            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )

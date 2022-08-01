@@ -16,23 +16,9 @@
 
 import pytest
 
-from hsfs import (
-    engine,
-    feature_group,
-    util,
-    feature_group_commit,
-    client,
-    validation_report,
-    feature,
-)
+from hsfs import feature_group, feature_group_commit, validation_report, feature
 from hsfs.client import exceptions
-from hsfs.core import (
-    feature_group_api,
-    feature_group_engine,
-    great_expectation_engine,
-    storage_connector_api,
-    kafka_api,
-)
+from hsfs.core import feature_group_engine
 
 
 class TestFeatureGroupEngine:
@@ -816,7 +802,7 @@ class TestFeatureGroupEngine:
             mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
         )
         assert (
-            len(mock_fg_engine_update_features_metadata.call_args.args[1]) == 4
+            len(mock_fg_engine_update_features_metadata.call_args[0][1]) == 4
         )  # todo why are there duplicates?
 
     def test_update_description(self, mocker):
@@ -1030,7 +1016,7 @@ class TestFeatureGroupEngine:
         )
         assert mock_warnings_warn.call_count == 1
         assert (
-            mock_warnings_warn.call_args.args[0]
+            mock_warnings_warn.call_args[0][0]
             == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
         )
 
@@ -1147,7 +1133,7 @@ class TestFeatureGroupEngine:
         )
         assert mock_warnings_warn.call_count == 1
         assert (
-            mock_warnings_warn.call_args.args[0]
+            mock_warnings_warn.call_args[0][0]
             == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
         )
 
@@ -1423,7 +1409,7 @@ class TestFeatureGroupEngine:
         assert f.partition == True
         assert f.hudi_precombine_key == True
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
@@ -1506,5 +1492,5 @@ class TestFeatureGroupEngine:
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
-            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )

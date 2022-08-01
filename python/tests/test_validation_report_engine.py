@@ -14,15 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import (
-    engine,
-    training_dataset,
-    feature_group,
-    training_dataset_feature,
-    transformation_function,
-    validation_report,
-)
-from hsfs.core import validation_report_engine, training_dataset_api
+from hsfs import feature_group, validation_report
+from hsfs.core import validation_report_engine
 
 
 class TestValidationReportEngine:
@@ -59,7 +52,7 @@ class TestValidationReportEngine:
         assert mock_vr_api_create.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Validation Report saved successfully, explore a summary at {}".format(
             validation_report_url
@@ -98,7 +91,7 @@ class TestValidationReportEngine:
         assert mock_vr_api_get_last.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Long reports can be truncated when fetching from Hopsworks.\n" "        \nYou can download the full report at {}".format(
             validation_report_url
@@ -137,7 +130,7 @@ class TestValidationReportEngine:
         assert mock_vr_api_get_all.call_count == 1
         assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args.args[
+        assert mock_print.call_args[0][
             0
         ] == "Long reports can be truncated when fetching from Hopsworks.\n" "        \nYou can download full reports at {}".format(
             validation_report_url
@@ -198,5 +191,5 @@ class TestValidationReportEngine:
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
-            mock_util_get_hostname_replaced_url.call_args.args[0] == "/p/50/fs/99/fg/10"
+            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )

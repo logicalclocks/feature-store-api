@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group, engine, client, util
+from hsfs import feature_group
 from hsfs.constructor import hudi_feature_group_alias
-from hsfs.core import hudi_engine, feature_group_api, storage_connector_api
+from hsfs.core import hudi_engine
 
 
 class TestHudiEngine:
@@ -51,7 +51,7 @@ class TestHudiEngine:
         # Assert
         assert mock_hudi_engine_write_hudi_dataset.call_count == 1
         assert mock_fg_api_commit.call_count == 1
-        assert mock_fg_api_commit.call_args.args[1].validation_id == 10
+        assert mock_fg_api_commit.call_args[0][1].validation_id == 10
 
     def test_delete_record(self, mocker):
         # Arrange
@@ -80,9 +80,9 @@ class TestHudiEngine:
         assert mock_fg_api_commit.call_count == 1
         assert (
             "hoodie.datasource.write.payload.class"
-            in mock_hudi_engine_write_hudi_dataset.call_args.args[3]
+            in mock_hudi_engine_write_hudi_dataset.call_args[0][3]
         )
-        assert mock_hudi_engine_write_hudi_dataset.call_args.args[1] == "append"
+        assert mock_hudi_engine_write_hudi_dataset.call_args[0][1] == "append"
 
     def test_register_temporary_table(self, mocker):
         # Arrange
@@ -121,15 +121,17 @@ class TestHudiEngine:
 
         # Assert
         assert mock_hudi_engine_setup_hudi_read_opts.call_count == 1
-        assert spark_session.read.format.call_args.args[0] == h_engine.HUDI_SPARK_FORMAT
+        assert spark_session.read.format.call_args[0][0] == h_engine.HUDI_SPARK_FORMAT
         assert (
-            spark_session.read.format.return_value.options.return_value.load.call_args.args[
+            spark_session.read.format.return_value.options.return_value.load.call_args[
                 0
-            ]
+            ][0]
             == fg.location
         )
         assert (
-            spark_session.read.format.return_value.options.return_value.load.return_value.createOrReplaceTempView.call_args.args[
+            spark_session.read.format.return_value.options.return_value.load.return_value.createOrReplaceTempView.call_args[
+                0
+            ][
                 0
             ]
             == hudi_fg_alias.alias
@@ -172,15 +174,15 @@ class TestHudiEngine:
         # Assert
         assert mock_hudi_engine_setup_hudi_write_opts.call_count == 1
         assert mock_hudi_engine_get_last_commit_metadata.call_count == 1
-        assert dataset.write.format.call_args.args[0] == h_engine.HUDI_SPARK_FORMAT
+        assert dataset.write.format.call_args[0][0] == h_engine.HUDI_SPARK_FORMAT
         assert (
-            dataset.write.format.return_value.options.return_value.mode.call_args.args[
-                0
-            ]
+            dataset.write.format.return_value.options.return_value.mode.call_args[0][0]
             == "test"
         )
         assert (
-            dataset.write.format.return_value.options.return_value.mode.return_value.save.call_args.args[
+            dataset.write.format.return_value.options.return_value.mode.return_value.save.call_args[
+                0
+            ][
                 0
             ]
             == fg.location

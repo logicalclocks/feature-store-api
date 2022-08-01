@@ -14,22 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import (
-    engine,
-    feature_group,
-    util,
-    feature_group_commit,
-    client,
-    validation_report,
-    feature,
-)
-from hsfs.core import (
-    feature_group_api,
-    feature_group_base_engine,
-    great_expectation_engine,
-    storage_connector_api,
-    kafka_api,
-)
+from python.hsfs import feature_group, feature
+from python.hsfs.core import feature_group_base_engine
 
 
 class TestFeatureGroupBaseEngine:
