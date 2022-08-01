@@ -54,7 +54,7 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"]
+            mock_code_api_post.call_args[1]["code_type"]
             == code_engine.RunType.JUPYTER
         )
 
