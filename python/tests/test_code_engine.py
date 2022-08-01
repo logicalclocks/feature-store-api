@@ -18,8 +18,8 @@ import os
 import sys
 import pytest
 
-from hsfs import engine, training_dataset, feature_group
-from hsfs.core import code_engine, code_api
+from hsfs import training_dataset, feature_group
+from hsfs.core import code_engine
 
 
 class TestCodeEngine:
@@ -83,7 +83,7 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+            mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JOB
         )
 
     def test_td_save_databricks(self, mocker, reset):
@@ -119,7 +119,7 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"]
+            mock_code_api_post.call_args[1]["code_type"]
             == code_engine.RunType.DATABRICKS
         )
 
@@ -148,7 +148,7 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"]
+            mock_code_api_post.call_args[1]["code_type"]
             == code_engine.RunType.JUPYTER
         )
 
@@ -177,7 +177,7 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"] == code_engine.RunType.JOB
+            mock_code_api_post.call_args[1]["code_type"] == code_engine.RunType.JOB
         )
 
     def test_fg_save_databricks(self, mocker, reset):
@@ -212,6 +212,6 @@ class TestCodeEngine:
         # Assert
         assert mock_code_api_post.call_count == 1
         assert (
-            mock_code_api_post.call_args.kwargs["code_type"]
+            mock_code_api_post.call_args[1]["code_type"]
             == code_engine.RunType.DATABRICKS
         )
