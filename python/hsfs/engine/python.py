@@ -78,16 +78,327 @@ class Engine(engine_base.EngineBase):
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
+    # write
+
+    def write_training_dataset(
+            self,
+            training_dataset,
+            dataset,
+            user_write_options,
+            save_mode,
+            feature_view_obj=None,
+            to_df=False,
+    ):
+        if not feature_view_obj and not isinstance(dataset, query.Query):
+            raise Exception(
+                "Currently only query based training datasets are supported by the Python engine"
+            )
+
+        # As for creating a feature group, users have the possibility of passing
+        # a spark_job_configuration object as part of the user_write_options with the key "spark"
+        spark_job_configuration = user_write_options.pop("spark", None)
+        td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
+            query=dataset,
+            overwrite=(save_mode == "overwrite"),
+            write_options=user_write_options,
+            spark_job_configuration=spark_job_configuration,
+        )
+
+        if feature_view_obj:
+            fv_api = feature_view_api.FeatureViewApi(feature_view_obj.featurestore_id)
+            td_job = fv_api.compute_training_dataset(
+                feature_view_obj.name,
+                feature_view_obj.version,
+                training_dataset.version,
+                td_app_conf,
+            )
+        else:
+            td_api = training_dataset_api.TrainingDatasetApi(
+                training_dataset.feature_store_id
+            )
+            td_job = td_api.compute(training_dataset, td_app_conf)
+        print(
+            "Training dataset job started successfully, you can follow the progress at \n{}".format(
+                self._get_job_url(td_job.href)
+            )
+        )
+
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        self._wait_for_job(td_job, user_write_options)
+
+        return td_job
+
+    def add_file(self, file):
+        # if streaming connectors are implemented in the future, this method
+        # can be used to materialize certificates locally
+        return file
+
+    def register_external_temporary_table(self, external_fg, alias):
+        # No op to avoid query failure
+        pass
+
+    def register_hudi_temporary_table(
+            self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+        # No op to avoid query failure
+        pass
+
+    def save_dataframe(
+            self,
+            feature_group: FeatureGroup,
+            dataframe: pd.DataFrame,
+            operation: str,
+            online_enabled: bool,
+            storage: bool,
+            offline_write_options: dict,
+            online_write_options: dict,
+            validation_id: int = None,
+    ):
+        if feature_group.stream:
+            return self._write_dataframe_kafka(
+                feature_group, dataframe, offline_write_options
+            )
+        else:
+            # for backwards compatibility
+            return self.legacy_save_dataframe(
+                feature_group,
+                dataframe,
+                operation,
+                online_enabled,
+                storage,
+                offline_write_options,
+                online_write_options,
+                validation_id,
+            )
+
+    def save_stream_dataframe(
+            self,
+            feature_group,
+            dataframe,
+            query_name,
+            output_mode,
+            await_termination,
+            timeout,
+            checkpoint_dir,
+            write_options,
+    ):
+        raise NotImplementedError(
+            "Stream ingestion is not available on Python environments, because it requires Spark as engine."
+        )
+
+    def save_empty_dataframe(self, feature_group, dataframe):
+        """Wrapper around save_dataframe in order to provide no-op."""
+        pass
+
+    # read
+
+    def read(self, storage_connector, data_format, read_options, location):
+        if storage_connector.type == storage_connector.HOPSFS:
+            df_list = self._read_hopsfs(location, data_format)
+        elif storage_connector.type == storage_connector.S3:
+            df_list = self._read_s3(storage_connector, location, data_format)
+        else:
+            raise NotImplementedError(
+                "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
+                    storage_connector.type
+                )
+            )
+        return pd.concat(df_list, ignore_index=True)
+
+    def read_options(self, data_format, provided_options):
+        return {}
+
+    def read_stream(
+            self,
+            storage_connector,
+            message_format,
+            schema,
+            options,
+            include_metadata,
+    ):
+        raise NotImplementedError(
+            "Streaming Sources are not supported for pure Python Environments."
+        )
+
+    def show(self, sql_query, feature_store, n, online_conn):
+        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
+
+    @staticmethod
+    def get_unique_values(feature_dataframe, feature_name):
+        return feature_dataframe[feature_name].unique()
+
+    def get_training_data(
+            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+    ):
+        df = query_obj.read(read_options=read_options)
+        if training_dataset_obj.splits:
+            split_df = self._prepare_transform_split_df(
+                df, training_dataset_obj, feature_view_obj
+            )
+        else:
+            split_df = df
+            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+                training_dataset_obj, feature_view_obj, split_df
+            )
+            split_df = self._apply_transformation_function(
+                training_dataset_obj, split_df
+            )
+        return split_df
+
+    def get_empty_appended_dataframe(self, dataframe, new_features):
+        """No-op in python engine, user has to write to feature group manually for schema
+        change to take effect."""
+        return None
+
+    # util
+
+    def set_job_group(self, group_id, description):
+        pass
+
     def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
             return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
+    def profile(
+            self,
+            dataframe,
+            relevant_columns,
+            correlations,
+            histograms,
+            exact_uniqueness=True,
+    ):
+        # TODO: add statistics for correlations, histograms and exact_uniqueness
+        if not relevant_columns:
+            stats = dataframe.describe()
+        else:
+            target_cols = [col for col in dataframe.columns if col in relevant_columns]
+            stats = dataframe[target_cols].describe()
+        final_stats = []
+        for col in stats.columns:
+            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stat["dataType"] = (
+                "Fractional"
+                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
+                else "Integral"
+            )
+            stat["isDataTypeInferred"] = "false"
+            stat["column"] = col.split(".")[-1]
+            stat["completeness"] = 1
+            final_stats.append(stat)
+        return json.dumps({"columns": final_stats})
+
+    def validate_with_great_expectations(
+            self,
+            dataframe: pd.DataFrame,
+            expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+            ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+    ):
+        report = ge.from_pandas(
+            dataframe, expectation_suite=expectation_suite
+        ).validate(**ge_validate_kwargs)
+        return report
+
+    def convert_to_default_dataframe(self, dataframe):
+        if isinstance(dataframe, pd.DataFrame):
+            upper_case_features = [
+                col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
+            ]
+            if len(upper_case_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
+                    "Feature names are sanitized to lower case in the feature store.".format(
+                        upper_case_features
+                    ),
+                    util.FeatureGroupWarning,
+                )
+
+            # making a shallow copy of the dataframe so that column names are unchanged
+            dataframe_copy = dataframe.copy(deep=False)
+            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+            return dataframe_copy
+
+        raise TypeError(
+            "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
+            + "The provided dataframe has type: {}".format(type(dataframe))
+        )
+
+    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
+        arrow_schema = pa.Schema.from_pandas(dataframe)
+        features = []
+        for feat_name, feat_type in dataframe.dtypes.items():
+            name = feat_name.lower()
+            try:
+                converted_type = self._convert_pandas_type(
+                    feat_type, arrow_schema.field(feat_name).type
+                )
+            except ValueError as e:
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+            features.append(feature.Feature(name, converted_type))
+        return features
+
+    def parse_schema_training_dataset(self, dataframe):
+        raise NotImplementedError(
+            "Training dataset creation from Dataframes is not "
+            + "supported in Python environment. Use HSFS Query object instead."
+        )
+
+    def split_labels(self, df, labels):
+        if labels:
+            labels_df = df[labels]
+            df_new = df.drop(columns=labels)
+            return df_new, labels_df
+        else:
+            return df, None
+
+    def is_spark_dataframe(self, dataframe):
+        return False
+
+    # other
+
+    def _return_dataframe_type(self, dataframe, dataframe_type):
+        if dataframe_type.lower() in ["default", "pandas"]:
+            return dataframe
+        if dataframe_type.lower() == "numpy":
+            return dataframe.values
+        if dataframe_type == "python":
+            return dataframe.values.tolist()
+
+        raise TypeError(
+            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
+        )
+
+    def _apply_transformation_function(self, training_dataset, dataset):
+        for (
+                feature_name,
+                transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            dataset[feature_name] = dataset[feature_name].map(
+                transformation_fn.transformation_fn
+            )
+
+        return dataset
+
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # todo only here
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
@@ -103,19 +414,6 @@ class Engine(engine_base.EngineBase):
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
-
-    def read(self, storage_connector, data_format, read_options, location):
-        if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format)
-        elif storage_connector.type == storage_connector.S3:
-            df_list = self._read_s3(storage_connector, location, data_format)
-        else:
-            raise NotImplementedError(
-                "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
-                    storage_connector.type
-                )
-            )
-        return pd.concat(df_list, ignore_index=True)
 
     # todo only here
     def _read_pandas(self, data_format, obj):
@@ -225,34 +523,6 @@ class Engine(engine_base.EngineBase):
                     df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
 
-    def read_options(self, data_format, provided_options):
-        return {}
-
-    def read_stream(
-        self,
-        storage_connector,
-        message_format,
-        schema,
-        options,
-        include_metadata,
-    ):
-        raise NotImplementedError(
-            "Streaming Sources are not supported for pure Python Environments."
-        )
-
-    def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
-
-    def register_external_temporary_table(self, external_fg, alias):
-        # No op to avoid query failure
-        pass
-
-    def register_hudi_temporary_table(
-        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
-    ):
-        # No op to avoid query failure
-        pass
-
     # todo only here
     def profile_by_spark(self, metadata_instance):
         stat_api = statistics_api.StatisticsApi(
@@ -266,34 +536,6 @@ class Engine(engine_base.EngineBase):
         )
 
         self._wait_for_job(job)
-
-    def profile(
-        self,
-        dataframe,
-        relevant_columns,
-        correlations,
-        histograms,
-        exact_uniqueness=True,
-    ):
-        # TODO: add statistics for correlations, histograms and exact_uniqueness
-        if not relevant_columns:
-            stats = dataframe.describe()
-        else:
-            target_cols = [col for col in dataframe.columns if col in relevant_columns]
-            stats = dataframe[target_cols].describe()
-        final_stats = []
-        for col in stats.columns:
-            stat = self._convert_pandas_statistics(stats[col].to_dict())
-            stat["dataType"] = (
-                "Fractional"
-                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
-                else "Integral"
-            )
-            stat["isDataTypeInferred"] = "false"
-            stat["column"] = col.split(".")[-1]
-            stat["completeness"] = 1
-            final_stats.append(stat)
-        return json.dumps({"columns": final_stats})
 
     # todo only here
     def _convert_pandas_statistics(self, stat):
@@ -324,64 +566,6 @@ class Engine(engine_base.EngineBase):
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
-        )
-
-    def validate_with_great_expectations(
-        self,
-        dataframe: pd.DataFrame,
-        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
-    ):
-        report = ge.from_pandas(
-            dataframe, expectation_suite=expectation_suite
-        ).validate(**ge_validate_kwargs)
-        return report
-
-    def set_job_group(self, group_id, description):
-        pass
-
-    def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
-            upper_case_features = [
-                col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
-            ]
-            if len(upper_case_features) > 0:
-                warnings.warn(
-                    "The ingested dataframe contains upper case letters in feature names: `{}`. "
-                    "Feature names are sanitized to lower case in the feature store.".format(
-                        upper_case_features
-                    ),
-                    util.FeatureGroupWarning,
-                )
-
-            # making a shallow copy of the dataframe so that column names are unchanged
-            dataframe_copy = dataframe.copy(deep=False)
-            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
-            return dataframe_copy
-
-        raise TypeError(
-            "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
-            + "The provided dataframe has type: {}".format(type(dataframe))
-        )
-
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe)
-        features = []
-        for feat_name, feat_type in dataframe.dtypes.items():
-            name = feat_name.lower()
-            try:
-                converted_type = self._convert_pandas_type(
-                    feat_type, arrow_schema.field(feat_name).type
-                )
-            except ValueError as e:
-                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
-            features.append(feature.Feature(name, converted_type))
-        return features
-
-    def parse_schema_training_dataset(self, dataframe):
-        raise NotImplementedError(
-            "Training dataset creation from Dataframes is not "
-            + "supported in Python environment. Use HSFS Query object instead."
         )
 
     # todo only here
@@ -448,34 +632,6 @@ class Engine(engine_base.EngineBase):
 
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
-    def save_dataframe(
-        self,
-        feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
-        operation: str,
-        online_enabled: bool,
-        storage: bool,
-        offline_write_options: dict,
-        online_write_options: dict,
-        validation_id: int = None,
-    ):
-        if feature_group.stream:
-            return self._write_dataframe_kafka(
-                feature_group, dataframe, offline_write_options
-            )
-        else:
-            # for backwards compatibility
-            return self.legacy_save_dataframe(
-                feature_group,
-                dataframe,
-                operation,
-                online_enabled,
-                storage,
-                offline_write_options,
-                online_write_options,
-                validation_id,
-            )
-
     # todo only here
     def legacy_save_dataframe(
         self,
@@ -513,32 +669,6 @@ class Engine(engine_base.EngineBase):
         self._wait_for_job(ingestion_job.job, offline_write_options)
 
         return ingestion_job.job
-
-    def get_training_data(
-        self, training_dataset_obj, feature_view_obj, query_obj, read_options
-    ):
-        df = query_obj.read(read_options=read_options)
-        if training_dataset_obj.splits:
-            split_df = self._prepare_transform_split_df(
-                df, training_dataset_obj, feature_view_obj
-            )
-        else:
-            split_df = df
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
-            )
-            split_df = self._apply_transformation_function(
-                training_dataset_obj, split_df
-            )
-        return split_df
-
-    def split_labels(self, dataframe, labels):
-        if labels:
-            labels_df = dataframe[labels]
-            df_new = dataframe.drop(columns=labels)
-            return df_new, labels_df
-        else:
-            return dataframe, None
 
     # todo only here
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
@@ -583,55 +713,6 @@ class Engine(engine_base.EngineBase):
 
         return result_dfs
 
-    def write_training_dataset(
-        self,
-        training_dataset,
-        dataset,
-        user_write_options,
-        save_mode,
-        feature_view_obj=None,
-        to_df=False,
-    ):
-        if not feature_view_obj and not isinstance(dataset, query.Query):
-            raise Exception(
-                "Currently only query based training datasets are supported by the Python engine"
-            )
-
-        # As for creating a feature group, users have the possibility of passing
-        # a spark_job_configuration object as part of the user_write_options with the key "spark"
-        spark_job_configuration = user_write_options.pop("spark", None)
-        td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
-            query=dataset,
-            overwrite=(save_mode == "overwrite"),
-            write_options=user_write_options,
-            spark_job_configuration=spark_job_configuration,
-        )
-
-        if feature_view_obj:
-            fv_api = feature_view_api.FeatureViewApi(feature_view_obj.featurestore_id)
-            td_job = fv_api.compute_training_dataset(
-                feature_view_obj.name,
-                feature_view_obj.version,
-                training_dataset.version,
-                td_app_conf,
-            )
-        else:
-            td_api = training_dataset_api.TrainingDatasetApi(
-                training_dataset.feature_store_id
-            )
-            td_job = td_api.compute(training_dataset, td_app_conf)
-        print(
-            "Training dataset job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(td_job.href)
-            )
-        )
-
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        self._wait_for_job(td_job, user_write_options)
-
-        return td_job
-
     # todo only here
     def _create_hive_connection(self, feature_store):
         try:
@@ -656,45 +737,6 @@ class Engine(engine_base.EngineBase):
                     f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
                     f" It is possible to request access from data owners of '{feature_store}'."
                 )
-
-    def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() in ["default", "pandas"]:
-            return dataframe
-        if dataframe_type.lower() == "numpy":
-            return dataframe.values
-        if dataframe_type == "python":
-            return dataframe.values.tolist()
-
-        raise TypeError(
-            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
-        )
-
-    def is_spark_dataframe(self, dataframe):
-        return False
-
-    def save_stream_dataframe(
-        self,
-        feature_group,
-        dataframe,
-        query_name,
-        output_mode,
-        await_termination,
-        timeout,
-        checkpoint_dir,
-        write_options,
-    ):
-        raise NotImplementedError(
-            "Stream ingestion is not available on Python environments, because it requires Spark as engine."
-        )
-
-    def get_empty_appended_dataframe(self, dataframe, new_features):
-        """No-op in python engine, user has to write to feature group manually for schema
-        change to take effect."""
-        return None
-
-    def save_empty_dataframe(self, feature_group, dataframe):
-        """Wrapper around save_dataframe in order to provide no-op."""
-        pass
 
     # todo only here
     def _get_job_url(self, href: str):
@@ -755,27 +797,6 @@ class Engine(engine_base.EngineBase):
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
-
-    def add_file(self, file):
-        # if streaming connectors are implemented in the future, this method
-        # can be used to materialize certificates locally
-        return file
-
-    @staticmethod
-    def _apply_transformation_function(training_dataset_instance, dataset):
-        for (
-            feature_name,
-            transformation_fn,
-        ) in training_dataset_instance.transformation_functions.items():
-            dataset[feature_name] = dataset[feature_name].map(
-                transformation_fn.transformation_fn
-            )
-
-        return dataset
-
-    @staticmethod
-    def get_unique_values(feature_dataframe, feature_name):
-        return feature_dataframe[feature_name].unique()
 
     # todo only here
     def _write_dataframe_kafka(
@@ -885,6 +906,7 @@ class Engine(engine_base.EngineBase):
 
         return job
 
+    # todo only here
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
     ) -> dict:
@@ -939,6 +961,3 @@ class Engine(engine_base.EngineBase):
                 ]
             )
         return config
-
-
-Engine()

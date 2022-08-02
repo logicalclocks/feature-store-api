@@ -163,7 +163,7 @@ class EngineBase(ABC):
         pass
 
     @abstractmethod
-    def split_labels(self, dataframe, labels):
+    def split_labels(self, df, labels):
         pass
 
     @abstractmethod
@@ -173,17 +173,13 @@ class EngineBase(ABC):
     # other
 
     @abstractmethod
-    def _return_dataframe_type(self):
+    def _return_dataframe_type(self, dataframe, dataframe_type):
         pass
 
     @abstractmethod
-    def _apply_transformation_function(self):
+    def _apply_transformation_function(self, training_dataset, dataset):
         pass
 
     @abstractmethod
-    def _encode_complex_features(self):
-        pass
-
-    @abstractmethod
-    def _sql_offline(self):
+    def _sql_offline(self, sql_query, feature_store, dataframe_type):
         pass
