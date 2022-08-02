@@ -53,6 +53,7 @@ from hsfs.core import (
 from hsfs.constructor import query
 from hsfs.client import exceptions, external, hopsworks
 from hsfs.feature_group import FeatureGroup
+from hsfs.engine import engine_base
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
 
@@ -66,7 +67,7 @@ except ImportError:
     pass
 
 
-class Engine:
+class Engine(engine_base.EngineBase):
     APP_OP_INSERT_FG = "insert_fg"
 
     def __init__(self):
@@ -88,6 +89,7 @@ class Engine:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
+    # todo only here
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
@@ -115,6 +117,7 @@ class Engine:
             )
         return pd.concat(df_list, ignore_index=True)
 
+    # todo only here
     def _read_pandas(self, data_format, obj):
         if data_format.lower() == "csv":
             return pd.read_csv(obj)
@@ -129,6 +132,7 @@ class Engine:
                 )
             )
 
+    # todo only here
     def _read_hopsfs(self, location, data_format):
         # providing more informative error
         try:
@@ -149,6 +153,7 @@ class Engine:
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
 
+    # todo only here
     # This is a version of the read method that uses the Hopsworks REST APIs
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
@@ -172,6 +177,7 @@ class Engine:
 
         return df_list
 
+    # todo only here
     def _read_s3(self, storage_connector, location, data_format):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
@@ -247,6 +253,7 @@ class Engine:
         # No op to avoid query failure
         pass
 
+    # todo only here
     def profile_by_spark(self, metadata_instance):
         stat_api = statistics_api.StatisticsApi(
             metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
@@ -262,7 +269,7 @@ class Engine:
 
     def profile(
         self,
-        df,
+        dataframe,
         relevant_columns,
         correlations,
         histograms,
@@ -270,10 +277,10 @@ class Engine:
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
-            stats = df.describe()
+            stats = dataframe.describe()
         else:
-            target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe()
+            target_cols = [col for col in dataframe.columns if col in relevant_columns]
+            stats = dataframe[target_cols].describe()
         final_stats = []
         for col in stats.columns:
             stat = self._convert_pandas_statistics(stats[col].to_dict())
@@ -288,6 +295,7 @@ class Engine:
             final_stats.append(stat)
         return json.dumps({"columns": final_stats})
 
+    # todo only here
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
@@ -312,6 +320,7 @@ class Engine:
             content_dict["approxPercentiles"] = percentiles
         return content_dict
 
+    # todo only here
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
@@ -375,6 +384,7 @@ class Engine:
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
+    # todo only here
     def _convert_pandas_type(self, dtype, arrow_type):
         # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
         # using pyarrow types to convert "O (object)"-typed fields.
@@ -384,6 +394,7 @@ class Engine:
 
         return self._convert_simple_pandas_type(dtype)
 
+    # todo only here
     def _convert_simple_pandas_type(self, dtype):
         if dtype == np.dtype("uint8"):
             return "int"
@@ -414,6 +425,7 @@ class Engine:
 
         raise ValueError(f"dtype '{dtype}' not supported")
 
+    # todo only here
     def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
@@ -464,6 +476,7 @@ class Engine:
                 validation_id,
             )
 
+    # todo only here
     def legacy_save_dataframe(
         self,
         feature_group,
@@ -519,14 +532,15 @@ class Engine:
             )
         return split_df
 
-    def split_labels(self, df, labels):
+    def split_labels(self, dataframe, labels):
         if labels:
-            labels_df = df[labels]
-            df_new = df.drop(columns=labels)
+            labels_df = dataframe[labels]
+            df_new = dataframe.drop(columns=labels)
             return df_new, labels_df
         else:
-            return df, None
+            return dataframe, None
 
+    # todo only here
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -618,6 +632,7 @@ class Engine:
 
         return td_job
 
+    # todo only here
     def _create_hive_connection(self, feature_store):
         try:
             return hive.Connection(
@@ -665,6 +680,7 @@ class Engine:
         output_mode,
         await_termination,
         timeout,
+        checkpoint_dir,
         write_options,
     ):
         raise NotImplementedError(
@@ -680,6 +696,7 @@ class Engine:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
+    # todo only here
     def _get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs
 
@@ -696,6 +713,7 @@ class Engine:
         ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
 
+    # todo only here
     def _get_app_options(self, user_write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
@@ -714,6 +732,7 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
+    # todo only here
     def _wait_for_job(self, job, user_write_options=None):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
@@ -758,6 +777,7 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         return feature_dataframe[feature_name].unique()
 
+    # todo only here
     def _write_dataframe_kafka(
         self,
         feature_group: FeatureGroup,
@@ -874,6 +894,7 @@ class Engine:
                 row[feature_name] = outf.getvalue()
         return row
 
+    # todo only here
     def _get_encoder_func(self, writer_schema: str) -> callable:
         if HAS_FAST:
             schema = json.loads(writer_schema)
@@ -884,6 +905,7 @@ class Engine:
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
+    # todo only here
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         # producer configuration properties
         # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
@@ -917,3 +939,6 @@ class Engine:
                 ]
             )
         return config
+
+
+Engine()

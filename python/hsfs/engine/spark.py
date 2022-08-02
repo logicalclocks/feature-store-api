@@ -56,6 +56,7 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
+from hsfs.engine import engine_base
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
@@ -65,7 +66,7 @@ from great_expectations.data_context.types.base import (
 )
 
 
-class Engine:
+class Engine(engine_base.EngineBase):
     HIVE_FORMAT = "hive"
     KAFKA_FORMAT = "kafka"
 
@@ -85,11 +86,11 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
-        if not connector:
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
+        if not online_conn:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
-            result_df = connector.read(sql_query, None, {}, None)
+            result_df = online_conn.read(sql_query, None, {}, None)
 
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -276,6 +277,7 @@ class Engine:
 
         return query
 
+    # todo only here
     def _save_offline_dataframe(
         self,
         feature_group,
@@ -305,6 +307,7 @@ class Engine:
                 feature_group._get_table_name()
             )
 
+    # todo only here
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
 
         serialized_df = self._online_fg_to_avro(
@@ -327,6 +330,7 @@ class Engine:
             ]
         )
 
+    # todo only here
     def _online_fg_to_avro(self, feature_group, dataframe):
         """Packs all features into named struct to be serialized to single avro/binary
         column. And packs primary key into arry to be serialized for partitioning.
@@ -355,11 +359,11 @@ class Engine:
         )
 
     def get_training_data(
-        self, training_dataset, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
         df = query_obj.read(read_options=read_options)
         return self.write_training_dataset(
-            training_dataset,
+            training_dataset_obj,
             df,
             read_options,
             None,
@@ -367,13 +371,13 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, dataframe, labels):
         if labels:
-            labels_df = df.select(*labels)
-            df_new = df.drop(*labels)
+            labels_df = dataframe.select(*labels)
+            df_new = dataframe.drop(*labels)
             return df_new, labels_df
         else:
-            return df, None
+            return dataframe, None
 
     def write_training_dataset(
         self,
@@ -430,6 +434,7 @@ class Engine:
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
 
+    # todo only here
     def _write_training_dataset_splits(
         self,
         training_dataset,
@@ -454,6 +459,7 @@ class Engine:
         if to_df:
             return feature_dataframes
 
+    # todo only here
     def _write_training_dataset_single(
         self,
         training_dataset,
@@ -525,6 +531,7 @@ class Engine:
                 stream, message_format, schema, include_metadata
             )
 
+    # todo only here
     def _read_stream_kafka(self, stream, message_format, schema, include_metadata):
         kafka_cols = [
             col("key"),
@@ -633,6 +640,7 @@ class Engine:
 
         return report
 
+    # todo only here
     def write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")
@@ -695,6 +703,7 @@ class Engine:
             for feat in dataframe.schema
         ]
 
+    # todo only here
     def convert_spark_type(self, hive_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
@@ -724,6 +733,7 @@ class Engine:
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
+    # todo only here
     def training_dataset_schema_match(self, dataframe, schema):
         schema_sorted = sorted(schema, key=lambda f: f.index)
         insert_schema = dataframe.schema
@@ -745,6 +755,7 @@ class Engine:
 
             i += 1
 
+    # todo only here
     def setup_storage_connector(self, storage_connector, path=None):
         # update storage connector to get new session token
         storage_connector.refetch()
@@ -758,6 +769,7 @@ class Engine:
         else:
             return path
 
+    # todo only here
     def _setup_s3_hadoop_conf(self, storage_connector, path):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
@@ -788,6 +800,7 @@ class Engine:
             )
         return path.replace("s3", "s3a", 1) if path is not None else None
 
+    # todo only here
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
@@ -859,6 +872,7 @@ class Engine:
         dataset = dataset.select(*sorted_feature_names)
         return dataset
 
+    # todo only here
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 
         PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile"
@@ -913,6 +927,7 @@ class Engine:
         unique_values = feature_dataframe.select(feature_name).distinct().collect()
         return [field[feature_name] for field in unique_values]
 
+    # todo only here
     def create_empty_df(self, streaming_df):
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
