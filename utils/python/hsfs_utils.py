@@ -90,6 +90,7 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
         write_options=job_conf.pop("write_options", {}) or {},
     )
 
+
 def create_fv_td(job_conf: Dict[Any, Any]) -> None:
     # Extract the feature store handle
     feature_store = job_conf.pop("feature_store")
@@ -103,6 +104,7 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
         job_conf.pop("write_options", {}) or {},
         training_dataset_version=job_conf["td_version"],
     )
+
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:
     """
@@ -122,6 +124,22 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
         )
 
     entity.compute_statistics()
+
+
+def ge_validate(job_conf: Dict[Any, Any]) -> None:
+    """
+    Run expectation suite attached to a feature group.
+    """
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    entity = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
+
+    # when user runs job we always want to save the report and actually perform validation,
+    # no matter of setting on feature group level
+    entity.validate(
+        dataframe=None, save_report=True, validation_options={"run_validation": True}
+    )
 
 
 if __name__ == "__main__":
@@ -154,3 +172,5 @@ if __name__ == "__main__":
         create_fv_td(job_conf)
     elif args.op == "compute_stats":
         compute_stats(job_conf)
+    elif args.op == "ge_validate":
+        ge_validate(job_conf)
