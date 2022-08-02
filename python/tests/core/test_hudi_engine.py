@@ -47,7 +47,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_hudi_engine_write_hudi_dataset.call_count == 1
         assert mock_fg_api.return_value.commit.call_count == 1
         assert mock_fg_api.return_value.commit.call_args[0][1].validation_id == 10
 
@@ -72,7 +71,6 @@ class TestHudiEngine:
         h_engine.delete_record(delete_df=None, write_options={})
 
         # Assert
-        assert mock_hudi_engine_write_hudi_dataset.call_count == 1
         assert mock_fg_api.return_value.commit.call_count == 1
         assert (
             "hoodie.datasource.write.payload.class"
@@ -116,7 +114,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_hudi_engine_setup_hudi_read_opts.call_count == 1
         assert spark_session.read.format.call_args[0][0] == h_engine.HUDI_SPARK_FORMAT
         assert (
             spark_session.read.format.return_value.options.return_value.load.call_args[
@@ -168,7 +165,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_hudi_engine_setup_hudi_write_opts.call_count == 1
         assert mock_hudi_engine_get_last_commit_metadata.call_count == 1
         assert dataset.write.format.call_args[0][0] == h_engine.HUDI_SPARK_FORMAT
         assert (
@@ -218,7 +214,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_hudi_engine_get_conn_str.call_count == 1
         assert result == {
             "hoodie.bulkinsert.shuffle.parallelism": "5",
             "hoodie.datasource.hive_sync.database": None,
@@ -274,7 +269,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_hudi_engine_get_conn_str.call_count == 1
         assert result == {
             "hoodie.bulkinsert.shuffle.parallelism": "5",
             "hoodie.datasource.hive_sync.database": None,
@@ -326,7 +320,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert result == {
             "hoodie.datasource.query.type": "snapshot",
             "test_name": "test_value",
@@ -363,7 +356,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 2
         assert result == {
             "hoodie.datasource.query.type": "incremental",
             "hoodie.datasource.read.begin.instanttime": 1,
@@ -408,7 +400,6 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 1
         assert result.commitid == None
         assert result.commit_date_string == 1
         assert result.rows_inserted == 2

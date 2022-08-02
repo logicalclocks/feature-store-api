@@ -60,13 +60,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
 
     def test_save_ge_report(self, mocker):
@@ -117,13 +110,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
 
     def test_insert(self, mocker):
@@ -170,14 +156,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_fg_api.return_value.delete_content.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
 
@@ -226,14 +204,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 0
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 1
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_fg_api.return_value.delete_content.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
 
@@ -291,14 +261,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 0
         assert mock_fg_api.return_value.delete_content.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
 
@@ -347,14 +309,6 @@ class TestFeatureGroupEngine:
             )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_fg_api.return_value.delete_content.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
         assert (
@@ -405,14 +359,6 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
-        assert mock_ge_engine.return_value.validate.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
         assert mock_fg_api.return_value.delete_content.call_count == 1
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
 
@@ -473,9 +419,7 @@ class TestFeatureGroupEngine:
             fg_engine.commit_details(feature_group=fg, wallclock_time=None, limit=None)
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api.return_value.get_commit_details.call_count == 0
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert (
             str(e_info.value)
             == "commit_details can only be used on time travel enabled feature groups"
@@ -513,9 +457,7 @@ class TestFeatureGroupEngine:
             fg_engine.commit_details(feature_group=fg, wallclock_time=None, limit=None)
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api.return_value.get_commit_details.call_count == 0
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert (
             str(e_info.value)
             == "commit_details can only be used on time travel enabled feature groups"
@@ -552,9 +494,7 @@ class TestFeatureGroupEngine:
         fg_engine.commit_details(feature_group=fg, wallclock_time=None, limit=None)
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api.return_value.get_commit_details.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
 
     def test_commit_details_time_travel_format_hudi_fg_commit(self, mocker):
         # Arrange
@@ -595,9 +535,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 0
         assert mock_fg_api.return_value.get_commit_details.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 1
         assert result == {
             1: {
                 "committedOn": "123",
@@ -659,7 +597,6 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_sc_api.return_value.get_online_connector.call_count == 0
-        assert mock_engine_get_instance.call_count == 1
 
     def test_sql_online(self, mocker):
         # Arrange
@@ -686,7 +623,6 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_sc_api.return_value.get_online_connector.call_count == 1
-        assert mock_engine_get_instance.call_count == 1
 
     def test_update_features_metadata(self, mocker):
         # Arrange
@@ -771,11 +707,6 @@ class TestFeatureGroupEngine:
         fg_engine.append_features(feature_group=fg, new_features=[f1, f2])
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.get_empty_appended_dataframe.call_count
-            == 1
-        )
-        assert mock_fg_engine_update_features_metadata.call_count == 1
         assert (
             mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
         )
@@ -912,15 +843,7 @@ class TestFeatureGroupEngine:
             )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 0
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 0
-        assert mock_fg_engine_get_kafka_config.call_count == 0
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert (
             mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 0
         )
@@ -972,19 +895,10 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 2
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 1
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 1
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert (
             mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
         )
-        assert mock_warnings_warn.call_count == 1
         assert (
             mock_warnings_warn.call_args[0][0]
             == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
@@ -1032,15 +946,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 1
-        assert mock_fg_engine_get_kafka_config.call_count == 1
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert (
             mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
         )
@@ -1089,19 +995,10 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
-        assert mock_fg_engine_save_feature_group_metadata.call_count == 0
-        assert mock_fg_engine_get_kafka_config.call_count == 1
-        assert mock_engine_get_instance.return_value.create_empty_df.call_count == 0
         assert mock_engine_get_instance.return_value.save_dataframe.call_count == 0
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 1
         assert (
             mock_engine_get_instance.return_value.save_stream_dataframe.call_count == 1
         )
-        assert mock_warnings_warn.call_count == 1
         assert (
             mock_warnings_warn.call_args[0][0]
             == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
@@ -1282,9 +1179,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_fg_api.return_value.save.call_count == 1
-        assert mock_fg_engine_get_feature_group_url.call_count == 1
         assert f.primary == False
         assert f.partition == False
         assert f.hudi_precombine_key == False
@@ -1333,9 +1228,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 1
         assert mock_fg_api.return_value.save.call_count == 1
-        assert mock_fg_engine_get_feature_group_url.call_count == 1
         assert f.primary == False
         assert f.partition == False
         assert f.hudi_precombine_key == False
@@ -1384,9 +1277,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_fg_api.return_value.save.call_count == 1
-        assert mock_fg_engine_get_feature_group_url.call_count == 1
         assert f.primary == True
         assert f.partition == True
         assert f.hudi_precombine_key == True
@@ -1436,9 +1327,7 @@ class TestFeatureGroupEngine:
         )
 
         # Assert
-        assert mock_fg_engine_verify_schema_compatibility.call_count == 0
         assert mock_fg_api.return_value.save.call_count == 1
-        assert mock_fg_engine_get_feature_group_url.call_count == 1
         assert f.primary == False
         assert f.partition == False
         assert f.hudi_precombine_key == False

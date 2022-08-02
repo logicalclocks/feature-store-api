@@ -50,14 +50,6 @@ class TestExternalFeatureGroupEngine:
         external_fg_engine.save(feature_group=fg)
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.register_external_temporary_table.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
         assert mock_fg_api.return_value.save.call_count == 1
         assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
         assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
@@ -92,14 +84,6 @@ class TestExternalFeatureGroupEngine:
         external_fg_engine.save(feature_group=fg)
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.register_external_temporary_table.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 1
-        )
         assert mock_fg_api.return_value.save.call_count == 1
         assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
         assert mock_fg_api.return_value.save.call_args[0][0].features[0].primary
@@ -132,14 +116,6 @@ class TestExternalFeatureGroupEngine:
         external_fg_engine.save(feature_group=fg)
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.register_external_temporary_table.call_count
-            == 0
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_feature_group.call_count
-            == 0
-        )
         assert mock_fg_api.return_value.save.call_count == 1
         assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 1
         assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
@@ -242,7 +218,7 @@ class TestExternalFeatureGroupEngine:
         assert mock_external_fg_engine_update_features_metadata.call_count == 1
         assert (
             len(mock_external_fg_engine_update_features_metadata.call_args[0][1]) == 4
-        )  # todo why are there duplicates?
+        )
 
     def test_update_description(self, mocker):
         # Arrange

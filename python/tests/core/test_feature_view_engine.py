@@ -59,9 +59,7 @@ class TestFeatureViewEngine:
         assert len(fv._features) == 2
         assert fv._features[0].name == "label1" and fv._features[0].label
         assert fv._features[1].name == "label2" and fv._features[1].label
-        assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 1
         assert mock_fv_api.return_value.post.call_count == 1
-        assert mock_fv_engine_get_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -105,7 +103,6 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_api.return_value.get_by_name_version.call_count == 0
         assert mock_fv_api.return_value.get_by_name.call_count == 1
-        assert mock_fv_engine_get_attached_transformation_fn.call_count == 2
         assert len(result) == 2
 
     def test_get_name_version(self, mocker):
@@ -137,7 +134,6 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_api.return_value.get_by_name_version.call_count == 1
         assert mock_fv_api.return_value.get_by_name.call_count == 0
-        assert mock_fv_engine_get_attached_transformation_fn.call_count == 1
 
     def test_delete_name(self, mocker):
         # Arrange
@@ -405,12 +401,7 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
         assert mock_fv_engine_create_training_data_metadata.call_count == 1
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 1
         assert mock_fv_engine_read_from_storage_connector.call_count == 1
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_get_training_data_td_version(self, mocker):
@@ -458,12 +449,7 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 1
         assert mock_fv_engine_create_training_data_metadata.call_count == 0
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 1
         assert mock_fv_engine_read_from_storage_connector.call_count == 1
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_get_training_data_type_in_memory(self, mocker):
@@ -517,12 +503,7 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
         assert mock_fv_engine_create_training_data_metadata.call_count == 1
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 1
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 1
         assert mock_fv_engine_read_from_storage_connector.call_count == 0
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 1
-        assert mock_fv_engine_get_batch_query.call_count == 1
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
     def test_get_training_data_splits(self, mocker):
@@ -573,12 +554,7 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
         assert mock_fv_engine_create_training_data_metadata.call_count == 1
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 2
         assert mock_fv_engine_read_from_storage_connector.call_count == 1
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_get_training_data_check_splits_0(self, mocker):
@@ -633,12 +609,7 @@ class TestFeatureViewEngine:
         )
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
         assert mock_fv_engine_create_training_data_metadata.call_count == 1
-        assert mock_engine_get_instance.return_value.read_options.call_count == 0
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 0
         assert mock_fv_engine_read_from_storage_connector.call_count == 0
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_get_training_data_check_splits_2(self, mocker):
@@ -693,13 +664,8 @@ class TestFeatureViewEngine:
             == "Incorrect `get` method is used. Use `feature_view.get_train_test_split` instead."
         )
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_create_training_data_metadata.call_count
-        assert mock_engine_get_instance.return_value.read_options.call_count == 0
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 0
+        assert mock_fv_engine_create_training_data_metadata.call_count == 1
         assert mock_fv_engine_read_from_storage_connector.call_count == 0
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_get_training_data_check_splits_3(self, mocker):
@@ -755,13 +721,8 @@ class TestFeatureViewEngine:
             == "Incorrect `get` method is used. Use `feature_view.get_train_validation_test_split` instead."
         )
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_create_training_data_metadata.call_count
-        assert mock_engine_get_instance.return_value.read_options.call_count == 0
-        assert mock_engine_get_instance.return_value.get_training_data.call_count == 0
-        assert mock_engine_get_instance.return_value.split_labels.call_count == 0
+        assert mock_fv_engine_create_training_data_metadata.call_count == 1
         assert mock_fv_engine_read_from_storage_connector.call_count == 0
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
     def test_recreate_training_dataset(self, mocker):
@@ -967,12 +928,6 @@ class TestFeatureViewEngine:
         # Assert
         assert str(e_info.value) == "No training dataset object or version is provided"
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 0
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 0
-        )
-        assert mock_code_engine.return_value.save_code.call_count == 0
-        assert mock_engine_get_type.call_count == 0
         assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 0
 
@@ -1020,12 +975,6 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 1
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
-        assert mock_code_engine.return_value.save_code.call_count == 1
-        assert mock_engine_get_type.call_count == 2
         assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
@@ -1075,12 +1024,6 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 1
-        assert mock_fv_engine_get_batch_query.call_count == 1
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
-        assert mock_code_engine.return_value.save_code.call_count == 1
-        assert mock_engine_get_type.call_count == 2
         assert mock_td_engine.return_value.read.call_count == 0
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
@@ -1130,12 +1073,6 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 1
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
-        assert mock_code_engine.return_value.save_code.call_count == 1
-        assert mock_engine_get_type.call_count == 2
         assert mock_td_engine.return_value.read.call_count == 1
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
@@ -1185,12 +1122,6 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_engine_get_training_data_metadata.call_count == 0
-        assert mock_fv_engine_get_batch_query.call_count == 1
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
-        assert mock_code_engine.return_value.save_code.call_count == 1
-        assert mock_engine_get_type.call_count == 2
         assert mock_td_engine.return_value.read.call_count == 2
         assert mock_fv_engine_compute_training_dataset_statistics.call_count == 1
 
@@ -1615,10 +1546,7 @@ class TestFeatureViewEngine:
             ].transformation_functions
             == tf_value
         )
-        assert mock_fv_engine_check_feature_group_accessibility.call_count == 1
-        assert mock_fv_engine_get_batch_query.call_count == 1
-        assert mock_fv_engine_get_training_data_metadata.call_count == 1
-        assert mock_engine_get_instance.call_count == 1
+        assert mock_engine_get_instance.return_value._apply_transformation_function.call_count == 1
 
     def test_add_tag(self, mocker):
         # Arrange
@@ -1908,7 +1836,6 @@ class TestFeatureViewEngine:
         fv_engine._get_feature_view_url(feature_view=fv)
 
         # Assert
-        assert mock_client_get_instance.call_count == 1
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
             mock_util_get_hostname_replaced_url.call_args[0][0]

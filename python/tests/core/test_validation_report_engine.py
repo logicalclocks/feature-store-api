@@ -50,7 +50,6 @@ class TestValidationReportEngine:
 
         # Assert
         assert mock_vr_api.return_value.create.call_count == 1
-        assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -89,7 +88,6 @@ class TestValidationReportEngine:
 
         # Assert
         assert mock_vr_api.return_value.get_last.call_count == 1
-        assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -128,7 +126,6 @@ class TestValidationReportEngine:
 
         # Assert
         assert mock_vr_api.return_value.get_all.call_count == 1
-        assert mock_vr_engine_get_validation_report_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0

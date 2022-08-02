@@ -52,7 +52,6 @@ class TestExpectationSuiteEngine:
 
         # Assert
         assert mock_es_api.return_value.create.call_count == 1
-        assert mock_es_engine_get_expectation_suite_url.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -145,7 +144,6 @@ class TestExpectationSuiteEngine:
         es_engine._get_expectation_suite_url(feature_group=fg)
 
         # Assert
-        assert mock_client_get_instance.call_count == 1
         assert mock_util_get_hostname_replaced_url.call_count == 1
         assert (
             mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"

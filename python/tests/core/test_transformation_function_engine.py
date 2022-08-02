@@ -52,7 +52,6 @@ class TestTransformationFunctionEngine:
             tf_engine.save(transformation_fn_instance=tf)
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 1
         assert mock_tf_api.return_value.register_transformation_fn.call_count == 0
         assert (
             str(e_info.value)
@@ -86,7 +85,6 @@ class TestTransformationFunctionEngine:
             tf_engine.save(transformation_fn_instance=tf)
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 1
         assert mock_tf_api.return_value.register_transformation_fn.call_count == 0
         assert str(e_info.value) == "transformer must be callable"
 
@@ -124,7 +122,6 @@ class TestTransformationFunctionEngine:
         tf_engine.save(transformation_fn_instance=tf)
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 1
         assert mock_tf_api.return_value.register_transformation_fn.call_count == 1
 
     def test_get_transformation_fn(self, mocker):
@@ -555,7 +552,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_builtin_tf_fn_min_max_scaler_stats.call_count == 1
         assert tf.transformation_fn.keywords["min_value"] == 1
         assert tf.transformation_fn.keywords["max_value"] == 100
 
@@ -585,7 +581,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_builtin_tf_fn_standard_scaler_stats.call_count == 1
         assert tf.transformation_fn.keywords["mean"] == 1
         assert tf.transformation_fn.keywords["std_dev"] == 100
 
@@ -615,7 +610,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_builtin_tf_fn_robust_scaler_stats.call_count == 1
         assert tf.transformation_fn.keywords["p25"] == 1
         assert tf.transformation_fn.keywords["p50"] == 2
         assert tf.transformation_fn.keywords["p75"] == 3
@@ -646,7 +640,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_builtin_tf_fn_encoder_stats.call_count == 1
         assert tf.transformation_fn.keywords["value_to_index"] == "test"
 
     def test_populate_builtin_attached_fns(self, mocker):
@@ -686,8 +679,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 2
-        assert mock_tf_engine_populate_builtin_fn_arguments.call_count == 0
         assert transformation_fn_dict["tf_name"] == tf_attached
         assert transformation_fn_dict["tf1_name"] == tf1_attached
 
@@ -727,8 +718,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 2
-        assert mock_tf_engine_populate_builtin_fn_arguments.call_count == 2
         assert transformation_fn_dict["tf_name"] != tf_attached
         assert transformation_fn_dict["tf1_name"] != tf1_attached
 
@@ -1278,7 +1267,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 4
         assert mock_tf_engine_compute_transformation_fn_statistics.call_count == 1
         assert mock_tf_engine_populate_builtin_attached_fns.call_count == 1
         assert dataset.get.call_count == 0
@@ -1345,7 +1333,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Assert
-        assert mock_tf_engine_is_builtin.call_count == 4
         assert mock_tf_engine_compute_transformation_fn_statistics.call_count == 1
         assert mock_tf_engine_populate_builtin_attached_fns.call_count == 1
         assert dataset.get.call_count == 1

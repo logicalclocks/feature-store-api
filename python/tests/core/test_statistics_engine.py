@@ -65,14 +65,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert mock_statistics_engine_profile_statistics.call_count == 0
-        assert mock_statistics.call_count == 0
-        assert mock_feature_group_select_all.call_count == 0
-        assert mock_feature_group_read.call_count == 0
         assert mock_statistics_engine_save_statistics.call_count == 0
-        assert mock_engine_get_instance.call_count == 1
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 1
 
     def test_compute_statistics_get_type_spark(self, mocker):
         # Arrange
@@ -119,14 +114,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 0
-        assert mock_feature_group_select_all.call_count == 0
-        assert mock_feature_group_read.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 0
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_compute_statistics_feature_view_obj(self, mocker):
         # Arrange
@@ -179,14 +169,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 0
-        assert mock_feature_group_select_all.call_count == 0
-        assert mock_feature_group_read.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 0
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_compute_statistics_get_type_spark_content_str(self, mocker):
         # Arrange
@@ -233,14 +218,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 1
-        assert mock_feature_group_select_all.call_count == 0
-        assert mock_feature_group_read.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_compute_statistics_feature_view_obj_content_str(self, mocker):
         # Arrange
@@ -293,14 +273,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 0
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 1
-        assert mock_feature_group_select_all.call_count == 0
-        assert mock_feature_group_read.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_compute_statistics_get_type_spark_feature_group_commit_id(self, mocker):
         # Arrange
@@ -347,14 +322,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 1
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 0
-        assert mock_feature_group_select_all.call_count == 1
-        assert mock_feature_group_read.call_count == 0
         assert mock_statistics_engine_save_statistics.call_count == 0
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_compute_statistics_feature_view_obj_feature_group_commit_id(self, mocker):
         # Arrange
@@ -407,14 +377,9 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_util_get_hudi_datestr_from_timestamp.call_count == 1
         assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_statistics.call_count == 0
-        assert mock_feature_group_select_all.call_count == 1
-        assert mock_feature_group_read.call_count == 0
         assert mock_statistics_engine_save_statistics.call_count == 0
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
     def test_profile_statistics(self, mocker):
         # Arrange
@@ -444,7 +409,7 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile.call_count == 0
         assert mock_warning.call_count == 1
         assert (
             mock_warning.call_args[0][0]
@@ -485,7 +450,7 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_instance.call_count == 1
+        assert mock_engine_get_instance.return_value.profile.call_count == 1
         assert (
             mock_engine_get_instance.return_value.profile.call_args[0][1] == sc.columns
         )
@@ -523,8 +488,7 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 1
+        assert mock_engine_get_instance.return_value.profile.call_count == 1
         assert mock_statistics_engine_profile_unique_values.call_count == 1
 
     def test_profile_transformation_fn_statistics_get_type_python(self, mocker):
@@ -552,8 +516,7 @@ class TestStatisticsEngine:
             )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile.call_count == 0
         assert mock_statistics_engine_profile_unique_values.call_count == 0
         assert (
             str(e_info.value)
@@ -587,8 +550,7 @@ class TestStatisticsEngine:
             )
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile.call_count == 0
         assert mock_statistics_engine_profile_unique_values.call_count == 0
         assert (
             str(e_info.value)
@@ -622,8 +584,7 @@ class TestStatisticsEngine:
             )
 
         # Assert
-        assert mock_engine_get_type.call_count == 1
-        assert mock_engine_get_instance.call_count == 0
+        assert mock_engine_get_instance.return_value.profile.call_count == 0
         assert mock_statistics_engine_profile_unique_values.call_count == 0
         assert (
             str(e_info.value)
@@ -663,8 +624,6 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_split_statistics.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_td_read.call_count == 1
         assert mock_split_statistics.call_args[0][0] == "split_name"
@@ -702,8 +661,6 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_statistics_engine_profile_statistics.call_count == 1
-        assert mock_split_statistics.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_td_read.call_count == 0
         assert mock_split_statistics.call_args[0][0] == "split_name"
@@ -732,10 +689,6 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert (
-            mock_statistics_engine_profile_transformation_fn_statistics.call_count == 1
-        )
-        assert mock_statistics.call_count == 1
         assert mock_statistics_engine_save_statistics.call_count == 1
 
     def test_get_last(self, mocker):
@@ -778,7 +731,6 @@ class TestStatisticsEngine:
         )
 
         # Assert
-        assert mock_util_get_timestamp_from_date_string.call_count == 1
         assert mock_statistics_api.return_value.get.call_count == 1
 
     def test_save_statistics(self, mocker):

@@ -99,9 +99,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 1
 
@@ -145,9 +142,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0
 
@@ -186,9 +180,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 1
 
@@ -227,9 +218,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0
 
@@ -273,9 +261,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 0
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 0
 
@@ -312,9 +297,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 0
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 0
 
@@ -360,9 +342,6 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0
 
@@ -403,8 +382,5 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert mock_engine_get_type.call_count == 3
-        assert mock_engine_get_instance.call_count == 1
-        assert mock_fg_get_expectation_suite.call_count == 1
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0

@@ -61,18 +61,6 @@ class TestTrainingDatasetEngine:
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
 
         # Assert
-        assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 0
-        assert (
-            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
         assert mock_td_api.return_value.post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -108,18 +96,6 @@ class TestTrainingDatasetEngine:
         td_engine.save(training_dataset=td, features=q, user_write_options=None)
 
         # Assert
-        assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 1
-        assert (
-            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
-            == 0
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
-            == 0
-        )
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
         assert mock_td_api.return_value.post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -176,18 +152,6 @@ class TestTrainingDatasetEngine:
             td_engine.save(training_dataset=td, features=None, user_write_options=None)
 
         # Assert
-        assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 0
-        assert (
-            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 0
-        )
         assert mock_td_api.return_value.post.call_count == 0
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -237,18 +201,6 @@ class TestTrainingDatasetEngine:
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
 
         # Assert
-        assert mock_tf_engine.return_value.attach_transformation_fn.call_count == 0
-        assert (
-            mock_engine_get_instance.return_value.convert_to_default_dataframe.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.parse_schema_training_dataset.call_count
-            == 1
-        )
-        assert (
-            mock_engine_get_instance.return_value.write_training_dataset.call_count == 1
-        )
         assert mock_td_api.return_value.post.call_count == 1
         assert len(td._features) == 2
         assert td._features[0].label is True
@@ -334,7 +286,6 @@ class TestTrainingDatasetEngine:
         td_engine.read(training_dataset=td, split=None, user_read_options=None)
 
         # Assert
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
         assert mock_storage_connector_read.call_args[1]["path"] == "td_location/test"
 
@@ -364,7 +315,6 @@ class TestTrainingDatasetEngine:
         td_engine.read(training_dataset=td, split="split", user_read_options=None)
 
         # Assert
-        assert mock_engine_get_instance.return_value.read_options.call_count == 1
         assert mock_storage_connector_read.call_count == 1
         assert mock_storage_connector_read.call_args[1]["path"] == "td_location/split"
 
