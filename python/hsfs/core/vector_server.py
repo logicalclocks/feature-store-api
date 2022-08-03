@@ -143,18 +143,10 @@ class VectorServer:
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
 
-    def get_preview_vectors(self, n):
-        batch = n > 1
-        entry = dict([(key, None) for key in self._serving_keys])
-        if batch:
-            return self.get_feature_vectors([entry], preview_sample=n)
-        else:
-            return self.get_feature_vector(entry, preview_sample=n)
-
-    def get_feature_vector(self, entry, passed_features={}, preview_sample=0):
+    def get_feature_vector(self, entry, passed_features={}):
         """Assembles serving vector from online feature store."""
 
-        if not preview_sample and all(
+        if all(
             [isinstance(val, list) for val in entry.values()]
         ):
             raise ValueError(
@@ -181,10 +173,6 @@ class VectorServer:
 
                 # Fetch the data from the online feature store
                 prepared_statement = self._prepared_statements[prepared_statement_index]
-                if preview_sample:
-                    prepared_statement = self._make_preview_statement(
-                        prepared_statement, preview_sample
-                    )
 
                 result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
 
@@ -208,7 +196,7 @@ class VectorServer:
 
         return self._generate_vector(result_dict)
 
-    def get_feature_vectors(self, entry, passed_features=[], preview_sample=0):
+    def get_feature_vectors(self, entry, passed_features=[]):
         """Assembles serving vector from online feature store."""
 
         # create dict object that will have of order of the vector as key and values as
@@ -218,10 +206,6 @@ class VectorServer:
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in self._prepared_statements:
                 prepared_statement = self._prepared_statements[prepared_statement_index]
-                if preview_sample:
-                    prepared_statement = self._make_preview_statement(
-                        prepared_statement, preview_sample
-                    )
 
                 entry_values_tuples = list(
                     map(
@@ -239,7 +223,7 @@ class VectorServer:
 
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
-                    batch_ids=None if preview_sample else entry_values_tuples,
+                    batch_ids=entry_values_tuples,
                 ).fetchall()
 
                 statement_results = []

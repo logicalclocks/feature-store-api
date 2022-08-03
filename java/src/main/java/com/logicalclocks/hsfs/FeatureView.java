@@ -159,28 +159,6 @@ public class FeatureView {
     return vectorServer.getFeatureVectors(this, entry, external);
   }
 
-  public List<Object> previewFeatureVector()
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return previewFeatureVectors(1).get(0);
-  }
-
-  public List<Object> previewFeatureVector(boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return previewFeatureVectors(1, external).get(0);
-  }
-
-  public List<List<Object>> previewFeatureVectors(Integer n)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, n);
-
-  }
-
-  public List<List<Object>> previewFeatureVectors(Integer n, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, external, n);
-
-  }
-
   @JsonIgnore
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
     return getBatchQuery(null, null);
