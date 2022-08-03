@@ -12,14 +12,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.0.0/generated/api/training_dataset_api/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.0.0/generated/api/external_feature_group_api/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
     
     
       
-        <title>TrainingDataset - Hopsworks Documentation</title>
+        <title>ExternalFeatureGroup - Hopsworks Documentation</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#training-dataset" class="md-skip">
+        <a href="#externalfeaturegroup" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              TrainingDataset
+              ExternalFeatureGroup
             
           </span>
         </div>
@@ -824,34 +824,6 @@
               
   
   
-  
-    <li class="md-nav__item">
-      <a href="../external_feature_group_api/" class="md-nav__link">
-        ExternalFeatureGroup
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../feature_view_api/" class="md-nav__link">
-        FeatureView
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
     
   
   
@@ -864,12 +836,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          TrainingDataset
+          ExternalFeatureGroup
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        TrainingDataset
+        ExternalFeatureGroup
       </a>
       
         
@@ -888,8 +860,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#trainingdataset" class="md-nav__link">
-    TrainingDataset
+  <a href="#externalfeaturegroup_1" class="md-nav__link">
+    ExternalFeatureGroup
   </a>
   
 </li>
@@ -903,8 +875,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#create_training_dataset" class="md-nav__link">
-    create_training_dataset
+  <a href="#create_external_feature_group" class="md-nav__link">
+    create_external_feature_group
   </a>
   
 </li>
@@ -923,8 +895,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get_training_dataset" class="md-nav__link">
-    get_training_dataset
+  <a href="#get_external_feature_group" class="md-nav__link">
+    get_external_feature_group
   </a>
   
 </li>
@@ -943,8 +915,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#coalesce" class="md-nav__link">
-    coalesce
+  <a href="#created" class="md-nav__link">
+    created
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creator" class="md-nav__link">
+    creator
   </a>
   
 </li>
@@ -964,22 +943,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#event_end_time" class="md-nav__link">
-    event_end_time
+  <a href="#event_time" class="md-nav__link">
+    event_time
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#event_start_time" class="md-nav__link">
-    event_start_time
+  <a href="#expectation_suite" class="md-nav__link">
+    expectation_suite
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#feature_store_id" class="md-nav__link">
-    feature_store_id
+  <a href="#features" class="md-nav__link">
+    features
   </a>
   
 </li>
@@ -987,13 +966,6 @@
           <li class="md-nav__item">
   <a href="#id" class="md-nav__link">
     id
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#label" class="md-nav__link">
-    label
   </a>
   
 </li>
@@ -1013,29 +985,29 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primary_key" class="md-nav__link">
+    primary_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#query" class="md-nav__link">
     query
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#schema" class="md-nav__link">
-    schema
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#seed" class="md-nav__link">
-    seed
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#splits" class="md-nav__link">
-    splits
   </a>
   
 </li>
@@ -1062,92 +1034,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#test_end" class="md-nav__link">
-    test_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test_size" class="md-nav__link">
-    test_size
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test_start" class="md-nav__link">
-    test_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_end" class="md-nav__link">
-    train_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_split" class="md-nav__link">
-    train_split
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_start" class="md-nav__link">
-    train_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training_dataset_type" class="md-nav__link">
-    training_dataset_type
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformation_functions" class="md-nav__link">
-    transformation_functions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_end" class="md-nav__link">
-    validation_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_size" class="md-nav__link">
-    validation_size
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_start" class="md-nav__link">
-    validation_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#version" class="md-nav__link">
     version
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#write_options" class="md-nav__link">
-    write_options
   </a>
   
 </li>
@@ -1173,6 +1061,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#append_features" class="md-nav__link">
+    append_features
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#compute_statistics" class="md-nav__link">
     compute_statistics
   </a>
@@ -1187,8 +1082,22 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#delete_expectation_suite" class="md-nav__link">
+    delete_expectation_suite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#delete_tag" class="md-nav__link">
     delete_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    filter
   </a>
   
 </li>
@@ -1201,29 +1110,29 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#from_response_json_single" class="md-nav__link">
-    from_response_json_single
+  <a href="#get_all_validation_reports" class="md-nav__link">
+    get_all_validation_reports
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_query" class="md-nav__link">
-    get_query
+  <a href="#get_expectation_suite" class="md-nav__link">
+    get_expectation_suite
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_serving_vector" class="md-nav__link">
-    get_serving_vector
+  <a href="#get_feature" class="md-nav__link">
+    get_feature
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_serving_vectors" class="md-nav__link">
-    get_serving_vectors
+  <a href="#get_latest_validation_report" class="md-nav__link">
+    get_latest_validation_report
   </a>
   
 </li>
@@ -1250,20 +1159,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#init_prepared_statement" class="md-nav__link">
-    init_prepared_statement
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#insert" class="md-nav__link">
-    insert
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#json" class="md-nav__link">
     json
   </a>
@@ -1285,6 +1180,41 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#save_expectation_suite" class="md-nav__link">
+    save_expectation_suite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_validation_report" class="md-nav__link">
+    save_validation_report
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select" class="md-nav__link">
+    select
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select_all" class="md-nav__link">
+    select_all
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select_except" class="md-nav__link">
+    select_except
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#show" class="md-nav__link">
     show
   </a>
@@ -1294,6 +1224,27 @@
           <li class="md-nav__item">
   <a href="#to_dict" class="md-nav__link">
     to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_description" class="md-nav__link">
+    update_description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_feature_description" class="md-nav__link">
+    update_feature_description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_features" class="md-nav__link">
+    update_features
   </a>
   
 </li>
@@ -1312,6 +1263,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    validate
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1321,6 +1279,34 @@
   
 </nav>
       
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_view_api/" class="md-nav__link">
+        FeatureView
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training_dataset_api/" class="md-nav__link">
+        TrainingDataset
+      </a>
     </li>
   
 
@@ -1465,8 +1451,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#trainingdataset" class="md-nav__link">
-    TrainingDataset
+  <a href="#externalfeaturegroup_1" class="md-nav__link">
+    ExternalFeatureGroup
   </a>
   
 </li>
@@ -1480,8 +1466,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#create_training_dataset" class="md-nav__link">
-    create_training_dataset
+  <a href="#create_external_feature_group" class="md-nav__link">
+    create_external_feature_group
   </a>
   
 </li>
@@ -1500,8 +1486,8 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get_training_dataset" class="md-nav__link">
-    get_training_dataset
+  <a href="#get_external_feature_group" class="md-nav__link">
+    get_external_feature_group
   </a>
   
 </li>
@@ -1520,8 +1506,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#coalesce" class="md-nav__link">
-    coalesce
+  <a href="#created" class="md-nav__link">
+    created
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creator" class="md-nav__link">
+    creator
   </a>
   
 </li>
@@ -1541,22 +1534,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#event_end_time" class="md-nav__link">
-    event_end_time
+  <a href="#event_time" class="md-nav__link">
+    event_time
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#event_start_time" class="md-nav__link">
-    event_start_time
+  <a href="#expectation_suite" class="md-nav__link">
+    expectation_suite
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#feature_store_id" class="md-nav__link">
-    feature_store_id
+  <a href="#features" class="md-nav__link">
+    features
   </a>
   
 </li>
@@ -1564,13 +1557,6 @@
           <li class="md-nav__item">
   <a href="#id" class="md-nav__link">
     id
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#label" class="md-nav__link">
-    label
   </a>
   
 </li>
@@ -1590,29 +1576,29 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primary_key" class="md-nav__link">
+    primary_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#query" class="md-nav__link">
     query
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#schema" class="md-nav__link">
-    schema
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#seed" class="md-nav__link">
-    seed
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#splits" class="md-nav__link">
-    splits
   </a>
   
 </li>
@@ -1639,92 +1625,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#test_end" class="md-nav__link">
-    test_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test_size" class="md-nav__link">
-    test_size
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test_start" class="md-nav__link">
-    test_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_end" class="md-nav__link">
-    train_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_split" class="md-nav__link">
-    train_split
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#train_start" class="md-nav__link">
-    train_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training_dataset_type" class="md-nav__link">
-    training_dataset_type
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformation_functions" class="md-nav__link">
-    transformation_functions
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_end" class="md-nav__link">
-    validation_end
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_size" class="md-nav__link">
-    validation_size
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#validation_start" class="md-nav__link">
-    validation_start
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#version" class="md-nav__link">
     version
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#write_options" class="md-nav__link">
-    write_options
   </a>
   
 </li>
@@ -1750,6 +1652,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#append_features" class="md-nav__link">
+    append_features
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#compute_statistics" class="md-nav__link">
     compute_statistics
   </a>
@@ -1764,8 +1673,22 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#delete_expectation_suite" class="md-nav__link">
+    delete_expectation_suite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#delete_tag" class="md-nav__link">
     delete_tag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    filter
   </a>
   
 </li>
@@ -1778,29 +1701,29 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#from_response_json_single" class="md-nav__link">
-    from_response_json_single
+  <a href="#get_all_validation_reports" class="md-nav__link">
+    get_all_validation_reports
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_query" class="md-nav__link">
-    get_query
+  <a href="#get_expectation_suite" class="md-nav__link">
+    get_expectation_suite
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_serving_vector" class="md-nav__link">
-    get_serving_vector
+  <a href="#get_feature" class="md-nav__link">
+    get_feature
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_serving_vectors" class="md-nav__link">
-    get_serving_vectors
+  <a href="#get_latest_validation_report" class="md-nav__link">
+    get_latest_validation_report
   </a>
   
 </li>
@@ -1827,20 +1750,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#init_prepared_statement" class="md-nav__link">
-    init_prepared_statement
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#insert" class="md-nav__link">
-    insert
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#json" class="md-nav__link">
     json
   </a>
@@ -1862,6 +1771,41 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#save_expectation_suite" class="md-nav__link">
+    save_expectation_suite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save_validation_report" class="md-nav__link">
+    save_validation_report
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select" class="md-nav__link">
+    select
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select_all" class="md-nav__link">
+    select_all
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select_except" class="md-nav__link">
+    select_except
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#show" class="md-nav__link">
     show
   </a>
@@ -1876,6 +1820,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#update_description" class="md-nav__link">
+    update_description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_feature_description" class="md-nav__link">
+    update_feature_description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_features" class="md-nav__link">
+    update_features
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#update_from_response_json" class="md-nav__link">
     update_from_response_json
   </a>
@@ -1885,6 +1850,13 @@
           <li class="md-nav__item">
   <a href="#update_statistics_config" class="md-nav__link">
     update_statistics_config
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    validate
   </a>
   
 </li>
@@ -1908,277 +1880,192 @@
                 
 
 
-<h1 id="training-dataset">Training Dataset<a class="headerlink" href="#training-dataset" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L40">[source]</a></span></p>
-<h3 id="trainingdataset">TrainingDataset<a class="headerlink" href="#trainingdataset" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">training_dataset</span><span class="o">.</span><span class="n">TrainingDataset</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">,</span>
-    <span class="n">version</span><span class="p">,</span>
-    <span class="n">data_format</span><span class="p">,</span>
-    <span class="n">featurestore_id</span><span class="p">,</span>
-    <span class="n">location</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">event_start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">event_end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">coalesce</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<h1 id="externalfeaturegroup">ExternalFeatureGroup<a class="headerlink" href="#externalfeaturegroup" title="Permanent link">#</a></h1>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1505">[source]</a></span></p>
+<h3 id="externalfeaturegroup_1">ExternalFeatureGroup<a class="headerlink" href="#externalfeaturegroup_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">feature_group</span><span class="o">.</span><span class="n">ExternalFeatureGroup</span><span class="p">(</span>
+    <span class="n">storage_connector</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">storage_connector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">splits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">test_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">train_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">train_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">validation_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">validation_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">test_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">test_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">primary_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">featurestore_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">featurestore_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">created</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">creator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">featurestore_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">inode_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">training_dataset_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">from_query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">querydto</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">transformation_functions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">train_split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expectation_suite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L738">[source]</a></span></p>
-<h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L652">[source]</a></span></p>
+<h3 id="create_external_feature_group">create_external_feature_group<a class="headerlink" href="#create_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
+    <span class="n">storage_connector</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{},</span>
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;tfrecords&quot;</span><span class="p">,</span>
-    <span class="n">coalesce</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">storage_connector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">splits</span><span class="o">=</span><span class="p">{},</span>
-    <span class="n">location</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">primary_key</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">features</span><span class="o">=</span><span class="p">[],</span>
     <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="p">[],</span>
-    <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{},</span>
-    <span class="n">train_split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expectation_suite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Create a training dataset metadata object.</p>
+<p>Create a external feature group metadata object.</p>
 <div class="admonition note">
 <p class="admonition-title">Lazy</p>
-<p>This method is lazy and does not persist any metadata or feature data in the
-feature store on its own. To materialize the training dataset and save
-feature data along the metadata in the feature store, call the <code>save()</code>
-method with a <code>DataFrame</code> or <code>Query</code>.</p>
-</div>
-<div class="admonition info">
-<p class="admonition-title">Data Formats</p>
-<p>The feature store currently supports the following data formats for
-training datasets:</p>
-<ol>
-<li>tfrecord</li>
-<li>csv</li>
-<li>tsv</li>
-<li>parquet</li>
-<li>avro</li>
-<li>orc</li>
-</ol>
-<p>Currently not supported petastorm, hdf5 and npy file formats.</p>
+<p>This method is lazy and does not persist any metadata in the
+feature store on its own. To persist the feature group metadata in the feature store,
+call the <code>save()</code> method.</p>
 </div>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: Name of the training dataset to create.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the training dataset to retrieve, defaults to <code>None</code> and
-    will create the training dataset with incremented version from the last
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to create.</li>
+<li><strong>query</strong> <code>Optional[str]</code>: A string containing a SQL query valid for the target data source.
+    the query will be used to pull data from the data sources when the
+    feature group is used.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: If the external feature groups refers to a directory with data,
+    the data format to use when reading it</li>
+<li><strong>path</strong> <code>Optional[str]</code>: The location within the scope of the storage connector, from where to read
+    the data for the external feature group</li>
+<li><strong>storage_connector</strong> <code>hsfs.StorageConnector</code>: the storage connector to use to establish connectivity
+    with the data source.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve, defaults to <code>None</code> and
+    will create the feature group with incremented version from the last
     version in the feature store.</li>
-<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the training dataset to
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the external feature group to
     improve discoverability for Data Scientists, defaults to empty string
     <code>""</code>.</li>
-<li><strong>data_format</strong> <code>Optional[str]</code>: The data format used to save the training dataset,
-    defaults to <code>"tfrecords"</code>-format.</li>
-<li><strong>coalesce</strong> <code>Optional[bool]</code>: If true the training dataset data will be coalesced into
-    a single partition before writing. The resulting training dataset
-    will be a single file per split. Default False.</li>
-<li><strong>storage_connector</strong> <code>Optional[hsfs.StorageConnector]</code>: Storage connector defining the sink location for the
-    training dataset, defaults to <code>None</code>, and materializes training dataset
-    on HopsFS.</li>
-<li><strong>splits</strong> <code>Optional[Dict[str, float]]</code>: A dictionary defining training dataset splits to be created. Keys in
-    the dictionary define the name of the split as <code>str</code>, values represent
-    percentage of samples in the split as <code>float</code>. Currently, only random
-    splits are supported. Defaults to empty dict<code>{}</code>, creating only a single
-    training dataset without splits.</li>
-<li><strong>location</strong> <code>Optional[str]</code>: Path to complement the sink storage connector with, e.g if the
-    storage connector points to an S3 bucket, this path can be used to
-    define a sub-directory inside the bucket to place the training dataset.
-    Defaults to <code>""</code>, saving the training dataset at the root defined by the
-    storage connector.</li>
-<li><strong>seed</strong> <code>Optional[int]</code>: Optionally, define a seed to create the random splits with, in order
-    to guarantee reproducability, defaults to <code>None</code>.</li>
+<li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
+    feature group. This primary key can be a composite key of multiple
+    features and will be used as joining key, if not specified otherwise.
+    Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
+<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the external feature group manually as a
+    list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
+    schema information of the DataFrame resulting by executing the provided query
+    against the data source.</li>
 <li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
     "<code>enabled</code>" to generally enable descriptive statistics computation for
-    this feature group, <code>"correlations</code>" to turn on feature correlation
-    computation and <code>"histograms"</code> to compute feature value frequencies. The
-    values should be booleans indicating the setting. To fully turn off
+    this external feature group, <code>"correlations</code>" to turn on feature correlation
+    computation, <code>"histograms"</code> to compute feature value frequencies and
+    <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
+    The values should be booleans indicating the setting. To fully turn off
     statistics computation pass <code>statistics_config=False</code>. Defaults to
     <code>None</code> and will compute only descriptive statistics.</li>
-<li><strong>label</strong> <code>Optional[List[str]]</code>: A list of feature names constituting the prediction label/feature of
-    the training dataset. When replaying a <code>Query</code> during model inference,
-    the label features can be omitted from the feature vector retrieval.
-    Defaults to <code>[]</code>, no label.</li>
-<li><strong>transformation_functions</strong> <code>Optional[Dict[str, hsfs.transformation_function.TransformationFunction]]</code>: A dictionary mapping tansformation functions to
-    to the features they should be applied to before writing out the
-    training data and at inference time. Defaults to <code>{}</code>, no
-    transformations.</li>
-<li><strong>train_split</strong> <code>Optional[str]</code>: If <code>splits</code> is set, provide the name of the split that is going
-    to be used for training. The statistics of this split will be used for
-    transformation functions if necessary. Defaults to <code>None</code>.</li>
-</ul>
-<p><strong>Returns:</strong></p>
-<p><code>TrainingDataset</code>: The training dataset metadata object.</p>
-<hr />
-<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L260">[source]</a></span></p>
-<h3 id="get_training_dataset">get_training_dataset<a class="headerlink" href="#get_training_dataset" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-<p>Get a training dataset entity from the feature store.</p>
-<p>Getting a training dataset from the Feature Store means getting its metadata handle
-so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>name</strong> <code>str</code>: Name of the training dataset to get.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: Version of the training dataset to retrieve, defaults to <code>None</code> and will
-    return the <code>version=1</code>.</li>
+<li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
+    time for the features in this feature group. If event_time is set
+    the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
+<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
+    group which dataframes should be validated against upon insertion.
+    Defaults to <code>None</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>TrainingDataset</code>: The training dataset metadata object.</p>
+<p><code>ExternalFeatureGroup</code>. The external feature group metadata object.</p>
+<hr />
+<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L187">[source]</a></span></p>
+<h3 id="get_external_feature_group">get_external_feature_group<a class="headerlink" href="#get_external_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_external_feature_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a external feature group entity from the feature store.</p>
+<p>Getting a external feature group from the Feature Store means getting its
+metadata handle so you can subsequently read the data into a Spark or
+Pandas DataFrame or use the <code>Query</code>-API to perform joins between feature groups.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the external feature group to get.</li>
+<li><strong>version</strong> <code>Optional[int]</code>: Version of the external feature group to retrieve,
+    defaults to <code>None</code> and will return the <code>version=1</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>ExternalFeatureGroup</code>: The external feature group metadata object.</p>
 <p><strong>Raises</strong></p>
 <ul>
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature group from the feature store.</li>
 </ul>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L583">[source]</a></span></p>
-<h3 id="coalesce">coalesce<a class="headerlink" href="#coalesce" title="Permanent link">#</a></h3>
-<p>If true the training dataset data will be coalesced into
-a single partition before writing. The resulting training dataset
-will be a single file per split</p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1721">[source]</a></span></p>
+<h3 id="created">created<a class="headerlink" href="#created" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L574">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1717">[source]</a></span></p>
+<h3 id="creator">creator<a class="headerlink" href="#creator" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1701">[source]</a></span></p>
 <h3 id="data_format">data_format<a class="headerlink" href="#data_format" title="Permanent link">#</a></h3>
-<p>File format of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L565">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1689">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L843">[source]</a></span></p>
-<h3 id="event_end_time">event_end_time<a class="headerlink" href="#event_end_time" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L624">[source]</a></span></p>
+<h3 id="event_time">event_time<a class="headerlink" href="#event_time" title="Permanent link">#</a></h3>
+<p>Event time feature in the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L839">[source]</a></span></p>
-<h3 id="event_start_time">event_start_time<a class="headerlink" href="#event_start_time" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L637">[source]</a></span></p>
+<h3 id="expectation_suite">expectation_suite<a class="headerlink" href="#expectation_suite" title="Permanent link">#</a></h3>
+<p>Expectation Suite configuration object defining the settings for
+data validation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L813">[source]</a></span></p>
-<h3 id="feature_store_id">feature_store_id<a class="headerlink" href="#feature_store_id" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1693">[source]</a></span></p>
+<h3 id="features">features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L538">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1677">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
-<p>Training dataset id.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L801">[source]</a></span></p>
-<h3 id="label">label<a class="headerlink" href="#label" title="Permanent link">#</a></h3>
-<p>The label/prediction feature of the training dataset.</p>
-<p>Can be a composite of multiple features.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L644">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L633">[source]</a></span></p>
 <h3 id="location">location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
-<p>Path to the training dataset location.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L547">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1681">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
-<p>Name of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L716">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1709">[source]</a></span></p>
+<h3 id="options">options<a class="headerlink" href="#options" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1705">[source]</a></span></p>
+<h3 id="path">path<a class="headerlink" href="#path" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L572">[source]</a></span></p>
+<h3 id="primary_key">primary_key<a class="headerlink" href="#primary_key" title="Permanent link">#</a></h3>
+<p>List of features building the primary key.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1697">[source]</a></span></p>
 <h3 id="query">query<a class="headerlink" href="#query" title="Permanent link">#</a></h3>
-<p>Query to generate this training dataset from online feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L653">[source]</a></span></p>
-<h3 id="schema">schema<a class="headerlink" href="#schema" title="Permanent link">#</a></h3>
-<p>Training dataset schema.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L663">[source]</a></span></p>
-<h3 id="seed">seed<a class="headerlink" href="#seed" title="Permanent link">#</a></h3>
-<p>Seed.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L628">[source]</a></span></p>
-<h3 id="splits">splits<a class="headerlink" href="#splits" title="Permanent link">#</a></h3>
-<p>Training dataset splits. <code>train</code>, <code>test</code> or <code>eval</code> and corresponding percentages.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L695">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L567">[source]</a></span></p>
 <h3 id="statistics">statistics<a class="headerlink" href="#statistics" title="Permanent link">#</a></h3>
-<p>Get the latest computed statistics for the training dataset.</p>
+<p>Get the latest computed statistics for the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L672">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L544">[source]</a></span></p>
 <h3 id="statistics_config">statistics_config<a class="headerlink" href="#statistics_config" title="Permanent link">#</a></h3>
 <p>Statistics configuration object defining the settings for statistics
-computation of the training dataset.</p>
+computation of the feature group.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L603">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1713">[source]</a></span></p>
 <h3 id="storage_connector">storage_connector<a class="headerlink" href="#storage_connector" title="Permanent link">#</a></h3>
-<p>Storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L917">[source]</a></span></p>
-<h3 id="test_end">test_end<a class="headerlink" href="#test_end" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L869">[source]</a></span></p>
-<h3 id="test_size">test_size<a class="headerlink" href="#test_size" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L909">[source]</a></span></p>
-<h3 id="test_start">test_start<a class="headerlink" href="#test_start" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L885">[source]</a></span></p>
-<h3 id="train_end">train_end<a class="headerlink" href="#train_end" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L817">[source]</a></span></p>
-<h3 id="train_split">train_split<a class="headerlink" href="#train_split" title="Permanent link">#</a></h3>
-<p>Set name of training dataset split that is used for training.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L877">[source]</a></span></p>
-<h3 id="train_start">train_start<a class="headerlink" href="#train_start" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L847">[source]</a></span></p>
-<h3 id="training_dataset_type">training_dataset_type<a class="headerlink" href="#training_dataset_type" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L826">[source]</a></span></p>
-<h3 id="transformation_functions">transformation_functions<a class="headerlink" href="#transformation_functions" title="Permanent link">#</a></h3>
-<p>Set transformation functions.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L901">[source]</a></span></p>
-<h3 id="validation_end">validation_end<a class="headerlink" href="#validation_end" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L861">[source]</a></span></p>
-<h3 id="validation_size">validation_size<a class="headerlink" href="#validation_size" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L893">[source]</a></span></p>
-<h3 id="validation_start">validation_start<a class="headerlink" href="#validation_start" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L556">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1685">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
-<p>Version number of the training dataset.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L594">[source]</a></span></p>
-<h3 id="write_options">write_options<a class="headerlink" href="#write_options" title="Permanent link">#</a></h3>
-<p>User provided options to write training dataset.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L394">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L167">[source]</a></span></p>
 <h3 id="add_tag">add_tag<a class="headerlink" href="#add_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </code></pre></div>
-<p>Attach a tag to a training dataset.</p>
+<p>Attach a tag to a feature group.</p>
 <p>A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
 The value of a tag can be any valid json - primitives, arrays or json objects.</p>
 <p><strong>Arguments</strong></p>
@@ -2189,38 +2076,67 @@ The value of a tag can be any valid json - primitives, arrays or json objects.</
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to add the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L372">[source]</a></span></p>
-<h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L338">[source]</a></span></p>
+<h3 id="append_features">append_features<a class="headerlink" href="#append_features" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">append_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 </code></pre></div>
-<p>Recompute the statistics for the training dataset and save them to the
-feature store.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L460">[source]</a></span></p>
-<h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
-</code></pre></div>
-<p>Delete training dataset and all associated metadata.</p>
-<div class="admonition note">
-<p class="admonition-title">Drops only HopsFS data</p>
-<p>Note that this operation drops only files which were materialized in
-HopsFS. If you used a Storage Connector for a cloud storage such as S3,
-the data will not be deleted, but you will not be able to track it anymore
-from the Feature Store.</p>
+<p>Append features to the schema of the feature group.</p>
+<div class="admonition info">
+<p class="admonition-title">Safe append</p>
+<p>This method appends the features to the feature group description safely.
+In case of failure your local metadata object will contain the correct
+schema.</p>
 </div>
+<p>It is only possible to append features to a feature group. Removing
+features is considered a breaking change.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>Union[hsfs.feature.Feature, List[hsfs.feature.Feature]]</code>: Feature or list. A feature object or list thereof to append to
+    the schema of the feature group.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroup</code>. The updated feature group object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L600">[source]</a></span></p>
+<h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
+</code></pre></div>
+<p>Recompute the statistics for the feature group and save them to the
+feature store.
+Statistics are only computed for data in the offline storage of the feature
+group.
+<strong>Returns</strong></p>
+<p><code>Statistics</code>. The statistics metadata object.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code>. Unable to persist the statistics.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L57">[source]</a></span></p>
+<h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</code></pre></div>
+<p>Drop the entire feature group along with its feature data.</p>
 <div class="admonition danger">
 <p class="admonition-title">Potentially dangerous operation</p>
 <p>This operation drops all metadata associated with <strong>this version</strong> of the
-training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
+feature group <strong>and</strong> all the feature data in offline and online storage
+associated with it.</p>
 </div>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L409">[source]</a></span></p>
-<h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L439">[source]</a></span></p>
+<h3 id="delete_expectation_suite">delete_expectation_suite<a class="headerlink" href="#delete_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete_expectation_suite</span><span class="p">()</span>
 </code></pre></div>
-<p>Delete a tag attached to a training dataset.</p>
+<p>Delete the expectation suite attached to the featuregroup.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L183">[source]</a></span></p>
+<h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Delete a tag attached to a feature group.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>name</strong> <code>str</code>: Name of the tag to be removed.</li>
@@ -2228,249 +2144,330 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to delete the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L478">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L136">[source]</a></span></p>
+<h3 id="filter">filter<a class="headerlink" href="#filter" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</code></pre></div>
+<p>Apply filter to the feature group.</p>
+<p>Selects all features and returns the resulting <code>Query</code> with the applied filter.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">hsfs.feature</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="n">fg</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Feature</span><span class="p">(</span><span class="s2">&quot;weekly_sales&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">)</span>
+</code></pre></div>
+<p>If you are planning to join the filtered feature group later on with another
+feature group, make sure to select the filtered feature explicitly from the
+respective feature group:
+<div class="highlight"><pre><span></span><code><span class="n">fg</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">fg</span><span class="o">.</span><span class="n">feature1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Composite filters require parenthesis:
+<div class="highlight"><pre><span></span><code><span class="n">fg</span><span class="o">.</span><span class="n">filter</span><span class="p">((</span><span class="n">fg</span><span class="o">.</span><span class="n">feature1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">fg</span><span class="o">.</span><span class="n">feature2</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">))</span>
+</code></pre></div></p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>f</strong> <code>Union[hsfs.constructor.filter.Filter, hsfs.constructor.filter.Logic]</code>: Filter object.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Query</code>. The query object with the applied filter.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1634">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L485">[source]</a></span></p>
-<h3 id="from_response_json_single">from_response_json_single<a class="headerlink" href="#from_response_json_single" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">from_response_json_single</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L467">[source]</a></span></p>
+<h3 id="get_all_validation_reports">get_all_validation_reports<a class="headerlink" href="#get_all_validation_reports" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_all_validation_reports</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L721">[source]</a></span></p>
-<h3 id="get_query">get_query<a class="headerlink" href="#get_query" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="n">online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-<p>Returns the query used to generate this training dataset</p>
+<p>Return the latest validation report attached to the feature group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>online</strong> <code>bool</code>: boolean, optional. Return the query for the online storage, else
-    for offline storage, defaults to <code>True</code> - for online storage.</li>
-<li><strong>with_label</strong> <code>bool</code>: Indicator whether the query should contain features which were
-    marked as prediction label/feature when the training dataset was
-    created, defaults to <code>False</code>.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>str</code>. Query string for the chosen storage used to generate this training
-    dataset.</p>
+<p><code>ValidationReport</code>. The latest validation report attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L757">[source]</a></span></p>
-<h3 id="get_serving_vector">get_serving_vector<a class="headerlink" href="#get_serving_vector" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_serving_vector</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L378">[source]</a></span></p>
+<h3 id="get_expectation_suite">get_expectation_suite<a class="headerlink" href="#get_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_expectation_suite</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Returns assembled serving vector from online feature store.</p>
+<p>Return the expectation suite attached to the feature group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>entry</strong> <code>Dict[str, Any]</code>: dictionary of training dataset feature group primary key names as keys and values provided by
-    serving application.</li>
-<li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
-    online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
-    If set to False, the online feature store storage connector is used
-    which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-    external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>list</code> List of feature values related to provided primary keys, ordered according to positions of this
-features in training dataset query.</p>
+<p><code>ExpectationSuite</code>. The expectation suite attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L779">[source]</a></span></p>
-<h3 id="get_serving_vectors">get_serving_vectors<a class="headerlink" href="#get_serving_vectors" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_serving_vectors</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L219">[source]</a></span></p>
+<h3 id="get_feature">get_feature<a class="headerlink" href="#get_feature" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
-<p>Returns assembled serving vectors in batches from online feature store.</p>
+<p>Retrieve a <code>Feature</code> object from the schema of the feature group.</p>
+<p>There are several ways to access features of a feature group:</p>
+<div class="highlight"><pre><span></span><code><span class="n">fg</span><span class="o">.</span><span class="n">feature1</span>
+<span class="n">fg</span><span class="p">[</span><span class="s2">&quot;feature1&quot;</span><span class="p">]</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;feature1&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Attribute access to features works only for non-reserved names. For example
+features named <code>id</code> or <code>name</code> will not be accessible via <code>fg.name</code>, instead
+this will return the name of the feature group itself. Fall back on using
+the <code>get_feature</code> method.</p>
+</div>
+<p>Args:
+    name (str): [description]</p>
+<p>Returns:
+    [type]: [description]</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L448">[source]</a></span></p>
+<h3 id="get_latest_validation_report">get_latest_validation_report<a class="headerlink" href="#get_latest_validation_report" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_latest_validation_report</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Return the latest validation report attached to the feature group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>entry</strong> <code>Dict[str, List[Any]]</code>: dict of feature group primary key names as keys and value as list of primary keys provided by
-    serving application.</li>
-<li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
-    online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
-    If set to False, the online feature store storage connector is used
-    which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-    external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>List[list]</code> List of lists of feature values related to provided primary keys, ordered according to
-positions of this features in training dataset query.</p>
+<p><code>ValidationReport</code>. The latest validation report attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L700">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L581">[source]</a></span></p>
 <h3 id="get_statistics">get_statistics<a class="headerlink" href="#get_statistics" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span><span class="n">commit_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-<p>Returns the statistics for this training dataset at a specific time.</p>
+<p>Returns the statistics for this feature group at a specific time.</p>
 <p>If <code>commit_time</code> is <code>None</code>, the most recent statistics are returned.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>commit_time</strong> <code>Optional[str]</code>: Commit time in the format <code>YYYYMMDDhhmmss</code>, defaults to <code>None</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
-<p><code>Statistics</code>. Object with statistics information.</p>
+<p><code>Statistics</code>. Statistics object.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L420">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L194">[source]</a></span></p>
 <h3 id="get_tag">get_tag<a class="headerlink" href="#get_tag" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
-<p>Get the tags of a training dataset.</p>
+<p>Get the tags of a feature group.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong>: Name of the tag to get.</li>
+<li><strong>name</strong> <code>str</code>: Name of the tag to get.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p>tag value</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to retrieve the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L434">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L208">[source]</a></span></p>
 <h3 id="get_tags">get_tags<a class="headerlink" href="#get_tags" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
 </code></pre></div>
-<p>Returns all tags attached to a training dataset.</p>
+<p>Retrieves all tags attached to a feature group.</p>
 <p><strong>Returns</strong></p>
 <p><code>Dict[str, obj]</code> of tags.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code> in case the backend fails to retrieve the tags.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L739">[source]</a></span></p>
-<h3 id="init_prepared_statement">init_prepared_statement<a class="headerlink" href="#init_prepared_statement" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">init_prepared_statement</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-<p>Initialise and cache parametrized prepared statement to
-   retrieve feature vector from online feature store.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>batch</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, prepared statements will be
-    initialised for retrieving serving vectors as a batch.</li>
-<li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
-    online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
-    If set to False, the online feature store storage connector is used
-    which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-    external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
-</ul>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L300">[source]</a></span></p>
-<h3 id="insert">insert<a class="headerlink" href="#insert" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
-</code></pre></div>
-<p>Insert additional feature data into the training dataset.</p>
-<p>This method appends data to the training dataset either from a Feature Store
-<code>Query</code>, a Spark or Pandas <code>DataFrame</code>, a Spark RDD, two-dimensional Python
-lists or Numpy ndarrays. The schemas must match for this operation.</p>
-<p>This can also be used to overwrite all data in an existing training dataset.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
-<li><strong>overwrite</strong> <code>bool</code>: Whether to overwrite the entire data in the training dataset.</li>
-<li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>python</code> engine, write_options can contain the
-    following entries:<ul>
-<li>key <code>spark</code> and value an object of type
-<a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
-  to configure the Hopsworks Job used to compute the training dataset.</li>
-<li>key <code>wait_for_job</code> and value <code>True</code> or <code>False</code> to configure
-  whether or not to the insert call should return only
-  after the Hopsworks Job has finished. By default it waits.</li>
-</ul>
-</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p><code>Job</code>: When using the <code>python</code> engine, it returns the Hopsworks Job
-    that was launched to create the training dataset.</p>
-<p><strong>Raises</strong></p>
-<ul>
-<li><strong><code>RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
-</ul>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L515">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1653">[source]</a></span></p>
 <h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L351">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1599">[source]</a></span></p>
 <h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dataframe_type</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>Read the training dataset into a dataframe.</p>
-<p>It is also possible to read only a specific split.</p>
-<p><strong>Arguments</strong></p>
-<ul>
-<li><strong>split</strong>: Name of the split to read, defaults to <code>None</code>, reading the entire
-    training dataset. If the training dataset has split, the <code>split</code> parameter
-    is mandatory.</li>
-<li><strong>read_options</strong>: Additional read options as key/value pairs, defaults to <code>{}</code>.</li>
-</ul>
-<p><strong>Returns</strong></p>
-<p><code>DataFrame</code>: The spark dataframe containing the feature data of the
-    training dataset.</p>
+<p>Get the feature group as a DataFrame.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L240">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1592">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div>
-<p>Materialize the training dataset to storage.</p>
-<p>This method materializes the training dataset either from a Feature Store
-<code>Query</code>, a Spark or Pandas <code>DataFrame</code>, a Spark RDD, two-dimensional Python
-lists or Numpy ndarrays.
-From v2.5 onward, filters are saved along with the <code>Query</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L398">[source]</a></span></p>
+<h3 id="save_expectation_suite">save_expectation_suite<a class="headerlink" href="#save_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save_expectation_suite</span><span class="p">(</span>
+    <span class="n">expectation_suite</span><span class="p">,</span> <span class="n">run_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validation_ingestion_policy</span><span class="o">=</span><span class="s2">&quot;ALWAYS&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Attach an expectation suite to a feature group and saves it for future use. If an expectation
+suite is already attached, it is replaced. Note that the provided expectation suite is modified
+inplace to include expectationId fields.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>features</strong> <code>Union[hsfs.constructor.query.Query, pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: Feature data to be materialized.</li>
-<li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
-    When using the <code>python</code> engine, write_options can contain the
-    following entries:<ul>
-<li>key <code>spark</code> and value an object of type
-<a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
-  to configure the Hopsworks Job used to compute the training dataset.</li>
-<li>key <code>wait_for_job</code> and value <code>True</code> or <code>False</code> to configure
-  whether or not to the save call should return only
-  after the Hopsworks Job has finished. By default it waits.</li>
+<li><strong>expectation_suite</strong> <code>Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]</code>: The expectation suite to attach to the featuregroup.</li>
+<li><strong>run_validation</strong>: Set whether the expectation_suite will run on ingestion</li>
+<li><strong>validation_ingestion_policy</strong>: Set the policy for ingestion to the featuregroup.<ul>
+<li>"STRICT" only allows DataFrame passing validation to be inserted into featuregroup.</li>
+<li>"ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.</li>
 </ul>
 </li>
 </ul>
-<p><strong>Returns</strong></p>
-<p><code>Job</code>: When using the <code>python</code> engine, it returns the Hopsworks Job
-    that was launched to create the training dataset.</p>
 <p><strong>Raises</strong></p>
-<ul>
-<li><strong><code>RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
-</ul>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L382">[source]</a></span></p>
-<h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L488">[source]</a></span></p>
+<h3 id="save_validation_report">save_validation_report<a class="headerlink" href="#save_validation_report" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">save_validation_report</span><span class="p">(</span><span class="n">validation_report</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Show the first <code>n</code> rows of the training dataset.</p>
-<p>You can specify a split from which to retrieve the rows.</p>
+<p>Save validation report to hopsworks platform along previous reports of the same featuregroup.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>n</strong> <code>int</code>: Number of rows to show.</li>
-<li><strong>split</strong> <code>Optional[str]</code>: Name of the split to show, defaults to <code>None</code>, showing the first rows
-    when taking all splits together.</li>
+<li><strong>validation_report</strong> <code>Union[dict, hsfs.validation_report.ValidationReport, great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult]</code>: The validation report to attach to the featuregroup.</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L518">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L86">[source]</a></span></p>
+<h3 id="select">select<a class="headerlink" href="#select" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
+</code></pre></div>
+<p>Select a subset of features of the feature group and return a query object.</p>
+<p>The query can be used to construct joins of feature groups or create a training
+dataset with a subset of features of the feature group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>List[Union[str, hsfs.feature.Feature]]</code>: list, optional. A list of <code>Feature</code> objects or feature names as
+    strings to be selected, defaults to [].</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Query</code>: A query object with the selected features of the feature group.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L70">[source]</a></span></p>
+<h3 id="select_all">select_all<a class="headerlink" href="#select_all" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+</code></pre></div>
+<p>Select all features in the feature group and return a query object.</p>
+<p>The query can be used to construct joins of feature groups or create a
+training dataset immediately.</p>
+<p><strong>Returns</strong></p>
+<p><code>Query</code>. A query object with all features of the feature group.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L106">[source]</a></span></p>
+<h3 id="select_except">select_except<a class="headerlink" href="#select_except" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">select_except</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[])</span>
+</code></pre></div>
+<p>Select all features of the feature group except a few and return a query
+object.</p>
+<p>The query can be used to construct joins of feature groups or create a training
+dataset with a subset of features of the feature group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>List[Union[str, hsfs.feature.Feature]]</code>: list, optional. A list of <code>Feature</code> objects or feature names as
+    strings to be excluded from the selection. Defaults to [],
+    selecting all features.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Query</code>: A query object with the selected features of the feature group.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1609">[source]</a></span></p>
+<h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</code></pre></div>
+<p>Show the first n rows of the feature group.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1656">[source]</a></span></p>
 <h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L492">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L264">[source]</a></span></p>
+<h3 id="update_description">update_description<a class="headerlink" href="#update_description" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_description</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+</code></pre></div>
+<p>Update the description of the feature group.</p>
+<div class="admonition info">
+<p class="admonition-title">Safe update</p>
+<p>This method updates the feature group description safely. In case of failure
+your local metadata object will keep the old description.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>description</strong> <code>str</code>: New description string.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroup</code>. The updated feature group object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L319">[source]</a></span></p>
+<h3 id="update_feature_description">update_feature_description<a class="headerlink" href="#update_feature_description" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_feature_description</span><span class="p">(</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+</code></pre></div>
+<p>Update the description of a single feature in this feature group.</p>
+<div class="admonition info">
+<p class="admonition-title">Safe update</p>
+<p>This method updates the feature description safely. In case of failure
+your local metadata object will keep the old description.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>feature_name</strong> <code>str</code>: Name of the feature to be updated.</li>
+<li><strong>description</strong> <code>str</code>: New description string.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroup</code>. The updated feature group object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L280">[source]</a></span></p>
+<h3 id="update_features">update_features<a class="headerlink" href="#update_features" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+</code></pre></div>
+<p>Update metadata of features in this feature group.</p>
+<p>Currently it's only supported to update the description of a feature.</p>
+<div class="admonition danger">
+<p class="admonition-title">Unsafe update</p>
+<p>Note that if you use an existing <code>Feature</code> object of the schema in the
+feature group metadata object, this might leave your metadata object in a
+corrupted state if the update fails.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>features</strong> <code>Union[hsfs.feature.Feature, List[hsfs.feature.Feature]]</code>: <code>Feature</code> or list of features. A feature object or list thereof to
+    be updated.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroup</code>. The updated feature group object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1646">[source]</a></span></p>
 <h3 id="update_from_response_json">update_from_response_json<a class="headerlink" href="#update_from_response_json" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/training_dataset.py#L445">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L249">[source]</a></span></p>
 <h3 id="update_statistics_config">update_statistics_config<a class="headerlink" href="#update_statistics_config" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
 </code></pre></div>
-<p>Update the statistics configuration of the training dataset.</p>
+<p>Update the statistics configuration of the feature group.</p>
 <p>Change the <code>statistics_config</code> object and persist the changes by calling
 this method.</p>
 <p><strong>Returns</strong></p>
-<p><code>TrainingDataset</code>. The updated metadata object of the training dataset.</p>
+<p><code>FeatureGroup</code>. The updated metadata object of the feature group.</p>
 <p><strong>Raises</strong></p>
 <p><code>RestAPIError</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1619">[source]</a></span></p>
+<h3 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExternalFeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">save_report</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validation_options</span><span class="o">=</span><span class="p">{})</span>
+</code></pre></div>
+<p>Run validation based on the attached expectations</p>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroupValidation</code>. The feature group validation metadata object.</p>
 <hr />
 
               
@@ -2485,7 +2482,7 @@ this method.</p>
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../feature_view_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: FeatureView" rel="prev">
+        <a href="../feature_group_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: FeatureGroup" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -2494,20 +2491,20 @@ this method.</p>
               <span class="md-footer__direction">
                 Previous
               </span>
-              FeatureView
+              FeatureGroup
             </div>
           </div>
         </a>
       
       
         
-        <a href="../storage_connector_api/" class="md-footer__link md-footer__link--next" aria-label="Next: Storage Connector" rel="next">
+        <a href="../feature_view_api/" class="md-footer__link md-footer__link--next" aria-label="Next: FeatureView" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Storage Connector
+              FeatureView
             </div>
           </div>
           <div class="md-footer__button md-icon">
