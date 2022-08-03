@@ -146,9 +146,7 @@ class VectorServer:
     def get_feature_vector(self, entry, passed_features={}):
         """Assembles serving vector from online feature store."""
 
-        if all(
-            [isinstance(val, list) for val in entry.values()]
-        ):
+        if all([isinstance(val, list) for val in entry.values()]):
             raise ValueError(
                 "Entry is expected to be single value per primary key. "
                 "If you have already initialised prepared statements for single vector and now want to retrieve "
