@@ -71,7 +71,6 @@ class Engine(engine_base.EngineBase):
     KAFKA_FORMAT = "kafka"
 
     APPEND = "append"
-    OVERWRITE = "overwrite"
 
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
