@@ -50,7 +50,6 @@ from hsfs.engine import engine_base
 
 
 class EngineRead(engine_base.EngineReadBase):
-
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
@@ -109,12 +108,12 @@ class EngineRead(engine_base.EngineReadBase):
         return options
 
     def read_stream(
-            self,
-            storage_connector,
-            message_format,
-            schema,
-            options,
-            include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ):
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
@@ -137,7 +136,7 @@ class EngineRead(engine_base.EngineReadBase):
         return [field[feature_name] for field in unique_values]
 
     def get_training_data(
-            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
         df = query_obj.read(read_options=read_options)
         return self.write_training_dataset(

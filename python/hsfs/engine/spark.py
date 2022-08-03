@@ -18,6 +18,5 @@ from hsfs.engine import spark_write, spark_read, spark_util
 
 
 class Engine(spark_write.EngineWrite, spark_read.EngineRead, spark_util.EngineUtil):
-
     def __init__(self):
         super().__init__()

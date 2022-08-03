@@ -19,7 +19,6 @@ from abc import ABC, abstractmethod
 
 
 class EngineWriteBase(ABC):
-
     @abstractmethod
     def write_training_dataset(
         self,
@@ -80,7 +79,6 @@ class EngineWriteBase(ABC):
 
 
 class EngineReadBase(ABC):
-
     @abstractmethod
     def read(self, storage_connector, data_format, read_options, location):
         pass
@@ -121,7 +119,6 @@ class EngineReadBase(ABC):
 
 
 class EngineUtilBase(ABC):
-
     @abstractmethod
     def set_job_group(self, group_id, description):
         pass

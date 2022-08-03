@@ -27,7 +27,6 @@ from hsfs.engine import engine_base
 
 
 class EngineRead(engine_base.EngineReadBase):
-
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
 
@@ -48,12 +47,12 @@ class EngineRead(engine_base.EngineReadBase):
         return {}
 
     def read_stream(
-            self,
-            storage_connector,
-            message_format,
-            schema,
-            options,
-            include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ):
         raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
@@ -67,7 +66,7 @@ class EngineRead(engine_base.EngineReadBase):
         return feature_dataframe[feature_name].unique()
 
     def get_training_data(
-            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
@@ -103,9 +102,9 @@ class EngineRead(engine_base.EngineReadBase):
         df_list = []
         for path in path_list:
             if (
-                    hdfs.path.isfile(path)
-                    and not path.endswith("_SUCCESS")
-                    and hdfs.path.getsize(path) > 0
+                hdfs.path.isfile(path)
+                and not path.endswith("_SUCCESS")
+                and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
@@ -207,9 +206,9 @@ class EngineRead(engine_base.EngineReadBase):
         result_dfs = {}
         splits = training_dataset_obj.splits
         if (
-                sum([split.percentage for split in splits]) != 1
-                or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
-                > 1
+            sum([split.percentage for split in splits]) != 1
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            > 1
         ):
             raise ValueError(
                 "Sum of split ratios should be 1 and each values should be in range (0, 1)"
@@ -243,8 +242,8 @@ class EngineRead(engine_base.EngineReadBase):
     # todo only here
     def _apply_transformation_function(self, training_dataset, dataset):
         for (
-                feature_name,
-                transformation_fn,
+            feature_name,
+            transformation_fn,
         ) in training_dataset.transformation_functions.items():
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn

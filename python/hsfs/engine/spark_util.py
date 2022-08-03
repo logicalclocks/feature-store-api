@@ -62,7 +62,6 @@ from great_expectations.data_context.types.base import (
 
 
 class EngineUtil(engine_base.EngineUtilBase):
-
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
@@ -89,12 +88,12 @@ class EngineUtil(engine_base.EngineUtilBase):
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def profile(
-            self,
-            dataframe,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness=True,
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ):
         """Profile a dataframe with Deequ."""
         return (
@@ -108,10 +107,10 @@ class EngineUtil(engine_base.EngineUtilBase):
         )
 
     def validate_with_great_expectations(
-            self,
-            dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
-            ge_validate_kwargs: Optional[dict],
+        self,
+        dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
+        ge_validate_kwargs: Optional[dict],
     ):
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
         # may experience data loss as it persists nothing. It is used here for testing.

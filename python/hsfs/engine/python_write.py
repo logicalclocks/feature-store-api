@@ -52,20 +52,19 @@ except ImportError:
 
 
 class EngineWrite(engine_base.EngineWriteBase):
-
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
         self._kafka_api = kafka_api.KafkaApi()
 
     def write_training_dataset(
-            self,
-            training_dataset,
-            dataset,
-            user_write_options,
-            save_mode,
-            feature_view_obj=None,
-            to_df=False,
+        self,
+        training_dataset,
+        dataset,
+        user_write_options,
+        save_mode,
+        feature_view_obj=None,
+        to_df=False,
     ):
         if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(
@@ -117,21 +116,21 @@ class EngineWrite(engine_base.EngineWriteBase):
         pass
 
     def register_hudi_temporary_table(
-            self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ):
         # No op to avoid query failure
         pass
 
     def save_dataframe(
-            self,
-            feature_group: FeatureGroup,
-            dataframe: pd.DataFrame,
-            operation: str,
-            online_enabled: bool,
-            storage: bool,
-            offline_write_options: dict,
-            online_write_options: dict,
-            validation_id: int = None,
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        operation: str,
+        online_enabled: bool,
+        storage: bool,
+        offline_write_options: dict,
+        online_write_options: dict,
+        validation_id: int = None,
     ):
         if feature_group.stream:
             return self._write_dataframe_kafka(
@@ -151,15 +150,15 @@ class EngineWrite(engine_base.EngineWriteBase):
             )
 
     def save_stream_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            query_name,
-            output_mode,
-            await_termination,
-            timeout,
-            checkpoint_dir,
-            write_options,
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        checkpoint_dir,
+        write_options,
     ):
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
@@ -171,15 +170,15 @@ class EngineWrite(engine_base.EngineWriteBase):
 
     # todo only here
     def _legacy_save_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            operation,
-            online_enabled,
-            storage,
-            offline_write_options,
-            online_write_options,
-            validation_id=None,
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        online_enabled,
+        storage,
+        offline_write_options,
+        online_write_options,
+        validation_id=None,
     ):
         # App configuration
         app_options = self._get_app_options(offline_write_options)
@@ -228,10 +227,10 @@ class EngineWrite(engine_base.EngineWriteBase):
 
     # todo only here
     def _write_dataframe_kafka(
-            self,
-            feature_group: FeatureGroup,
-            dataframe: pd.DataFrame,
-            offline_write_options: dict,
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        offline_write_options: dict,
     ):
         # setup kafka producer
         producer = Producer(self._get_kafka_config(offline_write_options))
@@ -258,7 +257,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         progress_bar = tqdm(
             total=dataframe.shape[0],
             bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-                       "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
             desc="Uploading Dataframe",
             mininterval=1,
         )
@@ -321,7 +320,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         job = self._job_api.get(job_name)
 
         if offline_write_options is not None and offline_write_options.get(
-                "start_offline_backfill", True
+            "start_offline_backfill", True
         ):
             print("Launching offline feature group backfill job...")
             self._job_api.launch(job_name)
@@ -336,7 +335,7 @@ class EngineWrite(engine_base.EngineWriteBase):
 
     # todo only here
     def _encode_complex_features(
-            self, feature_writers: Dict[str, callable], row: dict
+        self, feature_writers: Dict[str, callable], row: dict
     ) -> dict:
         for feature_name, writer in feature_writers.items():
             with BytesIO() as outf:
@@ -369,14 +368,14 @@ class EngineWrite(engine_base.EngineWriteBase):
         }
 
         if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-                "internal_kafka", False
+            "internal_kafka", False
         ):
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("INTERNAL://", "")
                     for endpoint in self._kafka_api.get_broker_endpoints(
-                    externalListeners=False
-                )
+                        externalListeners=False
+                    )
                 ]
             )
         elif isinstance(client.get_instance(), external.Client):
@@ -384,8 +383,8 @@ class EngineWrite(engine_base.EngineWriteBase):
                 [
                     endpoint.replace("EXTERNAL://", "")
                     for endpoint in self._kafka_api.get_broker_endpoints(
-                    externalListeners=True
-                )
+                        externalListeners=True
+                    )
                 ]
             )
         return config

@@ -38,7 +38,6 @@ from pyhive.exc import OperationalError
 
 
 class EngineUtil(engine_base.EngineUtilBase):
-
     def __init__(self):
         self._job_api = job_api.JobApi()
 
@@ -55,12 +54,12 @@ class EngineUtil(engine_base.EngineUtilBase):
             return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def profile(
-            self,
-            dataframe,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness=True,
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
@@ -83,10 +82,10 @@ class EngineUtil(engine_base.EngineUtilBase):
         return json.dumps({"columns": final_stats})
 
     def validate_with_great_expectations(
-            self,
-            dataframe: pd.DataFrame,
-            expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-            ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+        self,
+        dataframe: pd.DataFrame,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
     ):
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
@@ -252,7 +251,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
         while user_write_options is None or user_write_options.get(
-                "wait_for_job", True
+            "wait_for_job", True
         ):
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
