@@ -41,7 +41,9 @@ class EngineUtil(engine_base.EngineUtilBase):
     def set_job_group(self, group_id: int, description: str) -> None:
         pass
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
+    def sql(
+        self, sql_query, feature_store, online_conn, dataframe_type, read_options
+    ) -> Any:
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:

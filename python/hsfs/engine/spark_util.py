@@ -78,7 +78,9 @@ class EngineUtil(engine_base.EngineUtilBase):
     def set_job_group(self, group_id: int, description: str) -> None:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
+    def sql(
+        self, sql_query, feature_store, online_conn, dataframe_type, read_options
+    ) -> Any:
         if not online_conn:
             result_df = self._sql_offline(sql_query, feature_store)
         else:

@@ -419,7 +419,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
         while user_write_options is None or user_write_options.get(
-                "wait_for_job", True
+            "wait_for_job", True
         ):
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
@@ -437,4 +437,3 @@ class EngineWrite(engine_base.EngineWriteBase):
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
             time.sleep(3)
-
