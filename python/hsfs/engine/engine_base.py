@@ -147,7 +147,7 @@ class EngineUtilBase(ABC):
         self,
         dataframe,
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+        ge_validate_kwargs: Optional[Dict[Any, Any]],
     ):
         pass
 
