@@ -161,7 +161,7 @@ class Engine(engine_base.EngineBase):
             )
         else:
             # for backwards compatibility
-            return self.legacy_save_dataframe(
+            return self._legacy_save_dataframe(
                 feature_group,
                 dataframe,
                 operation,
@@ -190,6 +190,227 @@ class Engine(engine_base.EngineBase):
     def save_empty_dataframe(self, feature_group, dataframe):
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
+
+    # todo only here
+    def _legacy_save_dataframe(
+            self,
+            feature_group,
+            dataframe,
+            operation,
+            online_enabled,
+            storage,
+            offline_write_options,
+            online_write_options,
+            validation_id=None,
+    ):
+        # App configuration
+        app_options = self._get_app_options(offline_write_options)
+
+        # Setup job for ingestion
+        # Configure Hopsworks ingestion job
+        print("Configuring ingestion job...")
+        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
+        ingestion_job = fg_api.ingestion(feature_group, app_options)
+
+        # Upload dataframe into Hopsworks
+        print("Uploading Pandas dataframe...")
+        self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
+
+        # Launch job
+        print("Launching ingestion job...")
+        self._job_api.launch(ingestion_job.job.name)
+        print(
+            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
+                self._get_job_url(ingestion_job.job.href)
+            )
+        )
+
+        self._wait_for_job(ingestion_job.job, offline_write_options)
+
+        return ingestion_job.job
+
+    # todo only here
+    def _get_app_options(self, user_write_options={}):
+        """
+        Generate the options that should be passed to the application doing the ingestion.
+        Options should be data format, data options to read the input dataframe and
+        insert options to be passed to the insert method
+
+        Users can pass Spark configurations to the save/insert method
+        Property name should match the value in the JobConfiguration.__init__
+        """
+        spark_job_configuration = user_write_options.pop("spark", None)
+
+        return ingestion_job_conf.IngestionJobConf(
+            data_format="PARQUET",
+            data_options=[],
+            write_options=user_write_options,
+            spark_job_configuration=spark_job_configuration,
+        )
+
+    # todo only here
+    def _write_dataframe_kafka(
+            self,
+            feature_group: FeatureGroup,
+            dataframe: pd.DataFrame,
+            offline_write_options: dict,
+    ):
+        # setup kafka producer
+        producer = Producer(self._get_kafka_config(offline_write_options))
+
+        # setup complex feature writers
+        feature_writers = {
+            feature: self._get_encoder_func(
+                feature_group._get_feature_avro_schema(feature)
+            )
+            for feature in feature_group.get_complex_features()
+        }
+
+        # setup row writer function
+        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+
+        def acked(err, msg):
+            if err is not None and offline_write_options.get("debug_kafka", False):
+                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+            else:
+                # update progress bar for each msg
+                progress_bar.update()
+
+        # initialize progress bar
+        progress_bar = tqdm(
+            total=dataframe.shape[0],
+            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+                       "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+            desc="Uploading Dataframe",
+            mininterval=1,
+        )
+        # loop over rows
+        for r in dataframe.itertuples(index=False):
+            # itertuples returns Python NamedTyple, to be able to serialize it using
+            # avro, create copy of row only by converting to dict, which preserves datatypes
+            row = r._asdict()
+
+            # transform special data types
+            # here we might need to handle also timestamps and other complex types
+            # possible optimizaiton: make it based on type so we don't need to loop over
+            # all keys in the row
+            for k in row.keys():
+                # for avro to be able to serialize them, they need to be python data types
+                if isinstance(row[k], np.ndarray):
+                    row[k] = row[k].tolist()
+                if isinstance(row[k], pd.Timestamp):
+                    row[k] = row[k].to_pydatetime()
+
+            # encode complex features
+            row = self._encode_complex_features(feature_writers, row)
+
+            # encode feature row
+            with BytesIO() as outf:
+                writer(row, outf)
+                encoded_row = outf.getvalue()
+
+            # assemble key
+            key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
+
+            while True:
+                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+                try:
+                    # produce
+                    producer.produce(
+                        topic=feature_group._online_topic_name,
+                        key=key,
+                        value=encoded_row,
+                        callback=acked,
+                    )
+
+                    # Trigger internal callbacks to empty op queue
+                    producer.poll(0)
+                    break
+                except BufferError as e:
+                    if offline_write_options.get("debug_kafka", False):
+                        print("Caught: {}".format(e))
+                    # backoff for 1 second
+                    producer.poll(1)
+
+        # make sure producer blocks and everything is delivered
+        producer.flush()
+        progress_bar.close()
+
+        # start backfilling job
+        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+            fg_name=feature_group.name, version=feature_group.version
+        )
+        job = self._job_api.get(job_name)
+
+        if offline_write_options is not None and offline_write_options.get(
+                "start_offline_backfill", True
+        ):
+            print("Launching offline feature group backfill job...")
+            self._job_api.launch(job_name)
+            print(
+                "Backfill Job started successfully, you can follow the progress at \n{}".format(
+                    self._get_job_url(job.href)
+                )
+            )
+            self._wait_for_job(job, offline_write_options)
+
+        return job
+
+    # todo only here
+    def _encode_complex_features(
+            self, feature_writers: Dict[str, callable], row: dict
+    ) -> dict:
+        for feature_name, writer in feature_writers.items():
+            with BytesIO() as outf:
+                writer(row[feature_name], outf)
+                row[feature_name] = outf.getvalue()
+        return row
+
+    # todo only here
+    def _get_encoder_func(self, writer_schema: str) -> callable:
+        if HAS_FAST:
+            schema = json.loads(writer_schema)
+            parsed_schema = parse_schema(schema)
+            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
+
+        parsed_schema = avro.schema.parse(writer_schema)
+        writer = avro.io.DatumWriter(parsed_schema)
+        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
+
+    # todo only here
+    def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        # producer configuration properties
+        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
+        config = {
+            "security.protocol": "SSL",
+            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
+            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
+            "ssl.key.location": client.get_instance()._get_client_key_path(),
+            "client.id": socket.gethostname(),
+            **write_options.get("kafka_producer_config", {}),
+        }
+
+        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+                "internal_kafka", False
+        ):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("INTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                    externalListeners=False
+                )
+                ]
+            )
+        elif isinstance(client.get_instance(), external.Client):
+            config["bootstrap.servers"] = ",".join(
+                [
+                    endpoint.replace("EXTERNAL://", "")
+                    for endpoint in self._kafka_api.get_broker_endpoints(
+                    externalListeners=True
+                )
+                ]
+            )
+        return config
 
     # read
 
@@ -250,6 +471,169 @@ class Engine(engine_base.EngineBase):
         """No-op in python engine, user has to write to feature group manually for schema
         change to take effect."""
         return None
+
+    # todo only here
+    def _read_hopsfs(self, location, data_format):
+        # providing more informative error
+        try:
+            from pydoop import hdfs
+        except ModuleNotFoundError:
+            return self._read_hopsfs_rest(location, data_format)
+
+        util.setup_pydoop()
+        path_list = hdfs.ls(location, recursive=True)
+
+        df_list = []
+        for path in path_list:
+            if (
+                    hdfs.path.isfile(path)
+                    and not path.endswith("_SUCCESS")
+                    and hdfs.path.getsize(path) > 0
+            ):
+                df_list.append(self._read_pandas(data_format, path))
+        return df_list
+
+    # todo only here
+    # This is a version of the read method that uses the Hopsworks REST APIs
+    # To read the training dataset content, this to avoid the pydoop dependency
+    # requirement and allow users to read Hopsworks training dataset from outside
+    def _read_hopsfs_rest(self, location, data_format):
+        total_count = 10000
+        offset = 0
+        df_list = []
+
+        while offset < total_count:
+            total_count, inode_list = self._dataset_api.list_files(
+                location, offset, 100
+            )
+
+            for inode in inode_list:
+                if not inode.path.endswith("_SUCCESS"):
+                    content_stream = self._dataset_api.read_content(inode.path)
+                    df_list.append(
+                        self._read_pandas(data_format, BytesIO(content_stream.content))
+                    )
+                offset += 1
+
+        return df_list
+
+    # todo only here
+    def _read_pandas(self, data_format, obj):
+        if data_format.lower() == "csv":
+            return pd.read_csv(obj)
+        elif data_format.lower() == "tsv":
+            return pd.read_csv(obj, sep="\t")
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(BytesIO(obj.read()))
+        else:
+            raise TypeError(
+                "{} training dataset format is not supported to read as pandas dataframe.".format(
+                    data_format
+                )
+            )
+
+    # todo only here
+    def _read_s3(self, storage_connector, location, data_format):
+        # get key prefix
+        path_parts = location.replace("s3://", "").split("/")
+        _ = path_parts.pop(0)  # pop first element -> bucket
+
+        prefix = "/".join(path_parts)
+
+        if storage_connector.session_token is not None:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+                aws_session_token=storage_connector.session_token,
+            )
+        else:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=storage_connector.access_key,
+                aws_secret_access_key=storage_connector.secret_key,
+            )
+
+        df_list = []
+        object_list = {"is_truncated": True}
+        while object_list.get("is_truncated", False):
+            if "NextContinuationToken" in object_list:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                    ContinuationToken=object_list["NextContinuationToken"],
+                )
+            else:
+                object_list = s3.list_objects_v2(
+                    Bucket=storage_connector.bucket,
+                    Prefix=prefix,
+                    MaxKeys=1000,
+                )
+
+            for obj in object_list["Contents"]:
+                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                    obj = s3.get_object(
+                        Bucket=storage_connector.bucket,
+                        Key=obj["Key"],
+                    )
+                    df_list.append(self._read_pandas(data_format, obj["Body"]))
+        return df_list
+
+    # todo only here
+    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
+        """
+        Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
+        and values are split ratios.
+        """
+        split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
+        result_dfs = {}
+        splits = training_dataset_obj.splits
+        if (
+                sum([split.percentage for split in splits]) != 1
+                or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+                > 1
+        ):
+            raise ValueError(
+                "Sum of split ratios should be 1 and each values should be in range (0, 1)"
+            )
+
+        df_size = len(df)
+        groups = []
+        for i, split in enumerate(splits):
+            groups += [i] * int(df_size * split.percentage)
+        groups += [len(splits) - 1] * (df_size - len(groups))
+        random.shuffle(groups)
+        df[split_column] = groups
+        for i, split in enumerate(splits):
+            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            result_dfs[split.name] = split_df
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
+                training_dataset_obj,
+                result_dfs.get(split_name),
+            )
+
+        return result_dfs
+
+    # todo only here
+    def _apply_transformation_function(self, training_dataset, dataset):
+        for (
+                feature_name,
+                transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            dataset[feature_name] = dataset[feature_name].map(
+                transformation_fn.transformation_fn
+            )
+
+        return dataset
 
     # util
 
@@ -356,49 +740,59 @@ class Engine(engine_base.EngineBase):
     def is_spark_dataframe(self, dataframe):
         return False
 
-    # other
-
-    def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() in ["default", "pandas"]:
-            return dataframe
-        if dataframe_type.lower() == "numpy":
-            return dataframe.values
-        if dataframe_type == "python":
-            return dataframe.values.tolist()
-
-        raise TypeError(
-            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
+    def create_empty_df(self, streaming_df):
+        raise NotImplementedError(
+            "Create empty df is only available with Spark Engine."
         )
 
-    def _apply_transformation_function(self, training_dataset, dataset):
-        for (
-                feature_name,
-                transformation_fn,
-        ) in training_dataset.transformation_functions.items():
-            dataset[feature_name] = dataset[feature_name].map(
-                transformation_fn.transformation_fn
+    def setup_storage_connector(self, storage_connector, path=None):
+        raise NotImplementedError(
+            "Setup storage connector is only available with Spark Engine."
+        )
+
+    def profile_by_spark(self, metadata_instance):
+        stat_api = statistics_api.StatisticsApi(
+            metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
+        )
+        job = stat_api.compute(metadata_instance)
+        print(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
+                self._get_job_url(job.href)
             )
+        )
 
-        return dataset
+        self._wait_for_job(job)
 
+    # todo only here
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # todo only here
+    def _create_hive_connection(self, feature_store):
+        try:
+            return hive.Connection(
+                host=client.get_instance()._host,
+                port=9085,
+                # database needs to be set every time, 'default' doesn't work in pyhive
+                database=feature_store,
+                auth="CERTIFICATES",
+                truststore=client.get_instance()._get_jks_trust_store_path(),
+                keystore=client.get_instance()._get_jks_key_store_path(),
+                keystore_password=client.get_instance()._cert_key,
+            )
+        except (TTransportException, AttributeError):
+            raise ValueError(
+                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
+                "is correct and make sure port '9085' is open on host server."
+            )
+        except OperationalError as e:
+            if e.args[0].status.statusCode == 3:
+                raise RuntimeError(
+                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
+                    f" It is possible to request access from data owners of '{feature_store}'."
+                )
 
     # todo only here
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
@@ -416,126 +810,58 @@ class Engine(engine_base.EngineBase):
         return self._return_dataframe_type(result_df, dataframe_type)
 
     # todo only here
-    def _read_pandas(self, data_format, obj):
-        if data_format.lower() == "csv":
-            return pd.read_csv(obj)
-        elif data_format.lower() == "tsv":
-            return pd.read_csv(obj, sep="\t")
-        elif data_format.lower() == "parquet":
-            return pd.read_parquet(BytesIO(obj.read()))
-        else:
-            raise TypeError(
-                "{} training dataset format is not supported to read as pandas dataframe.".format(
-                    data_format
-                )
-            )
+    def _return_dataframe_type(self, dataframe, dataframe_type):
+        if dataframe_type.lower() in ["default", "pandas"]:
+            return dataframe
+        if dataframe_type.lower() == "numpy":
+            return dataframe.values
+        if dataframe_type == "python":
+            return dataframe.values.tolist()
+
+        raise TypeError(
+            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
+        )
 
     # todo only here
-    def _read_hopsfs(self, location, data_format):
-        # providing more informative error
-        try:
-            from pydoop import hdfs
-        except ModuleNotFoundError:
-            return self._read_hopsfs_rest(location, data_format)
+    def _get_job_url(self, href: str):
+        """Use the endpoint returned by the API to construct the UI url for jobs
 
-        util.setup_pydoop()
-        path_list = hdfs.ls(location, recursive=True)
-
-        df_list = []
-        for path in path_list:
-            if (
-                hdfs.path.isfile(path)
-                and not path.endswith("_SUCCESS")
-                and hdfs.path.getsize(path) > 0
-            ):
-                df_list.append(self._read_pandas(data_format, path))
-        return df_list
+        Args:
+            href (str): the endpoint returned by the API
+        """
+        url = urlparse(href)
+        url_splits = url.path.split("/")
+        project_id = url_splits[4]
+        job_name = url_splits[6]
+        ui_url = url._replace(
+            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+        )
+        ui_url = client.get_instance().replace_public_host(ui_url)
+        return ui_url.geturl()
 
     # todo only here
-    # This is a version of the read method that uses the Hopsworks REST APIs
-    # To read the training dataset content, this to avoid the pydoop dependency
-    # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_rest(self, location, data_format):
-        total_count = 10000
-        offset = 0
-        df_list = []
-
-        while offset < total_count:
-            total_count, inode_list = self._dataset_api.list_files(
-                location, offset, 100
-            )
-
-            for inode in inode_list:
-                if not inode.path.endswith("_SUCCESS"):
-                    content_stream = self._dataset_api.read_content(inode.path)
-                    df_list.append(
-                        self._read_pandas(data_format, BytesIO(content_stream.content))
-                    )
-                offset += 1
-
-        return df_list
-
-    # todo only here
-    def _read_s3(self, storage_connector, location, data_format):
-        # get key prefix
-        path_parts = location.replace("s3://", "").split("/")
-        _ = path_parts.pop(0)  # pop first element -> bucket
-
-        prefix = "/".join(path_parts)
-
-        if storage_connector.session_token is not None:
-            s3 = boto3.client(
-                "s3",
-                aws_access_key_id=storage_connector.access_key,
-                aws_secret_access_key=storage_connector.secret_key,
-                aws_session_token=storage_connector.session_token,
-            )
-        else:
-            s3 = boto3.client(
-                "s3",
-                aws_access_key_id=storage_connector.access_key,
-                aws_secret_access_key=storage_connector.secret_key,
-            )
-
-        df_list = []
-        object_list = {"is_truncated": True}
-        while object_list.get("is_truncated", False):
-            if "NextContinuationToken" in object_list:
-                object_list = s3.list_objects_v2(
-                    Bucket=storage_connector.bucket,
-                    Prefix=prefix,
-                    MaxKeys=1000,
-                    ContinuationToken=object_list["NextContinuationToken"],
-                )
+    def _wait_for_job(self, job, user_write_options=None):
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        while user_write_options is None or user_write_options.get(
+                "wait_for_job", True
+        ):
+            executions = self._job_api.last_execution(job)
+            if len(executions) > 0:
+                execution = executions[0]
             else:
-                object_list = s3.list_objects_v2(
-                    Bucket=storage_connector.bucket,
-                    Prefix=prefix,
-                    MaxKeys=1000,
+                return
+
+            if execution.final_status.lower() == "succeeded":
+                return
+            elif execution.final_status.lower() == "failed":
+                raise exceptions.FeatureStoreException(
+                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
                 )
+            elif execution.final_status.lower() == "killed":
+                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
 
-            for obj in object_list["Contents"]:
-                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
-                    obj = s3.get_object(
-                        Bucket=storage_connector.bucket,
-                        Key=obj["Key"],
-                    )
-                    df_list.append(self._read_pandas(data_format, obj["Body"]))
-        return df_list
-
-    # todo only here
-    def profile_by_spark(self, metadata_instance):
-        stat_api = statistics_api.StatisticsApi(
-            metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
-        )
-        job = stat_api.compute(metadata_instance)
-        print(
-            "Statistics Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(job.href)
-            )
-        )
-
-        self._wait_for_job(job)
+            time.sleep(3)
 
     # todo only here
     def _convert_pandas_statistics(self, stat):
@@ -563,12 +889,6 @@ class Engine(engine_base.EngineBase):
         return content_dict
 
     # todo only here
-    def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
-        raise NotImplementedError(
-            "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
-        )
-
-    # todo only here
     def _convert_pandas_type(self, dtype, arrow_type):
         # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
         # using pyarrow types to convert "O (object)"-typed fields.
@@ -577,6 +897,29 @@ class Engine(engine_base.EngineBase):
             return self._infer_type_pyarrow(arrow_type)
 
         return self._convert_simple_pandas_type(dtype)
+
+    # todo only here
+    def _infer_type_pyarrow(self, arrow_type):
+        if pa.types.is_list(arrow_type):
+            # figure out sub type
+            sub_arrow_type = arrow_type.value_type
+            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            subtype = self._convert_pandas_type(sub_dtype, sub_arrow_type)
+            return "array<{}>".format(subtype)
+        if pa.types.is_struct(arrow_type):
+            # best effort, based on pyarrow's string representation
+            return str(arrow_type)
+        # Currently not supported
+        # elif pa.types.is_decimal(arrow_type):
+        #    return str(arrow_type).replace("decimal128", "decimal")
+        elif pa.types.is_date(arrow_type):
+            return "date"
+        elif pa.types.is_binary(arrow_type):
+            return "binary"
+        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
+            return "string"
+
+        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     # todo only here
     def _convert_simple_pandas_type(self, dtype):
@@ -608,356 +951,3 @@ class Engine(engine_base.EngineBase):
             return "string"
 
         raise ValueError(f"dtype '{dtype}' not supported")
-
-    # todo only here
-    def _infer_type_pyarrow(self, arrow_type):
-        if pa.types.is_list(arrow_type):
-            # figure out sub type
-            sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
-            subtype = self._convert_pandas_type(sub_dtype, sub_arrow_type)
-            return "array<{}>".format(subtype)
-        if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
-        # Currently not supported
-        # elif pa.types.is_decimal(arrow_type):
-        #    return str(arrow_type).replace("decimal128", "decimal")
-        elif pa.types.is_date(arrow_type):
-            return "date"
-        elif pa.types.is_binary(arrow_type):
-            return "binary"
-        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
-            return "string"
-
-        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
-
-    # todo only here
-    def legacy_save_dataframe(
-        self,
-        feature_group,
-        dataframe,
-        operation,
-        online_enabled,
-        storage,
-        offline_write_options,
-        online_write_options,
-        validation_id=None,
-    ):
-        # App configuration
-        app_options = self._get_app_options(offline_write_options)
-
-        # Setup job for ingestion
-        # Configure Hopsworks ingestion job
-        print("Configuring ingestion job...")
-        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
-        ingestion_job = fg_api.ingestion(feature_group, app_options)
-
-        # Upload dataframe into Hopsworks
-        print("Uploading Pandas dataframe...")
-        self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
-
-        # Launch job
-        print("Launching ingestion job...")
-        self._job_api.launch(ingestion_job.job.name)
-        print(
-            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(ingestion_job.job.href)
-            )
-        )
-
-        self._wait_for_job(ingestion_job.job, offline_write_options)
-
-        return ingestion_job.job
-
-    # todo only here
-    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
-        """
-        Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
-        and values are split ratios.
-        """
-        split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
-        result_dfs = {}
-        splits = training_dataset_obj.splits
-        if (
-            sum([split.percentage for split in splits]) != 1
-            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
-            > 1
-        ):
-            raise ValueError(
-                "Sum of split ratios should be 1 and each values should be in range (0, 1)"
-            )
-
-        df_size = len(df)
-        groups = []
-        for i, split in enumerate(splits):
-            groups += [i] * int(df_size * split.percentage)
-        groups += [len(splits) - 1] * (df_size - len(groups))
-        random.shuffle(groups)
-        df[split_column] = groups
-        for i, split in enumerate(splits):
-            split_df = df[df[split_column] == i].drop(split_column, axis=1)
-            result_dfs[split.name] = split_df
-
-        # apply transformations
-        # 1st parametrise transformation functions with dt split stats
-        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-            training_dataset_obj, feature_view_obj, result_dfs
-        )
-        # and the apply them
-        for split_name in result_dfs:
-            result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj,
-                result_dfs.get(split_name),
-            )
-
-        return result_dfs
-
-    # todo only here
-    def _create_hive_connection(self, feature_store):
-        try:
-            return hive.Connection(
-                host=client.get_instance()._host,
-                port=9085,
-                # database needs to be set every time, 'default' doesn't work in pyhive
-                database=feature_store,
-                auth="CERTIFICATES",
-                truststore=client.get_instance()._get_jks_trust_store_path(),
-                keystore=client.get_instance()._get_jks_key_store_path(),
-                keystore_password=client.get_instance()._cert_key,
-            )
-        except (TTransportException, AttributeError):
-            raise ValueError(
-                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
-                "is correct and make sure port '9085' is open on host server."
-            )
-        except OperationalError as e:
-            if e.args[0].status.statusCode == 3:
-                raise RuntimeError(
-                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
-                    f" It is possible to request access from data owners of '{feature_store}'."
-                )
-
-    # todo only here
-    def _get_job_url(self, href: str):
-        """Use the endpoint returned by the API to construct the UI url for jobs
-
-        Args:
-            href (str): the endpoint returned by the API
-        """
-        url = urlparse(href)
-        url_splits = url.path.split("/")
-        project_id = url_splits[4]
-        job_name = url_splits[6]
-        ui_url = url._replace(
-            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
-        )
-        ui_url = client.get_instance().replace_public_host(ui_url)
-        return ui_url.geturl()
-
-    # todo only here
-    def _get_app_options(self, user_write_options={}):
-        """
-        Generate the options that should be passed to the application doing the ingestion.
-        Options should be data format, data options to read the input dataframe and
-        insert options to be passed to the insert method
-
-        Users can pass Spark configurations to the save/insert method
-        Property name should match the value in the JobConfiguration.__init__
-        """
-        spark_job_configuration = user_write_options.pop("spark", None)
-
-        return ingestion_job_conf.IngestionJobConf(
-            data_format="PARQUET",
-            data_options=[],
-            write_options=user_write_options,
-            spark_job_configuration=spark_job_configuration,
-        )
-
-    # todo only here
-    def _wait_for_job(self, job, user_write_options=None):
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
-            executions = self._job_api.last_execution(job)
-            if len(executions) > 0:
-                execution = executions[0]
-            else:
-                return
-
-            if execution.final_status.lower() == "succeeded":
-                return
-            elif execution.final_status.lower() == "failed":
-                raise exceptions.FeatureStoreException(
-                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-                )
-            elif execution.final_status.lower() == "killed":
-                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
-
-            time.sleep(3)
-
-    # todo only here
-    def _write_dataframe_kafka(
-        self,
-        feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
-        offline_write_options: dict,
-    ):
-        # setup kafka producer
-        producer = Producer(self._get_kafka_config(offline_write_options))
-
-        # setup complex feature writers
-        feature_writers = {
-            feature: self._get_encoder_func(
-                feature_group._get_feature_avro_schema(feature)
-            )
-            for feature in feature_group.get_complex_features()
-        }
-
-        # setup row writer function
-        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
-
-        def acked(err, msg):
-            if err is not None and offline_write_options.get("debug_kafka", False):
-                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-            else:
-                # update progress bar for each msg
-                progress_bar.update()
-
-        # initialize progress bar
-        progress_bar = tqdm(
-            total=dataframe.shape[0],
-            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-            desc="Uploading Dataframe",
-            mininterval=1,
-        )
-        # loop over rows
-        for r in dataframe.itertuples(index=False):
-            # itertuples returns Python NamedTyple, to be able to serialize it using
-            # avro, create copy of row only by converting to dict, which preserves datatypes
-            row = r._asdict()
-
-            # transform special data types
-            # here we might need to handle also timestamps and other complex types
-            # possible optimizaiton: make it based on type so we don't need to loop over
-            # all keys in the row
-            for k in row.keys():
-                # for avro to be able to serialize them, they need to be python data types
-                if isinstance(row[k], np.ndarray):
-                    row[k] = row[k].tolist()
-                if isinstance(row[k], pd.Timestamp):
-                    row[k] = row[k].to_pydatetime()
-
-            # encode complex features
-            row = self._encode_complex_features(feature_writers, row)
-
-            # encode feature row
-            with BytesIO() as outf:
-                writer(row, outf)
-                encoded_row = outf.getvalue()
-
-            # assemble key
-            key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
-
-            while True:
-                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
-                try:
-                    # produce
-                    producer.produce(
-                        topic=feature_group._online_topic_name,
-                        key=key,
-                        value=encoded_row,
-                        callback=acked,
-                    )
-
-                    # Trigger internal callbacks to empty op queue
-                    producer.poll(0)
-                    break
-                except BufferError as e:
-                    if offline_write_options.get("debug_kafka", False):
-                        print("Caught: {}".format(e))
-                    # backoff for 1 second
-                    producer.poll(1)
-
-        # make sure producer blocks and everything is delivered
-        producer.flush()
-        progress_bar.close()
-
-        # start backfilling job
-        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-            fg_name=feature_group.name, version=feature_group.version
-        )
-        job = self._job_api.get(job_name)
-
-        if offline_write_options is not None and offline_write_options.get(
-            "start_offline_backfill", True
-        ):
-            print("Launching offline feature group backfill job...")
-            self._job_api.launch(job_name)
-            print(
-                "Backfill Job started successfully, you can follow the progress at \n{}".format(
-                    self._get_job_url(job.href)
-                )
-            )
-            self._wait_for_job(job, offline_write_options)
-
-        return job
-
-    # todo only here
-    def _encode_complex_features(
-        self, feature_writers: Dict[str, callable], row: dict
-    ) -> dict:
-        for feature_name, writer in feature_writers.items():
-            with BytesIO() as outf:
-                writer(row[feature_name], outf)
-                row[feature_name] = outf.getvalue()
-        return row
-
-    # todo only here
-    def _get_encoder_func(self, writer_schema: str) -> callable:
-        if HAS_FAST:
-            schema = json.loads(writer_schema)
-            parsed_schema = parse_schema(schema)
-            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
-
-        parsed_schema = avro.schema.parse(writer_schema)
-        writer = avro.io.DatumWriter(parsed_schema)
-        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
-
-    # todo only here
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        # producer configuration properties
-        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
-        config = {
-            "security.protocol": "SSL",
-            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
-            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
-            "ssl.key.location": client.get_instance()._get_client_key_path(),
-            "client.id": socket.gethostname(),
-            **write_options.get("kafka_producer_config", {}),
-        }
-
-        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-            "internal_kafka", False
-        ):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=False
-                    )
-                ]
-            )
-        elif isinstance(client.get_instance(), external.Client):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("EXTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=True
-                    )
-                ]
-            )
-        return config

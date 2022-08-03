@@ -106,8 +106,8 @@ class Engine(engine_base.EngineBase):
             dataset = dataset.coalesce(1)
 
         if feature_view_obj is None:
-            self.training_dataset_schema_match(dataset, training_dataset.schema)
-        write_options = self.write_options(
+            self._training_dataset_schema_match(dataset, training_dataset.schema)
+        write_options = self._write_options(
             training_dataset.data_format, user_write_options
         )
 
@@ -271,6 +271,229 @@ class Engine(engine_base.EngineBase):
             {},
         )
 
+    # todo only here
+    def _save_offline_dataframe(
+            self,
+            feature_group,
+            dataframe,
+            operation,
+            write_options,
+            validation_id=None,
+    ):
+        if feature_group.time_travel_format == "HUDI":
+            hudi_engine_instance = hudi_engine.HudiEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                self._spark_session,
+                self._spark_context,
+            )
+
+            hudi_engine_instance.save_hudi_fg(
+                dataframe, self.APPEND, operation, write_options, validation_id
+            )
+        else:
+            dataframe.write.format(self.HIVE_FORMAT).mode(self.APPEND).options(
+                **write_options
+            ).partitionBy(
+                feature_group.partition_key if feature_group.partition_key else []
+            ).saveAsTable(
+                feature_group._get_table_name()
+            )
+
+    # todo only here
+    def _save_online_dataframe(self, feature_group, dataframe, write_options):
+
+        serialized_df = self._online_fg_to_avro(
+            feature_group, self._encode_complex_features(feature_group, dataframe)
+        )
+        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
+            "topic", feature_group._online_topic_name
+        ).save()
+
+    # todo only here
+    def _encode_complex_features(self, feature_group, dataframe):
+        """Encodes all complex type features to binary using their avro type as schema."""
+        return dataframe.select(
+            [
+                field["name"]
+                if field["name"] not in feature_group.get_complex_features()
+                else to_avro(
+                    field["name"], feature_group._get_feature_avro_schema(field["name"])
+                ).alias(field["name"])
+                for field in json.loads(feature_group.avro_schema)["fields"]
+            ]
+        )
+
+    # todo only here
+    def _online_fg_to_avro(self, feature_group, dataframe):
+        """Packs all features into named struct to be serialized to single avro/binary
+        column. And packs primary key into arry to be serialized for partitioning.
+        """
+        return dataframe.select(
+            [
+                # be aware: primary_key array should always be sorted
+                to_avro(
+                    concat(
+                        *[
+                            col(f).cast("string")
+                            for f in sorted(feature_group.primary_key)
+                        ]
+                    )
+                ).alias("key"),
+                to_avro(
+                    struct(
+                        [
+                            field["name"]
+                            for field in json.loads(feature_group.avro_schema)["fields"]
+                        ]
+                    ),
+                    feature_group._get_encoded_avro_schema(),
+                ).alias("value"),
+            ]
+        )
+
+    # todo only here
+    def _write_training_dataset_splits(
+            self,
+            training_dataset,
+            feature_dataframes,
+            write_options,
+            save_mode,
+            to_df=False,
+    ):
+        for split_name, feature_dataframe in feature_dataframes.items():
+            split_path = training_dataset.location + "/" + str(split_name)
+            feature_dataframes[split_name] = self._write_training_dataset_single(
+                training_dataset,
+                feature_dataframes[split_name],
+                training_dataset.storage_connector,
+                training_dataset.data_format,
+                write_options,
+                save_mode,
+                split_path,
+                to_df=to_df,
+            )
+
+        if to_df:
+            return feature_dataframes
+
+    # todo only here
+    def _write_training_dataset_single(
+            self,
+            training_dataset,
+            feature_dataframe,
+            storage_connector,
+            data_format,
+            write_options,
+            save_mode,
+            path,
+            to_df=False,
+    ):
+        # apply transformation functions (they are applied separately to each split)
+        feature_dataframe = self._apply_transformation_function(
+            training_dataset, dataset=feature_dataframe
+        )
+        if to_df:
+            return feature_dataframe
+        # TODO: currently not supported petastorm, hdf5 and npy file formats
+        if data_format.lower() == "tsv":
+            data_format = "csv"
+
+        path = self.setup_storage_connector(storage_connector, path)
+
+        feature_dataframe.write.format(data_format).options(**write_options).mode(
+            save_mode
+        ).save(path)
+
+    # todo only here
+    def _write_options(self, data_format, provided_options):
+        if data_format.lower() == "tfrecords":
+            options = dict(recordType="Example")
+            options.update(provided_options)
+        elif data_format.lower() == "tfrecord":
+            options = dict(recordType="Example")
+            options.update(provided_options)
+        elif data_format.lower() == "csv":
+            options = dict(delimiter=",", header="true")
+            options.update(provided_options)
+        elif data_format.lower() == "tsv":
+            options = dict(delimiter="\t", header="true")
+            options.update(provided_options)
+        else:
+            options = {}
+            options.update(provided_options)
+        return options
+
+    # todo only here
+    def _training_dataset_schema_match(self, dataframe, schema):
+
+        class SchemaError(Exception):
+            """Thrown when schemas don't match"""
+
+        schema_sorted = sorted(schema, key=lambda f: f.index)
+        insert_schema = dataframe.schema
+        if len(schema_sorted) != len(insert_schema):
+            raise SchemaError(
+                "Schemas do not match. Expected {} features, the dataframe contains {} features".format(
+                    len(schema_sorted), len(insert_schema)
+                )
+            )
+
+        i = 0
+        for feat in schema_sorted:
+            if feat.name != insert_schema[i].name.lower():
+                raise SchemaError(
+                    "Schemas do not match, expected feature {} in position {}, found {}".format(
+                        feat.name, str(i), insert_schema[i].name
+                    )
+                )
+
+            i += 1
+
+    # todo only here
+    def _apply_transformation_function(self, training_dataset, dataset):
+        # generate transformation function expressions
+        transformed_feature_names = []
+        transformation_fn_expressions = []
+        for (
+                feature_name,
+                transformation_fn,
+        ) in training_dataset.transformation_functions.items():
+            fn_registration_name = (
+                    transformation_fn.name
+                    + "_"
+                    + str(transformation_fn.version)
+                    + "_"
+                    + feature_name
+            )
+            self._spark_session.udf.register(
+                fn_registration_name, transformation_fn.transformation_fn
+            )
+            transformation_fn_expressions.append(
+                "{fn_name:}({name:}) AS {name:}".format(
+                    fn_name=fn_registration_name, name=feature_name
+                )
+            )
+            transformed_feature_names.append(feature_name)
+
+        # generate non transformation expressions
+        no_transformation_expr = [
+            "{name:} AS {name:}".format(name=col_name)
+            for col_name in dataset.columns
+            if col_name not in transformed_feature_names
+        ]
+
+        # generate entire expression and execute it
+        transformation_fn_expressions.extend(no_transformation_expr)
+        dataset = dataset.selectExpr(*transformation_fn_expressions)
+
+        # sort feature order if it was altered by transformation functions
+        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
+        sorted_feature_names = [ft.name for ft in sorded_features]
+        dataset = dataset.select(*sorted_feature_names)
+        return dataset
+
     # read
 
     def read(self, storage_connector, data_format, read_options, location):
@@ -363,6 +586,43 @@ class Engine(engine_base.EngineBase):
         for f in new_features:
             dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
         return dataframe
+
+    # todo only here
+    def _read_stream_kafka(self, stream, message_format, schema, include_metadata):
+        kafka_cols = [
+            col("key"),
+            col("topic"),
+            col("partition"),
+            col("offset"),
+            col("timestamp"),
+            col("timestampType"),
+        ]
+
+        if message_format == "avro" and schema is not None:
+            # check if vallid avro schema
+            avro.schema.parse(schema)
+            df = stream.load()
+            if include_metadata is True:
+                return df.select(
+                    *kafka_cols, from_avro(df.value, schema).alias("value")
+                ).select(*kafka_cols, col("value.*"))
+            return df.select(from_avro(df.value, schema).alias("value")).select(
+                col("value.*")
+            )
+        elif message_format == "json" and schema is not None:
+            df = stream.load()
+            if include_metadata is True:
+                return df.select(
+                    *kafka_cols,
+                    from_json(df.value.cast("string"), schema).alias("value"),
+                ).select(*kafka_cols, col("value.*"))
+            return df.select(
+                from_json(df.value.cast("string"), schema).alias("value")
+            ).select(col("value.*"))
+
+        if include_metadata is True:
+            return stream.load()
+        return stream.load().select("key", "value")
 
     # util
 
@@ -497,7 +757,7 @@ class Engine(engine_base.EngineBase):
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = self.convert_spark_type(feat.dataType, using_hudi)
+                converted_type = self._convert_spark_type(feat.dataType, using_hudi)
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
             features.append(
@@ -528,274 +788,37 @@ class Engine(engine_base.EngineBase):
             return True
         return False
 
-    # other
-
-    def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() in ["default", "spark"]:
-            return dataframe
-        if dataframe_type.lower() == "pandas":
-            return dataframe.toPandas()
-        if dataframe_type.lower() == "numpy":
-            return dataframe.toPandas().values
-        if dataframe_type == "python":
-            return dataframe.toPandas().values.tolist()
-
-        raise TypeError(
-            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
+    def create_empty_df(self, streaming_df):
+        return SQLContext(self._spark_context).createDataFrame(
+            self._spark_context.emptyRDD(), streaming_df.schema
         )
 
-    def _apply_transformation_function(self, training_dataset, dataset):
-        # generate transformation function expressions
-        transformed_feature_names = []
-        transformation_fn_expressions = []
-        for (
-                feature_name,
-                transformation_fn,
-        ) in training_dataset.transformation_functions.items():
-            fn_registration_name = (
-                    transformation_fn.name
-                    + "_"
-                    + str(transformation_fn.version)
-                    + "_"
-                    + feature_name
-            )
-            self._spark_session.udf.register(
-                fn_registration_name, transformation_fn.transformation_fn
-            )
-            transformation_fn_expressions.append(
-                "{fn_name:}({name:}) AS {name:}".format(
-                    fn_name=fn_registration_name, name=feature_name
-                )
-            )
-            transformed_feature_names.append(feature_name)
+    def setup_storage_connector(self, storage_connector, path=None):
+        # update storage connector to get new session token
+        storage_connector.refetch()
 
-        # generate non transformation expressions
-        no_transformation_expr = [
-            "{name:} AS {name:}".format(name=col_name)
-            for col_name in dataset.columns
-            if col_name not in transformed_feature_names
-        ]
+        if storage_connector.type == StorageConnector.S3:
+            return self._setup_s3_hadoop_conf(storage_connector, path)
+        elif storage_connector.type == StorageConnector.ADLS:
+            return self._setup_adls_hadoop_conf(storage_connector, path)
+        elif storage_connector.type == StorageConnector.GCS:
+            return self._setup_gcp_hadoop_conf(storage_connector, path)
+        else:
+            return path
 
-        # generate entire expression and execute it
-        transformation_fn_expressions.extend(no_transformation_expr)
-        dataset = dataset.selectExpr(*transformation_fn_expressions)
+    def profile_by_spark(self, metadata_instance):
+        raise NotImplementedError(
+            "Profile by spark is only available with Python Engine."
+        )
 
-        # sort feature order if it was altered by transformation functions
-        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
-        sorted_feature_names = [ft.name for ft in sorded_features]
-        dataset = dataset.select(*sorted_feature_names)
-        return dataset
-
-    def _sql_offline(self, sql_query, feature_store, dataframe_type):
+    # todo only here
+    def _sql_offline(self, sql_query, feature_store):
         # set feature store
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-
-
-
-
-
-
-
-
-
-
-
-
     # todo only here
-    def _save_offline_dataframe(
-        self,
-        feature_group,
-        dataframe,
-        operation,
-        write_options,
-        validation_id=None,
-    ):
-        if feature_group.time_travel_format == "HUDI":
-            hudi_engine_instance = hudi_engine.HudiEngine(
-                feature_group.feature_store_id,
-                feature_group.feature_store_name,
-                feature_group,
-                self._spark_session,
-                self._spark_context,
-            )
-
-            hudi_engine_instance.save_hudi_fg(
-                dataframe, self.APPEND, operation, write_options, validation_id
-            )
-        else:
-            dataframe.write.format(self.HIVE_FORMAT).mode(self.APPEND).options(
-                **write_options
-            ).partitionBy(
-                feature_group.partition_key if feature_group.partition_key else []
-            ).saveAsTable(
-                feature_group._get_table_name()
-            )
-
-    # todo only here
-    def _save_online_dataframe(self, feature_group, dataframe, write_options):
-
-        serialized_df = self._online_fg_to_avro(
-            feature_group, self._encode_complex_features(feature_group, dataframe)
-        )
-        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
-            "topic", feature_group._online_topic_name
-        ).save()
-
-    # todo only here
-    def _encode_complex_features(self, feature_group, dataframe):
-        """Encodes all complex type features to binary using their avro type as schema."""
-        return dataframe.select(
-            [
-                field["name"]
-                if field["name"] not in feature_group.get_complex_features()
-                else to_avro(
-                    field["name"], feature_group._get_feature_avro_schema(field["name"])
-                ).alias(field["name"])
-                for field in json.loads(feature_group.avro_schema)["fields"]
-            ]
-        )
-
-    # todo only here
-    def _online_fg_to_avro(self, feature_group, dataframe):
-        """Packs all features into named struct to be serialized to single avro/binary
-        column. And packs primary key into arry to be serialized for partitioning.
-        """
-        return dataframe.select(
-            [
-                # be aware: primary_key array should always be sorted
-                to_avro(
-                    concat(
-                        *[
-                            col(f).cast("string")
-                            for f in sorted(feature_group.primary_key)
-                        ]
-                    )
-                ).alias("key"),
-                to_avro(
-                    struct(
-                        [
-                            field["name"]
-                            for field in json.loads(feature_group.avro_schema)["fields"]
-                        ]
-                    ),
-                    feature_group._get_encoded_avro_schema(),
-                ).alias("value"),
-            ]
-        )
-
-    # todo only here
-    def _write_training_dataset_splits(
-        self,
-        training_dataset,
-        feature_dataframes,
-        write_options,
-        save_mode,
-        to_df=False,
-    ):
-        for split_name, feature_dataframe in feature_dataframes.items():
-            split_path = training_dataset.location + "/" + str(split_name)
-            feature_dataframes[split_name] = self._write_training_dataset_single(
-                training_dataset,
-                feature_dataframes[split_name],
-                training_dataset.storage_connector,
-                training_dataset.data_format,
-                write_options,
-                save_mode,
-                split_path,
-                to_df=to_df,
-            )
-
-        if to_df:
-            return feature_dataframes
-
-    # todo only here
-    def _write_training_dataset_single(
-        self,
-        training_dataset,
-        feature_dataframe,
-        storage_connector,
-        data_format,
-        write_options,
-        save_mode,
-        path,
-        to_df=False,
-    ):
-        # apply transformation functions (they are applied separately to each split)
-        feature_dataframe = self._apply_transformation_function(
-            training_dataset, dataset=feature_dataframe
-        )
-        if to_df:
-            return feature_dataframe
-        # TODO: currently not supported petastorm, hdf5 and npy file formats
-        if data_format.lower() == "tsv":
-            data_format = "csv"
-
-        path = self.setup_storage_connector(storage_connector, path)
-
-        feature_dataframe.write.format(data_format).options(**write_options).mode(
-            save_mode
-        ).save(path)
-
-    # todo only here
-    def _read_stream_kafka(self, stream, message_format, schema, include_metadata):
-        kafka_cols = [
-            col("key"),
-            col("topic"),
-            col("partition"),
-            col("offset"),
-            col("timestamp"),
-            col("timestampType"),
-        ]
-
-        if message_format == "avro" and schema is not None:
-            # check if vallid avro schema
-            avro.schema.parse(schema)
-            df = stream.load()
-            if include_metadata is True:
-                return df.select(
-                    *kafka_cols, from_avro(df.value, schema).alias("value")
-                ).select(*kafka_cols, col("value.*"))
-            return df.select(from_avro(df.value, schema).alias("value")).select(
-                col("value.*")
-            )
-        elif message_format == "json" and schema is not None:
-            df = stream.load()
-            if include_metadata is True:
-                return df.select(
-                    *kafka_cols,
-                    from_json(df.value.cast("string"), schema).alias("value"),
-                ).select(*kafka_cols, col("value.*"))
-            return df.select(
-                from_json(df.value.cast("string"), schema).alias("value")
-            ).select(col("value.*"))
-
-        if include_metadata is True:
-            return stream.load()
-        return stream.load().select("key", "value")
-
-    # todo only here
-    def write_options(self, data_format, provided_options):
-        if data_format.lower() == "tfrecords":
-            options = dict(recordType="Example")
-            options.update(provided_options)
-        elif data_format.lower() == "tfrecord":
-            options = dict(recordType="Example")
-            options.update(provided_options)
-        elif data_format.lower() == "csv":
-            options = dict(delimiter=",", header="true")
-            options.update(provided_options)
-        elif data_format.lower() == "tsv":
-            options = dict(delimiter="\t", header="true")
-            options.update(provided_options)
-        else:
-            options = {}
-            options.update(provided_options)
-        return options
-
-    # todo only here
-    def convert_spark_type(self, hive_type, using_hudi):
+    def _convert_spark_type(self, hive_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
@@ -823,42 +846,6 @@ class Engine(engine_base.EngineBase):
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
-
-    # todo only here
-    def training_dataset_schema_match(self, dataframe, schema):
-        schema_sorted = sorted(schema, key=lambda f: f.index)
-        insert_schema = dataframe.schema
-        if len(schema_sorted) != len(insert_schema):
-            raise SchemaError(
-                "Schemas do not match. Expected {} features, the dataframe contains {} features".format(
-                    len(schema_sorted), len(insert_schema)
-                )
-            )
-
-        i = 0
-        for feat in schema_sorted:
-            if feat.name != insert_schema[i].name.lower():
-                raise SchemaError(
-                    "Schemas do not match, expected feature {} in position {}, found {}".format(
-                        feat.name, str(i), insert_schema[i].name
-                    )
-                )
-
-            i += 1
-
-    # todo only here
-    def setup_storage_connector(self, storage_connector, path=None):
-        # update storage connector to get new session token
-        storage_connector.refetch()
-
-        if storage_connector.type == StorageConnector.S3:
-            return self._setup_s3_hadoop_conf(storage_connector, path)
-        elif storage_connector.type == StorageConnector.ADLS:
-            return self._setup_adls_hadoop_conf(storage_connector, path)
-        elif storage_connector.type == StorageConnector.GCS:
-            return self._setup_gcp_hadoop_conf(storage_connector, path)
-        else:
-            return path
 
     # todo only here
     def _setup_s3_hadoop_conf(self, storage_connector, path):
@@ -949,11 +936,16 @@ class Engine(engine_base.EngineBase):
         return path
 
     # todo only here
-    def create_empty_df(self, streaming_df):
-        return SQLContext(self._spark_context).createDataFrame(
-            self._spark_context.emptyRDD(), streaming_df.schema
+    def _return_dataframe_type(self, dataframe, dataframe_type):
+        if dataframe_type.lower() in ["default", "spark"]:
+            return dataframe
+        if dataframe_type.lower() == "pandas":
+            return dataframe.toPandas()
+        if dataframe_type.lower() == "numpy":
+            return dataframe.toPandas().values
+        if dataframe_type == "python":
+            return dataframe.toPandas().values.tolist()
+
+        raise TypeError(
+            "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
-
-
-class SchemaError(Exception):
-    """Thrown when schemas don't match"""

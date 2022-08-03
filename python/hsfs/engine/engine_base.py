@@ -170,16 +170,14 @@ class EngineBase(ABC):
     def is_spark_dataframe(self, dataframe):
         pass
 
-    # other
-
     @abstractmethod
-    def _return_dataframe_type(self, dataframe, dataframe_type):
+    def create_empty_df(self, dataframe):
         pass
 
     @abstractmethod
-    def _apply_transformation_function(self, training_dataset, dataset):
+    def setup_storage_connector(self, storage_connector, path=None):
         pass
 
     @abstractmethod
-    def _sql_offline(self, sql_query, feature_store, dataframe_type):
+    def profile_by_spark(self, metadata_instance):
         pass
