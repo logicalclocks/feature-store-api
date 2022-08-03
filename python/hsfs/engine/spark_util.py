@@ -24,11 +24,9 @@ import pandas as pd
 
 # in case importing in %%local
 try:
-    from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
-    from pyspark.sql.functions import struct, concat, col, lit, from_json
-    from pyspark.sql.avro.functions import from_avro, to_avro
+    from pyspark.sql.functions import col
     from pyspark.sql.types import (
         ByteType,
         ShortType,
