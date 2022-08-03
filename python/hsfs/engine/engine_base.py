@@ -77,6 +77,10 @@ class EngineWriteBase(ABC):
     def save_empty_dataframe(self, feature_group, dataframe):
         pass
 
+    @abstractmethod
+    def profile_by_spark(self, metadata_instance):
+        pass
+
 
 class EngineReadBase(ABC):
     @abstractmethod
@@ -173,8 +177,4 @@ class EngineUtilBase(ABC):
 
     @abstractmethod
     def setup_storage_connector(self, storage_connector, path=None):
-        pass
-
-    @abstractmethod
-    def profile_by_spark(self, metadata_instance):
         pass

@@ -255,11 +255,6 @@ class EngineUtil(engine_base.EngineUtilBase):
         else:
             return path
 
-    def profile_by_spark(self, metadata_instance):
-        raise NotImplementedError(
-            "Profile by spark is only available with Python Engine."
-        )
-
     # todo only here
     def _sql_offline(self, sql_query, feature_store):
         # set feature store

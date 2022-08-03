@@ -16,11 +16,13 @@
 
 import pandas as pd
 import numpy as np
+import time
 import avro
 import socket
 import json
 
 from io import BytesIO
+from urllib.parse import urlparse
 from typing import Dict
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
@@ -30,6 +32,7 @@ from hsfs.core import (
     feature_group_api,
     dataset_api,
     job_api,
+    statistics_api,
     ingestion_job_conf,
     kafka_api,
     training_dataset_api,
@@ -37,7 +40,7 @@ from hsfs.core import (
     feature_view_api,
 )
 from hsfs.constructor import query
-from hsfs.client import external, hopsworks
+from hsfs.client import external, hopsworks, exceptions
 from hsfs.feature_group import FeatureGroup
 from hsfs.engine import engine_base
 
@@ -167,6 +170,19 @@ class EngineWrite(engine_base.EngineWriteBase):
     def save_empty_dataframe(self, feature_group, dataframe):
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
+
+    def profile_by_spark(self, metadata_instance):
+        stat_api = statistics_api.StatisticsApi(
+            metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
+        )
+        job = stat_api.compute(metadata_instance)
+        print(
+            "Statistics Job started successfully, you can follow the progress at \n{}".format(
+                self._get_job_url(job.href)
+            )
+        )
+
+        self._wait_for_job(job)
 
     # todo only here
     def _legacy_save_dataframe(
@@ -388,3 +404,45 @@ class EngineWrite(engine_base.EngineWriteBase):
                 ]
             )
         return config
+
+    # todo only here
+    def _get_job_url(self, href: str):
+        """Use the endpoint returned by the API to construct the UI url for jobs
+
+        Args:
+            href (str): the endpoint returned by the API
+        """
+        url = urlparse(href)
+        url_splits = url.path.split("/")
+        project_id = url_splits[4]
+        job_name = url_splits[6]
+        ui_url = url._replace(
+            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+        )
+        ui_url = client.get_instance().replace_public_host(ui_url)
+        return ui_url.geturl()
+
+    # todo only here
+    def _wait_for_job(self, job, user_write_options=None):
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        while user_write_options is None or user_write_options.get(
+                "wait_for_job", True
+        ):
+            executions = self._job_api.last_execution(job)
+            if len(executions) > 0:
+                execution = executions[0]
+            else:
+                return
+
+            if execution.final_status.lower() == "succeeded":
+                return
+            elif execution.final_status.lower() == "failed":
+                raise exceptions.FeatureStoreException(
+                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
+                )
+            elif execution.final_status.lower() == "killed":
+                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
+
+            time.sleep(3)
+

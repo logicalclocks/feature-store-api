@@ -16,7 +16,6 @@
 
 import pandas as pd
 import numpy as np
-import time
 import re
 import warnings
 import pyarrow as pa
@@ -25,13 +24,10 @@ import json
 import great_expectations as ge
 
 from pyhive import hive
-from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import job_api, statistics_api
-from hsfs.client import exceptions
 from hsfs.engine import engine_base
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -39,8 +35,6 @@ from pyhive.exc import OperationalError
 
 class EngineUtil(engine_base.EngineUtilBase):
     def __init__(self):
-        self._job_api = job_api.JobApi()
-
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
@@ -157,19 +151,6 @@ class EngineUtil(engine_base.EngineUtilBase):
             "Setup storage connector is only available with Spark Engine."
         )
 
-    def profile_by_spark(self, metadata_instance):
-        stat_api = statistics_api.StatisticsApi(
-            metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
-        )
-        job = stat_api.compute(metadata_instance)
-        print(
-            "Statistics Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(job.href)
-            )
-        )
-
-        self._wait_for_job(job)
-
     # todo only here
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         with self._create_hive_connection(feature_store) as hive_conn:
@@ -228,47 +209,6 @@ class EngineUtil(engine_base.EngineUtilBase):
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
-
-    # todo only here
-    def _get_job_url(self, href: str):
-        """Use the endpoint returned by the API to construct the UI url for jobs
-
-        Args:
-            href (str): the endpoint returned by the API
-        """
-        url = urlparse(href)
-        url_splits = url.path.split("/")
-        project_id = url_splits[4]
-        job_name = url_splits[6]
-        ui_url = url._replace(
-            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
-        )
-        ui_url = client.get_instance().replace_public_host(ui_url)
-        return ui_url.geturl()
-
-    # todo only here
-    def _wait_for_job(self, job, user_write_options=None):
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
-            executions = self._job_api.last_execution(job)
-            if len(executions) > 0:
-                execution = executions[0]
-            else:
-                return
-
-            if execution.final_status.lower() == "succeeded":
-                return
-            elif execution.final_status.lower() == "failed":
-                raise exceptions.FeatureStoreException(
-                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-                )
-            elif execution.final_status.lower() == "killed":
-                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
-
-            time.sleep(3)
 
     # todo only here
     def _convert_pandas_statistics(self, stat):

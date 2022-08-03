@@ -253,6 +253,11 @@ class EngineWrite(engine_base.EngineWriteBase):
             {},
         )
 
+    def profile_by_spark(self, metadata_instance):
+        raise NotImplementedError(
+            "Profile by spark is only available with Python Engine."
+        )
+
     # todo only here
     def _save_offline_dataframe(
         self,
