@@ -18,9 +18,7 @@ from typing import TypeVar, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
 
-class EngineBase(ABC):
-
-    # write
+class EngineWriteBase(ABC):
 
     @abstractmethod
     def write_training_dataset(
@@ -80,7 +78,8 @@ class EngineBase(ABC):
     def save_empty_dataframe(self, feature_group, dataframe):
         pass
 
-    # read
+
+class EngineReadBase(ABC):
 
     @abstractmethod
     def read(self, storage_connector, data_format, read_options, location):
@@ -120,7 +119,8 @@ class EngineBase(ABC):
     def get_empty_appended_dataframe(self, dataframe, new_features):
         pass
 
-    # util
+
+class EngineUtilBase(ABC):
 
     @abstractmethod
     def set_job_group(self, group_id, description):
