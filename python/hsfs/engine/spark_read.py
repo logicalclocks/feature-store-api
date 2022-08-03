@@ -17,6 +17,7 @@
 import importlib.util
 
 import avro
+from typing import Any
 
 # in case importing in %%local
 try:
@@ -63,7 +64,7 @@ class EngineRead(engine_base.EngineReadBase):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(self, storage_connector, data_format, read_options, location) -> Any:
         if isinstance(location, str):
             if data_format.lower() in ["delta", "parquet", "hudi", "orc", "bigquery"]:
                 # All the above data format readers can handle partitioning
@@ -87,7 +88,7 @@ class EngineRead(engine_base.EngineReadBase):
             .load(path)
         )
 
-    def read_options(self, data_format, provided_options):
+    def read_options(self, data_format, provided_options) -> Any:
         if provided_options is None:
             provided_options = {}
         if data_format.lower() == "tfrecords":
@@ -114,7 +115,7 @@ class EngineRead(engine_base.EngineReadBase):
         schema,
         options,
         include_metadata,
-    ):
+    ) -> Any:
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
         stream = self._spark_session.readStream.format(storage_connector.SPARK_FORMAT)
@@ -127,17 +128,17 @@ class EngineRead(engine_base.EngineReadBase):
                 stream, message_format, schema, include_metadata
             )
 
-    def show(self, sql_query, feature_store, n, online_conn):
+    def show(self, sql_query, feature_store, n, online_conn) -> Any:
         return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
 
     @staticmethod
-    def get_unique_values(feature_dataframe, feature_name):
+    def get_unique_values(feature_dataframe, feature_name) -> Any:
         unique_values = feature_dataframe.select(feature_name).distinct().collect()
         return [field[feature_name] for field in unique_values]
 
     def get_training_data(
         self, training_dataset_obj, feature_view_obj, query_obj, read_options
-    ):
+    ) -> Any:
         df = query_obj.read(read_options=read_options)
         return self.write_training_dataset(
             training_dataset_obj,
@@ -148,13 +149,12 @@ class EngineRead(engine_base.EngineReadBase):
             feature_view_obj=feature_view_obj,
         )
 
-    def get_empty_appended_dataframe(self, dataframe, new_features):
+    def get_empty_appended_dataframe(self, dataframe, new_features) -> Any:
         dataframe = dataframe.limit(0)
         for f in new_features:
             dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
         return dataframe
 
-    # todo only here
     def _read_stream_kafka(self, stream, message_format, schema, include_metadata):
         kafka_cols = [
             col("key"),

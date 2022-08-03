@@ -17,7 +17,7 @@
 import importlib.util
 import re
 import warnings
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Any
 
 import numpy as np
 import pandas as pd
@@ -75,10 +75,10 @@ class EngineUtil(engine_base.EngineUtilBase):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def set_job_group(self, group_id, description):
+    def set_job_group(self, group_id: int, description: str) -> None:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
         if not online_conn:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
@@ -94,7 +94,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         correlations,
         histograms,
         exact_uniqueness=True,
-    ):
+    ) -> Any:
         """Profile a dataframe with Deequ."""
         return (
             self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
@@ -111,7 +111,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
         ge_validate_kwargs: Optional[dict],
-    ):
+    ) -> Any:
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
         # may experience data loss as it persists nothing. It is used here for testing.
         # Please refer to docs to learn how to instantiate your DataContext.
@@ -155,7 +155,7 @@ class EngineUtil(engine_base.EngineUtilBase):
 
         return report
 
-    def convert_to_default_dataframe(self, dataframe):
+    def convert_to_default_dataframe(self, dataframe) -> Any:
         if isinstance(dataframe, list):
             dataframe = np.array(dataframe)
 
@@ -200,7 +200,7 @@ class EngineUtil(engine_base.EngineUtilBase):
             )
         )
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
+    def parse_schema_feature_group(self, dataframe, time_travel_format=None) -> Any:
         features = []
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
@@ -216,7 +216,7 @@ class EngineUtil(engine_base.EngineUtilBase):
             )
         return features
 
-    def parse_schema_training_dataset(self, dataframe):
+    def parse_schema_training_dataset(self, dataframe) -> Any:
         return [
             training_dataset_feature.TrainingDatasetFeature(
                 feat.name.lower(), feat.dataType.simpleString()
@@ -224,7 +224,7 @@ class EngineUtil(engine_base.EngineUtilBase):
             for feat in dataframe.schema
         ]
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels) -> tuple:
         if labels:
             labels_df = df.select(*labels)
             df_new = df.drop(*labels)
@@ -232,17 +232,17 @@ class EngineUtil(engine_base.EngineUtilBase):
         else:
             return df, None
 
-    def is_spark_dataframe(self, dataframe):
+    def is_spark_dataframe(self, dataframe) -> bool:
         if isinstance(dataframe, DataFrame):
             return True
         return False
 
-    def create_empty_df(self, streaming_df):
+    def create_empty_df(self, streaming_df) -> Any:
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
         )
 
-    def setup_storage_connector(self, storage_connector, path=None):
+    def setup_storage_connector(self, storage_connector, path=None) -> Any:
         # update storage connector to get new session token
         storage_connector.refetch()
 
@@ -255,13 +255,11 @@ class EngineUtil(engine_base.EngineUtilBase):
         else:
             return path
 
-    # todo only here
     def _sql_offline(self, sql_query, feature_store):
         # set feature store
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    # todo only here
     def _convert_spark_type(self, hive_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
@@ -291,7 +289,6 @@ class EngineUtil(engine_base.EngineUtilBase):
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
-    # todo only here
     def _setup_s3_hadoop_conf(self, storage_connector, path):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
@@ -322,14 +319,12 @@ class EngineUtil(engine_base.EngineUtilBase):
             )
         return path.replace("s3", "s3a", 1) if path is not None else None
 
-    # todo only here
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
             self._spark_context._jsc.hadoopConfiguration().set(k, v)
 
         return path
 
-    # todo only here
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 
         PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile"
@@ -379,7 +374,6 @@ class EngineUtil(engine_base.EngineUtilBase):
 
         return path
 
-    # todo only here
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe

@@ -20,6 +20,7 @@ import random
 import uuid
 
 from io import BytesIO
+from typing import Any
 
 from hsfs import util
 from hsfs.core import dataset_api, transformation_function_engine
@@ -30,7 +31,7 @@ class EngineRead(engine_base.EngineReadBase):
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(self, storage_connector, data_format, read_options, location) -> Any:
         if storage_connector.type == storage_connector.HOPSFS:
             df_list = self._read_hopsfs(location, data_format)
         elif storage_connector.type == storage_connector.S3:
@@ -43,7 +44,7 @@ class EngineRead(engine_base.EngineReadBase):
             )
         return pd.concat(df_list, ignore_index=True)
 
-    def read_options(self, data_format, provided_options):
+    def read_options(self, data_format, provided_options) -> dict:
         return {}
 
     def read_stream(
@@ -53,21 +54,21 @@ class EngineRead(engine_base.EngineReadBase):
         schema,
         options,
         include_metadata,
-    ):
+    ) -> None:
         raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn):
+    def show(self, sql_query, feature_store, n, online_conn) -> Any:
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
     @staticmethod
-    def get_unique_values(feature_dataframe, feature_name):
+    def get_unique_values(feature_dataframe, feature_name) -> Any:
         return feature_dataframe[feature_name].unique()
 
     def get_training_data(
         self, training_dataset_obj, feature_view_obj, query_obj, read_options
-    ):
+    ) -> Any:
         df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
             split_df = self._prepare_transform_split_df(
@@ -83,12 +84,11 @@ class EngineRead(engine_base.EngineReadBase):
             )
         return split_df
 
-    def get_empty_appended_dataframe(self, dataframe, new_features):
+    def get_empty_appended_dataframe(self, dataframe, new_features) -> None:
         """No-op in python engine, user has to write to feature group manually for schema
         change to take effect."""
         return None
 
-    # todo only here
     def _read_hopsfs(self, location, data_format):
         # providing more informative error
         try:
@@ -109,7 +109,6 @@ class EngineRead(engine_base.EngineReadBase):
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
 
-    # todo only here
     # This is a version of the read method that uses the Hopsworks REST APIs
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
@@ -133,7 +132,6 @@ class EngineRead(engine_base.EngineReadBase):
 
         return df_list
 
-    # todo only here
     def _read_pandas(self, data_format, obj):
         if data_format.lower() == "csv":
             return pd.read_csv(obj)
@@ -148,7 +146,6 @@ class EngineRead(engine_base.EngineReadBase):
                 )
             )
 
-    # todo only here
     def _read_s3(self, storage_connector, location, data_format):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
@@ -196,7 +193,6 @@ class EngineRead(engine_base.EngineReadBase):
                     df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
 
-    # todo only here
     def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -239,7 +235,6 @@ class EngineRead(engine_base.EngineReadBase):
 
         return result_dfs
 
-    # todo only here
     def _apply_transformation_function(self, training_dataset, dataset):
         for (
             feature_name,

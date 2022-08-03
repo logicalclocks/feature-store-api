@@ -17,6 +17,7 @@
 import os
 import json
 import importlib.util
+from typing import Any
 
 # in case importing in %%local
 try:
@@ -78,7 +79,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         save_mode,
         feature_view_obj=None,
         to_df=False,
-    ):
+    ) -> Any:
         if isinstance(dataset, query.Query):
             dataset = dataset.read()
 
@@ -125,11 +126,11 @@ class EngineWrite(engine_base.EngineWriteBase):
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
 
-    def add_file(self, file):
+    def add_file(self, file) -> Any:
         self._spark_context.addFile("hdfs://" + file)
         return SparkFiles.get(os.path.basename(file))
 
-    def register_external_temporary_table(self, external_fg, alias):
+    def register_external_temporary_table(self, external_fg, alias) -> Any:
         external_dataset = external_fg.storage_connector.read(
             external_fg.query,
             external_fg.data_format,
@@ -144,7 +145,7 @@ class EngineWrite(engine_base.EngineWriteBase):
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
-    ):
+    ) -> None:
         hudi_engine_instance = hudi_engine.HudiEngine(
             feature_store_id,
             feature_store_name,
@@ -167,7 +168,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         offline_write_options,
         online_write_options,
         validation_id=None,
-    ):
+    ) -> None:
         try:
             if feature_group.stream:
                 self._save_online_dataframe(
@@ -209,7 +210,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         timeout,
         checkpoint_dir,
         write_options,
-    ):
+    ) -> Any:
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
@@ -241,7 +242,7 @@ class EngineWrite(engine_base.EngineWriteBase):
 
         return query
 
-    def save_empty_dataframe(self, feature_group, dataframe):
+    def save_empty_dataframe(self, feature_group, dataframe) -> None:
         """Wrapper around save_dataframe in order to provide no-op in python engine."""
         self.save_dataframe(
             feature_group,
@@ -253,12 +254,11 @@ class EngineWrite(engine_base.EngineWriteBase):
             {},
         )
 
-    def profile_by_spark(self, metadata_instance):
+    def profile_by_spark(self, metadata_instance) -> None:
         raise NotImplementedError(
             "Profile by spark is only available with Python Engine."
         )
 
-    # todo only here
     def _save_offline_dataframe(
         self,
         feature_group,
@@ -288,7 +288,6 @@ class EngineWrite(engine_base.EngineWriteBase):
                 feature_group._get_table_name()
             )
 
-    # todo only here
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
 
         serialized_df = self._online_fg_to_avro(
@@ -298,7 +297,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             "topic", feature_group._online_topic_name
         ).save()
 
-    # todo only here
     def _encode_complex_features(self, feature_group, dataframe):
         """Encodes all complex type features to binary using their avro type as schema."""
         return dataframe.select(
@@ -312,7 +310,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             ]
         )
 
-    # todo only here
     def _online_fg_to_avro(self, feature_group, dataframe):
         """Packs all features into named struct to be serialized to single avro/binary
         column. And packs primary key into arry to be serialized for partitioning.
@@ -340,7 +337,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             ]
         )
 
-    # todo only here
     def _write_training_dataset_splits(
         self,
         training_dataset,
@@ -365,7 +361,6 @@ class EngineWrite(engine_base.EngineWriteBase):
         if to_df:
             return feature_dataframes
 
-    # todo only here
     def _write_training_dataset_single(
         self,
         training_dataset,
@@ -393,7 +388,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             save_mode
         ).save(path)
 
-    # todo only here
     def _write_options(self, data_format, provided_options):
         if data_format.lower() == "tfrecords":
             options = dict(recordType="Example")
@@ -412,7 +406,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             options.update(provided_options)
         return options
 
-    # todo only here
     def _training_dataset_schema_match(self, dataframe, schema):
         class SchemaError(Exception):
             """Thrown when schemas don't match"""
@@ -437,7 +430,6 @@ class EngineWrite(engine_base.EngineWriteBase):
 
             i += 1
 
-    # todo only here
     def _apply_transformation_function(self, training_dataset, dataset):
         # generate transformation function expressions
         transformed_feature_names = []

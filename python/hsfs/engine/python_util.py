@@ -38,10 +38,10 @@ class EngineUtil(engine_base.EngineUtilBase):
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
-    def set_job_group(self, group_id, description):
+    def set_job_group(self, group_id: int, description: str) -> None:
         pass
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
+    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
@@ -54,7 +54,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         correlations,
         histograms,
         exact_uniqueness=True,
-    ):
+    ) -> Any:
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
             stats = dataframe.describe()
@@ -80,13 +80,13 @@ class EngineUtil(engine_base.EngineUtilBase):
         dataframe: pd.DataFrame,
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
         ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
-    ):
+    ) -> Any:
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)
         return report
 
-    def convert_to_default_dataframe(self, dataframe):
+    def convert_to_default_dataframe(self, dataframe) -> Any:
         if isinstance(dataframe, pd.DataFrame):
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
@@ -110,7 +110,7 @@ class EngineUtil(engine_base.EngineUtilBase):
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
+    def parse_schema_feature_group(self, dataframe, time_travel_format=None) -> Any:
         arrow_schema = pa.Schema.from_pandas(dataframe)
         features = []
         for feat_name, feat_type in dataframe.dtypes.items():
@@ -124,13 +124,13 @@ class EngineUtil(engine_base.EngineUtilBase):
             features.append(feature.Feature(name, converted_type))
         return features
 
-    def parse_schema_training_dataset(self, dataframe):
+    def parse_schema_training_dataset(self, dataframe) -> None:
         raise NotImplementedError(
             "Training dataset creation from Dataframes is not "
             + "supported in Python environment. Use HSFS Query object instead."
         )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels) -> tuple:
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
@@ -138,26 +138,24 @@ class EngineUtil(engine_base.EngineUtilBase):
         else:
             return df, None
 
-    def is_spark_dataframe(self, dataframe):
+    def is_spark_dataframe(self, dataframe) -> bool:
         return False
 
-    def create_empty_df(self, streaming_df):
+    def create_empty_df(self, streaming_df) -> None:
         raise NotImplementedError(
             "Create empty df is only available with Spark Engine."
         )
 
-    def setup_storage_connector(self, storage_connector, path=None):
+    def setup_storage_connector(self, storage_connector, path=None) -> None:
         raise NotImplementedError(
             "Setup storage connector is only available with Spark Engine."
         )
 
-    # todo only here
     def _sql_offline(self, sql_query, feature_store, dataframe_type):
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    # todo only here
     def _create_hive_connection(self, feature_store):
         try:
             return hive.Connection(
@@ -182,7 +180,6 @@ class EngineUtil(engine_base.EngineUtilBase):
                     f" It is possible to request access from data owners of '{feature_store}'."
                 )
 
-    # todo only here
     def _jdbc(self, sql_query, connector, dataframe_type, read_options):
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
@@ -197,7 +194,6 @@ class EngineUtil(engine_base.EngineUtilBase):
             result_df = pd.read_sql(sql_query, mysql_conn)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    # todo only here
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas"]:
             return dataframe
@@ -210,7 +206,6 @@ class EngineUtil(engine_base.EngineUtilBase):
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
 
-    # todo only here
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
@@ -235,7 +230,6 @@ class EngineUtil(engine_base.EngineUtilBase):
             content_dict["approxPercentiles"] = percentiles
         return content_dict
 
-    # todo only here
     def _convert_pandas_type(self, dtype, arrow_type):
         # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
         # using pyarrow types to convert "O (object)"-typed fields.
@@ -245,7 +239,6 @@ class EngineUtil(engine_base.EngineUtilBase):
 
         return self._convert_simple_pandas_type(dtype)
 
-    # todo only here
     def _infer_type_pyarrow(self, arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
@@ -268,7 +261,6 @@ class EngineUtil(engine_base.EngineUtilBase):
 
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
-    # todo only here
     def _convert_simple_pandas_type(self, dtype):
         if dtype == np.dtype("uint8"):
             return "int"

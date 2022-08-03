@@ -23,7 +23,7 @@ import json
 
 from io import BytesIO
 from urllib.parse import urlparse
-from typing import Dict
+from typing import Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
 
@@ -68,7 +68,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         save_mode,
         feature_view_obj=None,
         to_df=False,
-    ):
+    ) -> Any:
         if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(
                 "Currently only query based training datasets are supported by the Python engine"
@@ -109,18 +109,18 @@ class EngineWrite(engine_base.EngineWriteBase):
 
         return td_job
 
-    def add_file(self, file):
+    def add_file(self, file) -> Any:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         return file
 
-    def register_external_temporary_table(self, external_fg, alias):
+    def register_external_temporary_table(self, external_fg, alias) -> None:
         # No op to avoid query failure
         pass
 
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
-    ):
+    ) -> None:
         # No op to avoid query failure
         pass
 
@@ -134,7 +134,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         offline_write_options: dict,
         online_write_options: dict,
         validation_id: int = None,
-    ):
+    ) -> Any:
         if feature_group.stream:
             return self._write_dataframe_kafka(
                 feature_group, dataframe, offline_write_options
@@ -162,16 +162,16 @@ class EngineWrite(engine_base.EngineWriteBase):
         timeout,
         checkpoint_dir,
         write_options,
-    ):
+    ) -> None:
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
 
-    def save_empty_dataframe(self, feature_group, dataframe):
+    def save_empty_dataframe(self, feature_group, dataframe) -> None:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def profile_by_spark(self, metadata_instance):
+    def profile_by_spark(self, metadata_instance) -> None:
         stat_api = statistics_api.StatisticsApi(
             metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
         )
@@ -184,7 +184,6 @@ class EngineWrite(engine_base.EngineWriteBase):
 
         self._wait_for_job(job)
 
-    # todo only here
     def _legacy_save_dataframe(
         self,
         feature_group,
@@ -195,7 +194,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         offline_write_options,
         online_write_options,
         validation_id=None,
-    ):
+    ) -> Any:
         # App configuration
         app_options = self._get_app_options(offline_write_options)
 
@@ -222,7 +221,6 @@ class EngineWrite(engine_base.EngineWriteBase):
 
         return ingestion_job.job
 
-    # todo only here
     def _get_app_options(self, user_write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
@@ -241,7 +239,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             spark_job_configuration=spark_job_configuration,
         )
 
-    # todo only here
     def _write_dataframe_kafka(
         self,
         feature_group: FeatureGroup,
@@ -349,7 +346,6 @@ class EngineWrite(engine_base.EngineWriteBase):
 
         return job
 
-    # todo only here
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
     ) -> dict:
@@ -359,7 +355,6 @@ class EngineWrite(engine_base.EngineWriteBase):
                 row[feature_name] = outf.getvalue()
         return row
 
-    # todo only here
     def _get_encoder_func(self, writer_schema: str) -> callable:
         if HAS_FAST:
             schema = json.loads(writer_schema)
@@ -370,7 +365,6 @@ class EngineWrite(engine_base.EngineWriteBase):
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
-    # todo only here
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         # producer configuration properties
         # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
@@ -405,7 +399,6 @@ class EngineWrite(engine_base.EngineWriteBase):
             )
         return config
 
-    # todo only here
     def _get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs
 
@@ -422,7 +415,6 @@ class EngineWrite(engine_base.EngineWriteBase):
         ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
 
-    # todo only here
     def _wait_for_job(self, job, user_write_options=None):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
