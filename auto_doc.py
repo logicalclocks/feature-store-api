@@ -200,6 +200,17 @@ PAGES = {
         ),
         "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
     },
+    "api/external_feature_group_api.md": {
+        "fg": ["hsfs.feature_group.ExternalFeatureGroup"],
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_external_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_external_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.ExternalFeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.ExternalFeatureGroup"
+        ),
+    },
     "api/training_dataset_api.md": {
         "td": ["hsfs.training_dataset.TrainingDataset"],
         "td_create": ["hsfs.feature_store.FeatureStore.create_training_dataset"],
@@ -210,6 +221,14 @@ PAGES = {
         "td_methods": keras_autodoc.get_methods(
             "hsfs.training_dataset.TrainingDataset"
         ),
+    },
+    "api/feature_view_api.md": {
+        "fv": ["hsfs.feature_view.FeatureView"],
+        "fv_create": ["hsfs.feature_store.FeatureStore.create_feature_view"],
+        "fv_get": ["hsfs.feature_store.FeatureStore.get_feature_view"],
+        "fvs_get": ["hsfs.feature_store.FeatureStore.get_feature_views"],
+        "fv_properties": keras_autodoc.get_properties("hsfs.feature_view.FeatureView"),
+        "fv_methods": keras_autodoc.get_methods("hsfs.feature_view.FeatureView"),
     },
     "api/feature_api.md": {
         "feature": ["hsfs.feature.Feature"],

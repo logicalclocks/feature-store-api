@@ -31,8 +31,9 @@ window.addEventListener("DOMContentLoaded", function() {
     }).version;
 
     var select = makeSelect(versions.map(function(i) {
+      var allowedAliases = ["dev", "latest"]
       if (i.aliases.length > 0) {
-        var aliasString = " [" + i.aliases.join(", ") + "]";
+        var aliasString = " [" + i.aliases.filter(function (str) { return allowedAliases.includes(str); }).join(", ") + "]";
       } else {
         var aliasString = "";
       }

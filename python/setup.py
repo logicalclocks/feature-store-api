@@ -34,7 +34,7 @@ setup(
         "typing_extensions>=3.7.4", # GE issue 3: missing dependency https://github.com/great-expectations/great_expectations/pull/4082/files, set to 3.7.4 to be compatible with hopsworks base environment
     ],
     extras_require={
-        "dev": ["pytest", "flake8", "black"],
+        "dev": ["pytest==7.1.2", "pytest-mock==3.8.2", "flake8", "black"],
         "docs": [
             "mkdocs==1.3.0",
             "mkdocs-material==8.2.8",
@@ -43,6 +43,8 @@ setup(
             "keras_autodoc @ git+https://git@github.com/moritzmeister/keras-autodoc@split-tags-properties",
             "markdown-include",
             "mkdocs-jupyter==0.21.0",
+            "markdown==3.3.7",
+            "pymdown-extensions",
         ],
         "hive": [
             "pyhopshive[thrift]",
