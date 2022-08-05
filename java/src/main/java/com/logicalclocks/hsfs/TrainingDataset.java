@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -585,5 +586,23 @@ public class TrainingDataset {
    */
   public void delete() throws FeatureStoreException, IOException {
     trainingDatasetEngine.delete(this);
+  }
+
+  /**
+   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
+   *
+   * @return Set of serving keys
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   * @throws ClassNotFoundException
+   */
+  @JsonIgnore
+  public HashSet<String> getServingKeys()
+      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
+    if (vectorServer.getServingKeys().isEmpty()) {
+      initPreparedStatement();
+    }
+    return vectorServer.getServingKeys();
   }
 }
