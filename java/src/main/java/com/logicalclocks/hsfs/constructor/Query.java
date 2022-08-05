@@ -223,6 +223,8 @@ public class Query {
    * @throws FeatureStoreException
    * @throws IOException
    * @throws ParseException
+   *
+   * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
    */
   public Query pullChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, ParseException {

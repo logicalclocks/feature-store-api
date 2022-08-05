@@ -171,7 +171,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Reads changes that occurred between specified points in time.
+   * `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read(readOptions)` instead.
    *
    * @param wallclockStartTime start date.
    * @param wallclockEndTime   end date.
@@ -179,6 +179,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    * @throws ParseException
+   *
+   * @deprecated
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
@@ -186,7 +188,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Reads changes that occurred between specified points in time.
+   * `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read(readOptions)` instead.
    *
    * @param wallclockStartTime start date.
    * @param wallclockEndTime   end date.
@@ -194,6 +196,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    * @throws ParseException
+   *
+   * @deprecated
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {

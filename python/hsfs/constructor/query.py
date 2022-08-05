@@ -194,6 +194,11 @@ class Query:
         return self
 
     def pull_changes(self, wallclock_start_time, wallclock_end_time):
+        """
+        !!! warning "Deprecated"
+        `pull_changes` method is deprecated. Use
+        `as_of(end_wallclock_time, exclude_until=start_wallclock_time) instead.
+        """
         self.left_feature_group_start_time = util.get_timestamp_from_date_string(
             wallclock_start_time
         )

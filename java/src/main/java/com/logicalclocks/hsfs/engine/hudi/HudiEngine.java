@@ -262,7 +262,7 @@ public class HudiEngine {
                                                 Map<String, String> readOptions) {
     Map<String, String> hudiArgs = new HashMap<>();
     if (endTimestamp != null) {
-      // if endTimestamp was specified, trigger an incremental query.
+      // TODO: if only endTimestamp was specified, trigger a snapshot query.
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
       hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
 
@@ -271,6 +271,9 @@ public class HudiEngine {
       } else {
         hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(0L));
       }
+    } else if (startTimestamp != null) {
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
     } else {
       // if endTimestamp was not specified, trigger a snapshot query
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);

@@ -180,7 +180,11 @@ class HudiEngine:
         return hudi_options
 
     def _setup_hudi_read_opts(self, hudi_fg_alias, read_options):
-        if hudi_fg_alias.left_feature_group_end_timestamp:
+        if (
+            hudi_fg_alias.left_feature_group_end_timestamp
+            and hudi_fg_alias.left_feature_group_end_timestamp
+        ):
+            # TODO: trigger snapshot query when start_timestamp==0
             _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(
                 hudi_fg_alias.left_feature_group_start_timestamp
             )
@@ -192,6 +196,15 @@ class HudiEngine:
                 self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
                 self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
                 self.HUDI_END_INSTANTTIME_OPT_KEY: _hudi_commit_end_time,
+            }
+        elif hudi_fg_alias.left_feature_group_start_timestamp:
+            _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(
+                hudi_fg_alias.left_feature_group_start_timestamp
+            )
+
+            hudi_options = {
+                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
+                self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
             }
         else:
             hudi_options = {
