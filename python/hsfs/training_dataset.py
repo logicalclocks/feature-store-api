@@ -78,6 +78,7 @@ class TrainingDataset:
         label=None,
         transformation_functions=None,
         train_split=None,
+        time_split_size=None,
     ):
         self._id = id
         self._name = name
@@ -142,6 +143,7 @@ class TrainingDataset:
                     TrainingDatasetSplit.TEST: test_size,
                 }
             self._set_time_splits(
+                time_split_size,
                 train_start,
                 train_end,
                 validation_start,
@@ -176,6 +178,7 @@ class TrainingDataset:
 
     def _set_time_splits(
         self,
+        time_split_size,
         train_start=None,
         train_end=None,
         validation_start=None,
@@ -188,25 +191,25 @@ class TrainingDataset:
             time_splits,
             split_name=TrainingDatasetSplit.TRAIN,
             start_time=train_start,
-            end_time=train_end or validation_start,
+            end_time=train_end or validation_start or test_start,
         )
-        self._append_time_split(
-            time_splits,
-            split_name=TrainingDatasetSplit.VALIDATION,
-            start_time=validation_start or train_end,
-            end_time=validation_end or test_start,
-        )
+        if time_split_size == 3:
+            self._append_time_split(
+                time_splits,
+                split_name=TrainingDatasetSplit.VALIDATION,
+                start_time=validation_start or train_end,
+                end_time=validation_end or test_start,
+            )
         self._append_time_split(
             time_splits,
             split_name=TrainingDatasetSplit.TEST,
-            start_time=test_start or validation_end,
+            start_time=test_start or validation_end or train_end,
             end_time=test_end,
         )
         if time_splits:
-            raise NotImplementedError("Time series splits is not supported yet.")
             self._train_split = TrainingDatasetSplit.TRAIN
-        # prioritise time split
-        self._splits = time_splits or self._splits
+            # prioritise time split
+            self._splits = time_splits
 
     def _append_time_split(
         self,
@@ -219,21 +222,23 @@ class TrainingDataset:
             time_splits.append(
                 TrainingDatasetSplit(
                     name=split_name,
-                    split_type=TrainingDatasetSplit.TIME_SPLIT,
-                    start_time=start_time,
-                    end_time=end_time,
+                    split_type=TrainingDatasetSplit.TIME_SERIES_SPLIT,
+                    start_time=self._convert_event_time_to_timestamp(start_time),
+                    end_time=self._convert_event_time_to_timestamp(end_time),
                 )
             )
 
     def _convert_event_time_to_timestamp(self, event_time):
-        if not event_time:
+        if event_time is None:
             return None
         if isinstance(event_time, str):
-            return util.get_timestamp_from_date_string(event_time, timezone.utc)
+            if event_time:
+                return util.get_timestamp_from_date_string(event_time, timezone.utc)
         elif isinstance(event_time, int):
-            if event_time < 1000:
-                raise ValueError("Timestamp should be greater than or equal to 1000 ms")
-            return event_time
+            if event_time == 0:
+                raise ValueError("Event time should be greater than 0.")
+            # jdbc supports timestamp precision up to second only.
+            return event_time * 1000
         else:
             raise ValueError("Given event time should be in `str` or `int` type")
 
@@ -840,9 +845,17 @@ class TrainingDataset:
     def event_start_time(self):
         return self._start_time
 
+    @event_start_time.setter
+    def event_start_time(self, start_time):
+        self._start_time = start_time
+
     @property
     def event_end_time(self):
         return self._end_time
+
+    @event_end_time.setter
+    def event_end_time(self, end_time):
+        self._end_time = end_time
 
     @property
     def training_dataset_type(self):
