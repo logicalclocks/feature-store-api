@@ -1336,11 +1336,13 @@ class FeatureGroup(FeatureGroupBase):
                     json_decamelized["type"] == "streamFeatureGroupDTO"
                 )
             _ = json_decamelized.pop("type", None)
+            json_decamelized.pop("validation_type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
                 fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
+            fg.pop("validation_type", None)
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):

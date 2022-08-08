@@ -30,7 +30,14 @@ try:
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
-    from pyspark.sql.functions import struct, concat, col, lit, from_json
+    from pyspark.sql.functions import (
+        struct,
+        concat,
+        col,
+        lit,
+        from_json,
+        unix_timestamp,
+    )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
         ByteType,
@@ -56,6 +63,7 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine
 from hsfs.constructor import query
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
@@ -357,12 +365,12 @@ class Engine:
     def get_training_data(
         self, training_dataset, feature_view_obj, query_obj, read_options
     ):
-        df = query_obj.read(read_options=read_options)
         return self.write_training_dataset(
             training_dataset,
-            df,
+            query_obj,
             read_options,
             None,
+            read_options=read_options,
             to_df=True,
             feature_view_obj=feature_view_obj,
         )
@@ -378,31 +386,30 @@ class Engine:
     def write_training_dataset(
         self,
         training_dataset,
-        dataset,
+        query_obj,
         user_write_options,
         save_mode,
+        read_options={},
         feature_view_obj=None,
         to_df=False,
     ):
-        if isinstance(dataset, query.Query):
-            dataset = dataset.read()
-
-        dataset = self.convert_to_default_dataframe(dataset)
-
-        if training_dataset.coalesce:
-            dataset = dataset.coalesce(1)
-
-        if feature_view_obj is None:
-            self.training_dataset_schema_match(dataset, training_dataset.schema)
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
 
         if len(training_dataset.splits) == 0:
+            if isinstance(query_obj, query.Query):
+                dataset = self.convert_to_default_dataframe(
+                    query_obj.read(read_options=read_options)
+                )
+            else:
+                raise ValueError("Dataset should be a query.")
+
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
-
+            if training_dataset.coalesce:
+                dataset = dataset.coalesce(1)
             path = training_dataset.location + "/" + training_dataset.name
             return self._write_training_dataset_single(
                 training_dataset,
@@ -415,20 +422,71 @@ class Engine:
                 to_df=to_df,
             )
         else:
-            splits = [
-                (split.name, split.percentage) for split in training_dataset.splits
-            ]
-            split_weights = [split[1] for split in splits]
-            split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
-            split_dataset = dict(
-                [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
+            split_dataset = self._split_df(
+                query_obj, training_dataset, read_options=read_options
             )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
+            if training_dataset.coalesce:
+                for key in split_dataset:
+                    split_dataset[key] = split_dataset[key].coalesce(1)
             return self._write_training_dataset_splits(
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
+
+    def _split_df(self, query_obj, training_dataset, read_options={}):
+        if (
+            training_dataset.splits[0].split_type
+            == TrainingDatasetSplit.TIME_SERIES_SPLIT
+        ):
+            event_time = query_obj._left_feature_group.event_time
+            if event_time not in [_feature.name for _feature in query_obj.features]:
+                query_obj.append_feature(
+                    query_obj._left_feature_group.__getattr__(event_time)
+                )
+                return self._time_series_split(
+                    training_dataset,
+                    query_obj.read(read_options=read_options),
+                    event_time,
+                    drop_event_time=True,
+                )
+            else:
+                return self._time_series_split(
+                    training_dataset,
+                    query_obj.read(read_options=read_options),
+                    event_time,
+                )
+        else:
+            return self._random_split(
+                query_obj.read(read_options=read_options), training_dataset
+            )
+
+    def _random_split(self, dataset, training_dataset):
+        splits = [(split.name, split.percentage) for split in training_dataset.splits]
+        split_weights = [split[1] for split in splits]
+        split_dataset = dataset.randomSplit(split_weights, training_dataset.seed)
+        return dict([(split[0], split_dataset[i]) for i, split in enumerate(splits)])
+
+    def _time_series_split(
+        self, training_dataset, dataset, event_time, drop_event_time=False
+    ):
+        result_dfs = {}
+        ts_type = dataset.select(event_time).dtypes[0][1]
+        ts_col = (
+            unix_timestamp(col(event_time)) * 1000
+            if ts_type in ["date", "timestamp"]
+            # jdbc supports timestamp precision up to second only.
+            else col(event_time) * 1000
+        )
+        for split in training_dataset.splits:
+            result_df = dataset.filter(ts_col >= split.start_time).filter(
+                ts_col < split.end_time
+            )
+            if drop_event_time:
+                result_df = result_df.drop(event_time)
+            result_dfs[split.name] = result_df
+        return result_dfs
 
     def _write_training_dataset_splits(
         self,
@@ -723,27 +781,6 @@ class Engine:
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
-
-    def training_dataset_schema_match(self, dataframe, schema):
-        schema_sorted = sorted(schema, key=lambda f: f.index)
-        insert_schema = dataframe.schema
-        if len(schema_sorted) != len(insert_schema):
-            raise SchemaError(
-                "Schemas do not match. Expected {} features, the dataframe contains {} features".format(
-                    len(schema_sorted), len(insert_schema)
-                )
-            )
-
-        i = 0
-        for feat in schema_sorted:
-            if feat.name != insert_schema[i].name.lower():
-                raise SchemaError(
-                    "Schemas do not match, expected feature {} in position {}, found {}".format(
-                        feat.name, str(i), insert_schema[i].name
-                    )
-                )
-
-            i += 1
 
     def setup_storage_connector(self, storage_connector, path=None):
         # update storage connector to get new session token
