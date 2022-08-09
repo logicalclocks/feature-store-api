@@ -336,6 +336,9 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
+        )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
         )
@@ -363,6 +366,9 @@ class TestFeatureViewEngine:
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
+        )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
         )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
@@ -460,6 +466,9 @@ class TestFeatureViewEngine:
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
         )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
+        )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
         )
@@ -514,6 +523,9 @@ class TestFeatureViewEngine:
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
         )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
+        )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
         )
@@ -564,6 +576,9 @@ class TestFeatureViewEngine:
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
+        )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
         )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
@@ -620,6 +635,9 @@ class TestFeatureViewEngine:
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
         )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
+        )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
         )
@@ -675,6 +693,9 @@ class TestFeatureViewEngine:
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_fv_engine_get_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata"
+        )
+        mock_fv_engine_set_event_time = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._set_event_time"
         )
         mock_fv_engine_create_training_data_metadata = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._create_training_data_metadata"
