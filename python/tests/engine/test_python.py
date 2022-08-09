@@ -1756,10 +1756,14 @@ class TestPython:
 
     def test_convert_to_unix_timestamp_str(self, mocker):
         # Arrange
+        mock_util_get_timestamp_from_date_string = mocker.patch("hsfs.util.get_timestamp_from_date_string")
+
         python_engine = python.Engine()
 
+        mock_util_get_timestamp_from_date_string.return_value = 1483225200000
+
         # Act
-        result = python_engine._convert_to_unix_timestamp(t='2017-01-01-00-00-00-000')
+        result = python_engine._convert_to_unix_timestamp(t='2017-01-01')
 
         # Assert
         assert result == 1483225200000
