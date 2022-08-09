@@ -156,9 +156,8 @@ class Query:
     def as_of(self, wallclock_time, exclude_until=None):
         """Perform time travel on the given Query.
 
-        This method selects all features in the feature group and returns a Query object
-        at the specified point in time. Optionally, commits before a specified point in time can be
-        excluded from the query. The Query can then either be read into a Dataframe
+        This method returns a new Query object at the specified point in time. Optionally, commits before a
+        specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
         or used further to perform joins or construct a training dataset.
 
         !!! example "Reading features at a specific point in time:"
