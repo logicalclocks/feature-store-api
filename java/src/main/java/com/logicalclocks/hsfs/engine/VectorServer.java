@@ -245,27 +245,6 @@ public class VectorServer {
     return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
 
-  public List<List<Object>> previewFeatureVectors(FeatureView featureView, int size)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-
-    return previewFeatureVectors(featureView,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient, size);
-  }
-
-  public List<List<Object>> previewFeatureVectors(FeatureView featureView,
-      boolean external, int size) throws SQLException, FeatureStoreException, IOException,
-      ClassNotFoundException {
-    if (preparedStatements == null || !isBatch) {
-      initPreparedStatement(featureView, true, external);
-    }
-    List<String> queries = Lists.newArrayList();
-    for (Integer fgId : preparedQueryString.keySet()) {
-      String query = preparedQueryString.get(fgId);
-      queries.add(query.substring(0, query.indexOf("WHERE ")) + "LIMIT " + size);
-    }
-    return getFeatureVectors(featureView.getFeatureStore(), featureView.getFeatures(), queries, external);
-  }
-
   public void initServing(TrainingDataset trainingDataset, boolean batch)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     initPreparedStatement(trainingDataset, batch);
