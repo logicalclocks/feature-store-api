@@ -1759,7 +1759,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_to_unix_timestamp(t='2017-01-01')
+        result = python_engine._convert_to_unix_timestamp(t='2017-01-01-00-00-00-000')
 
         # Assert
         assert result == 1483225200000
