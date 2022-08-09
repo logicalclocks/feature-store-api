@@ -1546,7 +1546,10 @@ class TestFeatureViewEngine:
             ].transformation_functions
             == tf_value
         )
-        assert mock_engine_get_instance.return_value._apply_transformation_function.call_count == 1
+        assert (
+            mock_engine_get_instance.return_value._apply_transformation_function.call_count
+            == 1
+        )
 
     def test_add_tag(self, mocker):
         # Arrange
