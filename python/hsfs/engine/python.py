@@ -51,6 +51,7 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.constructor import query
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
@@ -504,20 +505,16 @@ class Engine:
     def get_training_data(
         self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
-        df = query_obj.read(read_options=read_options)
         if training_dataset_obj.splits:
-            split_df = self._prepare_transform_split_df(
-                df, training_dataset_obj, feature_view_obj
+            return self._prepare_transform_split_df(
+                query_obj, training_dataset_obj, feature_view_obj, read_options
             )
         else:
-            split_df = df
+            df = query_obj.read(read_options=read_options)
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-                training_dataset_obj, feature_view_obj, split_df
+                training_dataset_obj, feature_view_obj, df
             )
-            split_df = self._apply_transformation_function(
-                training_dataset_obj, split_df
-            )
-        return split_df
+            return self._apply_transformation_function(training_dataset_obj, df)
 
     def split_labels(self, df, labels):
         if labels:
@@ -527,11 +524,54 @@ class Engine:
         else:
             return df, None
 
-    def _prepare_transform_split_df(self, df, training_dataset_obj, feature_view_obj):
+    def _prepare_transform_split_df(
+        self, query_obj, training_dataset_obj, feature_view_obj, read_option
+    ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
+        if (
+            training_dataset_obj.splits[0].split_type
+            == TrainingDatasetSplit.TIME_SERIES_SPLIT
+        ):
+            event_time = query_obj._left_feature_group.event_time
+            if event_time not in [_feature.name for _feature in query_obj.features]:
+                query_obj.append_feature(
+                    query_obj._left_feature_group.__getattr__(event_time)
+                )
+                result_dfs = self._time_series_split(
+                    query_obj.read(read_options=read_option),
+                    training_dataset_obj,
+                    event_time,
+                    drop_event_time=True,
+                )
+            else:
+                result_dfs = self._time_series_split(
+                    query_obj.read(read_options=read_option),
+                    training_dataset_obj,
+                    event_time,
+                )
+        else:
+            result_dfs = self._random_split(
+                query_obj.read(read_options=read_option), training_dataset_obj
+            )
+
+        # apply transformations
+        # 1st parametrise transformation functions with dt split stats
+        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # and the apply them
+        for split_name in result_dfs:
+            result_dfs[split_name] = self._apply_transformation_function(
+                training_dataset_obj,
+                result_dfs.get(split_name),
+            )
+
+        return result_dfs
+
+    def _random_split(self, df, training_dataset_obj):
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
@@ -554,20 +594,39 @@ class Engine:
         for i, split in enumerate(splits):
             split_df = df[df[split_column] == i].drop(split_column, axis=1)
             result_dfs[split.name] = split_df
-
-        # apply transformations
-        # 1st parametrise transformation functions with dt split stats
-        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
-            training_dataset_obj, feature_view_obj, result_dfs
-        )
-        # and the apply them
-        for split_name in result_dfs:
-            result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj,
-                result_dfs.get(split_name),
-            )
-
         return result_dfs
+
+    def _time_series_split(
+        self, df, training_dataset_obj, event_time, drop_event_time=False
+    ):
+        result_dfs = {}
+        for split in training_dataset_obj.splits:
+            if len(df[event_time]) > 0:
+                result_df = df[
+                    [
+                        split.start_time
+                        <= self._convert_to_unix_timestamp(t)
+                        < split.end_time
+                        for t in df[event_time]
+                    ]
+                ]
+            else:
+                # if df[event_time] is empty, it returns an empty dataframe
+                result_df = df
+            if drop_event_time:
+                result_df = result_df.drop([event_time], axis=1)
+            result_dfs[split.name] = result_df
+        return result_dfs
+
+    def _convert_to_unix_timestamp(self, t):
+        if isinstance(t, pd._libs.tslibs.timestamps.Timestamp):
+            # pandas.timestamp represents millisecond in decimal
+            return t.timestamp() * 1000
+        elif isinstance(t, str):
+            return util.get_timestamp_from_date_string(t)
+        else:
+            # jdbc supports timestamp precision up to second only.
+            return t * 1000
 
     def write_training_dataset(
         self,

@@ -28,15 +28,7 @@ class GreatExpectationEngine:
             run_validation = validation_options.get(
                 "run_validation", suite.run_validation
             )
-            if (
-                run_validation
-                and engine.get_type() == "python"
-                and feature_group.stream
-            ) or (
-                run_validation
-                and engine.get_type() == "spark"
-                and not feature_group.stream
-            ):
+            if run_validation:
                 report = engine.get_instance().validate_with_great_expectations(
                     dataframe=dataframe,
                     expectation_suite=suite.to_ge_type(),

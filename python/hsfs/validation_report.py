@@ -206,5 +206,5 @@ class ValidationReport:
         return (
             f"ValidationReport(success: {self._success}, "
             + f"{self._statistics}, {len(self._results)} results"
-            + f" , {self._meta}, {self._full_report_path_string})"
+            + f" , {self._meta}, {self._full_report_path})"
         )

@@ -123,12 +123,12 @@ def check_timestamp_format_from_date_string(input_date):
         raise ValueError(
             "Unable to identify format of the provided date value : " + input_date
         )
-    return date_format
+    return input_date, date_format
 
 
 def get_timestamp_from_date_string(input_date, time_zone=None):
-    date_format = check_timestamp_format_from_date_string(input_date)
-    date_time = datetime.strptime(input_date, date_format)
+    norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
+    date_time = datetime.strptime(norm_input_date, date_format)
     date_time = date_time.replace(tzinfo=time_zone)
     return int(float(date_time.timestamp()) * 1000)
 
