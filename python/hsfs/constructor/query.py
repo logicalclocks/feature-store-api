@@ -22,21 +22,20 @@ from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
-from unittest.mock import MagicMock
 
 
 class Query:
     def __init__(
         self,
-        left_feature_group: MagicMock,
-        left_features: MagicMock,
-        feature_store_name: Optional[str]=None,
-        feature_store_id: Optional[int]=None,
-        left_feature_group_start_time: None=None,
-        left_feature_group_end_time: None=None,
-        joins: None=None,
-        filter: None=None,
-    ) -> None:
+        left_feature_group,
+        left_features,
+        feature_store_name=None,
+        feature_store_id=None,
+        left_feature_group_start_time=None,
+        left_feature_group_end_time=None,
+        joins=None,
+        filter=None,
+    ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
