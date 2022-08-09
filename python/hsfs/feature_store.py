@@ -160,58 +160,6 @@ class FeatureStore:
             name, None, feature_group_api.FeatureGroupApi.CACHED
         )
 
-    def get_stream_feature_group(self, name: str, version: int = None):
-        """Get a stream feature group entity from the feature store.
-
-        Getting a feature group from the Feature Store means getting its metadata handle
-        so you can subsequently read the data into a Spark or Pandas DataFrame or use
-        the `Query`-API to perform joins between feature groups.
-
-        # Arguments
-            name: Name of the feature group to get.
-            version: Version of the feature group to retrieve, defaults to `None` and will
-                return the `version=1`.
-
-        # Returns
-            `FeatureGroup`: The feature group metadata object.
-
-        # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
-        """
-        if version is None:
-            warnings.warn(
-                "No version provided for getting feature group `{}`, defaulting to `{}`.".format(
-                    name, self.DEFAULT_VERSION
-                ),
-                util.VersionWarning,
-            )
-            version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(
-            name, version, feature_group_api.FeatureGroupApi.STREAM
-        )
-
-    def get_stream_feature_groups(self, name: str):
-        """Get a list of all versions of a stream feature group entity from the feature store.
-
-        Getting a feature group from the Feature Store means getting its metadata handle
-        so you can subsequently read the data into a Spark or Pandas DataFrame or use
-        the `Query`-API to perform joins between feature groups.
-
-        # Arguments
-            name: Name of the feature group to get.
-
-        # Returns
-            `FeatureGroup`: List of feature group metadata objects.
-
-        # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
-        """
-        return self._feature_group_api.get(
-            name, None, feature_group_api.FeatureGroupApi.STREAM
-        )
-
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
 

@@ -57,14 +57,11 @@ import java.util.stream.Collectors;
 
 public class FeatureGroupUtils {
 
-  private final FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private final StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private final KafkaApi kafkaApi = new KafkaApi();
-  private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  private KafkaApi kafkaApi = new KafkaApi();
+  private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   public final String engineType = engineType();
-
-  public FeatureGroupUtils() {
-  }
 
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
       throws FeatureStoreException {
@@ -133,6 +130,14 @@ public class FeatureGroupUtils {
     return storageConnector.getConnectionString()
         + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
         .collect(Collectors.joining(";"));
+  }
+
+  public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
+    if (inputDate != null) {
+      return new Date(getTimeStampFromDateString(inputDate));
+    } else {
+      return null;
+    }
   }
 
   public static Long getTimeStampFromDateString(String inputDate) throws FeatureStoreException, ParseException {
@@ -345,14 +350,6 @@ public class FeatureGroupUtils {
       return new Schema.Parser().parse(avroSchema);
     } catch (SchemaParseException e) {
       throw new FeatureStoreException("Failed to deserialize online feature group schema" + avroSchema + ".");
-    }
-  }
-
-  public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
-    if (inputDate != null) {
-      return new Date(getTimeStampFromDateString(inputDate));
-    } else {
-      return null;
     }
   }
 }
