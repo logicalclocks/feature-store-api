@@ -51,7 +51,7 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.constructor import query
-from hsfs.client import exceptions, external, hopsworks
+from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
