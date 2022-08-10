@@ -210,7 +210,7 @@ class Query:
             This method only works for queries on Hudi tables.
 
         !!! warning
-            The wallclock_time needs to be a time included into the Hudi active timeline.
+            Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.
             By default, Hudi keeps the last 20 to 30 commits in the active timeline.
             If you need to keep a longer active timeline, you can overwrite the options:
             `hoodie.keep.min.commits` and `hoodie.keep.max.commits`
