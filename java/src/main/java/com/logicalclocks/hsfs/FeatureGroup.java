@@ -220,6 +220,24 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectAll().asOf(wallclockTime);
   }
 
+  /**
+   * Get Query object to retrieve all features of the group at a point in the past.
+   * This method selects all features in the feature group and returns a Query object
+   * at the specified point in time. This can then either be read into a Dataframe
+   * or used further to perform joins or construct a training dataset.
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @param excludeUntil Datetime string. The String should be formatted in one of the
+    *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * @return Query. The query object with the applied time travel condition
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+    return selectAll().asOf(wallclockTime, excludeUntil);
+  }
+
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, false);
   }
