@@ -19,8 +19,8 @@ from hsfs.feature_group import FeatureGroup
 
 class TestFeatureGroup:
 
-    def test_from_response_json(self, response_get_feature_group):
-        fg = FeatureGroup.from_response_json(response_get_feature_group)[0]
+    def test_from_response_json(self, backend_fixtures):
+        fg = FeatureGroup.from_response_json(backend_fixtures["get_feature_group"]["response"])[0]
 
         assert fg.id == 15
         assert len(fg._features) == 2
