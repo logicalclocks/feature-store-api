@@ -14,7 +14,9 @@
 #   limitations under the License.
 #
 
+import datetime
 from hsfs import engine, training_dataset_feature, client, util
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
     tags_api,
     storage_connector_api,
@@ -136,6 +138,7 @@ class FeatureViewEngine:
     def create_training_dataset(
         self, feature_view_obj, training_dataset_obj, user_write_options
     ):
+        self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
             feature_view_obj, training_dataset_obj
         )
@@ -160,6 +163,7 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_version
             )
         else:
+            self._set_event_time(feature_view_obj, training_dataset_obj)
             td_updated = self._create_training_data_metadata(
                 feature_view_obj, training_dataset_obj
             )
@@ -211,6 +215,37 @@ class FeatureViewEngine:
             )
 
         return td_updated, split_df
+
+    def _set_event_time(self, feature_view_obj, training_dataset_obj):
+        event_time = feature_view_obj.query._left_feature_group.event_time
+        if event_time:
+            if training_dataset_obj.splits:
+                for split in training_dataset_obj.splits:
+                    if (
+                        split.split_type == TrainingDatasetSplit.TIME_SERIES_SPLIT
+                        and split.name == TrainingDatasetSplit.TRAIN
+                        and not split.start_time
+                    ):
+                        split.start_time = self._get_start_time()
+                    if (
+                        split.split_type == TrainingDatasetSplit.TIME_SERIES_SPLIT
+                        and split.name == TrainingDatasetSplit.TEST
+                        and not split.end_time
+                    ):
+                        split.end_time = self._get_end_time()
+            else:
+                if not training_dataset_obj.event_start_time:
+                    training_dataset_obj.event_start_time = self._get_start_time()
+                if not training_dataset_obj.event_end_time:
+                    training_dataset_obj.event_end_time = self._get_end_time()
+
+    def _get_start_time(self):
+        # minimum start time is 1 second
+        return 1000
+
+    def _get_end_time(self):
+        # end time is current time
+        return int(float(datetime.datetime.now().timestamp()) * 1000)
 
     def recreate_training_dataset(
         self, feature_view_obj, training_dataset_version, user_write_options

@@ -477,6 +477,7 @@ class FeatureView:
             name=self.name,
             version=None,
             test_size=test_size,
+            time_split_size=2,
             train_start=train_start,
             train_end=train_end,
             test_start=test_start,
@@ -606,6 +607,7 @@ class FeatureView:
             version=None,
             validation_size=validation_size,
             test_size=test_size,
+            time_split_size=3,
             train_start=train_start,
             train_end=train_end,
             validation_start=validation_start,
@@ -788,6 +790,7 @@ class FeatureView:
             train_end=train_end,
             test_start=test_start,
             test_end=test_end,
+            time_split_size=2,
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
@@ -890,6 +893,7 @@ class FeatureView:
             splits={},
             validation_size=validation_size,
             test_size=test_size,
+            time_split_size=3,
             train_start=train_start,
             train_end=train_end,
             validation_start=validation_start,
@@ -1227,3 +1231,16 @@ class FeatureView:
     @schema.setter
     def schema(self, features):
         self._features = features
+
+    @property
+    def primary_keys(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        _vector_server = self._single_vector_server or self._batch_vectors_server
+        if _vector_server:
+            return _vector_server.serving_keys
+        else:
+            _vector_server = vector_server.VectorServer(
+                self._featurestore_id, self._features
+            )
+            _vector_server.init_prepared_statement(self, False, False)
+            return _vector_server.serving_keys

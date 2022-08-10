@@ -18,6 +18,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -691,4 +692,21 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name, version);
   }
 
+  /**
+   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
+   *
+   * @return Set of serving keys
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   * @throws ClassNotFoundException
+   */
+  @JsonIgnore
+  public HashSet<String> getPrimaryKeys()
+      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
+    if (vectorServer.getServingKeys().isEmpty()) {
+      initServing();
+    }
+    return vectorServer.getServingKeys();
+  }
 }
