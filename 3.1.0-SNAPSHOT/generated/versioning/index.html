@@ -1183,7 +1183,7 @@ Data versioning is also not critical for training datasets, which are point in t
 </p>
 
 <p>It is also possible to retrieve the same information programmatically, using the <code>commit_details()</code> method of a feature group object:</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1175">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1180">[source]</a></span></p>
 <h3 id="commit_details">commit_details<a class="headerlink" href="#commit_details" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">commit_details</span><span class="p">(</span><span class="n">wallclock_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1204,23 +1204,74 @@ is <code>Dict[str, str]</code> with key value pairs of date committed on, number
 <p>Users can also use the APIs to read the feature group data at a specific point in time using the <code>as_of</code> method of the query object:</p>
 <p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L156">[source]</a></span></p>
 <h3 id="as_of">as_of<a class="headerlink" href="#as_of" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="n">wallclock_time</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="n">wallclock_time</span><span class="p">,</span> <span class="n">exclude_until</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Perform time travel on the given Query.</p>
-<p>This method returns a new Query object at the specified point in time.</p>
+<p>This method returns a new Query object at the specified point in time. Optionally, commits before a
+specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
+or used further to perform joins or construct a training dataset.</p>
+<div class="admonition example">
+<p class="admonition-title">Reading features at a specific point in time:</p>
+<p>```python
+fs = connection.get_feature_store();
+query = fs.get_feature_group("example_feature_group", 1).select_all()
+query.as_of("2020-10-20 07:34:11").read().show()</p>
+</div>
+<div class="admonition example">
+<p class="admonition-title">Reading commits incrementally between specified points in time:</p>
+<p>```python
+fs = connection.get_feature_store();
+query = fs.get_feature_group("example_feature_group", 1).select_all()
+query.as_of("2020-10-20 07:34:11", exclude_until="2020-10-19 07:34:11").read().show()</p>
+</div>
+<p>The first parameter is inclusive while the latter is exclusive.
+That means, in order to query a single commit, you need to query that commit time
+and exclude everything just before the commit.</p>
+<div class="admonition example">
+<p class="admonition-title">Reading only the changes from a single commit</p>
+<p>```python
+fs = connection.get_feature_store();
+query = fs.get_feature_group("example_feature_group", 1).select_all()
+query.as_of("2020-10-20 07:31:38", exclude_until="2020-10-20 07:31:37").read().show()</p>
+</div>
+<p>When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
+a specified point in time can still be excluded.</p>
+<div class="admonition example">
+<p class="admonition-title">Reading the latest state of features, excluding commits before a specified point in time:</p>
+<p>```python
+fs = connection.get_feature_store();
+query = fs.get_feature_group("example_feature_group", 1).select_all()
+query.as_of(None, exclude_until="2020-10-20 07:31:38").read().show()</p>
+</div>
+<p>Note that the interval will be applied to all joins in the query.
+If you want to query different intervals for different feature groups in
+the query, you have to apply them in a nested fashion:
+<div class="highlight"><pre><span></span><code><span class="n">query1</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query2</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+</code></pre></div>
+If instead you apply another <code>as_of</code> selection after the join, all
+joined feature groups will be queried with this interval:
+<div class="highlight"><pre><span></span><code><span class="n">query1</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>  <span class="c1"># as_of is not applied</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query2</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>  <span class="c1"># as_of is not applied</span>
+    <span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</code></pre></div></p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>The wallclock_time needs to be a time included into the Hudi active timeline.
-By default Hudi keeps the last 20 to 30 commits in the active timeline.
+<p>This method only works for queries on Hudi tables.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.
+By default, Hudi keeps the last 20 to 30 commits in the active timeline.
 If you need to keep a longer active timeline, you can overwrite the options:
 <code>hoodie.keep.min.commits</code> and <code>hoodie.keep.max.commits</code>
 when calling the <code>insert()</code> method.</p>
 </div>
-<p>This can then either be read into a Dataframe or used further to perform joins
-or construct a training dataset.</p>
 <p><strong>Arguments</strong></p>
 <ul>
 <li><strong>wallclock_time</strong>: Datetime string. The String should be formatted in one of the
+    following formats <code>%Y%m%d</code>, <code>%Y%m%d%H</code>, <code>%Y%m%d%H%M</code>, or <code>%Y%m%d%H%M%S</code>.</li>
+<li><strong>exclude_until</strong>: Datetime string. The String should be formatted in one of the
     following formats <code>%Y%m%d</code>, <code>%Y%m%d%H</code>, <code>%Y%m%d%H%M</code>, or <code>%Y%m%d%H%M%S</code>.</li>
 </ul>
 <p><strong>Returns</strong></p>
