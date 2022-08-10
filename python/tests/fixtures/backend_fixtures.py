@@ -1,7 +1,7 @@
 import pytest
 import json
 
-with open('tests/fixtures/backend_fixtures.json', 'r') as json_file:
+with open('python/tests/fixtures/backend_fixtures.json', 'r') as json_file:
     backend_fixtures = json.load(json_file)
 
 @pytest.fixture
