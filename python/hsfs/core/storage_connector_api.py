@@ -32,7 +32,7 @@ class StorageConnectorApi:
             "storageconnectors",
             name,
         ]
-        query_params = {"temporaryCredentials": True}
+        query_params = {"temporaryCredentials": True, "durationSeconds": 0}
         return _client._send_request("GET", path_params, query_params=query_params)
 
     def get(self, name):

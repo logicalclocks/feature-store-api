@@ -46,6 +46,7 @@ public class StorageConnectorApi {
         .set("fsId", featureStoreId)
         .set("name", name)
         .set("temporaryCredentials", true)
+        .set("durationSeconds", 0)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
