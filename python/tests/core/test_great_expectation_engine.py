@@ -84,7 +84,10 @@ class TestCodeEngine:
 
         # Act
         ge_engine.validate(
-            feature_group=fg, dataframe=None, save_report=None, validation_options=validation_options
+            feature_group=fg,
+            dataframe=None,
+            save_report=None,
+            validation_options=validation_options,
         )
 
         # Assert
@@ -123,7 +126,10 @@ class TestCodeEngine:
 
         # Act
         ge_engine.validate(
-            feature_group=fg, dataframe=None, save_report=None, validation_options=validation_options
+            feature_group=fg,
+            dataframe=None,
+            save_report=None,
+            validation_options=validation_options,
         )
 
         # Assert
@@ -162,7 +168,10 @@ class TestCodeEngine:
 
         # Act
         ge_engine.validate(
-            feature_group=fg, dataframe=None, save_report=True, validation_options=validation_options
+            feature_group=fg,
+            dataframe=None,
+            save_report=True,
+            validation_options=validation_options,
         )
 
         # Assert

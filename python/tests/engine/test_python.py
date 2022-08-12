@@ -25,8 +25,7 @@ from hsfs import (
     training_dataset,
     feature_view,
     transformation_function,
-    training_dataset_split,
-    feature
+    feature,
 )
 from hsfs.engine import python
 from hsfs.core import inode, execution
@@ -1421,21 +1420,26 @@ class TestPython:
             id=10,
         )
 
-        q = query.Query(left_feature_group=None,
-                        left_features=None)
+        q = query.Query(left_feature_group=None, left_features=None)
 
-        mock_python_engine_random_split.return_value = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        mock_python_engine_random_split.return_value = {
+            "train": df.loc[df["col1"] == 1],
+            "test": df.loc[df["col1"] == 2],
+        }
         mock_python_engine_apply_transformation_function.return_value = "temp"
 
         # Act
         result = python_engine._prepare_transform_split_df(
-            query_obj=q, training_dataset_obj=td, feature_view_obj=None, read_option=None
+            query_obj=q,
+            training_dataset_obj=td,
+            feature_view_obj=None,
+            read_option=None,
         )
 
         # Assert
         assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_random_split.call_count == 1
-        assert result == {'test': "temp", 'train': "temp"}
+        assert result == {"test": "temp", "train": "temp"}
 
     def test_prepare_transform_split_df_time_split_td_features(self, mocker):
         # Arrange
@@ -1470,7 +1474,7 @@ class TestPython:
             id=10,
             train_start=1,
             train_end=2,
-            test_end=3
+            test_end=3,
         )
 
         f = feature.Feature(name="col1", type="str")
@@ -1488,21 +1492,26 @@ class TestPython:
             features=[f, f1, f2],
         )
 
-        q = query.Query(left_feature_group=fg,
-                        left_features=[])
+        q = query.Query(left_feature_group=fg, left_features=[])
 
-        mock_python_engine_time_series_split.return_value = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        mock_python_engine_time_series_split.return_value = {
+            "train": df.loc[df["col1"] == 1],
+            "test": df.loc[df["col1"] == 2],
+        }
         mock_python_engine_apply_transformation_function.return_value = "temp"
 
         # Act
         result = python_engine._prepare_transform_split_df(
-            query_obj=q, training_dataset_obj=td, feature_view_obj=None, read_option=None
+            query_obj=q,
+            training_dataset_obj=td,
+            feature_view_obj=None,
+            read_option=None,
         )
 
         # Assert
         assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_time_series_split.call_count == 1
-        assert result == {'test': "temp", 'train': "temp"}
+        assert result == {"test": "temp", "train": "temp"}
 
     def test_prepare_transform_split_df_time_split_query_features(self, mocker):
         # Arrange
@@ -1537,7 +1546,7 @@ class TestPython:
             id=10,
             train_start=1,
             train_end=2,
-            test_end=3
+            test_end=3,
         )
 
         fg = feature_group.FeatureGroup(
@@ -1554,21 +1563,26 @@ class TestPython:
         f1 = feature.Feature(name="col2", type="str")
         f2 = feature.Feature(name="event_time", type="str")
 
-        q = query.Query(left_feature_group=fg,
-                        left_features=[f, f1, f2])
+        q = query.Query(left_feature_group=fg, left_features=[f, f1, f2])
 
-        mock_python_engine_time_series_split.return_value = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        mock_python_engine_time_series_split.return_value = {
+            "train": df.loc[df["col1"] == 1],
+            "test": df.loc[df["col1"] == 2],
+        }
         mock_python_engine_apply_transformation_function.return_value = "temp"
 
         # Act
         result = python_engine._prepare_transform_split_df(
-            query_obj=q, training_dataset_obj=td, feature_view_obj=None, read_option=None
+            query_obj=q,
+            training_dataset_obj=td,
+            feature_view_obj=None,
+            read_option=None,
         )
 
         # Assert
         assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_time_series_split.call_count == 1
-        assert result == {'test': "temp", 'train': "temp"}
+        assert result == {"test": "temp", "train": "temp"}
 
     def test_random_split(self, mocker):
         # Arrange
@@ -1590,14 +1604,12 @@ class TestPython:
         )
 
         # Act
-        result = python_engine._random_split(
-            df=df, training_dataset_obj=td
-        )
+        result = python_engine._random_split(df=df, training_dataset_obj=td)
 
         # Assert
         assert list(result) == ["test_split1", "test_split2"]
         for column in list(result):
-            assert not  result[column].empty
+            assert not result[column].empty
 
     def test_random_split_bad_percentage(self, mocker):
         # Arrange
@@ -1620,14 +1632,12 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            result = python_engine._random_split(
-                df=df, training_dataset_obj=td
-            )
+            result = python_engine._random_split(df=df, training_dataset_obj=td)
 
         # Assert
         assert (
-                str(e_info.value)
-                == "Sum of split ratios should be 1 and each values should be in range (0, 1)"
+            str(e_info.value)
+            == "Sum of split ratios should be 1 and each values should be in range (0, 1)"
         )
 
     # todo not sure if _time_series_split works as intended when no event time (if len(df[event_time])>0 means if df has any rows)
@@ -1653,14 +1663,17 @@ class TestPython:
             id=10,
             train_start=1,
             train_end=2,
-            test_end=3
+            test_end=3,
         )
 
-        expected = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
 
         # Act
         result = python_engine._time_series_split(
-            df=df, training_dataset_obj=td, event_time="event_time", drop_event_time=False
+            df=df,
+            training_dataset_obj=td,
+            event_time="event_time",
+            drop_event_time=False,
         )
 
         # Assert
@@ -1690,16 +1703,19 @@ class TestPython:
             id=10,
             train_start=1,
             train_end=2,
-            test_end=3
+            test_end=3,
         )
 
-        expected = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
         expected["train"] = expected["train"].drop(["event_time"], axis=1)
         expected["test"] = expected["test"].drop(["event_time"], axis=1)
 
         # Act
         result = python_engine._time_series_split(
-            df=df, training_dataset_obj=td, event_time="event_time", drop_event_time=True
+            df=df,
+            training_dataset_obj=td,
+            event_time="event_time",
+            drop_event_time=True,
         )
 
         # Assert
@@ -1711,7 +1727,8 @@ class TestPython:
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         mock_python_engine_convert_to_unix_timestamp = mocker.patch(
-            "hsfs.engine.python.Engine._convert_to_unix_timestamp", side_effect = [1000, 2000, 1000, 2000]
+            "hsfs.engine.python.Engine._convert_to_unix_timestamp",
+            side_effect=[1000, 2000, 1000, 2000],
         )
 
         python_engine = python.Engine()
@@ -1729,14 +1746,17 @@ class TestPython:
             id=10,
             train_start=1,
             train_end=2,
-            test_end=3
+            test_end=3,
         )
 
-        expected = {"train": df.loc[df['col1'] == 1], "test": df.loc[df['col1'] == 2]}
+        expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
 
         # Act
         result = python_engine._time_series_split(
-            df=df, training_dataset_obj=td, event_time="event_time", drop_event_time=False
+            df=df,
+            training_dataset_obj=td,
+            event_time="event_time",
+            drop_event_time=False,
         )
 
         # Assert
@@ -1749,21 +1769,21 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_to_unix_timestamp(t=pd.Timestamp('2017-01-01'))
+        result = python_engine._convert_to_unix_timestamp(t=pd.Timestamp("2017-01-01"))
 
         # Assert
         assert result == 1483228800000.0
 
     def test_convert_to_unix_timestamp_str(self, mocker):
         # Arrange
-        #mock_util_get_timestamp_from_date_string = mocker.patch("hsfs.util.get_timestamp_from_date_string")
+        # mock_util_get_timestamp_from_date_string = mocker.patch("hsfs.util.get_timestamp_from_date_string")
 
         python_engine = python.Engine()
 
-        #mock_util_get_timestamp_from_date_string.return_value = 1483225200000
+        # mock_util_get_timestamp_from_date_string.return_value = 1483225200000
 
         # Act
-        result = python_engine._convert_to_unix_timestamp(t='2017-01-01 00-00-00-000')
+        result = python_engine._convert_to_unix_timestamp(t="2017-01-01 00-00-00-000")
 
         # Assert
         assert result == 1483225200000
