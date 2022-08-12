@@ -17,7 +17,6 @@
 import pytest
 import pandas as pd
 import numpy as np
-import pyarrow as pa
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
@@ -25,16 +24,13 @@ from hsfs import (
     storage_connector,
     feature_group,
     training_dataset,
-    feature_view,
     transformation_function,
-    training_dataset_split,
     feature,
     storage_connector,
     expectation_suite,
     training_dataset_feature,
 )
 from hsfs.engine import spark
-from hsfs.core import inode, execution
 from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
 
