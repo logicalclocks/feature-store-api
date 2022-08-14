@@ -72,7 +72,7 @@ class Connection:
     Clients in external clusters need to connect to the Hopsworks Feature Store using an
     API key. The API key is generated inside the Hopsworks platform, and requires at
     least the "project" and "featurestore" scopes to be able to access a feature store.
-    For more information, see the [integration guides](../setup.md).
+    For more information, see the integration guides.
 
     # Arguments
         host: The hostname of the Hopsworks instance, defaults to `None`.
@@ -259,7 +259,7 @@ class Connection:
         Databricks cluster to a Hopsworks Feature Store instance. It returns a
         `Connection` object and will print instructions on how to finalize the setup
         of the Databricks cluster.
-        See also the [Databricks integration guide](../integrations/databricks/configuration.md).
+        See also the Databricks integration guide.
         """
         connection = cls(
             host,
