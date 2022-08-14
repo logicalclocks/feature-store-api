@@ -217,43 +217,6 @@ class FeatureView:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
-    def preview_feature_vector(self, external: Optional[bool] = None):
-        """Returns a sample of assembled serving vector from online feature store.
-
-        # Arguments
-            external: boolean, optional. If set to True, the connection to the
-                online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        # Returns
-            `list` List of feature values, ordered according to positions of this
-            features in training dataset query.
-        """
-        if self._single_vector_server is None:
-            self.init_serving(external=external)
-        return self._single_vector_server.get_preview_vectors(1)
-
-    def preview_feature_vectors(self, n: int, external: Optional[bool] = None):
-        """Returns n samples of assembled serving vectors in batches from online feature store.
-
-        # Arguments
-            n: int. Number of feature vectors to return.
-            external: boolean, optional. If set to True, the connection to the
-                online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        # Returns
-            `List[list]` List of lists of feature values , ordered according to
-            positions of this features in training dataset query.
-        """
-        if self._single_vector_server is None:
-            self.init_serving(external=external)
-        return self._single_vector_server.get_preview_vectors(n)
-
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
         start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
