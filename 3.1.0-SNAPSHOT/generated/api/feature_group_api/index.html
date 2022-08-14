@@ -867,6 +867,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#get_or_create_feature_group" class="md-nav__link">
+    get_or_create_feature_group
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1542,6 +1549,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#get_or_create_feature_group" class="md-nav__link">
+    get_or_create_feature_group
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2048,7 +2062,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L371">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L382">[source]</a></span></p>
 <h3 id="create_feature_group">create_feature_group<a class="headerlink" href="#create_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2118,6 +2132,78 @@ DataFrame.</p>
 <li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
     group which dataframes should be validated against upon insertion.
     Defaults to <code>None</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>FeatureGroup</code>. The feature group metadata object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L473">[source]</a></span></p>
+<h3 id="get_or_create_feature_group">get_or_create_feature_group<a class="headerlink" href="#get_or_create_feature_group" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_or_create_feature_group</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">online_enabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">time_travel_format</span><span class="o">=</span><span class="s2">&quot;HUDI&quot;</span><span class="p">,</span>
+    <span class="n">partition_key</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">primary_key</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">hudi_precombine_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">statistics_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expectation_suite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.</p>
+<div class="admonition note">
+<p class="admonition-title">Lazy</p>
+<p>This method is lazy and does not persist any metadata or feature data in the
+feature store on its own. To persist the feature group and save feature data
+along the metadata in the feature store, call the <code>insert()</code> method with a
+DataFrame.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the feature group to create.</li>
+<li><strong>version</strong> <code>int</code>: Version of the feature group to retrieve or create.</li>
+<li><strong>description</strong> <code>Optional[str]</code>: A string describing the contents of the feature group to
+    improve discoverability for Data Scientists, defaults to empty string
+    <code>""</code>.</li>
+<li><strong>online_enabled</strong> <code>Optional[bool]</code>: Define whether the feature group should be made available
+    also in the online feature store for low latency access, defaults to
+    <code>False</code>.</li>
+<li><strong>time_travel_format</strong> <code>Optional[str]</code>: Format used for time travel, defaults to <code>"HUDI"</code>.</li>
+<li><strong>partition_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as partition key when
+    writing the feature data to the offline storage, defaults to empty list
+    <code>[]</code>.</li>
+<li><strong>primary_key</strong> <code>Optional[List[str]]</code>: A list of feature names to be used as primary key for the
+    feature group. This primary key can be a composite key of multiple
+    features and will be used as joining key, if not specified otherwise.
+    Defaults to empty list <code>[]</code>, and the feature group won't have any primary key.</li>
+<li><strong>hudi_precombine_key</strong> <code>Optional[str]</code>: A feature name to be used as a precombine key for the <code>"HUDI"</code>
+    feature group. Defaults to <code>None</code>. If feature group has time travel format
+    <code>"HUDI"</code> and hudi precombine key was not specified then the first primary key of
+    the feature group will be used as hudi precombine key.</li>
+<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the feature group manually as a
+    list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
+    schema information of the DataFrame provided in the <code>save</code> method.</li>
+<li><strong>statistics_config</strong> <code>Optional[Union[hsfs.StatisticsConfig, bool, dict]]</code>: A configuration object, or a dictionary with keys
+    "<code>enabled</code>" to generally enable descriptive statistics computation for
+    this feature group, <code>"correlations</code>" to turn on feature correlation
+    computation, <code>"histograms"</code> to compute feature value frequencies and
+    <code>"exact_uniqueness"</code> to compute uniqueness, distinctness and entropy.
+    The values should be booleans indicating the setting. To fully turn off
+    statistics computation pass <code>statistics_config=False</code>. Defaults to
+    <code>None</code> and will compute only descriptive statistics.</li>
+<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
+    group which dataframes should be validated against upon insertion.
+    Defaults to <code>None</code>.</li>
+<li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
+    time for the features in this feature group. If event_time is set
+    the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
+<li><strong>stream</strong> <code>Optional[bool]</code>: Optionally, Define whether the feature group should support real time stream writing capabilities.
+    Stream enabled Feature Groups have unified single API for writing streaming features transparently
+    to both online and offline store.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>
@@ -2790,7 +2876,7 @@ feature data.</p>
 <p>Persist the metadata and materialize the feature group to the feature store.</p>
 <div class="admonition warning">
 <p class="admonition-title">Deprecated</p>
-<p>save<code>method is deprecated. Use the</code>insert` method instead.</p>
+<p><code>save</code> method is deprecated. Use the <code>insert</code> method instead.</p>
 </div>
 <p>Calling <code>save</code> creates the metadata for the feature group in the feature store
 and writes the specified <code>features</code> dataframe as feature group to the

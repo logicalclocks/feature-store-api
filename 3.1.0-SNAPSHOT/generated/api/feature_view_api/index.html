@@ -1840,7 +1840,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L908">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L923">[source]</a></span></p>
 <h3 id="create_feature_view">create_feature_view<a class="headerlink" href="#create_feature_view" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_feature_view</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[],</span> <span class="n">transformation_functions</span><span class="o">=</span><span class="p">{}</span>
@@ -1870,7 +1870,7 @@
 <p><code>FeatureView</code>: The feature view metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L951">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L966">[source]</a></span></p>
 <h3 id="get_feature_view">get_feature_view<a class="headerlink" href="#get_feature_view" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_view</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -1889,7 +1889,7 @@
 <li><strong><code>RestAPIError</code></strong>: If unable to retrieve feature view from the feature store.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L977">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L992">[source]</a></span></p>
 <h3 id="get_feature_views">get_feature_views<a class="headerlink" href="#get_feature_views" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_feature_views</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2289,7 +2289,7 @@ read_options: User provided read options. Defaults to <code>{}</code>.</p>
     providing feature values which are not available in the feature store.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used
     which relies on the private IP. Defaults to True if connection to Hopsworks is established from
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
@@ -2311,7 +2311,7 @@ features in the feature view query.</p>
     providing feature values which are not available in the feature store.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used
     which relies on the private IP. Defaults to True if connection to Hopsworks is established from
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
@@ -2441,7 +2441,7 @@ recreate the training data.</p>
     initialised for retrieving serving vectors as a batch.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used which relies on the private IP.
     Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
     Sagemaker or Google Colab), otherwise to False.</li>

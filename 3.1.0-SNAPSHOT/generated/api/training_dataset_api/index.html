@@ -1964,7 +1964,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L738">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L749">[source]</a></span></p>
 <h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -1983,6 +1983,11 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>Create a training dataset metadata object.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deprecated</p>
+<p><code>TrainingDataset</code> is deprecated, use <code>FeatureView</code> instead. From version 3.0
+training datasets created with this API are not visibile in the API anymore.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Lazy</p>
 <p>This method is lazy and does not persist any metadata or feature data in the
@@ -2061,6 +2066,14 @@ training datasets:</p>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p>Get a training dataset entity from the feature store.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deprecated</p>
+<p><code>TrainingDataset</code> is deprecated, use <code>FeatureView</code> instead. You can still retrieve old
+training datasets using this method, but after upgrading the old training datasets will
+also be available under a Feature View with the same name and version.</p>
+<p>It is recommended to use this method only for old training datasets that have been
+created directly from Dataframes and not with Query objects.</p>
+</div>
 <p>Getting a training dataset from the Feature Store means getting its metadata handle
 so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 <p><strong>Arguments</strong></p>
@@ -2285,7 +2298,7 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
     serving application.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used
     which relies on the private IP. Defaults to True if connection to Hopsworks is established from
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
@@ -2305,7 +2318,7 @@ features in training dataset query.</p>
     serving application.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used
     which relies on the private IP. Defaults to True if connection to Hopsworks is established from
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
@@ -2363,7 +2376,7 @@ positions of this features in training dataset query.</p>
     initialised for retrieving serving vectors as a batch.</li>
 <li><strong>external</strong> <code>Optional[bool]</code>: boolean, optional. If set to True, the connection to the
     online feature store is established using the same host as
-    for the <code>host</code> parameter in the <a href="project.md#connection"><code>hsfs.connection()</code></a> method.
+    for the <code>host</code> parameter in the <a href="../connection_api/#connection"><code>hsfs.connection()</code></a> method.
     If set to False, the online feature store storage connector is used
     which relies on the private IP. Defaults to True if connection to Hopsworks is established from
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
