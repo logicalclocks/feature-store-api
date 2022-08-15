@@ -309,7 +309,7 @@ class TestHudiEngine:
             feature_group="",
             alias=None,
             left_feature_group_end_timestamp=None,
-            left_feature_group_start_timestamp=0,
+            left_feature_group_start_timestamp=None,
         )
 
         mock_util_get_hudi_datestr_from_timestamp.side_effect = [1, 2]

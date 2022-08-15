@@ -32,6 +32,7 @@ from pyspark.sql.types import (
     BinaryType,
     BooleanType,
     StructField,
+    MapType,
 )
 from pyspark.sql.functions import lit
 
@@ -1987,7 +1988,7 @@ class TestSpark:
         assert list(result) == ["test_split1", "test_split2"]
         for column in list(result):
             assert result[column].schema == spark_df.schema
-            assert not result[column].isEmpty()
+            assert not result[column].rdd.isEmpty()
 
     def test_time_series_split(self, mocker):
         # Arrange
@@ -3493,21 +3494,21 @@ class TestSpark:
         # Assert
         assert result == "binary"
 
-    def test_convert_spark_type_using_hudi_struct_type(self, mocker):
+    def test_convert_spark_type_using_hudi_map_type(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
         # Act
         with pytest.raises(ValueError) as e_info:
             spark_engine.convert_spark_type(
-                hive_type=StructType(),
+                hive_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )
 
         # Assert
         assert (
             str(e_info.value)
-            == "spark type <class 'pyspark.sql.types.StructType'> not supported"
+            == "spark type <class 'pyspark.sql.types.MapType'> not supported"
         )
 
     def test_setup_storage_connector_s3(self, mocker):
