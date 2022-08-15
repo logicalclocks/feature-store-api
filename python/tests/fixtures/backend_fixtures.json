@@ -18,7 +18,7 @@
                     "toursState": 0,
                     "twoFactor": false
                 },
-                "description": "",
+                "description": "test_description",
                 "featurestoreId": 67,
                 "featurestoreName": "test_featurestore",
                 "id": 15,
@@ -57,6 +57,30 @@
                 "onlineTopicName": "119_15_fg_test_1_onlinefs",
                 "onlineEnabled": true,
                 "timeTravelFormat": "HUDI"
+            }
+        ],
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_feature_group_basic_info": {
+        "response": [
+            {
+                "type": "cachedFeaturegroupDTO",
+                "featurestoreId": 67,
+                "id": 15,
+                "name": "fg_test",
+                "version": 1
             }
         ],
         "method": "GET",
