@@ -14,6 +14,12 @@
 #   limitations under the License.
 #
 
+import os
+import sys
+
 pytest_plugins = [
     "tests.fixtures.backend_fixtures",
 ]
+
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
