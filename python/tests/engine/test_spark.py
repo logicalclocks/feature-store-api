@@ -1974,7 +1974,7 @@ class TestSpark:
             seed=1,
         )
 
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"]}
+        d = {"col_0": [1, 2, 3, 4, 5, 6], "col_1": ["test_1", "test_2", "test_3", "test_4", "test_5", "test_6"]}
         df = pd.DataFrame(data=d)
 
         spark_df = spark_engine._spark_session.createDataFrame(df)
