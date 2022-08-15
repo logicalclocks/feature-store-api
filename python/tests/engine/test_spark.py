@@ -234,6 +234,7 @@ class TestSpark:
     def test_register_hudi_temporary_table(self, mocker):
         # Arrange
         mock_hudi_engine = mocker.patch("hsfs.core.hudi_engine.HudiEngine")
+        mocker.patch("hsfs.feature_group.FeatureGroup.from_response_json")
 
         spark_engine = spark.Engine()
 
@@ -3048,9 +3049,8 @@ class TestSpark:
                     "batch_data": "SparkDataFrame",
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
-                "checkpoint_name": None,
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.15.14",
+                "great_expectations_version": "0.14.3",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },
