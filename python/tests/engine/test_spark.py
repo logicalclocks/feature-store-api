@@ -32,7 +32,6 @@ from pyspark.sql.types import (
     BinaryType,
     BooleanType,
     StructField,
-    DayTimeIntervalType,
 )
 from pyspark.sql.functions import lit
 
@@ -3494,21 +3493,21 @@ class TestSpark:
         # Assert
         assert result == "binary"
 
-    def test_convert_spark_type_using_hudi_day_time_interval_type(self, mocker):
+    def test_convert_spark_type_using_hudi_struct_type(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
         # Act
         with pytest.raises(ValueError) as e_info:
             spark_engine.convert_spark_type(
-                hive_type=DayTimeIntervalType(),
+                hive_type=StructType(),
                 using_hudi=True,
             )
 
         # Assert
         assert (
             str(e_info.value)
-            == "spark type <class 'pyspark.sql.types.DayTimeIntervalType'> not supported"
+            == "spark type <class 'pyspark.sql.types.StructType'> not supported"
         )
 
     def test_setup_storage_connector_s3(self, mocker):
