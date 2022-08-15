@@ -16,8 +16,6 @@
 
 import os
 import sys
-import pytest
-from tests.fixtures.backend_fixtures import backend_fixtures
 
 pytest_plugins = [
     "tests.fixtures.backend_fixtures",
