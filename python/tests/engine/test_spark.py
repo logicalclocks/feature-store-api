@@ -1987,7 +1987,7 @@ class TestSpark:
         # Assert
         assert list(result) == ["test_split1", "test_split2"]
         for column in list(result):
-            result[column].show()
+            assert result[column].schema == spark_df.schema
             assert not result[column].isEmpty()
 
     def test_time_series_split(self, mocker):
