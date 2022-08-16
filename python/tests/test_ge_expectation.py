@@ -32,7 +32,7 @@ class TestGeExpectation:
         assert ge.meta == 3
         assert ge.id == "4"
 
-    def test_from_response_list(self, backend_fixtures):
+    def test_from_response_json_list(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_ge_expectation_list"]["response"]
 
@@ -47,7 +47,7 @@ class TestGeExpectation:
         assert ge.meta == 3
         assert ge.id == "4"
 
-    def test_from_response_list_empty(self, backend_fixtures):
+    def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_ge_expectation_list_empty"]["response"]
 
