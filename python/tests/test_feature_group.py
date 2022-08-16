@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import feature_group, user, statistics_config, feature
+from hsfs import feature_group, user, statistics_config, feature, storage_connector, expectation_suite
 
 class TestFeatureGroup:
 
@@ -83,3 +83,65 @@ class TestFeatureGroup:
         assert fg.expectation_suite == None
 
 
+class TestExternalFeatureGroup:
+
+    def test_from_response_json(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["get_external_feature_group"]["response"]
+
+        # Act
+        fg_list = feature_group.ExternalFeatureGroup.from_response_json(json)
+
+        # Assert
+        assert len(fg_list) == 1
+        fg = fg_list[0]
+        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
+        assert fg.query == "Select * from "
+        assert fg.data_format == "HUDI"
+        assert fg.path == "test_path"
+        assert fg.options == {'test_name': 'test_value'}
+        assert fg.name == "external_fg_test"
+        assert fg.version == 1
+        assert fg.description == "test description"
+        assert fg.primary_key == ['intt']
+        assert fg._feature_store_id == 67
+        assert fg._feature_store_name == 'test_project_featurestore'
+        assert fg.created == "2022-08-16T07:19:12Z"
+        assert isinstance(fg.creator, user.User)
+        assert fg.id == 14
+        assert len(fg.features) == 3
+        assert isinstance(fg.features[0], feature.Feature)
+        assert fg.location == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg.event_time == "datet"
+        assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
+
+    def test_from_response_json_basic_info(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["get_external_feature_group_basic_info"]["response"]
+
+        # Act
+        fg_list = feature_group.ExternalFeatureGroup.from_response_json(json)
+
+        # Assert
+        assert len(fg_list) == 1
+        fg = fg_list[0]
+        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
+        assert fg.query == None
+        assert fg.data_format == None
+        assert fg.path == None
+        assert fg.options == None
+        assert fg.name == None
+        assert fg.version == None
+        assert fg.description == None
+        assert fg.primary_key == []
+        assert fg._feature_store_id == None
+        assert fg._feature_store_name == None
+        assert fg.created == None
+        assert fg.creator == None
+        assert fg.id == 15
+        assert fg.features == None
+        assert fg.location == None
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg.event_time == None
+        assert fg.expectation_suite == None
