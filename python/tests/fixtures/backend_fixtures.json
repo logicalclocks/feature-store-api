@@ -1,8 +1,82 @@
 {
     "get_feature_group": {
+        "response": {
+            "type": "cachedFeaturegroupDTO",
+            "validation_type": "test_validation_type",
+            "created": "2022-08-01T11:07:55Z",
+            "creator": {
+                "email": "admin@hopsworks.ai",
+                "firstName": "Admin",
+                "lastName": "Admin",
+                "maxNumProjects": 0,
+                "numActiveProjects": 0,
+                "numCreatedProjects": 0,
+                "numRemainingProjects": 0,
+                "status": 0,
+                "testUser": false,
+                "tos": false,
+                "toursState": 0,
+                "twoFactor": false
+            },
+            "description": "test_description",
+            "featurestoreId": 67,
+            "featurestoreName": "test_featurestore",
+            "id": 15,
+            "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+            "name": "fg_test",
+            "statisticsConfig": {
+                "columns": [],
+                "correlations": false,
+                "enabled": true,
+                "exactUniqueness": false,
+                "histograms": false
+            },
+            "version": 1,
+            "features": [
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": true,
+                    "name": "intt",
+                    "onlineType": "int",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": false,
+                    "name": "stringt",
+                    "onlineType": "varchar(1000)",
+                    "partition": false,
+                    "primary": false,
+                    "type": "string"
+                }
+            ],
+            "onlineTopicName": "119_15_fg_test_1_onlinefs",
+            "onlineEnabled": true,
+            "timeTravelFormat": "HUDI"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_feature_group_list": {
         "response": [
             {
                 "type": "cachedFeaturegroupDTO",
+                "validation_type": "test_validation_type",
                 "created": "2022-08-01T11:07:55Z",
                 "creator": {
                     "email": "admin@hopsworks.ai",
@@ -74,15 +148,183 @@
         "headers": null
     },
     "get_feature_group_basic_info": {
+        "response": {
+            "type": "cachedFeaturegroupDTO",
+            "featurestoreId": 67,
+            "id": 15,
+            "name": "fg_test",
+            "version": 1
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_feature_group_stream": {
+        "response": {
+            "type": "streamFeatureGroupDTO",
+            "validation_type": "test_validation_type",
+            "created": "2022-08-01T11:07:55Z",
+            "creator": {
+                "email": "admin@hopsworks.ai",
+                "firstName": "Admin",
+                "lastName": "Admin",
+                "maxNumProjects": 0,
+                "numActiveProjects": 0,
+                "numCreatedProjects": 0,
+                "numRemainingProjects": 0,
+                "status": 0,
+                "testUser": false,
+                "tos": false,
+                "toursState": 0,
+                "twoFactor": false
+            },
+            "description": "test_description",
+            "featurestoreId": 67,
+            "featurestoreName": "test_featurestore",
+            "id": 15,
+            "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+            "name": "fg_test",
+            "statisticsConfig": {
+                "columns": [],
+                "correlations": false,
+                "enabled": true,
+                "exactUniqueness": false,
+                "histograms": false
+            },
+            "version": 1,
+            "features": [
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": true,
+                    "name": "intt",
+                    "onlineType": "int",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": false,
+                    "name": "stringt",
+                    "onlineType": "varchar(1000)",
+                    "partition": false,
+                    "primary": false,
+                    "type": "string"
+                }
+            ],
+            "onlineTopicName": "119_15_fg_test_1_onlinefs",
+            "onlineEnabled": true,
+            "timeTravelFormat": "HUDI"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_feature_group_stream_list": {
         "response": [
             {
-                "type": "cachedFeaturegroupDTO",
+                "type": "streamFeatureGroupDTO",
+                "validation_type": "test_validation_type",
+                "created": "2022-08-01T11:07:55Z",
+                "creator": {
+                    "email": "admin@hopsworks.ai",
+                    "firstName": "Admin",
+                    "lastName": "Admin",
+                    "maxNumProjects": 0,
+                    "numActiveProjects": 0,
+                    "numCreatedProjects": 0,
+                    "numRemainingProjects": 0,
+                    "status": 0,
+                    "testUser": false,
+                    "tos": false,
+                    "toursState": 0,
+                    "twoFactor": false
+                },
+                "description": "test_description",
                 "featurestoreId": 67,
+                "featurestoreName": "test_featurestore",
                 "id": 15,
+                "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
                 "name": "fg_test",
-                "version": 1
+                "statisticsConfig": {
+                    "columns": [],
+                    "correlations": false,
+                    "enabled": true,
+                    "exactUniqueness": false,
+                    "histograms": false
+                },
+                "version": 1,
+                "features": [
+                    {
+                        "defaultValue": null,
+                        "featureGroupId": 15,
+                        "hudiPrecombineKey": true,
+                        "name": "intt",
+                        "onlineType": "int",
+                        "partition": false,
+                        "primary": true,
+                        "type": "int"
+                    },
+                    {
+                        "defaultValue": null,
+                        "featureGroupId": 15,
+                        "hudiPrecombineKey": false,
+                        "name": "stringt",
+                        "onlineType": "varchar(1000)",
+                        "partition": false,
+                        "primary": false,
+                        "type": "string"
+                    }
+                ],
+                "onlineTopicName": "119_15_fg_test_1_onlinefs",
+                "onlineEnabled": true,
+                "timeTravelFormat": "HUDI"
             }
         ],
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_feature_group_stream_basic_info": {
+        "response": {
+            "type": "streamFeatureGroupDTO",
+            "featurestoreId": 67,
+            "id": 15,
+            "name": "fg_test",
+            "version": 1
+        },
         "method": "GET",
         "path_params": [
             "project",
@@ -579,9 +821,123 @@
         "headers": null
     },
     "get_external_feature_group": {
+        "response": {
+            "type": "onDemandFeaturegroupDTO",
+            "online_topic_name": "test_online_topic_name",
+            "created": "2022-08-16T07:19:12Z",
+            "creator": {
+                "email": "admin@hopsworks.ai",
+                "firstName": "Admin",
+                "lastName": "Admin",
+                "maxNumProjects": 0,
+                "numActiveProjects": 0,
+                "numCreatedProjects": 0,
+                "numRemainingProjects": 0,
+                "status": 0,
+                "testUser": false,
+                "tos": false,
+                "toursState": 0,
+                "twoFactor": false
+            },
+            "description": "test description",
+            "featurestoreId": 67,
+            "featurestoreName": "test_project_featurestore",
+            "id": 14,
+            "location": "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1",
+            "name": "external_fg_test",
+            "statisticsConfig": {
+                "columns": [],
+                "correlations": false,
+                "enabled": true,
+                "exactUniqueness": false,
+                "histograms": false
+            },
+            "version": 1,
+            "features": [
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "intt",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "stringt",
+                    "partition": false,
+                    "primary": false,
+                    "type": "string"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "datet",
+                    "partition": false,
+                    "primary": false,
+                    "type": "date"
+                }
+            ],
+            "expectationSuite": {
+                "id": 1,
+                "expectationSuiteName": "test_expectation_suite_name",
+                "expectations": [],
+                "meta": "{}",
+                "validationIngestionPolicy": "STRICT",
+                "runValidation": true
+            },
+            "eventTime": "datet",
+            "storageConnector": {
+                "type": "featurestoreJdbcConnectorDTO",
+                "description": "JDBC connector for the Offline Feature Store",
+                "featurestoreId": 67,
+                "id": 2,
+                "name": "test_project_featurestore",
+                "storageConnectorType": "JDBC",
+                "arguments": [
+                    {
+                        "name": "sslTrustStore"
+                    },
+                    {
+                        "name": "trustStorePassword"
+                    },
+                    {
+                        "name": "sslKeyStore"
+                    },
+                    {
+                        "name": "keyStorePassword"
+                    }
+                ],
+                "connectionString": "jdbc:hopshive://10.0.2.15:9085/test_project_featurestore;auth=noSasl;ssl=true;twoWay=true;"
+            },
+            "query": "Select * from ",
+            "dataFormat": "HUDI",
+            "path": "test_path",
+            "options": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "featuregroups",
+            "external_fg_test"
+        ],
+        "query_params": {
+            "version": 1
+        },
+        "headers": null
+    },
+    "get_external_feature_group_list": {
         "response": [
             {
                 "type": "onDemandFeaturegroupDTO",
+                "online_topic_name": "test_online_topic_name",
                 "created": "2022-08-16T07:19:12Z",
                 "creator": {
                     "email": "admin@hopsworks.ai",
@@ -693,19 +1049,17 @@
         "headers": null
     },
     "get_external_feature_group_basic_info": {
-        "response": [
-            {
-                "type": "onDemandFeaturegroupDTO",
-                "id": 15,
-                "storageConnector": {
-                    "type": "featurestoreJdbcConnectorDTO",
-                    "featurestoreId": 67,
-                    "id": 2,
-                    "name": "test_project_featurestore",
-                    "storageConnectorType": "JDBC"
-                }
+        "response": {
+            "type": "onDemandFeaturegroupDTO",
+            "id": 15,
+            "storageConnector": {
+                "type": "featurestoreJdbcConnectorDTO",
+                "featurestoreId": 67,
+                "id": 2,
+                "name": "test_project_featurestore",
+                "storageConnectorType": "JDBC"
             }
-        ],
+        },
         "method": "GET",
         "path_params": [
             "project",
@@ -745,6 +1099,22 @@
         "response": {
             "count": 0,
             "items": []
+        }
+    },
+    "get_external_feature_group_alias": {
+        "response": {
+            "on_demand_feature_group": {
+                "type": "onDemandFeaturegroupDTO",
+                "id": 15,
+                "storageConnector": {
+                    "type": "featurestoreJdbcConnectorDTO",
+                    "featurestoreId": 67,
+                    "id": 2,
+                    "name": "test_project_featurestore",
+                    "storageConnectorType": "JDBC"
+                }
+            },
+            "alias": "test_alias"
         }
     }
 }
