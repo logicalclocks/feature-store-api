@@ -1116,5 +1116,60 @@
             },
             "alias": "test_alias"
         }
+    },
+    "get_filter": {
+        "response": {
+            "condition": "test_condition",
+            "value": "test_value",
+            "feature": {
+                "defaultValue": null,
+                "featureGroupId": 15,
+                "hudiPrecombineKey": true,
+                "name": "intt",
+                "onlineType": "int",
+                "partition": false,
+                "primary": true,
+                "type": "int"
+            }
+        }
+    },
+    "get_logic": {
+        "response": {
+            "type": "test_type",
+            "left_filter": {
+                "condition": "test_condition",
+                "value": "test_value",
+                "feature": {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": true,
+                    "name": "intt",
+                    "onlineType": "int",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                }
+            },
+            "right_filter": {
+                "condition": "test_condition",
+                "value": "test_value",
+                "feature": {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": true,
+                    "name": "intt",
+                    "onlineType": "int",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                }
+            },
+            "left_logic": {
+                "type": "test_type"
+            },
+            "right_logic": {
+                "type": "test_type"
+            }
+        }
     }
 }
