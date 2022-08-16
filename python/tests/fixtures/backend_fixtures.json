@@ -719,5 +719,32 @@
             "version": 1
         },
         "headers": null
+    },
+    "get_ge_expectation": {
+        "response": {
+            "expectation_type": "1",
+            "kwargs": "2",
+            "meta": "3",
+            "id": "4"
+        }
+    },
+    "get_ge_expectation_list": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "expectation_type": "1",
+                    "kwargs": "2",
+                    "meta": "3",
+                    "id": "4"
+                }
+            ]
+        }
+    },
+    "get_ge_expectation_list_empty": {
+        "response": {
+            "count": 0,
+            "items": []
+        }
     }
 }
