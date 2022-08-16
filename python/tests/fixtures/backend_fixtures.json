@@ -1392,5 +1392,16 @@
                 "filter": null
             }
         }
+    },
+    "get_prepared_statement_parameter": {
+        "response":{
+            "name": "test_name",
+            "index": "test_index",
+            "type": "test_type",
+            "href": "test_href"
+        }
+    },
+    "get_prepared_statement_parameter_basic_info": {
+        "response":{}
     }
 }
