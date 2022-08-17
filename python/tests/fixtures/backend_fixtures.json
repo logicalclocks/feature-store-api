@@ -2583,5 +2583,17 @@
             "count": 0,
             "items": []
         }
+    },
+    "get_statistics_config": {
+        "response": {
+            "enabled": true,
+            "correlations": true,
+            "histograms": true,
+            "exact_uniqueness": true,
+            "columns": []
+        }
+    },
+    "get_statistics_config_basic_info": {
+        "response": {}
     }
 }
