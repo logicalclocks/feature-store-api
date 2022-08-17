@@ -2618,5 +2618,207 @@
             "count": 0,
             "items": []
         }
+    },
+    "get_training_dataset": {
+        "response": [
+            {
+                "name": "test_name",
+                "version": 1,
+                "data_format": "hudi",
+                "featurestore_id": 22,
+                "location": "test_location",
+                "event_start_time": "2022-03-05",
+                "event_end_time": "2022-03-08",
+                "coalesce": "test_coalesce",
+                "description": "test_description",
+                "storage_connector": {
+                    "type": "featurestoreJdbcConnectorDTO",
+                    "description": "JDBC connector description",
+                    "featurestoreId": 67,
+                    "id": 1,
+                    "name": "test_jdbc",
+                    "storageConnectorType": "JDBC",
+                    "arguments": [
+                        {
+                            "name": "sslTrustStore"
+                        },
+                        {
+                            "name": "trustStorePassword"
+                        },
+                        {
+                            "name": "sslKeyStore"
+                        },
+                        {
+                            "name": "keyStorePassword"
+                        }
+                    ],
+                    "connectionString": "test_conn_string"
+                },
+                "splits": [
+                    {
+                        "name": "test_name",
+                        "split_type": "test_split_type",
+                        "percentage": "test_percentage",
+                        "start_time": "test_start_time",
+                        "end_time": "test_end_time"
+                    }
+                ],
+                "validation_size": 2,
+                "test_size": 3,
+                "train_start": 4,
+                "train_end": 5,
+                "validation_start": 6,
+                "validation_end": 7,
+                "test_start": 8,
+                "test_end": 9,
+                "seed": 123,
+                "created": "test_created",
+                "creator": "test_creator",
+                "features": [
+                    {
+                        "name": "test_name",
+                        "type": "test_type",
+                        "index": "test_index",
+                        "featuregroup": {
+                            "type": "cachedFeaturegroupDTO",
+                            "validation_type": "test_validation_type",
+                            "created": "2022-08-01T11:07:55Z",
+                            "creator": {
+                                "email": "admin@hopsworks.ai",
+                                "firstName": "Admin",
+                                "lastName": "Admin",
+                                "maxNumProjects": 0,
+                                "numActiveProjects": 0,
+                                "numCreatedProjects": 0,
+                                "numRemainingProjects": 0,
+                                "status": 0,
+                                "testUser": false,
+                                "tos": false,
+                                "toursState": 0,
+                                "twoFactor": false
+                            },
+                            "description": "test_description",
+                            "featurestoreId": 67,
+                            "featurestoreName": "test_featurestore",
+                            "id": 15,
+                            "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+                            "name": "fg_test",
+                            "statisticsConfig": {
+                                "columns": [],
+                                "correlations": false,
+                                "enabled": true,
+                                "exactUniqueness": false,
+                                "histograms": false
+                            },
+                            "version": 1,
+                            "features": [
+                                {
+                                    "defaultValue": null,
+                                    "featureGroupId": 15,
+                                    "hudiPrecombineKey": true,
+                                    "name": "intt",
+                                    "onlineType": "int",
+                                    "partition": false,
+                                    "primary": true,
+                                    "type": "int"
+                                },
+                                {
+                                    "defaultValue": null,
+                                    "featureGroupId": 15,
+                                    "hudiPrecombineKey": false,
+                                    "name": "stringt",
+                                    "onlineType": "varchar(1000)",
+                                    "partition": false,
+                                    "primary": false,
+                                    "type": "string"
+                                }
+                            ],
+                            "onlineTopicName": "119_15_fg_test_1_onlinefs",
+                            "onlineEnabled": true,
+                            "timeTravelFormat": "HUDI"
+                        },
+                        "feature_group_feature_name": "test_feature_group_feature_name",
+                        "label": {
+                            "count": 1,
+                            "items": [
+                                {
+                                    "featurestore_id": 11,
+                                    "transformation_fn": "test_transformation_fn",
+                                    "version": 1,
+                                    "name": "test_name",
+                                    "source_code_content": "test_source_code_content",
+                                    "builtin_source_code": "test_builtin_source_code",
+                                    "output_type": "test_output_type",
+                                    "id": 43,
+                                    "type": "transformationFunctionTDO",
+                                    "items": [],
+                                    "count": 0,
+                                    "href": "test_href"
+                                }
+                            ]
+                        },
+                        "transformation_function": "test_transformation_function"
+                    }
+                ],
+                "statistics_config": {
+                    "enabled": true,
+                    "correlations": true,
+                    "histograms": true,
+                    "exact_uniqueness": true,
+                    "columns": []
+                },
+                "featurestore_name": "test_featurestore_name",
+                "id": 11,
+                "inode_id": 64,
+                "training_dataset_type": "HOPSFS_TRAINING_DATASET",
+                "from_query": "test_from_query",
+                "querydto": "test_querydto",
+                "label": "test_label",
+                "transformation_functions": "test_transformation_functions",
+                "train_split": "test_train_split",
+                "time_split_size": "test_time_split_size",
+                "type": "trainingDatasetDTO"
+            }
+        ]
+    },
+    "get_training_dataset_basic_info": {
+        "response": [
+            {
+                "name": "test_name",
+                "version": 1,
+                "data_format": "hudi",
+                "featurestore_id": 22,
+                "type": "trainingDatasetDTO",
+                "created": "test_created",
+                "storage_connector": {
+                    "type": "featurestoreJdbcConnectorDTO",
+                    "description": "JDBC connector description",
+                    "featurestoreId": 67,
+                    "id": 1,
+                    "name": "test_jdbc",
+                    "storageConnectorType": "JDBC",
+                    "arguments": [
+                        {
+                            "name": "sslTrustStore"
+                        },
+                        {
+                            "name": "trustStorePassword"
+                        },
+                        {
+                            "name": "sslKeyStore"
+                        },
+                        {
+                            "name": "keyStorePassword"
+                        }
+                    ],
+                    "connectionString": "test_conn_string"
+                },
+                "splits": [],
+                "statistics_config": {}
+            }
+        ]
+    },
+    "get_training_dataset_empty": {
+        "response": []
     }
 }
