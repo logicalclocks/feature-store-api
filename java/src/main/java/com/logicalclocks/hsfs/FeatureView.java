@@ -63,6 +63,10 @@ public class FeatureView {
   @JsonIgnore
   private List<String> labels;
 
+  @Getter
+  @Setter
+  private String type = "featureViewDTO";
+
   private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static VectorServer vectorServer = new VectorServer();
   private Integer extraFilterVersion = null;
