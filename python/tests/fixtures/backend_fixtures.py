@@ -20,8 +20,9 @@ import os
 
 FIXTURES_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(FIXTURES_DIR, "backend_fixtures.json"), 'r') as json_file:
+with open(os.path.join(FIXTURES_DIR, "backend_fixtures.json"), "r") as json_file:
     backend_fixtures_json = json.load(json_file)
+
 
 @pytest.fixture
 def backend_fixtures():

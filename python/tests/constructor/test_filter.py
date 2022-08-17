@@ -18,8 +18,8 @@
 from hsfs.constructor import filter
 from hsfs import feature
 
-class TestFilter:
 
+class TestFilter:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_filter"]["response"]
@@ -32,8 +32,8 @@ class TestFilter:
         assert f._condition == "test_condition"
         assert f._value == "test_value"
 
-class TestLogic:
 
+class TestLogic:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_logic"]["response"]
@@ -47,4 +47,3 @@ class TestLogic:
         assert isinstance(l._right_f, filter.Filter)
         assert isinstance(l._left_l, filter.Logic)
         assert isinstance(l._right_l, filter.Logic)
-

@@ -15,10 +15,17 @@
 #
 
 
-from hsfs import feature_group, user, statistics_config, feature, storage_connector, expectation_suite
+from hsfs import (
+    feature_group,
+    user,
+    statistics_config,
+    feature,
+    storage_connector,
+    expectation_suite,
+)
+
 
 class TestFeatureGroup:
-
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_feature_group"]["response"]
@@ -32,19 +39,22 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == "test_description"
         assert fg.partition_key == []
-        assert fg.primary_key == ['intt']
-        assert fg.hudi_precombine_key == 'intt'
-        assert fg._feature_store_name == 'test_featurestore'
-        assert fg.created == '2022-08-01T11:07:55Z'
+        assert fg.primary_key == ["intt"]
+        assert fg.hudi_precombine_key == "intt"
+        assert fg._feature_store_name == "test_featurestore"
+        assert fg.created == "2022-08-01T11:07:55Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 15
         assert len(fg.features) == 2
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == 'hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1'
+        assert (
+            fg.location
+            == "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1"
+        )
         assert fg.online_enabled == True
-        assert fg.time_travel_format == 'HUDI'
+        assert fg.time_travel_format == "HUDI"
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg._online_topic_name == '119_15_fg_test_1_onlinefs'
+        assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time == None
         assert fg.stream == False
         assert fg.expectation_suite == None
@@ -64,19 +74,22 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == "test_description"
         assert fg.partition_key == []
-        assert fg.primary_key == ['intt']
-        assert fg.hudi_precombine_key == 'intt'
-        assert fg._feature_store_name == 'test_featurestore'
-        assert fg.created == '2022-08-01T11:07:55Z'
+        assert fg.primary_key == ["intt"]
+        assert fg.hudi_precombine_key == "intt"
+        assert fg._feature_store_name == "test_featurestore"
+        assert fg.created == "2022-08-01T11:07:55Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 15
         assert len(fg.features) == 2
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == 'hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1'
+        assert (
+            fg.location
+            == "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1"
+        )
         assert fg.online_enabled == True
-        assert fg.time_travel_format == 'HUDI'
+        assert fg.time_travel_format == "HUDI"
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg._online_topic_name == '119_15_fg_test_1_onlinefs'
+        assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time == None
         assert fg.stream == False
         assert fg.expectation_suite == None
@@ -123,19 +136,22 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == "test_description"
         assert fg.partition_key == []
-        assert fg.primary_key == ['intt']
-        assert fg.hudi_precombine_key == 'intt'
-        assert fg._feature_store_name == 'test_featurestore'
-        assert fg.created == '2022-08-01T11:07:55Z'
+        assert fg.primary_key == ["intt"]
+        assert fg.hudi_precombine_key == "intt"
+        assert fg._feature_store_name == "test_featurestore"
+        assert fg.created == "2022-08-01T11:07:55Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 15
         assert len(fg.features) == 2
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == 'hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1'
+        assert (
+            fg.location
+            == "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1"
+        )
         assert fg.online_enabled == True
-        assert fg.time_travel_format == 'HUDI'
+        assert fg.time_travel_format == "HUDI"
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg._online_topic_name == '119_15_fg_test_1_onlinefs'
+        assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time == None
         assert fg.stream == True
         assert fg.expectation_suite == None
@@ -155,19 +171,22 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == "test_description"
         assert fg.partition_key == []
-        assert fg.primary_key == ['intt']
-        assert fg.hudi_precombine_key == 'intt'
-        assert fg._feature_store_name == 'test_featurestore'
-        assert fg.created == '2022-08-01T11:07:55Z'
+        assert fg.primary_key == ["intt"]
+        assert fg.hudi_precombine_key == "intt"
+        assert fg._feature_store_name == "test_featurestore"
+        assert fg.created == "2022-08-01T11:07:55Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 15
         assert len(fg.features) == 2
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == 'hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1'
+        assert (
+            fg.location
+            == "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1"
+        )
         assert fg.online_enabled == True
-        assert fg.time_travel_format == 'HUDI'
+        assert fg.time_travel_format == "HUDI"
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg._online_topic_name == '119_15_fg_test_1_onlinefs'
+        assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time == None
         assert fg.stream == True
         assert fg.expectation_suite == None
@@ -203,7 +222,6 @@ class TestFeatureGroup:
 
 
 class TestExternalFeatureGroup:
-
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_external_feature_group"]["response"]
@@ -216,19 +234,22 @@ class TestExternalFeatureGroup:
         assert fg.query == "Select * from "
         assert fg.data_format == "HUDI"
         assert fg.path == "test_path"
-        assert fg.options == {'test_name': 'test_value'}
+        assert fg.options == {"test_name": "test_value"}
         assert fg.name == "external_fg_test"
         assert fg.version == 1
         assert fg.description == "test description"
-        assert fg.primary_key == ['intt']
+        assert fg.primary_key == ["intt"]
         assert fg._feature_store_id == 67
-        assert fg._feature_store_name == 'test_project_featurestore'
+        assert fg._feature_store_name == "test_project_featurestore"
         assert fg.created == "2022-08-16T07:19:12Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 14
         assert len(fg.features) == 3
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        assert (
+            fg.location
+            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        )
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time == "datet"
         assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
@@ -247,19 +268,22 @@ class TestExternalFeatureGroup:
         assert fg.query == "Select * from "
         assert fg.data_format == "HUDI"
         assert fg.path == "test_path"
-        assert fg.options == {'test_name': 'test_value'}
+        assert fg.options == {"test_name": "test_value"}
         assert fg.name == "external_fg_test"
         assert fg.version == 1
         assert fg.description == "test description"
-        assert fg.primary_key == ['intt']
+        assert fg.primary_key == ["intt"]
         assert fg._feature_store_id == 67
-        assert fg._feature_store_name == 'test_project_featurestore'
+        assert fg._feature_store_name == "test_project_featurestore"
         assert fg.created == "2022-08-16T07:19:12Z"
         assert isinstance(fg.creator, user.User)
         assert fg.id == 14
         assert len(fg.features) == 3
         assert isinstance(fg.features[0], feature.Feature)
-        assert fg.location == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        assert (
+            fg.location
+            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        )
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time == "datet"
         assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)

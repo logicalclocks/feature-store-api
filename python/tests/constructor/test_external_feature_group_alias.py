@@ -18,16 +18,22 @@
 from hsfs.constructor import external_feature_group_alias
 from hsfs import feature_group
 
-class TestExternalFeatureGroupAlias:
 
+class TestExternalFeatureGroupAlias:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_external_feature_group_alias"]["response"]
 
         # Act
-        external_fg_alias = external_feature_group_alias.ExternalFeatureGroupAlias.from_response_json(json)
+        external_fg_alias = (
+            external_feature_group_alias.ExternalFeatureGroupAlias.from_response_json(
+                json
+            )
+        )
 
         # Assert
-        assert isinstance(external_fg_alias.on_demand_feature_group, feature_group.ExternalFeatureGroup)
+        assert isinstance(
+            external_fg_alias.on_demand_feature_group,
+            feature_group.ExternalFeatureGroup,
+        )
         assert external_fg_alias.alias == "test_alias"
-

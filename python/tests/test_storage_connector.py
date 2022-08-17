@@ -164,7 +164,7 @@ class TestAdlsConnector:
         assert sc.service_credential == "test_service_credential"
         assert sc.account_name == "test_account_name"
         assert sc.container_name == "test_container_name"
-        assert sc._spark_options == {'test_name': 'test_value'}
+        assert sc._spark_options == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -237,11 +237,13 @@ class TestSnowflakeConnector:
         assert sc.user == "test_user"
         assert sc.warehouse == "test_warehouse"
         assert sc.application == "test_application"
-        assert sc._options == {'test_name': 'test_value'}
+        assert sc._options == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_snowflake_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["get_snowflake_storage_connector_basic_info"][
+            "response"
+        ]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -335,10 +337,12 @@ class TestJdbcConnector:
         assert sc._featurestore_id == 67
         assert sc.description == "JDBC connector description"
         assert sc.connection_string == "test_conn_string"
-        assert sc.arguments == [{'name': 'sslTrustStore'},
-                                {'name': 'trustStorePassword'},
-                                {'name': 'sslKeyStore'},
-                                {'name': 'keyStorePassword'}]
+        assert sc.arguments == [
+            {"name": "sslTrustStore"},
+            {"name": "trustStorePassword"},
+            {"name": "sslKeyStore"},
+            {"name": "keyStorePassword"},
+        ]
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -362,7 +366,9 @@ class TestKafkaConnector:
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["get_kafka_storage_connector"]["response"]
 
-        mock_engine_get_instance.return_value.add_file.return_value = 'result_from_add_file'
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -379,15 +385,20 @@ class TestKafkaConnector:
         assert sc.ssl_keystore_location == "result_from_add_file"
         assert sc._ssl_keystore_password == "test_ssl_keystore_password"
         assert sc._ssl_key_password == "test_ssl_key_password"
-        assert sc.ssl_endpoint_identification_algorithm == "test_ssl_endpoint_identification_algorithm"
-        assert sc.options == {'test_name': 'test_value'}
+        assert (
+            sc.ssl_endpoint_identification_algorithm
+            == "test_ssl_endpoint_identification_algorithm"
+        )
+        assert sc.options == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["get_kafka_storage_connector_basic_info"]["response"]
 
-        mock_engine_get_instance.return_value.add_file.return_value = 'result_from_add_file'
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -465,11 +476,13 @@ class TestBigQueryConnector:
         assert sc.query_table == "test_query_table"
         assert sc.query_project == "test_query_project"
         assert sc.materialization_dataset == "test_materialization_dataset"
-        assert sc.arguments == {'test_name': 'test_value'}
+        assert sc.arguments == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_big_query_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["get_big_query_storage_connector_basic_info"][
+            "response"
+        ]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)

@@ -1776,7 +1776,9 @@ class TestPython:
 
     def test_convert_to_unix_timestamp_str(self, mocker):
         # Arrange
-        mock_util_get_timestamp_from_date_string = mocker.patch("hsfs.util.get_timestamp_from_date_string")
+        mock_util_get_timestamp_from_date_string = mocker.patch(
+            "hsfs.util.get_timestamp_from_date_string"
+        )
 
         python_engine = python.Engine()
 

@@ -17,8 +17,8 @@
 
 from hsfs import expectation_suite, ge_expectation
 
-class TestExpectationSuite:
 
+class TestExpectationSuite:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_expectation_suite"]["response"]
@@ -37,7 +37,7 @@ class TestExpectationSuite:
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {'key': 'value'}
+        assert es.meta == {"key": "value"}
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -59,7 +59,7 @@ class TestExpectationSuite:
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {'key': 'value'}
+        assert es.meta == {"key": "value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -76,10 +76,10 @@ class TestExpectationSuite:
         assert es.ge_cloud_id == None
         assert es.data_asset_type == None
         assert es.run_validation == True
-        assert es.validation_ingestion_policy == 'STRICT'
+        assert es.validation_ingestion_policy == "STRICT"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {'key': 'value'}
+        assert es.meta == {"key": "value"}
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

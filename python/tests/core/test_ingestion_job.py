@@ -17,8 +17,8 @@
 
 from hsfs.core import ingestion_job, job
 
-class TestIngestionJob:
 
+class TestIngestionJob:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_ingestion_job"]["response"]

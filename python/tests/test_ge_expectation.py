@@ -17,8 +17,8 @@
 
 from hsfs import ge_expectation
 
-class TestGeExpectation:
 
+class TestGeExpectation:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_ge_expectation"]["response"]
@@ -56,4 +56,3 @@ class TestGeExpectation:
 
         # Assert
         assert len(ge_list) == 0
-

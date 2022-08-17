@@ -17,14 +17,18 @@
 
 from hsfs.constructor import prepared_statement_parameter
 
-class TestPreparedStatementParameter:
 
+class TestPreparedStatementParameter:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_prepared_statement_parameter"]["response"]
 
         # Act
-        psp = prepared_statement_parameter.PreparedStatementParameter.from_response_json(json)
+        psp = (
+            prepared_statement_parameter.PreparedStatementParameter.from_response_json(
+                json
+            )
+        )
 
         # Assert
         assert psp.name == "test_name"
@@ -32,10 +36,16 @@ class TestPreparedStatementParameter:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_prepared_statement_parameter_basic_info"]["response"]
+        json = backend_fixtures["get_prepared_statement_parameter_basic_info"][
+            "response"
+        ]
 
         # Act
-        psp = prepared_statement_parameter.PreparedStatementParameter.from_response_json(json)
+        psp = (
+            prepared_statement_parameter.PreparedStatementParameter.from_response_json(
+                json
+            )
+        )
 
         # Assert
         assert psp.name == None

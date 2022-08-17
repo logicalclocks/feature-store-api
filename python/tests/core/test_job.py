@@ -17,8 +17,8 @@
 
 from hsfs.core import job
 
-class TestJob:
 
+class TestJob:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_job"]["response"]

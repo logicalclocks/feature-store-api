@@ -18,19 +18,23 @@
 from hsfs.constructor import hudi_feature_group_alias
 from hsfs import feature_group
 
-class TestFsQuery:
 
+class TestFsQuery:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_hudi_feature_group_alias"]["response"]
 
         # Act
-        hudi_fg_alias = hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(json)
+        hudi_fg_alias = (
+            hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(json)
+        )
 
         # Assert
         assert isinstance(hudi_fg_alias._feature_group, feature_group.FeatureGroup)
         assert hudi_fg_alias.alias == "test_alias"
-        assert hudi_fg_alias._left_feature_group_start_timestamp == "test_start_timestamp"
+        assert (
+            hudi_fg_alias._left_feature_group_start_timestamp == "test_start_timestamp"
+        )
         assert hudi_fg_alias._left_feature_group_end_timestamp == "test_end_timestamp"
 
     def test_from_response_json_basic_info(self, backend_fixtures):
@@ -38,7 +42,9 @@ class TestFsQuery:
         json = backend_fixtures["get_hudi_feature_group_alias_basic_info"]["response"]
 
         # Act
-        hudi_fg_alias = hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(json)
+        hudi_fg_alias = (
+            hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(json)
+        )
 
         # Assert
         assert isinstance(hudi_fg_alias._feature_group, feature_group.FeatureGroup)

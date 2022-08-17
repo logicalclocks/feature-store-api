@@ -17,8 +17,8 @@
 
 from hsfs.core import inode
 
-class TestInode:
 
+class TestInode:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_inode"]["response"]

@@ -18,8 +18,8 @@
 from hsfs import feature
 from hsfs.constructor import join, query
 
-class TestJoin:
 
+class TestJoin:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")

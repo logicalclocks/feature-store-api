@@ -17,14 +17,16 @@
 
 from hsfs.constructor import serving_prepared_statement, prepared_statement_parameter
 
-class TestServingPreparedStatement:
 
+class TestServingPreparedStatement:
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_serving_prepared_statement_list"]["response"]
 
         # Act
-        sps_list = serving_prepared_statement.ServingPreparedStatement.from_response_json(json)
+        sps_list = (
+            serving_prepared_statement.ServingPreparedStatement.from_response_json(json)
+        )
 
         # Assert
         assert len(sps_list) == 1
@@ -32,7 +34,10 @@ class TestServingPreparedStatement:
         assert sps._feature_group_id == "test_feature_group_id"
         assert sps._prepared_statement_index == "test_prepared_statement_index"
         assert len(sps._prepared_statement_parameters) == 1
-        assert isinstance(sps._prepared_statement_parameters[0], prepared_statement_parameter.PreparedStatementParameter)
+        assert isinstance(
+            sps._prepared_statement_parameters[0],
+            prepared_statement_parameter.PreparedStatementParameter,
+        )
         assert sps._query_online == "test_query_online"
         assert sps._prefix == "test_prefix"
 
@@ -41,7 +46,9 @@ class TestServingPreparedStatement:
         json = backend_fixtures["get_serving_prepared_statement_list_empty"]["response"]
 
         # Act
-        sps_list = serving_prepared_statement.ServingPreparedStatement.from_response_json(json)
+        sps_list = (
+            serving_prepared_statement.ServingPreparedStatement.from_response_json(json)
+        )
 
         # Assert
         assert len(sps_list) == 0

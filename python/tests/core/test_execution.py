@@ -17,8 +17,8 @@
 
 from hsfs.core import execution
 
-class TestExecution:
 
+class TestExecution:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_execution"]["response"]

@@ -15,11 +15,15 @@
 #
 
 
-from hsfs.constructor import hudi_feature_group_alias, external_feature_group_alias, fs_query
+from hsfs.constructor import (
+    hudi_feature_group_alias,
+    external_feature_group_alias,
+    fs_query,
+)
 from hsfs import feature_group
 
-class TestFsQuery:
 
+class TestFsQuery:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_fs_query"]["response"]
@@ -30,9 +34,15 @@ class TestFsQuery:
         # Assert
         assert q.query == "test_query"
         assert len(q._on_demand_fg_aliases) == 1
-        assert isinstance(q._on_demand_fg_aliases[0], external_feature_group_alias.ExternalFeatureGroupAlias)
+        assert isinstance(
+            q._on_demand_fg_aliases[0],
+            external_feature_group_alias.ExternalFeatureGroupAlias,
+        )
         assert len(q._hudi_cached_feature_groups) == 1
-        assert isinstance(q._hudi_cached_feature_groups[0], hudi_feature_group_alias.HudiFeatureGroupAlias)
+        assert isinstance(
+            q._hudi_cached_feature_groups[0],
+            hudi_feature_group_alias.HudiFeatureGroupAlias,
+        )
         assert q.query_online == "test_query_online"
         assert q.pit_query == "test_pit_query"
 
