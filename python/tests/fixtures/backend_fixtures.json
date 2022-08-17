@@ -1956,5 +1956,84 @@
             "job_type": "test_job_type",
             "creator": "test_creator"
         }
+    },
+    "get_expectation_suite": {
+        "response": {
+            "expectation_suite_name": "test_expectation_suite_name",
+            "expectations": [
+                {
+                    "expectation_type": "1",
+                    "kwargs": "2",
+                    "meta": "3",
+                    "id": "4"
+                }
+            ],
+            "meta": {"key":  "value"},
+            "id": "test_id",
+            "data_asset_type": "test_data_asset_type",
+            "ge_cloud_id": "test_ge_cloud_id",
+            "run_validation": "test_run_validation",
+            "validation_ingestion_policy": "test_validation_ingestion_policy",
+            "featurestore_id": "test_featurestore_id",
+            "featuregroup_id": "test_featuregroup_id",
+            "href": "test_href",
+            "expand": "test_expand",
+            "items": "test_items",
+            "type": "expectationSuiteDTO",
+            "created": "test_created"
+        }
+    },
+    "get_expectation_suite_list": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "expectation_suite_name": "test_expectation_suite_name",
+                    "expectations": [
+                        {
+                            "expectation_type": "1",
+                            "kwargs": "2",
+                            "meta": "3",
+                            "id": "4"
+                        }
+                    ],
+                    "meta": {
+                        "key": "value"
+                    },
+                    "id": "test_id",
+                    "data_asset_type": "test_data_asset_type",
+                    "ge_cloud_id": "test_ge_cloud_id",
+                    "run_validation": "test_run_validation",
+                    "validation_ingestion_policy": "test_validation_ingestion_policy",
+                    "featurestore_id": "test_featurestore_id",
+                    "featuregroup_id": "test_featuregroup_id",
+                    "href": "test_href",
+                    "expand": "test_expand",
+                    "items": "test_items",
+                    "type": "expectationSuiteDTO",
+                    "created": "test_created"
+                }
+            ]
+        }
+    },
+    "get_expectation_suite_basic_info": {
+        "response": {
+            "expectation_suite_name": "test_expectation_suite_name",
+            "expectations": [
+                {
+                    "expectation_type": "1",
+                    "kwargs": "2",
+                    "meta": "3",
+                    "id": "4"
+                }
+            ],
+            "meta": {"key":  "value"}
+        }
+    },
+    "get_expectation_suite_list_empty": {
+        "response": {
+            "count": 0,
+            "items": []
+        }
     }
 }

@@ -63,9 +63,9 @@ class ExpectationSuite:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if "count" in json_decamelized:
+        if "count" in json_decamelized:  # todo count is expected also when providing dict
             if json_decamelized["count"] == 0:
-                return None
+                return None  # todo sometimes empty list returns [] others None
             return [
                 cls(**expectation_suite)
                 for expectation_suite in json_decamelized["items"]
