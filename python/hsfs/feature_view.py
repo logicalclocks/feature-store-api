@@ -1063,7 +1063,7 @@ class FeatureView:
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
         )
-        features = json_decamelized.get("features", None)
+        features = json_decamelized.get("features", [])
         if features:
             features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(
