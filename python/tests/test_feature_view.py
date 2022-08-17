@@ -30,13 +30,13 @@ class TestFeatureView:
         fv = feature_view.FeatureView.from_response_json(json)
 
         # Assert
-        assert fv.name == 'test_name'
+        assert fv.name == "test_name"
         assert fv.id == 11
         assert isinstance(fv.query, query.Query)
         assert fv.featurestore_id == 5
         assert fv.version == 1
-        assert fv.description == 'test_description'
-        assert fv.labels == ['intt']
+        assert fv.description == "test_description"
+        assert fv.labels == ["intt"]
         assert fv.transformation_functions == {}
         assert len(fv.schema) == 2
         assert isinstance(fv.schema[0], training_dataset_feature.TrainingDatasetFeature)
@@ -51,7 +51,7 @@ class TestFeatureView:
         fv = feature_view.FeatureView.from_response_json(json)
 
         # Assert
-        assert fv.name == 'test_name'
+        assert fv.name == "test_name"
         assert fv.id == None
         assert isinstance(fv.query, query.Query)
         assert fv.featurestore_id == 5

@@ -32,10 +32,12 @@ class TestValidationResult:
         assert vr._observed_value == "test_observed_value"
         assert vr._expectation_id == 22
         assert vr._validation_report_id == 33
-        assert vr.result == {'result_key': 'result_value'}
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.exception_info == {'exception_info_key': 'exception_info_value'}
-        assert vr.expectation_config == {'expectation_config_key': 'expectation_config_value'}
+        assert vr.result == {"result_key": "result_value"}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.exception_info == {"exception_info_key": "exception_info_value"}
+        assert vr.expectation_config == {
+            "expectation_config_key": "expectation_config_value"
+        }
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -50,10 +52,12 @@ class TestValidationResult:
         assert vr._observed_value == None
         assert vr._expectation_id == None
         assert vr._validation_report_id == None
-        assert vr.result == {'result_key': 'result_value'}
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.exception_info == {'exception_info_key': 'exception_info_value'}
-        assert vr.expectation_config == {'expectation_config_key': 'expectation_config_value'}
+        assert vr.result == {"result_key": "result_value"}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.exception_info == {"exception_info_key": "exception_info_value"}
+        assert vr.expectation_config == {
+            "expectation_config_key": "expectation_config_value"
+        }
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -70,10 +74,12 @@ class TestValidationResult:
         assert vr._observed_value == "test_observed_value"
         assert vr._expectation_id == 22
         assert vr._validation_report_id == 33
-        assert vr.result == {'result_key': 'result_value'}
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.exception_info == {'exception_info_key': 'exception_info_value'}
-        assert vr.expectation_config == {'expectation_config_key': 'expectation_config_value'}
+        assert vr.result == {"result_key": "result_value"}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.exception_info == {"exception_info_key": "exception_info_value"}
+        assert vr.expectation_config == {
+            "expectation_config_key": "expectation_config_value"
+        }
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

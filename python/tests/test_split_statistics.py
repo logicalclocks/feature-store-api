@@ -28,7 +28,7 @@ class TestSplitStatistics:
 
         # Assert
         assert ss.name == "test_name"
-        assert ss.content == {'key': 'value'}
+        assert ss.content == {"key": "value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -39,4 +39,4 @@ class TestSplitStatistics:
 
         # Assert
         assert ss.name == "test_name"
-        assert ss.content == {'key': 'value'}
+        assert ss.content == {"key": "value"}

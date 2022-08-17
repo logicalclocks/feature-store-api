@@ -15,7 +15,13 @@
 #
 
 
-from hsfs import training_dataset, storage_connector, training_dataset_feature, training_dataset_split, statistics_config
+from hsfs import (
+    training_dataset,
+    storage_connector,
+    training_dataset_feature,
+    training_dataset_split,
+    statistics_config,
+)
 
 
 class TestTrainingDataset:
@@ -56,11 +62,13 @@ class TestTrainingDataset:
         assert td.training_dataset_type == "HOPSFS_TRAINING_DATASET"
         assert isinstance(td.storage_connector, storage_connector.JdbcConnector)
         assert len(td._features) == 1
-        assert isinstance(td._features[0], training_dataset_feature.TrainingDatasetFeature)
+        assert isinstance(
+            td._features[0], training_dataset_feature.TrainingDatasetFeature
+        )
         assert len(td.splits) == 1
         assert isinstance(td.splits[0], training_dataset_split.TrainingDatasetSplit)
         assert isinstance(td.statistics_config, statistics_config.StatisticsConfig)
-        assert td.label == ['test_name']
+        assert td.label == ["test_name"]
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange

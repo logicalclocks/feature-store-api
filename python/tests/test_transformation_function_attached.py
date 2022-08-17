@@ -24,42 +24,63 @@ class TestTransformationFunctionAttached:
         json = backend_fixtures["get_transformation_function_attached"]["response"]
 
         # Act
-        tf_attached = transformation_function_attached.TransformationFunctionAttached.from_response_json(json)
+        tf_attached = transformation_function_attached.TransformationFunctionAttached.from_response_json(
+            json
+        )
 
         # Assert
         assert tf_attached.name == "test_name"
-        assert isinstance(tf_attached.transformation_function, transformation_function.TransformationFunction)
+        assert isinstance(
+            tf_attached.transformation_function,
+            transformation_function.TransformationFunction,
+        )
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached_basic_info"]["response"]
+        json = backend_fixtures["get_transformation_function_attached_basic_info"][
+            "response"
+        ]
 
         # Act
-        tf_attached = transformation_function_attached.TransformationFunctionAttached.from_response_json(json)
+        tf_attached = transformation_function_attached.TransformationFunctionAttached.from_response_json(
+            json
+        )
 
         # Assert
         assert tf_attached.name == "test_name"
-        assert isinstance(tf_attached.transformation_function, transformation_function.TransformationFunction)
+        assert isinstance(
+            tf_attached.transformation_function,
+            transformation_function.TransformationFunction,
+        )
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_transformation_function_attached_list"]["response"]
 
         # Act
-        tf_attached_list = transformation_function_attached.TransformationFunctionAttached.from_response_json(json)
+        tf_attached_list = transformation_function_attached.TransformationFunctionAttached.from_response_json(
+            json
+        )
 
         # Assert
         assert len(tf_attached_list) == 1
         tf_attached = tf_attached_list[0]
         assert tf_attached.name == "test_name"
-        assert isinstance(tf_attached.transformation_function, transformation_function.TransformationFunction)
+        assert isinstance(
+            tf_attached.transformation_function,
+            transformation_function.TransformationFunction,
+        )
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached_list_empty"]["response"]
+        json = backend_fixtures["get_transformation_function_attached_list_empty"][
+            "response"
+        ]
 
         # Act
-        tf_attached_list = transformation_function_attached.TransformationFunctionAttached.from_response_json(json)
+        tf_attached_list = transformation_function_attached.TransformationFunctionAttached.from_response_json(
+            json
+        )
 
         # Assert
         assert len(tf_attached_list) == 0

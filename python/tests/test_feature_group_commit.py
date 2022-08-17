@@ -28,8 +28,8 @@ class TestFeatureGroupCommit:
 
         # Assert
         assert fg_commit.commitid == 11
-        assert fg_commit.commit_date_string == 'test_commit_date_string'
-        assert fg_commit.commit_time == 'test_commit_time'
+        assert fg_commit.commit_date_string == "test_commit_date_string"
+        assert fg_commit.commit_time == "test_commit_time"
         assert fg_commit.rows_inserted == 1
         assert fg_commit.rows_updated == 2
         assert fg_commit.rows_deleted == 3
@@ -40,14 +40,16 @@ class TestFeatureGroupCommit:
         json = backend_fixtures["get_feature_group_commit_list"]["response"]
 
         # Act
-        fg_commit_list = feature_group_commit.FeatureGroupCommit.from_response_json(json)
+        fg_commit_list = feature_group_commit.FeatureGroupCommit.from_response_json(
+            json
+        )
 
         # Assert
         assert len(fg_commit_list) == 1
         fg_commit = fg_commit_list[0]
         assert fg_commit.commitid == 11
-        assert fg_commit.commit_date_string == 'test_commit_date_string'
-        assert fg_commit.commit_time == 'test_commit_time'
+        assert fg_commit.commit_date_string == "test_commit_date_string"
+        assert fg_commit.commit_time == "test_commit_time"
         assert fg_commit.rows_inserted == 1
         assert fg_commit.rows_updated == 2
         assert fg_commit.rows_deleted == 3

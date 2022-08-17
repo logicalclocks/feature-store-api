@@ -33,13 +33,18 @@ class TestTransformationFunction:
         assert tf.name == "test_name"
         assert tf.transformation_fn == None
         assert tf.output_type == "FloatType()"
-        assert tf.source_code_content == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
+        assert (
+            tf.source_code_content
+            == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
+        )
         assert tf._feature_group_feature_name == None
         assert tf._feature_group_id == None
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
-        mocker.patch("hsfs.transformation_function.TransformationFunction._load_source_code")
+        mocker.patch(
+            "hsfs.transformation_function.TransformationFunction._load_source_code"
+        )
         json = backend_fixtures["get_transformation_function_basic_info"]["response"]
 
         # Act
@@ -61,7 +66,9 @@ class TestTransformationFunction:
         json = backend_fixtures["get_transformation_function_list"]["response"]
 
         # Act
-        tf_list = transformation_function.TransformationFunction.from_response_json(json)
+        tf_list = transformation_function.TransformationFunction.from_response_json(
+            json
+        )
 
         # Assert
         assert len(tf_list) == 1
@@ -72,7 +79,10 @@ class TestTransformationFunction:
         assert tf.name == "test_name"
         assert tf.transformation_fn == None
         assert tf.output_type == "FloatType()"
-        assert tf.source_code_content == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
+        assert (
+            tf.source_code_content
+            == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
+        )
         assert tf._feature_group_feature_name == None
         assert tf._feature_group_id == None
 
@@ -81,7 +91,9 @@ class TestTransformationFunction:
         json = backend_fixtures["get_transformation_function_list_empty"]["response"]
 
         # Act
-        tf_list = transformation_function.TransformationFunction.from_response_json(json)
+        tf_list = transformation_function.TransformationFunction.from_response_json(
+            json
+        )
 
         # Assert
         assert len(tf_list) == 0

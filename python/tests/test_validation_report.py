@@ -36,9 +36,11 @@ class TestValidationReport:
         assert vr.ingestion_result == "test_ingestion_result"
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.statistics == {'statistics_key': 'statistics_value'}
-        assert vr.evaluation_parameters == {'evaluation_parameters_key': 'evaluation_parameters_value'}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.statistics == {"statistics_key": "statistics_value"}
+        assert vr.evaluation_parameters == {
+            "evaluation_parameters_key": "evaluation_parameters_value"
+        }
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -57,8 +59,8 @@ class TestValidationReport:
         assert vr.ingestion_result == None
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.statistics == {'statistics_key': 'statistics_value'}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.statistics == {"statistics_key": "statistics_value"}
         assert vr.evaluation_parameters == None
 
     def test_from_response_json_list(self, backend_fixtures):
@@ -80,9 +82,11 @@ class TestValidationReport:
         assert vr.ingestion_result == "test_ingestion_result"
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
-        assert vr.meta == {'meta_key': 'meta_value'}
-        assert vr.statistics == {'statistics_key': 'statistics_value'}
-        assert vr.evaluation_parameters == {'evaluation_parameters_key': 'evaluation_parameters_value'}
+        assert vr.meta == {"meta_key": "meta_value"}
+        assert vr.statistics == {"statistics_key": "statistics_value"}
+        assert vr.evaluation_parameters == {
+            "evaluation_parameters_key": "evaluation_parameters_value"
+        }
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

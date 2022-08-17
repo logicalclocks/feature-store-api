@@ -29,7 +29,7 @@ class TestStatistics:
         # Assert
         assert s.commit_time == "test_commit_time"
         assert s.feature_group_commit_id == 11
-        assert s.content == {'key': 'value'}
+        assert s.content == {"key": "value"}
         assert len(s.split_statistics) == 1
         assert isinstance(s.split_statistics[0], split_statistics.SplitStatistics)
         assert s.for_transformation == True

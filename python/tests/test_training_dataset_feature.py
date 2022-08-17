@@ -24,24 +24,33 @@ class TestTrainingDatasetFeature:
         json = backend_fixtures["get_training_dataset_feature"]["response"]
 
         # Act
-        td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(json)
+        td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(
+            json
+        )
 
         # Assert
         assert td_feature.name == "test_name"
         assert td_feature.type == "test_type"
         assert td_feature.index == "test_index"
         assert isinstance(td_feature._feature_group, feature_group.FeatureGroup)
-        assert td_feature._feature_group_feature_name == "test_feature_group_feature_name"
+        assert (
+            td_feature._feature_group_feature_name == "test_feature_group_feature_name"
+        )
         assert td_feature.label == "test_label"
         assert len(td_feature.transformation_function) == 1
-        assert isinstance(td_feature.transformation_function[0], transformation_function.TransformationFunction)
+        assert isinstance(
+            td_feature.transformation_function[0],
+            transformation_function.TransformationFunction,
+        )
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["get_training_dataset_feature_basic_info"]["response"]
 
         # Act
-        td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(json)
+        td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(
+            json
+        )
 
         # Assert
         assert td_feature.name == "test_name"

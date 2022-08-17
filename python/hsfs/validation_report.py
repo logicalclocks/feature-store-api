@@ -61,7 +61,9 @@ class ValidationReport:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if "count" in json_decamelized:  # todo it has count either way (if items or dict)
+        if (
+            "count" in json_decamelized
+        ):  # todo it has count either way (if items or dict)
             if json_decamelized["count"] == 0:
                 return []
             return [
