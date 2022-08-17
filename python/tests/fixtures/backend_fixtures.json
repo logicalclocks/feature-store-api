@@ -2537,5 +2537,51 @@
             "name": "test_name",
             "content": {"key":  "value"}
         }
+    },
+    "get_statistics": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "commit_time": "test_commit_time",
+                    "content": {"key": "value"},
+                    "feature_group_commit_id": 11,
+                    "split_statistics": [
+                        {
+                            "name": "test_name",
+                            "content": {"key":  "value"},
+                            "href": "test_href",
+                            "expand": "test_expand",
+                            "items": [],
+                            "count": 0,
+                            "type": "test_type"
+                        }
+                    ],
+                    "for_transformation": true,
+                    "href": "test_href",
+                    "expand": "test_expand",
+                    "items": [],
+                    "count": 0,
+                    "type": "statisticsDTO"
+                }
+            ]
+        }
+    },
+    "get_statistics_basic_info": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "commit_time": "test_commit_time",
+                    "content": "{}"
+                }
+            ]
+        }
+    },
+    "get_statistics_empty": {
+        "response": {
+            "count": 0,
+            "items": []
+        }
     }
 }
