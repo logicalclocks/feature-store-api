@@ -2520,5 +2520,22 @@
             "count": 0,
             "items": []
         }
+    },
+    "get_split_statistics": {
+        "response": {
+            "name": "test_name",
+            "content": {"key":  "value"},
+            "href": "test_href",
+            "expand": "test_expand",
+            "items": [],
+            "count": 0,
+            "type": "test_type"
+        }
+    },
+    "get_split_statistics_basic_info": {
+        "response": {
+            "name": "test_name",
+            "content": {"key":  "value"}
+        }
     }
 }
