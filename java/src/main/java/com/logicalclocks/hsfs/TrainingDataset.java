@@ -35,7 +35,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -137,7 +136,7 @@ public class TrainingDataset {
       Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
       String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
-      String validationEnd, String testStart, String testEnd)
+      String validationEnd, String testStart, String testEnd, Integer timeSplitSize)
       throws FeatureStoreException, ParseException {
     this.name = name;
     this.version = version;
@@ -157,20 +156,24 @@ public class TrainingDataset {
     this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
         utils.getTrainingDatasetType(storageConnector);
     setValTestSplit(validationSize, testSize);
-    setTimeSeriesSplits(trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
+    setTimeSeriesSplits(timeSplitSize, trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
   }
 
-  private void setTimeSeriesSplits(String trainStart, String trainEnd, String valStart, String valEnd,
-      String testStart, String testEnd) throws FeatureStoreException, ParseException {
+  private void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
+      String valEnd, String testStart, String testEnd) throws FeatureStoreException, ParseException {
     List<Split> splits = Lists.newArrayList();
-    appendTimeSeriesSplit(splits, Split.TRAIN, trainStart, trainEnd != null ? trainEnd : valStart);
-    appendTimeSeriesSplit(splits, Split.VALIDATION,
-        trainEnd != null ? trainEnd : valStart,
-        testStart != null ? testStart : valEnd);
-    appendTimeSeriesSplit(splits, Split.TEST, testStart != null ? testStart : valEnd, testEnd);
+    appendTimeSeriesSplit(splits, Split.TRAIN,
+        trainStart, trainEnd != null ? trainEnd : valStart != null ? valStart : testStart);
+    if (timeSplitSize == 3) {
+      appendTimeSeriesSplit(splits, Split.VALIDATION,
+          valStart != null ? valStart : trainEnd,
+          valEnd != null ? valEnd : testStart);
+    }
+    appendTimeSeriesSplit(splits, Split.TEST,
+        testStart != null ? testStart : valEnd != null ? valEnd : trainEnd,
+        testEnd);
     if (!splits.isEmpty()) {
       this.splits = splits;
-      throw new FeatureStoreException("Time series split is not supported yet.");
     }
   }
 
@@ -180,7 +183,7 @@ public class TrainingDataset {
       splits.add(
           new Split(splitName,
               FeatureGroupUtils.getDateFromDateString(startTime),
-              FeatureGroupUtils.getDateFromDateString(startTime)));
+              FeatureGroupUtils.getDateFromDateString(endTime)));
     }
   }
 
@@ -209,17 +212,6 @@ public class TrainingDataset {
   }
 
   /**
-   * Create the training dataset based on teh content of the dataset.
-   *
-   * @param dataset the dataset to save as training dataset
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void save(Dataset<Row> dataset) throws FeatureStoreException, IOException {
-    save(dataset, null);
-  }
-
-  /**
    * Create the training dataset based on the content of the feature store query.
    *
    * @param query        the query to save as training dataset
@@ -229,78 +221,8 @@ public class TrainingDataset {
    */
   public void save(Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
     this.queryInt = query;
-    save((Dataset<Row>) query.read(), writeOptions);
-  }
-
-  /**
-   * Create the training dataset based on the content of the dataset.
-   *
-   * @param dataset      the dataset to save as training dataset
-   * @param writeOptions options to pass to the Spark write operation
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void save(Dataset<Row> dataset, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    TrainingDataset trainingDataset = trainingDatasetEngine.save(this, dataset, writeOptions, label);
+    TrainingDataset trainingDataset = trainingDatasetEngine.save(this, query, writeOptions, label);
     this.setStorageConnector(trainingDataset.getStorageConnector());
-    codeEngine.saveCode(this);
-    computeStatistics();
-  }
-
-  /**
-   * Insert the content of the feature store query in the training dataset.
-   *
-   * @param query     the query to write as training dataset
-   * @param overwrite true to overwrite the current content of the training dataset
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void insert(Query query, boolean overwrite) throws FeatureStoreException, IOException {
-    insert(query, overwrite, null);
-  }
-
-  /**
-   * Insert the content of the dataset in the training dataset.
-   *
-   * @param dataset   the dataset to write as training dataset
-   * @param overwrite true to overwrite the current content of the training dataset
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void insert(Dataset<Row> dataset, boolean overwrite) throws FeatureStoreException, IOException {
-    insert(dataset, overwrite, null);
-  }
-
-  /**
-   * Insert the content of the feature store query in the training dataset.
-   *
-   * @param query        the query to execute to generate the training dataset
-   * @param overwrite    true to overwrite the current content of the training dataset
-   * @param writeOptions options to pass to the Spark write operation
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void insert(Query query, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    trainingDatasetEngine.insert(this, (Dataset<Row>) query.read(),
-        writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
-    computeStatistics();
-  }
-
-  /**
-   * Insert the content of the dataset in the training dataset.
-   *
-   * @param dataset      the spark dataframe to write as training dataset
-   * @param overwrite    true to overwrite the current content of the training dataset
-   * @param writeOptions options to pass to the Spark write operation
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public void insert(Dataset<Row> dataset, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    trainingDatasetEngine.insert(this, dataset,
-        writeOptions, overwrite ? SaveMode.Overwrite : SaveMode.Append);
     codeEngine.saveCode(this);
     computeStatistics();
   }

@@ -22,17 +22,18 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
@@ -82,6 +83,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.logicalclocks.hsfs.FeatureType.BIGINT;
+import static com.logicalclocks.hsfs.FeatureType.DATE;
+import static com.logicalclocks.hsfs.FeatureType.TIMESTAMP;
+import static com.logicalclocks.hsfs.Split.SplitType.TIME_SERIES_SPLIT;
 import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.col;
@@ -228,30 +233,33 @@ public class SparkEngine {
    * Setup Spark to write the data on the File System.
    *
    * @param trainingDataset
-   * @param dataset
+   * @param query
    * @param writeOptions
    * @param saveMode
    */
-  public Dataset<Row>[] write(TrainingDataset trainingDataset, Dataset<Row> dataset,
+  public Dataset<Row>[] write(TrainingDataset trainingDataset, Query query, Map<String, String> queryReadOptions,
                     Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
     setupConnectorHadoopConf(trainingDataset.getStorageConnector());
 
-    if (trainingDataset.getCoalesce()) {
-      dataset = dataset.coalesce(1);
-    }
-
     if (trainingDataset.getSplits() == null || trainingDataset.getSplits().isEmpty()) {
       // Write a single dataset
-
+      Dataset<Row> dataset = (Dataset<Row>) query.read();
       // The actual data will be stored in training_ds_version/training_ds the double directory is needed
       // for cases such as tfrecords in which we need to store also the schema
       // also in case of multiple splits, the single splits will be stored inside the training dataset dir
       String path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
-      writeSingle(dataset, trainingDataset.getDataFormat(),
-          writeOptions, saveMode, path);
+      if (trainingDataset.getCoalesce()) {
+        dataset = dataset.coalesce(1);
+      }
+      writeSingle(dataset, trainingDataset.getDataFormat(), writeOptions, saveMode, path);
       return new Dataset[] {dataset};
     } else {
-      Dataset<Row>[] datasetSplits = splitDataset(trainingDataset, dataset);
+      Dataset<Row>[] datasetSplits = splitDataset(trainingDataset, query, queryReadOptions);
+      if (trainingDataset.getCoalesce()) {
+        for (int i=0; i < datasetSplits.length; i++) {
+          datasetSplits[i] = datasetSplits[i].coalesce(1);
+        }
+      }
       writeSplits(datasetSplits,
           trainingDataset.getDataFormat(), writeOptions, saveMode,
           trainingDataset.getLocation(), trainingDataset.getSplits());
@@ -259,7 +267,70 @@ public class SparkEngine {
     }
   }
 
-  public Dataset<Row>[] splitDataset(TrainingDataset trainingDataset, Dataset<Row> dataset) {
+  public Dataset<Row>[] splitDataset(TrainingDataset trainingDataset, Query query, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException {
+    if (TIME_SERIES_SPLIT.equals(trainingDataset.getSplits().get(0).getSplitType())) {
+      String eventTime = query.getLeftFeatureGroup().getEventTime();
+      if (query.getLeftFeatures().stream().noneMatch(feature -> feature.getName().equals(eventTime))) {
+        query.appendFeature(query.getLeftFeatureGroup().getFeature(eventTime));
+        return timeSeriesSplit(trainingDataset, query, readOptions, true);
+      } else {
+        return timeSeriesSplit(trainingDataset, query, readOptions, false);
+      }
+    } else {
+      return randomSplit(trainingDataset, query, readOptions);
+    }
+  }
+
+  private Dataset<Row>[] timeSeriesSplit(TrainingDataset trainingDataset, Query query,
+      Map<String, String> readOptions, Boolean dropEventTime)
+      throws FeatureStoreException, IOException {
+    Dataset<Row> dataset = (Dataset<Row>) query.read(false, readOptions);
+    List<Split> splits = trainingDataset.getSplits();
+    Dataset<Row>[] datasetSplits = new Dataset[splits.size()];
+    dataset.persist();
+    int i = 0;
+    for (Split split : splits) {
+      if (dataset.count() > 0) {
+        String eventTimeType =
+            query.getLeftFeatureGroup().getFeature(query.getLeftFeatureGroup().getEventTime()).getType();
+        if (BIGINT.getType().equals(eventTimeType)) {
+          // event time in second. `getTime()` return in millisecond.
+          datasetSplits[i] = dataset.filter(
+              String.format(
+                  "%d/1000 <= `%s` and `%s` < %d/1000",
+                  split.getStartTime().getTime(),
+                  query.getLeftFeatureGroup().getEventTime(),
+                  query.getLeftFeatureGroup().getEventTime(),
+                  split.getEndTime().getTime()
+              )
+          );
+        } else if(DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
+          // unix_timestamp return in second. `getTime()` return in millisecond.
+          datasetSplits[i] = dataset.filter(
+              String.format(
+                  "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
+                  split.getStartTime().getTime(),
+                  query.getLeftFeatureGroup().getEventTime(),
+                  query.getLeftFeatureGroup().getEventTime(),
+                  split.getEndTime().getTime()
+              )
+          );
+        } else {
+          throw new FeatureStoreException("Invalid event time type");
+        }
+      } else {
+        datasetSplits[i] = dataset;
+      }
+      i++;
+    }
+    return datasetSplits;
+  }
+
+  private Dataset<Row>[] randomSplit(TrainingDataset trainingDataset, Query query, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException {
+    Dataset<Row> dataset = (Dataset<Row>) query.read(false, readOptions);
+
     List<Float> splitFactors = trainingDataset.getSplits().stream()
         .map(Split::getPercentage)
         .collect(Collectors.toList());

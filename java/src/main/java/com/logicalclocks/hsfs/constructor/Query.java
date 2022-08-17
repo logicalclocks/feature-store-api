@@ -298,4 +298,9 @@ public class Query {
     }
     return this;
   }
+
+  public Query appendFeature(Feature feature) {
+    this.leftFeatures.add(feature);
+    return this;
+  }
 }

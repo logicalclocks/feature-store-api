@@ -119,12 +119,13 @@ public class FeatureViewEngine {
   public void writeTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
   ) throws IOException, FeatureStoreException {
-    Dataset<Row> dataset = readDataset(featureView, trainingDataset, Maps.newHashMap());
     // Build write options map
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
-    Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions,
-        SaveMode.Overwrite);
+    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(),
+        trainingDataset.getEventEndTime(), true);
+    Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, query, Maps.newHashMap(),
+        writeOptions, SaveMode.Overwrite);
     computeStatistics(featureView, trainingDataset, datasets);
   }
 
@@ -192,15 +193,18 @@ public class FeatureViewEngine {
         );
       }
     } else {
-      Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
       TrainingDatasetBundle trainingDatasetBundle;
       if (trainingDatasetUpdated.getSplits() != null && !trainingDatasetUpdated.getSplits().isEmpty()) {
-        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, dataset);
+        Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
+            true);
+        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, query,
+            userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
             convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
             featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, datasets);
       } else {
+        Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
             featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, new Dataset[]{dataset});
