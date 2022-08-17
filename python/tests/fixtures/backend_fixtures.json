@@ -3094,5 +3094,71 @@
             "count": 0,
             "items": []
         }
+    },
+    "get_transformation_function_attached": {
+        "response": {
+            "name": "test_name",
+            "transformation_function": {
+                "featurestore_id": 11,
+                "transformation_fn": null,
+                "version": 1,
+                "name": "test_name",
+                "source_code_content": "test_source_code_content",
+                "builtin_source_code": "test_builtin_source_code",
+                "output_type": "float",
+                "id": 43,
+                "type": "transformationFunctionDTO",
+                "href": "test_href"
+            },
+            "type": "transformationFunctionAttachedDTO",
+            "href": "test_href"
+        }
+    },
+    "get_transformation_function_attached_basic_info": {
+        "response": {
+            "name": "test_name",
+            "transformation_function": {
+                "featurestore_id": 11,
+                "transformation_fn": null,
+                "version": 1,
+                "name": "test_name",
+                "source_code_content": "test_source_code_content",
+                "builtin_source_code": "test_builtin_source_code",
+                "output_type": "float",
+                "id": 43,
+                "type": "transformationFunctionDTO",
+                "href": "test_href"
+            }
+        }
+    },
+    "get_transformation_function_attached_list": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "name": "test_name",
+                    "transformation_function": {
+                        "featurestore_id": 11,
+                        "transformation_fn": null,
+                        "version": 1,
+                        "name": "test_name",
+                        "source_code_content": "test_source_code_content",
+                        "builtin_source_code": "test_builtin_source_code",
+                        "output_type": "float",
+                        "id": 43,
+                        "type": "transformationFunctionDTO",
+                        "href": "test_href"
+                    },
+                    "type": "transformationFunctionAttachedDTO",
+                    "href": "test_href"
+                }
+            ]
+        }
+    },
+    "get_transformation_function_attached_list_empty": {
+        "response": {
+            "count": 0,
+            "items": []
+        }
     }
 }
