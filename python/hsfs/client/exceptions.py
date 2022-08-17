@@ -30,7 +30,7 @@ class RestAPIError(Exception):
                 url,
                 response.status_code,
                 response.reason,
-                response.body,
+                response.content,
                 error_object.get("errorCode", ""),
                 error_object.get("errorMsg", ""),
                 error_object.get("usrMsg", ""),
