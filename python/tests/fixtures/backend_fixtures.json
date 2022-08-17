@@ -3050,5 +3050,49 @@
             "count": 0,
             "items": []
         }
+    },
+    "get_transformation_function": {
+        "response": {
+            "featurestore_id": 11,
+            "transformation_fn": null,
+            "version": 1,
+            "name": "test_name",
+            "source_code_content": "test_source_code_content",
+            "builtin_source_code": "test_builtin_source_code",
+            "output_type": "float",
+            "id": 43,
+            "type": "transformationFunctionTDO",
+            "href": "test_href"
+        }
+    },
+    "get_transformation_function_basic_info": {
+        "response": {
+            "featurestore_id": 11
+        }
+    },
+    "get_transformation_function_list": {
+        "response": {
+            "count": 1,
+            "items": [
+                {
+                    "featurestore_id": 11,
+                    "transformation_fn": null,
+                    "version": 1,
+                    "name": "test_name",
+                    "source_code_content": "test_source_code_content",
+                    "builtin_source_code": "test_builtin_source_code",
+                    "output_type": "float",
+                    "id": 43,
+                    "type": "transformationFunctionTDO",
+                    "href": "test_href"
+                }
+            ]
+        }
+    },
+    "get_transformation_function_list_empty": {
+        "response": {
+            "count": 0,
+            "items": []
+        }
     }
 }
