@@ -21,7 +21,7 @@ from hsfs import statistics_config
 class TestStatistics:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_statistics_config"]["response"]
+        json = backend_fixtures["statistics_config"]["get"]["response"]
 
         # Act
         sc = statistics_config.StatisticsConfig.from_response_json(json)
@@ -35,7 +35,7 @@ class TestStatistics:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_statistics_config_basic_info"]["response"]
+        json = backend_fixtures["statistics_config"]["get_basic_info"]["response"]
 
         # Act
         sc = statistics_config.StatisticsConfig.from_response_json(json)

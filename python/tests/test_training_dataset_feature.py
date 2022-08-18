@@ -21,7 +21,7 @@ from hsfs import training_dataset_feature, feature_group, transformation_functio
 class TestTrainingDatasetFeature:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_training_dataset_feature"]["response"]
+        json = backend_fixtures["training_dataset_feature"]["get"]["response"]
 
         # Act
         td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(
@@ -45,7 +45,9 @@ class TestTrainingDatasetFeature:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_training_dataset_feature_basic_info"]["response"]
+        json = backend_fixtures["training_dataset_feature"]["get_basic_info"][
+            "response"
+        ]
 
         # Act
         td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(

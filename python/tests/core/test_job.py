@@ -21,7 +21,7 @@ from hsfs.core import job
 class TestJob:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_job"]["response"]
+        json = backend_fixtures["job"]["get"]["response"]
 
         # Act
         j = job.Job.from_response_json(json)
@@ -34,7 +34,7 @@ class TestJob:
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_job_empty"]["response"]
+        json = backend_fixtures["job"]["get_empty"]["response"]
 
         # Act
         j = job.Job.from_response_json(json)

@@ -20,7 +20,7 @@ from hsfs import storage_connector
 class TestHopsfsConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_hopsfs_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_hopsfs"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -35,7 +35,9 @@ class TestHopsfsConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_hopsfs_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_hopsfs_basic_info"][
+            "response"
+        ]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -52,7 +54,7 @@ class TestHopsfsConnector:
 class TestS3Connector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_s3_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_s3"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -72,7 +74,7 @@ class TestS3Connector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_s3_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_s3_basic_info"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -94,7 +96,7 @@ class TestS3Connector:
 class TestRedshiftConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_redshift_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_redshift"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -120,7 +122,9 @@ class TestRedshiftConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_redshift_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_redshift_basic_info"][
+            "response"
+        ]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -148,7 +152,7 @@ class TestRedshiftConnector:
 class TestAdlsConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_adls_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_adls"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -168,7 +172,7 @@ class TestAdlsConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_adls_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_adls_basic_info"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -217,7 +221,7 @@ class TestSnowflakeConnector:
 
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_snowflake_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_snowflake"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -241,7 +245,7 @@ class TestSnowflakeConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_snowflake_storage_connector_basic_info"][
+        json = backend_fixtures["storage_connector"]["get_snowflake_basic_info"][
             "response"
         ]
 
@@ -326,7 +330,7 @@ class TestJdbcConnector:
 
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_jdbc_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_jdbc"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -346,7 +350,7 @@ class TestJdbcConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_jdbc_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_jdbc_basic_info"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -364,7 +368,7 @@ class TestKafkaConnector:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        json = backend_fixtures["get_kafka_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
 
         mock_engine_get_instance.return_value.add_file.return_value = (
             "result_from_add_file"
@@ -394,7 +398,7 @@ class TestKafkaConnector:
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        json = backend_fixtures["get_kafka_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka_basic_info"]["response"]
 
         mock_engine_get_instance.return_value.add_file.return_value = (
             "result_from_add_file"
@@ -422,7 +426,7 @@ class TestKafkaConnector:
 class TestGcsConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_gcs_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_gcs"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -440,7 +444,7 @@ class TestGcsConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_gcs_storage_connector_basic_info"]["response"]
+        json = backend_fixtures["storage_connector"]["get_gcs_basic_info"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -460,7 +464,7 @@ class TestGcsConnector:
 class TestBigQueryConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_big_query_storage_connector"]["response"]
+        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -480,7 +484,7 @@ class TestBigQueryConnector:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_big_query_storage_connector_basic_info"][
+        json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
             "response"
         ]
 

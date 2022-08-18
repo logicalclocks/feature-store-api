@@ -22,7 +22,7 @@ from hsfs import feature_group
 class TestFsQuery:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_hudi_feature_group_alias"]["response"]
+        json = backend_fixtures["hudi_feature_group_alias"]["get"]["response"]
 
         # Act
         hudi_fg_alias = (
@@ -39,7 +39,9 @@ class TestFsQuery:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_hudi_feature_group_alias_basic_info"]["response"]
+        json = backend_fixtures["hudi_feature_group_alias"]["get_basic_info"][
+            "response"
+        ]
 
         # Act
         hudi_fg_alias = (

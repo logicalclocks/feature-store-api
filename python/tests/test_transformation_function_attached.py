@@ -21,7 +21,7 @@ from hsfs import transformation_function_attached, transformation_function
 class TestTransformationFunctionAttached:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached"]["response"]
+        json = backend_fixtures["transformation_function_attached"]["get"]["response"]
 
         # Act
         tf_attached = transformation_function_attached.TransformationFunctionAttached.from_response_json(
@@ -37,7 +37,7 @@ class TestTransformationFunctionAttached:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached_basic_info"][
+        json = backend_fixtures["transformation_function_attached"]["get_basic_info"][
             "response"
         ]
 
@@ -55,7 +55,9 @@ class TestTransformationFunctionAttached:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached_list"]["response"]
+        json = backend_fixtures["transformation_function_attached"]["get_list"][
+            "response"
+        ]
 
         # Act
         tf_attached_list = transformation_function_attached.TransformationFunctionAttached.from_response_json(
@@ -73,7 +75,7 @@ class TestTransformationFunctionAttached:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_attached_list_empty"][
+        json = backend_fixtures["transformation_function_attached"]["get_list_empty"][
             "response"
         ]
 

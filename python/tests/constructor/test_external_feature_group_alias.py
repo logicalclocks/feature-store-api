@@ -22,7 +22,7 @@ from hsfs import feature_group
 class TestExternalFeatureGroupAlias:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_external_feature_group_alias"]["response"]
+        json = backend_fixtures["external_feature_group_alias"]["get"]["response"]
 
         # Act
         external_fg_alias = (

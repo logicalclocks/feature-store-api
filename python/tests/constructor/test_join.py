@@ -23,7 +23,7 @@ class TestJoin:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        json = backend_fixtures["get_join"]["response"]
+        json = backend_fixtures["join"]["get"]["response"]
 
         # Act
         j = join.Join.from_response_json(json)
@@ -45,7 +45,7 @@ class TestJoin:
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        json = backend_fixtures["get_join_basic_info"]["response"]
+        json = backend_fixtures["join"]["get_basic_info"]["response"]
 
         # Act
         j = join.Join.from_response_json(json)

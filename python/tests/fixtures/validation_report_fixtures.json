@@ -1,0 +1,102 @@
+{
+  "get": {
+    "response": {
+      "success": true,
+      "results": [
+        {
+          "success": true,
+          "result": {"result_key": "result_value"},
+          "exception_info": {"exception_info_key": "exception_info_value"},
+          "expectation_config": {"expectation_config_key": "expectation_config_value"},
+          "meta": {"meta_key": "meta_value"},
+          "id": 11,
+          "observed_value": "test_observed_value",
+          "expectation_id": 22,
+          "validation_report_id": 33,
+          "href": "test_href",
+          "expand": "test_expand",
+          "type": "validationResultDTO"
+        }
+      ],
+      "meta": {"meta_key": "meta_value"},
+      "statistics": {"statistics_key": "statistics_value"},
+      "evaluation_parameters": {"evaluation_parameters_key": "evaluation_parameters_value"},
+      "id": 11,
+      "full_report_path": "test_full_report_path",
+      "featurestore_id": "test_featurestore_id",
+      "featuregroup_id": "test_featuregroup_id",
+      "href": "test_href",
+      "expand": "test_expand",
+      "type": "validationReportDTO",
+      "validation_time": "test_validation_time",
+      "ingestion_result": "test_ingestion_result"
+    }
+  },
+  "get_basic_info": {
+    "response": {
+      "success": true,
+      "results": [
+        {
+          "success": true,
+          "result": {"result_key": "result_value"},
+          "exception_info": {"exception_info_key": "exception_info_value"},
+          "expectation_config": {"expectation_config_key": "expectation_config_value"},
+          "meta": {"meta_key": "meta_value"},
+          "id": 11,
+          "observed_value": "test_observed_value",
+          "expectation_id": 22,
+          "validation_report_id": 33,
+          "href": "test_href",
+          "expand": "test_expand",
+          "type": "validationResultDTO"
+        }
+      ],
+      "meta": {"meta_key": "meta_value"},
+      "statistics": {"statistics_key": "statistics_value"}
+    }
+  },
+  "get_list": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "success": true,
+          "results": [
+            {
+              "success": true,
+              "result": {"result_key": "result_value"},
+              "exception_info": {"exception_info_key": "exception_info_value"},
+              "expectation_config": {"expectation_config_key": "expectation_config_value"},
+              "meta": {"meta_key": "meta_value"},
+              "id": 11,
+              "observed_value": "test_observed_value",
+              "expectation_id": 22,
+              "validation_report_id": 33,
+              "href": "test_href",
+              "expand": "test_expand",
+              "type": "validationResultDTO"
+            }
+          ],
+          "meta": {"meta_key": "meta_value"},
+          "statistics": {"statistics_key": "statistics_value"},
+          "evaluation_parameters": {"evaluation_parameters_key": "evaluation_parameters_value"},
+          "id": 11,
+          "full_report_path": "test_full_report_path",
+          "featurestore_id": "test_featurestore_id",
+          "featuregroup_id": "test_featuregroup_id",
+          "href": "test_href",
+          "expand": "test_expand",
+          "type": "validationReportDTO",
+          "validation_time": "test_validation_time",
+          "ingestion_result": "test_ingestion_result"
+        }
+      ]
+    }
+  },
+  "get_list_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

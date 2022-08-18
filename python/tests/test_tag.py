@@ -21,7 +21,7 @@ from hsfs import tag
 class TestTag:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_tag"]["response"]
+        json = backend_fixtures["tag"]["get"]["response"]
 
         # Act
         t_list = tag.Tag.from_response_json(json)
@@ -34,7 +34,7 @@ class TestTag:
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_tag_empty"]["response"]
+        json = backend_fixtures["tag"]["get_empty"]["response"]
 
         # Act
         t_list = tag.Tag.from_response_json(json)

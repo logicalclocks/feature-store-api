@@ -1,0 +1,17 @@
+{
+  "get": {
+    "response": {
+      "name": "test_name",
+      "split_type": "test_split_type",
+      "percentage": "test_percentage",
+      "start_time": "test_start_time",
+      "end_time": "test_end_time"
+    }
+  },
+  "get_basic_info": {
+    "response": {
+      "name": "test_name",
+      "split_type": "test_split_type"
+    }
+  }
+}

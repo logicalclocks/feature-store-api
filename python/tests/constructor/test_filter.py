@@ -22,7 +22,7 @@ from hsfs import feature
 class TestFilter:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_filter"]["response"]
+        json = backend_fixtures["filter"]["get"]["response"]
 
         # Act
         f = filter.Filter.from_response_json(json)
@@ -36,7 +36,7 @@ class TestFilter:
 class TestLogic:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_logic"]["response"]
+        json = backend_fixtures["logic"]["get"]["response"]
 
         # Act
         l = filter.Logic.from_response_json(json)

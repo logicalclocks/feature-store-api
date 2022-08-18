@@ -21,7 +21,7 @@ from hsfs import feature_group_commit
 class TestFeatureGroupCommit:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_commit"]["response"]
+        json = backend_fixtures["feature_group_commit"]["get"]["response"]
 
         # Act
         fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)
@@ -37,7 +37,7 @@ class TestFeatureGroupCommit:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_commit_list"]["response"]
+        json = backend_fixtures["feature_group_commit"]["get_list"]["response"]
 
         # Act
         fg_commit_list = feature_group_commit.FeatureGroupCommit.from_response_json(
@@ -57,7 +57,7 @@ class TestFeatureGroupCommit:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_commit_basic_info"]["response"]
+        json = backend_fixtures["feature_group_commit"]["get_basic_info"]["response"]
 
         # Act
         fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)

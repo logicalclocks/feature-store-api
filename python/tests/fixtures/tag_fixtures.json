@@ -1,0 +1,25 @@
+{
+  "get": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "name": "test_name",
+          "value": "test_value",
+          "schema": "test_schema",
+          "href": "test_href",
+          "expand": "test_expand",
+          "items": [],
+          "count": 0,
+          "type": "tagDTO"
+        }
+      ]
+    }
+  },
+  "get_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

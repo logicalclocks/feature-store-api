@@ -21,7 +21,7 @@ from hsfs.constructor import serving_prepared_statement, prepared_statement_para
 class TestServingPreparedStatement:
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_serving_prepared_statement_list"]["response"]
+        json = backend_fixtures["serving_prepared_statement"]["get_list"]["response"]
 
         # Act
         sps_list = (
@@ -43,7 +43,9 @@ class TestServingPreparedStatement:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_serving_prepared_statement_list_empty"]["response"]
+        json = backend_fixtures["serving_prepared_statement"]["get_list_empty"][
+            "response"
+        ]
 
         # Act
         sps_list = (

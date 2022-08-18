@@ -21,7 +21,7 @@ from hsfs.core import execution
 class TestExecution:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_execution"]["response"]
+        json = backend_fixtures["execution"]["get"]["response"]
 
         # Act
         ex_list = execution.Execution.from_response_json(json)
@@ -35,7 +35,7 @@ class TestExecution:
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_execution_empty"]["response"]
+        json = backend_fixtures["execution"]["get_empty"]["response"]
 
         # Act
         ex_list = execution.Execution.from_response_json(json)

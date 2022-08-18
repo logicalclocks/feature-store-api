@@ -1,0 +1,18 @@
+{
+  "get": {
+    "response": {
+      "condition": "test_condition",
+      "value": "test_value",
+      "feature": {
+        "defaultValue": null,
+        "featureGroupId": 15,
+        "hudiPrecombineKey": true,
+        "name": "intt",
+        "onlineType": "int",
+        "partition": false,
+        "primary": true,
+        "type": "int"
+      }
+    }
+  }
+}

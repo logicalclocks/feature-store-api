@@ -21,7 +21,7 @@ from hsfs import ge_expectation
 class TestGeExpectation:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_ge_expectation"]["response"]
+        json = backend_fixtures["ge_expectation"]["get"]["response"]
 
         # Act
         ge = ge_expectation.GeExpectation.from_response_json(json)
@@ -34,7 +34,7 @@ class TestGeExpectation:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_ge_expectation_list"]["response"]
+        json = backend_fixtures["ge_expectation"]["get_list"]["response"]
 
         # Act
         ge_list = ge_expectation.GeExpectation.from_response_json(json)
@@ -49,7 +49,7 @@ class TestGeExpectation:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_ge_expectation_list_empty"]["response"]
+        json = backend_fixtures["ge_expectation"]["get_list_empty"]["response"]
 
         # Act
         ge_list = ge_expectation.GeExpectation.from_response_json(json)

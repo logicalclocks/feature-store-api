@@ -23,7 +23,7 @@ class TestQuery:
     def test_from_response_json_python(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        json = backend_fixtures["get_query"]["response"]
+        json = backend_fixtures["query"]["get"]["response"]
 
         # Act
         q = query.Query.from_response_json(json)
@@ -44,7 +44,7 @@ class TestQuery:
     def test_from_response_json_external_fg_python(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        json = backend_fixtures["get_query_external_fg"]["response"]
+        json = backend_fixtures["query"]["get_external_fg"]["response"]
 
         # Act
         q = query.Query.from_response_json(json)
@@ -65,7 +65,7 @@ class TestQuery:
     def test_from_response_json_spark(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="spark")
-        json = backend_fixtures["get_query"]["response"]
+        json = backend_fixtures["query"]["get"]["response"]
 
         # Act
         q = query.Query.from_response_json(json)
@@ -86,7 +86,7 @@ class TestQuery:
     def test_from_response_json_external_fg_spark(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="spark")
-        json = backend_fixtures["get_query_external_fg"]["response"]
+        json = backend_fixtures["query"]["get_external_fg"]["response"]
 
         # Act
         q = query.Query.from_response_json(json)
@@ -107,7 +107,7 @@ class TestQuery:
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        json = backend_fixtures["get_query_basic_info"]["response"]
+        json = backend_fixtures["query"]["get_basic_info"]["response"]
 
         # Act
         q = query.Query.from_response_json(json)

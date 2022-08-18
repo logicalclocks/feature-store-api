@@ -20,8 +20,47 @@ import os
 
 FIXTURES_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(FIXTURES_DIR, "backend_fixtures.json"), "r") as json_file:
-    backend_fixtures_json = json.load(json_file)
+FIXTURES = [
+    "execution",
+    "expectation_suite",
+    "external_feature_group_alias",
+    "external_feature_group",
+    "feature",
+    "feature_group_commit",
+    "feature_group",
+    "feature_store",
+    "feature_view",
+    "filter",
+    "fs_query",
+    "ge_expectation",
+    "ge_validation_result",
+    "hudi_feature_group_alias",
+    "ingestion_job",
+    "inode",
+    "job",
+    "join",
+    "logic",
+    "prepared_statement_parameter",
+    "query",
+    "serving_prepared_statement",
+    "split_statistics",
+    "statistics_config",
+    "statistics",
+    "storage_connector",
+    "tag",
+    "training_dataset_feature",
+    "training_dataset",
+    "training_dataset_split",
+    "transformation_function_attached",
+    "transformation_function",
+    "user",
+    "validation_report",
+]
+
+backend_fixtures_json = {}
+for fixture in FIXTURES:
+    with open(os.path.join(FIXTURES_DIR, f"{fixture}_fixtures.json"), "r") as json_file:
+        backend_fixtures_json[fixture] = json.load(json_file)
 
 
 @pytest.fixture

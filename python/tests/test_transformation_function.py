@@ -21,7 +21,7 @@ from hsfs import transformation_function
 class TestTransformationFunction:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function"]["response"]
+        json = backend_fixtures["transformation_function"]["get"]["response"]
 
         # Act
         tf = transformation_function.TransformationFunction.from_response_json(json)
@@ -45,7 +45,7 @@ class TestTransformationFunction:
         mocker.patch(
             "hsfs.transformation_function.TransformationFunction._load_source_code"
         )
-        json = backend_fixtures["get_transformation_function_basic_info"]["response"]
+        json = backend_fixtures["transformation_function"]["get_basic_info"]["response"]
 
         # Act
         tf = transformation_function.TransformationFunction.from_response_json(json)
@@ -63,7 +63,7 @@ class TestTransformationFunction:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_list"]["response"]
+        json = backend_fixtures["transformation_function"]["get_list"]["response"]
 
         # Act
         tf_list = transformation_function.TransformationFunction.from_response_json(
@@ -88,7 +88,7 @@ class TestTransformationFunction:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_transformation_function_list_empty"]["response"]
+        json = backend_fixtures["transformation_function"]["get_list_empty"]["response"]
 
         # Act
         tf_list = transformation_function.TransformationFunction.from_response_json(

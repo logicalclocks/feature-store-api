@@ -21,7 +21,7 @@ from hsfs import feature
 class TestFeature:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature"]["response"]
+        json = backend_fixtures["feature"]["get"]["response"]
 
         # Act
         f = feature.Feature.from_response_json(json)
@@ -39,7 +39,7 @@ class TestFeature:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_basic_info"]["response"]
+        json = backend_fixtures["feature"]["get_basic_info"]["response"]
 
         # Act
         f = feature.Feature.from_response_json(json)

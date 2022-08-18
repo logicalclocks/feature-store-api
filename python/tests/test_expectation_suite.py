@@ -21,7 +21,7 @@ from hsfs import expectation_suite, ge_expectation
 class TestExpectationSuite:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_expectation_suite"]["response"]
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
 
         # Act
         es = expectation_suite.ExpectationSuite.from_response_json(json)
@@ -41,7 +41,7 @@ class TestExpectationSuite:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_expectation_suite_list"]["response"]
+        json = backend_fixtures["expectation_suite"]["get_list"]["response"]
 
         # Act
         es_list = expectation_suite.ExpectationSuite.from_response_json(json)
@@ -63,7 +63,7 @@ class TestExpectationSuite:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_expectation_suite_basic_info"]["response"]
+        json = backend_fixtures["expectation_suite"]["get_basic_info"]["response"]
 
         # Act
         es = expectation_suite.ExpectationSuite.from_response_json(json)
@@ -83,7 +83,7 @@ class TestExpectationSuite:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_expectation_suite_list_empty"]["response"]
+        json = backend_fixtures["expectation_suite"]["get_list_empty"]["response"]
 
         # Act
         es_list = expectation_suite.ExpectationSuite.from_response_json(json)

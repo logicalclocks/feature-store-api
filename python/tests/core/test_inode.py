@@ -21,7 +21,7 @@ from hsfs.core import inode
 class TestInode:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_inode"]["response"]
+        json = backend_fixtures["inode"]["get"]["response"]
 
         # Act
         node_list = inode.Inode.from_response_json(json)
@@ -33,7 +33,7 @@ class TestInode:
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_inode_empty"]["response"]
+        json = backend_fixtures["inode"]["get_empty"]["response"]
 
         # Act
         node_list = inode.Inode.from_response_json(json)

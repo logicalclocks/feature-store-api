@@ -24,7 +24,7 @@ class TestFeatureView:
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_feature_view"]["response"]
+        json = backend_fixtures["feature_view"]["get"]["response"]
 
         # Act
         fv = feature_view.FeatureView.from_response_json(json)
@@ -45,7 +45,7 @@ class TestFeatureView:
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_feature_view_basic_info"]["response"]
+        json = backend_fixtures["feature_view"]["get_basic_info"]["response"]
 
         # Act
         fv = feature_view.FeatureView.from_response_json(json)

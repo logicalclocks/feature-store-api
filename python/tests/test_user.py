@@ -21,7 +21,7 @@ from hsfs import user
 class TestUser:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_user"]["response"]
+        json = backend_fixtures["user"]["get"]["response"]
 
         # Act
         u = user.User.from_response_json(json)
@@ -47,7 +47,7 @@ class TestUser:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_user_basic_info"]["response"]
+        json = backend_fixtures["user"]["get_basic_info"]["response"]
 
         # Act
         u = user.User.from_response_json(json)

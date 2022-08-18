@@ -28,7 +28,7 @@ class TestTrainingDataset:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_training_dataset"]["response"]
+        json = backend_fixtures["training_dataset"]["get"]["response"]
 
         # Act
         td_list = training_dataset.TrainingDataset.from_response_json(json)
@@ -73,7 +73,7 @@ class TestTrainingDataset:
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_training_dataset_basic_info"]["response"]
+        json = backend_fixtures["training_dataset"]["get_basic_info"]["response"]
 
         # Act
         td_list = training_dataset.TrainingDataset.from_response_json(json)
@@ -114,7 +114,7 @@ class TestTrainingDataset:
     def test_from_response_json_empty(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_training_dataset_empty"]["response"]
+        json = backend_fixtures["training_dataset"]["get_empty"]["response"]
 
         # Act
         td_list = training_dataset.TrainingDataset.from_response_json(json)

@@ -21,7 +21,7 @@ from hsfs import training_dataset_split
 class TestTrainingDatasetSplit:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_training_dataset_split"]["response"]
+        json = backend_fixtures["training_dataset_split"]["get"]["response"]
 
         # Act
         td_split = training_dataset_split.TrainingDatasetSplit.from_response_json(json)
@@ -35,7 +35,7 @@ class TestTrainingDatasetSplit:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_training_dataset_split_basic_info"]["response"]
+        json = backend_fixtures["training_dataset_split"]["get_basic_info"]["response"]
 
         # Act
         td_split = training_dataset_split.TrainingDatasetSplit.from_response_json(json)

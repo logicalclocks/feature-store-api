@@ -22,7 +22,7 @@ class TestFeatureStore:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_feature_store"]["response"]
+        json = backend_fixtures["feature_store"]["get"]["response"]
 
         # Act
         fs = feature_store.FeatureStore.from_response_json(json)
@@ -50,7 +50,7 @@ class TestFeatureStore:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["get_feature_store_basic_info"]["response"]
+        json = backend_fixtures["feature_store"]["get_basic_info"]["response"]
 
         # Act
         fs = feature_store.FeatureStore.from_response_json(json)

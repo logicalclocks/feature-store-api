@@ -26,7 +26,7 @@ from hsfs import feature_group
 class TestFsQuery:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_fs_query"]["response"]
+        json = backend_fixtures["fs_query"]["get"]["response"]
 
         # Act
         q = fs_query.FsQuery.from_response_json(json)
@@ -48,7 +48,7 @@ class TestFsQuery:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_fs_query_basic_info"]["response"]
+        json = backend_fixtures["fs_query"]["get_basic_info"]["response"]
 
         # Act
         q = fs_query.FsQuery.from_response_json(json)

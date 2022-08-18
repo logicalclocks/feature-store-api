@@ -21,7 +21,7 @@ from hsfs import validation_report, ge_validation_result
 class TestValidationReport:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_validation_report"]["response"]
+        json = backend_fixtures["validation_report"]["get"]["response"]
 
         # Act
         vr = validation_report.ValidationReport.from_response_json(json)
@@ -44,7 +44,7 @@ class TestValidationReport:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_validation_report_basic_info"]["response"]
+        json = backend_fixtures["validation_report"]["get_basic_info"]["response"]
 
         # Act
         vr = validation_report.ValidationReport.from_response_json(json)
@@ -65,7 +65,7 @@ class TestValidationReport:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_validation_report_list"]["response"]
+        json = backend_fixtures["validation_report"]["get_list"]["response"]
 
         # Act
         vr_list = validation_report.ValidationReport.from_response_json(json)
@@ -90,7 +90,7 @@ class TestValidationReport:
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_validation_report_list_empty"]["response"]
+        json = backend_fixtures["validation_report"]["get_list_empty"]["response"]
 
         # Act
         vr_list = validation_report.ValidationReport.from_response_json(json)

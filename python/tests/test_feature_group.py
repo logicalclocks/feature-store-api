@@ -28,7 +28,7 @@ from hsfs import (
 class TestFeatureGroup:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group"]["response"]
+        json = backend_fixtures["feature_group"]["get"]["response"]
 
         # Act
         fg = feature_group.FeatureGroup.from_response_json(json)
@@ -61,7 +61,7 @@ class TestFeatureGroup:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_list"]["response"]
+        json = backend_fixtures["feature_group"]["get_list"]["response"]
 
         # Act
         fg_list = feature_group.FeatureGroup.from_response_json(json)
@@ -96,7 +96,7 @@ class TestFeatureGroup:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_basic_info"]["response"]
+        json = backend_fixtures["feature_group"]["get_basic_info"]["response"]
 
         # Act
         fg = feature_group.FeatureGroup.from_response_json(json)
@@ -125,7 +125,7 @@ class TestFeatureGroup:
 
     def test_from_response_json_stream(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_stream"]["response"]
+        json = backend_fixtures["feature_group"]["get_stream"]["response"]
 
         # Act
         fg = feature_group.FeatureGroup.from_response_json(json)
@@ -158,7 +158,7 @@ class TestFeatureGroup:
 
     def test_from_response_json_stream_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_stream_list"]["response"]
+        json = backend_fixtures["feature_group"]["get_stream_list"]["response"]
 
         # Act
         fg_list = feature_group.FeatureGroup.from_response_json(json)
@@ -193,7 +193,7 @@ class TestFeatureGroup:
 
     def test_from_response_json_stream_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_feature_group_stream_basic_info"]["response"]
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
 
         # Act
         fg = feature_group.FeatureGroup.from_response_json(json)
@@ -224,7 +224,7 @@ class TestFeatureGroup:
 class TestExternalFeatureGroup:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_external_feature_group"]["response"]
+        json = backend_fixtures["external_feature_group"]["get"]["response"]
 
         # Act
         fg = feature_group.ExternalFeatureGroup.from_response_json(json)
@@ -256,7 +256,7 @@ class TestExternalFeatureGroup:
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_external_feature_group_list"]["response"]
+        json = backend_fixtures["external_feature_group"]["get_list"]["response"]
 
         # Act
         fg_list = feature_group.ExternalFeatureGroup.from_response_json(json)
@@ -290,7 +290,7 @@ class TestExternalFeatureGroup:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_external_feature_group_basic_info"]["response"]
+        json = backend_fixtures["external_feature_group"]["get_basic_info"]["response"]
 
         # Act
         fg = feature_group.ExternalFeatureGroup.from_response_json(json)

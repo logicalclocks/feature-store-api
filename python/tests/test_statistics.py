@@ -21,7 +21,7 @@ from hsfs import statistics, split_statistics
 class TestStatistics:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_statistics"]["response"]
+        json = backend_fixtures["statistics"]["get"]["response"]
 
         # Act
         s = statistics.Statistics.from_response_json(json)
@@ -36,7 +36,7 @@ class TestStatistics:
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_statistics_basic_info"]["response"]
+        json = backend_fixtures["statistics"]["get_basic_info"]["response"]
 
         # Act
         s = statistics.Statistics.from_response_json(json)
@@ -50,7 +50,7 @@ class TestStatistics:
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["get_statistics_empty"]["response"]
+        json = backend_fixtures["statistics"]["get_empty"]["response"]
 
         # Act
         s = statistics.Statistics.from_response_json(json)
