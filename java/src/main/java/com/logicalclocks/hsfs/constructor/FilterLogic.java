@@ -17,8 +17,9 @@
 package com.logicalclocks.hsfs.constructor;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+@NoArgsConstructor
 public class FilterLogic {
 
   @Getter @Setter

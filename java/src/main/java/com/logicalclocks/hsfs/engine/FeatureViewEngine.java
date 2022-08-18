@@ -305,8 +305,8 @@ public class FeatureViewEngine {
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),
-        startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime(),
+        startTime == null ? null : startTime.getTime()/1000,
+        endTime == null ? null : endTime.getTime()/1000,
         withLabels
     );
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
