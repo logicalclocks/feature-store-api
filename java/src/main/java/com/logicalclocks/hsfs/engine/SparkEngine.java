@@ -256,7 +256,7 @@ public class SparkEngine {
     } else {
       Dataset<Row>[] datasetSplits = splitDataset(trainingDataset, query, queryReadOptions);
       if (trainingDataset.getCoalesce()) {
-        for (int i=0; i < datasetSplits.length; i++) {
+        for (int i = 0; i < datasetSplits.length; i++) {
           datasetSplits[i] = datasetSplits[i].coalesce(1);
         }
       }
@@ -305,7 +305,7 @@ public class SparkEngine {
                   split.getEndTime().getTime()
               )
           );
-        } else if(DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
+        } else if (DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
@@ -699,7 +699,7 @@ public class SparkEngine {
     writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
-  
+
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
       TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -730,12 +730,12 @@ public class SparkEngine {
         throw new FeatureStoreException("Feature '" + structField.name().toLowerCase() + "': "
             + "spark type " + structField.dataType().catalogString() + " not supported.");
       }
-  
+
       Feature f = new Feature(structField.name().toLowerCase(), featureType, false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
-      
+
       features.add(f);
     }
 
