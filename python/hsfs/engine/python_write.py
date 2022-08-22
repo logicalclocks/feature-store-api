@@ -40,7 +40,7 @@ from hsfs.core import (
     feature_view_api,
 )
 from hsfs.constructor import query
-from hsfs.client import external, hopsworks, exceptions
+from hsfs.client import hopsworks, exceptions
 from hsfs.feature_group import FeatureGroup
 from hsfs.engine import engine_base
 
@@ -399,29 +399,6 @@ class EngineWrite(engine_base.EngineWriteBase):
         )
         ui_url = client.get_instance().replace_public_host(ui_url)
         return ui_url.geturl()
-
-    def _wait_for_job(self, job, user_write_options=None):
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
-            executions = self._job_api.last_execution(job)
-            if len(executions) > 0:
-                execution = executions[0]
-            else:
-                return
-
-            if execution.final_status.lower() == "succeeded":
-                return
-            elif execution.final_status.lower() == "failed":
-                raise exceptions.FeatureStoreException(
-                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-                )
-            elif execution.final_status.lower() == "killed":
-                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
-
-            time.sleep(3)
 
     def _wait_for_job(self, job, user_write_options=None):
         # If the user passed the wait_for_job option consider it,
