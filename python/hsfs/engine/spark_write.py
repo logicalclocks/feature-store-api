@@ -55,14 +55,14 @@ class EngineWrite(engine_base.EngineWriteBase):
             util.setup_pydoop()
 
     def write_training_dataset(
-            self,
-            training_dataset,
-            query_obj,
-            user_write_options,
-            save_mode,
-            read_options={},
-            feature_view_obj=None,
-            to_df=False,
+        self,
+        training_dataset,
+        query_obj,
+        user_write_options,
+        save_mode,
+        read_options={},
+        feature_view_obj=None,
+        to_df=False,
     ) -> Any:
         write_options = self._write_options(
             training_dataset.data_format, user_write_options
@@ -124,7 +124,7 @@ class EngineWrite(engine_base.EngineWriteBase):
         return external_dataset
 
     def register_hudi_temporary_table(
-            self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ) -> None:
         hudi_engine_instance = hudi_engine.HudiEngine(
             feature_store_id,
@@ -139,15 +139,15 @@ class EngineWrite(engine_base.EngineWriteBase):
         )
 
     def save_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            operation,
-            online_enabled,
-            storage,
-            offline_write_options,
-            online_write_options,
-            validation_id=None,
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        online_enabled,
+        storage,
+        offline_write_options,
+        online_write_options,
+        validation_id=None,
     ) -> None:
         try:
             if feature_group.stream:
@@ -181,15 +181,15 @@ class EngineWrite(engine_base.EngineWriteBase):
             raise FeatureStoreException(e)
 
     def save_stream_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            query_name,
-            output_mode,
-            await_termination,
-            timeout,
-            checkpoint_dir,
-            write_options,
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        checkpoint_dir,
+        write_options,
     ) -> Any:
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
@@ -240,12 +240,12 @@ class EngineWrite(engine_base.EngineWriteBase):
         )
 
     def _save_offline_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            operation,
-            write_options,
-            validation_id=None,
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        write_options,
+        validation_id=None,
     ):
         if feature_group.time_travel_format == "HUDI":
             hudi_engine_instance = hudi_engine.HudiEngine(
@@ -318,12 +318,12 @@ class EngineWrite(engine_base.EngineWriteBase):
         )
 
     def _write_training_dataset_splits(
-            self,
-            training_dataset,
-            feature_dataframes,
-            write_options,
-            save_mode,
-            to_df=False,
+        self,
+        training_dataset,
+        feature_dataframes,
+        write_options,
+        save_mode,
+        to_df=False,
     ):
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
@@ -342,15 +342,15 @@ class EngineWrite(engine_base.EngineWriteBase):
             return feature_dataframes
 
     def _write_training_dataset_single(
-            self,
-            training_dataset,
-            feature_dataframe,
-            storage_connector,
-            data_format,
-            write_options,
-            save_mode,
-            path,
-            to_df=False,
+        self,
+        training_dataset,
+        feature_dataframe,
+        storage_connector,
+        data_format,
+        write_options,
+        save_mode,
+        path,
+        to_df=False,
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
@@ -391,15 +391,15 @@ class EngineWrite(engine_base.EngineWriteBase):
         transformed_feature_names = []
         transformation_fn_expressions = []
         for (
-                feature_name,
-                transformation_fn,
+            feature_name,
+            transformation_fn,
         ) in training_dataset.transformation_functions.items():
             fn_registration_name = (
-                    transformation_fn.name
-                    + "_"
-                    + str(transformation_fn.version)
-                    + "_"
-                    + feature_name
+                transformation_fn.name
+                + "_"
+                + str(transformation_fn.version)
+                + "_"
+                + feature_name
             )
             self._spark_session.udf.register(
                 fn_registration_name, transformation_fn.transformation_fn

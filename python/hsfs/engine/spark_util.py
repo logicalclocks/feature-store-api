@@ -76,7 +76,9 @@ class EngineUtil(engine_base.EngineUtilBase):
     def set_job_group(self, group_id: int, description: str) -> None:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
+    def sql(
+        self, sql_query, feature_store, online_conn, dataframe_type, read_options
+    ) -> Any:
         if not online_conn:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
@@ -86,12 +88,12 @@ class EngineUtil(engine_base.EngineUtilBase):
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def profile(
-            self,
-            dataframe,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness=True,
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ) -> Any:
         """Profile a dataframe with Deequ."""
         return (
@@ -105,10 +107,10 @@ class EngineUtil(engine_base.EngineUtilBase):
         )
 
     def validate_with_great_expectations(
-            self,
-            dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
-            ge_validate_kwargs: Optional[dict],
+        self,
+        dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
+        ge_validate_kwargs: Optional[dict],
     ) -> Any:
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
         # may experience data loss as it persists nothing. It is used here for testing.
@@ -223,12 +225,12 @@ class EngineUtil(engine_base.EngineUtilBase):
         ]
 
     def split_labels(self, df, labels) -> tuple:
-            if labels:
-                labels_df = df.select(*labels)
-                df_new = df.drop(*labels)
-                return df_new, labels_df
-            else:
-                return df, None
+        if labels:
+            labels_df = df.select(*labels)
+            df_new = df.drop(*labels)
+            return df_new, labels_df
+        else:
+            return df, None
 
     def is_spark_dataframe(self, dataframe) -> bool:
         if isinstance(dataframe, DataFrame):
@@ -388,8 +390,8 @@ class EngineUtil(engine_base.EngineUtilBase):
 
     def _split_df(self, query_obj, training_dataset, read_options={}):
         if (
-                training_dataset.splits[0].split_type
-                == training_dataset_split.TrainingDatasetSplit.TIME_SERIES_SPLIT
+            training_dataset.splits[0].split_type
+            == training_dataset_split.TrainingDatasetSplit.TIME_SERIES_SPLIT
         ):
             event_time = query_obj._left_feature_group.event_time
             if event_time not in [_feature.name for _feature in query_obj.features]:
@@ -420,7 +422,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         return dict([(split[0], split_dataset[i]) for i, split in enumerate(splits)])
 
     def _time_series_split(
-            self, training_dataset, dataset, event_time, drop_event_time=False
+        self, training_dataset, dataset, event_time, drop_event_time=False
     ):
         result_dfs = {}
         ts_type = dataset.select(event_time).dtypes[0][1]

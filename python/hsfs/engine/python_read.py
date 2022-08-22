@@ -46,12 +46,12 @@ class EngineRead(engine_base.EngineReadBase):
         return {}
 
     def read_stream(
-            self,
-            storage_connector,
-            message_format,
-            schema,
-            options,
-            include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ) -> None:
         raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
@@ -65,7 +65,7 @@ class EngineRead(engine_base.EngineReadBase):
         return feature_dataframe[feature_name].unique()
 
     def get_training_data(
-            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ) -> Any:
         if training_dataset_obj.splits:
             return self._prepare_transform_split_df(
@@ -96,9 +96,9 @@ class EngineRead(engine_base.EngineReadBase):
         df_list = []
         for path in path_list:
             if (
-                    hdfs.path.isfile(path)
-                    and not path.endswith("_SUCCESS")
-                    and hdfs.path.getsize(path) > 0
+                hdfs.path.isfile(path)
+                and not path.endswith("_SUCCESS")
+                and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
@@ -188,15 +188,15 @@ class EngineRead(engine_base.EngineReadBase):
         return df_list
 
     def _prepare_transform_split_df(
-            self, query_obj, training_dataset_obj, feature_view_obj, read_option
+        self, query_obj, training_dataset_obj, feature_view_obj, read_option
     ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
         """
         if (
-                training_dataset_obj.splits[0].split_type
-                == training_dataset_split.TrainingDatasetSplit.TIME_SERIES_SPLIT
+            training_dataset_obj.splits[0].split_type
+            == training_dataset_split.TrainingDatasetSplit.TIME_SERIES_SPLIT
         ):
             event_time = query_obj._left_feature_group.event_time
             if event_time not in [_feature.name for _feature in query_obj.features]:
@@ -237,8 +237,8 @@ class EngineRead(engine_base.EngineReadBase):
     @staticmethod
     def _apply_transformation_function(training_dataset_instance, dataset):
         for (
-                feature_name,
-                transformation_fn,
+            feature_name,
+            transformation_fn,
         ) in training_dataset_instance.transformation_functions.items():
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn

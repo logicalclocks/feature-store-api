@@ -1,4 +1,3 @@
-
 #
 #   Copyright 2022 Hopsworks AB
 #
@@ -92,12 +91,12 @@ class EngineRead(engine_base.EngineReadBase):
         return options
 
     def read_stream(
-            self,
-            storage_connector,
-            message_format,
-            schema,
-            options,
-            include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ) -> Any:
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
@@ -122,7 +121,7 @@ class EngineRead(engine_base.EngineReadBase):
         return [field[feature_name] for field in unique_values]
 
     def get_training_data(
-            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ) -> Any:
         return self.write_training_dataset(
             training_dataset_obj,

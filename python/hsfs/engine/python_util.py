@@ -43,19 +43,21 @@ class EngineUtil(engine_base.EngineUtilBase):
     def set_job_group(self, group_id: int, description: str) -> None:
         pass
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options) -> Any:
+    def sql(
+        self, sql_query, feature_store, online_conn, dataframe_type, read_options
+    ) -> Any:
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type)
         else:
             return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
 
     def profile(
-            self,
-            dataframe,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness=True,
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ) -> Any:
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
@@ -78,10 +80,10 @@ class EngineUtil(engine_base.EngineUtilBase):
         return json.dumps({"columns": final_stats})
 
     def validate_with_great_expectations(
-            self,
-            dataframe: pd.DataFrame,
-            expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-            ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+        self,
+        dataframe: pd.DataFrame,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
     ) -> Any:
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
@@ -298,9 +300,9 @@ class EngineUtil(engine_base.EngineUtilBase):
         result_dfs = {}
         splits = training_dataset_obj.splits
         if (
-                sum([split.percentage for split in splits]) != 1
-                or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
-                > 1
+            sum([split.percentage for split in splits]) != 1
+            or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
+            > 1
         ):
             raise ValueError(
                 "Sum of split ratios should be 1 and each values should be in range (0, 1)"
@@ -319,7 +321,7 @@ class EngineUtil(engine_base.EngineUtilBase):
         return result_dfs
 
     def _time_series_split(
-            self, df, training_dataset_obj, event_time, drop_event_time=False
+        self, df, training_dataset_obj, event_time, drop_event_time=False
     ):
         result_dfs = {}
         for split in training_dataset_obj.splits:
@@ -351,7 +353,7 @@ class EngineUtil(engine_base.EngineUtilBase):
             return t * 1000
 
     def _kafka_produce(
-            self, producer, feature_group, key, encoded_row, acked, offline_write_options
+        self, producer, feature_group, key, encoded_row, acked, offline_write_options
     ):
         while True:
             # if BufferError is thrown, we can be sure, message hasn't been send so we retry

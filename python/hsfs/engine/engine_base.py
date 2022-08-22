@@ -21,14 +21,14 @@ from abc import ABC, abstractmethod
 class EngineWriteBase(ABC):
     @abstractmethod
     def write_training_dataset(
-            self,
-            training_dataset,
-            query_obj,
-            user_write_options,
-            save_mode,
-            read_options={},
-            feature_view_obj=None,
-            to_df=False,
+        self,
+        training_dataset,
+        query_obj,
+        user_write_options,
+        save_mode,
+        read_options={},
+        feature_view_obj=None,
+        to_df=False,
     ):
         pass
 
@@ -42,35 +42,35 @@ class EngineWriteBase(ABC):
 
     @abstractmethod
     def register_hudi_temporary_table(
-            self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
+        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ):
         pass
 
     @abstractmethod
     def save_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            operation,
-            online_enabled,
-            storage,
-            offline_write_options,
-            online_write_options,
-            validation_id=None,
+        self,
+        feature_group,
+        dataframe,
+        operation,
+        online_enabled,
+        storage,
+        offline_write_options,
+        online_write_options,
+        validation_id=None,
     ):
         pass
 
     @abstractmethod
     def save_stream_dataframe(
-            self,
-            feature_group,
-            dataframe,
-            query_name,
-            output_mode,
-            await_termination,
-            timeout,
-            checkpoint_dir,
-            write_options,
+        self,
+        feature_group,
+        dataframe,
+        query_name,
+        output_mode,
+        await_termination,
+        timeout,
+        checkpoint_dir,
+        write_options,
     ):
         pass
 
@@ -94,12 +94,12 @@ class EngineReadBase(ABC):
 
     @abstractmethod
     def read_stream(
-            self,
-            storage_connector,
-            message_format,
-            schema,
-            options,
-            include_metadata,
+        self,
+        storage_connector,
+        message_format,
+        schema,
+        options,
+        include_metadata,
     ):
         pass
 
@@ -114,7 +114,7 @@ class EngineReadBase(ABC):
 
     @abstractmethod
     def get_training_data(
-            self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options
     ):
         pass
 
@@ -134,21 +134,21 @@ class EngineUtilBase(ABC):
 
     @abstractmethod
     def profile(
-            self,
-            dataframe,
-            relevant_columns,
-            correlations,
-            histograms,
-            exact_uniqueness=True,
+        self,
+        dataframe,
+        relevant_columns,
+        correlations,
+        histograms,
+        exact_uniqueness=True,
     ):
         pass
 
     @abstractmethod
     def validate_with_great_expectations(
-            self,
-            dataframe,
-            expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-            ge_validate_kwargs: Optional[Dict[Any, Any]],
+        self,
+        dataframe,
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        ge_validate_kwargs: Optional[Dict[Any, Any]],
     ):
         pass
 
