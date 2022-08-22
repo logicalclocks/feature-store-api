@@ -27,7 +27,7 @@ from hsfs import (
     transformation_function,
     feature,
 )
-from hsfs.engine import python
+from hsfs.engine import python, python_write
 from hsfs.core import inode, execution
 from hsfs.constructor import query
 from hsfs.client import exceptions
@@ -615,7 +615,7 @@ class TestPython:
 
         # Act
         result = python_engine.profile(
-            df=df,
+            dataframe=df,
             relevant_columns=None,
             correlations=None,
             histograms=None,
@@ -648,7 +648,7 @@ class TestPython:
 
         # Act
         result = python_engine.profile(
-            df=df,
+            dataframe=df,
             relevant_columns=["col1"],
             correlations=None,
             histograms=None,
@@ -791,20 +791,6 @@ class TestPython:
             "stdDev": 33,
             "sum": 5000,
         }
-
-    def test_validate(self):
-        # Arrange
-        python_engine = python.Engine()
-
-        # Act
-        with pytest.raises(NotImplementedError) as e_info:
-            python_engine.validate(dataframe=None, expectations=None, log_activity=True)
-
-        # Assert
-        assert (
-            str(e_info.value)
-            == "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
-        )
 
     def test_validate_with_great_expectations(self, mocker):
         # Arrange
@@ -1182,7 +1168,7 @@ class TestPython:
             "hsfs.engine.python.Engine._write_dataframe_kafka"
         )
         mock_python_engine_legacy_save_dataframe = mocker.patch(
-            "hsfs.engine.python.Engine.legacy_save_dataframe"
+            "hsfs.engine.python.Engine._legacy_save_dataframe"
         )
 
         python_engine = python.Engine()
@@ -1219,7 +1205,7 @@ class TestPython:
             "hsfs.engine.python.Engine._write_dataframe_kafka"
         )
         mock_python_engine_legacy_save_dataframe = mocker.patch(
-            "hsfs.engine.python.Engine.legacy_save_dataframe"
+            "hsfs.engine.python.Engine._legacy_save_dataframe"
         )
 
         python_engine = python.Engine()
@@ -1268,7 +1254,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine.legacy_save_dataframe(
+        python_engine._legacy_save_dataframe(
             feature_group=mocker.Mock(),
             dataframe=None,
             operation=None,
@@ -1821,7 +1807,7 @@ class TestPython:
         with pytest.raises(Exception) as e_info:
             python_engine.write_training_dataset(
                 training_dataset=None,
-                dataset=None,
+                query_obj=None,
                 user_write_options={},
                 save_mode=None,
                 feature_view_obj=None,
@@ -1869,7 +1855,7 @@ class TestPython:
         # Act
         python_engine.write_training_dataset(
             training_dataset=td,
-            dataset=q,
+            query_obj=q,
             user_write_options={},
             save_mode=None,
             feature_view_obj=None,
@@ -1921,7 +1907,7 @@ class TestPython:
         # Act
         python_engine.write_training_dataset(
             training_dataset=td,
-            dataset=q,
+            query_obj=q,
             user_write_options={},
             save_mode=None,
             feature_view_obj=fv,
@@ -2048,6 +2034,7 @@ class TestPython:
                 output_mode=None,
                 await_termination=None,
                 timeout=None,
+                checkpoint_dir=None,
                 write_options=None,
             )
 
@@ -2393,7 +2380,7 @@ class TestPython:
         mock_avro_schema_parse = mocker.patch("avro.schema.parse")
 
         python_engine = python.Engine()
-        python.HAS_FAST = False
+        python_write.HAS_FAST = False
 
         # Act
         result = python_engine._get_encoder_func(
@@ -2426,7 +2413,7 @@ class TestPython:
         mock_avro_schema_parse = mocker.patch("avro.schema.parse")
 
         python_engine = python.Engine()
-        python.HAS_FAST = True
+        python_write.HAS_FAST = True
 
         # Act
         result = python_engine._get_encoder_func(

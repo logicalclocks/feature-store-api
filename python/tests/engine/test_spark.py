@@ -70,7 +70,7 @@ class TestSpark:
         spark_engine.sql(
             sql_query=None,
             feature_store=None,
-            connector=None,
+            online_conn=None,
             dataframe_type=None,
             read_options=None,
         )
@@ -99,7 +99,7 @@ class TestSpark:
         spark_engine.sql(
             sql_query=None,
             feature_store=None,
-            connector=connector,
+            online_conn=connector,
             dataframe_type=None,
             read_options=None,
         )
@@ -1485,7 +1485,7 @@ class TestSpark:
 
         # Act
         spark_engine.get_training_data(
-            training_dataset=None,
+            training_dataset_obj=None,
             feature_view_obj=None,
             query_obj=None,
             read_options=None,
@@ -1538,7 +1538,7 @@ class TestSpark:
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
+            "hsfs.engine.spark.Engine._write_options"
         )
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
@@ -1591,7 +1591,7 @@ class TestSpark:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
         mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
+            "hsfs.engine.spark.Engine._write_options"
         )
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
@@ -1644,7 +1644,7 @@ class TestSpark:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
         mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
+            "hsfs.engine.spark.Engine._write_options"
         )
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
@@ -1698,7 +1698,7 @@ class TestSpark:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
         mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
+            "hsfs.engine.spark.Engine._write_options"
         )
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
@@ -1756,7 +1756,7 @@ class TestSpark:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
         mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
+            "hsfs.engine.spark.Engine._write_options"
         )
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
@@ -3072,7 +3072,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.write_options(
+        result = spark_engine._write_options(
             data_format="",
             provided_options={"test_key": "test_value"},
         )
@@ -3085,7 +3085,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.write_options(
+        result = spark_engine._write_options(
             data_format="tfrecords",
             provided_options={"test_key": "test_value"},
         )
@@ -3098,7 +3098,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.write_options(
+        result = spark_engine._write_options(
             data_format="tfrecord",
             provided_options={"test_key": "test_value"},
         )
@@ -3111,7 +3111,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.write_options(
+        result = spark_engine._write_options(
             data_format="csv",
             provided_options={"test_key": "test_value"},
         )
@@ -3124,7 +3124,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.write_options(
+        result = spark_engine._write_options(
             data_format="tsv",
             provided_options={"test_key": "test_value"},
         )
@@ -3223,7 +3223,7 @@ class TestSpark:
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine._convert_spark_type"
         )
 
         spark_engine = spark.Engine()
@@ -3248,7 +3248,7 @@ class TestSpark:
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine._convert_spark_type"
         )
 
         spark_engine = spark.Engine()
@@ -3273,7 +3273,7 @@ class TestSpark:
     def test_parse_schema_feature_group_value_error(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine._convert_spark_type"
         )
 
         spark_engine = spark.Engine()
@@ -3320,7 +3320,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=IntegerType(),
             using_hudi=False,
         )
@@ -3333,7 +3333,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=ByteType(),
             using_hudi=True,
         )
@@ -3346,7 +3346,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=ShortType(),
             using_hudi=True,
         )
@@ -3359,7 +3359,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=BooleanType(),
             using_hudi=True,
         )
@@ -3372,7 +3372,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=IntegerType(),
             using_hudi=True,
         )
@@ -3385,7 +3385,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=LongType(),
             using_hudi=True,
         )
@@ -3398,7 +3398,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=FloatType(),
             using_hudi=True,
         )
@@ -3411,7 +3411,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=DoubleType(),
             using_hudi=True,
         )
@@ -3424,7 +3424,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=DecimalType(),
             using_hudi=True,
         )
@@ -3437,7 +3437,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=TimestampType(),
             using_hudi=True,
         )
@@ -3450,7 +3450,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=DateType(),
             using_hudi=True,
         )
@@ -3463,7 +3463,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=StringType(),
             using_hudi=True,
         )
@@ -3476,7 +3476,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=StructType(),
             using_hudi=True,
         )
@@ -3489,7 +3489,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine._convert_spark_type(
             hive_type=BinaryType(),
             using_hudi=True,
         )
@@ -3503,7 +3503,7 @@ class TestSpark:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            spark_engine.convert_spark_type(
+            spark_engine._convert_spark_type(
                 hive_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )
