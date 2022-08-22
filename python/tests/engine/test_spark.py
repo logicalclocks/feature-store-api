@@ -1437,7 +1437,7 @@ class TestSpark:
         fg._avro_schema = '{"fields": [{"name": "col_0"}]}'
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this
+        with pytest.raises(TypeError) as e_info:  # todo look into this (to_avro has to be mocked)
             result = spark_engine._encode_complex_features(
                 feature_group=fg,
                 dataframe=spark_df,
@@ -1466,7 +1466,7 @@ class TestSpark:
         fg._avro_schema = '{"fields": [{"name": "col_0"}]}'
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this
+        with pytest.raises(TypeError) as e_info:  # todo look into this (to_avro has to be mocked)
             spark_engine._online_fg_to_avro(
                 feature_group=fg,
                 dataframe=spark_df,
@@ -2897,7 +2897,7 @@ class TestSpark:
                             }"""
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this
+        with pytest.raises(TypeError) as e_info:  # todo look into this (from_avro has to be mocked)
             result = spark_engine._read_stream_kafka(
                 stream=mock_stream,
                 message_format="avro",
@@ -2956,7 +2956,7 @@ class TestSpark:
                             }"""
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this
+        with pytest.raises(TypeError) as e_info:  # todo look into this (from_avro has to be mocked)
             result = spark_engine._read_stream_kafka(
                 stream=mock_stream,
                 message_format="avro",
