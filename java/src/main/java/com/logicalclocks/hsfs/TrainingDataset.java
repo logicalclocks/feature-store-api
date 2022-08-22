@@ -164,7 +164,7 @@ public class TrainingDataset {
     List<Split> splits = Lists.newArrayList();
     appendTimeSeriesSplit(splits, Split.TRAIN,
         trainStart, trainEnd != null ? trainEnd : valStart != null ? valStart : testStart);
-    if (timeSplitSize == 3) {
+    if (timeSplitSize != null && timeSplitSize == 3) {
       appendTimeSeriesSplit(splits, Split.VALIDATION,
           valStart != null ? valStart : trainEnd,
           valEnd != null ? valEnd : testStart);

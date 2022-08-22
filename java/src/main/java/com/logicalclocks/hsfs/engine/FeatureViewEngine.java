@@ -225,8 +225,44 @@ public class FeatureViewEngine {
 
   private TrainingDataset createTrainingDataMetadata(
       FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
+    setEventTime(featureView, trainingDataset);
     return featureViewApi.createTrainingData(
         featureView.getName(), featureView.getVersion(), trainingDataset);
+  }
+
+  private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
+    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
+    if (!Strings.isNullOrEmpty(eventTime)) {
+      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
+        for (Split split: trainingDataset.getSplits()) {
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT &&
+              split.getName().equals(Split.TRAIN) &&
+              split.getStartTime() == null) {
+            split.setStartTime(getStartTime());
+          }
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT &&
+              split.getName().equals(Split.TEST) &&
+              split.getEndTime() == null) {
+            split.setEndTime(getEndTime());
+          }
+        }
+      } else {
+        if (trainingDataset.getEventStartTime() == null) {
+          trainingDataset.setEventStartTime(getStartTime());
+        }
+        if (trainingDataset.getEventEndTime() == null) {
+          trainingDataset.setEventEndTime(getEndTime());
+        }
+      }
+    }
+  }
+
+  private Date getStartTime() {
+    return new Date(1000);
+  }
+
+  private Date getEndTime() {
+    return new Date();
   }
 
   private TrainingDataset getTrainingDataMetadata(
