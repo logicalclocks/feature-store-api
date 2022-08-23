@@ -1287,7 +1287,7 @@
 Users will never construct a Query object using the constructor of the class.
 For this reason we do not provide the full documentation of the class here.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L399">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L403">[source]</a></span></p>
 <h3 id="append_feature">append_feature<a class="headerlink" href="#append_feature" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">append_feature</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
 </code></pre></div>
@@ -1302,36 +1302,36 @@ specified point in time can be excluded from the query. The Query can then eithe
 or used further to perform joins or construct a training dataset.</p>
 <div class="admonition example">
 <p class="admonition-title">Reading features at a specific point in time:</p>
-<p>```python
-fs = connection.get_feature_store();
-query = fs.get_feature_group("example_feature_group", 1).select_all()
-query.as_of("2020-10-20 07:34:11").read().show()</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="s2">&quot;example_feature_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+<span class="n">query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="s2">&quot;2020-10-20 07:34:11&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 </div>
 <div class="admonition example">
 <p class="admonition-title">Reading commits incrementally between specified points in time:</p>
-<p>```python
-fs = connection.get_feature_store();
-query = fs.get_feature_group("example_feature_group", 1).select_all()
-query.as_of("2020-10-20 07:34:11", exclude_until="2020-10-19 07:34:11").read().show()</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="s2">&quot;example_feature_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+<span class="n">query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="s2">&quot;2020-10-20 07:34:11&quot;</span><span class="p">,</span> <span class="n">exclude_until</span><span class="o">=</span><span class="s2">&quot;2020-10-19 07:34:11&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 </div>
 <p>The first parameter is inclusive while the latter is exclusive.
 That means, in order to query a single commit, you need to query that commit time
 and exclude everything just before the commit.</p>
 <div class="admonition example">
 <p class="admonition-title">Reading only the changes from a single commit</p>
-<p>```python
-fs = connection.get_feature_store();
-query = fs.get_feature_group("example_feature_group", 1).select_all()
-query.as_of("2020-10-20 07:31:38", exclude_until="2020-10-20 07:31:37").read().show()</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="s2">&quot;example_feature_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+<span class="n">query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="s2">&quot;2020-10-20 07:31:38&quot;</span><span class="p">,</span> <span class="n">exclude_until</span><span class="o">=</span><span class="s2">&quot;2020-10-20 07:31:37&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 </div>
 <p>When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
 a specified point in time can still be excluded.</p>
 <div class="admonition example">
 <p class="admonition-title">Reading the latest state of features, excluding commits before a specified point in time:</p>
-<p>```python
-fs = connection.get_feature_store();
-query = fs.get_feature_group("example_feature_group", 1).select_all()
-query.as_of(None, exclude_until="2020-10-20 07:31:38").read().show()</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="s2">&quot;example_feature_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select_all</span><span class="p">()</span>
+<span class="n">query</span><span class="o">.</span><span class="n">as_of</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">exclude_until</span><span class="o">=</span><span class="s2">&quot;2020-10-20 07:31:38&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 </div>
 <p>Note that the interval will be applied to all joins in the query.
 If you want to query different intervals for different feature groups in
@@ -1347,7 +1347,7 @@ joined feature groups will be queried with this interval:
 </code></pre></div></p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This method only works for queries on Hudi tables.</p>
+<p>This function only works for queries on feature groups with time_travel_format='HUDI'.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1367,7 +1367,7 @@ when calling the <code>insert()</code> method.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>. The query object with the applied time travel condition.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L257">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L261">[source]</a></span></p>
 <h3 id="filter">filter<a class="headerlink" href="#filter" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </code></pre></div>
@@ -1392,12 +1392,12 @@ respective feature group:
 <p><strong>Returns</strong></p>
 <p><code>Query</code>. The query object with the applied filter.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L299">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L303">[source]</a></span></p>
 <h3 id="from_cache_feature_group_only">from_cache_feature_group_only<a class="headerlink" href="#from_cache_feature_group_only" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">from_cache_feature_group_only</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L321">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L325">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
@@ -1427,7 +1427,7 @@ Joins of one level are supported, no neted joins.</p>
 <p><strong>Returns</strong></p>
 <p><code>Query</code>: A new Query object representing the join.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L243">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L247">[source]</a></span></p>
 <h3 id="pull_changes">pull_changes<a class="headerlink" href="#pull_changes" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">pull_changes</span><span class="p">(</span><span class="n">wallclock_start_time</span><span class="p">,</span> <span class="n">wallclock_end_time</span><span class="p">)</span>
 </code></pre></div>
@@ -1465,19 +1465,19 @@ type of the output DataFrame (Spark, Pandas, Numpy, Python Lists).</p>
 <li><strong>online</strong> <code>Optional[bool]</code>: Show from online storage. Defaults to <code>False</code>.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L367">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L371">[source]</a></span></p>
 <h3 id="to_string">to_string<a class="headerlink" href="#to_string" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">Query</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">online</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L395">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L399">[source]</a></span></p>
 <h3 id="features">features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L383">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L387">[source]</a></span></p>
 <h3 id="left_feature_group_end_time">left_feature_group_end_time<a class="headerlink" href="#left_feature_group_end_time" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L379">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/constructor/query.py#L383">[source]</a></span></p>
 <h3 id="left_feature_group_start_time">left_feature_group_start_time<a class="headerlink" href="#left_feature_group_start_time" title="Permanent link">#</a></h3>
 <hr />
 
