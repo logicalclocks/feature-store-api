@@ -92,6 +92,7 @@ public class HudiEngine {
   protected static final String HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type";
   protected static final String HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental";
   protected static final String HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot";
+  protected static final String HUDI_QUERY_TIME_TRAVEL_AS_OF_INSTANT = "as.of.instant";
   protected static final String HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime";
   protected static final String HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime";
 
@@ -261,19 +262,22 @@ public class HudiEngine {
   public Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
     Map<String, String> hudiArgs = new HashMap<>();
-    if (endTimestamp != null) {
-      // if endTimestamp was specified, trigger an incremental query.
-      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
-      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
-
-      if (startTimestamp != null) {
-        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
-      } else {
-        hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(0L));
-      }
-    } else {
-      // if endTimestamp was not specified, trigger a snapshot query
+    if (endTimestamp == null && startTimestamp == null) {
+      // snapshot query latest state
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
+    } else if (endTimestamp != null && startTimestamp == null) {
+      // snapshot query with end time
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
+      hudiArgs.put(HUDI_QUERY_TIME_TRAVEL_AS_OF_INSTANT, utils.timeStampToHudiFormat(endTimestamp));
+    } else if (endTimestamp == null && startTimestamp != null) {
+      // incremental query with start time until now
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
+    } else {
+      // incremental query with start and end time
+      hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL);
+      hudiArgs.put(HUDI_BEGIN_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(startTimestamp));
+      hudiArgs.put(HUDI_END_INSTANTTIME_OPT_KEY, utils.timeStampToHudiFormat(endTimestamp));
     }
 
     // Overwrite with user provided options if any

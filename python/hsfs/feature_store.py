@@ -260,6 +260,14 @@ class FeatureStore:
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
 
+        !!! warning "Deprecated"
+            `TrainingDataset` is deprecated, use `FeatureView` instead. You can still retrieve old
+            training datasets using this method, but after upgrading the old training datasets will
+            also be available under a Feature View with the same name and version.
+
+            It is recommended to use this method only for old training datasets that have been
+            created directly from Dataframes and not with Query objects.
+
         Getting a training dataset from the Feature Store means getting its metadata handle
         so you can subsequently read the data into a Spark or Pandas DataFrame.
 
@@ -287,6 +295,9 @@ class FeatureStore:
 
     def get_training_datasets(self, name: str):
         """Get a list of all versions of a training dataset entity from the feature store.
+
+        !!! warning "Deprecated"
+            `TrainingDataset` is deprecated, use `FeatureView` instead.
 
         Getting a training dataset from the Feature Store means getting its metadata handle
         so you can subsequently read the data into a Spark or Pandas DataFrame.
@@ -346,7 +357,7 @@ class FeatureStore:
                 Defaults to False.
             read_options: Additional options to pass to the execution engine. Defaults to {}.
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
-                this instructs the library to use the `host` parameter in the [`hsfs.connection()`](project.md#connection) to establish the connection to the online feature store.
+                this instructs the library to use the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on
                 the private ip.
 
@@ -760,6 +771,10 @@ class FeatureStore:
         train_split: str = None,
     ):
         """Create a training dataset metadata object.
+
+        !!! warning "Deprecated"
+            `TrainingDataset` is deprecated, use `FeatureView` instead. From version 3.0
+            training datasets created with this API are not visibile in the API anymore.
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the

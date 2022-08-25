@@ -914,6 +914,11 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
+        !!! warning "Deprecated"
+                    `read_changes` method is deprecated. Use
+                    `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
+                    instead.
+
         This function only works on feature groups with `HUDI` time travel format.
 
         !!! example "Reading commits incrementally between specified points in time:"
@@ -975,7 +980,7 @@ class FeatureGroup(FeatureGroupBase):
         """Persist the metadata and materialize the feature group to the feature store.
 
         !!! warning "Deprecated"
-            save` method is deprecated. Use the `insert` method instead.
+            `save` method is deprecated. Use the `insert` method instead.
 
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
@@ -1273,21 +1278,84 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def as_of(self, wallclock_time):
+    def as_of(self, wallclock_time, exclude_until=None):
         """Get Query object to retrieve all features of the group at a point in the past.
 
         This method selects all features in the feature group and returns a Query object
-        at the specified point in time. This can then either be read into a Dataframe
+        at the specified point in time. Optionally, commits before a specified point in time can be
+        excluded from the query. The Query can then either be read into a Dataframe
         or used further to perform joins or construct a training dataset.
+
+        !!! example "Reading features at a specific point in time:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.as_of("2020-10-20 07:34:11").read().show()
+            ```
+
+        !!! example "Reading commits incrementally between specified points in time:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.as_of("2020-10-20 07:34:11", exclude_until="2020-10-19 07:34:11").read().show()
+            ```
+
+        The first parameter is inclusive while the latter is exclusive.
+        That means, in order to query a single commit, you need to query that commit time
+        and exclude everything just before the commit.
+
+        !!! example "Reading only the changes from a single commit"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.as_of("2020-10-20 07:31:38", exclude_until="2020-10-20 07:31:37").read().show()
+            ```
+
+        When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
+        a specified point in time can still be excluded.
+
+        !!! example "Reading the latest state of features, excluding commits before a specified point in time:"
+            ```python
+            fs = connection.get_feature_store();
+            fg = fs.get_feature_group("example_feature_group", 1)
+            fg.as_of(None, exclude_until="2020-10-20 07:31:38").read().show()
+            ```
+
+        Note that the interval will be applied to all joins in the query.
+        If you want to query different intervals for different feature groups in
+        the query, you have to apply them in a nested fashion:
+        ```python
+        fg_a.select_all().as_of(..., ...)
+            .join(fg_b.select_all().as_of(..., ...))
+        ```
+        If instead you apply another `as_of` selection after the join, all
+        joined feature groups will be queried with this interval:
+        ```python
+        fg_a.select_all().as_of(..., ...)  # as_of is not applied
+            .join(fg_b.select_all().as_of(..., ...))  # as_of is not applied
+            .as_of(..., ...)
+        ```
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
+
+        !!! warning
+            Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.
+            By default, Hudi keeps the last 20 to 30 commits in the active timeline.
+            If you need to keep a longer active timeline, you can overwrite the options:
+            `hoodie.keep.min.commits` and `hoodie.keep.max.commits`
+            when calling the `insert()` method.
 
         # Arguments
             wallclock_time: Datetime string. The String should be formatted in one of the
+                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+            exclude_until: Datetime string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time)
+        return self.select_all().as_of(wallclock_time, exclude_until)
 
     def validate(
         self,
