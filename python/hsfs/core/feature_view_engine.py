@@ -114,7 +114,11 @@ class FeatureViewEngine:
         )
 
     def get_batch_query_string(
-        self, feature_view_obj, start_time, end_time, training_dataset_version=None
+        self,
+        feature_view_obj,
+        start_time,
+        end_time,
+        training_dataset_version=None
     ):
         query_obj = self._feature_view_api.get_batch_query(
             feature_view_obj.name,

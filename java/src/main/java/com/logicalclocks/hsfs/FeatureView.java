@@ -178,6 +178,12 @@ public class FeatureView {
   }
 
   @JsonIgnore
+  public Dataset<Row> getBatchData(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return getBatchData(startTime, endTime, Maps.newHashMap(), null);
+  }
+
+  @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException, ParseException {
     return getBatchData(startTime, endTime, Maps.newHashMap(), trainingDataVersion);
