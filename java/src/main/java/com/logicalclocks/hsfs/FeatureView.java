@@ -164,17 +164,13 @@ public class FeatureView {
 
   @JsonIgnore
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
-    return getBatchQuery(null, null, null);
+    return getBatchQuery(null, null);
   }
 
   @JsonIgnore
   public String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
-    return featureViewEngine.getBatchQueryString(
-        this,
-        startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
-        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
-        null);
+    return getBatchQuery(startTime, endTime, null);
   }
 
   @JsonIgnore

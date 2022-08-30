@@ -142,9 +142,7 @@ class FeatureView:
         self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
-        self,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ):
         """Get a query string of batch query.
 
