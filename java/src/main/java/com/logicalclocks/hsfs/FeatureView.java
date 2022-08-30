@@ -168,6 +168,16 @@ public class FeatureView {
   }
 
   @JsonIgnore
+  public String getBatchQuery(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException {
+    return featureViewEngine.getBatchQueryString(
+        this,
+        startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
+        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
+        null);
+  }
+
+  @JsonIgnore
   public String getBatchQuery(String startTime, String endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchQueryString(
