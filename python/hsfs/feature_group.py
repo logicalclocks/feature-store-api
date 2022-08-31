@@ -1227,12 +1227,14 @@ class FeatureGroup(FeatureGroupBase):
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of("2020-10-20 07:34:11").read().show()
+            ```
 
         !!! example "Reading commits incrementally between specified points in time:"
             ```python
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of("2020-10-20 07:34:11", exclude_until="2020-10-19 07:34:11").read().show()
+            ```
 
         The first parameter is inclusive while the latter is exclusive.
         That means, in order to query a single commit, you need to query that commit time
@@ -1243,6 +1245,7 @@ class FeatureGroup(FeatureGroupBase):
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of("2020-10-20 07:31:38", exclude_until="2020-10-20 07:31:37").read().show()
+            ```
 
         When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
         a specified point in time can still be excluded.
@@ -1252,6 +1255,7 @@ class FeatureGroup(FeatureGroupBase):
             fs = connection.get_feature_store();
             fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of(None, exclude_until="2020-10-20 07:31:38").read().show()
+            ```
 
         Note that the interval will be applied to all joins in the query.
         If you want to query different intervals for different feature groups in
@@ -1269,7 +1273,7 @@ class FeatureGroup(FeatureGroupBase):
         ```
 
         !!! warning
-            This method only works for feature groups with time time_travel_format=`HUDI`.
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         !!! warning
             Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.

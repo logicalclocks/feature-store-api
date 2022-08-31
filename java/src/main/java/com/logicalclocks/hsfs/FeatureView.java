@@ -296,6 +296,7 @@ public class FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
@@ -322,6 +323,7 @@ public class FeatureView {
             .location(location)
             .trainSplit(Split.TRAIN)
             .seed(seed)
+            .timeSplitSize(2)
             .statisticsConfig(statisticsConfig)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
@@ -347,6 +349,7 @@ public class FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
@@ -376,6 +379,7 @@ public class FeatureView {
             .storageConnector(storageConnector)
             .location(location)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
             .build();
@@ -486,6 +490,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return getDataset(
@@ -509,6 +514,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
@@ -537,6 +543,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return getDataset(
@@ -564,6 +571,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
