@@ -1,11 +1,11 @@
 Please summarize your changes to the code and make sure to include all changes to user-facing APIs: 
 - ...
 
-JIRA Issue: 
+JIRA Issue: -
 
-Priority for Review: 
+Priority for Review: -
 
-Related PRs: 
+Related PRs: -
 
 **How Has This Been Tested?**
 
