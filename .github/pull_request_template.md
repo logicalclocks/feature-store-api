@@ -1,5 +1,6 @@
-Please summarize your changes to the code and make sure to include all changes to user-facing APIs: 
-- ...
+This PR adds/fixes/changes...
+- please summarize your changes to the code 
+- and make sure to include all changes to user-facing APIs
 
 JIRA Issue: -
 
@@ -14,7 +15,7 @@ Related PRs: -
 - [ ] Manual Tests on VM
 
 
-**Checklist for the Assigned Reviewer:**
+**Checklist For The Assigned Reviewer:**
 
 ```
 - [ ] Checked if merge conflicts with master exist
