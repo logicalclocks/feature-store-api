@@ -1,4 +1,4 @@
-Summary of changes to the code, including all changes to user-facing APIs: 
+Please summarize your changes to the code and make sure to include all changes to user-facing APIs: 
 - ...
 
 JIRA Issue: 
