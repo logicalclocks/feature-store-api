@@ -890,10 +890,8 @@ class Engine:
 
         # generate entire expression and execute it
         transformation_fn_expressions.extend(no_transformation_expr)
-        dataset = dataset.selectExpr(*transformation_fn_expressions)
-
-        dataset = dataset.select(*dataset.columns)
-        return dataset
+        transformed_dataset = dataset.selectExpr(*transformation_fn_expressions)
+        return transformed_dataset.select(*dataset.columns)
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 
