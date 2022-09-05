@@ -132,7 +132,7 @@ class FeatureView:
         """Initialise and cache parametrized transformation functions.
 
         # Arguments
-            training_dataset_version: int, optional. Default to be 1. Transformation statistics
+            training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
 

@@ -525,7 +525,7 @@ class Engine:
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
-            training_dataset, dataset=feature_dataframe
+            training_dataset.transformation_functions, dataset=feature_dataframe
         )
         if to_df:
             return feature_dataframe
@@ -856,14 +856,14 @@ class Engine:
             {},
         )
 
-    def _apply_transformation_function(self, training_dataset, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset):
         # generate transformation function expressions
         transformed_feature_names = []
         transformation_fn_expressions = []
         for (
             feature_name,
             transformation_fn,
-        ) in training_dataset.transformation_functions.items():
+        ) in transformation_functions.items():
             fn_registration_name = (
                 transformation_fn.name
                 + "_"
@@ -892,10 +892,7 @@ class Engine:
         transformation_fn_expressions.extend(no_transformation_expr)
         dataset = dataset.selectExpr(*transformation_fn_expressions)
 
-        # sort feature order if it was altered by transformation functions
-        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
-        sorted_feature_names = [ft.name for ft in sorded_features]
-        dataset = dataset.select(*sorted_feature_names)
+        dataset = dataset.select(*dataset.columns)
         return dataset
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
