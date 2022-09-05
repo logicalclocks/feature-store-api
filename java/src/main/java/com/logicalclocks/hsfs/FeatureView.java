@@ -65,6 +65,7 @@ public class FeatureView {
 
   private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static VectorServer vectorServer = new VectorServer();
+  private Integer extraFilterVersion = null;
 
   public static class FeatureViewBuilder {
 
@@ -138,6 +139,10 @@ public class FeatureView {
     vectorServer.initServing(this, batch, external);
   }
 
+  public void initBatchScoring(Integer trainingDatasetVersion) {
+    this.extraFilterVersion = trainingDatasetVersion;
+  }
+
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
@@ -170,41 +175,29 @@ public class FeatureView {
   @JsonIgnore
   public String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
-    return getBatchQuery(startTime, endTime, null);
-  }
-
-  @JsonIgnore
-  public String getBatchQuery(String startTime, String endTime, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchQueryString(
         this,
         startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
         endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
-        trainingDataVersion);
+        extraFilterVersion);
   }
 
   @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
-    return getBatchData(startTime, endTime, Maps.newHashMap(), null);
+    return getBatchData(startTime, endTime, Maps.newHashMap());
   }
 
   @JsonIgnore
-  public Dataset<Row> getBatchData(String startTime, String endTime, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException, ParseException {
-    return getBatchData(startTime, endTime, Maps.newHashMap(), trainingDataVersion);
-  }
-
-  public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions,
-      Integer trainingDataVersion)
+  public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchData(
         this,
         startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
         endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
         readOptions,
-        trainingDataVersion);
-
+        extraFilterVersion
+    );
   }
 
   /**
