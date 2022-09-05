@@ -786,8 +786,7 @@ class FeatureView:
 
     @staticmethod
     def _validate_train_test_split(test_size, train_end, test_start):
-        if not (test_size or (train_end or test_start)
-                or 0 < test_size < 1):
+        if not (test_size or (train_end or test_start) or 0 < test_size < 1):
             raise ValueError(
                 "Invalid split input."
                 " You should specify either `test_size` or (`train_end` or `test_start`)."
@@ -912,7 +911,8 @@ class FeatureView:
         if not (
             (validation_size and test_size)
             or ((train_end or validation_start) and (validation_end or test_start))
-            or (0 < validation_size < 1) or (0 < test_size < 1)
+            or (0 < validation_size < 1)
+            or (0 < test_size < 1)
         ):
             raise ValueError(
                 "Invalid split input."

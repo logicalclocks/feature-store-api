@@ -125,12 +125,8 @@ class TrainingDataset:
             self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
-            self._start_time = self._convert_event_time_to_timestamp(
-                event_start_time
-            )
-            self._end_time = self._convert_event_time_to_timestamp(
-                event_end_time
-            )
+            self._start_time = self._convert_event_time_to_timestamp(event_start_time)
+            self._end_time = self._convert_event_time_to_timestamp(event_end_time)
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
