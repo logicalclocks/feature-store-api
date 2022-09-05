@@ -332,13 +332,14 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
+            training_dataset_version=training_dataset_obj.version
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
             batch_query,
             user_write_options,
             self._OVERWRITE,
-            feature_view_obj=feature_view_obj,
+            feature_view_obj=feature_view_obj
         )
         self._td_code_engine.save_code(training_dataset_obj)
         if engine.get_type() == "spark":
