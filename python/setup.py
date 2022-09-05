@@ -32,7 +32,7 @@ setup(
         "jinja2==2.11.3", # GE issue 1: great_expectations pulls in jinja 3.1.2 which causes import of great_expectations to fail
         "markupsafe==2.0.1", # GE issue 2: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3
         "typing_extensions>=3.7.4", # GE issue 3: missing dependency https://github.com/great-expectations/great_expectations/pull/4082/files, set to 3.7.4 to be compatible with hopsworks base environment
-        "ipywidgets<=7.7.2", # tqdm v4.64 dependency issue on ipywidgets>8 https://github.com/tqdm/tqdm/issues/1310
+        #"ipywidgets<=7.7.2", # tqdm v4.64 dependency issue on ipywidgets>8 https://github.com/tqdm/tqdm/issues/1310
     ],
     extras_require={
         "dev": ["pytest==7.1.2", "pytest-mock==3.8.2", "flake8", "black"],
