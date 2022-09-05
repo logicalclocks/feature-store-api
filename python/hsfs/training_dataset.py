@@ -86,8 +86,6 @@ class TrainingDataset:
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._start_time = self._convert_event_time_to_timestamp(event_start_time)
-        self._end_time = self._convert_event_time_to_timestamp(event_end_time)
         self._validation_size = validation_size
         self._test_size = test_size
         self._train_start = train_start
@@ -127,6 +125,12 @@ class TrainingDataset:
             self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
+            self._start_time = self._convert_event_time_to_timestamp(
+                event_start_time
+            )
+            self._end_time = self._convert_event_time_to_timestamp(
+                event_end_time
+            )
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
@@ -157,6 +161,8 @@ class TrainingDataset:
                 else extra_filter
             )
         else:
+            self._start_time = event_start_time
+            self._end_time = event_end_time
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
             self._storage_connector = StorageConnector.from_response_json(
