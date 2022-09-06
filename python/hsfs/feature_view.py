@@ -911,12 +911,13 @@ class FeatureView:
         if not (
             (validation_size and 0 < validation_size < 1)
             and (test_size and 0 < test_size < 1)
+            and (validation_size + test_size < 1)
             or ((train_end or validation_start) and (validation_end or test_start))
         ):
             raise ValueError(
                 "Invalid split input."
                 " You should specify either (`validation_size` and `test_size`) or ((`train_end` or `validation_start`) and (`validation_end` or `test_start`))."
-                "`validation_size` and `test_size` should be between 0 and 1 if specified."
+                "`validation_size`, `test_size` and sum of `validationSize` and `testSize` should be between 0 and 1 if specified."
             )
 
     def get_training_data(

@@ -616,12 +616,12 @@ public class FeatureView {
   }
 
   private void validateTrainTestSplit(Float testSize, String trainEnd, String testStart) throws FeatureStoreException {
-    if (!((testSize != null && testSize > 0)
+    if (!((testSize != null && testSize > 0 && testSize < 1)
         || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
       throw new FeatureStoreException(
           "Invalid split input."
               + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
-              + " `testSize` should be greater than 0 if specified"
+              + " `testSize` should be between 0 and 1 if specified."
       );
     }
   }
@@ -630,7 +630,9 @@ public class FeatureView {
       Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
       String testStart)
       throws FeatureStoreException {
-    if (!((validationSize != null && validationSize > 0 && testSize != null && testSize > 0)
+    if (!((validationSize != null && validationSize > 0 && validationSize < 1
+        && testSize != null && testSize > 0 && testSize < 1
+        && validationSize + testSize < 1)
         || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
         && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
       throw new FeatureStoreException(
@@ -638,7 +640,8 @@ public class FeatureView {
               + " You should specify either (`validationSize` and `testSize`) or "
               + "((`trainEnd` or `validationStart`) and (`validationEnd` "
               + "or `testStart`))."
-              + "`validationSize` and `testSize` should be greater than 0 if specified."
+              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 " +
+              "if specified."
       );
     }
   }
