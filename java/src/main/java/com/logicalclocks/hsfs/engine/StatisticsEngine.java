@@ -156,6 +156,8 @@ public class StatisticsEngine {
 
       if (statistics.isPresent()) {
         splitStatistics.add(new SplitStatistics(entry.getKey(), statistics.get().getContent()));
+      } else {
+        splitStatistics.add(new SplitStatistics(entry.getKey(), "{}"));
       }
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();

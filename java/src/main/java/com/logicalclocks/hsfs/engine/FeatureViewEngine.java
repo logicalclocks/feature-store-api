@@ -119,12 +119,13 @@ public class FeatureViewEngine {
   public void writeTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
   ) throws IOException, FeatureStoreException {
-    Dataset<Row> dataset = readDataset(featureView, trainingDataset, Maps.newHashMap());
     // Build write options map
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
-    Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions,
-        SaveMode.Overwrite);
+    Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(),
+        trainingDataset.getEventEndTime(), true);
+    Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, query, Maps.newHashMap(),
+        writeOptions, SaveMode.Overwrite);
     computeStatistics(featureView, trainingDataset, datasets);
   }
 
@@ -192,15 +193,18 @@ public class FeatureViewEngine {
         );
       }
     } else {
-      Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
       TrainingDatasetBundle trainingDatasetBundle;
       if (trainingDatasetUpdated.getSplits() != null && !trainingDatasetUpdated.getSplits().isEmpty()) {
-        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, dataset);
+        Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
+            true);
+        Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, query,
+            userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
             convertSplitDatasetsToMap(trainingDatasetUpdated.getSplits(), datasets),
             featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, datasets);
       } else {
+        Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
             featureView.getLabels());
         computeStatistics(featureView, trainingDatasetUpdated, new Dataset[]{dataset});
@@ -221,8 +225,44 @@ public class FeatureViewEngine {
 
   private TrainingDataset createTrainingDataMetadata(
       FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
+    setEventTime(featureView, trainingDataset);
     return featureViewApi.createTrainingData(
         featureView.getName(), featureView.getVersion(), trainingDataset);
+  }
+
+  private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
+    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
+    if (!Strings.isNullOrEmpty(eventTime)) {
+      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
+        for (Split split : trainingDataset.getSplits()) {
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TRAIN)
+              && split.getStartTime() == null) {
+            split.setStartTime(getStartTime());
+          }
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TEST)
+              && split.getEndTime() == null) {
+            split.setEndTime(getEndTime());
+          }
+        }
+      } else {
+        if (trainingDataset.getEventStartTime() == null) {
+          trainingDataset.setEventStartTime(getStartTime());
+        }
+        if (trainingDataset.getEventEndTime() == null) {
+          trainingDataset.setEventEndTime(getEndTime());
+        }
+      }
+    }
+  }
+
+  private Date getStartTime() {
+    return new Date(1000);
+  }
+
+  private Date getEndTime() {
+    return new Date();
   }
 
   private TrainingDataset getTrainingDataMetadata(
@@ -301,8 +341,8 @@ public class FeatureViewEngine {
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),
-        startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime(),
+        startTime == null ? null : startTime.getTime() / 1000,
+        endTime == null ? null : endTime.getTime() / 1000,
         withLabels
     );
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());

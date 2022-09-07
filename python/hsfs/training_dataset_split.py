@@ -21,7 +21,7 @@ import humps
 
 class TrainingDatasetSplit:
 
-    TIME_SPLIT = "TIME_SPLIT"
+    TIME_SERIES_SPLIT = "TIME_SERIES_SPLIT"
     RANDOM_SPLIT = "RANDOM_SPLIT"
     TRAIN = "train"
     VALIDATION = "validation"
@@ -83,9 +83,9 @@ class TrainingDatasetSplit:
         return {
             "name": self._name,
             "percentage": self._percentage,
-            "split_type": self._split_type,
-            "start_time": self._start_time,
-            "end_time": self._end_time,
+            "splitType": self._split_type,
+            "startTime": self._start_time,
+            "endTime": self._end_time,
         }
 
     @classmethod
@@ -96,5 +96,7 @@ class TrainingDatasetSplit:
             split_type=json_decamelized.get(
                 "split_type", TrainingDatasetSplit.RANDOM_SPLIT
             ),
-            percentage=json_decamelized["percentage"],
+            percentage=json_decamelized.get("percentage", None),
+            start_time=json_decamelized.get("start_time", None),
+            end_time=json_decamelized.get("end_time", None),
         )

@@ -18,6 +18,7 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -159,28 +160,6 @@ public class FeatureView {
     return vectorServer.getFeatureVectors(this, entry, external);
   }
 
-  public List<Object> previewFeatureVector()
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return previewFeatureVectors(1).get(0);
-  }
-
-  public List<Object> previewFeatureVector(boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return previewFeatureVectors(1, external).get(0);
-  }
-
-  public List<List<Object>> previewFeatureVectors(Integer n)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, n);
-
-  }
-
-  public List<List<Object>> previewFeatureVectors(Integer n, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.previewFeatureVectors(this, external, n);
-
-  }
-
   @JsonIgnore
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
     return getBatchQuery(null, null);
@@ -317,6 +296,7 @@ public class FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
@@ -343,6 +323,7 @@ public class FeatureView {
             .location(location)
             .trainSplit(Split.TRAIN)
             .seed(seed)
+            .timeSplitSize(2)
             .statisticsConfig(statisticsConfig)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
@@ -368,6 +349,7 @@ public class FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
@@ -397,6 +379,7 @@ public class FeatureView {
             .storageConnector(storageConnector)
             .location(location)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
             .build();
@@ -507,6 +490,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return getDataset(
@@ -530,6 +514,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
@@ -558,6 +543,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .build();
     return getDataset(
@@ -585,6 +571,7 @@ public class FeatureView {
             .testEnd(testEnd)
             .description(description)
             .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
@@ -691,4 +678,21 @@ public class FeatureView {
     featureViewEngine.deleteTag(this, name, version);
   }
 
+  /**
+   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
+   *
+   * @return Set of serving keys
+   * @throws SQLException
+   * @throws IOException
+   * @throws FeatureStoreException
+   * @throws ClassNotFoundException
+   */
+  @JsonIgnore
+  public HashSet<String> getPrimaryKeys()
+      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
+    if (vectorServer.getServingKeys().isEmpty()) {
+      initServing();
+    }
+    return vectorServer.getServingKeys();
+  }
 }

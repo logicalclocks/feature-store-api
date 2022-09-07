@@ -178,13 +178,39 @@ public class Query {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return asOf(wallclockTime, null);
+  }
+
+  /**
+   * Perform time travel on the given Query.
+   * This method returns a new Query object at the specified point in time.
+   * This can then either be read into a Dataframe or used further to perform joins
+   * or construct a training dataset.
+   *
+   * @param wallclockTime point in time
+   * @param excludeUntil point in time
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
+    Long excludeUntilTimestamp = null;
+    if (excludeUntil != null) {
+      excludeUntilTimestamp = utils.getTimeStampFromDateString(excludeUntil);
+    }
     for (Join join : this.joins) {
       Query queryWithTimeStamp = join.getQuery();
       queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
+      if (excludeUntilTimestamp != null) {
+        queryWithTimeStamp.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
+      }
       join.setQuery(queryWithTimeStamp);
     }
     this.setLeftFeatureGroupEndTime(wallclockTimestamp);
+    if (excludeUntilTimestamp != null) {
+      this.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
+    }
     return this;
   }
 
@@ -197,6 +223,8 @@ public class Query {
    * @throws FeatureStoreException
    * @throws IOException
    * @throws ParseException
+   *
+   * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
    */
   public Query pullChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, ParseException {
@@ -268,6 +296,11 @@ public class Query {
     } else {
       this.filter = this.filter.and(filter);
     }
+    return this;
+  }
+
+  public Query appendFeature(Feature feature) {
+    this.leftFeatures.add(feature);
     return this;
   }
 }

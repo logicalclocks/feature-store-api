@@ -33,7 +33,7 @@ public class Split {
 
   public enum SplitType {
     RANDOM_SPLIT,
-    TIME_SPLIT;
+    TIME_SERIES_SPLIT;
   }
 
   public Split(String name, Float percentage) {
@@ -46,7 +46,7 @@ public class Split {
     this.name = name;
     this.startTime = startTime;
     this.endTime = endTime;
-    this.splitType = SplitType.TIME_SPLIT;
+    this.splitType = SplitType.TIME_SERIES_SPLIT;
   }
 
   @Getter

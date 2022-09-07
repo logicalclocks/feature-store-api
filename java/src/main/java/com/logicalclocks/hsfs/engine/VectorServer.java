@@ -14,6 +14,7 @@ import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.util.Constants;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
@@ -51,6 +52,7 @@ public class VectorServer {
   private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
   private TreeMap<Integer, PreparedStatement> preparedStatements;
   private TreeMap<Integer, String> preparedQueryString;
+  @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
 
@@ -241,27 +243,6 @@ public class VectorServer {
       results.close();
     }
     return new ArrayList<List<Object>>(servingVectorsMap.values());
-  }
-
-  public List<List<Object>> previewFeatureVectors(FeatureView featureView, int size)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-
-    return previewFeatureVectors(featureView,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient, size);
-  }
-
-  public List<List<Object>> previewFeatureVectors(FeatureView featureView,
-      boolean external, int size) throws SQLException, FeatureStoreException, IOException,
-      ClassNotFoundException {
-    if (preparedStatements == null || !isBatch) {
-      initPreparedStatement(featureView, true, external);
-    }
-    List<String> queries = Lists.newArrayList();
-    for (Integer fgId : preparedQueryString.keySet()) {
-      String query = preparedQueryString.get(fgId);
-      queries.add(query.substring(0, query.indexOf("WHERE ")) + "LIMIT " + size);
-    }
-    return getFeatureVectors(featureView.getFeatureStore(), featureView.getFeatures(), queries, external);
   }
 
   public void initServing(TrainingDataset trainingDataset, boolean batch)

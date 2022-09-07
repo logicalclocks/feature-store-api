@@ -16,11 +16,13 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.constructor.FsQuery;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import org.apache.hadoop.fs.Path;
@@ -48,19 +50,14 @@ public class TrainingDatasetEngine {
    * Make a REST call to Hopsworks to create the metadata and write the data on the File System.
    *
    * @param trainingDataset
-   * @param dataset
+   * @param query
    * @param userWriteOptions
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public TrainingDataset save(TrainingDataset trainingDataset, Dataset<Row> dataset,
+  public TrainingDataset save(TrainingDataset trainingDataset, Query query,
       Map<String, String> userWriteOptions, List<String> labels)
       throws FeatureStoreException, IOException {
-
-    trainingDataset.setFeatures(utils.parseTrainingDatasetSchema(dataset));
-
-    // set label features
-    TrainingDatasetUtils.setLabelFeature(trainingDataset.getFeatures(), labels);
 
     // Make the rest call to create the training dataset metadata
     TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
@@ -80,36 +77,9 @@ public class TrainingDatasetEngine {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
 
-    SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, SaveMode.Overwrite);
+    SparkEngine.getInstance().write(trainingDataset, query, Maps.newHashMap(), writeOptions, SaveMode.Overwrite);
 
     return trainingDataset;
-  }
-
-  /**
-   * Insert (append or overwrite) data on a training dataset.
-   *
-   * @param trainingDataset
-   * @param dataset
-   * @param providedOptions
-   * @param saveMode
-   * @throws FeatureStoreException
-   */
-  public void insert(TrainingDataset trainingDataset, Dataset<Row> dataset,
-      Map<String, String> providedOptions, SaveMode saveMode)
-      throws FeatureStoreException, IOException {
-    // validate that the schema matches
-    utils.trainingDatasetSchemaMatch(dataset, trainingDataset.getFeatures());
-
-    // check if this training dataset has transformation functions attached and throw exception if any
-    if (trainingDatasetApi.getTransformationFunctions(trainingDataset).size() > 0) {
-      throw new FeatureStoreException("This training dataset has transformation functions attached and "
-          + "insert operation must be performed from a PySpark application");
-    }
-
-    Map<String, String> writeOptions =
-        SparkEngine.getInstance().getWriteOptions(providedOptions, trainingDataset.getDataFormat());
-
-    SparkEngine.getInstance().write(trainingDataset, dataset, writeOptions, saveMode);
   }
 
   public Dataset<Row> read(TrainingDataset trainingDataset, String split, Map<String, String> providedOptions)

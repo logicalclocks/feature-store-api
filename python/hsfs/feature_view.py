@@ -97,7 +97,7 @@ class FeatureView:
                 initialised for retrieving serving vectors as a batch.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
@@ -179,7 +179,7 @@ class FeatureView:
                 providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
@@ -206,7 +206,7 @@ class FeatureView:
                 providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
@@ -216,43 +216,6 @@ class FeatureView:
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
-
-    def preview_feature_vector(self, external: Optional[bool] = None):
-        """Returns a sample of assembled serving vector from online feature store.
-
-        # Arguments
-            external: boolean, optional. If set to True, the connection to the
-                online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        # Returns
-            `list` List of feature values, ordered according to positions of this
-            features in training dataset query.
-        """
-        if self._single_vector_server is None:
-            self.init_serving(external=external)
-        return self._single_vector_server.get_preview_vectors(1)
-
-    def preview_feature_vectors(self, n: int, external: Optional[bool] = None):
-        """Returns n samples of assembled serving vectors in batches from online feature store.
-
-        # Arguments
-            n: int. Number of feature vectors to return.
-            external: boolean, optional. If set to True, the connection to the
-                online feature store is established using the same host as
-                for the `host` parameter in the [`hsfs.connection()`](project.md#connection) method.
-                If set to False, the online feature store storage connector is used
-                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
-                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        # Returns
-            `List[list]` List of lists of feature values , ordered according to
-            positions of this features in training dataset query.
-        """
-        if self._single_vector_server is None:
-            self.init_serving(external=external)
-        return self._single_vector_server.get_preview_vectors(n)
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
@@ -477,6 +440,7 @@ class FeatureView:
             name=self.name,
             version=None,
             test_size=test_size,
+            time_split_size=2,
             train_start=train_start,
             train_end=train_end,
             test_start=test_start,
@@ -606,6 +570,7 @@ class FeatureView:
             version=None,
             validation_size=validation_size,
             test_size=test_size,
+            time_split_size=3,
             train_start=train_start,
             train_end=train_end,
             validation_start=validation_start,
@@ -788,6 +753,7 @@ class FeatureView:
             train_end=train_end,
             test_start=test_start,
             test_end=test_end,
+            time_split_size=2,
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
@@ -890,6 +856,7 @@ class FeatureView:
             splits={},
             validation_size=validation_size,
             test_size=test_size,
+            time_split_size=3,
             train_start=train_start,
             train_end=train_end,
             validation_start=validation_start,
@@ -1227,3 +1194,16 @@ class FeatureView:
     @schema.setter
     def schema(self, features):
         self._features = features
+
+    @property
+    def primary_keys(self):
+        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        _vector_server = self._single_vector_server or self._batch_vectors_server
+        if _vector_server:
+            return _vector_server.serving_keys
+        else:
+            _vector_server = vector_server.VectorServer(
+                self._featurestore_id, self._features
+            )
+            _vector_server.init_prepared_statement(self, False, False)
+            return _vector_server.serving_keys
