@@ -1448,7 +1448,7 @@ class FeatureGroup(FeatureGroupBase):
 
         for field in schema["fields"]:
             if field["name"] in complex_features:
-                field["type"] = ["null", "bytes"]
+                field["type"] = ["bytes", "null"]
 
         schema_s = json.dumps(schema)
         try:
