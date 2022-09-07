@@ -234,15 +234,15 @@ public class FeatureViewEngine {
     String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
     if (!Strings.isNullOrEmpty(eventTime)) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        for (Split split: trainingDataset.getSplits()) {
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT &&
-              split.getName().equals(Split.TRAIN) &&
-              split.getStartTime() == null) {
+        for (Split split : trainingDataset.getSplits()) {
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TRAIN)
+              && split.getStartTime() == null) {
             split.setStartTime(getStartTime());
           }
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT &&
-              split.getName().equals(Split.TEST) &&
-              split.getEndTime() == null) {
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TEST)
+              && split.getEndTime() == null) {
             split.setEndTime(getEndTime());
           }
         }
