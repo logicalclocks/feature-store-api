@@ -737,7 +737,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_test, y_test):
+            (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -772,7 +772,7 @@ class FeatureView:
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
         )
-        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+        return df
 
     @staticmethod
     def _validate_train_test_split(test_size, train_end, test_start):
@@ -837,7 +837,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_val, y_val, X_test, y_test):
+            (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -885,11 +885,7 @@ class FeatureView:
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
         )
-        return (
-            df[TrainingDatasetSplit.TRAIN]
-            + df[TrainingDatasetSplit.VALIDATION]
-            + df[TrainingDatasetSplit.TEST]
-        )
+        return df
 
     @staticmethod
     def _validate_train_validation_test_split(
@@ -962,7 +958,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_test, y_test):
+            (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -972,7 +968,7 @@ class FeatureView:
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
         )
-        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+        return df
 
     def get_train_validation_test_split(
         self,
@@ -996,7 +992,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_val, y_val, X_test, y_test):
+            (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -1010,11 +1006,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
         )
-        return (
-            df[TrainingDatasetSplit.TRAIN]
-            + df[TrainingDatasetSplit.VALIDATION]
-            + df[TrainingDatasetSplit.TEST]
-        )
+        return df
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(

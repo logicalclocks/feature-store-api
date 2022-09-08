@@ -209,12 +209,17 @@ class FeatureViewEngine:
                 split_df[split_name] = engine.get_instance().split_labels(
                     split_df[split_name], feature_view_obj.labels
                 )
+            feature_dfs = []
+            label_dfs = []
+            for split in splits:
+                feature_dfs.append(split_df[split][0])
+                label_dfs.append(split_df[split][1])
+            return td_updated, feature_dfs + label_dfs
         else:
             split_df = engine.get_instance().split_labels(
                 split_df, feature_view_obj.labels
             )
-
-        return td_updated, split_df
+            return td_updated, split_df
 
     def _set_event_time(self, feature_view_obj, training_dataset_obj):
         event_time = feature_view_obj.query._left_feature_group.event_time
