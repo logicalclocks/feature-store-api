@@ -1,0 +1,26 @@
+{
+  "get": {
+    "response": {
+      "data_path": "test_data_path",
+      "job": {
+        "id": "test_id",
+        "name": "test_name",
+        "creation_time": "test_creation_time",
+        "config": "test_config",
+        "job_type": "test_job_type",
+        "creator": "test_creator",
+        "executions": "test_executions",
+        "type": "test_type",
+        "href": "test_href",
+        "expand": "test_expand",
+        "items": "test_items",
+        "count": "test_count"
+      },
+      "href": "test_href",
+      "expand": "test_expand",
+      "items": "test_items",
+      "count": "test_count",
+      "type": "test_type"
+    }
+  }
+}

@@ -937,8 +937,8 @@ class GcsConnector(StorageConnector):
         self,
         id,
         name,
-        description,
         featurestore_id,
+        description=None,
         # members specific to type of connector
         key_path=None,
         bucket=None,

@@ -148,7 +148,7 @@ class Engine:
             return dataframe.toPandas()
         if dataframe_type.lower() == "numpy":
             return dataframe.toPandas().values
-        if dataframe_type == "python":
+        if dataframe_type.lower() == "python":
             return dataframe.toPandas().values.tolist()
 
         raise TypeError(
@@ -573,7 +573,9 @@ class Engine:
     ):
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
-        stream = self._spark_session.readStream.format(storage_connector.SPARK_FORMAT)
+        stream = self._spark_session.readStream.format(
+            storage_connector.SPARK_FORMAT
+        )  # todo SPARK_FORMAT available only for KAFKA connectors
 
         # set user options last so that they overwrite any default options
         stream = stream.options(**storage_connector.spark_options(), **options)

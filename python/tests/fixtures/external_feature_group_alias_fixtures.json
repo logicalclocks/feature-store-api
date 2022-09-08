@@ -1,0 +1,18 @@
+{
+  "get": {
+    "response": {
+      "on_demand_feature_group": {
+        "type": "onDemandFeaturegroupDTO",
+        "id": 15,
+        "storageConnector": {
+          "type": "featurestoreJdbcConnectorDTO",
+          "featurestoreId": 67,
+          "id": 2,
+          "name": "test_project_featurestore",
+          "storageConnectorType": "JDBC"
+        }
+      },
+      "alias": "test_alias"
+    }
+  }
+}

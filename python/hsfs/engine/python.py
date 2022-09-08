@@ -52,7 +52,7 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions, external, hopsworks
+from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -645,7 +645,7 @@ class Engine:
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         spark_job_configuration = user_write_options.pop("spark", None)
-        td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
+        td_app_conf = training_dataset_job_conf.TrainingDatasetJobConf(
             query=dataset,
             overwrite=(save_mode == "overwrite"),
             write_options=user_write_options,
@@ -706,7 +706,7 @@ class Engine:
             return dataframe
         if dataframe_type.lower() == "numpy":
             return dataframe.values
-        if dataframe_type == "python":
+        if dataframe_type.lower() == "python":
             return dataframe.values.tolist()
 
         raise TypeError(
@@ -880,25 +880,9 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            while True:
-                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
-                try:
-                    # produce
-                    producer.produce(
-                        topic=feature_group._online_topic_name,
-                        key=key,
-                        value=encoded_row,
-                        callback=acked,
-                    )
-
-                    # Trigger internal callbacks to empty op queue
-                    producer.poll(0)
-                    break
-                except BufferError as e:
-                    if offline_write_options.get("debug_kafka", False):
-                        print("Caught: {}".format(e))
-                    # backoff for 1 second
-                    producer.poll(1)
+            self._kafka_produce(
+                producer, feature_group, key, encoded_row, acked, offline_write_options
+            )
 
         # make sure producer blocks and everything is delivered
         producer.flush()
@@ -923,6 +907,29 @@ class Engine:
             self._wait_for_job(job, offline_write_options)
 
         return job
+
+    def _kafka_produce(
+        self, producer, feature_group, key, encoded_row, acked, offline_write_options
+    ):
+        while True:
+            # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+            try:
+                # produce
+                producer.produce(
+                    topic=feature_group._online_topic_name,
+                    key=key,
+                    value=encoded_row,
+                    callback=acked,
+                )
+
+                # Trigger internal callbacks to empty op queue
+                producer.poll(0)
+                break
+            except BufferError as e:
+                if offline_write_options.get("debug_kafka", False):
+                    print("Caught: {}".format(e))
+                # backoff for 1 second
+                producer.poll(1)
 
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
@@ -966,7 +973,7 @@ class Engine:
                     )
                 ]
             )
-        elif isinstance(client.get_instance(), external.Client):
+        else:
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("EXTERNAL://", "")

@@ -1,0 +1,14 @@
+{
+  "get": {
+    "response": {
+      "enabled": true,
+      "correlations": true,
+      "histograms": true,
+      "exact_uniqueness": true,
+      "columns": []
+    }
+  },
+  "get_basic_info": {
+    "response": {}
+  }
+}
