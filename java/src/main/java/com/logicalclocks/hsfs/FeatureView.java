@@ -404,9 +404,15 @@ public class FeatureView {
   }
 
   private List<Dataset<Row>> getDataset(TrainingDatasetBundle trainingDatasetBundle, List<String> splits) {
-    return splits.stream()
-        .flatMap(split -> trainingDatasetBundle.getDataset(split, true).stream())
-        .collect(Collectors.toList());
+    List<Dataset<Row>> features = Lists.newArrayList();
+    List<Dataset<Row>> labels = Lists.newArrayList();
+    for (String split: splits) {
+      List<Dataset<Row>> featureLabel = trainingDatasetBundle.getDataset(split, true);
+      features.add(featureLabel.get(0));
+      labels.add(featureLabel.get(1));
+    }
+    features.addAll(labels);
+    return features;
   }
 
   public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
