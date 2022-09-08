@@ -76,7 +76,7 @@ class TestExpectationSuite:
         assert es.ge_cloud_id == None
         assert es.data_asset_type == None
         assert es.run_validation == True
-        assert es.validation_ingestion_policy == "STRICT"
+        assert es.validation_ingestion_policy == "ALWAYS"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
         assert es.meta == {"key": "value"}
