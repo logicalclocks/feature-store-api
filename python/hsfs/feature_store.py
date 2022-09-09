@@ -313,7 +313,7 @@ class FeatureStore:
         """
         return self._training_dataset_api.get(name, None)
 
-    def get_storage_connector(self, name: str):
+    def get_storage_connector(self, name: str, session_duration: Optional[int] = None):
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -334,11 +334,17 @@ class FeatureStore:
 
         # Arguments
             name: Name of the storage connector to retrieve.
+            session_duration: If the connector assumes an IAM role for authentication,
+                for example for S3, this setting configures its session duration in seconds.
+                Make sure the provided session duration is within the maximum session
+                duration configured on the role itself. If you haven't configured a maximum
+                on the rule, the default maximum by AWS is 1 hour or 3600 seconds.
+                Defaults to `None`, that is 3600 seconds.
 
         # Returns
             `StorageConnector`. Storage connector object.
         """
-        return self._storage_connector_api.get(name)
+        return self._storage_connector_api.get(name, session_duration)
 
     def sql(
         self,

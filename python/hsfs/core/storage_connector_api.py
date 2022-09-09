@@ -21,7 +21,7 @@ class StorageConnectorApi:
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
 
-    def _get(self, name):
+    def _get(self, name, session_duration):
         """Returning response dict instead of initialized object."""
         _client = client.get_instance()
         path_params = [
@@ -33,9 +33,11 @@ class StorageConnectorApi:
             name,
         ]
         query_params = {"temporaryCredentials": True}
+        if session_duration is not None:
+            query_params["durationSeconds"] = session_duration
         return _client._send_request("GET", path_params, query_params=query_params)
 
-    def get(self, name):
+    def get(self, name, session_duration):
         """Get storage connector with name and type.
 
         :param name: name of the storage connector
@@ -43,7 +45,11 @@ class StorageConnectorApi:
         :return: the storage connector
         :rtype: StorageConnector
         """
-        return storage_connector.StorageConnector.from_response_json(self._get(name))
+        connector = storage_connector.StorageConnector.from_response_json(
+            self._get(name, session_duration)
+        )
+        connector._session_duration = session_duration
+        return connector
 
     def refetch(self, storage_connector_instance):
         """
@@ -51,7 +57,11 @@ class StorageConnectorApi:
         credentials.
         """
         return storage_connector_instance.update_from_response_json(
-            self._get(storage_connector_instance.name)
+            self._get(
+                storage_connector_instance.name,
+                storage_connector_instance._session_duration,
+            ),
+            storage_connector_instance._session_duration,
         )
 
     def get_online_connector(self):

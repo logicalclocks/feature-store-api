@@ -54,12 +54,13 @@ class StorageConnector(ABC):
                 return subcls(**json_decamelized)
         raise ValueError
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(self, json_dict, session_duration):
         json_decamelized = humps.decamelize(json_dict)
         _ = json_decamelized.pop("type")
         if self.type == json_decamelized["storage_connector_type"]:
             _ = json_decamelized.pop("storage_connector_type")
             self.__init__(**json_decamelized)
+            self._session_duration = session_duration
         else:
             raise ValueError("Failed to update storage connector information.")
         return self
