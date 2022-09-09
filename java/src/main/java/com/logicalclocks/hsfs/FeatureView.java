@@ -640,8 +640,8 @@ public class FeatureView {
               + " You should specify either (`validationSize` and `testSize`) or "
               + "((`trainEnd` or `validationStart`) and (`validationEnd` "
               + "or `testStart`))."
-              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 " +
-              "if specified."
+              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
+              + "if specified."
       );
     }
   }
