@@ -2286,7 +2286,7 @@ class TestSpark:
 
         # Act
         spark_engine._write_training_dataset_single(
-            training_dataset=None,
+            transformation_functions=None,
             feature_dataframe=None,
             storage_connector=None,
             data_format="csv",
@@ -2322,7 +2322,7 @@ class TestSpark:
 
         # Act
         spark_engine._write_training_dataset_single(
-            training_dataset=None,
+            transformation_functions=None,
             feature_dataframe=None,
             storage_connector=None,
             data_format="tsv",
@@ -2358,7 +2358,7 @@ class TestSpark:
 
         # Act
         spark_engine._write_training_dataset_single(
-            training_dataset=None,
+            transformation_functions=None,
             feature_dataframe=None,
             storage_connector=None,
             data_format=None,
@@ -3859,14 +3859,14 @@ class TestSpark:
         spark_df = spark_engine._spark_session.createDataFrame(df)
 
         expected_df = pd.DataFrame(
-            data={"col_0": ["2", "3"], "col_1": ["test_1", "test_2"]}
+            data={"col_0": ["2", "3"], "col_1": ["test_1", "test_2"], "col_2": [True, False]}
         )  # todo why it doesnt return int?
 
         expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
 
         # Act
         result = spark_engine._apply_transformation_function(
-            training_dataset=td,
+            transformation_functions=td.transformation_functions,
             dataset=spark_df,
         )
 

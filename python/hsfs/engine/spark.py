@@ -514,7 +514,7 @@ class Engine:
 
     def _write_training_dataset_single(
         self,
-        training_dataset,
+        transformation_functions,
         feature_dataframe,
         storage_connector,
         data_format,
@@ -525,7 +525,7 @@ class Engine:
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
-            training_dataset.transformation_functions, dataset=feature_dataframe
+            transformation_functions, dataset=feature_dataframe
         )
         if to_df:
             return feature_dataframe

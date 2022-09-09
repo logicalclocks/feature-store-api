@@ -802,11 +802,11 @@ class Engine:
         return file
 
     @staticmethod
-    def _apply_transformation_function(training_dataset_instance, dataset):
+    def _apply_transformation_function(transformation_functions, dataset):
         for (
             feature_name,
             transformation_fn,
-        ) in training_dataset_instance.transformation_functions.items():
+        ) in transformation_functions.items():
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
