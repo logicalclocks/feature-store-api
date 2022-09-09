@@ -2250,7 +2250,7 @@ class TestPython:
 
         # Act
         result = python_engine._apply_transformation_function(
-            training_dataset_instance=td, dataset=df
+            transformation_functions=td.transformation_functions, dataset=df
         )
 
         # Assert

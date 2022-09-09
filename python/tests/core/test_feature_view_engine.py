@@ -1564,7 +1564,7 @@ class TestFeatureViewEngine:
                 0
             ][
                 0
-            ].transformation_functions
+            ]
             == tf_value
         )
         assert (

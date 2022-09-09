@@ -7,8 +7,8 @@
         "data_format": "hudi",
         "featurestore_id": 22,
         "location": "test_location",
-        "event_start_time": "2022-03-05",
-        "event_end_time": "2022-03-08",
+        "event_start_time": 1646438400000,
+        "event_end_time": 1646697600000,
         "coalesce": "test_coalesce",
         "description": "test_description",
         "storage_connector": {

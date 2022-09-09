@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
@@ -63,6 +65,7 @@ public class FeatureView {
 
   private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static VectorServer vectorServer = new VectorServer();
+  private Integer extraFilterVersion = null;
 
   public static class FeatureViewBuilder {
 
@@ -136,6 +139,10 @@ public class FeatureView {
     vectorServer.initServing(this, batch, external);
   }
 
+  public void initBatchScoring(Integer trainingDatasetVersion) {
+    this.extraFilterVersion = trainingDatasetVersion;
+  }
+
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
@@ -171,7 +178,8 @@ public class FeatureView {
     return featureViewEngine.getBatchQueryString(
         this,
         startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
-        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null);
+        endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
+        extraFilterVersion);
   }
 
   @JsonIgnore
@@ -180,14 +188,16 @@ public class FeatureView {
     return getBatchData(startTime, endTime, Maps.newHashMap());
   }
 
+  @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchData(
         this,
         startTime != null ? FeatureGroupUtils.getDateFromDateString(startTime) : null,
         endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
-        readOptions);
-
+        readOptions,
+        extraFilterVersion
+    );
   }
 
   /**
@@ -260,7 +270,8 @@ public class FeatureView {
   public Integer createTrainingData(
       String startTime, String endTime, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
         this.featureStore
@@ -275,6 +286,8 @@ public class FeatureView {
             .location(location)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
@@ -304,7 +317,8 @@ public class FeatureView {
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
       String description, DataFormat dataFormat, Boolean coalesce, StorageConnector storageConnector, String location,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
@@ -325,6 +339,8 @@ public class FeatureView {
             .seed(seed)
             .timeSplitSize(2)
             .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
@@ -358,7 +374,8 @@ public class FeatureView {
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
@@ -382,6 +399,8 @@ public class FeatureView {
             .timeSplitSize(3)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
@@ -406,7 +425,7 @@ public class FeatureView {
   public List<Dataset<Row>> getTrainingData(
       Integer version
   ) throws IOException, FeatureStoreException, ParseException {
-    return getTrainingData(version);
+    return getTrainingData(version, null);
   }
 
   public List<Dataset<Row>> getTrainingData(
@@ -420,7 +439,7 @@ public class FeatureView {
   public List<Dataset<Row>> getTrainTestSplit(
       Integer version
   ) throws IOException, FeatureStoreException, ParseException {
-    return getTrainTestSplit(version);
+    return getTrainTestSplit(version, null);
   }
 
   public List<Dataset<Row>> getTrainTestSplit(
@@ -435,7 +454,7 @@ public class FeatureView {
   public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version
   ) throws IOException, FeatureStoreException, ParseException {
-    return getTrainValidationTestSplit(version);
+    return getTrainValidationTestSplit(version, null);
   }
 
   public List<Dataset<Row>> getTrainValidationTestSplit(
@@ -464,7 +483,8 @@ public class FeatureView {
 
   public List<Dataset<Row>> trainingData(
       String startTime, String endTime, String description,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
         this.featureStore
@@ -476,6 +496,8 @@ public class FeatureView {
             .seed(seed)
             .statisticsConfig(statisticsConfig)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions).getDataset(true);
   }
@@ -506,7 +528,8 @@ public class FeatureView {
 
   public List<Dataset<Row>> trainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
-      String description, Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions
+      String description, Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
@@ -524,6 +547,8 @@ public class FeatureView {
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return getDataset(
         featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions),
@@ -560,7 +585,8 @@ public class FeatureView {
   public List<Dataset<Row>> trainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
@@ -581,6 +607,8 @@ public class FeatureView {
             .seed(seed)
             .trainingDatasetType(TrainingDatasetType.IN_MEMORY_TRAINING_DATASET)
             .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
             .build();
     return getDataset(
         featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions),
@@ -588,12 +616,12 @@ public class FeatureView {
   }
 
   private void validateTrainTestSplit(Float testSize, String trainEnd, String testStart) throws FeatureStoreException {
-    if (!((testSize != null && testSize > 0)
+    if (!((testSize != null && testSize > 0 && testSize < 1)
         || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
       throw new FeatureStoreException(
           "Invalid split input."
               + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
-              + " `testSize` should be greater than 0 if specified"
+              + " `testSize` should be between 0 and 1 if specified."
       );
     }
   }
@@ -602,7 +630,9 @@ public class FeatureView {
       Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
       String testStart)
       throws FeatureStoreException {
-    if (!((validationSize != null && validationSize > 0 && testSize != null && testSize > 0)
+    if (!((validationSize != null && validationSize > 0 && validationSize < 1
+        && testSize != null && testSize > 0 && testSize < 1
+        && validationSize + testSize < 1)
         || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
         && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
       throw new FeatureStoreException(
@@ -610,7 +640,8 @@ public class FeatureView {
               + " You should specify either (`validationSize` and `testSize`) or "
               + "((`trainEnd` or `validationStart`) and (`validationEnd` "
               + "or `testStart`))."
-              + "`validationSize` and `testSize` should be greater than 0 if specified."
+              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
+              + "if specified."
       );
     }
   }

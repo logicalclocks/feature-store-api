@@ -23,7 +23,7 @@ from hsfs.training_dataset_split import TrainingDatasetSplit
 import humps
 
 from hsfs import util, training_dataset_feature, storage_connector, training_dataset
-from hsfs.constructor import query
+from hsfs.constructor import query, filter
 from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
@@ -132,16 +132,9 @@ class FeatureView:
         """Initialise and cache parametrized transformation functions.
 
         # Arguments
-            training_dataset_version: int, optional. Default to be 1. Transformation statistics
+            training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
-
-        if training_dataset_version is None:
-            training_dataset_version = 1
-            warnings.warn(
-                "No training dataset version was provided to initialise batch scoring . Defaulting to version 1.",
-                util.VersionWarning,
-            )
 
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
@@ -161,7 +154,14 @@ class FeatureView:
             `str`: batch query
         """
         return self._feature_view_engine.get_batch_query_string(
-            self, start_time, end_time
+            self,
+            start_time,
+            end_time,
+            training_dataset_version=(
+                self._batch_scoring_server.training_dataset_version
+                if self._batch_scoring_server
+                else None
+            ),
         )
 
     def get_feature_vector(
@@ -257,6 +257,7 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -338,6 +339,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -360,6 +362,7 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -454,6 +457,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -479,6 +483,7 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -586,6 +591,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -632,6 +638,7 @@ class FeatureView:
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -681,6 +688,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_obj=td
@@ -699,6 +707,7 @@ class FeatureView:
         test_start: Optional[str] = "",
         test_end: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -761,6 +770,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -776,11 +786,11 @@ class FeatureView:
 
     @staticmethod
     def _validate_train_test_split(test_size, train_end, test_start):
-        if not (test_size or (train_end or test_start)):
+        if not ((test_size and 0 < test_size < 1) or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
-                "You should specify either `test_size` or (`train_end` or `test_start`)."
-                " `test_size` should be greater than 0 if specified"
+                " You should specify either `test_size` or (`train_end` or `test_start`)."
+                " `test_size` should be between 0 and 1 if specified."
             )
 
     def train_validation_test_split(
@@ -794,6 +804,7 @@ class FeatureView:
         test_start: Optional[str] = "",
         test_end: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -870,6 +881,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -897,13 +909,15 @@ class FeatureView:
         test_start,
     ):
         if not (
-            (validation_size and test_size)
+            (validation_size and 0 < validation_size < 1)
+            and (test_size and 0 < test_size < 1)
+            and (validation_size + test_size < 1)
             or ((train_end or validation_start) and (validation_end or test_start))
         ):
             raise ValueError(
                 "Invalid split input."
                 " You should specify either (`validation_size` and `test_size`) or ((`train_end` or `validation_start`) and (`validation_end` or `test_start`))."
-                "`validation_size` and `test_size` should be greater than 0 if specified."
+                "`validation_size`, `test_size` and sum of `validationSize` and `testSize` should be between 0 and 1 if specified."
             )
 
     def get_training_data(
