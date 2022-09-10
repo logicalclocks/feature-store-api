@@ -142,6 +142,30 @@ def ge_validate(job_conf: Dict[Any, Any]) -> None:
     )
 
 
+def import_fg(job_conf: Dict[Any, Any]) -> None:
+    """
+    Import data to a feature group using storage connector.
+    """
+    print("====Input JSON config====", job_conf)
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+    # retrieve connector
+    st = fs.get_storage_connector(name=job_conf["storageConnectorName"])
+    # read data
+    spark_options = job_conf.pop("options")
+    df = st.read(query=job_conf["query"], options=spark_options)
+    # create fg and insert
+    fg = fs.get_or_create_feature_group(
+        name=job_conf["featureGroupName"],
+        version=job_conf["version"],
+        primary_key=job_conf["primaryKey"],
+        online_enabled=job_conf.pop("onlineEnabled", False) or False,
+        statistics_config=job_conf.pop("statisticsConfig", None) or None,
+        partition_key=job_conf.pop("partitionKey", []) or [],
+    )
+    fg.insert(df)
+
+
 if __name__ == "__main__":
     # Setup spark first so it fails faster in case of args errors
     # Otherwise the resource manager will wait until the spark application master
@@ -158,6 +182,7 @@ if __name__ == "__main__":
             "create_fv_td",
             "compute_stats",
             "ge_validate",
+            "import_fg",
         ],
         help="Operation type",
     )
@@ -180,3 +205,5 @@ if __name__ == "__main__":
         compute_stats(job_conf)
     elif args.op == "ge_validate":
         ge_validate(job_conf)
+    elif args.op == "import_fg":
+        import_fg(job_conf)
