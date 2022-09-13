@@ -37,7 +37,7 @@ class StorageConnectorApi:
             query_params["durationSeconds"] = session_duration
         return _client._send_request("GET", path_params, query_params=query_params)
 
-    def get(self, name, session_duration):
+    def get(self, name, session_duration=None):
         """Get storage connector with name and type.
 
         :param name: name of the storage connector
