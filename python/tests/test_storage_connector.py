@@ -29,7 +29,7 @@ class TestBaseStorageConnector:
         json["name"] = "updated_name"
 
         # Act
-        sc.update_from_response_json(json, 900)
+        sc.update_from_response_json(json)
 
         # Assert
         assert sc.id == 1
@@ -38,8 +38,6 @@ class TestBaseStorageConnector:
         assert sc.description == "HOPSFS connector description"
         assert sc._hopsfs_path == "test_path"
         assert sc._dataset_name == "test_dataset_name"
-
-        assert sc._session_duration == 900
 
 
 class TestHopsfsConnector:
