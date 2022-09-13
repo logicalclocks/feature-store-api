@@ -338,7 +338,7 @@ class FeatureStore:
                 for example for S3, this setting configures its session duration in seconds.
                 Make sure the provided session duration is within the maximum session
                 duration configured on the role itself. If you haven't configured a maximum
-                on the rule, the default maximum by AWS is 1 hour or 3600 seconds.
+                on the role, the default maximum by AWS is 1 hour or 3600 seconds.
                 Defaults to `None`, that is 3600 seconds.
 
         # Returns
