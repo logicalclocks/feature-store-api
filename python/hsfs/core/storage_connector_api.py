@@ -56,13 +56,15 @@ class StorageConnectorApi:
         Refetches the storage connector from Hopsworks, in order to update temporary
         credentials.
         """
-        return storage_connector_instance.update_from_response_json(
+        session_duration = storage_connector_instance._session_duration
+        connector = storage_connector_instance.update_from_response_json(
             self._get(
                 storage_connector_instance.name,
-                storage_connector_instance._session_duration,
-            ),
-            storage_connector_instance._session_duration,
+                session_duration,
+            )
         )
+        connector._session_duration = session_duration
+        return connector
 
     def get_online_connector(self):
         _client = client.get_instance()
