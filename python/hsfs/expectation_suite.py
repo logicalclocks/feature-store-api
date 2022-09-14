@@ -36,7 +36,7 @@ class ExpectationSuite:
         data_asset_type=None,
         ge_cloud_id=None,
         run_validation=True,
-        validation_ingestion_policy="STRICT",
+        validation_ingestion_policy="ALWAYS",
         featurestore_id=None,
         featuregroup_id=None,
         href=None,
