@@ -123,3 +123,33 @@ class TestQuery:
         assert len(q._joins) == 0
         assert q._filter == None
         assert q._python_engine == True
+
+    def test_as_of(self, mocker, backend_fixtures):
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])
+        q.as_of("2022-01-01 00:00:00")
+
+        assert q.left_feature_group_end_time == 1640991600000
+        assert q._joins[0].query.left_feature_group_end_time == 1640991600000
+
+        q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])
+        q.as_of(None, "2022-01-01 00:00:00")
+
+        assert q.left_feature_group_start_time == 1640991600000
+        assert q._joins[0].query.left_feature_group_start_time == 1640991600000
+
+        q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])
+        q.as_of("2022-01-02 00:00:00", exclude_until="2022-01-01 00:00:00")
+
+        assert q.left_feature_group_end_time == 1641078000000
+        assert q.left_feature_group_start_time == 1640991600000
+        assert q._joins[0].query.left_feature_group_end_time == 1641078000000
+        assert q._joins[0].query.left_feature_group_start_time == 1640991600000
+
+        q.as_of()
+
+        assert q.left_feature_group_end_time is None
+        assert q.left_feature_group_start_time is None
+        assert q._joins[0].query.left_feature_group_end_time is None
+        assert q._joins[0].query.left_feature_group_start_time is None
+
