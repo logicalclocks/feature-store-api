@@ -1294,9 +1294,6 @@ class TestPython:
         mock_tf_engine = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
-        mock_python_engine_apply_transformation_function = mocker.patch(
-            "hsfs.engine.python.Engine._apply_transformation_function"
-        )
 
         python_engine = python.Engine()
 
@@ -1320,7 +1317,6 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_prepare_transform_split_df.call_count == 0
-        assert mock_python_engine_apply_transformation_function.call_count == 1
 
     def test_get_training_data_splits(self, mocker):
         # Arrange
@@ -1330,9 +1326,6 @@ class TestPython:
         )
         mock_tf_engine = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-        mock_python_engine_apply_transformation_function = mocker.patch(
-            "hsfs.engine.python.Engine._apply_transformation_function"
         )
 
         python_engine = python.Engine()
@@ -1357,7 +1350,6 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_prepare_transform_split_df.call_count == 1
-        assert mock_python_engine_apply_transformation_function.call_count == 0
 
     def test_split_labels(self, mocker):
         # Arrange
@@ -1392,17 +1384,11 @@ class TestPython:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mock_python_engine_time_series_split = mocker.patch(
-            "hsfs.engine.python.Engine._time_series_split"
-        )
         mock_python_engine_random_split = mocker.patch(
             "hsfs.engine.python.Engine._random_split"
         )
         mock_tf_engine = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-        mock_python_engine_apply_transformation_function = mocker.patch(
-            "hsfs.engine.python.Engine._apply_transformation_function"
         )
 
         python_engine = python.Engine()
@@ -1426,7 +1412,6 @@ class TestPython:
             "train": df.loc[df["col1"] == 1],
             "test": df.loc[df["col1"] == 2],
         }
-        mock_python_engine_apply_transformation_function.return_value = "temp"
 
         # Act
         result = python_engine._prepare_transform_split_df(
@@ -1437,9 +1422,10 @@ class TestPython:
         )
 
         # Assert
-        assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_random_split.call_count == 1
-        assert result == {"test": "temp", "train": "temp"}
+        assert isinstance(result["train"], pd.DataFrame)
+        assert isinstance(result["test"], pd.DataFrame)
+
 
     def test_prepare_transform_split_df_time_split_td_features(self, mocker):
         # Arrange
@@ -1449,14 +1435,8 @@ class TestPython:
         mock_python_engine_time_series_split = mocker.patch(
             "hsfs.engine.python.Engine._time_series_split"
         )
-        mock_python_engine_random_split = mocker.patch(
-            "hsfs.engine.python.Engine._random_split"
-        )
         mock_tf_engine = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-        mock_python_engine_apply_transformation_function = mocker.patch(
-            "hsfs.engine.python.Engine._apply_transformation_function"
         )
 
         python_engine = python.Engine()
@@ -1498,7 +1478,6 @@ class TestPython:
             "train": df.loc[df["col1"] == 1],
             "test": df.loc[df["col1"] == 2],
         }
-        mock_python_engine_apply_transformation_function.return_value = "temp"
 
         # Act
         result = python_engine._prepare_transform_split_df(
@@ -1509,9 +1488,9 @@ class TestPython:
         )
 
         # Assert
-        assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_time_series_split.call_count == 1
-        assert result == {"test": "temp", "train": "temp"}
+        assert isinstance(result["train"], pd.DataFrame)
+        assert isinstance(result["test"], pd.DataFrame)
 
     def test_prepare_transform_split_df_time_split_query_features(self, mocker):
         # Arrange
@@ -1521,20 +1500,19 @@ class TestPython:
         mock_python_engine_time_series_split = mocker.patch(
             "hsfs.engine.python.Engine._time_series_split"
         )
-        mock_python_engine_random_split = mocker.patch(
-            "hsfs.engine.python.Engine._random_split"
-        )
         mock_tf_engine = mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-        mock_python_engine_apply_transformation_function = mocker.patch(
-            "hsfs.engine.python.Engine._apply_transformation_function"
         )
 
         python_engine = python.Engine()
 
         d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
         df = pd.DataFrame(data=d)
+
+        mock_python_engine_time_series_split.return_value = {
+            "train": df.loc[df["col1"] == 1],
+            "test": df.loc[df["col1"] == 2],
+        }
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -1565,12 +1543,6 @@ class TestPython:
 
         q = query.Query(left_feature_group=fg, left_features=[f, f1, f2])
 
-        mock_python_engine_time_series_split.return_value = {
-            "train": df.loc[df["col1"] == 1],
-            "test": df.loc[df["col1"] == 2],
-        }
-        mock_python_engine_apply_transformation_function.return_value = "temp"
-
         # Act
         result = python_engine._prepare_transform_split_df(
             query_obj=q,
@@ -1580,9 +1552,9 @@ class TestPython:
         )
 
         # Assert
-        assert mock_python_engine_apply_transformation_function.call_count == 2
         assert mock_python_engine_time_series_split.call_count == 1
-        assert result == {"test": "temp", "train": "temp"}
+        assert isinstance(result["train"], pd.DataFrame)
+        assert isinstance(result["test"], pd.DataFrame)
 
     def test_random_split(self, mocker):
         # Arrange
