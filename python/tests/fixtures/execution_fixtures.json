@@ -1,0 +1,34 @@
+{
+  "get": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "id": "test_id",
+          "state": "test_state",
+          "final_status": "test_final_status",
+          "submission_time": "test_submission_time",
+          "stdout_path": "test_stdout_path",
+          "stderr_path": "test_stderr_path",
+          "app_id": "test_app_id",
+          "hdfs_user": "test_hdfs_user",
+          "args": "test_args",
+          "progress": "test_progress",
+          "user": "test_user",
+          "files_to_remove": "test_files_to_remove",
+          "duration": "test_duration",
+          "flink_master_url": "test_flink_master_url",
+          "monitoring": "test_monitoring",
+          "type": "test_type",
+          "href": "test_href"
+        }
+      ]
+    }
+  },
+  "get_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

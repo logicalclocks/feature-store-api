@@ -275,4 +275,4 @@ class HudiEngine:
 
         return self._connstr + ";".join(
             ["{}={}".format(option[0], option[1]) for option in credentials.items()]
-        )
+        )  # todo this method assumes that _connstr ends with ";", but is it a fair assumption (since the generated results doesnt end with ";")?

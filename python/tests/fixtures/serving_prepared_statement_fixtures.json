@@ -1,0 +1,33 @@
+{
+  "get_list": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "feature_group_id": "test_feature_group_id",
+          "prepared_statement_index": "test_prepared_statement_index",
+          "prepared_statement_parameters": [
+            {
+              "name": "test_name",
+              "index": "test_index",
+              "type": "test_type",
+              "href": "test_href"
+            }
+          ],
+          "query_online": "test_query_online",
+          "prefix": "test_prefix",
+          "type": "test_type",
+          "items": "test_items",
+          "count": "test_count",
+          "href": "test_href"
+        }
+      ]
+    }
+  },
+  "get_list_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

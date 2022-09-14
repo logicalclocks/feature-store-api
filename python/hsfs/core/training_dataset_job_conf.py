@@ -18,7 +18,7 @@ import json
 from hsfs import util
 
 
-class TrainingDatsetJobConf:
+class TrainingDatasetJobConf:
     def __init__(self, query, overwrite, write_options, spark_job_configuration):
         self._query = query
         self._overwrite = overwrite

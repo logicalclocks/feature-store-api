@@ -1,0 +1,26 @@
+{
+  "get": {
+    "response": {
+      "username": "test_username",
+      "email": "test_email",
+      "first_name": "test_first_name",
+      "last_name": "test_last_name",
+      "status": "test_status",
+      "secret": "test_secret",
+      "chosen_password": "test_chosen_password",
+      "repeated_password": "test_repeated_password",
+      "tos": "test_tos",
+      "two_factor": "test_two_factor",
+      "tours_state": "test_tours_state",
+      "max_num_projects": "test_max_num_projects",
+      "num_created_projects": "test_num_created_projects",
+      "test_user": "test_test_user",
+      "user_account_type": "test_user_account_type",
+      "num_active_projects": "test_num_active_projects",
+      "num_remaining_projects": "test_num_remaining_projects"
+    }
+  },
+  "get_basic_info": {
+    "response": {}
+  }
+}
