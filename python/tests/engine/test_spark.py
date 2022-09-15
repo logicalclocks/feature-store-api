@@ -1688,7 +1688,6 @@ class TestSpark:
 
         assert sum_rows == 2
 
-
     def test_write_training_dataset_query(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
