@@ -8,6 +8,7 @@ from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
 from hsfs.core import feature_view_engine
+from hsfs.statistics_config import StatisticsConfig
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -146,22 +147,28 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     """
     Import data to a feature group using storage connector.
     """
-    print("====Input JSON config====", job_conf)
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
     # retrieve connector
     st = fs.get_storage_connector(name=job_conf["storageConnectorName"])
-    # read data
+    # first read data from connector
     spark_options = job_conf.pop("options")
     df = st.read(query=job_conf["query"], options=spark_options)
+    # store dataframe into feature group
+    if job_conf["statisticsConfig"]:
+        stat_config = StatisticsConfig.from_response_json(job_conf["statisticsConfig"])
+    else:
+        stat_config = None
     # create fg and insert
     fg = fs.get_or_create_feature_group(
         name=job_conf["featureGroupName"],
         version=job_conf["version"],
         primary_key=job_conf["primaryKey"],
         online_enabled=job_conf.pop("onlineEnabled", False) or False,
-        statistics_config=job_conf.pop("statisticsConfig", None) or None,
+        statistics_config=stat_config,
         partition_key=job_conf.pop("partitionKey", []) or [],
+        description=job_conf["description"],
+        event_time=job_conf.pop("eventTime", None) or None,
     )
     fg.insert(df)
 
