@@ -2323,7 +2323,7 @@ class TestSpark:
             featurestore_id=99,
             splits={},
             id=10,
-            transformation_functions={}
+            transformation_functions={},
         )
 
         # Act
@@ -2355,7 +2355,7 @@ class TestSpark:
             featurestore_id=99,
             splits={},
             id=10,
-            transformation_functions={}
+            transformation_functions={},
         )
 
         # Act
