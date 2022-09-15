@@ -1722,7 +1722,9 @@ class TestPython:
 
     def test_convert_to_unix_timestamp_pandas(self):
         # Act
-        result = util.convert_event_time_to_timestamp(t=pd.Timestamp("2017-01-01"))
+        result = util.convert_event_time_to_timestamp(
+            event_time=pd.Timestamp("2017-01-01")
+        )
 
         # Assert
         assert result == 1483228800000.0
@@ -1736,14 +1738,16 @@ class TestPython:
         mock_util_get_timestamp_from_date_string.return_value = 1483225200000
 
         # Act
-        result = util.convert_event_time_to_timestamp(t="2017-01-01 00-00-00-000")
+        result = util.convert_event_time_to_timestamp(
+            event_time="2017-01-01 00-00-00-000"
+        )
 
         # Assert
         assert result == 1483225200000
 
     def test_convert_to_unix_timestamp_int(self):
         # Act
-        result = util.convert_event_time_to_timestamp(t=1483225200)
+        result = util.convert_event_time_to_timestamp(event_time=1483225200)
 
         # Assert
         assert result == 1483225200000
