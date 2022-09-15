@@ -153,7 +153,7 @@ class Query:
         )
         return self
 
-    def as_of(self, wallclock_time, exclude_until=None):
+    def as_of(self, wallclock_time=None, exclude_until=None):
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
@@ -229,7 +229,11 @@ class Query:
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        wallclock_timestamp = util.get_timestamp_from_date_string(wallclock_time)
+        wallclock_timestamp = (
+            util.get_timestamp_from_date_string(wallclock_time)
+            if wallclock_time
+            else None
+        )
         exclude_until_timestamp = (
             util.get_timestamp_from_date_string(exclude_until)
             if exclude_until
@@ -237,11 +241,9 @@ class Query:
         )
         for join in self._joins:
             join.query.left_feature_group_end_time = wallclock_timestamp
-            if exclude_until_timestamp:
-                join.query.left_feature_group_start_time = exclude_until_timestamp
+            join.query.left_feature_group_start_time = exclude_until_timestamp
         self.left_feature_group_end_time = wallclock_timestamp
-        if exclude_until_timestamp:
-            self.left_feature_group_start_time = exclude_until_timestamp
+        self.left_feature_group_start_time = exclude_until_timestamp
         return self
 
     def pull_changes(self, wallclock_start_time, wallclock_end_time):

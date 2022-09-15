@@ -18,6 +18,7 @@ import re
 import json
 
 from datetime import datetime
+from datetime import timezone
 from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
@@ -127,7 +128,7 @@ def check_timestamp_format_from_date_string(input_date):
     return normalized_date, date_format
 
 
-def get_timestamp_from_date_string(input_date, time_zone=None):
+def get_timestamp_from_date_string(input_date, time_zone=timezone.utc):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     date_time = datetime.strptime(norm_input_date, date_format)
     date_time = date_time.replace(tzinfo=time_zone)
