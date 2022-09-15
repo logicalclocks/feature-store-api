@@ -153,8 +153,9 @@ def convert_event_time_to_timestamp(event_time, time_zone=timezone.utc):
         if event_time == 0:
             raise ValueError("Event time should be greater than 0.")
         # jdbc supports timestamp precision up to second only.
-        # TODO (Davit): check if this necessary
-        return event_time * 1000
+        if len(str(event_time)) < 13:
+            event_time = event_time * 1000
+        return event_time
     else:
         raise ValueError("Given event time should be in `str` or `int` type")
 
