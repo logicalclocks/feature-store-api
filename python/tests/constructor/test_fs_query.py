@@ -20,7 +20,6 @@ from hsfs.constructor import (
     external_feature_group_alias,
     fs_query,
 )
-from hsfs import feature_group
 
 
 class TestFsQuery:
@@ -57,5 +56,5 @@ class TestFsQuery:
         assert q.query == "test_query"
         assert len(q._on_demand_fg_aliases) == 0
         assert len(q._hudi_cached_feature_groups) == 0
-        assert q.query_online == None
-        assert q.pit_query == None
+        assert q.query_online is None
+        assert q.pit_query is None

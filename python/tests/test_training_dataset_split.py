@@ -42,7 +42,7 @@ class TestTrainingDatasetSplit:
 
         # Assert
         assert td_split.name == "test_name"
-        assert td_split.percentage == None
+        assert td_split.percentage is None
         assert td_split.split_type == "test_split_type"
-        assert td_split.start_time == None
-        assert td_split.end_time == None
+        assert td_split.start_time is None
+        assert td_split.end_time is None

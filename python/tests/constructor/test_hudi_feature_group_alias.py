@@ -51,5 +51,5 @@ class TestFsQuery:
         # Assert
         assert isinstance(hudi_fg_alias._feature_group, feature_group.FeatureGroup)
         assert hudi_fg_alias.alias == "test_alias"
-        assert hudi_fg_alias._left_feature_group_start_timestamp == None
-        assert hudi_fg_alias._left_feature_group_end_timestamp == None
+        assert hudi_fg_alias._left_feature_group_start_timestamp is None
+        assert hudi_fg_alias._left_feature_group_end_timestamp is None

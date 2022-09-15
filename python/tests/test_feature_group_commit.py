@@ -63,10 +63,10 @@ class TestFeatureGroupCommit:
         fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)
 
         # Assert
-        assert fg_commit.commitid == None
-        assert fg_commit.commit_date_string == None
-        assert fg_commit.commit_time == None
-        assert fg_commit.rows_inserted == None
-        assert fg_commit.rows_updated == None
-        assert fg_commit.rows_deleted == None
-        assert fg_commit.validation_id == None
+        assert fg_commit.commitid is None
+        assert fg_commit.commit_date_string is None
+        assert fg_commit.commit_time is None
+        assert fg_commit.rows_inserted is None
+        assert fg_commit.rows_updated is None
+        assert fg_commit.rows_deleted is None
+        assert fg_commit.validation_id is None

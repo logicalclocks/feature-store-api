@@ -42,5 +42,5 @@ class TestJob:
         # Assert
         assert j.id == "test_id"
         assert j.name == "test_name"
-        assert j.executions == None
-        assert j.href == None
+        assert j.executions is None
+        assert j.href is None

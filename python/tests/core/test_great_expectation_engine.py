@@ -23,8 +23,8 @@ class TestCodeEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
         mock_fg_get_expectation_suite = mocker.patch(
             "hsfs.feature_group.FeatureGroup.get_expectation_suite"
         )
@@ -56,8 +56,8 @@ class TestCodeEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
         mock_fg_get_expectation_suite = mocker.patch(
             "hsfs.feature_group.FeatureGroup.get_expectation_suite"
         )
@@ -98,8 +98,8 @@ class TestCodeEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
         mock_fg_get_expectation_suite = mocker.patch(
             "hsfs.feature_group.FeatureGroup.get_expectation_suite"
         )
@@ -140,8 +140,8 @@ class TestCodeEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
         mock_fg_get_expectation_suite = mocker.patch(
             "hsfs.feature_group.FeatureGroup.get_expectation_suite"
         )

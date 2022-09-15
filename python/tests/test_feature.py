@@ -30,9 +30,9 @@ class TestFeature:
         assert f.name == "intt"
         assert f.type == "int"
         assert f.description == "test_description"
-        assert f.primary == True
-        assert f.partition == False
-        assert f.hudi_precombine_key == True
+        assert f.primary is True
+        assert f.partition is False
+        assert f.hudi_precombine_key is True
         assert f.online_type == "int"
         assert f.default_value == 1
         assert f._feature_group_id == 15
@@ -46,11 +46,11 @@ class TestFeature:
 
         # Assert
         assert f.name == "intt"
-        assert f.type == None
-        assert f.description == None
-        assert f.primary == False
-        assert f.partition == False
-        assert f.hudi_precombine_key == False
-        assert f.online_type == None
-        assert f.default_value == None
-        assert f._feature_group_id == None
+        assert f.type is None
+        assert f.description is None
+        assert f.primary is False
+        assert f.partition is False
+        assert f.hudi_precombine_key is False
+        assert f.online_type is None
+        assert f.default_value is None
+        assert f._feature_group_id is None

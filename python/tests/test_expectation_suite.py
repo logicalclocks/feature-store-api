@@ -69,13 +69,13 @@ class TestExpectationSuite:
         es = expectation_suite.ExpectationSuite.from_response_json(json)
 
         # Assert
-        assert es.id == None
+        assert es.id is None
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id == None
-        assert es._featuregroup_id == None
-        assert es.ge_cloud_id == None
-        assert es.data_asset_type == None
-        assert es.run_validation == True
+        assert es._featurestore_id is None
+        assert es._featuregroup_id is None
+        assert es.ge_cloud_id is None
+        assert es.data_asset_type is None
+        assert es.run_validation is True
         assert es.validation_ingestion_policy == "ALWAYS"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
@@ -89,4 +89,4 @@ class TestExpectationSuite:
         es_list = expectation_suite.ExpectationSuite.from_response_json(json)
 
         # Assert
-        assert es_list == None
+        assert es_list is None

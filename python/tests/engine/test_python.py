@@ -538,7 +538,7 @@ class TestPython:
         # Assert
         assert result == {}
 
-    def test_read_options(self):
+    def test_read_options_stream_source(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -580,9 +580,9 @@ class TestPython:
         )
 
         # Assert
-        assert result == None
+        assert result is None
 
-    def test_register_hudi_temporary_table(self, mocker):
+    def test_register_hudi_temporary_table(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -595,7 +595,7 @@ class TestPython:
         )
 
         # Assert
-        assert result == None
+        assert result is None
 
     def test_profile(self, mocker):
         # Arrange
@@ -663,7 +663,7 @@ class TestPython:
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
 
-    def test_convert_pandas_statistics(self, mocker):
+    def test_convert_pandas_statistics(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -828,7 +828,7 @@ class TestPython:
         result = python_engine.set_job_group(group_id=None, description=None)
 
         # Assert
-        assert result == None
+        assert result is None
 
     def test_convert_to_default_dataframe(self, mocker):
         # Arrange
@@ -851,9 +851,7 @@ class TestPython:
 
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
-        )
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_type")
 
         python_engine = python.Engine()
 
@@ -1171,7 +1169,7 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            result = python_engine._infer_type_pyarrow(arrow_type=pa.bool_())
+            python_engine._infer_type_pyarrow(arrow_type=pa.bool_())
 
         # Assert
         assert str(e_info.value) == "dtype 'O' (arrow_type 'bool') not supported"
@@ -1252,15 +1250,11 @@ class TestPython:
 
     def test_legacy_save_dataframe(self, mocker):
         # Arrange
-        mock_python_engine_get_app_options = mocker.patch(
-            "hsfs.engine.python.Engine._get_app_options"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_app_options")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mock_python_engine_get_job_url = mocker.patch(
-            "hsfs.engine.python.Engine._get_job_url"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
             "hsfs.engine.python.Engine._wait_for_job"
         )
@@ -1291,7 +1285,7 @@ class TestPython:
         mock_python_engine_prepare_transform_split_df = mocker.patch(
             "hsfs.engine.python.Engine._prepare_transform_split_df"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
 
@@ -1324,7 +1318,7 @@ class TestPython:
         mock_python_engine_prepare_transform_split_df = mocker.patch(
             "hsfs.engine.python.Engine._prepare_transform_split_df"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
 
@@ -1351,7 +1345,7 @@ class TestPython:
         # Assert
         assert mock_python_engine_prepare_transform_split_df.call_count == 1
 
-    def test_split_labels(self, mocker):
+    def test_split_labels(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1365,7 +1359,7 @@ class TestPython:
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
         assert str(result_df_split) == "None"
 
-    def test_split_labels_labels(self, mocker):
+    def test_split_labels_labels(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1387,7 +1381,7 @@ class TestPython:
         mock_python_engine_random_split = mocker.patch(
             "hsfs.engine.python.Engine._random_split"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
 
@@ -1426,7 +1420,6 @@ class TestPython:
         assert isinstance(result["train"], pd.DataFrame)
         assert isinstance(result["test"], pd.DataFrame)
 
-
     def test_prepare_transform_split_df_time_split_td_features(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
@@ -1435,7 +1428,7 @@ class TestPython:
         mock_python_engine_time_series_split = mocker.patch(
             "hsfs.engine.python.Engine._time_series_split"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
 
@@ -1500,7 +1493,7 @@ class TestPython:
         mock_python_engine_time_series_split = mocker.patch(
             "hsfs.engine.python.Engine._time_series_split"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
 
@@ -1604,7 +1597,7 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            result = python_engine._random_split(df=df, training_dataset_obj=td)
+            python_engine._random_split(df=df, training_dataset_obj=td)
 
         # Assert
         assert (
@@ -1616,9 +1609,7 @@ class TestPython:
     def test_time_series_split(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mock_python_engine_convert_to_unix_timestamp = mocker.patch(
-            "hsfs.engine.python.Engine._convert_to_unix_timestamp"
-        )
+        mocker.patch("hsfs.engine.python.Engine._convert_to_unix_timestamp")
 
         python_engine = python.Engine()
 
@@ -1656,9 +1647,7 @@ class TestPython:
     def test_time_series_split_drop_event_time(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mock_python_engine_convert_to_unix_timestamp = mocker.patch(
-            "hsfs.engine.python.Engine._convert_to_unix_timestamp"
-        )
+        mocker.patch("hsfs.engine.python.Engine._convert_to_unix_timestamp")
 
         python_engine = python.Engine()
 
@@ -1698,7 +1687,7 @@ class TestPython:
     def test_time_series_split_event_time(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mock_python_engine_convert_to_unix_timestamp = mocker.patch(
+        mocker.patch(
             "hsfs.engine.python.Engine._convert_to_unix_timestamp",
             side_effect=[1000, 2000, 1000, 2000],
         )
@@ -1736,7 +1725,7 @@ class TestPython:
         for column in list(result):
             assert result[column].equals(expected[column])
 
-    def test_convert_to_unix_timestamp_pandas(self, mocker):
+    def test_convert_to_unix_timestamp_pandas(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1762,7 +1751,7 @@ class TestPython:
         # Assert
         assert result == 1483225200000
 
-    def test_convert_to_unix_timestamp_int(self, mocker):
+    def test_convert_to_unix_timestamp_int(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1775,14 +1764,10 @@ class TestPython:
     def test_write_training_dataset(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
-        mock_td_job_conf = mocker.patch(
-            "hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf"
-        )
+        mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mock_python_engine_get_job_url = mocker.patch(
-            "hsfs.engine.python.Engine._get_job_url"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
             "hsfs.engine.python.Engine._wait_for_job"
         )
@@ -1812,14 +1797,10 @@ class TestPython:
     def test_write_training_dataset_query_td(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
-        mock_td_job_conf = mocker.patch(
-            "hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf"
-        )
+        mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mock_python_engine_get_job_url = mocker.patch(
-            "hsfs.engine.python.Engine._get_job_url"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
             "hsfs.engine.python.Engine._wait_for_job"
         )
@@ -1856,14 +1837,10 @@ class TestPython:
     def test_write_training_dataset_query_fv(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
-        mock_td_job_conf = mocker.patch(
-            "hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf"
-        )
+        mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mock_python_engine_get_job_url = mocker.patch(
-            "hsfs.engine.python.Engine._get_job_url"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
             "hsfs.engine.python.Engine._wait_for_job"
         )
@@ -1987,9 +1964,7 @@ class TestPython:
 
         # Act
         with pytest.raises(TypeError) as e_info:
-            result = python_engine._return_dataframe_type(
-                dataframe=df, dataframe_type="other"
-            )
+            python_engine._return_dataframe_type(dataframe=df, dataframe_type="other")
 
         # Assert
         assert (
@@ -1997,7 +1972,7 @@ class TestPython:
             == "Dataframe type `other` not supported on this platform."
         )
 
-    def test_return_dataframe_type_other(self):
+    def test_is_spark_dataframe(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -2176,7 +2151,7 @@ class TestPython:
         assert mock_job_api.return_value.last_execution.call_count == 1
         assert str(e_info.value) == "The Hopsworks Job was stopped"
 
-    def test_add_file(self, mocker):
+    def test_add_file(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -2230,7 +2205,7 @@ class TestPython:
         assert result["tf_name"][0] == 2
         assert result["tf_name"][1] == 3
 
-    def test_get_unique_values(self, mocker):
+    def test_get_unique_values(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -2249,25 +2224,15 @@ class TestPython:
 
     def test_write_dataframe_kafka(self, mocker):
         # Arrange
-        mock_python_engine_get_kafka_config = mocker.patch(
-            "hsfs.engine.python.Engine._get_kafka_config", return_value={}
-        )
-        mock_fg_get_encoded_avro_schema = mocker.patch(
-            "hsfs.feature_group.FeatureGroup._get_encoded_avro_schema"
-        )
-        mock_python_engine_get_encoder_func = mocker.patch(
-            "hsfs.engine.python.Engine._get_encoder_func"
-        )
-        mock_python_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.python.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
+        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
+        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
-        mock_python_engine_get_job_url = mocker.patch(
-            "hsfs.engine.python.Engine._get_job_url"
-        )
+        mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
+        mocker.patch("hsfs.engine.python.Engine._get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
             "hsfs.engine.python.Engine._wait_for_job"
         )
@@ -2342,7 +2307,7 @@ class TestPython:
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][0] == "Caught: test_error"
 
-    def test_encode_complex_features(self, mocker):
+    def test_encode_complex_features(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -2426,9 +2391,7 @@ class TestPython:
         mock_client_get_instance.return_value._get_client_key_path.return_value = (
             "_get_client_key_path"
         )
-        mock_socket_gethostname = mocker.patch(
-            "socket.gethostname", return_value="gethostname"
-        )
+        mocker.patch("socket.gethostname", return_value="gethostname")
         mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
 
         python_engine = python.Engine()
@@ -2469,9 +2432,7 @@ class TestPython:
         mock_client_get_instance.return_value._get_client_key_path.return_value = (
             "_get_client_key_path"
         )
-        mock_socket_gethostname = mocker.patch(
-            "socket.gethostname", return_value="gethostname"
-        )
+        mocker.patch("socket.gethostname", return_value="gethostname")
         mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
 
         python_engine = python.Engine()
