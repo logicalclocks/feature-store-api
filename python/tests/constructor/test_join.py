@@ -56,4 +56,4 @@ class TestJoin:
         assert len(j._left_on) == 0
         assert len(j._right_on) == 0
         assert j._join_type == "INNER"
-        assert j._prefix == None
+        assert j._prefix is None

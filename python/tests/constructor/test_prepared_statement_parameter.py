@@ -48,5 +48,5 @@ class TestPreparedStatementParameter:
         )
 
         # Assert
-        assert psp.name == None
-        assert psp.index == None
+        assert psp.name is None
+        assert psp.index is None

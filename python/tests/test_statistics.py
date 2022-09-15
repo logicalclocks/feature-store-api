@@ -32,7 +32,7 @@ class TestStatistics:
         assert s.content == {"key": "value"}
         assert len(s.split_statistics) == 1
         assert isinstance(s.split_statistics[0], split_statistics.SplitStatistics)
-        assert s.for_transformation == True
+        assert s.for_transformation is True
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -43,10 +43,10 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.feature_group_commit_id == None
+        assert s.feature_group_commit_id is None
         assert s.content == {}
         assert len(s.split_statistics) == 0
-        assert s.for_transformation == False
+        assert s.for_transformation is False
 
     def test_from_response_json_empty(self, backend_fixtures):
         # Arrange
@@ -56,4 +56,4 @@ class TestStatistics:
         s = statistics.Statistics.from_response_json(json)
 
         # Assert
-        assert s == None
+        assert s is None
