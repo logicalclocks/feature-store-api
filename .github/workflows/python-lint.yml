@@ -19,7 +19,7 @@ jobs:
         run: black --check python/hsfs
 
       - name: flake8
-        run: flake8 --config python/.flake8 python/hsfs
+        run: flake8 --config python/.flake8 python
 
       - name: trailing-whitespace-fixer
         run: trailing-whitespace-fixer $(find python/hsfs -type f) || exit 1

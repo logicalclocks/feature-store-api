@@ -93,7 +93,7 @@ class TestExternalFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(

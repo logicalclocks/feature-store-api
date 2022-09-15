@@ -27,10 +27,10 @@ class TestStatistics:
         sc = statistics_config.StatisticsConfig.from_response_json(json)
 
         # Assert
-        assert sc.enabled == True
-        assert sc.correlations == True
-        assert sc.histograms == True
-        assert sc.exact_uniqueness == True
+        assert sc.enabled is True
+        assert sc.correlations is True
+        assert sc.histograms is True
+        assert sc.exact_uniqueness is True
         assert sc.columns == []
 
     def test_from_response_json_basic_info(self, backend_fixtures):
@@ -41,8 +41,8 @@ class TestStatistics:
         sc = statistics_config.StatisticsConfig.from_response_json(json)
 
         # Assert
-        assert sc.enabled == True
-        assert sc.correlations == False
-        assert sc.histograms == False
-        assert sc.exact_uniqueness == False
+        assert sc.enabled is True
+        assert sc.correlations is False
+        assert sc.histograms is False
+        assert sc.exact_uniqueness is False
         assert sc.columns == []

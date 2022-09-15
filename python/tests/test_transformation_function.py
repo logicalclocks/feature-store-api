@@ -31,14 +31,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 1
         assert tf.name == "test_name"
-        assert tf.transformation_fn == None
+        assert tf.transformation_fn is None
         assert tf.output_type == "FloatType()"
         assert (
             tf.source_code_content
             == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
         )
-        assert tf._feature_group_feature_name == None
-        assert tf._feature_group_id == None
+        assert tf._feature_group_feature_name is None
+        assert tf._feature_group_id is None
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
@@ -51,15 +51,15 @@ class TestTransformationFunction:
         tf = transformation_function.TransformationFunction.from_response_json(json)
 
         # Assert
-        assert tf.id == None
+        assert tf.id is None
         assert tf._featurestore_id == 11
-        assert tf.version == None
-        assert tf.name == None
-        assert tf.transformation_fn == None
-        assert tf.output_type == None
-        assert tf.source_code_content == None
-        assert tf._feature_group_feature_name == None
-        assert tf._feature_group_id == None
+        assert tf.version is None
+        assert tf.name is None
+        assert tf.transformation_fn is None
+        assert tf.output_type is None
+        assert tf.source_code_content is None
+        assert tf._feature_group_feature_name is None
+        assert tf._feature_group_id is None
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -77,14 +77,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 1
         assert tf.name == "test_name"
-        assert tf.transformation_fn == None
+        assert tf.transformation_fn is None
         assert tf.output_type == "FloatType()"
         assert (
             tf.source_code_content
             == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
         )
-        assert tf._feature_group_feature_name == None
-        assert tf._feature_group_id == None
+        assert tf._feature_group_feature_name is None
+        assert tf._feature_group_id is None
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

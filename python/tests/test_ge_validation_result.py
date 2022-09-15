@@ -28,7 +28,7 @@ class TestValidationResult:
 
         # Assert
         assert vr.id == 11
-        assert vr.success == True
+        assert vr.success is True
         assert vr._observed_value == "test_observed_value"
         assert vr._expectation_id == 22
         assert vr._validation_report_id == 33
@@ -47,11 +47,11 @@ class TestValidationResult:
         vr = ge_validation_result.ValidationResult.from_response_json(json)
 
         # Assert
-        assert vr.id == None
-        assert vr.success == True
-        assert vr._observed_value == None
-        assert vr._expectation_id == None
-        assert vr._validation_report_id == None
+        assert vr.id is None
+        assert vr.success is True
+        assert vr._observed_value is None
+        assert vr._expectation_id is None
+        assert vr._validation_report_id is None
         assert vr.result == {"result_key": "result_value"}
         assert vr.meta == {"meta_key": "meta_value"}
         assert vr.exception_info == {"exception_info_key": "exception_info_value"}
@@ -70,7 +70,7 @@ class TestValidationResult:
         assert len(vr_list) == 1
         vr = vr_list[0]
         assert vr.id == 11
-        assert vr.success == True
+        assert vr.success is True
         assert vr._observed_value == "test_observed_value"
         assert vr._expectation_id == 22
         assert vr._validation_report_id == 33

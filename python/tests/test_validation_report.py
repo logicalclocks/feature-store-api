@@ -28,7 +28,7 @@ class TestValidationReport:
 
         # Assert
         assert vr.id == 11
-        assert vr.success == True
+        assert vr.success is True
         assert vr._full_report_path == "test_full_report_path"
         assert vr._validation_time == "test_validation_time"
         assert vr._featurestore_id == "test_featurestore_id"
@@ -50,18 +50,18 @@ class TestValidationReport:
         vr = validation_report.ValidationReport.from_response_json(json)
 
         # Assert
-        assert vr.id == None
-        assert vr.success == True
-        assert vr._full_report_path == None
-        assert vr._validation_time == None
-        assert vr._featurestore_id == None
-        assert vr._featuregroup_id == None
-        assert vr.ingestion_result == None
+        assert vr.id is None
+        assert vr.success is True
+        assert vr._full_report_path is None
+        assert vr._validation_time is None
+        assert vr._featurestore_id is None
+        assert vr._featuregroup_id is None
+        assert vr.ingestion_result is None
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
         assert vr.meta == {"meta_key": "meta_value"}
         assert vr.statistics == {"statistics_key": "statistics_value"}
-        assert vr.evaluation_parameters == None
+        assert vr.evaluation_parameters is None
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -74,7 +74,7 @@ class TestValidationReport:
         assert len(vr_list) == 1
         vr = vr_list[0]
         assert vr.id == 11
-        assert vr.success == True
+        assert vr.success is True
         assert vr._full_report_path == "test_full_report_path"
         assert vr._validation_time == "test_validation_time"
         assert vr._featurestore_id == "test_featurestore_id"

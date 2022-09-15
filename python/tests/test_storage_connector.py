@@ -46,9 +46,9 @@ class TestHopsfsConnector:
         assert sc.id == 1
         assert sc.name == "test_hopsfs"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc._hopsfs_path == None
-        assert sc._dataset_name == None
+        assert sc.description is None
+        assert sc._hopsfs_path is None
+        assert sc._dataset_name is None
 
 
 class TestS3Connector:
@@ -83,14 +83,14 @@ class TestS3Connector:
         assert sc.id == 1
         assert sc.name == "test_s3"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.access_key == None
-        assert sc.secret_key == None
-        assert sc.server_encryption_algorithm == None
-        assert sc.server_encryption_key == None
-        assert sc.bucket == None
-        assert sc.session_token == None
-        assert sc.iam_role == None
+        assert sc.description is None
+        assert sc.access_key is None
+        assert sc.secret_key is None
+        assert sc.server_encryption_algorithm is None
+        assert sc.server_encryption_key is None
+        assert sc.bucket is None
+        assert sc.session_token is None
+        assert sc.iam_role is None
 
 
 class TestRedshiftConnector:
@@ -133,20 +133,20 @@ class TestRedshiftConnector:
         assert sc.id == 1
         assert sc.name == "test_redshift"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.cluster_identifier == None
-        assert sc.database_driver == None
-        assert sc.database_endpoint == None
-        assert sc.database_name == None
-        assert sc.database_port == None
-        assert sc.table_name == None
-        assert sc.database_user_name == None
-        assert sc.auto_create == None
-        assert sc.database_password == None
-        assert sc.database_group == None
-        assert sc.iam_role == None
-        assert sc.arguments == None
-        assert sc.expiration == None
+        assert sc.description is None
+        assert sc.cluster_identifier is None
+        assert sc.database_driver is None
+        assert sc.database_endpoint is None
+        assert sc.database_name is None
+        assert sc.database_port is None
+        assert sc.table_name is None
+        assert sc.database_user_name is None
+        assert sc.auto_create is None
+        assert sc.database_password is None
+        assert sc.database_group is None
+        assert sc.iam_role is None
+        assert sc.arguments is None
+        assert sc.expiration is None
 
 
 class TestAdlsConnector:
@@ -181,13 +181,13 @@ class TestAdlsConnector:
         assert sc.id == 1
         assert sc.name == "test_adls"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.generation == None
-        assert sc.directory_id == None
-        assert sc.application_id == None
-        assert sc.service_credential == None
-        assert sc.account_name == None
-        assert sc.container_name == None
+        assert sc.description is None
+        assert sc.generation is None
+        assert sc.directory_id is None
+        assert sc.application_id is None
+        assert sc.service_credential is None
+        assert sc.account_name is None
+        assert sc.container_name is None
         assert sc._spark_options == {}
 
 
@@ -256,17 +256,17 @@ class TestSnowflakeConnector:
         assert sc.id == 1
         assert sc.name == "test_snowflake"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.database == None
-        assert sc.password == None
-        assert sc.token == None
-        assert sc.role == None
-        assert sc.schema == None
-        assert sc.table == None
-        assert sc.url == None
-        assert sc.user == None
-        assert sc.warehouse == None
-        assert sc.application == None
+        assert sc.description is None
+        assert sc.database is None
+        assert sc.password is None
+        assert sc.token is None
+        assert sc.role is None
+        assert sc.schema is None
+        assert sc.table is None
+        assert sc.url is None
+        assert sc.user is None
+        assert sc.warehouse is None
+        assert sc.application is None
         assert sc._options == {}
 
 
@@ -359,9 +359,9 @@ class TestJdbcConnector:
         assert sc.id == 1
         assert sc.name == "test_jdbc"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.connection_string == None
-        assert sc.arguments == None
+        assert sc.description is None
+        assert sc.connection_string is None
+        assert sc.arguments is None
 
 
 class TestKafkaConnector:
@@ -411,15 +411,15 @@ class TestKafkaConnector:
         assert sc.id == 1
         assert sc.name == "test_kafka"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc._bootstrap_servers == None
-        assert sc.security_protocol == None
+        assert sc.description is None
+        assert sc._bootstrap_servers is None
+        assert sc.security_protocol is None
         assert sc.ssl_truststore_location == "result_from_add_file"
-        assert sc._ssl_truststore_password == None
+        assert sc._ssl_truststore_password is None
         assert sc.ssl_keystore_location == "result_from_add_file"
-        assert sc._ssl_keystore_password == None
-        assert sc._ssl_key_password == None
-        assert sc.ssl_endpoint_identification_algorithm == None
+        assert sc._ssl_keystore_password is None
+        assert sc._ssl_key_password is None
+        assert sc.ssl_endpoint_identification_algorithm is None
         assert sc.options == {}
 
 
@@ -453,12 +453,12 @@ class TestGcsConnector:
         assert sc.id == 1
         assert sc.name == "test_gcs"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.key_path == None
-        assert sc.bucket == None
-        assert sc.algorithm == None
-        assert sc.encryption_key == None
-        assert sc.encryption_key_hash == None
+        assert sc.description is None
+        assert sc.key_path is None
+        assert sc.bucket is None
+        assert sc.algorithm is None
+        assert sc.encryption_key is None
+        assert sc.encryption_key_hash is None
 
 
 class TestBigQueryConnector:
@@ -495,11 +495,11 @@ class TestBigQueryConnector:
         assert sc.id == 1
         assert sc.name == "test_big_query"
         assert sc._featurestore_id == 67
-        assert sc.description == None
-        assert sc.key_path == None
-        assert sc.parent_project == None
-        assert sc.dataset == None
-        assert sc.query_table == None
-        assert sc.query_project == None
-        assert sc.materialization_dataset == None
+        assert sc.description is None
+        assert sc.key_path is None
+        assert sc.parent_project is None
+        assert sc.dataset is None
+        assert sc.query_table is None
+        assert sc.query_project is None
+        assert sc.materialization_dataset is None
         assert sc.arguments == {}

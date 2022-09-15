@@ -32,7 +32,7 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
         mock_tf_api = mocker.patch(
@@ -530,7 +530,7 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_min_max_scaler_stats = mocker.patch(
+        mocker.patch(
             "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.min_max_scaler_stats",
             return_value=(1, 100),
         )
@@ -559,7 +559,7 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_standard_scaler_stats = mocker.patch(
+        mocker.patch(
             "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.standard_scaler_stats",
             return_value=(1, 100),
         )
@@ -588,7 +588,7 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_robust_scaler_stats = mocker.patch(
+        mocker.patch(
             "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.robust_scaler_stats",
             return_value={24: 1, 49: 2, 74: 3},
         )
@@ -618,7 +618,7 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_builtin_tf_fn_encoder_stats = mocker.patch(
+        mocker.patch(
             "hsfs.core.builtin_transformation_function.BuiltInTransformationFunction.encoder_stats",
             return_value="test",
         )
@@ -646,11 +646,11 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin",
             return_value=False,
         )
-        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments"
         )
 
@@ -686,10 +686,10 @@ class TestTransformationFunctionEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_tf_engine_is_builtin = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
-        mock_tf_engine_populate_builtin_fn_arguments = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_fn_arguments"
         )
 
@@ -1210,7 +1210,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_tf_engine_is_builtin = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
         mock_tf_engine_compute_transformation_fn_statistics = mocker.patch(
@@ -1276,7 +1276,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_tf_engine_is_builtin = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.is_builtin"
         )
         mock_tf_engine_compute_transformation_fn_statistics = mocker.patch(

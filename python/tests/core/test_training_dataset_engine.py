@@ -27,7 +27,7 @@ class TestTrainingDatasetEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
@@ -73,10 +73,10 @@ class TestTrainingDatasetEngine:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
 
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
         td = training_dataset.TrainingDataset(
@@ -109,7 +109,7 @@ class TestTrainingDatasetEngine:
         mocker.patch(
             "hsfs.transformation_function.TransformationFunction._extract_source_code"
         )
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
@@ -166,7 +166,7 @@ class TestTrainingDatasetEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_tf_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
@@ -265,7 +265,7 @@ class TestTrainingDatasetEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
         mock_storage_connector_read = mocker.patch(
             "hsfs.storage_connector.StorageConnector.read"
         )
@@ -294,7 +294,7 @@ class TestTrainingDatasetEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
         mock_storage_connector_read = mocker.patch(
             "hsfs.storage_connector.StorageConnector.read"
         )
