@@ -56,9 +56,9 @@ class TestTrainingDatasetFeature:
 
         # Assert
         assert td_feature.name == "test_name"
-        assert td_feature.type == None
-        assert td_feature.index == None
-        assert td_feature._feature_group == None
-        assert td_feature._feature_group_feature_name == None
-        assert td_feature.label == False
-        assert td_feature.transformation_function == None
+        assert td_feature.type is None
+        assert td_feature.index is None
+        assert td_feature._feature_group is None
+        assert td_feature._feature_group_feature_name is None
+        assert td_feature.label is False
+        assert td_feature.transformation_function is None

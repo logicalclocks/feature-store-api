@@ -53,4 +53,4 @@ class TestUser:
         u = user.User.from_response_json(json)
 
         # Assert
-        assert u == None
+        assert u is None

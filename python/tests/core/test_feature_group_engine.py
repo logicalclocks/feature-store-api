@@ -28,13 +28,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_ge_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
 
@@ -68,13 +68,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
         mock_ge_engine = mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
 
@@ -118,16 +118,16 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mock_ge_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -165,16 +165,16 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mock_ge_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -213,16 +213,16 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_ge_engine = mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -270,16 +270,16 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mock_ge_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -321,16 +321,16 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mock_ge_engine = mocker.patch(
+        mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -393,11 +393,11 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_util_get_timestamp_from_date_string = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_hudi_datestr_from_timestamp"
         )
 
@@ -430,11 +430,11 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_util_get_timestamp_from_date_string = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_hudi_datestr_from_timestamp"
         )
 
@@ -468,11 +468,11 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_util_get_timestamp_from_date_string = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_hudi_datestr_from_timestamp"
         )
 
@@ -501,7 +501,7 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_util_get_timestamp_from_date_string = mocker.patch(
+        mocker.patch(
             "hsfs.util.get_timestamp_from_date_string"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
@@ -580,7 +580,7 @@ class TestFeatureGroupEngine:
         mock_sc_api = mocker.patch(
             "hsfs.core.storage_connector_api.StorageConnectorApi"
         )
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -606,7 +606,7 @@ class TestFeatureGroupEngine:
         mock_sc_api = mocker.patch(
             "hsfs.core.storage_connector_api.StorageConnectorApi"
         )
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mocker.patch("hsfs.engine.get_instance")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -806,13 +806,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
 
@@ -858,13 +858,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_warnings_warn = mocker.patch("warnings.warn")
@@ -910,13 +910,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
 
@@ -957,13 +957,13 @@ class TestFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_fg_engine_save_feature_group_metadata = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mock_fg_engine_get_kafka_config = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_warnings_warn = mocker.patch("warnings.warn")
@@ -1148,11 +1148,11 @@ class TestFeatureGroupEngine:
         feature_group_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_fg_engine_get_feature_group_url = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
             return_value=feature_group_url,
         )
@@ -1180,9 +1180,9 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_fg_api.return_value.save.call_count == 1
-        assert f.primary == False
-        assert f.partition == False
-        assert f.hudi_precombine_key == False
+        assert f.primary is False
+        assert f.partition is False
+        assert f.hudi_precombine_key is False
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -1196,11 +1196,11 @@ class TestFeatureGroupEngine:
         feature_group_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_fg_engine_get_feature_group_url = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
             return_value=feature_group_url,
         )
@@ -1229,9 +1229,9 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_fg_api.return_value.save.call_count == 1
-        assert f.primary == False
-        assert f.partition == False
-        assert f.hudi_precombine_key == False
+        assert f.primary is False
+        assert f.partition is False
+        assert f.hudi_precombine_key is False
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -1245,11 +1245,11 @@ class TestFeatureGroupEngine:
         feature_group_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_fg_engine_get_feature_group_url = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
             return_value=feature_group_url,
         )
@@ -1278,9 +1278,9 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_fg_api.return_value.save.call_count == 1
-        assert f.primary == True
-        assert f.partition == True
-        assert f.hudi_precombine_key == True
+        assert f.primary is True
+        assert f.partition is True
+        assert f.hudi_precombine_key is True
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -1295,11 +1295,11 @@ class TestFeatureGroupEngine:
         write_options = "test"
 
         mocker.patch("hsfs.engine.get_type")
-        mock_fg_engine_verify_schema_compatibility = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mock_fg_engine_get_feature_group_url = mocker.patch(
+        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
             return_value=feature_group_url,
         )
@@ -1328,9 +1328,9 @@ class TestFeatureGroupEngine:
 
         # Assert
         assert mock_fg_api.return_value.save.call_count == 1
-        assert f.primary == False
-        assert f.partition == False
-        assert f.hudi_precombine_key == False
+        assert f.primary is False
+        assert f.partition is False
+        assert f.hudi_precombine_key is False
         assert fg._options == write_options
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][

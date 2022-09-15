@@ -81,30 +81,30 @@ class TestTrainingDataset:
         # Assert
         assert len(td_list) == 1
         td = td_list[0]
-        assert td.id == None
+        assert td.id is None
         assert td.name == "test_name"
         assert td.version == 1
-        assert td.description == None
+        assert td.description is None
         assert td.data_format == "hudi"
-        assert td._start_time == None
-        assert td._end_time == None
-        assert td.validation_size == None
-        assert td.test_size == None
-        assert td.train_start == None
-        assert td.train_end == None
-        assert td.validation_start == None
-        assert td.validation_end == None
-        assert td.test_start == None
-        assert td.test_end == None
-        assert td.coalesce == False
-        assert td.seed == None
+        assert td._start_time is None
+        assert td._end_time is None
+        assert td.validation_size is None
+        assert td.test_size is None
+        assert td.train_start is None
+        assert td.train_end is None
+        assert td.validation_start is None
+        assert td.validation_end is None
+        assert td.test_start is None
+        assert td.test_end is None
+        assert td.coalesce is False
+        assert td.seed is None
         assert td.location == ""
-        assert td._from_query == None
-        assert td._querydto == None
+        assert td._from_query is None
+        assert td._querydto is None
         assert td.feature_store_id == 22
-        assert td.transformation_functions == None
-        assert td.train_split == None
-        assert td.training_dataset_type == None
+        assert td.transformation_functions is None
+        assert td.train_split is None
+        assert td.training_dataset_type is None
         assert isinstance(td.storage_connector, storage_connector.JdbcConnector)
         assert len(td._features) == 0
         assert len(td.splits) == 0

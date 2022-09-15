@@ -41,13 +41,13 @@ class TestFeatureStore:
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
         assert fs.hive_endpoint == "test_hive_endpoint"
         assert fs.mysql_server_endpoint == "test_mysql_server_endpoint"
-        assert fs.online_enabled == True
+        assert fs.online_enabled is True
         assert fs._num_feature_groups == 2
         assert fs._num_training_datasets == 3
         assert fs._num_storage_connectors == 4
         assert fs._num_feature_views == 5
 
-    def test_from_response_json(self, mocker, backend_fixtures):
+    def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         json = backend_fixtures["feature_store"]["get_basic_info"]["response"]
@@ -64,13 +64,13 @@ class TestFeatureStore:
         assert fs.project_id == 67
         assert fs.description == "test_featurestore_description"
         assert fs._inode_id == 44
-        assert fs._online_feature_store_name == None
-        assert fs._online_feature_store_size == None
+        assert fs._online_feature_store_name is None
+        assert fs._online_feature_store_size is None
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
         assert fs.hive_endpoint == "test_hive_endpoint"
-        assert fs.mysql_server_endpoint == None
-        assert fs.online_enabled == True
-        assert fs._num_feature_groups == None
-        assert fs._num_training_datasets == None
-        assert fs._num_storage_connectors == None
-        assert fs._num_feature_views == None
+        assert fs.mysql_server_endpoint is None
+        assert fs.online_enabled is True
+        assert fs._num_feature_groups is None
+        assert fs._num_training_datasets is None
+        assert fs._num_storage_connectors is None
+        assert fs._num_feature_views is None
