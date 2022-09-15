@@ -31,9 +31,7 @@ class TestFeatureGroupEngine:
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
-        mocker.patch(
-            "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
@@ -124,9 +122,7 @@ class TestFeatureGroupEngine:
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mocker.patch(
-            "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
@@ -171,9 +167,7 @@ class TestFeatureGroupEngine:
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mocker.patch(
-            "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
@@ -276,9 +270,7 @@ class TestFeatureGroupEngine:
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mocker.patch(
-            "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
@@ -327,9 +319,7 @@ class TestFeatureGroupEngine:
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
-        mocker.patch(
-            "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
@@ -393,13 +383,9 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_timestamp_from_date_string"
-        )
+        mocker.patch("hsfs.util.get_timestamp_from_date_string")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -430,13 +416,9 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_timestamp_from_date_string"
-        )
+        mocker.patch("hsfs.util.get_timestamp_from_date_string")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -468,13 +450,9 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_timestamp_from_date_string"
-        )
+        mocker.patch("hsfs.util.get_timestamp_from_date_string")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -501,9 +479,7 @@ class TestFeatureGroupEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_timestamp_from_date_string"
-        )
+        mocker.patch("hsfs.util.get_timestamp_from_date_string")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_util_get_hudi_datestr_from_timestamp = mocker.patch(
             "hsfs.util.get_hudi_datestr_from_timestamp"

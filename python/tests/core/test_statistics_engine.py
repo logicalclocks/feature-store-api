@@ -28,17 +28,13 @@ class TestStatisticsEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value=None,
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -74,20 +70,14 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.get_type", return_value="spark"
-        )
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value=None,
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -124,17 +114,13 @@ class TestStatisticsEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value=None,
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -178,20 +164,14 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.get_type", return_value="spark"
-        )
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value="test",
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -228,17 +208,13 @@ class TestStatisticsEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value="test",
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -282,20 +258,14 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.get_type", return_value="spark"
-        )
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value=None,
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -332,17 +302,13 @@ class TestStatisticsEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
-        mocker.patch(
-            "hsfs.util.get_hudi_datestr_from_timestamp"
-        )
+        mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
             return_value=None,
         )
         mocker.patch("hsfs.statistics.Statistics")
-        mocker.patch(
-            "hsfs.feature_group.FeatureGroup.select_all"
-        )
+        mocker.patch("hsfs.feature_group.FeatureGroup.select_all")
         mocker.patch("hsfs.feature_group.FeatureGroup.read")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -598,9 +564,7 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics"
-        )
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine.profile_statistics")
         mock_split_statistics = mocker.patch("hsfs.split_statistics.SplitStatistics")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -633,9 +597,7 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics"
-        )
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine.profile_statistics")
         mock_split_statistics = mocker.patch("hsfs.split_statistics.SplitStatistics")
         mock_statistics_engine_save_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine._save_statistics"
@@ -715,9 +677,7 @@ class TestStatisticsEngine:
         # Arrange
         feature_store_id = 99
 
-        mocker.patch(
-            "hsfs.util.get_timestamp_from_date_string"
-        )
+        mocker.patch("hsfs.util.get_timestamp_from_date_string")
         mock_statistics_api = mocker.patch("hsfs.core.statistics_api.StatisticsApi")
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")

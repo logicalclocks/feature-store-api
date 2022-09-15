@@ -56,9 +56,7 @@ class TestSpark:
         mock_spark_engine_sql_offline = mocker.patch(
             "hsfs.engine.spark.Engine._sql_offline"
         )
-        mocker.patch(
-            "hsfs.engine.spark.Engine.set_job_group"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.set_job_group")
         mock_spark_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.spark.Engine._return_dataframe_type"
         )
@@ -83,9 +81,7 @@ class TestSpark:
         mock_spark_engine_sql_offline = mocker.patch(
             "hsfs.engine.spark.Engine._sql_offline"
         )
-        mocker.patch(
-            "hsfs.engine.spark.Engine.set_job_group"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.set_job_group")
         mock_spark_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.spark.Engine._return_dataframe_type"
         )
@@ -751,9 +747,7 @@ class TestSpark:
     def test_save_stream_dataframe(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -854,9 +848,7 @@ class TestSpark:
     def test_save_stream_dataframe_query_name(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -957,9 +949,7 @@ class TestSpark:
     def test_save_stream_dataframe_checkpoint_dir(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1060,9 +1050,7 @@ class TestSpark:
     def test_save_stream_dataframe_await_termination(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1309,9 +1297,7 @@ class TestSpark:
 
     def test_save_online_dataframe(self, mocker):
         # Arrange
-        mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1538,9 +1524,7 @@ class TestSpark:
     def test_write_training_dataset(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
@@ -1591,9 +1575,7 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
@@ -1644,9 +1626,7 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
@@ -1698,9 +1678,7 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
@@ -1756,9 +1734,7 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
