@@ -338,15 +338,28 @@ public class FeatureViewEngine {
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
       Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = featureViewApi.getBatchQuery(
-        featureView.getFeatureStore(),
-        featureView.getName(),
-        featureView.getVersion(),
-        startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime(),
-        withLabels,
-        trainingDataVersion
-    );
+    Query query = null;
+    try {
+      query = featureViewApi.getBatchQuery(
+          featureView.getFeatureStore(),
+          featureView.getName(),
+          featureView.getVersion(),
+          startTime == null ? null : startTime.getTime(),
+          endTime == null ? null : endTime.getTime(),
+          withLabels,
+          trainingDataVersion
+      );
+     }catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270172")) {
+        throw new FeatureStoreException(
+            "Cannot generate dataset or query from the given start/end time because"
+                + " event time column is not available in one or more feature groups."
+                + " A start/end time should not be provided as parameters."
+        );
+      } else {
+        throw e;
+      }
+    }
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
   }
