@@ -405,14 +405,17 @@ class Engine:
             else:
                 raise ValueError("Dataset should be a query.")
 
+            if training_dataset.coalesce:
+                dataset = dataset.coalesce(1)
+
+            dataset = dataset.cache()
+
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
-            if training_dataset.coalesce:
-                dataset = dataset.coalesce(1)
             path = training_dataset.location + "/" + training_dataset.name
             return self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 dataset,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -425,12 +428,15 @@ class Engine:
             split_dataset = self._split_df(
                 query_obj, training_dataset, read_options=read_options
             )
+            for key in split_dataset:
+                if training_dataset.coalesce:
+                    split_dataset[key] = split_dataset[key].coalesce(1)
+
+                split_dataset[key] = split_dataset[key].cache()
+
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
-            if training_dataset.coalesce:
-                for key in split_dataset:
-                    split_dataset[key] = split_dataset[key].coalesce(1)
             return self._write_training_dataset_splits(
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
@@ -499,7 +505,7 @@ class Engine:
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 feature_dataframes[split_name],
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -538,6 +544,8 @@ class Engine:
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
         ).save(path)
+
+        feature_dataframe.unpersist()
 
     def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):

@@ -43,15 +43,15 @@ class TestTrainingDataset:
         assert td.data_format == "hudi"
         assert td._start_time == 1646438400000
         assert td._end_time == 1646697600000
-        assert td.validation_size == 2
-        assert td.test_size == 3
+        assert td.validation_size == 0.0
+        assert td.test_size == 0.5
         assert td.train_start == 4
         assert td.train_end == 5
         assert td.validation_start == 6
         assert td.validation_end == 7
         assert td.test_start == 8
         assert td.test_end == 9
-        assert td.coalesce == "test_coalesce"
+        assert td.coalesce is True
         assert td.seed == 123
         assert td.location == "test_location"
         assert td._from_query == "test_from_query"
