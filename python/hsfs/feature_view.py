@@ -219,10 +219,10 @@ class FeatureView:
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
-        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+        start_time: timestamp in second or wallclock_time: Datetime object or string. The String should be formatted in
+            one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+        end_time: timestamp in second or wallclock_time: Datetime object string. The String should be formatted in one
+            of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
         read_options: User provided read options. Defaults to `{}`.
         """
 
@@ -281,10 +281,12 @@ class FeatureView:
 
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -387,14 +389,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -444,10 +450,10 @@ class FeatureView:
             version=None,
             test_size=test_size,
             time_split_size=2,
-            train_start=train_start,
-            train_end=train_end,
-            test_start=test_start,
-            test_end=test_end,
+            train_start=util.convert_event_time_to_timestamp(train_start),
+            train_end=util.convert_event_time_to_timestamp(train_end),
+            test_start=util.convert_event_time_to_timestamp(test_start),
+            test_end=util.convert_event_time_to_timestamp(test_end),
             description=description,
             data_format=data_format,
             storage_connector=storage_connector,
@@ -509,18 +515,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -576,12 +588,12 @@ class FeatureView:
             validation_size=validation_size,
             test_size=test_size,
             time_split_size=3,
-            train_start=train_start,
-            train_end=train_end,
-            validation_start=validation_start,
-            validation_end=validation_end,
-            test_start=test_start,
-            test_end=test_end,
+            train_start=util.convert_event_time_to_timestamp(train_start),
+            train_end=util.convert_event_time_to_timestamp(train_end),
+            validation_start=util.convert_event_time_to_timestamp(validation_start),
+            validation_end=util.convert_event_time_to_timestamp(validation_end),
+            test_start=util.convert_event_time_to_timestamp(test_start),
+            test_end=util.convert_event_time_to_timestamp(test_end),
             description=description,
             data_format=data_format,
             storage_connector=storage_connector,
@@ -650,10 +662,12 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -720,14 +734,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -758,10 +776,10 @@ class FeatureView:
             version=None,
             splits={},
             test_size=test_size,
-            train_start=train_start,
-            train_end=train_end,
-            test_start=test_start,
-            test_end=test_end,
+            train_start=util.convert_event_time_to_timestamp(train_start),
+            train_end=util.convert_event_time_to_timestamp(train_end),
+            test_start=util.convert_event_time_to_timestamp(test_start),
+            test_end=util.convert_event_time_to_timestamp(test_end),
             time_split_size=2,
             description=description,
             storage_connector=None,
@@ -818,18 +836,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: timestamp in second or wallclock_time: Datetime object or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -868,12 +892,12 @@ class FeatureView:
             validation_size=validation_size,
             test_size=test_size,
             time_split_size=3,
-            train_start=train_start,
-            train_end=train_end,
-            validation_start=validation_start,
-            validation_end=validation_end,
-            test_start=test_start,
-            test_end=test_end,
+            train_start=util.convert_event_time_to_timestamp(train_start),
+            train_end=util.convert_event_time_to_timestamp(train_end),
+            validation_start=util.convert_event_time_to_timestamp(validation_start),
+            validation_end=util.convert_event_time_to_timestamp(validation_end),
+            test_start=util.convert_event_time_to_timestamp(test_start),
+            test_end=util.convert_event_time_to_timestamp(test_end),
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,

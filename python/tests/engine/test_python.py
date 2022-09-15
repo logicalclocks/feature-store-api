@@ -26,6 +26,7 @@ from hsfs import (
     feature_view,
     transformation_function,
     feature,
+    util,
 )
 from hsfs.engine import python
 from hsfs.core import inode, execution
@@ -1609,7 +1610,6 @@ class TestPython:
     def test_time_series_split(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch("hsfs.engine.python.Engine._convert_to_unix_timestamp")
 
         python_engine = python.Engine()
 
@@ -1647,7 +1647,6 @@ class TestPython:
     def test_time_series_split_drop_event_time(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch("hsfs.engine.python.Engine._convert_to_unix_timestamp")
 
         python_engine = python.Engine()
 
@@ -1687,10 +1686,6 @@ class TestPython:
     def test_time_series_split_event_time(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.engine.python.Engine._convert_to_unix_timestamp",
-            side_effect=[1000, 2000, 1000, 2000],
-        )
 
         python_engine = python.Engine()
 
@@ -1726,11 +1721,8 @@ class TestPython:
             assert result[column].equals(expected[column])
 
     def test_convert_to_unix_timestamp_pandas(self):
-        # Arrange
-        python_engine = python.Engine()
-
         # Act
-        result = python_engine._convert_to_unix_timestamp(t=pd.Timestamp("2017-01-01"))
+        result = util.convert_event_time_to_timestamp(t=pd.Timestamp("2017-01-01"))
 
         # Assert
         assert result == 1483228800000.0
@@ -1741,22 +1733,17 @@ class TestPython:
             "hsfs.util.get_timestamp_from_date_string"
         )
 
-        python_engine = python.Engine()
-
         mock_util_get_timestamp_from_date_string.return_value = 1483225200000
 
         # Act
-        result = python_engine._convert_to_unix_timestamp(t="2017-01-01 00-00-00-000")
+        result = util.convert_event_time_to_timestamp(t="2017-01-01 00-00-00-000")
 
         # Assert
         assert result == 1483225200000
 
     def test_convert_to_unix_timestamp_int(self):
-        # Arrange
-        python_engine = python.Engine()
-
         # Act
-        result = python_engine._convert_to_unix_timestamp(t=1483225200)
+        result = util.convert_event_time_to_timestamp(t=1483225200)
 
         # Assert
         assert result == 1483225200000

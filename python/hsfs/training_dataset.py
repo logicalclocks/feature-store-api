@@ -16,7 +16,6 @@
 import json
 import warnings
 from typing import Optional, Union, Any, Dict, List, TypeVar
-from datetime import timezone
 
 import humps
 import pandas as pd
@@ -125,8 +124,8 @@ class TrainingDataset:
             self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
-            self._start_time = self._convert_event_time_to_timestamp(event_start_time)
-            self._end_time = self._convert_event_time_to_timestamp(event_end_time)
+            self._start_time = util.convert_event_time_to_timestamp(event_start_time)
+            self._end_time = util.convert_event_time_to_timestamp(event_end_time)
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
@@ -230,24 +229,10 @@ class TrainingDataset:
                 TrainingDatasetSplit(
                     name=split_name,
                     split_type=TrainingDatasetSplit.TIME_SERIES_SPLIT,
-                    start_time=self._convert_event_time_to_timestamp(start_time),
-                    end_time=self._convert_event_time_to_timestamp(end_time),
+                    start_time=util.convert_event_time_to_timestamp(start_time),
+                    end_time=util.convert_event_time_to_timestamp(end_time),
                 )
             )
-
-    def _convert_event_time_to_timestamp(self, event_time):
-        if event_time is None:
-            return None
-        if isinstance(event_time, str):
-            if event_time:
-                return util.get_timestamp_from_date_string(event_time, timezone.utc)
-        elif isinstance(event_time, int):
-            if event_time == 0:
-                raise ValueError("Event time should be greater than 0.")
-            # jdbc supports timestamp precision up to second only.
-            return event_time * 1000
-        else:
-            raise ValueError("Given event time should be in `str` or `int` type")
 
     def save(
         self,

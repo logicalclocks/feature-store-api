@@ -119,8 +119,8 @@ class FeatureViewEngine:
         query_obj = self._feature_view_api.get_batch_query(
             feature_view_obj.name,
             feature_view_obj.version,
-            start_time,
-            end_time,
+            util.convert_event_time_to_timestamp(start_time),
+            util.convert_event_time_to_timestamp(end_time),
             training_dataset_version=training_dataset_version,
             is_python_engine=engine.get_type() == "python",
         )

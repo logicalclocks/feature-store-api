@@ -16,6 +16,7 @@
 
 import re
 import json
+import pandas as pd
 
 from datetime import datetime
 from datetime import timezone
@@ -137,6 +138,25 @@ def get_timestamp_from_date_string(input_date, time_zone=timezone.utc):
 
 def get_hudi_datestr_from_timestamp(timestamp):
     return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
+
+
+def convert_event_time_to_timestamp(event_time, time_zone=timezone.utc):
+    if event_time is None:
+        return None
+    if isinstance(event_time, str):
+        if event_time:
+            return get_timestamp_from_date_string(event_time, time_zone)
+    if isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+        # pandas.timestamp represents millisecond in decimal
+        return event_time.timestamp() * 1000
+    elif isinstance(event_time, int):
+        if event_time == 0:
+            raise ValueError("Event time should be greater than 0.")
+        # jdbc supports timestamp precision up to second only.
+        # TODO (Davit): check if this necessary
+        return event_time * 1000
+    else:
+        raise ValueError("Given event time should be in `str` or `int` type")
 
 
 def setup_pydoop():
