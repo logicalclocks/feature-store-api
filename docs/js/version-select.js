@@ -40,7 +40,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return {text: i.title + aliasString, value: i.version};
     }), realVersion);
     select.addEventListener("change", function(event) {
-      window.location.href = ABS_BASE_URL + "/../" + this.value;
+      window.location.href = ABS_BASE_URL + "/../" + this.value + "/generated/api/connection_api/";
     });
 
     var container = document.createElement("div");
