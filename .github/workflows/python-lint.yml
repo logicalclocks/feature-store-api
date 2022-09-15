@@ -16,16 +16,16 @@ jobs:
         run: pip install flake8==3.9.0 black==22.3.0 pre-commit-hooks==2.4.0
 
       - name: black
-        run: black --check python/hsfs
+        run: black --check python
 
       - name: flake8
         run: flake8 --config python/.flake8 python
 
       - name: trailing-whitespace-fixer
-        run: trailing-whitespace-fixer $(find python/hsfs -type f) || exit 1
+        run: trailing-whitespace-fixer $(find python -name "*.py" -type f) || exit 1
 
       - name: end-of-file-fixer
-        run: end-of-file-fixer $(find python/hsfs -type f) || exit 1
+        run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
 
   unit_tests:
     name: Unit Testing
