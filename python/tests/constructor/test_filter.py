@@ -39,11 +39,11 @@ class TestLogic:
         json = backend_fixtures["logic"]["get"]["response"]
 
         # Act
-        l = filter.Logic.from_response_json(json)
+        logic = filter.Logic.from_response_json(json)
 
         # Assert
-        assert l._type == "test_type"
-        assert isinstance(l._left_f, filter.Filter)
-        assert isinstance(l._right_f, filter.Filter)
-        assert isinstance(l._left_l, filter.Logic)
-        assert isinstance(l._right_l, filter.Logic)
+        assert logic._type == "test_type"
+        assert isinstance(logic._left_f, filter.Filter)
+        assert isinstance(logic._right_f, filter.Filter)
+        assert isinstance(logic._left_l, filter.Logic)
+        assert isinstance(logic._right_l, filter.Logic)

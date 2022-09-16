@@ -24,9 +24,7 @@ class TestHudiEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_hudi_engine_write_hudi_dataset = mocker.patch(
-            "hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset"
-        )
+        mocker.patch("hsfs.core.hudi_engine.HudiEngine._write_hudi_dataset")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         h_engine = hudi_engine.HudiEngine(
@@ -82,9 +80,7 @@ class TestHudiEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_hudi_engine_setup_hudi_read_opts = mocker.patch(
-            "hsfs.core.hudi_engine.HudiEngine._setup_hudi_read_opts"
-        )
+        mocker.patch("hsfs.core.hudi_engine.HudiEngine._setup_hudi_read_opts")
 
         spark_session = mocker.Mock()
 
@@ -134,9 +130,7 @@ class TestHudiEngine:
         # Arrange
         feature_store_id = 99
 
-        mock_hudi_engine_setup_hudi_write_opts = mocker.patch(
-            "hsfs.core.hudi_engine.HudiEngine._setup_hudi_write_opts"
-        )
+        mocker.patch("hsfs.core.hudi_engine.HudiEngine._setup_hudi_write_opts")
         mock_hudi_engine_get_last_commit_metadata = mocker.patch(
             "hsfs.core.hudi_engine.HudiEngine._get_last_commit_metadata"
         )
@@ -180,7 +174,7 @@ class TestHudiEngine:
             == fg.location
         )
 
-    def test_write_hudi_dataset(self, mocker):
+    def test__setup_hudi_write_opts(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -400,7 +394,7 @@ class TestHudiEngine:
         )
 
         # Assert
-        assert result.commitid == None
+        assert result.commitid is None
         assert result.commit_date_string == 1
         assert result.rows_inserted == 2
         assert result.rows_updated == 3

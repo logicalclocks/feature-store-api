@@ -517,7 +517,9 @@ class Engine:
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
-            return self._apply_transformation_function(training_dataset_obj, df)
+            return self._apply_transformation_function(
+                training_dataset_obj.transformation_functions, df
+            )
 
     def split_labels(self, df, labels):
         if labels:
@@ -568,7 +570,7 @@ class Engine:
         # and the apply them
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj,
+                training_dataset_obj.transformation_functions,
                 result_dfs.get(split_name),
             )
 

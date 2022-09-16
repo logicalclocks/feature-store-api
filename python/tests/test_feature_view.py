@@ -52,11 +52,11 @@ class TestFeatureView:
 
         # Assert
         assert fv.name == "test_name"
-        assert fv.id == None
+        assert fv.id is None
         assert isinstance(fv.query, query.Query)
         assert fv.featurestore_id == 5
-        assert fv.version == None
-        assert fv.description == None
+        assert fv.version is None
+        assert fv.description is None
         assert fv.labels == []
         assert fv.transformation_functions == {}
         assert len(fv.schema) == 0

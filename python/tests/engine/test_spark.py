@@ -37,7 +37,6 @@ from pyspark.sql.types import (
 from pyspark.sql.functions import lit
 
 from hsfs import (
-    storage_connector,
     feature_group,
     training_dataset,
     transformation_function,
@@ -57,9 +56,7 @@ class TestSpark:
         mock_spark_engine_sql_offline = mocker.patch(
             "hsfs.engine.spark.Engine._sql_offline"
         )
-        mock_spark_engine_set_job_group = mocker.patch(
-            "hsfs.engine.spark.Engine.set_job_group"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.set_job_group")
         mock_spark_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.spark.Engine._return_dataframe_type"
         )
@@ -84,9 +81,7 @@ class TestSpark:
         mock_spark_engine_sql_offline = mocker.patch(
             "hsfs.engine.spark.Engine._sql_offline"
         )
-        mock_spark_engine_set_job_group = mocker.patch(
-            "hsfs.engine.spark.Engine.set_job_group"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.set_job_group")
         mock_spark_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.spark.Engine._return_dataframe_type"
         )
@@ -347,13 +342,13 @@ class TestSpark:
             == "Dataframe type `other` not supported on this platform."
         )
 
-    def test_convert_to_default_dataframe_list_1dimension(self, mocker):
+    def test_convert_to_default_dataframe_list_1dimension(self):
         # Arrange
         spark_engine = spark.Engine()
 
         # Act
         with pytest.raises(TypeError) as e_info:
-            result = spark_engine.convert_to_default_dataframe(
+            spark_engine.convert_to_default_dataframe(
                 dataframe=list(),
             )
 
@@ -363,7 +358,7 @@ class TestSpark:
             == "Cannot convert numpy array that do not have two dimensions to a dataframe. The number of dimensions are: 1"
         )
 
-    def test_convert_to_default_dataframe_list(self, mocker):
+    def test_convert_to_default_dataframe_list(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -381,7 +376,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_numpy_array(self, mocker):
+    def test_convert_to_default_dataframe_numpy_array(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -399,7 +394,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_pandas_dataframe(self, mocker):
+    def test_convert_to_default_dataframe_pandas_dataframe(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -417,7 +412,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_pyspark_rdd(self, mocker):
+    def test_convert_to_default_dataframe_pyspark_rdd(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -440,7 +435,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_pyspark_dataframe(self, mocker):
+    def test_convert_to_default_dataframe_pyspark_dataframe(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -460,9 +455,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_pyspark_dataframe_capitalized_columns(
-        self, mocker
-    ):
+    def test_convert_to_default_dataframe_pyspark_dataframe_capitalized_columns(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -482,7 +475,7 @@ class TestSpark:
         for column in list(result_df):
             assert result_df[column.lower()].equals(result_df[column])
 
-    def test_convert_to_default_dataframe_wrong_type(self, mocker):
+    def test_convert_to_default_dataframe_wrong_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -754,9 +747,7 @@ class TestSpark:
     def test_save_stream_dataframe(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_spark_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -857,9 +848,7 @@ class TestSpark:
     def test_save_stream_dataframe_query_name(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_spark_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -960,9 +949,7 @@ class TestSpark:
     def test_save_stream_dataframe_checkpoint_dir(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_spark_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1063,9 +1050,7 @@ class TestSpark:
     def test_save_stream_dataframe_await_termination(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_spark_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1312,9 +1297,7 @@ class TestSpark:
 
     def test_save_online_dataframe(self, mocker):
         # Arrange
-        mock_spark_engine_encode_complex_features = mocker.patch(
-            "hsfs.engine.spark.Engine._encode_complex_features"
-        )
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
@@ -1437,8 +1420,10 @@ class TestSpark:
         fg._avro_schema = '{"fields": [{"name": "col_0"}]}'
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this (to_avro has to be mocked)
-            result = spark_engine._encode_complex_features(
+        with pytest.raises(
+            TypeError
+        ) as e_info:  # todo look into this (to_avro has to be mocked)
+            spark_engine._encode_complex_features(
                 feature_group=fg,
                 dataframe=spark_df,
             )
@@ -1446,7 +1431,7 @@ class TestSpark:
         # Assert
         assert str(e_info.value) == "'JavaPackage' object is not callable"
 
-    def test_online_fg_to_avro(self, mocker):
+    def test_online_fg_to_avro(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -1466,7 +1451,9 @@ class TestSpark:
         fg._avro_schema = '{"fields": [{"name": "col_0"}]}'
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this (to_avro has to be mocked)
+        with pytest.raises(
+            TypeError
+        ) as e_info:  # todo look into this (to_avro has to be mocked)
             spark_engine._online_fg_to_avro(
                 feature_group=fg,
                 dataframe=spark_df,
@@ -1494,7 +1481,7 @@ class TestSpark:
         # Assert
         assert mock_spark_engine_write_training_dataset.call_count == 1
 
-    def test_split_labels(self, mocker):
+    def test_split_labels(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -1510,7 +1497,7 @@ class TestSpark:
         # Assert
         assert result == (df, None)
 
-    def test_split_labels_labels(self, mocker):
+    def test_split_labels_labels(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -1537,19 +1524,17 @@ class TestSpark:
     def test_write_training_dataset(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mock_tf_engine_populate_builtin_transformation_functions = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
         )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
-        mock_spark_engine_split_df = mocker.patch("hsfs.engine.spark.Engine._split_df")
+        mocker.patch("hsfs.engine.spark.Engine._split_df")
         mock_spark_engine_write_training_dataset_splits = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_splits"
         )
@@ -1590,19 +1575,17 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mock_tf_engine_populate_builtin_transformation_functions = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
         )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
-        mock_spark_engine_split_df = mocker.patch("hsfs.engine.spark.Engine._split_df")
+        mocker.patch("hsfs.engine.spark.Engine._split_df")
         mock_spark_engine_write_training_dataset_splits = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_splits"
         )
@@ -1643,19 +1626,17 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mock_tf_engine_populate_builtin_transformation_functions = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
         )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
-        mock_spark_engine_split_df = mocker.patch("hsfs.engine.spark.Engine._split_df")
+        mocker.patch("hsfs.engine.spark.Engine._split_df")
         mock_spark_engine_write_training_dataset_splits = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_splits"
         )
@@ -1697,13 +1678,11 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mock_tf_engine_populate_builtin_transformation_functions = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
         )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
@@ -1755,13 +1734,11 @@ class TestSpark:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.constructor.query.Query.read")
-        mock_spark_engine_write_options = mocker.patch(
-            "hsfs.engine.spark.Engine.write_options"
-        )
+        mocker.patch("hsfs.engine.spark.Engine.write_options")
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mock_tf_engine_populate_builtin_transformation_functions = mocker.patch(
+        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
         )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
@@ -2394,7 +2371,7 @@ class TestSpark:
         # Assert
         assert result is not None
         assert mock_spark_engine_setup_storage_connector.call_count == 1
-        assert mock_spark_engine_setup_storage_connector.call_args[0][1] == None
+        assert mock_spark_engine_setup_storage_connector.call_args[0][1] is None
         assert mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == ""
         assert (
             mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
@@ -2425,7 +2402,7 @@ class TestSpark:
         # Assert
         assert result is not None
         assert mock_spark_engine_setup_storage_connector.call_count == 1
-        assert mock_spark_engine_setup_storage_connector.call_args[0][1] == None
+        assert mock_spark_engine_setup_storage_connector.call_args[0][1] is None
         assert mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == ""
         assert mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
             1
@@ -2883,10 +2860,6 @@ class TestSpark:
         spark_df = spark_engine._spark_session.createDataFrame(df)
         mock_stream.load.return_value = spark_df
 
-        expected_df = pd.DataFrame(data={"name": ["value1", "value2"]})
-
-        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
-
         schema_string = """{
                                 "namespace": "example.avro",
                                 "type": "record",
@@ -2897,8 +2870,10 @@ class TestSpark:
                             }"""
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this (from_avro has to be mocked)
-            result = spark_engine._read_stream_kafka(
+        with pytest.raises(
+            TypeError
+        ) as e_info:  # todo look into this (from_avro has to be mocked)
+            spark_engine._read_stream_kafka(
                 stream=mock_stream,
                 message_format="avro",
                 schema=schema_string,
@@ -2932,20 +2907,6 @@ class TestSpark:
         spark_df = spark_engine._spark_session.createDataFrame(df)
         mock_stream.load.return_value = spark_df
 
-        expected_df = pd.DataFrame(
-            data={
-                "key": [1, 2],
-                "topic": ["test_topic", "test_topic"],
-                "partition": ["test_partition", "test_partition"],
-                "offset": ["test_offset", "test_offset"],
-                "timestamp": ["test_timestamp", "test_timestamp"],
-                "timestampType": ["test_timestampType", "test_timestampType"],
-                "name": ["value1", "value2"],
-            }
-        )
-
-        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
-
         schema_string = """{
                                 "namespace": "example.avro",
                                 "type": "record",
@@ -2956,8 +2917,10 @@ class TestSpark:
                             }"""
 
         # Act
-        with pytest.raises(TypeError) as e_info:  # todo look into this (from_avro has to be mocked)
-            result = spark_engine._read_stream_kafka(
+        with pytest.raises(
+            TypeError
+        ) as e_info:  # todo look into this (from_avro has to be mocked)
+            spark_engine._read_stream_kafka(
                 stream=mock_stream,
                 message_format="avro",
                 schema=schema_string,
@@ -3067,7 +3030,7 @@ class TestSpark:
             "success": True,
         }
 
-    def test_write_options(self, mocker):
+    def test_write_options(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3080,7 +3043,7 @@ class TestSpark:
         # Assert
         assert result == {"test_key": "test_value"}
 
-    def test_write_options_tfrecords(self, mocker):
+    def test_write_options_tfrecords(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3093,7 +3056,7 @@ class TestSpark:
         # Assert
         assert result == {"recordType": "Example", "test_key": "test_value"}
 
-    def test_write_options_tfrecord(self, mocker):
+    def test_write_options_tfrecord(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3106,7 +3069,7 @@ class TestSpark:
         # Assert
         assert result == {"recordType": "Example", "test_key": "test_value"}
 
-    def test_write_options_csv(self, mocker):
+    def test_write_options_csv(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3119,7 +3082,7 @@ class TestSpark:
         # Assert
         assert result == {"delimiter": ",", "header": "true", "test_key": "test_value"}
 
-    def test_write_options_tsv(self, mocker):
+    def test_write_options_tsv(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3132,7 +3095,7 @@ class TestSpark:
         # Assert
         assert result == {"delimiter": "\t", "header": "true", "test_key": "test_value"}
 
-    def test_read_options(self, mocker):
+    def test_read_options(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3145,7 +3108,7 @@ class TestSpark:
         # Assert
         assert result == {}
 
-    def test_read_options_provided_options(self, mocker):
+    def test_read_options_provided_options(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3158,7 +3121,7 @@ class TestSpark:
         # Assert
         assert result == {"test_key": "test_value"}
 
-    def test_read_options_provided_options_tfrecords(self, mocker):
+    def test_read_options_provided_options_tfrecords(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3171,7 +3134,7 @@ class TestSpark:
         # Assert
         assert result == {"recordType": "Example", "test_key": "test_value"}
 
-    def test_read_options_provided_options_tfrecord(self, mocker):
+    def test_read_options_provided_options_tfrecord(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3184,7 +3147,7 @@ class TestSpark:
         # Assert
         assert result == {"recordType": "Example", "test_key": "test_value"}
 
-    def test_read_options_provided_options_csv(self, mocker):
+    def test_read_options_provided_options_csv(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3202,7 +3165,7 @@ class TestSpark:
             "test_key": "test_value",
         }
 
-    def test_read_options_provided_options_tsv(self, mocker):
+    def test_read_options_provided_options_tsv(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3243,7 +3206,7 @@ class TestSpark:
         assert result[0].name == "col_0"
         assert result[1].name == "col_1"
         assert mock_spark_engine_convert_spark_type.call_count == 2
-        assert mock_spark_engine_convert_spark_type.call_args[0][1] == False
+        assert mock_spark_engine_convert_spark_type.call_args[0][1] is False
 
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
@@ -3268,7 +3231,7 @@ class TestSpark:
         assert result[0].name == "col_0"
         assert result[1].name == "col_1"
         assert mock_spark_engine_convert_spark_type.call_count == 2
-        assert mock_spark_engine_convert_spark_type.call_args[0][1] == True
+        assert mock_spark_engine_convert_spark_type.call_args[0][1] is True
 
     def test_parse_schema_feature_group_value_error(self, mocker):
         # Arrange
@@ -3297,7 +3260,7 @@ class TestSpark:
         # Assert
         assert str(e_info.value) == "Feature 'col_0': test error response"
 
-    def test_parse_schema_training_dataset(self, mocker):
+    def test_parse_schema_training_dataset(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3315,7 +3278,7 @@ class TestSpark:
         assert result[0].name == "col_0"
         assert result[1].name == "col_1"
 
-    def test_convert_spark_type(self, mocker):
+    def test_convert_spark_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3328,7 +3291,7 @@ class TestSpark:
         # Assert
         assert result == "int"
 
-    def test_convert_spark_type_using_hudi_byte_type(self, mocker):
+    def test_convert_spark_type_using_hudi_byte_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3341,7 +3304,7 @@ class TestSpark:
         # Assert
         assert result == "int"
 
-    def test_convert_spark_type_using_hudi_short_type(self, mocker):
+    def test_convert_spark_type_using_hudi_short_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3354,7 +3317,7 @@ class TestSpark:
         # Assert
         assert result == "int"
 
-    def test_convert_spark_type_using_hudi_bool_type(self, mocker):
+    def test_convert_spark_type_using_hudi_bool_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3367,7 +3330,7 @@ class TestSpark:
         # Assert
         assert result == "boolean"
 
-    def test_convert_spark_type_using_hudi_int_type(self, mocker):
+    def test_convert_spark_type_using_hudi_int_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3380,7 +3343,7 @@ class TestSpark:
         # Assert
         assert result == "int"
 
-    def test_convert_spark_type_using_hudi_long_type(self, mocker):
+    def test_convert_spark_type_using_hudi_long_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3393,7 +3356,7 @@ class TestSpark:
         # Assert
         assert result == "bigint"
 
-    def test_convert_spark_type_using_hudi_float_type(self, mocker):
+    def test_convert_spark_type_using_hudi_float_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3406,7 +3369,7 @@ class TestSpark:
         # Assert
         assert result == "float"
 
-    def test_convert_spark_type_using_hudi_double_type(self, mocker):
+    def test_convert_spark_type_using_hudi_double_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3419,7 +3382,7 @@ class TestSpark:
         # Assert
         assert result == "double"
 
-    def test_convert_spark_type_using_hudi_decimal_type(self, mocker):
+    def test_convert_spark_type_using_hudi_decimal_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3432,7 +3395,7 @@ class TestSpark:
         # Assert
         assert result == "decimal(10,0)"
 
-    def test_convert_spark_type_using_hudi_timestamp_type(self, mocker):
+    def test_convert_spark_type_using_hudi_timestamp_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3445,7 +3408,7 @@ class TestSpark:
         # Assert
         assert result == "timestamp"
 
-    def test_convert_spark_type_using_hudi_date_type(self, mocker):
+    def test_convert_spark_type_using_hudi_date_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3458,7 +3421,7 @@ class TestSpark:
         # Assert
         assert result == "date"
 
-    def test_convert_spark_type_using_hudi_string_type(self, mocker):
+    def test_convert_spark_type_using_hudi_string_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3471,7 +3434,7 @@ class TestSpark:
         # Assert
         assert result == "string"
 
-    def test_convert_spark_type_using_hudi_struct_type(self, mocker):
+    def test_convert_spark_type_using_hudi_struct_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3484,7 +3447,7 @@ class TestSpark:
         # Assert
         assert result == "struct<>"
 
-    def test_convert_spark_type_using_hudi_binary_type(self, mocker):
+    def test_convert_spark_type_using_hudi_binary_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3497,7 +3460,7 @@ class TestSpark:
         # Assert
         assert result == "binary"
 
-    def test_convert_spark_type_using_hudi_map_type(self, mocker):
+    def test_convert_spark_type_using_hudi_map_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3536,7 +3499,7 @@ class TestSpark:
         )
 
         # Act
-        result = spark_engine.setup_storage_connector(
+        spark_engine.setup_storage_connector(
             storage_connector=s3_connector,
             path="test_path",
         )
@@ -3568,7 +3531,7 @@ class TestSpark:
         )
 
         # Act
-        result = spark_engine.setup_storage_connector(
+        spark_engine.setup_storage_connector(
             storage_connector=adls_connector,
             path="test_path",
         )
@@ -3600,7 +3563,7 @@ class TestSpark:
         )
 
         # Act
-        result = spark_engine.setup_storage_connector(
+        spark_engine.setup_storage_connector(
             storage_connector=gcs_connector,
             path="test_path",
         )
@@ -3643,7 +3606,7 @@ class TestSpark:
         assert mock_spark_engine_setup_adls_hadoop_conf.call_count == 0
         assert mock_spark_engine_setup_gcp_hadoop_conf.call_count == 0
 
-    def test_setup_storage_connector_jdbc(self, mocker):
+    def test_setup_s3_hadoop_conf(self, mocker):
         # Arrange
         mock_pyspark_getOrCreate = mocker.patch(
             "pyspark.sql.session.SparkSession.builder.getOrCreate"
@@ -3732,7 +3695,7 @@ class TestSpark:
             "name_2", "value_2"
         )
 
-    def test_is_spark_dataframe(self, mocker):
+    def test_is_spark_dataframe(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3742,9 +3705,9 @@ class TestSpark:
         )
 
         # Assert
-        assert result == False
+        assert result is False
 
-    def test_is_spark_dataframe_spark_dataframe(self, mocker):
+    def test_is_spark_dataframe_spark_dataframe(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3759,9 +3722,9 @@ class TestSpark:
         )
 
         # Assert
-        assert result == True
+        assert result is True
 
-    def test_get_empty_appended_dataframe(self, mocker):
+    def test_get_empty_appended_dataframe(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -3859,7 +3822,11 @@ class TestSpark:
         spark_df = spark_engine._spark_session.createDataFrame(df)
 
         expected_df = pd.DataFrame(
-            data={"col_0": ["2", "3"], "col_1": ["test_1", "test_2"], "col_2": [True, False]}
+            data={
+                "col_0": ["2", "3"],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
         )  # todo why it doesnt return int?
 
         expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
@@ -3993,7 +3960,7 @@ class TestSpark:
             "fs.gs.encryption.key.hash", gcs_connector.encryption_key_hash
         )
 
-    def test_get_unique_values(self, mocker):
+    def test_get_unique_values(self):
         # Arrange
         spark_engine = spark.Engine()
 
@@ -4011,7 +3978,7 @@ class TestSpark:
         # Assert
         assert result == [1, 2]
 
-    def test_create_empty_df(self, mocker):
+    def test_create_empty_df(self):
         # Arrange
         spark_engine = spark.Engine()
 
