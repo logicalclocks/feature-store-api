@@ -153,7 +153,7 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     st = fs.get_storage_connector(name=job_conf["storageConnectorName"])
     # first read data from connector
     spark_options = job_conf.pop("options")
-    df = st.read(query=job_conf["query"], options=spark_options)
+    df = st.read(query=(job_conf.pop("query", "") or ""), options=spark_options)
     # store dataframe into feature group
     if job_conf["statisticsConfig"]:
         stat_config = StatisticsConfig.from_response_json(job_conf["statisticsConfig"])
