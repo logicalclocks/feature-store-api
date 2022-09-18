@@ -231,11 +231,8 @@ class Query:
         """
         wallclock_timestamp = util.convert_event_time_to_timestamp(wallclock_time)
 
-        exclude_until_timestamp = (
-            util.convert_event_time_to_timestamp(exclude_until)
-            if exclude_until
-            else None
-        )
+        exclude_until_timestamp = util.convert_event_time_to_timestamp(exclude_until)
+
         for join in self._joins:
             join.query.left_feature_group_end_time = wallclock_timestamp
             join.query.left_feature_group_start_time = exclude_until_timestamp

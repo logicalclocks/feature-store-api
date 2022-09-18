@@ -16,7 +16,7 @@
 
 import json
 import warnings
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -142,7 +142,9 @@ class FeatureView:
         self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
-        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+        self,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
 
@@ -252,8 +254,8 @@ class FeatureView:
 
     def create_training_data(
         self,
-        start_time: Optional[str] = "",
-        end_time: Optional[str] = "",
+        start_time: Optional[Union[str, int, datetime, date]] = "",
+        end_time: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -357,10 +359,10 @@ class FeatureView:
     def create_train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -480,12 +482,12 @@ class FeatureView:
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -647,8 +649,8 @@ class FeatureView:
 
     def training_data(
         self,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -693,8 +695,8 @@ class FeatureView:
             name=self.name,
             version=None,
             splits={},
-            event_start_time=start_time,
-            event_end_time=end_time,
+            event_start_time=util.convert_event_time_to_timestamp(start_time),
+            event_end_time=util.convert_event_time_to_timestamp(end_time),
             description=description,
             storage_connector=None,
             featurestore_id=self._featurestore_id,
@@ -716,10 +718,10 @@ class FeatureView:
     def train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -815,12 +817,12 @@ class FeatureView:
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,

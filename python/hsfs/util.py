@@ -18,8 +18,7 @@ import re
 import json
 import pandas as pd
 
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, date, timezone
 from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
@@ -143,12 +142,21 @@ def get_hudi_datestr_from_timestamp(timestamp):
 def convert_event_time_to_timestamp(event_time, time_zone=timezone.utc):
     if event_time is None:
         return None
-    if isinstance(event_time, str):
+    elif isinstance(event_time, str):
         if event_time:
             return get_timestamp_from_date_string(event_time, time_zone)
-    if isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
-        # pandas.timestamp represents millisecond in decimal
+    elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+        # convert to unix epoch time in milliseconds.
         return event_time.timestamp() * 1000
+    elif isinstance(event_time, datetime):
+        # convert to unix epoch time in milliseconds.
+        return int(event_time.replace(tzinfo=time_zone).timestamp() * 1000)
+    elif isinstance(event_time, date):
+        # convert to unix epoch time in milliseconds.
+        return int(
+            datetime(*event_time.timetuple()[:7]).replace(tzinfo=time_zone).timestamp()
+            * 1000
+        )
     elif isinstance(event_time, int):
         if event_time == 0:
             raise ValueError("Event time should be greater than 0.")
@@ -157,7 +165,9 @@ def convert_event_time_to_timestamp(event_time, time_zone=timezone.utc):
             event_time = event_time * 1000
         return event_time
     else:
-        raise ValueError("Given event time should be in `str` or `int` type")
+        raise ValueError(
+            "Given event time should be in `datetime`, `date`, `str` or `int` type"
+        )
 
 
 def setup_pydoop():

@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 import pyarrow as pa
 
+from datetime import datetime, date, timezone
 from hsfs import (
     storage_connector,
     feature_group,
@@ -1689,7 +1690,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000, 2000]}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1751,6 +1752,24 @@ class TestPython:
 
         # Assert
         assert result == 1483225200000
+
+    def test_convert_to_unix_timestamp_datetime(self):
+        # Act
+        result = util.convert_event_time_to_timestamp(
+            event_time=datetime(2022, 9, 18), time_zone=timezone.utc
+        )
+
+        # Assert
+        assert result == 1663459200000
+
+    def test_convert_to_unix_timestamp_date(self):
+        # Act
+        result = util.convert_event_time_to_timestamp(
+            event_time=date(2022, 9, 18), time_zone=timezone.utc
+        )
+
+        # Assert
+        assert result == 1663459200000
 
     def test_write_training_dataset(self, mocker):
         # Arrange

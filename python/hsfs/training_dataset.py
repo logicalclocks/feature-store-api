@@ -21,6 +21,8 @@ import humps
 import pandas as pd
 import numpy as np
 
+from datetime import datetime, date
+
 from hsfs import util, engine, training_dataset_feature
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
@@ -192,6 +194,13 @@ class TrainingDataset:
         test_start=None,
         test_end=None,
     ):
+        train_start = util.convert_event_time_to_timestamp(train_start)
+        train_end = util.convert_event_time_to_timestamp(train_end)
+        validation_start = util.convert_event_time_to_timestamp(validation_start)
+        validation_end = util.convert_event_time_to_timestamp(validation_end)
+        test_start = util.convert_event_time_to_timestamp(test_start)
+        test_end = util.convert_event_time_to_timestamp(test_end)
+
         time_splits = list()
         self._append_time_split(
             time_splits,
@@ -695,7 +704,7 @@ class TrainingDataset:
         """Get the latest computed statistics for the training dataset."""
         return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time: str = None):
+    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
         """Returns the statistics for this training dataset at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
@@ -706,6 +715,7 @@ class TrainingDataset:
         # Returns
             `Statistics`. Object with statistics information.
         """
+        commit_time = util.convert_event_time_to_timestamp(commit_time)
         if commit_time is None:
             return self.statistics
         else:
