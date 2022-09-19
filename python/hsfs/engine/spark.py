@@ -412,7 +412,7 @@ class Engine:
                 dataset = dataset.coalesce(1)
             path = training_dataset.location + "/" + training_dataset.name
             return self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 dataset,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -499,7 +499,7 @@ class Engine:
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 feature_dataframes[split_name],
                 training_dataset.storage_connector,
                 training_dataset.data_format,
