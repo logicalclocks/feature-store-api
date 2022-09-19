@@ -21,7 +21,7 @@ class RestAPIError(Exception):
     def __init__(self, url, response):
         try:
             error_object = response.json()
-        except ValueError:
+        except Exception:
             error_object = {}
         message = (
             "Metadata operation error: (url: {}). Server response: \n"
