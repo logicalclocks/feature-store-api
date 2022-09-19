@@ -2202,7 +2202,7 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            id=10,
+            transformation_functions=None,
         )
 
         # Act
@@ -2233,7 +2233,6 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            id=10,
         )
 
         # Act
