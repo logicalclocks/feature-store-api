@@ -2226,7 +2226,7 @@ class TestSpark:
             splits={},
             id=10,
             transformation_functions=transformation_fn_dict,
-            features=features
+            features=features,
         )
 
         # Act
@@ -2281,7 +2281,7 @@ class TestSpark:
             splits={},
             id=10,
             transformation_functions=transformation_fn_dict,
-            features=features
+            features=features,
         )
 
         # Act
