@@ -1111,6 +1111,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "type": "featureViewDTO",
         }
 
     @property
