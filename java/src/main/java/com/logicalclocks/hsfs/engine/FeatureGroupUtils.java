@@ -291,7 +291,8 @@ public class FeatureGroupUtils {
       throws FeatureStoreException, IOException {
     List<Schema.Field> fields = schema.getFields().stream()
         .map(field -> complexFeatures.contains(field.name())
-            ? new Schema.Field(field.name(), SchemaBuilder.builder().nullable().bytesType(), null, null)
+            ? new Schema.Field(field.name(), SchemaBuilder.builder().unionOf().nullType().and().bytesType().endUnion(),
+                null, null)
             : new Schema.Field(field.name(), field.schema(), null, null))
         .collect(Collectors.toList());
     return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(false);
