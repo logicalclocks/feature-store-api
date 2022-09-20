@@ -24,6 +24,7 @@ from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement, query
 from hsfs.client.exceptions import RestAPIError
 
+
 class FeatureViewApi:
     _POST = "POST"
     _GET = "GET"
