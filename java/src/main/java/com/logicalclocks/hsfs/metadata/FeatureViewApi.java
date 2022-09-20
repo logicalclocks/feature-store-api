@@ -75,7 +75,19 @@ public class FeatureViewApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return hopsworksClient.handleRequest(request, FeatureView.class);
+    try {
+      return hopsworksClient.handleRequest(request, FeatureView.class);
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270009")) {
+        throw new FeatureStoreException(
+            "Cannot get back the feature view because the query defined is no longer valid."
+            + " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
+            + " or `FeatureView.clean`."
+        );
+      } else {
+        throw e;
+      }
+    }
   }
 
   public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
@@ -92,7 +104,19 @@ public class FeatureViewApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
+    try {
+      return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270009")) {
+        throw new FeatureStoreException(
+            "Cannot get back the feature view because the query defined is no longer valid."
+                + " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
+                + " or `FeatureView.clean`."
+        );
+      } else {
+        throw e;
+      }
+   }
   }
 
   private String addQueryParam(String baseUrl, Map<String, Object> params) {
