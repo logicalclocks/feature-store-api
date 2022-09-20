@@ -40,6 +40,7 @@ setup(
             "flake8",
             "black",
             "pyspark==3.1.1",
+            "moto[s3]",
         ],
         "docs": [
             "mkdocs==1.3.0",
