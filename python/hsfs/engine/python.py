@@ -26,6 +26,7 @@ import pyarrow as pa
 import json
 import random
 import uuid
+from datetime import datetime, timezone
 
 import great_expectations as ge
 
@@ -812,6 +813,8 @@ class Engine:
                     row[k] = row[k].tolist()
                 if isinstance(row[k], pd.Timestamp):
                     row[k] = row[k].to_pydatetime()
+                if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                    row[k] = row[k].replace(tzinfo=timezone.utc)
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
