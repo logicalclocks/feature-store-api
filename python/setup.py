@@ -34,7 +34,7 @@ setup(
         "typing_extensions>=3.7.4", # GE issue 3: missing dependency https://github.com/great-expectations/great_expectations/pull/4082/files, set to 3.7.4 to be compatible with hopsworks base environment
     ],
     extras_require={
-        "dev": ["pytest", "flake8", "black"],
+        "dev": ["pytest", "flake8", "black", "moto[s3]",],
         "docs": [
             "mkdocs==1.3.0",
             "mkdocs-material==8.2.8",
