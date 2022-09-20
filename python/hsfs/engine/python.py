@@ -35,6 +35,7 @@ from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
+from botocore.response import StreamingBody
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -120,8 +121,10 @@ class Engine:
             return pd.read_csv(obj)
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
-        elif data_format.lower() == "parquet":
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
             return pd.read_parquet(BytesIO(obj.read()))
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe.".format(
