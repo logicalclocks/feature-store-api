@@ -26,6 +26,7 @@ import pyarrow as pa
 import json
 import random
 import uuid
+from datetime import datetime, timezone
 
 import great_expectations as ge
 
@@ -35,6 +36,7 @@ from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
+from botocore.response import StreamingBody
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -121,8 +123,10 @@ class Engine:
             return pd.read_csv(obj)
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
-        elif data_format.lower() == "parquet":
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
             return pd.read_parquet(BytesIO(obj.read()))
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe.".format(
@@ -870,6 +874,8 @@ class Engine:
                     row[k] = row[k].tolist()
                 if isinstance(row[k], pd.Timestamp):
                     row[k] = row[k].to_pydatetime()
+                if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                    row[k] = row[k].replace(tzinfo=timezone.utc)
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)

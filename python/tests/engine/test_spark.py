@@ -2316,6 +2316,28 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
+        def plus_one(a) -> int:
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            featurestore_id=99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["col_0"] = tf
+
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="col_0", type=IntegerType(), index=0
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="col_1", type=StringType(), index=1
+        )
+        features = [f, f1]
+
         td = training_dataset.TrainingDataset(
             name="test",
             version=1,
@@ -2323,7 +2345,8 @@ class TestSpark:
             featurestore_id=99,
             splits={},
             id=10,
-            transformation_functions={},
+            transformation_functions=transformation_fn_dict,
+            features=features,
         )
 
         # Act
@@ -2348,6 +2371,28 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
+        def plus_one(a) -> int:
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            featurestore_id=99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["col_0"] = tf
+
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="col_0", type=IntegerType(), index=0
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="col_1", type=StringType(), index=1
+        )
+        features = [f, f1]
+
         td = training_dataset.TrainingDataset(
             name="test",
             version=1,
@@ -2355,7 +2400,8 @@ class TestSpark:
             featurestore_id=99,
             splits={},
             id=10,
-            transformation_functions={},
+            transformation_functions=transformation_fn_dict,
+            features=features,
         )
 
         # Act

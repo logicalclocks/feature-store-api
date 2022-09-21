@@ -129,6 +129,10 @@ public class TrainingDataset {
   @Getter
   @Setter
   private FilterLogic extraFilter;
+  
+  @Getter
+  @Setter
+  private String type = "trainingDatasetDTO";
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
