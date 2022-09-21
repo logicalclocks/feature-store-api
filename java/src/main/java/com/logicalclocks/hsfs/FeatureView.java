@@ -122,6 +122,11 @@ public class FeatureView {
     featureViewEngine.delete(this.featureStore, this.name, this.version);
   }
 
+  public static void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
+      throws FeatureStoreException, IOException {
+    featureViewEngine.delete(featureStore, featureViewName, featureViewVersion);
+  }
+
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {
     return featureViewEngine.update(other);
   }
