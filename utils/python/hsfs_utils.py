@@ -8,6 +8,7 @@ from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
 from hsfs.core import feature_view_engine
+from hsfs.statistics_config import StatisticsConfig
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -90,6 +91,7 @@ def create_td(job_conf: Dict[Any, Any]) -> None:
         write_options=job_conf.pop("write_options", {}) or {},
     )
 
+
 def create_fv_td(job_conf: Dict[Any, Any]) -> None:
     # Extract the feature store handle
     feature_store = job_conf.pop("feature_store")
@@ -103,6 +105,7 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
         job_conf.pop("write_options", {}) or {},
         training_dataset_version=job_conf["td_version"],
     )
+
 
 def compute_stats(job_conf: Dict[Any, Any]) -> None:
     """
@@ -124,6 +127,36 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
     entity.compute_statistics()
 
 
+def import_fg(job_conf: Dict[Any, Any]) -> None:
+    """
+    Import data to a feature group using storage connector.
+    """
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+    # retrieve connector
+    st = fs.get_storage_connector(name=job_conf["storageConnectorName"])
+    # first read data from connector
+    spark_options = job_conf.pop("options")
+    df = st.read(query=(job_conf.pop("query", "") or ""), options=spark_options)
+    # store dataframe into feature group
+    if job_conf["statisticsConfig"]:
+        stat_config = StatisticsConfig.from_response_json(job_conf["statisticsConfig"])
+    else:
+        stat_config = None
+    # create fg and insert
+    fg = fs.get_or_create_feature_group(
+        name=job_conf["featureGroupName"],
+        version=job_conf["version"],
+        primary_key=job_conf["primaryKey"],
+        online_enabled=job_conf.pop("onlineEnabled", False) or False,
+        statistics_config=stat_config,
+        partition_key=job_conf.pop("partitionKey", []) or [],
+        description=job_conf["description"],
+        event_time=job_conf.pop("eventTime", None) or None,
+    )
+    fg.insert(df)
+
+
 if __name__ == "__main__":
     # Setup spark first so it fails faster in case of args errors
     # Otherwise the resource manager will wait until the spark application master
@@ -134,7 +167,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "-op",
         type=str,
-        choices=["insert_fg", "create_td", "create_fv_td", "compute_stats"],
+        choices=[
+            "insert_fg",
+            "create_td",
+            "create_fv_td",
+            "compute_stats",
+            "import_fg",
+        ],
         help="Operation type",
     )
     parser.add_argument(
@@ -154,3 +193,5 @@ if __name__ == "__main__":
         create_fv_td(job_conf)
     elif args.op == "compute_stats":
         compute_stats(job_conf)
+    elif args.op == "import_fg":
+        import_fg(job_conf)
