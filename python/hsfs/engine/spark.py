@@ -405,14 +405,11 @@ class Engine:
             else:
                 raise ValueError("Dataset should be a query.")
 
-            if training_dataset.coalesce:
-                dataset = dataset.coalesce(1)
-
-            dataset = dataset.cache()
-
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, dataset
             )
+            if training_dataset.coalesce:
+                dataset = dataset.coalesce(1)
             path = training_dataset.location + "/" + training_dataset.name
             return self._write_training_dataset_single(
                 training_dataset.transformation_functions,
