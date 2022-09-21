@@ -63,6 +63,10 @@ public class FeatureView {
   @JsonIgnore
   private List<String> labels;
 
+  @Getter
+  @Setter
+  private String type = "featureViewDTO";
+
   private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static VectorServer vectorServer = new VectorServer();
   private Integer extraFilterVersion = null;
@@ -124,6 +128,11 @@ public class FeatureView {
 
   public void delete() throws FeatureStoreException, IOException {
     featureViewEngine.delete(this.featureStore, this.name, this.version);
+  }
+
+  public static void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
+      throws FeatureStoreException, IOException {
+    featureViewEngine.delete(featureStore, featureViewName, featureViewVersion);
   }
 
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {

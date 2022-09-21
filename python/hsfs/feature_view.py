@@ -31,6 +31,7 @@ from hsfs.core import (
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.core.feature_view_api import FeatureViewApi
 
 
 class FeatureView:
@@ -77,6 +78,27 @@ class FeatureView:
             `RestAPIError`.
         """
         self._feature_view_engine.delete(self.name, self.version)
+
+    @staticmethod
+    def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
+        """Delete the feature view and all associated metadata.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            feature view **and** related training dataset **and** materialized data in HopsFS.
+
+        # Arguments
+            feature_store_id: int. Id of feature store.
+            feature_view_name: str. Name of feature view.
+            feature_view_version: str. Version of feature view.
+        # Raises
+            `RestAPIError`.
+        """
+        if not isinstance(feature_store_id, int):
+            raise ValueError("`feature_store_id` should be an integer.")
+        FeatureViewApi(feature_store_id).delete_by_name_version(
+            feature_view_name, feature_view_version
+        )
 
     def update(self):
         # TODO feature view: wait for RestAPI
@@ -1137,6 +1159,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "type": "featureViewDTO",
         }
 
     @property

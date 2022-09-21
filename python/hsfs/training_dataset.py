@@ -540,6 +540,7 @@ class TrainingDataset:
             "eventStartTime": self._start_time,
             "eventEndTime": self._end_time,
             "extraFilter": self._extra_filter,
+            "type": "trainingDatasetDTO",
         }
 
     @property

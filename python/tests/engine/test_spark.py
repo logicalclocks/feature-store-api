@@ -45,6 +45,7 @@ from hsfs import (
     expectation_suite,
     training_dataset_feature,
 )
+from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
@@ -1570,6 +1571,123 @@ class TestSpark:
         assert mock_spark_engine_write_training_dataset_single.call_count == 0
         assert mock_spark_engine_write_training_dataset_splits.call_count == 0
 
+    def test_write_training_dataset_to_df(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch("hsfs.client.get_instance")
+
+        spark_engine = spark.Engine()
+
+        jsonq = backend_fixtures["query"]["get"]["response"]
+        q = query.Query.from_response_json(jsonq)
+
+        mock_query_read = mocker.patch("hsfs.constructor.query.Query.read")
+        d = {
+            "col_0": [1, 2],
+            "col_1": ["test_1", "test_2"],
+            "col_2": [3, 4],
+            "event_time": [1, 2],
+        }
+        df = pd.DataFrame(data=d)
+        query_df = spark_engine._spark_session.createDataFrame(df)
+        mock_query_read.side_effect = [query_df]
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=None,
+            splits={},
+            event_start_time=None,
+            event_end_time=None,
+            description="test",
+            storage_connector=None,
+            featurestore_id=10,
+            data_format="tsv",
+            location="",
+            statistics_config=None,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=None,
+            transformation_functions={},
+        )
+
+        # Act
+        df_returned = spark_engine.write_training_dataset(
+            training_dataset=td,
+            query_obj=q,
+            user_write_options={},
+            save_mode=training_dataset_engine.TrainingDatasetEngine.OVERWRITE,
+            read_options={},
+            feature_view_obj=None,
+            to_df=True,
+        )
+
+        # Assert
+        assert set(df_returned.columns) == {"col_0", "col_1", "col_2", "event_time"}
+        assert df_returned.count() == 2
+        assert df_returned.exceptAll(query_df).rdd.isEmpty()
+
+    def test_write_training_dataset_split_to_df(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch("hsfs.client.get_instance")
+
+        spark_engine = spark.Engine()
+
+        jsonq = backend_fixtures["query"]["get"]["response"]
+        q = query.Query.from_response_json(jsonq)
+
+        mock_query_read = mocker.patch("hsfs.constructor.query.Query.read")
+        d = {
+            "col_0": [1, 2],
+            "col_1": ["test_1", "test_2"],
+            "col_2": [3, 4],
+            "event_time": [1, 2],
+        }
+        df = pd.DataFrame(data=d)
+        query_df = spark_engine._spark_session.createDataFrame(df)
+        mock_query_read.side_effect = [query_df]
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=None,
+            splits={},
+            test_size=0.5,
+            train_start=None,
+            train_end=None,
+            test_start=None,
+            test_end=None,
+            time_split_size=2,
+            description="test",
+            storage_connector=None,
+            featurestore_id=12,
+            data_format="tsv",
+            location="",
+            statistics_config=None,
+            training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=None,
+            seed=1,
+            transformation_functions={},
+        )
+
+        # Act
+        split_dfs_returned = spark_engine.write_training_dataset(
+            training_dataset=td,
+            query_obj=q,
+            user_write_options={},
+            save_mode=training_dataset_engine.TrainingDatasetEngine.OVERWRITE,
+            read_options={},
+            feature_view_obj=None,
+            to_df=True,
+        )
+
+        # Assert
+        sum_rows = 0
+        for key in split_dfs_returned:
+            df_returned = split_dfs_returned[key]
+            assert set(df_returned.columns) == {"col_0", "col_1", "col_2", "event_time"}
+            sum_rows += df_returned.count()
+
+        assert sum_rows == 2
+
     def test_write_training_dataset_query(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
@@ -1967,9 +2085,11 @@ class TestSpark:
 
         # Assert
         assert list(result) == ["test_split1", "test_split2"]
+        sum_rows = 0
         for column in list(result):
             assert result[column].schema == spark_df.schema
-            assert not result[column].rdd.isEmpty()
+            sum_rows += result[column].count()
+        assert sum_rows == 6
 
     def test_time_series_split(self, mocker):
         # Arrange
@@ -2196,13 +2316,36 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
+        def plus_one(a) -> int:
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            featurestore_id=99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["col_0"] = tf
+
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="col_0", type=IntegerType(), index=0
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="col_1", type=StringType(), index=1
+        )
+        features = [f, f1]
+
         td = training_dataset.TrainingDataset(
             name="test",
             version=1,
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            transformation_functions=None,
+            transformation_functions=transformation_fn_dict,
+            features=features,
         )
 
         # Act
@@ -2227,12 +2370,36 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
+        def plus_one(a) -> int:
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            featurestore_id=99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["col_0"] = tf
+
+        f = training_dataset_feature.TrainingDatasetFeature(
+            name="col_0", type=IntegerType(), index=0
+        )
+        f1 = training_dataset_feature.TrainingDatasetFeature(
+            name="col_1", type=StringType(), index=1
+        )
+        features = [f, f1]
+
         td = training_dataset.TrainingDataset(
             name="test",
             version=1,
             data_format="CSV",
             featurestore_id=99,
             splits={},
+            transformation_functions=transformation_fn_dict,
+            features=features,
         )
 
         # Act
