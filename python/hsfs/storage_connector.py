@@ -683,7 +683,7 @@ class SnowflakeConnector(StorageConnector):
 
     def read(
         self,
-        query: str,
+        query: str = None,
         data_format: str = None,
         options: dict = {},
         path: str = None,
