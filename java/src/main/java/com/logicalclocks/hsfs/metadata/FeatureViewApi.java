@@ -81,8 +81,8 @@ public class FeatureViewApi {
       if (e.getMessage().contains("\"errorCode\":270009")) {
         throw new FeatureStoreException(
             "Cannot get back the feature view because the query defined is no longer valid."
-            + " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
-            + " or `FeatureView.clean`."
+            + " Some feature groups used in the query may have been deleted."
+            + " You can clean up this feature view on the UI or `FeatureView.clean`."
         );
       } else {
         throw e;
@@ -110,13 +110,13 @@ public class FeatureViewApi {
       if (e.getMessage().contains("\"errorCode\":270009")) {
         throw new FeatureStoreException(
             "Cannot get back the feature view because the query defined is no longer valid."
-                + " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
-                + " or `FeatureView.clean`."
+                + " Some feature groups used in the query may have been deleted."
+                + " You can clean up this feature view on the UI or `FeatureView.clean`."
         );
       } else {
         throw e;
       }
-   }
+    }
   }
 
   private String addQueryParam(String baseUrl, Map<String, Object> params) {
