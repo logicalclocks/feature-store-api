@@ -18,6 +18,24 @@ import numpy
 import datetime
 from functools import partial
 
+# in case importing in %%local
+try:
+    from pyspark.sql.types import (
+        ByteType,
+        ShortType,
+        IntegerType,
+        LongType,
+        FloatType,
+        DoubleType,
+        DateType,
+        StringType,
+        TimestampType,
+        BinaryType,
+        BooleanType,
+    )
+except ImportError:
+    pass
+
 from hsfs import training_dataset, training_dataset_feature
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
@@ -177,27 +195,27 @@ class TransformationFunctionEngine:
     @staticmethod
     def infer_spark_type(output_type):
         if output_type in (str, "str", "string"):
-            return "StringType()"
-        elif output_type in (bytes,):
-            return "BinaryType()"
+            return StringType()
+        elif output_type in (bytes, "bytes"):
+            return BinaryType()
         elif output_type in (numpy.int8, "int8", "byte"):
-            return "ByteType()"
+            return ByteType()
         elif output_type in (numpy.int16, "int16", "short"):
-            return "ShortType()"
+            return ShortType()
         elif output_type in (int, "int", numpy.int, numpy.int32):
-            return "IntegerType()"
+            return IntegerType()
         elif output_type in (numpy.int64, "int64", "long", "bigint"):
-            return "LongType()"
+            return LongType()
         elif output_type in (float, "float", numpy.float):
-            return "FloatType()"
+            return FloatType()
         elif output_type in (numpy.float64, "float64", "double"):
-            return "DoubleType()"
-        elif output_type in (datetime.datetime, numpy.datetime64):
-            return "TimestampType()"
-        elif output_type in (datetime.date,):
-            return "DateType()"
+            return DoubleType()
+        elif output_type in (datetime.datetime, numpy.datetime64, "timestamp"):
+            return TimestampType()
+        elif output_type in (datetime.date, "date"):
+            return DateType()
         elif output_type in (bool, "boolean", "bool", numpy.bool):
-            return "BooleanType()"
+            return BooleanType()
         else:
             raise TypeError("Not supported type %s." % output_type)
 

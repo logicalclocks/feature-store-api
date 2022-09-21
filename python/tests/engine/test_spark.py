@@ -3791,7 +3791,7 @@ class TestSpark:
             featurestore_id=99,
             transformation_fn=plus_one,
             builtin_source_code="",
-            output_type="int",
+            output_type="long",
         )
 
         transformation_fn_dict = dict()
@@ -3823,7 +3823,7 @@ class TestSpark:
 
         expected_df = pd.DataFrame(
             data={
-                "col_0": ["2", "3"],
+                "col_0": [2, 3],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
