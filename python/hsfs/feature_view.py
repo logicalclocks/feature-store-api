@@ -88,7 +88,7 @@ class FeatureView:
             feature view **and** related training dataset **and** materialized data in HopsFS.
 
         # Arguments
-            feature_store_id: int. Id of Feature store.
+            feature_store_id: int. Id of feature store.
             feature_view_name: str. Name of feature view.
             feature_view_version: str. Version of feature view.
         # Raises
