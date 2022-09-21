@@ -1767,6 +1767,15 @@ class TestPython:
         # Assert
         assert result == 1663459200000
 
+    def test_convert_to_unix_timestamp_pandas_datetime(self):
+        # Act
+        result = util.convert_event_time_to_timestamp(
+            event_time=pd.Timestamp("2022-09-18")
+        )
+
+        # Assert
+        assert result == 1663459200000
+
     def test_write_training_dataset(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")

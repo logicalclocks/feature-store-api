@@ -711,12 +711,13 @@ class TrainingDataset:
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+            commit_time: datatime.datetime, datetime.date, unix time in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`. Defaults to `None`.
 
         # Returns
             `Statistics`. Object with statistics information.
         """
-        commit_time = util.convert_event_time_to_timestamp(commit_time)
         if commit_time is None:
             return self.statistics
         else:
