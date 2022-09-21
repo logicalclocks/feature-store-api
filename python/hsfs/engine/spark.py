@@ -423,6 +423,12 @@ class Engine:
             split_dataset = dict(
                 [(split[0], split_dataset[i]) for i, split in enumerate(splits)]
             )
+            for key in split_dataset:
+                if training_dataset.coalesce:
+                    split_dataset[key] = split_dataset[key].coalesce(1)
+
+                split_dataset[key] = split_dataset[key].cache()
+
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
@@ -480,6 +486,8 @@ class Engine:
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
         ).save(path)
+
+        feature_dataframe.unpersist()
 
     def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):
