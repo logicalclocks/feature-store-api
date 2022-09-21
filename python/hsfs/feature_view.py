@@ -80,11 +80,7 @@ class FeatureView:
         self._feature_view_engine.delete(self.name, self.version)
 
     @staticmethod
-    def clean(
-        feature_store_id: int,
-        feature_view_name: str,
-        feature_view_version: str
-    ):
+    def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
         """Delete the feature view and all associated metadata.
 
         !!! danger "Potentially dangerous operation"
@@ -99,9 +95,7 @@ class FeatureView:
             `RestAPIError`.
         """
         if not isinstance(feature_store_id, int):
-            raise ValueError(
-                "`feature_store_id` should be an integer."
-            )
+            raise ValueError("`feature_store_id` should be an integer.")
         FeatureViewApi(feature_store_id).delete_by_name_version(
             feature_view_name, feature_view_version
         )
