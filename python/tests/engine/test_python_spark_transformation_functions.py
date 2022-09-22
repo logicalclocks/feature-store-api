@@ -41,21 +41,21 @@ from hsfs.core.transformation_function_engine import TransformationFunctionEngin
 
 
 class TestPythonSparkTransformationFuctions:
-    def _create_training_dataset(self, tf_fun, outp_type, name=None, col="col_0"):
+    def _create_training_dataset(self, tf_fun, output_type, name=None, col="col_0"):
         if isinstance(tf_fun, str):
             tf = transformation_function.TransformationFunction(
                 name=name,
                 featurestore_id=99,
                 transformation_fn=None,
                 source_code_content=tf_fun,
-                output_type=outp_type,
+                output_type=output_type,
             )
         else:
             tf = transformation_function.TransformationFunction(
                 featurestore_id=99,
                 transformation_fn=tf_fun,
                 builtin_source_code=None,
-                output_type=outp_type,
+                output_type=output_type,
             )
         transformation_fn_dict = dict()
         transformation_fn_dict[col] = tf
@@ -158,7 +158,7 @@ class TestPythonSparkTransformationFuctions:
             '        except ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "double", "min_max_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
 
         td.transformation_functions[
             "col_0"
@@ -228,7 +228,7 @@ class TestPythonSparkTransformationFuctions:
             '    return value_to_index[value]"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "integer", "label_encoder", "col_1")
+        td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
 
         td.transformation_functions[
             "col_1"
@@ -289,7 +289,7 @@ class TestPythonSparkTransformationFuctions:
             'ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "double", "standard_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "standard_scaler")
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
@@ -361,7 +361,7 @@ class TestPythonSparkTransformationFuctions:
             'except ZeroDivisionError:\\n            return 0\\n"}\n'
         )
 
-        td = self._create_training_dataset(tf_fun, "double", "robust_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "robust_scaler")
 
         percentiles = [1] * 100
         percentiles[24] = 1
@@ -508,14 +508,14 @@ class TestPythonSparkTransformationFuctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", DoubleType(), True),
+                StructField("col_0", IntegerType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [2.0, 3.0],
+                "col_0": [2, 3],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -523,12 +523,13 @@ class TestPythonSparkTransformationFuctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         # Arrange
         def tf_fun(a) -> int:
             return a + 1
 
-        td = self._create_training_dataset(tf_fun, "double")
+        td = self._create_training_dataset(tf_fun, int)
 
         # Assert
         self._validate_on_python_engine(td, df, expected_df)

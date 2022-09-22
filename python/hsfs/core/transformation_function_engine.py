@@ -192,9 +192,9 @@ class TransformationFunctionEngine:
             return "FLOAT"
         elif output_type in (numpy.float64, "float64", "double"):
             return "DOUBLE"
-        elif output_type in (datetime.datetime, numpy.datetime64):
+        elif output_type in (datetime.datetime, numpy.datetime64, "datetime"):
             return "TIMESTAMP"
-        elif output_type in (datetime.date,):
+        elif output_type in (datetime.date, "date"):
             return "DATE"
         elif output_type in (bool, "boolean", "bool", numpy.bool):
             return "BOOLEAN"
