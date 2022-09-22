@@ -221,24 +221,18 @@ class Query:
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: Datetime string. The String should be formatted in one of the
+            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-            exclude_until: Datetime string. The String should be formatted in one of the
+            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        wallclock_timestamp = (
-            util.get_timestamp_from_date_string(wallclock_time)
-            if wallclock_time
-            else None
-        )
-        exclude_until_timestamp = (
-            util.get_timestamp_from_date_string(exclude_until)
-            if exclude_until
-            else None
-        )
+        wallclock_timestamp = util.convert_event_time_to_timestamp(wallclock_time)
+
+        exclude_until_timestamp = util.convert_event_time_to_timestamp(exclude_until)
+
         for join in self._joins:
             join.query.left_feature_group_end_time = wallclock_timestamp
             join.query.left_feature_group_start_time = exclude_until_timestamp
@@ -252,10 +246,10 @@ class Query:
         `pull_changes` method is deprecated. Use
         `as_of(end_wallclock_time, exclude_until=start_wallclock_time) instead.
         """
-        self.left_feature_group_start_time = util.get_timestamp_from_date_string(
+        self.left_feature_group_start_time = util.convert_event_time_to_timestamp(
             wallclock_start_time
         )
-        self.left_feature_group_end_time = util.get_timestamp_from_date_string(
+        self.left_feature_group_end_time = util.convert_event_time_to_timestamp(
             wallclock_end_time
         )
         return self

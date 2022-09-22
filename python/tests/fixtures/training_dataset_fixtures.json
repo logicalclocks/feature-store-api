@@ -9,7 +9,7 @@
         "location": "test_location",
         "event_start_time": 1646438400000,
         "event_end_time": 1646697600000,
-        "coalesce": "test_coalesce",
+        "coalesce": true,
         "description": "test_description",
         "storage_connector": {
           "type": "featurestoreJdbcConnectorDTO",
@@ -43,8 +43,8 @@
             "end_time": "test_end_time"
           }
         ],
-        "validation_size": 2,
-        "test_size": 3,
+        "validation_size": 0.0,
+        "test_size": 0.5,
         "train_start": 4,
         "train_end": 5,
         "validation_start": 6,
