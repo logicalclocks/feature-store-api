@@ -175,7 +175,7 @@ class StatisticsEngine:
         training_dataset_version=None,
     ):
         """Get Statistics with the specified commit time of an entity."""
-        commit_timestamp = util.get_timestamp_from_date_string(commit_time)
+        commit_timestamp = util.convert_event_time_to_timestamp(commit_time)
         return self._statistics_api.get(
             metadata_instance,
             commit_timestamp,
