@@ -221,9 +221,9 @@ class Query:
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: timestamp, Datetime object or string. The String should be formatted in one of the
+            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-            exclude_until: timestamp, Datetime object or string. The String should be formatted in one of the
+            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
 
         # Returns

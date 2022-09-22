@@ -586,7 +586,7 @@ class FeatureGroupBase:
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: datatime.datetime, datetime.date, unix time in seconds (int), or string. The String should
+            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
                 be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
                 or `%Y%m%d%H%M%S%f`. Defaults to `None`. Defaults to `None`.
 
@@ -804,7 +804,7 @@ class FeatureGroup(FeatureGroupBase):
             fg.read("2020-10-20 07:34:11")
             ```
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix time in seconds (int), or string. The String should
+            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
                 be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
                 or `%Y%m%d%H%M%S%f`.
                 If Specified will retrieve feature group as of specific point in time.
@@ -871,10 +871,10 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            start_wallclock_time: datatime.datetime, datetime.date, unix time in seconds (int), or string.
+            start_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
                 The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
                 `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_wallclock_time: datatime.datetime, datetime.date, unix time in seconds (int), or string.
+            end_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
                 The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
                 `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
             read_options: User provided read options. Defaults to `{}`.
@@ -1193,7 +1193,9 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             wallclock_time: Commit details as of specific point in time. Defaults to `None`.
-            limit: Number of commits to retrieve. Defaults to `None`.
+            limit: Number of commits to retrieve. Defaults to `None`. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
+                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
+                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
 
         # Returns
             `Dict[str, Dict[str, str]]`. Dictionary object of commit metadata timeline, where Key is commit id and value
@@ -1291,9 +1293,9 @@ class FeatureGroup(FeatureGroupBase):
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: timestamp, Datetime object or string. The String should be formatted in one of the
+            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-            exclude_until: timestamp, Datetime object or string. The String should be formatted in one of the
+            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
                 following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
 
         # Returns
@@ -1349,7 +1351,7 @@ class FeatureGroup(FeatureGroupBase):
         group.
 
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix time in seconds (int), or string. The String should
+            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
                 be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
                 or `%Y%m%d%H%M%S%f`. If specified will recompute statistics on
                 feature group as of specific point in time. If not specified then will compute statistics

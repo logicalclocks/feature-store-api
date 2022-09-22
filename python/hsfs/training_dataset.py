@@ -711,7 +711,7 @@ class TrainingDataset:
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: datatime.datetime, datetime.date, unix time in seconds (int), or string. The String should
+            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
                 be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
                 or `%Y%m%d%H%M%S%f`. Defaults to `None`.
 
