@@ -814,27 +814,27 @@ class Engine:
     @staticmethod
     def infer_python_type(output_type, feature_column):
         if output_type in ("STRING",):
-            return feature_column.apply(str)
+            return feature_column.astype(str)
         elif output_type in ("BINARY",):
-            return feature_column.apply(bytes)
+            return feature_column.astype(bytes)
         elif output_type in ("BYTE",):
-            return feature_column.apply(np.int8)
+            return feature_column.astype(np.int8)
         elif output_type in ("SHORT",):
-            return feature_column.apply(np.int16)
+            return feature_column.astype(np.int16)
         elif output_type in ("INT",):
-            return feature_column.apply(int)
+            return feature_column.astype(int)
         elif output_type in ("LONG",):
-            return feature_column.apply(np.int64)
+            return feature_column.astype(np.int64)
         elif output_type in ("FLOAT",):
-            return float
+            return feature_column.astype(float)
         elif output_type in ("DOUBLE",):
-            return feature_column.apply(np.float64)
+            return feature_column.astype(np.float64)
         elif output_type in ("TIMESTAMP",):
             return pd.to_datetime(feature_column)
         elif output_type in ("DATE",):
             return pd.to_datetime(feature_column).dt.date
         elif output_type in ("BOOLEAN",):
-            return feature_column.apply(bool)
+            return feature_column.astype(bool)
         else:
             raise TypeError("Not supported type %s." % output_type)
 

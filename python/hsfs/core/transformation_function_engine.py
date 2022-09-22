@@ -178,11 +178,11 @@ class TransformationFunctionEngine:
     def infer_spark_type(output_type):
         if output_type in (str, "str", "string"):
             return "STRING"
-        elif output_type in (bytes,):
+        elif output_type in (bytes, "binary"):
             return "BINARY"
-        elif output_type in (numpy.int8, "int8", "byte"):
+        elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
             return "BYTE"
-        elif output_type in (numpy.int16, "int16", "short"):
+        elif output_type in (numpy.int16, "int16", "short", "smallint"):
             return "SHORT"
         elif output_type in (int, "int", numpy.int, numpy.int32):
             return "INT"
