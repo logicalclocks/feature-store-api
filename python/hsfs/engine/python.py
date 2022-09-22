@@ -26,6 +26,7 @@ import pyarrow as pa
 import json
 import random
 import uuid
+from datetime import datetime, timezone
 
 import great_expectations as ge
 
@@ -35,6 +36,7 @@ from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
+from botocore.response import StreamingBody
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -121,8 +123,10 @@ class Engine:
             return pd.read_csv(obj)
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
-        elif data_format.lower() == "parquet":
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
             return pd.read_parquet(BytesIO(obj.read()))
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe.".format(
@@ -607,7 +611,7 @@ class Engine:
                 result_df = df[
                     [
                         split.start_time
-                        <= self._convert_to_unix_timestamp(t)
+                        <= util.convert_event_time_to_timestamp(t)
                         < split.end_time
                         for t in df[event_time]
                     ]
@@ -619,16 +623,6 @@ class Engine:
                 result_df = result_df.drop([event_time], axis=1)
             result_dfs[split.name] = result_df
         return result_dfs
-
-    def _convert_to_unix_timestamp(self, t):
-        if isinstance(t, pd._libs.tslibs.timestamps.Timestamp):
-            # pandas.timestamp represents millisecond in decimal
-            return t.timestamp() * 1000
-        elif isinstance(t, str):
-            return util.get_timestamp_from_date_string(t)
-        else:
-            # jdbc supports timestamp precision up to second only.
-            return t * 1000
 
     def write_training_dataset(
         self,
@@ -870,6 +864,8 @@ class Engine:
                     row[k] = row[k].tolist()
                 if isinstance(row[k], pd.Timestamp):
                     row[k] = row[k].to_pydatetime()
+                if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                    row[k] = row[k].replace(tzinfo=timezone.utc)
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)

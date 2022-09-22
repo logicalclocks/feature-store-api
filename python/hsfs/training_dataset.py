@@ -16,11 +16,12 @@
 import json
 import warnings
 from typing import Optional, Union, Any, Dict, List, TypeVar
-from datetime import timezone
 
 import humps
 import pandas as pd
 import numpy as np
+
+from datetime import datetime, date
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -125,8 +126,8 @@ class TrainingDataset:
             self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
-            self._start_time = self._convert_event_time_to_timestamp(event_start_time)
-            self._end_time = self._convert_event_time_to_timestamp(event_end_time)
+            self._start_time = util.convert_event_time_to_timestamp(event_start_time)
+            self._end_time = util.convert_event_time_to_timestamp(event_end_time)
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
@@ -193,6 +194,13 @@ class TrainingDataset:
         test_start=None,
         test_end=None,
     ):
+        train_start = util.convert_event_time_to_timestamp(train_start)
+        train_end = util.convert_event_time_to_timestamp(train_end)
+        validation_start = util.convert_event_time_to_timestamp(validation_start)
+        validation_end = util.convert_event_time_to_timestamp(validation_end)
+        test_start = util.convert_event_time_to_timestamp(test_start)
+        test_end = util.convert_event_time_to_timestamp(test_end)
+
         time_splits = list()
         self._append_time_split(
             time_splits,
@@ -230,24 +238,10 @@ class TrainingDataset:
                 TrainingDatasetSplit(
                     name=split_name,
                     split_type=TrainingDatasetSplit.TIME_SERIES_SPLIT,
-                    start_time=self._convert_event_time_to_timestamp(start_time),
-                    end_time=self._convert_event_time_to_timestamp(end_time),
+                    start_time=util.convert_event_time_to_timestamp(start_time),
+                    end_time=util.convert_event_time_to_timestamp(end_time),
                 )
             )
-
-    def _convert_event_time_to_timestamp(self, event_time):
-        if event_time is None:
-            return None
-        if isinstance(event_time, str):
-            if event_time:
-                return util.get_timestamp_from_date_string(event_time, timezone.utc)
-        elif isinstance(event_time, int):
-            if event_time == 0:
-                raise ValueError("Event time should be greater than 0.")
-            # jdbc supports timestamp precision up to second only.
-            return event_time * 1000
-        else:
-            raise ValueError("Given event time should be in `str` or `int` type")
 
     def save(
         self,
@@ -711,13 +705,15 @@ class TrainingDataset:
         """Get the latest computed statistics for the training dataset."""
         return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time: str = None):
+    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
         """Returns the statistics for this training dataset at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`. Defaults to `None`.
 
         # Returns
             `Statistics`. Object with statistics information.
