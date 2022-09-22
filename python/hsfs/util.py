@@ -141,7 +141,7 @@ def get_hudi_datestr_from_timestamp(timestamp):
 
 
 def convert_event_time_to_timestamp(event_time):
-    if event_time is None:
+    if not event_time:
         return None
     if isinstance(event_time, str):
         return get_timestamp_from_date_string(event_time)
