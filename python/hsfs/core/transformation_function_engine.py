@@ -202,37 +202,6 @@ class TransformationFunctionEngine:
             raise TypeError("Not supported type %s." % output_type)
 
     @staticmethod
-    def infer_python_type(output_type):
-        # engine.get_type() == "spark"
-        if output_type in (str, "str", "string", "STRING"):
-            return str
-        elif output_type in (bytes, "BINARY"):
-            return bytes
-        elif output_type in (numpy.int8, "int8", "byte", "BYTE"):
-            return numpy.int8
-        elif output_type in (numpy.int16, "int16", "short", "SHORT"):
-            return numpy.int16
-        elif output_type in (int, "int", "INT", numpy.int, numpy.int32):
-            return int
-        elif output_type in (numpy.int64, "int64", "long", "LONG", "bigint"):
-            return numpy.int64
-        elif output_type in (float, "float", "FLOAT", numpy.float):
-            return float
-        elif output_type in (numpy.float64, "float64", "double", "DOUBLE"):
-            return numpy.float64
-        elif output_type in (datetime.datetime, numpy.datetime64, "TIMESTAMP"):
-            # pd.to_datetime("2022-09-18")
-            return datetime.datetime
-        elif output_type in (datetime.date,):
-            # pd.to_datetime(df['DateTime']).dt.date
-            return "DATE"
-        elif output_type in (bool, "boolean", "bool", "BOOLEAN", numpy.bool):
-            # df['bool_column'].apply(bool)
-            return bool
-        else:
-            raise TypeError("Not supported type %s." % output_type)
-
-    @staticmethod
     def compute_transformation_fn_statistics(
         training_dataset_obj,
         builtin_tffn_features,
