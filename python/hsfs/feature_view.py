@@ -16,7 +16,7 @@
 
 import json
 import warnings
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -165,13 +165,19 @@ class FeatureView:
         self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
-        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+        self,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
 
         # Arguments
-            start_time: Optional. Start time of the batch query.
-            end_time: Optional. End time of the batch query.
+            start_time: Optional. Start time of the batch query. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
+                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
+                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            end_time: Optional. End time of the batch query. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
+                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
+                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
 
         # Returns
             `str`: batch query
@@ -272,10 +278,12 @@ class FeatureView:
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
-        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+        start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+            formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+            or `%Y%m%d%H%M%S%f`.
+        end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+            formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+            or `%Y%m%d%H%M%S%f`.
         read_options: User provided read options. Defaults to `{}`.
         """
 
@@ -305,8 +313,8 @@ class FeatureView:
 
     def create_training_data(
         self,
-        start_time: Optional[str] = "",
-        end_time: Optional[str] = "",
+        start_time: Optional[Union[str, int, datetime, date]] = "",
+        end_time: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -333,10 +341,12 @@ class FeatureView:
 
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -406,10 +416,10 @@ class FeatureView:
     def create_train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -437,14 +447,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be  formatted in one of the following ormats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -522,12 +536,12 @@ class FeatureView:
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
@@ -556,18 +570,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: tdatatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -680,8 +700,8 @@ class FeatureView:
 
     def training_data(
         self,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
@@ -694,10 +714,14 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            be formatted in one of the following
+                formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+            formatted in one of the following
+                formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -745,10 +769,10 @@ class FeatureView:
     def train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
@@ -762,14 +786,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -837,12 +865,12 @@ class FeatureView:
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
@@ -857,18 +885,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.

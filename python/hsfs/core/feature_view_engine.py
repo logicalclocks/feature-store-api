@@ -97,8 +97,8 @@ class FeatureViewEngine:
         return self._feature_view_api.get_batch_query(
             feature_view_obj.name,
             feature_view_obj.version,
-            start_time,
-            end_time,
+            util.convert_event_time_to_timestamp(start_time),
+            util.convert_event_time_to_timestamp(end_time),
             is_python_engine=engine.get_type() == "python",
             with_label=with_label,
         )
@@ -107,8 +107,8 @@ class FeatureViewEngine:
         query_obj = self._feature_view_api.get_batch_query(
             feature_view_obj.name,
             feature_view_obj.version,
-            start_time,
-            end_time,
+            util.convert_event_time_to_timestamp(start_time),
+            util.convert_event_time_to_timestamp(end_time),
             is_python_engine=engine.get_type() == "python",
         )
         fs_query = self._query_constructor_api.construct_query(query_obj)
