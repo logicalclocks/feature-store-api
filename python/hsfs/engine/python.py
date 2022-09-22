@@ -797,8 +797,7 @@ class Engine:
         # can be used to materialize certificates locally
         return file
 
-    @staticmethod
-    def _apply_transformation_function(transformation_functions, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset):
         for (
             feature_name,
             transformation_fn,
@@ -806,8 +805,38 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
+            dataset[feature_name] = self.infer_python_type(
+                transformation_fn.output_type, dataset[feature_name]
+            )
 
         return dataset
+
+    @staticmethod
+    def infer_python_type(output_type, feature_column):
+        if output_type in ("STRING",):
+            return feature_column.apply(str)
+        elif output_type in ("BINARY",):
+            return feature_column.apply(bytes)
+        elif output_type in ("BYTE",):
+            return feature_column.apply(np.int8)
+        elif output_type in ("SHORT",):
+            return feature_column.apply(np.int16)
+        elif output_type in ("INT",):
+            return feature_column.apply(int)
+        elif output_type in ("LONG",):
+            return feature_column.apply(np.int64)
+        elif output_type in ("FLOAT",):
+            return float
+        elif output_type in ("DOUBLE",):
+            return feature_column.apply(np.float64)
+        elif output_type in ("TIMESTAMP",):
+            return pd.to_datetime(feature_column)
+        elif output_type in ("DATE",):
+            return pd.to_datetime(feature_column).dt.date
+        elif output_type in ("BOOLEAN",):
+            return feature_column.apply(bool)
+        else:
+            raise TypeError("Not supported type %s." % output_type)
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
