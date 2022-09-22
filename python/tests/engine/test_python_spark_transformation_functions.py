@@ -504,7 +504,6 @@ class TestPythonSparkTransformationFuctions:
                 "col_2": [True, False],
             }
         )
-        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         expected_schema = StructType(
             [
