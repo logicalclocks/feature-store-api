@@ -2109,7 +2109,7 @@ class TestSpark:
             test_end=3,
         )
 
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1, 2]}
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1000, 2000]}
         df = pd.DataFrame(data=d)
 
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -2276,7 +2276,7 @@ class TestSpark:
             test_end=3,
         )
 
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1, 2]}
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1000, 2000]}
         df = pd.DataFrame(data=d)
 
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -2344,7 +2344,6 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            id=10,
             transformation_functions=transformation_fn_dict,
             features=features,
         )
@@ -2399,7 +2398,6 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            id=10,
             transformation_functions=transformation_fn_dict,
             features=features,
         )
