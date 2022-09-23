@@ -652,7 +652,7 @@ class TestPythonSparkTransformationFuctions:
         self._validate_on_python_engine(td, df, expected_df)
         self._validate_on_spark_engine(td, spark_df, expected_spark_df)
 
-    def test_apply_plus_one_date_no_type(self, mocker):
+    def test_apply_plus_one_no_type(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         spark_engine = spark.Engine()
@@ -701,7 +701,7 @@ class TestPythonSparkTransformationFuctions:
         self._validate_on_python_engine(td, df, expected_df)
         self._validate_on_spark_engine(td, spark_df, expected_spark_df)
 
-    def test_apply_plus_one_date_empty_type(self, mocker):
+    def test_apply_plus_one_empty_type(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         spark_engine = spark.Engine()
