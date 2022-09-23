@@ -797,8 +797,7 @@ class Engine:
         # can be used to materialize certificates locally
         return file
 
-    @staticmethod
-    def _apply_transformation_function(transformation_functions, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset):
         for (
             feature_name,
             transformation_fn,
@@ -806,8 +805,38 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
+            dataset[feature_name] = self.convert_column(
+                transformation_fn.output_type, dataset[feature_name]
+            )
 
         return dataset
+
+    @staticmethod
+    def convert_column(output_type, feature_column):
+        if output_type in ("StringType()",):
+            return feature_column.astype(str)
+        elif output_type in ("BinaryType()",):
+            return feature_column.astype(bytes)
+        elif output_type in ("ByteType()",):
+            return feature_column.astype(np.int8)
+        elif output_type in ("ShortType()",):
+            return feature_column.astype(np.int16)
+        elif output_type in ("IntegerType()",):
+            return feature_column.astype(int)
+        elif output_type in ("LongType()",):
+            return feature_column.astype(np.int64)
+        elif output_type in ("FloatType()",):
+            return feature_column.astype(float)
+        elif output_type in ("DoubleType()",):
+            return feature_column.astype(np.float64)
+        elif output_type in ("TimestampType()",):
+            return pd.to_datetime(feature_column)
+        elif output_type in ("DateType()",):
+            return pd.to_datetime(feature_column).dt.date
+        elif output_type in ("BooleanType()",):
+            return feature_column.astype(bool)
+        else:
+            return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
