@@ -754,8 +754,9 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-        dataset[feature_name] = self.convert_column(
-            transformation_fn.output_type, dataset[feature_name]
+            dataset[feature_name] = self.convert_column(
+                training_dataset_instance.transformation_functions.output_type,
+                dataset[feature_name]
         )
 
         return dataset
