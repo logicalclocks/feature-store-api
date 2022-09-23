@@ -805,35 +805,35 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-            dataset[feature_name] = self.infer_python_type(
+            dataset[feature_name] = self.convert_column(
                 transformation_fn.output_type, dataset[feature_name]
             )
 
         return dataset
 
     @staticmethod
-    def infer_python_type(output_type, feature_column):
-        if output_type in ("STRING",):
+    def convert_column(output_type, feature_column):
+        if output_type in ("StringType()",):
             return feature_column.astype(str)
-        elif output_type in ("BINARY",):
+        elif output_type in ("BinaryType()",):
             return feature_column.astype(bytes)
-        elif output_type in ("BYTE",):
+        elif output_type in ("ByteType()",):
             return feature_column.astype(np.int8)
-        elif output_type in ("SHORT",):
+        elif output_type in ("ShortType()",):
             return feature_column.astype(np.int16)
-        elif output_type in ("INT",):
+        elif output_type in ("IntegerType()",):
             return feature_column.astype(int)
-        elif output_type in ("LONG",):
+        elif output_type in ("LongType()",):
             return feature_column.astype(np.int64)
-        elif output_type in ("FLOAT",):
+        elif output_type in ("FloatType()",):
             return feature_column.astype(float)
-        elif output_type in ("DOUBLE",):
+        elif output_type in ("DoubleType()",):
             return feature_column.astype(np.float64)
-        elif output_type in ("TIMESTAMP",):
+        elif output_type in ("TimestampType()",):
             return pd.to_datetime(feature_column)
-        elif output_type in ("DATE",):
+        elif output_type in ("DateType()",):
             return pd.to_datetime(feature_column).dt.date
-        elif output_type in ("BOOLEAN",):
+        elif output_type in ("BooleanType()",):
             return feature_column.astype(bool)
         else:
             raise TypeError("Not supported type %s." % output_type)

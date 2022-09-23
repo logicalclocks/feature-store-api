@@ -32,7 +32,7 @@ class TestTransformationFunction:
         assert tf.version == 1
         assert tf.name == "test_name"
         assert tf.transformation_fn is None
-        assert tf.output_type == "FLOAT"
+        assert tf.output_type == "FloatType()"
         assert (
             tf.source_code_content
             == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'
@@ -78,7 +78,7 @@ class TestTransformationFunction:
         assert tf.version == 1
         assert tf.name == "test_name"
         assert tf.transformation_fn is None
-        assert tf.output_type == "FLOAT"
+        assert tf.output_type == "FloatType()"
         assert (
             tf.source_code_content
             == '{"module_imports": "", "transformer_code": "test_builtin_source_code"}'

@@ -730,7 +730,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(str)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(str))
 
         # Assert
         assert result == "STRING"
@@ -744,7 +744,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("str")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("str"))
 
         # Assert
         assert result == "STRING"
@@ -758,7 +758,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("string")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("string"))
 
         # Assert
         assert result == "STRING"
@@ -772,7 +772,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(bytes)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(bytes))
 
         # Assert
         assert result == "BINARY"
@@ -800,7 +800,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("int8")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("int8"))
 
         # Assert
         assert result == "BYTE"
@@ -814,7 +814,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("byte")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("byte"))
 
         # Assert
         assert result == "BYTE"
@@ -828,7 +828,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int16)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.int16))
 
         # Assert
         assert result == "SHORT"
@@ -842,7 +842,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("int16")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("int16"))
 
         # Assert
         assert result == "SHORT"
@@ -856,7 +856,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("short")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("short"))
 
         # Assert
         assert result == "SHORT"
@@ -870,7 +870,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(int)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(int))
 
         # Assert
         assert result == "INT"
@@ -884,7 +884,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("int")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("int"))
 
         # Assert
         assert result == "INT"
@@ -898,7 +898,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.int))
 
         # Assert
         assert result == "INT"
@@ -912,7 +912,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int32)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.int32))
 
         # Assert
         assert result == "INT"
@@ -926,7 +926,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int64)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.int64))
 
         # Assert
         assert result == "LONG"
@@ -940,7 +940,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("int64")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("int64"))
 
         # Assert
         assert result == "LONG"
@@ -954,7 +954,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("long")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("long"))
 
         # Assert
         assert result == "LONG"
@@ -968,7 +968,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("bigint")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("bigint"))
 
         # Assert
         assert result == "LONG"
@@ -982,7 +982,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(float)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(float))
 
         # Assert
         assert result == "FLOAT"
@@ -996,7 +996,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("float")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("float"))
 
         # Assert
         assert result == "FLOAT"
@@ -1010,7 +1010,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.float)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.float))
 
         # Assert
         assert result == "FLOAT"
@@ -1024,7 +1024,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.float64)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.float64))
 
         # Assert
         assert result == "DOUBLE"
@@ -1038,7 +1038,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("float64")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("float64"))
 
         # Assert
         assert result == "DOUBLE"
@@ -1052,7 +1052,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("double")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("double"))
 
         # Assert
         assert result == "DOUBLE"
@@ -1066,7 +1066,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(datetime.datetime)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(datetime.datetime))
 
         # Assert
         assert result == "TIMESTAMP"
@@ -1080,7 +1080,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.datetime64)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.datetime64))
 
         # Assert
         assert result == "TIMESTAMP"
@@ -1094,7 +1094,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(datetime.date)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(datetime.date))
 
         # Assert
         assert result == "DATE"
@@ -1108,7 +1108,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(bool)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(bool))
 
         # Assert
         assert result == "BOOLEAN"
@@ -1122,7 +1122,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("boolean")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("boolean"))
 
         # Assert
         assert result == "BOOLEAN"
@@ -1136,7 +1136,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type("bool")
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type("bool"))
 
         # Assert
         assert result == "BOOLEAN"
@@ -1150,7 +1150,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.bool)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.bool))
 
         # Assert
         assert result == "BOOLEAN"
