@@ -174,13 +174,19 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def infer_spark_type(output_type):
+        if not output_type:
+            return "StringType()"  # StringType() is default type for spark udfs
+
+        if isinstance(output_type, str):
+            output_type = output_type.lower()
+
         if output_type in (str, "str", "string"):
             return "StringType()"
-        elif output_type in (bytes,):
+        elif output_type in (bytes, "binary"):
             return "BinaryType()"
-        elif output_type in (numpy.int8, "int8", "byte"):
+        elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
             return "ByteType()"
-        elif output_type in (numpy.int16, "int16", "short"):
+        elif output_type in (numpy.int16, "int16", "short", "smallint"):
             return "ShortType()"
         elif output_type in (int, "int", numpy.int, numpy.int32):
             return "IntegerType()"
@@ -190,14 +196,41 @@ class TransformationFunctionEngine:
             return "FloatType()"
         elif output_type in (numpy.float64, "float64", "double"):
             return "DoubleType()"
-        elif output_type in (datetime.datetime, numpy.datetime64):
+        elif output_type in (datetime.datetime, numpy.datetime64, "datetime"):
             return "TimestampType()"
-        elif output_type in (datetime.date,):
+        elif output_type in (datetime.date, "date"):
             return "DateType()"
         elif output_type in (bool, "boolean", "bool", numpy.bool):
             return "BooleanType()"
         else:
             raise TypeError("Not supported type %s." % output_type)
+
+    @staticmethod
+    def convert_legacy_type(output_type):
+        if output_type == "StringType()":
+            return "STRING"
+        elif output_type == "BinaryType()":
+            return "BINARY"
+        elif output_type == "ByteType()":
+            return "BYTE"
+        elif output_type == "ShortType()":
+            return "SHORT"
+        elif output_type == "IntegerType()":
+            return "INT"
+        elif output_type == "LongType()":
+            return "LONG"
+        elif output_type == "FloatType()":
+            return "FLOAT"
+        elif output_type == "DoubleType()":
+            return "DOUBLE"
+        elif output_type == "TimestampType()":
+            return "TIMESTAMP"
+        elif output_type == "DateType()":
+            return "DATE"
+        elif output_type == "BooleanType()":
+            return "BOOLEAN"
+        else:
+            return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
 
     @staticmethod
     def compute_transformation_fn_statistics(
