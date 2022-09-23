@@ -127,7 +127,6 @@ def check_timestamp_format_from_date_string(input_date):
     return date_format
 
 
-
 def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     date_time = datetime.strptime(norm_input_date, date_format)
