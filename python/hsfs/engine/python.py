@@ -836,7 +836,7 @@ class Engine:
         elif output_type in ("BooleanType()",):
             return feature_column.astype(bool)
         else:
-            raise TypeError("Not supported type %s." % output_type)
+            return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
