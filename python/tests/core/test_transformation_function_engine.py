@@ -786,7 +786,7 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int8)
+        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.int8))
 
         # Assert
         assert result == "BYTE"
