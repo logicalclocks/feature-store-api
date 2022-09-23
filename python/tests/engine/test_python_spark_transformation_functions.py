@@ -43,7 +43,9 @@ from hsfs.core.transformation_function_engine import TransformationFunctionEngin
 
 
 class TestPythonSparkTransformationFuctions:
-    def _create_training_dataset(self, tf_fun, output_type=None, name=None, col="col_0"):
+    def _create_training_dataset(
+        self, tf_fun, output_type=None, name=None, col="col_0"
+    ):
         if isinstance(tf_fun, str):
             tf = transformation_function.TransformationFunction(
                 name=name,
@@ -231,7 +233,9 @@ class TestPythonSparkTransformationFuctions:
             '    return value_to_index[value]"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "IntegerType()", "label_encoder", "col_1")
+        td = self._create_training_dataset(
+            tf_fun, "IntegerType()", "label_encoder", "col_1"
+        )
 
         td.transformation_functions[
             "col_1"
@@ -689,7 +693,7 @@ class TestPythonSparkTransformationFuctions:
 
         # Arrange
         def tf_fun(a) -> int:
-            return a+1
+            return a + 1
 
         td = self._create_training_dataset(tf_fun)
 
@@ -738,7 +742,7 @@ class TestPythonSparkTransformationFuctions:
 
         # Arrange
         def tf_fun(a) -> int:
-            return a+1
+            return a + 1
 
         td = self._create_training_dataset(tf_fun, "")
 
@@ -752,11 +756,11 @@ class TestPythonSparkTransformationFuctions:
 
         # Arrange
         def tf_fun(a) -> int:
-            return a+1
+            return a + 1
 
         # Act
         with pytest.raises(TypeError) as e_info:
-            td = self._create_training_dataset(tf_fun, list)
+            self._create_training_dataset(tf_fun, list)
 
         # Assert
         assert str(e_info.value) == "Not supported type <class 'list'>."

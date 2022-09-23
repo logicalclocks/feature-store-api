@@ -1024,7 +1024,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.float64))
+        result = tf_engine.convert_legacy_type(
+            tf_engine.infer_spark_type(numpy.float64)
+        )
 
         # Assert
         assert result == "DOUBLE"
@@ -1066,7 +1068,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(datetime.datetime))
+        result = tf_engine.convert_legacy_type(
+            tf_engine.infer_spark_type(datetime.datetime)
+        )
 
         # Assert
         assert result == "TIMESTAMP"
@@ -1080,7 +1084,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(numpy.datetime64))
+        result = tf_engine.convert_legacy_type(
+            tf_engine.infer_spark_type(numpy.datetime64)
+        )
 
         # Assert
         assert result == "TIMESTAMP"
@@ -1094,7 +1100,9 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.convert_legacy_type(tf_engine.infer_spark_type(datetime.date))
+        result = tf_engine.convert_legacy_type(
+            tf_engine.infer_spark_type(datetime.date)
+        )
 
         # Assert
         assert result == "DATE"

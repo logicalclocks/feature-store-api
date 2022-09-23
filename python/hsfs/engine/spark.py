@@ -880,7 +880,8 @@ class Engine:
                 fn_registration_name,
                 transformation_fn.transformation_fn,
                 transformation_function_engine.TransformationFunctionEngine.convert_legacy_type(
-                    transformation_fn.output_type),
+                    transformation_fn.output_type
+                ),
             )
             transformation_fn_expressions.append(
                 "{fn_name:}({name:}) AS {name:}".format(
