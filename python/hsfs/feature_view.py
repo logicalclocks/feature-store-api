@@ -247,13 +247,14 @@ class FeatureView:
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
-        start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
-            formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-            or `%Y%m%d%H%M%S%f`.
-        end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
-            formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-            or `%Y%m%d%H%M%S%f`.
-        read_options: User provided read options. Defaults to `{}`.
+        # Arguments
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            read_options: User provided read options. Defaults to `{}`.
         """
 
         if self._batch_scoring_server is None:

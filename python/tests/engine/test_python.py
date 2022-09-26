@@ -1607,7 +1607,6 @@ class TestPython:
             == "Sum of split ratios should be 1 and each values should be in range (0, 1)"
         )
 
-    # todo not sure if _time_series_split works as intended when no event time (if len(df[event_time])>0 means if df has any rows)
     def test_time_series_split(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")

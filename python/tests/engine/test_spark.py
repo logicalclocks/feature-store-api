@@ -3182,7 +3182,7 @@ class TestSpark:
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.14.3",
+                "great_expectations_version": "0.14.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },
@@ -3957,7 +3957,7 @@ class TestSpark:
             featurestore_id=99,
             transformation_fn=plus_one,
             builtin_source_code="",
-            output_type="int",
+            output_type="long",
         )
 
         transformation_fn_dict = dict()
@@ -3989,7 +3989,7 @@ class TestSpark:
 
         expected_df = pd.DataFrame(
             data={
-                "col_0": ["2", "3"],
+                "col_0": [2, 3],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
