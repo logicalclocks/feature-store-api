@@ -712,8 +712,8 @@ class TrainingDataset:
 
         # Arguments
             commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. Defaults to `None`.
+                be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, `%y-%m-%d %H:%M:%S`,
+                or `%y-%m-%d %H:%M:%S.%f`. Defaults to `None`.
 
         # Returns
             `Statistics`. Object with statistics information.

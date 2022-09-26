@@ -587,8 +587,8 @@ class FeatureGroupBase:
 
         # Arguments
             commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. Defaults to `None`. Defaults to `None`.
+                be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, `%y-%m-%d %H:%M:%S`,
+                or `%y-%m-%d %H:%M:%S.%f`. Defaults to `None`. Defaults to `None`.
 
         # Returns
             `Statistics`. Statistics object.
@@ -805,8 +805,8 @@ class FeatureGroup(FeatureGroupBase):
             ```
         # Arguments
             wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`.
+                be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, `%y-%m-%d %H:%M:%S`,
+                or `%y-%m-%d %H:%M:%S.%f`.
                 If Specified will retrieve feature group as of specific point in time.
                 If not specified will return as of most recent time. Defaults to `None`.
             online: bool, optional. If `True` read from online feature store, defaults
@@ -872,11 +872,11 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             start_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                The String should be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`,
+                `%y-%m-%d %H:%M:%S`, or `%y-%m-%d %H:%M:%S.%f`.
             end_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                The String should be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`,
+                `%y-%m-%d %H:%M:%S`, or `%y-%m-%d %H:%M:%S.%f`.
             read_options: User provided read options. Defaults to `{}`.
 
         # Returns
@@ -1194,8 +1194,8 @@ class FeatureGroup(FeatureGroupBase):
         # Arguments
             wallclock_time: Commit details as of specific point in time. Defaults to `None`.
             limit: Number of commits to retrieve. Defaults to `None`. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                The String should be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`,
+                `%y-%m-%d %H:%M:%S`, or `%y-%m-%d %H:%M:%S.%f`.
 
         # Returns
             `Dict[str, Dict[str, str]]`. Dictionary object of commit metadata timeline, where Key is commit id and value
@@ -1294,9 +1294,9 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
             exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
@@ -1352,8 +1352,8 @@ class FeatureGroup(FeatureGroupBase):
 
         # Arguments
             wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. If specified will recompute statistics on
+                be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, `%y-%m-%d %H:%M:%S`,
+                or `%y-%m-%d %H:%M:%S.%f`. If specified will recompute statistics on
                 feature group as of specific point in time. If not specified then will compute statistics
                 as of most recent time of this feature group. Defaults to `None`.
 

@@ -110,7 +110,11 @@ def check_timestamp_format_from_date_string(input_date):
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
     }
     normalized_date = (
-        input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
+        input_date.replace("/", "")
+        .replace("-", "")
+        .replace(" ", "")
+        .replace(":", "")
+        .replace(".", "")
     )
 
     date_format = None
