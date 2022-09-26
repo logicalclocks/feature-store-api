@@ -65,11 +65,8 @@ class FeatureViewApi:
         headers = {"content-type": "application/json"}
         return self._client._send_request(
             self._PUT,
-            self._base_path + [
-                feature_view_obj.name,
-                self._VERSION,
-                feature_view_obj.version
-            ],
+            self._base_path
+            + [feature_view_obj.name, self._VERSION, feature_view_obj.version],
             headers=headers,
             data=feature_view_obj.json(),
         )
