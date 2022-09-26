@@ -75,6 +75,10 @@ class FeatureViewEngine:
         )
         return updated_fv
 
+    def update(self, feature_view_obj):
+        self._feature_view_api.update(feature_view_obj)
+        return feature_view_obj
+
     def get(self, name, version=None):
         if version:
             fv = self._feature_view_api.get_by_name_version(name, version)

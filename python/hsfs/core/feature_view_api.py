@@ -28,6 +28,7 @@ from hsfs.client.exceptions import RestAPIError
 class FeatureViewApi:
     _POST = "POST"
     _GET = "GET"
+    _PUT = "PUT"
     _DELETE = "DELETE"
     _VERSION = "version"
     _QUERY = "query"
@@ -58,6 +59,19 @@ class FeatureViewApi:
                 headers=headers,
                 data=feature_view_obj.json(),
             )
+        )
+
+    def update(self, feature_view_obj):
+        headers = {"content-type": "application/json"}
+        return self._client._send_request(
+            self._PUT,
+            self._base_path + [
+                feature_view_obj.name,
+                self._VERSION,
+                feature_view_obj.version
+            ],
+            headers=headers,
+            data=feature_view_obj.json(),
         )
 
     def get_by_name(self, name):

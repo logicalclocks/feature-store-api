@@ -101,8 +101,15 @@ class FeatureView:
         )
 
     def update(self):
-        # TODO feature view: wait for RestAPI
-        return self
+        """Update the description of the feature view.
+
+        # Arguments
+        # Returns
+            `FeatureView` Updated feature view.
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_view_engine.update(self)
 
     def init_serving(
         self,
