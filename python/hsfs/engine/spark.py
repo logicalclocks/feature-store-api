@@ -790,9 +790,6 @@ class Engine:
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def setup_storage_connector(self, storage_connector, path=None):
-        # update storage connector to get new session token
-        storage_connector.refetch()
-
         if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
