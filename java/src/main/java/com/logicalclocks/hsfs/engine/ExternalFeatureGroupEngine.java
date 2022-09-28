@@ -40,6 +40,10 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
           externalFeatureGroup.getTimeTravelFormat()));
     }
 
+    // verify primary keys
+    utils.verifyAttributeKeyNames("primary", externalFeatureGroup.getPrimaryKeys(),
+        null, null, externalFeatureGroup.getFeatures());
+
     /* set primary features */
     if (externalFeatureGroup.getPrimaryKeys() != null) {
       externalFeatureGroup.getPrimaryKeys().forEach(pk ->

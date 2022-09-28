@@ -305,4 +305,30 @@ public class FeatureGroupUtils {
       throw new FeatureStoreException("Failed to deserialize online feature group schema" + avroSchema + ".");
     }
   }
+
+  public void verifyAttributeKeyNames(String primaryOrPartition, List<String> primaryPartitionKeyNames,
+                                      String eventTime, String precombineKeyName,
+                                      List<Feature> features) throws FeatureStoreException {
+
+    List<String> featureNames = features.stream().map(Feature::getName).collect(Collectors.toList());
+    if (primaryOrPartition != null && primaryPartitionKeyNames != null) {
+      List<String> differences = primaryPartitionKeyNames.stream()
+          .filter(element -> !featureNames.contains(element))
+          .collect(Collectors.toList());
+
+      if (!differences.isEmpty()) {
+        throw new FeatureStoreException("Provided " + primaryOrPartition + " key(s) " + String.join(", ",
+            differences) +  " doesn't exist in feature dataframe");
+      }
+    }
+    if (precombineKeyName != null && !featureNames.contains(precombineKeyName)) {
+      throw new FeatureStoreException("Provided Hudi precombine key " + precombineKeyName
+          + " doesn't exist in feature dataframe");
+    }
+
+    if (eventTime != null && !featureNames.contains(precombineKeyName)) {
+      throw new FeatureStoreException("Provided eventTime feature name " + eventTime
+          + " doesn't exist in feature dataframe");
+    }
+  }
 }
