@@ -486,9 +486,6 @@ public class SparkEngine {
       return;
     }
 
-    // update connector to get new session token
-    storageConnector.refetch();
-
     switch (storageConnector.getStorageConnectorType()) {
       case S3:
         setupS3ConnectorHadoopConf((StorageConnector.S3Connector) storageConnector);
