@@ -696,6 +696,8 @@ class SnowflakeConnector(StorageConnector):
         )
         if query:
             options["query"] = query
+            # if table also specified we override to use query
+            options.pop("dbtable", None)
 
         return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
 
