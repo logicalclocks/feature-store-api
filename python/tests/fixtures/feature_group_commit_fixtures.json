@@ -8,7 +8,6 @@
       "rows_deleted": 3,
       "validation_id": 77,
       "commit_time": "test_commit_time",
-      "type": "featureGroupCommitDTO",
       "items": [],
       "count": 0,
       "href": "test_href"
@@ -26,7 +25,6 @@
           "rows_deleted": 3,
           "validation_id": 77,
           "commit_time": "test_commit_time",
-          "type": "featureGroupCommitDTO",
           "items": [],
           "count": 0,
           "href": "test_href"
