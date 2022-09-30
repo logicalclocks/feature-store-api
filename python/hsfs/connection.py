@@ -60,7 +60,7 @@ class Connection:
         ```python hl_lines="6"
             import hsfs
             conn = hsfs.connection(
-                'my_instance',                      # DNS of your Feature Store instance
+                'my_instance',                      # Hostname of your Feature Store instance
                 443,                                # Port to reach your Hopsworks instance, defaults to 443
                 'my_project',                       # Name of your Hopsworks Feature Store project
                 api_key_file='featurestore.key',    # The file containing the API key generated above
@@ -75,7 +75,9 @@ class Connection:
     For more information, see the integration guides.
 
     # Arguments
-        host: The hostname of the Hopsworks instance, defaults to `None`.
+        host: The hostname of the Hopsworks instance in the form of `[UUID].cloud.hopsworks.ai`,
+            defaults to `None`. Do **not** use the url including `https://` when connecting
+            programatically.
         port: The port on which the Hopsworks instance can be reached,
             defaults to `443`.
         project: The name of the project to connect to. When running on Hopsworks, this
