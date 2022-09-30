@@ -35,7 +35,7 @@ public class FeatureViewApi {
   private static final String FEATURE_VIEWS_PATH = FEATURE_VIEWS_ROOT_PATH + "{/fvName}";
   private static final String FEATURE_VIEW_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}";
   private static final String FEATURE_VIEW_BATCH_QUERY_PATH = FEATURE_VIEWS_PATH + "/version{/fvVersion}/query/batch"
-      + "{?with_label,start_time,end_time}";
+      + "{?with_label,start_time,end_time,td_version}";
   private static final String ALL_TRAINING_DATA_PATH = FEATURE_VIEW_PATH + "/trainingdatasets";
   private static final String TRAINING_DATA_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}";
   private static final String ALL_TRAINING_DATASET_PATH = FEATURE_VIEW_PATH + "/trainingdatasets/data";
@@ -75,7 +75,19 @@ public class FeatureViewApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return hopsworksClient.handleRequest(request, FeatureView.class);
+    try {
+      return hopsworksClient.handleRequest(request, FeatureView.class);
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270009")) {
+        throw new FeatureStoreException(
+            "Cannot get back the feature view because the query defined is no longer valid."
+            + " Some feature groups used in the query may have been deleted."
+            + " You can clean up this feature view on the UI or `FeatureView.clean`."
+        );
+      } else {
+        throw e;
+      }
+    }
   }
 
   public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
@@ -92,7 +104,19 @@ public class FeatureViewApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
+    try {
+      return Arrays.stream(hopsworksClient.handleRequest(request, FeatureView[].class)).collect(Collectors.toList());
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270009")) {
+        throw new FeatureStoreException(
+            "Cannot get back the feature view because the query defined is no longer valid."
+                + " Some feature groups used in the query may have been deleted."
+                + " You can clean up this feature view on the UI or `FeatureView.clean`."
+        );
+      } else {
+        throw e;
+      }
+    }
   }
 
   private String addQueryParam(String baseUrl, Map<String, Object> params) {
@@ -291,7 +315,8 @@ public class FeatureViewApi {
   }
 
   public Query getBatchQuery(FeatureStore featureStore, String name, Integer version,
-      Long startTime, Long endTime, Boolean withLabels) throws FeatureStoreException, IOException {
+      Long startTime, Long endTime, Boolean withLabels, Integer trainingDataVersion) throws FeatureStoreException,
+      IOException {
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_BATCH_QUERY_PATH)
         .set("projectId", featureStore.getProjectId())
         .set("fsId", featureStore.getId())
@@ -300,6 +325,7 @@ public class FeatureViewApi {
         .set("start_time", startTime)
         .set("end_time", endTime)
         .set("with_label", withLabels)
+        .set("td_version", trainingDataVersion)
         .expand();
 
     HttpGet request = new HttpGet(uri);

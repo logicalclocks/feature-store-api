@@ -1,0 +1,50 @@
+{
+  "get": {
+    "response": {
+      "query": "test_query",
+      "on_demand_feature_groups": [
+        {
+          "on_demand_feature_group": {
+            "type": "onDemandFeaturegroupDTO",
+            "id": 15,
+            "storageConnector": {
+              "type": "featurestoreJdbcConnectorDTO",
+              "featurestoreId": 67,
+              "id": 2,
+              "name": "test_project_featurestore",
+              "storageConnectorType": "JDBC"
+            }
+          },
+          "alias": "test_alias"
+        }
+      ],
+      "hudi_cached_feature_groups": [
+        {
+          "feature_group": {
+            "type": "onDemandFeaturegroupDTO",
+            "id": 15,
+            "name": "test_name",
+            "version": 15,
+            "featurestore_id": 15
+          },
+          "alias": "test_alias",
+          "left_feature_group_start_timestamp": "test_start_timestamp",
+          "left_feature_group_end_timestamp": "test_end_timestamp"
+        }
+      ],
+      "query_online": "test_query_online",
+      "pit_query": "test_pit_query",
+      "href": "test_href",
+      "expand": "test_expand",
+      "items": "test_items",
+      "type": "test_type"
+    }
+  },
+  "get_basic_info": {
+    "response": {
+      "query": "test_query",
+      "on_demand_feature_groups": [],
+      "hudi_cached_feature_groups": []
+    }
+  }
+}

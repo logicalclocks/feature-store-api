@@ -63,7 +63,7 @@ class Tag:
     @property
     def value(self):
         """Value of tag."""
-        return self.value
+        return self._value
 
     @value.setter
     def value(self, value):

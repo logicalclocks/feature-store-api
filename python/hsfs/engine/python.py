@@ -26,6 +26,7 @@ import pyarrow as pa
 import json
 import random
 import uuid
+from datetime import datetime, timezone
 
 import great_expectations as ge
 
@@ -35,6 +36,7 @@ from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer
 from tqdm.auto import tqdm
+from botocore.response import StreamingBody
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -52,7 +54,7 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions, external, hopsworks
+from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -121,8 +123,10 @@ class Engine:
             return pd.read_csv(obj)
         elif data_format.lower() == "tsv":
             return pd.read_csv(obj, sep="\t")
-        elif data_format.lower() == "parquet":
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
             return pd.read_parquet(BytesIO(obj.read()))
+        elif data_format.lower() == "parquet":
+            return pd.read_parquet(obj)
         else:
             raise TypeError(
                 "{} training dataset format is not supported to read as pandas dataframe.".format(
@@ -514,7 +518,9 @@ class Engine:
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
-            return self._apply_transformation_function(training_dataset_obj, df)
+            return self._apply_transformation_function(
+                training_dataset_obj.transformation_functions, df
+            )
 
     def split_labels(self, df, labels):
         if labels:
@@ -565,7 +571,7 @@ class Engine:
         # and the apply them
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj,
+                training_dataset_obj.transformation_functions,
                 result_dfs.get(split_name),
             )
 
@@ -605,7 +611,7 @@ class Engine:
                 result_df = df[
                     [
                         split.start_time
-                        <= self._convert_to_unix_timestamp(t)
+                        <= util.convert_event_time_to_timestamp(t)
                         < split.end_time
                         for t in df[event_time]
                     ]
@@ -617,16 +623,6 @@ class Engine:
                 result_df = result_df.drop([event_time], axis=1)
             result_dfs[split.name] = result_df
         return result_dfs
-
-    def _convert_to_unix_timestamp(self, t):
-        if isinstance(t, pd._libs.tslibs.timestamps.Timestamp):
-            # pandas.timestamp represents millisecond in decimal
-            return t.timestamp() * 1000
-        elif isinstance(t, str):
-            return util.get_timestamp_from_date_string(t)
-        else:
-            # jdbc supports timestamp precision up to second only.
-            return t * 1000
 
     def write_training_dataset(
         self,
@@ -645,7 +641,7 @@ class Engine:
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         spark_job_configuration = user_write_options.pop("spark", None)
-        td_app_conf = training_dataset_job_conf.TrainingDatsetJobConf(
+        td_app_conf = training_dataset_job_conf.TrainingDatasetJobConf(
             query=dataset,
             overwrite=(save_mode == "overwrite"),
             write_options=user_write_options,
@@ -706,7 +702,7 @@ class Engine:
             return dataframe
         if dataframe_type.lower() == "numpy":
             return dataframe.values
-        if dataframe_type == "python":
+        if dataframe_type.lower() == "python":
             return dataframe.values.tolist()
 
         raise TypeError(
@@ -801,17 +797,46 @@ class Engine:
         # can be used to materialize certificates locally
         return file
 
-    @staticmethod
-    def _apply_transformation_function(training_dataset_instance, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset):
         for (
             feature_name,
             transformation_fn,
-        ) in training_dataset_instance.transformation_functions.items():
+        ) in transformation_functions.items():
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
+            dataset[feature_name] = self.convert_column(
+                transformation_fn.output_type, dataset[feature_name]
+            )
 
         return dataset
+
+    @staticmethod
+    def convert_column(output_type, feature_column):
+        if output_type in ("StringType()",):
+            return feature_column.astype(str)
+        elif output_type in ("BinaryType()",):
+            return feature_column.astype(bytes)
+        elif output_type in ("ByteType()",):
+            return feature_column.astype(np.int8)
+        elif output_type in ("ShortType()",):
+            return feature_column.astype(np.int16)
+        elif output_type in ("IntegerType()",):
+            return feature_column.astype(int)
+        elif output_type in ("LongType()",):
+            return feature_column.astype(np.int64)
+        elif output_type in ("FloatType()",):
+            return feature_column.astype(float)
+        elif output_type in ("DoubleType()",):
+            return feature_column.astype(np.float64)
+        elif output_type in ("TimestampType()",):
+            return pd.to_datetime(feature_column)
+        elif output_type in ("DateType()",):
+            return pd.to_datetime(feature_column).dt.date
+        elif output_type in ("BooleanType()",):
+            return feature_column.astype(bool)
+        else:
+            return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
@@ -868,6 +893,8 @@ class Engine:
                     row[k] = row[k].tolist()
                 if isinstance(row[k], pd.Timestamp):
                     row[k] = row[k].to_pydatetime()
+                if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                    row[k] = row[k].replace(tzinfo=timezone.utc)
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
@@ -880,25 +907,9 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            while True:
-                # if BufferError is thrown, we can be sure, message hasn't been send so we retry
-                try:
-                    # produce
-                    producer.produce(
-                        topic=feature_group._online_topic_name,
-                        key=key,
-                        value=encoded_row,
-                        callback=acked,
-                    )
-
-                    # Trigger internal callbacks to empty op queue
-                    producer.poll(0)
-                    break
-                except BufferError as e:
-                    if offline_write_options.get("debug_kafka", False):
-                        print("Caught: {}".format(e))
-                    # backoff for 1 second
-                    producer.poll(1)
+            self._kafka_produce(
+                producer, feature_group, key, encoded_row, acked, offline_write_options
+            )
 
         # make sure producer blocks and everything is delivered
         producer.flush()
@@ -923,6 +934,29 @@ class Engine:
             self._wait_for_job(job, offline_write_options)
 
         return job
+
+    def _kafka_produce(
+        self, producer, feature_group, key, encoded_row, acked, offline_write_options
+    ):
+        while True:
+            # if BufferError is thrown, we can be sure, message hasn't been send so we retry
+            try:
+                # produce
+                producer.produce(
+                    topic=feature_group._online_topic_name,
+                    key=key,
+                    value=encoded_row,
+                    callback=acked,
+                )
+
+                # Trigger internal callbacks to empty op queue
+                producer.poll(0)
+                break
+            except BufferError as e:
+                if offline_write_options.get("debug_kafka", False):
+                    print("Caught: {}".format(e))
+                # backoff for 1 second
+                producer.poll(1)
 
     def _encode_complex_features(
         self, feature_writers: Dict[str, callable], row: dict
@@ -966,7 +1000,7 @@ class Engine:
                     )
                 ]
             )
-        elif isinstance(client.get_instance(), external.Client):
+        else:
             config["bootstrap.servers"] = ",".join(
                 [
                     endpoint.replace("EXTERNAL://", "")

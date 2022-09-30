@@ -1,0 +1,28 @@
+{
+  "get": {
+    "response": {
+      "feature_group": {
+        "type": "onDemandFeaturegroupDTO",
+        "id": 15,
+        "name": "test_name",
+        "version": 15,
+        "featurestore_id": 15
+      },
+      "alias": "test_alias",
+      "left_feature_group_start_timestamp": "test_start_timestamp",
+      "left_feature_group_end_timestamp": "test_end_timestamp"
+    }
+  },
+  "get_basic_info": {
+    "response":{
+      "feature_group": {
+        "type": "onDemandFeaturegroupDTO",
+        "id": 15,
+        "name": "test_name",
+        "version": 15,
+        "featurestore_id": 15
+      },
+      "alias": "test_alias"
+    }
+  }
+}

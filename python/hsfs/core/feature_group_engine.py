@@ -134,11 +134,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 "commit_details can only be used on time travel enabled feature groups"
             )
 
-        wallclock_timestamp = (
-            util.get_timestamp_from_date_string(wallclock_time)
-            if wallclock_time is not None
-            else None
-        )
+        wallclock_timestamp = util.convert_event_time_to_timestamp(wallclock_time)
+
         feature_group_commits = self._feature_group_api.get_commit_details(
             feature_group, wallclock_timestamp, limit
         )
@@ -208,7 +205,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         self._update_features_metadata(
-            feature_group, feature_group.features + new_features
+            feature_group,
+            feature_group.features + new_features,  # todo allows for duplicates
         )
 
         # write empty dataframe to update parquet schema

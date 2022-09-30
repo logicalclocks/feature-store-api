@@ -60,7 +60,7 @@ class Statistics:
         # Currently getting multiple commits at the same time is not allowed
         if json_decamelized["count"] == 0:
             return None
-        elif len(json_decamelized["items"]) == 1:
+        elif len(json_decamelized["items"]) == 1:  # todo what if more?
             return cls(**json_decamelized["items"][0])
 
     def to_dict(self):

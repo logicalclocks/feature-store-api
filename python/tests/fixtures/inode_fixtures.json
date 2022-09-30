@@ -1,0 +1,25 @@
+{
+  "get": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "type": "inodeDTO",
+          "href": "test_href",
+          "attributes": {
+            "path":  "test_path",
+            "name":  "value"
+          },
+          "zip_state": "test_zip_state",
+          "tags": "test_tags"
+        }
+      ]
+    }
+  },
+  "get_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

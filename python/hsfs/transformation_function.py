@@ -139,8 +139,10 @@ class TransformationFunction:
             for n in node.names:
                 if imported_module:
                     import_line = "from " + imported_module + " import " + n.name
-                else:
+                elif n.asname:
                     import_line = "import " + n.name + " as " + n.asname
+                else:
+                    import_line = "import " + n.name
                 imports.append(import_line)
         return imports
 

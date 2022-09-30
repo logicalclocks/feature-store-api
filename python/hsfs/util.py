@@ -16,8 +16,9 @@
 
 import re
 import json
+import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, date, timezone
 from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
@@ -127,15 +128,52 @@ def check_timestamp_format_from_date_string(input_date):
     return normalized_date, date_format
 
 
-def get_timestamp_from_date_string(input_date, time_zone=None):
+def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     date_time = datetime.strptime(norm_input_date, date_format)
-    date_time = date_time.replace(tzinfo=time_zone)
+    if date_time.tzinfo is None:
+        date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
     return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
+
+
+def convert_event_time_to_timestamp(event_time):
+    if not event_time:
+        return None
+    if isinstance(event_time, str):
+        return get_timestamp_from_date_string(event_time)
+    elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+        # convert to unix epoch time in milliseconds.
+        event_time = event_time.to_pydatetime()
+        # convert to unix epoch time in milliseconds.
+        if event_time.tzinfo is None:
+            event_time = event_time.replace(tzinfo=timezone.utc)
+        return int(event_time.timestamp() * 1000)
+    elif isinstance(event_time, datetime):
+        # convert to unix epoch time in milliseconds.
+        if event_time.tzinfo is None:
+            event_time = event_time.replace(tzinfo=timezone.utc)
+        return int(event_time.timestamp() * 1000)
+    elif isinstance(event_time, date):
+        # convert to unix epoch time in milliseconds.
+        event_time = datetime(*event_time.timetuple()[:7])
+        if event_time.tzinfo is None:
+            event_time = event_time.replace(tzinfo=timezone.utc)
+        return int(event_time.timestamp() * 1000)
+    elif isinstance(event_time, int):
+        if event_time == 0:
+            raise ValueError("Event time should be greater than 0.")
+        # jdbc supports timestamp precision up to second only.
+        if len(str(event_time)) < 13:
+            event_time = event_time * 1000
+        return event_time
+    else:
+        raise ValueError(
+            "Given event time should be in `datetime`, `date`, `str` or `int` type"
+        )
 
 
 def setup_pydoop():

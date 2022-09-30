@@ -1,0 +1,483 @@
+{
+    "get_hopsfs": {
+        "response": {
+            "type": "featurestoreHopsfsConnectorDTO",
+            "description": "HOPSFS connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_hopsfs",
+            "storageConnectorType": "HOPSFS",
+            "hopsfs_path": "test_path",
+            "dataset_name": "test_dataset_name"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_hopsfs"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_hopsfs_basic_info": {
+        "response": {
+            "type": "featurestoreHopsfsConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_hopsfs",
+            "storageConnectorType": "HOPSFS"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_hopsfs"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_s3": {
+        "response": {
+            "type": "featurestoreS3ConnectorDTO",
+            "description": "S3 connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_s3",
+            "storageConnectorType": "S3",
+            "access_key": "test_access_key",
+            "secret_key": "test_secret_key",
+            "server_encryption_algorithm": "test_server_encryption_algorithm",
+            "server_encryption_key": "test_server_encryption_key",
+            "bucket": "test_bucket",
+            "session_token": "test_session_token",
+            "iam_role": "test_iam_role"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_s3"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_s3_basic_info": {
+        "response": {
+            "type": "featurestoreS3ConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_s3",
+            "storageConnectorType": "S3"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_s3"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_redshift": {
+        "response": {
+            "type": "featurestoreRedshiftConnectorDTO",
+            "description": "Redshift connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_redshift",
+            "storageConnectorType": "REDSHIFT",
+            "cluster_identifier": "test_cluster_identifier",
+            "database_driver": "test_database_driver",
+            "database_endpoint": "test_database_endpoint",
+            "database_name": "test_database_name",
+            "database_port": "test_database_port",
+            "table_name": "test_table_name",
+            "database_user_name": "test_database_user_name",
+            "auto_create": "test_auto_create",
+            "database_password": "test_database_password",
+            "database_group": "test_database_group",
+            "iam_role": "test_iam_role",
+            "arguments": "test_arguments",
+            "expiration": "test_expiration"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_redshift"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_redshift_basic_info": {
+        "response": {
+            "type": "featurestoreRedshiftConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_redshift",
+            "storageConnectorType": "REDSHIFT"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_redshift"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_adls": {
+        "response": {
+            "type": "featurestoreAdlsConnectorDTO",
+            "description": "Adls connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_adls",
+            "storageConnectorType": "ADLS",
+            "generation": "test_generation",
+            "directory_id": "test_directory_id",
+            "application_id": "test_application_id",
+            "service_credential": "test_service_credential",
+            "account_name": "test_account_name",
+            "container_name": "test_container_name",
+            "spark_options": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_adls"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_adls_basic_info": {
+        "response": {
+            "type": "featurestoreAdlsConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_adls",
+            "storageConnectorType": "ADLS"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_adls"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_snowflake": {
+        "response": {
+            "type": "featurestoreSnowflakeConnectorDTO",
+            "description": "Snowflake connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_snowflake",
+            "storageConnectorType": "SNOWFLAKE",
+            "database": "test_database",
+            "password": "test_password",
+            "token": "test_token",
+            "role": "test_role",
+            "schema": "test_schema",
+            "table": "test_table",
+            "url": "test_url",
+            "user": "test_user",
+            "warehouse": "test_warehouse",
+            "application": "test_application",
+            "sf_options": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_snowflake"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_snowflake_basic_info": {
+        "response": {
+            "type": "featurestoreSnowflakeConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_snowflake",
+            "storageConnectorType": "SNOWFLAKE"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_snowflake"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_jdbc": {
+        "response": {
+            "type": "featurestoreJdbcConnectorDTO",
+            "description": "JDBC connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_jdbc",
+            "storageConnectorType": "JDBC",
+            "arguments": [
+                {
+                    "name": "sslTrustStore"
+                },
+                {
+                    "name": "trustStorePassword"
+                },
+                {
+                    "name": "sslKeyStore"
+                },
+                {
+                    "name": "keyStorePassword"
+                }
+            ],
+            "connectionString": "test_conn_string"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_jdbc"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_jdbc_basic_info": {
+        "response": {
+            "type": "featurestoreJdbcConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_jdbc",
+            "storageConnectorType": "JDBC"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_jdbc"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_kafka": {
+        "response": {
+            "type": "featurestoreKafkaConnectorDTO",
+            "description": "Kafka connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_kafka",
+            "storageConnectorType": "KAFKA",
+            "bootstrap_servers": "test_bootstrap_servers",
+            "security_protocol": "test_security_protocol",
+            "ssl_truststore_location": "test_ssl_truststore_location",
+            "ssl_truststore_password": "test_ssl_truststore_password",
+            "ssl_keystore_location": "test_ssl_keystore_location",
+            "ssl_keystore_password": "test_ssl_keystore_password",
+            "ssl_key_password": "test_ssl_key_password",
+            "ssl_endpoint_identification_algorithm": "test_ssl_endpoint_identification_algorithm",
+            "options": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_kafka"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_kafka_basic_info": {
+        "response": {
+            "type": "featurestoreKafkaConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_kafka",
+            "storageConnectorType": "KAFKA"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_kafka"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_gcs": {
+        "response": {
+            "type": "featurestoreGcsConnectorDTO",
+            "description": "Gcs connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_gcs",
+            "storageConnectorType": "GCS",
+            "key_path": "test_key_path",
+            "bucket": "test_bucket",
+            "algorithm": "test_algorithm",
+            "encryption_key": "test_encryption_key",
+            "encryption_key_hash": "test_encryption_key_hash"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_gcs"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_gcs_basic_info": {
+        "response": {
+            "type": "featurestoreGcsConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_gcs",
+            "storageConnectorType": "GCS"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_gcs"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_big_query": {
+        "response": {
+            "type": "featurestoreBigQueryConnectorDTO",
+            "description": "BigQuery connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_big_query",
+            "storageConnectorType": "BIGQUERY",
+            "key_path": "test_key_path",
+            "parent_project": "test_parent_project",
+            "dataset": "test_dataset",
+            "query_table": "test_query_table",
+            "query_project": "test_query_project",
+            "materialization_dataset": "test_materialization_dataset",
+            "arguments": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_big_query"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_big_query_basic_info": {
+        "response": {
+            "type": "featurestoreBigQueryConnectorDTO",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_big_query",
+            "storageConnectorType": "BIGQUERY"
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_big_query"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    }
+}

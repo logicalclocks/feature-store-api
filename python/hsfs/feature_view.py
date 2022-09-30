@@ -16,14 +16,14 @@
 
 import json
 import warnings
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 
 from hsfs import util, training_dataset_feature, storage_connector, training_dataset
-from hsfs.constructor import query
+from hsfs.constructor import query, filter
 from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
@@ -31,6 +31,7 @@ from hsfs.core import (
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.core.feature_view_api import FeatureViewApi
 
 
 class FeatureView:
@@ -77,6 +78,27 @@ class FeatureView:
             `RestAPIError`.
         """
         self._feature_view_engine.delete(self.name, self.version)
+
+    @staticmethod
+    def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
+        """Delete the feature view and all associated metadata.
+
+        !!! danger "Potentially dangerous operation"
+            This operation drops all metadata associated with **this version** of the
+            feature view **and** related training dataset **and** materialized data in HopsFS.
+
+        # Arguments
+            feature_store_id: int. Id of feature store.
+            feature_view_name: str. Name of feature view.
+            feature_view_version: str. Version of feature view.
+        # Raises
+            `RestAPIError`.
+        """
+        if not isinstance(feature_store_id, int):
+            raise ValueError("`feature_store_id` should be an integer.")
+        FeatureViewApi(feature_store_id).delete_by_name_version(
+            feature_view_name, feature_view_version
+        )
 
     def update(self):
         # TODO feature view: wait for RestAPI
@@ -132,16 +154,9 @@ class FeatureView:
         """Initialise and cache parametrized transformation functions.
 
         # Arguments
-            training_dataset_version: int, optional. Default to be 1. Transformation statistics
+            training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
         """
-
-        if training_dataset_version is None:
-            training_dataset_version = 1
-            warnings.warn(
-                "No training dataset version was provided to initialise batch scoring . Defaulting to version 1.",
-                util.VersionWarning,
-            )
 
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
@@ -149,19 +164,32 @@ class FeatureView:
         self._batch_scoring_server.init_batch_scoring(self)
 
     def get_batch_query(
-        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+        self,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
 
         # Arguments
-            start_time: Optional. Start time of the batch query.
-            end_time: Optional. End time of the batch query.
+            start_time: Optional. Start time of the batch query. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
+                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
+                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            end_time: Optional. End time of the batch query. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
+                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
+                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
 
         # Returns
             `str`: batch query
         """
         return self._feature_view_engine.get_batch_query_string(
-            self, start_time, end_time
+            self,
+            start_time,
+            end_time,
+            training_dataset_version=(
+                self._batch_scoring_server.training_dataset_version
+                if self._batch_scoring_server
+                else None
+            ),
         )
 
     def get_feature_vector(
@@ -219,11 +247,14 @@ class FeatureView:
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
         """
-        start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-        end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-            following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-        read_options: User provided read options. Defaults to `{}`.
+        # Arguments
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+                formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            read_options: User provided read options. Defaults to `{}`.
         """
 
         if self._batch_scoring_server is None:
@@ -252,11 +283,12 @@ class FeatureView:
 
     def create_training_data(
         self,
-        start_time: Optional[str] = "",
-        end_time: Optional[str] = "",
+        start_time: Optional[Union[str, int, datetime, date]] = "",
+        end_time: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -280,10 +312,12 @@ class FeatureView:
 
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -338,6 +372,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -353,13 +388,14 @@ class FeatureView:
     def create_train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -384,14 +420,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be  formatted in one of the following ormats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -454,6 +494,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -470,15 +511,16 @@ class FeatureView:
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         data_format: Optional[str] = "csv",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -504,18 +546,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: tdatatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -586,6 +634,7 @@ class FeatureView:
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
+            extra_filter=extra_filter,
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
@@ -629,9 +678,10 @@ class FeatureView:
 
     def training_data(
         self,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -643,10 +693,14 @@ class FeatureView:
         recreate the training data.
 
         # Arguments
-            start_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_time: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            be formatted in one of the following
+                formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+            formatted in one of the following
+                formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -681,6 +735,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_obj=td
@@ -694,11 +749,12 @@ class FeatureView:
     def train_test_split(
         self,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -711,14 +767,18 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -737,7 +797,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_test, y_test):
+            (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -761,6 +821,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -772,28 +833,29 @@ class FeatureView:
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
         )
-        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+        return df
 
     @staticmethod
     def _validate_train_test_split(test_size, train_end, test_start):
-        if not (test_size or (train_end or test_start)):
+        if not ((test_size and 0 < test_size < 1) or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
-                "You should specify either `test_size` or (`train_end` or `test_start`)."
-                " `test_size` should be greater than 0 if specified"
+                " You should specify either `test_size` or (`train_end` or `test_start`)."
+                " `test_size` should be between 0 and 1 if specified."
             )
 
     def train_validation_test_split(
         self,
         validation_size: Optional[float] = None,
         test_size: Optional[float] = None,
-        train_start: Optional[str] = "",
-        train_end: Optional[str] = "",
-        validation_start: Optional[str] = "",
-        validation_end: Optional[str] = "",
-        test_start: Optional[str] = "",
-        test_end: Optional[str] = "",
+        train_start: Optional[Union[str, int, datetime, date]] = "",
+        train_end: Optional[Union[str, int, datetime, date]] = "",
+        validation_start: Optional[Union[str, int, datetime, date]] = "",
+        validation_end: Optional[Union[str, int, datetime, date]] = "",
+        test_start: Optional[Union[str, int, datetime, date]] = "",
+        test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
+        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
     ):
@@ -807,18 +869,24 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            train_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            validation_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            validation_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
-            test_start: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            test_end: timestamp in second or wallclock_time: Datetime string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,  or `%Y%m%d%H%M%S%f`.
+            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+                should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
+            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -837,7 +905,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_val, y_val, X_test, y_test):
+            (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -870,6 +938,7 @@ class FeatureView:
             location="",
             statistics_config=statistics_config,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
+            extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -885,11 +954,7 @@ class FeatureView:
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
         )
-        return (
-            df[TrainingDatasetSplit.TRAIN]
-            + df[TrainingDatasetSplit.VALIDATION]
-            + df[TrainingDatasetSplit.TEST]
-        )
+        return df
 
     @staticmethod
     def _validate_train_validation_test_split(
@@ -901,13 +966,15 @@ class FeatureView:
         test_start,
     ):
         if not (
-            (validation_size and test_size)
+            (validation_size and 0 < validation_size < 1)
+            and (test_size and 0 < test_size < 1)
+            and (validation_size + test_size < 1)
             or ((train_end or validation_start) and (validation_end or test_start))
         ):
             raise ValueError(
                 "Invalid split input."
                 " You should specify either (`validation_size` and `test_size`) or ((`train_end` or `validation_start`) and (`validation_end` or `test_start`))."
-                "`validation_size` and `test_size` should be greater than 0 if specified."
+                "`validation_size`, `test_size` and sum of `validationSize` and `testSize` should be between 0 and 1 if specified."
             )
 
     def get_training_data(
@@ -962,7 +1029,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_test, y_test):
+            (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -972,7 +1039,7 @@ class FeatureView:
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
         )
-        return df[TrainingDatasetSplit.TRAIN] + df[TrainingDatasetSplit.TEST]
+        return df
 
     def get_train_validation_test_split(
         self,
@@ -996,7 +1063,7 @@ class FeatureView:
                   to configure the Hopsworks Job used to compute the training dataset.
 
         # Returns
-            (X_train, y_train, X_val, y_val, X_test, y_test):
+            (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
 
         """
@@ -1010,11 +1077,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
         )
-        return (
-            df[TrainingDatasetSplit.TRAIN]
-            + df[TrainingDatasetSplit.VALIDATION]
-            + df[TrainingDatasetSplit.TEST]
-        )
+        return df
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         return self._feature_view_engine.add_tag(
@@ -1063,7 +1126,7 @@ class FeatureView:
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
         )
-        features = json_decamelized.get("features", None)
+        features = json_decamelized.get("features", [])
         if features:
             features = [
                 training_dataset_feature.TrainingDatasetFeature.from_response_json(
@@ -1105,6 +1168,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "type": "featureViewDTO",
         }
 
     @property

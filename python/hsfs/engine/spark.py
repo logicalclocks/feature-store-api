@@ -148,7 +148,7 @@ class Engine:
             return dataframe.toPandas()
         if dataframe_type.lower() == "numpy":
             return dataframe.toPandas().values
-        if dataframe_type == "python":
+        if dataframe_type.lower() == "python":
             return dataframe.toPandas().values.tolist()
 
         raise TypeError(
@@ -412,7 +412,7 @@ class Engine:
                 dataset = dataset.coalesce(1)
             path = training_dataset.location + "/" + training_dataset.name
             return self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 dataset,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -425,12 +425,15 @@ class Engine:
             split_dataset = self._split_df(
                 query_obj, training_dataset, read_options=read_options
             )
+            for key in split_dataset:
+                if training_dataset.coalesce:
+                    split_dataset[key] = split_dataset[key].coalesce(1)
+
+                split_dataset[key] = split_dataset[key].cache()
+
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset, feature_view_obj, split_dataset
             )
-            if training_dataset.coalesce:
-                for key in split_dataset:
-                    split_dataset[key] = split_dataset[key].coalesce(1)
             return self._write_training_dataset_splits(
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
@@ -499,7 +502,7 @@ class Engine:
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
-                training_dataset,
+                training_dataset.transformation_functions,
                 feature_dataframes[split_name],
                 training_dataset.storage_connector,
                 training_dataset.data_format,
@@ -514,7 +517,7 @@ class Engine:
 
     def _write_training_dataset_single(
         self,
-        training_dataset,
+        transformation_functions,
         feature_dataframe,
         storage_connector,
         data_format,
@@ -525,7 +528,7 @@ class Engine:
     ):
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
-            training_dataset, dataset=feature_dataframe
+            transformation_functions, dataset=feature_dataframe
         )
         if to_df:
             return feature_dataframe
@@ -538,6 +541,8 @@ class Engine:
         feature_dataframe.write.format(data_format).options(**write_options).mode(
             save_mode
         ).save(path)
+
+        feature_dataframe.unpersist()
 
     def read(self, storage_connector, data_format, read_options, location):
         if isinstance(location, str):
@@ -573,7 +578,9 @@ class Engine:
     ):
         # ideally all this logic should be in the storage connector in case we add more
         # streaming storage connectors...
-        stream = self._spark_session.readStream.format(storage_connector.SPARK_FORMAT)
+        stream = self._spark_session.readStream.format(
+            storage_connector.SPARK_FORMAT
+        )  # todo SPARK_FORMAT available only for KAFKA connectors
 
         # set user options last so that they overwrite any default options
         stream = stream.options(**storage_connector.spark_options(), **options)
@@ -783,9 +790,6 @@ class Engine:
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def setup_storage_connector(self, storage_connector, path=None):
-        # update storage connector to get new session token
-        storage_connector.refetch()
-
         if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
@@ -854,14 +858,14 @@ class Engine:
             {},
         )
 
-    def _apply_transformation_function(self, training_dataset, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset):
         # generate transformation function expressions
         transformed_feature_names = []
         transformation_fn_expressions = []
         for (
             feature_name,
             transformation_fn,
-        ) in training_dataset.transformation_functions.items():
+        ) in transformation_functions.items():
             fn_registration_name = (
                 transformation_fn.name
                 + "_"
@@ -870,7 +874,11 @@ class Engine:
                 + feature_name
             )
             self._spark_session.udf.register(
-                fn_registration_name, transformation_fn.transformation_fn
+                fn_registration_name,
+                transformation_fn.transformation_fn,
+                transformation_function_engine.TransformationFunctionEngine.convert_legacy_type(
+                    transformation_fn.output_type
+                ),
             )
             transformation_fn_expressions.append(
                 "{fn_name:}({name:}) AS {name:}".format(
@@ -888,13 +896,8 @@ class Engine:
 
         # generate entire expression and execute it
         transformation_fn_expressions.extend(no_transformation_expr)
-        dataset = dataset.selectExpr(*transformation_fn_expressions)
-
-        # sort feature order if it was altered by transformation functions
-        sorded_features = sorted(training_dataset._features, key=lambda ft: ft.index)
-        sorted_feature_names = [ft.name for ft in sorded_features]
-        dataset = dataset.select(*sorted_feature_names)
-        return dataset
+        transformed_dataset = dataset.selectExpr(*transformation_fn_expressions)
+        return transformed_dataset.select(*dataset.columns)
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 

@@ -22,6 +22,7 @@ from hsfs import (
 )
 from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement, query
+from hsfs.client.exceptions import RestAPIError
 
 
 class FeatureViewApi:
@@ -61,20 +62,40 @@ class FeatureViewApi:
 
     def get_by_name(self, name):
         path = self._base_path + [name]
-        return [
-            feature_view.FeatureView.from_response_json(fv)
-            for fv in self._client._send_request(
-                self._GET, path, {"expand": ["query", "features"]}
-            )["items"]
-        ]
+        try:
+            return [
+                feature_view.FeatureView.from_response_json(fv)
+                for fv in self._client._send_request(
+                    self._GET, path, {"expand": ["query", "features"]}
+                )["items"]
+            ]
+        except RestAPIError as e:
+            if e.response.json().get("errorCode", "") == 270009:
+                raise ValueError(
+                    "Cannot get back the feature view because the query defined is no longer valid."
+                    " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
+                    " or `FeatureView.clean`."
+                )
+            else:
+                raise e
 
     def get_by_name_version(self, name, version):
         path = self._base_path + [name, self._VERSION, version]
-        return feature_view.FeatureView.from_response_json(
-            self._client._send_request(
-                self._GET, path, {"expand": ["query", "features"]}
+        try:
+            return feature_view.FeatureView.from_response_json(
+                self._client._send_request(
+                    self._GET, path, {"expand": ["query", "features"]}
+                )
             )
-        )
+        except RestAPIError as e:
+            if e.response.json().get("errorCode", "") == 270009:
+                raise ValueError(
+                    "Cannot get back the feature view because the query defined is no longer valid."
+                    " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
+                    " or `FeatureView.clean`."
+                )
+            else:
+                raise e
 
     def delete_by_name(self, name):
         path = self._base_path + [name]
@@ -90,6 +111,7 @@ class FeatureViewApi:
         version,
         start_time,
         end_time,
+        training_dataset_version=None,
         with_label=False,
         is_python_engine=False,
     ):
@@ -109,6 +131,7 @@ class FeatureViewApi:
                     "end_time": end_time,
                     "with_label": with_label,
                     "is_hive_engine": is_python_engine,
+                    "td_version": training_dataset_version,
                 },
             )
         )

@@ -16,11 +16,12 @@
 import json
 import warnings
 from typing import Optional, Union, Any, Dict, List, TypeVar
-from datetime import timezone
 
 import humps
 import pandas as pd
 import numpy as np
+
+from datetime import datetime, date
 
 from hsfs import util, engine, training_dataset_feature
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -34,7 +35,7 @@ from hsfs.core import (
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query
+from hsfs.constructor import query, filter
 
 
 class TrainingDataset:
@@ -79,14 +80,13 @@ class TrainingDataset:
         transformation_functions=None,
         train_split=None,
         time_split_size=None,
+        extra_filter=None,
     ):
         self._id = id
         self._name = name
         self._version = version
         self._description = description
         self._data_format = data_format
-        self._start_time = self._convert_event_time_to_timestamp(event_start_time)
-        self._end_time = self._convert_event_time_to_timestamp(event_end_time)
         self._validation_size = validation_size
         self._test_size = test_size
         self._train_start = train_start
@@ -103,7 +103,6 @@ class TrainingDataset:
         self._feature_store_id = featurestore_id
         self._transformation_functions = transformation_functions
         self._train_split = train_split
-
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
         )
@@ -127,6 +126,8 @@ class TrainingDataset:
             self._training_dataset_type = None
         # set up depending on user initialized or coming from backend response
         if created is None:
+            self._start_time = util.convert_event_time_to_timestamp(event_start_time)
+            self._end_time = util.convert_event_time_to_timestamp(event_end_time)
             # no type -> user init
             self._features = features
             self.storage_connector = storage_connector
@@ -151,7 +152,14 @@ class TrainingDataset:
                 test_start,
                 test_end,
             )
+            self._extra_filter = (
+                filter.Logic(filter.Logic.SINGLE, left_f=extra_filter)
+                if isinstance(extra_filter, filter.Filter)
+                else extra_filter
+            )
         else:
+            self._start_time = event_start_time
+            self._end_time = event_end_time
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
             self._storage_connector = StorageConnector.from_response_json(
@@ -171,7 +179,7 @@ class TrainingDataset:
                 statistics_config
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
-
+            self._extra_filter = filter.Logic.from_response_json(extra_filter)
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
@@ -186,6 +194,13 @@ class TrainingDataset:
         test_start=None,
         test_end=None,
     ):
+        train_start = util.convert_event_time_to_timestamp(train_start)
+        train_end = util.convert_event_time_to_timestamp(train_end)
+        validation_start = util.convert_event_time_to_timestamp(validation_start)
+        validation_end = util.convert_event_time_to_timestamp(validation_end)
+        test_start = util.convert_event_time_to_timestamp(test_start)
+        test_end = util.convert_event_time_to_timestamp(test_end)
+
         time_splits = list()
         self._append_time_split(
             time_splits,
@@ -223,24 +238,10 @@ class TrainingDataset:
                 TrainingDatasetSplit(
                     name=split_name,
                     split_type=TrainingDatasetSplit.TIME_SERIES_SPLIT,
-                    start_time=self._convert_event_time_to_timestamp(start_time),
-                    end_time=self._convert_event_time_to_timestamp(end_time),
+                    start_time=util.convert_event_time_to_timestamp(start_time),
+                    end_time=util.convert_event_time_to_timestamp(end_time),
                 )
             )
-
-    def _convert_event_time_to_timestamp(self, event_time):
-        if event_time is None:
-            return None
-        if isinstance(event_time, str):
-            if event_time:
-                return util.get_timestamp_from_date_string(event_time, timezone.utc)
-        elif isinstance(event_time, int):
-            if event_time == 0:
-                raise ValueError("Event time should be greater than 0.")
-            # jdbc supports timestamp precision up to second only.
-            return event_time * 1000
-        else:
-            raise ValueError("Given event time should be in `str` or `int` type")
 
     def save(
         self,
@@ -538,6 +539,8 @@ class TrainingDataset:
             "trainSplit": self._train_split,
             "eventStartTime": self._start_time,
             "eventEndTime": self._end_time,
+            "extraFilter": self._extra_filter,
+            "type": "trainingDatasetDTO",
         }
 
     @property
@@ -702,13 +705,15 @@ class TrainingDataset:
         """Get the latest computed statistics for the training dataset."""
         return self._statistics_engine.get_last(self)
 
-    def get_statistics(self, commit_time: str = None):
+    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
         """Returns the statistics for this training dataset at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: Commit time in the format `YYYYMMDDhhmmss`, defaults to `None`.
+            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
+                or `%Y%m%d%H%M%S%f`. Defaults to `None`.
 
         # Returns
             `Statistics`. Object with statistics information.
@@ -935,7 +940,6 @@ class TrainingDataset:
     def test_end(self, test_end):
         self._test_end = test_end
 
-    @property
     def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
         if self._vector_server.serving_keys:
@@ -946,3 +950,11 @@ class TrainingDataset:
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.serving_keys
+
+    @property
+    def extra_filter(self):
+        return self._extra_filter
+
+    @extra_filter.setter
+    def extra_filter(self, extra_filter):
+        self._extra_filter = extra_filter
