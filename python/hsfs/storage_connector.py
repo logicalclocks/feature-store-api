@@ -1118,8 +1118,8 @@ class BigQueryConnector(StorageConnector):
 
         local_key_path = engine.get_instance().add_file(self._key_path)
         with open(local_key_path, "rb") as credentials_file:
-            properties[self.BIGQ_CREDENTIALS] = base64.b64encode(
-                credentials_file.read()
+            properties[self.BIGQ_CREDENTIALS] = str(
+                base64.b64encode(credentials_file.read()), "utf-8"
             )
 
         if self._materialization_dataset:
