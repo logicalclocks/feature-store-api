@@ -14,7 +14,11 @@
 #   limitations under the License.
 #
 
-from hsfs import storage_connector
+import base64
+
+from hsfs import engine, storage_connector
+from hsfs.storage_connector import BigQueryConnector
+from hsfs.engine import spark
 
 
 class TestHopsfsConnector:
@@ -503,3 +507,28 @@ class TestBigQueryConnector:
         assert sc.query_project is None
         assert sc.materialization_dataset is None
         assert sc.arguments == {}
+
+    def test_credentials_base64_encoded(self, backend_fixtures, tmp_path):
+        # Arrange
+        engine.set_instance("spark", spark.Engine())
+
+        credentials = '{"type": "service_account", "project_id": "test"}'
+
+        credentialsFile = tmp_path / "bigquery.json"
+        credentialsFile.write_text(credentials)
+
+        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
+        json["key_path"] = "file://" + str(credentialsFile.resolve())
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        spark_options = sc.spark_options()
+
+        # Assert - Credentials should be base64 encoded
+        assert (
+            base64.b64decode(spark_options[BigQueryConnector.BIGQ_CREDENTIALS]).decode(
+                "utf-8"
+            )
+            == credentials
+        )

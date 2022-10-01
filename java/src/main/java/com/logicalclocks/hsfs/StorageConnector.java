@@ -32,8 +32,11 @@ import lombok.ToString;
 
 import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +89,7 @@ public abstract class StorageConnector {
   @JsonIgnore
   public abstract String getPath(String subPath) throws FeatureStoreException;
 
-  public abstract Map<String, String> sparkOptions();
+  public abstract Map<String, String> sparkOptions() throws IOException;
 
   public static class HopsFsConnector extends StorageConnector {
 
@@ -478,7 +481,7 @@ public abstract class StorageConnector {
     }
 
     public Object readStream(String topic, boolean topicPattern, String messageFormat, String schema,
-        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException {
+        Map<String, String> options, boolean includeMetadata) throws FeatureStoreException, IOException {
       if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
         throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
       }
@@ -552,9 +555,14 @@ public abstract class StorageConnector {
      * Set spark options specific to BigQuery.
      * @return Map
      */
-    public Map<String, String> sparkOptions() {
+    public Map<String, String> sparkOptions() throws IOException {
       Map<String, String> options = new HashMap<>();
-      options.put(Constants.BIGQ_CREDENTIALS_FILE, SparkEngine.getInstance().addFile(keyPath));
+
+      // Base64 encode the credentials file
+      String localKeyPath = SparkEngine.getInstance().addFile(keyPath);
+      byte[] fileContent = Files.readAllBytes(Paths.get(localKeyPath));
+      options.put(Constants.BIGQ_CREDENTIALS, Base64.getEncoder().encodeToString(fileContent));
+
       options.put(Constants.BIGQ_PARENT_PROJECT, parentProject);
       if (!Strings.isNullOrEmpty(materializationDataset)) {
         options.put(Constants.BIGQ_MATERIAL_DATASET, materializationDataset);
