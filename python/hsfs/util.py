@@ -222,21 +222,22 @@ def get_hostname_replaced_url(sub_path: str):
 
 
 def verify_attribute_key_names(attribute_name, provided_names, features):
+    feature_names = set([feat.name for feat in features])
     if attribute_name in ["primary", "partition"]:
-        diff = list(set(provided_names) - set([feat.name for feat in features]))
+        diff = list(set(provided_names) - feature_names)
         if diff:
             raise exceptions.FeatureStoreException(
                 f"Provided {attribute_name} key(s) {','.join(diff)} doesn't exist in feature dataframe"
             )
     elif attribute_name == "precombine":
-        if provided_names is not None or provided_names not in features:
+        if provided_names is not None and provided_names not in feature_names:
             raise exceptions.FeatureStoreException(
                 f"Provided hudi {attribute_name} key {provided_names} doesn't exist in feature dataframe"
             )
     elif attribute_name == "event_time":
-        if provided_names is not None or provided_names not in features:
+        if provided_names is not None and provided_names not in feature_names:
             raise exceptions.FeatureStoreException(
-                f"Provided event time {attribute_name} feature {provided_names} doesn't exist in feature dataframe"
+                f"Provided {attribute_name} feature {provided_names} doesn't exist in feature dataframe"
             )
     else:
         raise ValueError(f"Unknown attribute name {attribute_name}")
