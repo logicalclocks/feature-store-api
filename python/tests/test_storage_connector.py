@@ -203,8 +203,10 @@ class TestSnowflakeConnector:
         query = "select * from table"
         snowflake_connector.read(query=query)
 
-        assert mock_engine_read.call_args.args[2].get("dbtable", None) is None
-        assert mock_engine_read.call_args.args[2].get("query") == query
+        print(mock_engine_read.call_args)
+
+        assert mock_engine_read.call_args[0][2].get("dbtable", None) is None
+        assert mock_engine_read.call_args[0][2].get("query") == query
 
     def test_spark_options_db_table_none(self):
         snowflake_connector = storage_connector.SnowflakeConnector(
