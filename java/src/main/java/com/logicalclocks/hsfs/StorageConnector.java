@@ -600,7 +600,7 @@ public abstract class StorageConnector {
 
       Map<String, String> readOptions = sparkOptions();
       // merge user spark options on top of default spark options
-      if (!options.isEmpty()) {
+      if (options != null && !options.isEmpty()) {
         readOptions.putAll(options);
       }
 
