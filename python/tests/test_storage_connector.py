@@ -15,6 +15,7 @@
 #
 
 from hsfs import storage_connector
+from hsfs.engine import spark
 
 
 class TestHopsfsConnector:
@@ -192,6 +193,19 @@ class TestAdlsConnector:
 
 
 class TestSnowflakeConnector:
+    def test_read_query_option(self, mocker):
+        mocker.patch("hsfs.engine.get_instance", return_value=spark.Engine())
+        mock_engine_read = mocker.patch("hsfs.engine.spark.Engine.read")
+
+        snowflake_connector = storage_connector.SnowflakeConnector(
+            id=1, name="test_connector", featurestore_id=1, table="snowflake_table"
+        )
+        query = "select * from table"
+        snowflake_connector.read(query=query)
+
+        assert mock_engine_read.call_args[0][2].get("dbtable", None) is None
+        assert mock_engine_read.call_args[0][2].get("query") == query
+
     def test_spark_options_db_table_none(self):
         snowflake_connector = storage_connector.SnowflakeConnector(
             id=1, name="test_connector", featurestore_id=1, table=None
