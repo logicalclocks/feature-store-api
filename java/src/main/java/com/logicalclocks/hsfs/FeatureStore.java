@@ -17,9 +17,11 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
@@ -49,6 +51,7 @@ public class FeatureStore {
   private Integer projectId;
 
   private FeatureGroupApi featureGroupApi;
+  private FeatureViewApi featureViewApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
   private FeatureViewEngine featureViewEngine;
@@ -59,6 +62,7 @@ public class FeatureStore {
 
   public FeatureStore() {
     featureGroupApi = new FeatureGroupApi();
+    featureViewApi = new FeatureViewApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     featureViewEngine = new FeatureViewEngine();
@@ -253,14 +257,14 @@ public class FeatureStore {
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
+    return featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
         null, null, false, null, null, null);
   }
 
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+    return featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
         null, null, onlineEnabled, null, null, eventTime);
   }
 
@@ -270,7 +274,7 @@ public class FeatureStore {
                                               boolean onlineEnabled,
                                               String eventTime) throws IOException, FeatureStoreException {
 
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+    return featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
         partitionKeys, null, onlineEnabled, null, null, eventTime);
   }
 
@@ -281,7 +285,7 @@ public class FeatureStore {
                                               StatisticsConfig statisticsConfig, String eventTime)
       throws IOException, FeatureStoreException {
 
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
+    return featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
         partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
   }
 
@@ -336,6 +340,38 @@ public class FeatureStore {
 
   public FeatureView.FeatureViewBuilder createFeatureView() {
     return new FeatureView.FeatureViewBuilder(this);
+  }
+
+  /**
+   * Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
+   * existing feature view metadata object.
+   *
+   * @param name name of the feature view
+   * @param version version of the feature view
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getOrcreateFeatureView(String name, Integer version) throws FeatureStoreException, IOException {
+    return featureViewApi.getOrCreateFeatureView(this, name, version, null, null, null);
+  }
+
+  /**
+   * Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
+   * existing feature view metadata object.
+   *
+   * @param name name of the feature view
+   * @param query Query object
+   * @param version version of the feature view
+   * @param description description of the feature view
+   * @param labels list of label features
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getOrcreateFeatureView(String name, Query query, Integer version, String description,
+                                            List<String> labels) throws FeatureStoreException, IOException {
+    return featureViewApi.getOrCreateFeatureView(this, name, version, query, description, labels);
   }
 
   /**
