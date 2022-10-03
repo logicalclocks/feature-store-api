@@ -570,7 +570,11 @@ class Engine:
         return stream.load().select("key", "value")
 
     def add_file(self, file):
-        self._spark_context.addFile("hdfs://" + file)
+        # This is used for unit testing
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
+        self._spark_context.addFile(file)
         return SparkFiles.get(os.path.basename(file))
 
     def profile(
