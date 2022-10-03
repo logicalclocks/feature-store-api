@@ -630,7 +630,7 @@ public class SparkEngine {
     writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
-  
+
   public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
       TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
@@ -661,12 +661,12 @@ public class SparkEngine {
         throw new FeatureStoreException("Feature '" + structField.name().toLowerCase() + "': "
             + "spark type " + structField.dataType().catalogString() + " not supported.");
       }
-  
+
       Feature f = new Feature(structField.name().toLowerCase(), featureType, false, false);
       if (structField.metadata().contains("description")) {
         f.setDescription(structField.metadata().getString("description"));
       }
-      
+
       features.add(f);
     }
 
@@ -680,13 +680,17 @@ public class SparkEngine {
   }
 
   public String addFile(String filePath) {
-    sparkSession.sparkContext().addFile("hdfs://" + filePath);
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    sparkSession.sparkContext().addFile(filePath);
     return SparkFiles.get((new Path(filePath)).getName());
   }
 
   public Dataset<Row> readStream(StorageConnector storageConnector, String dataFormat, String messageFormat,
                                  String schema, Map<String, String> options, boolean includeMetadata)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     DataStreamReader stream = sparkSession.readStream().format(dataFormat);
 
     // set user options last so that they overwrite any default options
