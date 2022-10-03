@@ -353,7 +353,7 @@ public class FeatureViewEngine {
       if (e.getMessage().contains("\"errorCode\":270172")) {
         throw new FeatureStoreException(
             "Cannot generate dataset or query from the given start/end time because"
-                + " event time column is not available in one or more feature groups."
+                + " event time column is not available in the left feature groups."
                 + " A start/end time should not be provided as parameters."
         );
       } else {
