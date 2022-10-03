@@ -18,7 +18,7 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
@@ -48,7 +48,7 @@ public class TestStorageConnector {
     Map<String, String> sparkOptions = bigqueryConnector.sparkOptions();
 
     // Assert
-    Assert.assertEquals(credentials,
+    Assertions.assertEquals(credentials,
       new String(Base64.getDecoder().decode(sparkOptions.get(Constants.BIGQ_CREDENTIALS)), StandardCharsets.UTF_8));
   }
 
@@ -69,7 +69,7 @@ public class TestStorageConnector {
     Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), mapArg.capture(), Mockito.any());
 
     // Assert
-    Assert.assertFalse(mapArg.getValue().containsKey(Constants.SNOWFLAKE_TABLE));
-    Assert.assertEquals(query, mapArg.getValue().get("query"));
+    Assertions.assertFalse(mapArg.getValue().containsKey(Constants.SNOWFLAKE_TABLE));
+    Assertions.assertEquals(query, mapArg.getValue().get("query"));
   }
 }
