@@ -87,7 +87,7 @@ public class Constants {
   public static final String PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable";
   // end gcs
   // bigquery constants
-  public static final String BIGQ_CREDENTIALS_FILE = "credentialsFile";
+  public static final String BIGQ_CREDENTIALS = "credentials";
   public static final String BIGQ_PARENT_PROJECT = "parentProject";
   public static final String BIGQ_MATERIAL_DATASET = "materializationDataset";
   public static final String BIGQ_VIEWS_ENABLED = "viewsEnabled";

@@ -19,14 +19,38 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Map;
 
 
 public class TestStorageConnector {
+
+  @Test
+  public void testBigQueryCredentialsBase64Encoded(@TempDir Path tempDir) throws IOException {
+    // Arrange
+    String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\"}";
+    Path credentialsFile = tempDir.resolve("bigquery.json");
+    Files.write(credentialsFile, credentials.getBytes());
+
+    StorageConnector.BigqueryConnector bigqueryConnector = new StorageConnector.BigqueryConnector();
+    bigqueryConnector.setKeyPath("file://" + credentialsFile);
+
+    // Act
+    Map<String, String> sparkOptions = bigqueryConnector.sparkOptions();
+
+    // Assert
+    Assert.assertEquals(credentials,
+      new String(Base64.getDecoder().decode(sparkOptions.get(Constants.BIGQ_CREDENTIALS)), StandardCharsets.UTF_8));
+  }
 
   @Test
   public void testSnowflakeConnector_read() throws Exception {
