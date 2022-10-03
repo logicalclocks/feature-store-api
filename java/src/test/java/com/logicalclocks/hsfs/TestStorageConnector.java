@@ -38,12 +38,14 @@ public class TestStorageConnector {
     SparkEngine.setInstance(sparkEngine);
 
     ArgumentCaptor<Map> mapArg = ArgumentCaptor.forClass(Map.class);
+    String query = "select * from dbtable";
 
     // Act
-    snowflakeConnector.read("select * form dbtable", null, null, null);
+    snowflakeConnector.read(query, null, null, null);
     Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), mapArg.capture(), Mockito.any());
 
     // Assert
     Assert.assertFalse(mapArg.getValue().containsKey(Constants.SNOWFLAKE_TABLE));
+    Assert.assertEquals(query, mapArg.getValue().get("query"));
   }
 }
