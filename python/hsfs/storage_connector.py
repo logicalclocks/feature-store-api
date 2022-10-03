@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
+import base64
 
 from hsfs import engine
 from hsfs.core import storage_connector_api
@@ -683,7 +684,7 @@ class SnowflakeConnector(StorageConnector):
 
     def read(
         self,
-        query: str,
+        query: str = None,
         data_format: str = None,
         options: dict = {},
         path: str = None,
@@ -696,6 +697,8 @@ class SnowflakeConnector(StorageConnector):
         )
         if query:
             options["query"] = query
+            # if table also specified we override to use query
+            options.pop("dbtable", None)
 
         return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
 
@@ -1041,7 +1044,7 @@ class GcsConnector(StorageConnector):
 class BigQueryConnector(StorageConnector):
     type = StorageConnector.BIGQUERY
     BIGQUERY_FORMAT = "bigquery"
-    BIGQ_CREDENTIALS_FILE = "credentialsFile"
+    BIGQ_CREDENTIALS = "credentials"
     BIGQ_PARENT_PROJECT = "parentProject"
     BIGQ_MATERIAL_DATASET = "materializationDataset"
     BIGQ_VIEWS_ENABLED = "viewsEnabled"
@@ -1113,9 +1116,14 @@ class BigQueryConnector(StorageConnector):
     def spark_options(self):
         """Return spark options to be set for BigQuery spark connector"""
         properties = self._arguments
-        local_key_path = engine.get_instance().add_file(self._key_path)
-        properties[self.BIGQ_CREDENTIALS_FILE] = local_key_path
         properties[self.BIGQ_PARENT_PROJECT] = self._parent_project
+
+        local_key_path = engine.get_instance().add_file(self._key_path)
+        with open(local_key_path, "rb") as credentials_file:
+            properties[self.BIGQ_CREDENTIALS] = str(
+                base64.b64encode(credentials_file.read()), "utf-8"
+            )
+
         if self._materialization_dataset:
             properties[self.BIGQ_MATERIAL_DATASET] = self._materialization_dataset
             properties[self.BIGQ_VIEWS_ENABLED] = "true"

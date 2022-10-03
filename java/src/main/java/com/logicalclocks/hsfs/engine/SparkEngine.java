@@ -106,6 +106,11 @@ public class SparkEngine {
     return INSTANCE;
   }
 
+  // for testing
+  public static void setInstance(SparkEngine sparkEngine) {
+    INSTANCE = sparkEngine;
+  }
+
   @Getter
   private SparkSession sparkSession;
 
@@ -625,9 +630,6 @@ public class SparkEngine {
       return;
     }
 
-    // update connector to get new session token
-    storageConnector.refetch();
-
     switch (storageConnector.getStorageConnectorType()) {
       case S3:
         setupS3ConnectorHadoopConf((StorageConnector.S3Connector) storageConnector);
@@ -749,13 +751,17 @@ public class SparkEngine {
   }
 
   public String addFile(String filePath) {
-    sparkSession.sparkContext().addFile("hdfs://" + filePath);
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    sparkSession.sparkContext().addFile(filePath);
     return SparkFiles.get((new Path(filePath)).getName());
   }
 
   public Dataset<Row> readStream(StorageConnector storageConnector, String dataFormat, String messageFormat,
                                  String schema, Map<String, String> options, boolean includeMetadata)
-      throws FeatureStoreException {
+      throws FeatureStoreException, IOException {
     DataStreamReader stream = sparkSession.readStream().format(dataFormat);
 
     // set user options last so that they overwrite any default options
