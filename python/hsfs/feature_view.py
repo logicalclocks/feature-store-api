@@ -986,8 +986,13 @@ class FeatureView:
         Get training data from storage or feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
+
+        !!! warning "External Storage Support"
+            Reading training data that was written to external storage using a Storage
+            Connector other than S3 can currently not be read using HSFS APIs with
+            Python as Engine, instead you will have to use the storage's native client.
 
         # Arguments
             version: training dataset version
