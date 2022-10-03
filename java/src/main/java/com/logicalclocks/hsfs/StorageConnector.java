@@ -351,6 +351,8 @@ public abstract class StorageConnector {
         throws FeatureStoreException, IOException {
       Map<String, String> readOptions = sparkOptions();
       if (!Strings.isNullOrEmpty(query)) {
+        // if table also specified we override to use query
+        readOptions.remove(Constants.SNOWFLAKE_TABLE);
         readOptions.put("query", query);
       }
       return SparkEngine.getInstance().read(this, Constants.SNOWFLAKE_FORMAT, readOptions, null);
