@@ -63,7 +63,7 @@ class FeatureViewApi:
 
     def update(self, feature_view_obj):
         headers = {"content-type": "application/json"}
-        return self._client._send_request(
+        self._client._send_request(
             self._PUT,
             self._base_path
             + [feature_view_obj.name, self._VERSION, feature_view_obj.version],
