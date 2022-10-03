@@ -16,11 +16,13 @@
 
 package com.logicalclocks.hsfs;
 
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
-import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,5 +49,26 @@ public class TestStorageConnector {
     // Assert
     Assertions.assertEquals(credentials,
         new String(Base64.getDecoder().decode(sparkOptions.get(Constants.BIGQ_CREDENTIALS)),  StandardCharsets.UTF_8));
+  }
+
+  @Test
+  public void testSnowflakeConnector_read() throws Exception {
+    // Arrange
+    StorageConnector.SnowflakeConnector snowflakeConnector = new StorageConnector.SnowflakeConnector();
+    snowflakeConnector.setTable(Constants.SNOWFLAKE_TABLE);
+
+    SparkEngine sparkEngine = Mockito.mock(SparkEngine.class);
+    SparkEngine.setInstance(sparkEngine);
+
+    ArgumentCaptor<Map> mapArg = ArgumentCaptor.forClass(Map.class);
+    String query = "select * from dbtable";
+
+    // Act
+    snowflakeConnector.read(query, null, null, null);
+    Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), mapArg.capture(), Mockito.any());
+
+    // Assert
+    Assertions.assertFalse(mapArg.getValue().containsKey(Constants.SNOWFLAKE_TABLE));
+    Assertions.assertEquals(query, mapArg.getValue().get("query"));
   }
 }

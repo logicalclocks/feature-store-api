@@ -101,6 +101,11 @@ public class SparkEngine {
     return INSTANCE;
   }
 
+  // for testing
+  public static void setInstance(SparkEngine sparkEngine) {
+    INSTANCE = sparkEngine;
+  }
+
   @Getter
   private SparkSession sparkSession;
 
