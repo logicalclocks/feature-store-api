@@ -89,7 +89,7 @@ class Query:
         !!! warning "External Feature Group Engine Support"
             **Spark only**
 
-            Reading aQuery containing an External Feature Group directly into a
+            Reading a Query containing an External Feature Group directly into a
             Pandas Dataframe using Python/Pandas as Engine is not supported,
             however, you can use the Query API to create Feature Views/Training
             Data containing External Feature Groups.
