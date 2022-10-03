@@ -41,6 +41,16 @@ class Artifact:
         self._meta_type = meta_type
         self._href = href
 
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return (
+            f"Artifact({self._feature_store_name!r}, {self._name!r}, "
+            f"{self._version!r}, {self._type!r}, {self._meta_type!r}, "
+            f"{self._href!r})"
+        )
+
     @staticmethod
     def from_response_json(link_json: dict):
         if bool(link_json["deleted"]):
@@ -48,7 +58,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifactType"],
+                link_json["artifact_type"],
                 Artifact.MetaType.DELETED,
             )
         elif not bool(link_json["accessible"]):
@@ -56,7 +66,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifactType"],
+                link_json["artifact_type"],
                 Artifact.MetaType.INACCESSIBLE,
                 link_json["artifact"]["href"],
             )
@@ -88,6 +98,15 @@ class Links:
         FEATURE_GROUP = 1
         FEATURE_VIEW = 2
 
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return (
+            f"Artifact({self._accessible!r}, {self._deleted!r}"
+            f", {self._inaccessible!r})"
+        )
+
     @staticmethod
     def __feature_group(link_json: dict):
         if (
@@ -102,7 +121,7 @@ class Links:
     def __parse_feature_groups(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["artifact_type"] in artifacts:
+            if link_json["node"]["artifact_type"] in artifacts:
                 if bool(link_json["node"]["accessible"]):
                     links.accessible.append(
                         Links.__feature_group(link_json["node"]["artifact"])
@@ -113,12 +132,13 @@ class Links:
                     links.inaccessible.append(
                         Artifact.from_response_json(link_json["node"])
                     )
+        return links
 
     @staticmethod
     def __parse_feature_views(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["artifact_type"] in artifacts:
+            if link_json["node"]["artifact_type"] in artifacts:
                 if bool(link_json["node"]["accessible"]):
                     links.accessible.append(
                         feature_view.FeatureView.from_response_json(
@@ -131,6 +151,7 @@ class Links:
                     links.inaccessible.append(
                         Artifact.from_response_json(link_json["node"])
                     )
+        return links
 
     @staticmethod
     def from_response_json(links_json: dict, direction: Direction, artifact: Type):
