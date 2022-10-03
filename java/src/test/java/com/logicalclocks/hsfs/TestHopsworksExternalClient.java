@@ -24,9 +24,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.junit.Assert;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,6 +63,6 @@ public class TestHopsworksExternalClient {
     HopsworksExternalClient hopsworksExternalClient = new HopsworksExternalClient(
         httpClient, httpHost);
     String apiKey = hopsworksExternalClient.readApiKey(null, null, apiFilePath.toString());
-    Assert.assertEquals("hello", apiKey);
+    Assertions.assertEquals("hello", apiKey);
   }
 }
