@@ -17,6 +17,7 @@
 import json
 
 import humps
+from typing import Any, Dict
 from great_expectations.core import ExpectationConfiguration
 
 from hsfs import util
@@ -27,9 +28,9 @@ class GeExpectation:
 
     def __init__(
         self,
-        expectation_type,
-        kwargs,
-        meta,
+        expectation_type : str,
+        kwargs : Dict[str, Any],
+        meta : Dict[str, Any],
         id=None,
     ):
         self._id = id
@@ -37,6 +38,10 @@ class GeExpectation:
         self.kwargs = kwargs
         self.meta = meta
 
+        if not self.id:
+            if "expectationId" in self.meta.keys():
+                self.id = int(self.meta["expectationId"])
+                
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

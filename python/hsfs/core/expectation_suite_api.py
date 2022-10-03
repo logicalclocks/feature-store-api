@@ -47,6 +47,29 @@ class ExpectationSuiteApi:
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
         return ExpectationSuite.from_response_json(
+            _client._send_request("POST", path_params, headers=headers, data=payload)
+        )
+
+    def update(self, feature_group_id, expectation_suite):
+        """Create an expectation suite attached to a featuregroup.
+        :param expectation_suite: expectation suite object to be created for a featuregroup
+        :type expectation_suite: `ExpectationSuite`
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_id,
+            "expectationsuite",
+            expectation_suite.id
+        ]
+
+        headers = {"content-type": "application/json"}
+        payload = expectation_suite.json()
+        return ExpectationSuite.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 

@@ -15,13 +15,14 @@
 #
 
 import json
-from typing import Optional
+from typing import Optional, Union
 
 import humps
 import great_expectations as ge
 
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
+from hsfs.core import expectation_engine
 
 
 class ExpectationSuite:
@@ -59,6 +60,13 @@ class ExpectationSuite:
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
         self.meta = meta
+
+        if self.id:
+            self._expectation_engine = expectation_engine.ExpectationEngine(
+                featurestore_id=featurestore_id,
+                featuregroup_id=featuregroup_id,
+                expectation_suite_id=self.id
+            )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -127,6 +135,68 @@ class ExpectationSuite:
             ],
             meta=self._meta,
         )
+
+    # Emulate GE single expectation api to edit list of expectations
+    def _convert_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration, dict]):
+        """Convert different representation of expectation to Hopsworks GeExpectation type.
+        
+        :param expectation: An expectation to convert to Hopsworks GeExpectation type
+        :type Union[GeExpectation, ge.core.ExpectationConfiguration, dict]
+        :return: An expectation converted to Hopsworks GeExpectation type
+        :rtype `GeExpectation`
+        """
+        if isinstance(expectation, ge.core.ExpectationConfiguration):
+            return GeExpectation(**expectation.to_json_dict())
+        elif isinstance(expectation, GeExpectation):
+            return expectation
+        elif isinstance(expectation, dict):
+            return GeExpectation(**expectation)
+        else:
+            raise TypeError(
+                "Expectation of type {} is not supported.".format(
+                    type(expectation)
+                )
+            )
+
+    def add_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration]):
+        converted_expectation = self._convert_expectation(expectation=expectation)
+        if self.id:
+            return self._expectation_engine.create(expectation=converted_expectation)
+        else:
+            self._expectations.append(converted_expectation)
+            return converted_expectation
+
+    def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration]):
+        converted_expectation = self._convert_expectation(expectation=expectation)
+        # To update an expectation we need an id either from meta field or from self.id
+        self._expectation_engine.check_for_id(expectation)
+        if self.id:
+            self._expectation_engine.update(expectation=converted_expectation)
+        else:
+            matches = [index for index, expec in enumerate(self._expectations) if expec.id == expectation.id]
+
+            if len(matches) == 0:
+                raise ValueError(f"No expectation with id {expectation.id} in the expectation suite.")
+            elif len(matches) == 1:
+                self._expectations[matches[0]]
+            else:
+                raise ValueError(f"Found multiple expectations with id {expectation.id}, reinitialise the expectation suite by fetching from the server.")
+
+        return expectation
+
+    def delete_expectation(self, expectation_id : int):
+        if self.id:
+            self._expectation_engine.delete(expectation_id=expectation_id)
+        else:
+            matches = [index for index, expec in enumerate(self._expectations) if expec.id == expectation_id]
+
+            if len(matches) == 0:
+                raise ValueError(f"No expectation with id {expectation_id} in the expectation suite.")
+            elif len(matches) == 1:
+                self._expectations.pop(matches[0])
+            else:
+                raise ValueError(f"Found multiple expectations with id {expectation_id}, reinitialise the expectation suite by fetching from the server.")
+              
 
     def __str__(self):
         return self.json()
@@ -213,9 +283,7 @@ class ExpectationSuite:
                     self._expectations.append(GeExpectation(**expectation))
                 else:
                     raise TypeError(
-                        "Expectation of type {} is not supported.".format(
-                            type(expectation)
-                        )
+                        f"Expectation of type {type(expectation)} is not supported."
                     )
 
     @property

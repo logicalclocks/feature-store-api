@@ -18,10 +18,17 @@ from hsfs import engine, validation_report
 
 
 class GreatExpectationEngine:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id : int):
+        """Engine to run validation using Great Expectations.
+        
+        :param feature_store_id: id of the respective Feature Store
+        :type `int`
+        :return: The engine for Great Expectation objects
+        :rtype: `GreatExpectationEngine` 
+        """
         self._feature_store_id = feature_store_id
 
-    def validate(self, feature_group, dataframe, save_report, validation_options):
+    def validate(self, feature_group, dataframe, save_report : bool, validation_options):
 
         suite = feature_group.get_expectation_suite(False)
         if suite is not None:
