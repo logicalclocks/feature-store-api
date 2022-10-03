@@ -627,7 +627,11 @@ class Engine:
         return stream.load().select("key", "value")
 
     def add_file(self, file):
-        self._spark_context.addFile("hdfs://" + file)
+        # This is used for unit testing
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
+        self._spark_context.addFile(file)
         return SparkFiles.get(os.path.basename(file))
 
     def profile(
@@ -790,9 +794,6 @@ class Engine:
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def setup_storage_connector(self, storage_connector, path=None):
-        # update storage connector to get new session token
-        storage_connector.refetch()
-
         if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
