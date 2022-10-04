@@ -20,14 +20,13 @@ from hsfs import (
     transformation_function_attached,
     training_dataset,
     split_statistics,
-    feature_group
+    feature_group,
 )
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 
 
 class TestFeatureViewEngine:
-
     def __init__(self):
         fg = feature_group.FeatureGroup(
             name="test",

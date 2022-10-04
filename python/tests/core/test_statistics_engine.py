@@ -22,7 +22,6 @@ from hsfs.core import statistics_engine
 
 
 class TestStatisticsEngine:
-
     def __init__(self):
         fg = feature_group.FeatureGroup(
             name="test",
