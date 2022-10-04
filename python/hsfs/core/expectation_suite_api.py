@@ -19,16 +19,14 @@ from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteApi:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id : int):
         """Expectation Suite endpoints for the featuregroup resource.
         :param feature_store_id: id of the respective featurestore
         :type feature_store_id: int
-        :param feature_group_id: id of the respective featuregroup
-        :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
 
-    def create(self, feature_group_id, expectation_suite):
+    def create(self, feature_group_id : int, expectation_suite : ExpectationSuite):
         """Create an expectation suite attached to a featuregroup.
         :param expectation_suite: expectation suite object to be created for a featuregroup
         :type expectation_suite: `ExpectationSuite`
@@ -50,7 +48,7 @@ class ExpectationSuiteApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, feature_group_id, expectation_suite):
+    def update(self, feature_group_id : int, expectation_suite : ExpectationSuite):
         """Create an expectation suite attached to a featuregroup.
         :param expectation_suite: expectation suite object to be created for a featuregroup
         :type expectation_suite: `ExpectationSuite`
@@ -73,7 +71,7 @@ class ExpectationSuiteApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self, feature_group_id):
+    def delete(self, feature_group_id : int) -> None:
         """Delete the expectation suite attached to a featuregroup."""
         _client = client.get_instance()
         path_params = [
@@ -88,7 +86,7 @@ class ExpectationSuiteApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(self, feature_group_id):
+    def get(self, feature_group_id : int) -> ExpectationSuite:
         """Get the expectation suite attached to a feature group.
 
         :return: expectation suite

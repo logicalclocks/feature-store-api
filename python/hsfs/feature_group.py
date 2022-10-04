@@ -377,7 +377,7 @@ class FeatureGroupBase:
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def get_expectation_suite(self, ge_type: bool = True):
+    def get_expectation_suite(self, ge_type: bool = True) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Return the expectation suite attached to the feature group if it exists.
 
         # Arguments
@@ -400,9 +400,9 @@ class FeatureGroupBase:
     def save_expectation_suite(
         self,
         expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
-        run_validation=True,
-        validation_ingestion_policy="ALWAYS",
-    ):
+        run_validation : bool=True,
+        validation_ingestion_policy: str="ALWAYS",
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
         inplace to include expectationId fields.
@@ -432,13 +432,16 @@ class FeatureGroupBase:
                 )
             )
 
-        self._expectation_suite = self._expectation_suite_engine.save(
-            self, tmp_expectation_suite
-        )
+        if self._id:
+            self._expectation_suite = self._expectation_suite_engine.save(
+                self, tmp_expectation_suite
+            )
+            expectation_suite = self._expectation_suite.to_ge_type()
+        else:
+            # Added to avoid throwing an error if Feature Group is not initialised with the backend
+            self._expectation_suite = tmp_expectation_suite 
 
-        expectation_suite = self._expectation_suite.to_ge_type()
-
-    def delete_expectation_suite(self):
+    def delete_expectation_suite(self) -> None:
         """Delete the expectation suite attached to the featuregroup.
 
         # Raises
@@ -447,7 +450,7 @@ class FeatureGroupBase:
         self._expectation_suite_engine.delete(self)
         self._expectation_suite = None
 
-    def get_latest_validation_report(self, ge_type: bool = True):
+    def get_latest_validation_report(self, ge_type: bool = True) -> Union[ValidationReport, ge.core.ValidationReport, None]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -466,7 +469,7 @@ class FeatureGroupBase:
         else:
             return self._validation_report_engine.get_last(self)
 
-    def get_all_validation_reports(self, ge_type: bool = True):
+    def get_all_validation_reports(self, ge_type: bool = True) -> List[Union[ValidationReport, ge.core.ValidationReport, None]]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -495,7 +498,7 @@ class FeatureGroupBase:
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
         ge_type: bool = True,
-    ):
+    ) -> Union[ValidationReport, ge.core.ValidationReport]:
         """Save validation report to hopsworks platform along previous reports of the same featuregroup.
 
         # Arguments

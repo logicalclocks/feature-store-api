@@ -17,7 +17,7 @@
 import json
 
 import humps
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from great_expectations.core import ExpectationConfiguration
 
 from hsfs import util
@@ -31,7 +31,7 @@ class GeExpectation:
         expectation_type : str,
         kwargs : Dict[str, Any],
         meta : Dict[str, Any],
-        id=None,
+        id: Optional[int]=None,
         href=None
     ):
         self._id = id
@@ -56,7 +56,7 @@ class GeExpectation:
         else:
             return cls(**json_decamelized)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             # "id": self._id,
             "expectationType": self._expectation_type,
@@ -64,7 +64,7 @@ class GeExpectation:
             "meta": json.dumps(self._meta),
         }
 
-    def to_json_dict(self):
+    def to_json_dict(self) -> Dict[str, Any]:
         return {
             # "id": self._id,
             "expectationType": self._expectation_type,
@@ -72,7 +72,7 @@ class GeExpectation:
             "meta": self._meta,
         }
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
@@ -81,13 +81,13 @@ class GeExpectation:
     def __repr__(self):
         return f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
 
-    def to_ge_type(self):
+    def to_ge_type(self) -> ExpectationConfiguration:
         return ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Id of the expectation, set by backend."""
         return self._id
 
@@ -96,7 +96,7 @@ class GeExpectation:
         self._id = id
 
     @property
-    def expectation_type(self):
+    def expectation_type(self) -> str:
         """Type of the expectation."""
         return self._expectation_type
 
@@ -105,7 +105,7 @@ class GeExpectation:
         self._expectation_type = expectation_type
 
     @property
-    def kwargs(self):
+    def kwargs(self) -> Dict[str, Any]:
         """Kwargs to run the expectation."""
         return self._kwargs
 
@@ -119,7 +119,7 @@ class GeExpectation:
             raise ValueError("Kwargs field must be stringified json or dict.")
 
     @property
-    def meta(self):
+    def meta(self) -> Dict[str, Any]:
         """Meta field of the expectation to store additional information."""
         return self._meta
 

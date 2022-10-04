@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+from typing import Optional
 from hsfs.core import expectation_api
 
 from hsfs.ge_expectation import GeExpectation
@@ -38,21 +39,21 @@ class ExpectationEngine:
         )
 
     # CRUD operations
-    def create(self, expectation):
+    def create(self, expectation : GeExpectation) -> GeExpectation:
         return self._expectation_api.create(expectation)
 
-    def update(self, expectation):
+    def update(self, expectation : GeExpectation) -> GeExpectation:
         return self._expectation_api.update(expectation)
 
-    def get(self, expectation_id):
+    def get(self, expectation_id : int) -> Optional[GeExpectation]:
         return self._expectation_api.get(expectation_id)
 
-    def delete(self, expectation_id):
+    def delete(self, expectation_id : int) -> None:
         self._expectation_api.delete(expectation_id)
 
     # End of CRUD operations
 
-    def check_for_id(self, expectation: GeExpectation):
+    def check_for_id(self, expectation: GeExpectation) -> None:
         if expectation.id:
             return
         else:

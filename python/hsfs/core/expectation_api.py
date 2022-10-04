@@ -32,7 +32,7 @@ class ExpectationApi:
         self._feature_group_id = feature_group_id
         self._expectation_suite_id = expectation_suite_id
 
-    def create(self, expectation : GeExpectation):
+    def create(self, expectation : GeExpectation) -> GeExpectation:
         """Create an expectation suite attached to a Feature Group.
         :param expectation: Expectation object to be appended to an Expectation Suite
         :type expectation: `GeExpectation`
@@ -59,7 +59,7 @@ class ExpectationApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation : GeExpectation):
+    def update(self, expectation : GeExpectation) -> GeExpectation:
         """Update an Expectation of an Expectation Suite attached to a Feature Group.
         :param expectation: Expectation object to be appended to an Expectation Suite
         :type expectation: `GeExpectation`
@@ -87,7 +87,7 @@ class ExpectationApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self, expectation_id : int):
+    def delete(self, expectation_id : int) -> None:
         """Delete the Expectation with expectation_id from the Expectation Suite attached to a Feature Group.
         :param expectation_id: id of the Expectation to delete
         :type expectation_id: `int`
@@ -108,7 +108,7 @@ class ExpectationApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(self, expectation_id : int):
+    def get(self, expectation_id : int) -> GeExpectation:
         """Get an expectation attached to a feature group.
 
         :return: expectation

@@ -15,7 +15,7 @@
 #
 
 import json
-from typing import Optional, Union
+from typing import Optional, Union, List
 import re
 
 import humps
@@ -31,17 +31,17 @@ class ExpectationSuite:
 
     def __init__(
         self,
-        expectation_suite_name,
-        expectations,
-        meta,
-        id=None,
+        expectation_suite_name : str,
+        expectations : List[Union[ge.core.ExpectationConfiguration, dict, GeExpectation]],
+        meta : dict,
+        id : Optional[int]=None,
         data_asset_type=None,
         ge_cloud_id=None,
-        run_validation=True,
-        validation_ingestion_policy="ALWAYS",
-        featurestore_id=None,
-        featuregroup_id=None,
-        href=None,
+        run_validation: bool=True,
+        validation_ingestion_policy: str="ALWAYS",
+        featurestore_id : Optional[int]=None,
+        featuregroup_id : Optional[int]=None,
+        href : Optional[str]=None,
         expand=None,
         items=None,
         count=None,
@@ -102,7 +102,7 @@ class ExpectationSuite:
             validation_ingestion_policy=validation_ingestion_policy,
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
@@ -114,7 +114,7 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_json_dict(self):
+    def to_json_dict(self) -> dict:
         return {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
@@ -128,10 +128,10 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_ge_type(self):
+    def to_ge_type(self) -> ge.core.ExpectationSuite:
         return ge.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,
@@ -142,13 +142,12 @@ class ExpectationSuite:
             meta=self._meta,
         )
 
-    def _init_id_from_href(self, href):
-        print(href)
+    def _init_id_from_href(self, href) -> None:
         self._featurestore_id, self._featuregroup_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
 
 
     # Emulate GE single expectation api to edit list of expectations
-    def _convert_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration, dict]):
+    def _convert_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration, dict]) -> GeExpectation:
         """Convert different representation of expectation to Hopsworks GeExpectation type.
         
         :param expectation: An expectation to convert to Hopsworks GeExpectation type
@@ -169,33 +168,40 @@ class ExpectationSuite:
                 )
             )
 
-    def add_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration]):
+    def add_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
-            return self._expectation_engine.create(expectation=converted_expectation)
+            converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
         else:
             self._expectations.append(converted_expectation)
+        
+        if ge_type:
+            return converted_expectation.to_ge_type()
+        else:
             return converted_expectation
 
-    def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration]):
+    def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
         # To update an expectation we need an id either from meta field or from self.id
         self._expectation_engine.check_for_id(expectation)
         if self.id:
-            self._expectation_engine.update(expectation=converted_expectation)
+            converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
         else:
             matches = [index for index, expec in enumerate(self._expectations) if expec.id == expectation.id]
 
             if len(matches) == 0:
                 raise ValueError(f"No expectation with id {expectation.id} in the expectation suite.")
             elif len(matches) == 1:
-                self._expectations[matches[0]]
+                self._expectations[matches[0]] = converted_expectation
             else:
                 raise ValueError(f"Found multiple expectations with id {expectation.id}, reinitialise the expectation suite by fetching from the server.")
 
-        return expectation
+        if ge_type:
+            return converted_expectation.to_ge_type()
+        else:
+            return converted_expectation
 
-    def remove_expectation(self, expectation_id : int):
+    def remove_expectation(self, expectation_id : int) -> None:
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
         else:
@@ -209,14 +215,14 @@ class ExpectationSuite:
                 raise ValueError(f"Found multiple expectations with id {expectation_id}, reinitialise the expectation suite by fetching from the server.")
     # End of single expectation API              
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.json()
 
     def __repr__(self):
         return f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         """Id of the expectation suite, set by backend."""
         return self._id
 
@@ -252,7 +258,7 @@ class ExpectationSuite:
         self._ge_cloud_id = ge_cloud_id
 
     @property
-    def run_validation(self):
+    def run_validation(self) -> bool:
         """Boolean to determine whether or not the expectation suite shoudl run on ingestion."""
         return self._run_validation
 
@@ -261,7 +267,7 @@ class ExpectationSuite:
         self._run_validation = run_validation
 
     @property
-    def validation_ingestion_policy(self):
+    def validation_ingestion_policy(self) -> str:
         """Whether to ingest a df based on the validation result.
 
         "STRICT" : ingest df only if all expectations succeed,
@@ -274,7 +280,7 @@ class ExpectationSuite:
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
 
     @property
-    def expectations(self):
+    def expectations(self) -> List[GeExpectation]:
         """List of expectations to run at validation."""
         return self._expectations
 
@@ -298,7 +304,7 @@ class ExpectationSuite:
                     )
 
     @property
-    def meta(self):
+    def meta(self) -> dict:
         """Meta field of the expectation suite to store additional informations."""
         return self._meta
 

@@ -17,10 +17,11 @@
 from hsfs.core import expectation_suite_api, expectation_engine
 from hsfs import client, util
 from hsfs.ge_expectation import GeExpectation
+from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteEngine:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id : int):
         """Expectation Suite engine.
 
         :param feature_store_id: id of the respective featurestore
@@ -32,7 +33,7 @@ class ExpectationSuiteEngine:
         )
         self._expectation_engine = None
 
-    def save(self, feature_group, expectation_suite):
+    def save(self, feature_group, expectation_suite : ExpectationSuite) -> ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(
             feature_group.id, expectation_suite
         )
@@ -40,14 +41,14 @@ class ExpectationSuiteEngine:
         print(f"Attached expectation suite to featuregroup, edit it at {url}")
         return saved_suite
 
-    def get(self, feature_group):
+    def get(self, feature_group) -> ExpectationSuite:
         return self._expectation_suite_api.get(feature_group.id)
 
-    def delete(self, feature_group):
+    def delete(self, feature_group) -> None:
         self._expectation_suite_api.delete(feature_group.id)
 
     # Emulate GE single expectation api to edit list of expectations
-    def _init_expectation_engine(self, feature_group):
+    def _init_expectation_engine(self, feature_group) -> None:
         if self._expectation_engine == None:
             self._expectation_engine = expectation_engine.ExpectationEngine(
                 feature_store_id=self._feature_store_id,
@@ -55,21 +56,20 @@ class ExpectationSuiteEngine:
                 expectation_suite_id=self.get(feature_group).id
             )
 
-    def add_expectation(self, feature_group, expectation: GeExpectation):
+    def add_expectation(self, feature_group, expectation: GeExpectation) -> GeExpectation:
         self._init_expectation_engine(feature_group=feature_group)
-        
         return self._expectation_engine.save(expectation=expectation)
 
-    def replace_expectation(self, feature_group, expectation: GeExpectation):
+    def replace_expectation(self, feature_group, expectation: GeExpectation) -> GeExpectation:
         self._init_expectation_engine(feature_group=feature_group)
         return self._expectation_engine.update(expectation=expectation)
 
-    def remove_expectation(self, feature_group, expectation_id: int):
+    def remove_expectation(self, feature_group, expectation_id: int) -> None:
         self._init_expectation_engine(feature_group=feature_group)
         self._expectation_engine.delete(expectation_id=expectation_id)
     # End of single expectation api
 
-    def _get_expectation_suite_url(self, feature_group):
+    def _get_expectation_suite_url(self, feature_group) -> str:
         """Build url to land on Hopsworks UI page which summarizes validation results"""
         sub_path = (
             "/p/"
