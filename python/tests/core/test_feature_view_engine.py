@@ -20,12 +20,26 @@ from hsfs import (
     transformation_function_attached,
     training_dataset,
     split_statistics,
+    feature_group
 )
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 
 
 class TestFeatureViewEngine:
+
+    def __init__(self):
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+        self.query = fg.select_all()
+
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -47,7 +61,7 @@ class TestFeatureViewEngine:
 
         fv = feature_view.FeatureView(
             name="fv_name",
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=["label1", "label2"],
         )
@@ -83,14 +97,14 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
         fv1 = feature_view.FeatureView(
             name="fv_name",
             version=2,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -121,7 +135,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -183,7 +197,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -213,7 +227,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -252,7 +266,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -388,7 +402,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -434,7 +448,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -481,7 +495,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -537,7 +551,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -586,7 +600,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -641,7 +655,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -697,7 +711,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1285,7 +1299,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1326,7 +1340,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1358,7 +1372,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1383,7 +1397,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1408,7 +1422,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1438,7 +1452,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1775,7 +1789,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )

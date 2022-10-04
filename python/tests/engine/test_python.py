@@ -1911,7 +1911,7 @@ class TestPython:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=q,
             featurestore_id=99,
             labels=[],
         )

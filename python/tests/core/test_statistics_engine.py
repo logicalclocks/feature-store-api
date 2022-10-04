@@ -22,6 +22,19 @@ from hsfs.core import statistics_engine
 
 
 class TestStatisticsEngine:
+
+    def __init__(self):
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+        self.query = fg.select_all()
+
     def test_compute_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -141,7 +154,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -235,7 +248,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -329,7 +342,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -743,7 +756,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=self.query,
             featurestore_id=feature_store_id,
             labels=[],
         )
