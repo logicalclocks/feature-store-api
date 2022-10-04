@@ -352,7 +352,7 @@ public class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public FeatureView getOrcreateFeatureView(String name, Integer version) throws FeatureStoreException, IOException {
+  public FeatureView getOrCreateFeatureView(String name, Integer version) throws FeatureStoreException, IOException {
     return featureViewApi.getOrCreateFeatureView(this, name, version, null, null, null);
   }
 
