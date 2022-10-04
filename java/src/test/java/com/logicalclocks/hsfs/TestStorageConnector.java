@@ -16,8 +16,9 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.engine.SparkEngine;
-import com.logicalclocks.hsfs.util.Constants;
+import com.logicalclocks.hsfs.generic.StorageConnector;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
+import com.logicalclocks.hsfs.generic.util.Constants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
