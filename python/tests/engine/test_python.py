@@ -616,7 +616,7 @@ class TestPython:
             fg.to_dict(),
             "fg",
             left_feature_group_end_timestamp="20220101",
-            left_feature_group_start_timestamp="20220101"
+            left_feature_group_start_timestamp="20220101",
         )
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
@@ -630,8 +630,8 @@ class TestPython:
         # Assert
         assert str(e_info.value) == (
             "Hive engine on Python environments does not support incremental queries. "
-                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
-                + "environment with Spark Engine."
+            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            + "environment with Spark Engine."
         )
 
     def test_profile(self, mocker):
