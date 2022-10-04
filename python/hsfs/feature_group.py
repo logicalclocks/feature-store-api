@@ -391,7 +391,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        self._expectation_suite = self._expectation_suite_engine.get(self)
+        self._expectation_suite = self._expectation_suite_engine.get()
         if self._expectation_suite is not None and ge_type is True:
             return self._expectation_suite.to_ge_type()
         else:
@@ -434,7 +434,7 @@ class FeatureGroupBase:
 
         if self._id:
             self._expectation_suite = self._expectation_suite_engine.save(
-                self, tmp_expectation_suite
+                tmp_expectation_suite
             )
             expectation_suite = self._expectation_suite.to_ge_type()
         else:
@@ -450,7 +450,7 @@ class FeatureGroupBase:
         self._expectation_suite_engine.delete(self)
         self._expectation_suite = None
 
-    def get_latest_validation_report(self, ge_type: bool = True) -> Union[ValidationReport, ge.core.ValidationReport, None]:
+    def get_latest_validation_report(self, ge_type: bool = True) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -469,7 +469,7 @@ class FeatureGroupBase:
         else:
             return self._validation_report_engine.get_last(self)
 
-    def get_all_validation_reports(self, ge_type: bool = True) -> List[Union[ValidationReport, ge.core.ValidationReport, None]]:
+    def get_all_validation_reports(self, ge_type: bool = True) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -478,7 +478,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
+            Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
             `RestAPIException`.
@@ -486,9 +486,9 @@ class FeatureGroupBase:
         if ge_type is True:
             return [
                 report.to_ge_type()
-                for report in self._validation_report_engine.get_all(self)
+                for report in self._validation_report_engine.get_all()
             ]
-        return self._validation_report_engine.get_all(self)
+        return self._validation_report_engine.get_all()
 
     def save_validation_report(
         self,
@@ -498,7 +498,7 @@ class FeatureGroupBase:
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
         ge_type: bool = True,
-    ) -> Union[ValidationReport, ge.core.ValidationReport]:
+    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same featuregroup.
 
         # Arguments
@@ -521,8 +521,8 @@ class FeatureGroupBase:
             report = validation_report
 
         if ge_type:
-            return self._validation_report_engine.save(self, report).to_ge_type()
-        return self._validation_report_engine.save(self, report)
+            return self._validation_report_engine.save(report).to_ge_type()
+        return self._validation_report_engine.save(report)
 
     def __getattr__(self, name):
         try:
