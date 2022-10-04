@@ -32,6 +32,7 @@ class GeExpectation:
         kwargs : Dict[str, Any],
         meta : Dict[str, Any],
         id=None,
+        href=None
     ):
         self._id = id
         self._expectation_type = expectation_type

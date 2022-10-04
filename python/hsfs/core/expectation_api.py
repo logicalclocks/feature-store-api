@@ -59,7 +59,7 @@ class ExpectationApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def create(self, expectation : GeExpectation):
+    def update(self, expectation : GeExpectation):
         """Update an Expectation of an Expectation Suite attached to a Feature Group.
         :param expectation: Expectation object to be appended to an Expectation Suite
         :type expectation: `GeExpectation`

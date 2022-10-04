@@ -653,7 +653,7 @@ class FeatureGroupBase:
                 **expectation_suite.to_json_dict()
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(**expectation_suite)
+            self._expectation_suite = ExpectationSuite(**expectation_suite, featurestore_id=self._feature_store_id, featuregroup_id=self._id)
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:

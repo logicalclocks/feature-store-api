@@ -16,6 +16,7 @@
 
 import json
 from typing import Optional, Union
+import re
 
 import humps
 import great_expectations as ge
@@ -49,13 +50,18 @@ class ExpectationSuite:
     ):
         self._id = id
         self._expectation_suite_name = expectation_suite_name
-        self._featurestore_id = featurestore_id
-        self._featuregroup_id = featuregroup_id
         self._ge_cloud_id = ge_cloud_id
         self._data_asset_type = data_asset_type
         self._run_validation = run_validation
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         self._expectations = []
+        self._href = href
+        
+        if (href != None and featurestore_id == None):
+            self._init_id_from_href(href)
+        else:
+            self._featurestore_id = featurestore_id
+            self._featuregroup_id = featuregroup_id
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
@@ -63,8 +69,8 @@ class ExpectationSuite:
 
         if self.id:
             self._expectation_engine = expectation_engine.ExpectationEngine(
-                featurestore_id=featurestore_id,
-                featuregroup_id=featuregroup_id,
+                feature_store_id=featurestore_id,
+                feature_group_id=featuregroup_id,
                 expectation_suite_id=self.id
             )
 
@@ -136,6 +142,11 @@ class ExpectationSuite:
             meta=self._meta,
         )
 
+    def _init_id_from_href(self, href):
+        print(href)
+        self._featurestore_id, self._featuregroup_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
+
+
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration, dict]):
         """Convert different representation of expectation to Hopsworks GeExpectation type.
@@ -184,7 +195,7 @@ class ExpectationSuite:
 
         return expectation
 
-    def delete_expectation(self, expectation_id : int):
+    def remove_expectation(self, expectation_id : int):
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
         else:
@@ -196,7 +207,7 @@ class ExpectationSuite:
                 self._expectations.pop(matches[0])
             else:
                 raise ValueError(f"Found multiple expectations with id {expectation_id}, reinitialise the expectation suite by fetching from the server.")
-              
+    # End of single expectation API              
 
     def __str__(self):
         return self.json()

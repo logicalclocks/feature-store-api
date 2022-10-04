@@ -33,22 +33,22 @@ class ExpectationEngine:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._expectation_suite_id = expectation_suite_id
-        self._expectation_suite_api = expectation_api.ExpectationApi(
+        self._expectation_api = expectation_api.ExpectationApi(
             feature_store_id, feature_group_id, expectation_suite_id
         )
 
     # CRUD operations
-    def save(self, expectation):
+    def create(self, expectation):
         return self._expectation_api.create(expectation)
 
     def update(self, expectation):
-        return self._expectation_suite_api.update(expectation)
+        return self._expectation_api.update(expectation)
 
     def get(self, expectation_id):
-        return self._expectation_suite_api.get(expectation_id)
+        return self._expectation_api.get(expectation_id)
 
     def delete(self, expectation_id):
-        self._expectation_suite_api.delete(expectation_id)
+        self._expectation_api.delete(expectation_id)
 
     # End of CRUD operations
 
