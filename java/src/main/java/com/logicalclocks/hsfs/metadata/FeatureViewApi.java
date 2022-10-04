@@ -119,20 +119,6 @@ public class FeatureViewApi {
     }
   }
 
-  public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
-                                            String description, List<String> labels)
-      throws FeatureStoreException, IOException {
-    FeatureView featureView = null;
-    try {
-      featureView = get(featureStore, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
-        featureView = new FeatureView(name, version, query, description, featureStore, labels);
-      }
-    }
-    return featureView;
-  }
-
   private String addQueryParam(String baseUrl, Map<String, Object> params) {
     String url = baseUrl + "?";
     List<String> paramUrl = params.entrySet().stream().flatMap(entry -> {

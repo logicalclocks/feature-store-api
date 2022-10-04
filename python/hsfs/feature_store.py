@@ -1002,16 +1002,14 @@ class FeatureStore:
                 e.response.json().get("errorCode", "") == 270181
                 and e.response.status_code == 404
             ):
-                feat_view = feature_view.FeatureView(
+                return self.create_feature_view(
                     name=name,
                     query=query,
-                    featurestore_id=self._id,
                     version=version,
                     description=description,
                     labels=labels,
                     transformation_functions=transformation_functions,
                 )
-                return self._feature_view_engine.save(feat_view)
             else:
                 raise e
 

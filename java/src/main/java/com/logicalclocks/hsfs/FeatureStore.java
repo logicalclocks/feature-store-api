@@ -21,7 +21,6 @@ import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import lombok.Getter;
@@ -51,7 +50,6 @@ public class FeatureStore {
   private Integer projectId;
 
   private FeatureGroupApi featureGroupApi;
-  private FeatureViewApi featureViewApi;
   private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
   private FeatureViewEngine featureViewEngine;
@@ -62,7 +60,6 @@ public class FeatureStore {
 
   public FeatureStore() {
     featureGroupApi = new FeatureGroupApi();
-    featureViewApi = new FeatureViewApi();
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     featureViewEngine = new FeatureViewEngine();
@@ -347,13 +344,12 @@ public class FeatureStore {
    * existing feature view metadata object.
    *
    * @param name name of the feature view
+   * @param query Query object
    * @param version version of the feature view
    * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
    */
-  public FeatureView getOrCreateFeatureView(String name, Integer version) throws FeatureStoreException, IOException {
-    return featureViewApi.getOrCreateFeatureView(this, name, version, null, null, null);
+  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version) {
+    return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
   }
 
   /**
@@ -366,12 +362,10 @@ public class FeatureStore {
    * @param description description of the feature view
    * @param labels list of label features
    * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
-                                            List<String> labels) throws FeatureStoreException, IOException {
-    return featureViewApi.getOrCreateFeatureView(this, name, version, query, description, labels);
+                                            List<String> labels) {
+    return featureViewEngine.getOrCreateFeatureView(this, name, version, query, description, labels);
   }
 
   /**

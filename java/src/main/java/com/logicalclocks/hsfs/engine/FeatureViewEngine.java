@@ -398,4 +398,17 @@ public class FeatureViewEngine {
       throws FeatureStoreException, IOException {
     return tagsApi.get(featureView, trainingDataVersion);
   }
+
+  public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
+                                            String description, List<String> labels) {
+    FeatureView featureView = null;
+    try {
+      featureView = get(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
+        featureView = new FeatureView(name, version, query, description, featureStore, labels);
+      }
+    }
+    return featureView;
+  }
 }
