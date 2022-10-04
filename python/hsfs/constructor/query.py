@@ -86,6 +86,14 @@ class Query:
         It is possible to specify the storage (online/offline) to read from and the
         type of the output DataFrame (Spark, Pandas, Numpy, Python Lists).
 
+        !!! warning "External Feature Group Engine Support"
+            **Spark only**
+
+            Reading a Query containing an External Feature Group directly into a
+            Pandas Dataframe using Python/Pandas as Engine is not supported,
+            however, you can use the Query API to create Feature Views/Training
+            Data containing External Feature Groups.
+
         # Arguments
             online: Read from online storage. Defaults to `False`.
             dataframe_type: DataFrame type to return. Defaults to `"default"`.
