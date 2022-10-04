@@ -19,16 +19,20 @@ from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteApi:
-    def __init__(self, feature_store_id : int):
-        """Expectation Suite endpoints for the featuregroup resource.
-        :param feature_store_id: id of the respective featurestore
+    def __init__(self, feature_store_id : int, feature_group_id : int):
+        """Expectation Suite endpoints for the Feature Group resource.
+        :param feature_store_id: id of the respective Feature Store
         :type feature_store_id: int
+        :param feature_group_id: id of the respective Feature Group
+        :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
+        self._feature_group_id = feature_group_id
 
-    def create(self, feature_group_id : int, expectation_suite : ExpectationSuite):
-        """Create an expectation suite attached to a featuregroup.
-        :param expectation_suite: expectation suite object to be created for a featuregroup
+    def create(self, expectation_suite : ExpectationSuite):
+        """Create an expectation suite attached to a Feature Group.
+
+        :param expectation_suite: expectation suite object to be created for a Feature Group
         :type expectation_suite: `ExpectationSuite`
         """
         _client = client.get_instance()
@@ -38,7 +42,7 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            feature_group_id,
+            self._feature_group_id,
             "expectationsuite",
         ]
 
@@ -48,9 +52,10 @@ class ExpectationSuiteApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, feature_group_id : int, expectation_suite : ExpectationSuite):
-        """Create an expectation suite attached to a featuregroup.
-        :param expectation_suite: expectation suite object to be created for a featuregroup
+    def update(self, expectation_suite : ExpectationSuite):
+        """Create an expectation suite attached to a Feature Group.
+
+        :param expectation_suite: expectation suite object to be created for a Feature Group
         :type expectation_suite: `ExpectationSuite`
         """
         _client = client.get_instance()
@@ -60,7 +65,7 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            feature_group_id,
+            self._feature_group_id,
             "expectationsuite",
             expectation_suite.id
         ]
@@ -71,8 +76,8 @@ class ExpectationSuiteApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self, feature_group_id : int) -> None:
-        """Delete the expectation suite attached to a featuregroup."""
+    def delete(self) -> None:
+        """Delete the expectation suite attached to a Feature Group."""
         _client = client.get_instance()
         path_params = [
             "project",
@@ -80,14 +85,14 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            feature_group_id,
+            self._feature_group_id,
             "expectationsuite",
         ]
 
         _client._send_request("DELETE", path_params)
 
-    def get(self, feature_group_id : int) -> ExpectationSuite:
-        """Get the expectation suite attached to a feature group.
+    def get(self) -> ExpectationSuite:
+        """Get the expectation suite attached to a Feature Group.
 
         :return: expectation suite
         :rtype: dict
@@ -99,7 +104,7 @@ class ExpectationSuiteApi:
             "featurestores",
             self._feature_store_id,
             "featuregroups",
-            feature_group_id,
+            self._feature_group_id,
             "expectationsuite",
         ]
 

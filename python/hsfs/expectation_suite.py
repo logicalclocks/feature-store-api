@@ -23,7 +23,7 @@ import great_expectations as ge
 
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
-from hsfs.core import expectation_engine
+from hsfs.core.expectation_engine import ExpectationEngine
 
 
 class ExpectationSuite:
@@ -68,7 +68,7 @@ class ExpectationSuite:
         self.meta = meta
 
         if self.id:
-            self._expectation_engine = expectation_engine.ExpectationEngine(
+            self._expectation_engine = ExpectationEngine(
                 feature_store_id=featurestore_id,
                 feature_group_id=featuregroup_id,
                 expectation_suite_id=self.id

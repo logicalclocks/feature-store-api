@@ -745,6 +745,12 @@ class FeatureGroup(FeatureGroupBase):
 
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(self._feature_store_id, self._id)
+            )
+            self._validation_report_engine = (
+                validation_report_engine.ValidationReportEngine(self._feature_store_id, self._id)
+            )
 
         else:
             # initialized by user
@@ -769,12 +775,6 @@ class FeatureGroup(FeatureGroupBase):
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
-        )
-        self._expectation_suite_engine = (
-            expectation_suite_engine.ExpectationSuiteEngine(self._feature_store_id)
-        )
-        self._validation_report_engine = (
-            validation_report_engine.ValidationReportEngine(self._feature_store_id)
         )
 
     def read(
@@ -1311,6 +1311,7 @@ class FeatureGroup(FeatureGroupBase):
         dataframe: Optional[
             Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
         ] = None,
+        expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
     ):
@@ -1320,7 +1321,7 @@ class FeatureGroup(FeatureGroupBase):
         Suites.
 
         # Arguments
-            dataframe: The PySpark dataframe to run the data validation expectations against.
+            dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
                 one that is possibly attached to the feature group. This is useful for
                 testing new Expectation suites. When an extra suite is provided, the results
@@ -1336,7 +1337,7 @@ class FeatureGroup(FeatureGroupBase):
                 as well as the Validation Report produced by Great Expectations.
 
         """
-        # Activity is logged only if a the validation concerts the feature group and not a specific dataframe
+        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
 
