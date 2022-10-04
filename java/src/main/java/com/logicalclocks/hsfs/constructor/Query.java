@@ -65,6 +65,8 @@ public class Query {
   @Getter
   @Setter
   private Boolean hiveEngine = false;
+  @Getter
+  private boolean isTimeTravel = false;
 
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
@@ -194,6 +196,7 @@ public class Query {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+    isTimeTravel = true;
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
     Long excludeUntilTimestamp = null;
     if (excludeUntil != null) {

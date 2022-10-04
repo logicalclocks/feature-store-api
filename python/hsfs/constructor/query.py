@@ -49,6 +49,7 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        self._is_time_travel = False
 
     def _prep_read(self, online, read_options):
         query = self._query_constructor_api.construct_query(self)
@@ -237,6 +238,7 @@ class Query:
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
+        self._is_time_travel = True
         wallclock_timestamp = util.convert_event_time_to_timestamp(wallclock_time)
 
         exclude_until_timestamp = util.convert_event_time_to_timestamp(exclude_until)
@@ -406,3 +408,6 @@ class Query:
 
     def append_feature(self, feature):
         self._left_features.append(feature)
+
+    def is_time_travel(self):
+        return self._is_time_travel
