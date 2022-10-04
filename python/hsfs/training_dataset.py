@@ -254,6 +254,9 @@ class TrainingDataset:
         lists or Numpy ndarrays.
         From v2.5 onward, filters are saved along with the `Query`.
 
+        !!! warning "Engine Support"
+            Creating Training Datasets from Dataframes is only supported using Spark as Engine.
+
         # Arguments
             features: Feature data to be materialized.
             write_options: Additional write options as key-value pairs, defaults to `{}`.

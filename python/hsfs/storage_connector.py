@@ -889,7 +889,11 @@ class KafkaConnector(StorageConnector):
     ):
         """Reads a Kafka stream from a topic or multiple topics into a Dataframe.
 
-        Currently, this method is only supported for Spark engines.
+        !!! warning "Engine Support"
+            **Spark only**
+
+            Reading from data streams using Pandas/Python as engine is currently not supported.
+            Python/Pandas has no notion of streaming.
 
         # Arguments
             topic: Name or pattern of the topic(s) to subscribe to.
