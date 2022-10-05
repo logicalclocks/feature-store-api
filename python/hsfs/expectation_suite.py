@@ -15,7 +15,7 @@
 #
 
 import json
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 import re
 
 import humps
@@ -33,7 +33,7 @@ class ExpectationSuite:
         self,
         expectation_suite_name : str,
         expectations : List[Union[ge.core.ExpectationConfiguration, dict, GeExpectation]],
-        meta : dict,
+        meta : Dict[str, Any],
         id : Optional[int]=None,
         data_asset_type=None,
         ge_cloud_id=None,
@@ -73,6 +73,8 @@ class ExpectationSuite:
                 feature_group_id=feature_group_id,
                 expectation_suite_id=self.id
             )
+        else:
+            self._ge_object = self.to_ge_type()
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -169,50 +171,47 @@ class ExpectationSuite:
             )
 
     def add_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
-        converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
+            converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
+
+            if ge_type:
+                return converted_expectation.to_ge_type()
+            else:
+                return converted_expectation
         else:
-            self._expectations.append(converted_expectation)
-        
-        if ge_type:
-            return converted_expectation.to_ge_type()
-        else:
-            return converted_expectation
+            self._ge_object.add_expectation(expectation)
+            self.set_expectations(self._ge_object.expectations)
+
+            return expectation
 
     def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
-        converted_expectation = self._convert_expectation(expectation=expectation)
-        # To update an expectation we need an id either from meta field or from self.id
-        self._expectation_engine.check_for_id(expectation)
         if self.id:
+            converted_expectation = self._convert_expectation(expectation=expectation)
+            # To update an expectation we need an id either from meta field or from self.id
+            self._expectation_engine.check_for_id(expectation)
             converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
-        else:
-            matches = [index for index, expec in enumerate(self._expectations) if expec.id == expectation.id]
-
-            if len(matches) == 0:
-                raise ValueError(f"No expectation with id {expectation.id} in the expectation suite.")
-            elif len(matches) == 1:
-                self._expectations[matches[0]] = converted_expectation
+            if ge_type:
+                return converted_expectation.to_ge_type()
             else:
-                raise ValueError(f"Found multiple expectations with id {expectation.id}, reinitialise the expectation suite by fetching from the server.")
-
-        if ge_type:
-            return converted_expectation.to_ge_type()
+                return converted_expectation
         else:
-            return converted_expectation
+            self._ge_object.replace_expectation(expectation)
+            self.set_expectations(self._ge_object.expectations)
 
-    def remove_expectation(self, expectation_id : int) -> None:
-        if self.id:
+            return expectation  
+
+    def remove_expectation(self, expectation_id : Optional[int] = None, expectation: ge.core.ExpectationConfiguration = None) -> None:
+        if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
+        elif self.id and expectation:
+            self._expectation_engine.check_for_id(expectation)
+        elif self.id:
+            raise ValueError("Provide an expectation_id or an expectation with an id in its meta field.")
+        elif expectation:
+            self._ge_object.remove_expectation(expectation)
         else:
-            matches = [index for index, expec in enumerate(self._expectations) if expec.id == expectation_id]
-
-            if len(matches) == 0:
-                raise ValueError(f"No expectation with id {expectation_id} in the expectation suite.")
-            elif len(matches) == 1:
-                self._expectations.pop(matches[0])
-            else:
-                raise ValueError(f"Found multiple expectations with id {expectation_id}, reinitialise the expectation suite by fetching from the server.")
+            raise ValueError("Provide an expectation to remove from the suite.")
     # End of single expectation API              
 
     def __str__(self) -> str:
@@ -231,7 +230,7 @@ class ExpectationSuite:
         self._id = id
 
     @property
-    def expectation_suite_name(self):
+    def expectation_suite_name(self) -> str:
         """Name of the expectation suite."""
         return self._expectation_suite_name
 

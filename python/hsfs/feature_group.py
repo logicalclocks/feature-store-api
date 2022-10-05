@@ -642,10 +642,15 @@ class FeatureGroupBase:
         return self._location
 
     @property
-    def expectation_suite(self):
+    def expectation_suite(self) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Expectation Suite configuration object defining the settings for
         data validation of the feature group."""
-        return self._expectation_suite
+        if self._expectation_suite == None:
+            return None
+        elif self._expectation_suite.id:
+            return self._expectation_suite
+        else:
+            return self._expectation_suite.to_ge_type()
 
     @expectation_suite.setter
     def expectation_suite(self, expectation_suite):
