@@ -352,7 +352,9 @@ class Engine:
 
             # convert timestamps with timezone to UTC
             for col in dataframe.columns:
-                if isinstance(dataframe[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype):
+                if isinstance(
+                    dataframe[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                ):
                     dataframe[col] = dataframe[col].dt.tz_convert(None)
 
             # making a shallow copy of the dataframe so that column names are unchanged
