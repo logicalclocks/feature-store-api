@@ -645,21 +645,14 @@ class FeatureGroupBase:
     def expectation_suite(self) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Expectation Suite configuration object defining the settings for
         data validation of the feature group."""
-        if self._expectation_suite == None:
-            return None
-        elif self._expectation_suite.id:
-            return self._expectation_suite
-        else:
-            return self._expectation_suite.to_ge_type()
+        return self._expectation_suite
 
     @expectation_suite.setter
-    def expectation_suite(self, expectation_suite):
+    def expectation_suite(self, expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite, dict, None]):
         if isinstance(expectation_suite, ExpectationSuite):
             self._expectation_suite = expectation_suite
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite.to_json_dict()
-            )
+            self._expectation_suite = ExpectationSuite(**expectation_suite.to_json_dict(), feature_store_id=self._feature_store_id, feature_group_id=self._id)
         elif isinstance(expectation_suite, dict):
             self._expectation_suite = ExpectationSuite(**expectation_suite, feature_store_id=self._feature_store_id, feature_group_id=self._id)
         elif expectation_suite is None:
@@ -749,8 +742,10 @@ class FeatureGroup(FeatureGroupBase):
                 self._hudi_precombine_key = None
 
             self.statistics_config = statistics_config
+            print(f"FG has an id, here is the suite : {expectation_suite}")
             self.expectation_suite = expectation_suite
             if expectation_suite:
+                print(f"Creating engine via init_expectation_engine with featurestore_id: {featurestore_id}, featuregroup_id: {self._id}")
                 self._expectation_suite._init_expectation_engine(
                     feature_store_id=featurestore_id,
                     feature_group_id=self._id
@@ -1427,6 +1422,7 @@ class FeatureGroup(FeatureGroupBase):
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
+        print("Updating from response json")
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")

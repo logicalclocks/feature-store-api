@@ -89,7 +89,14 @@ class GeExpectation:
     @property
     def id(self) -> int:
         """Id of the expectation, set by backend."""
-        return self._id
+        if self._id:
+            return self._id
+        else:
+            if "expectationId" in self._meta.keys():
+                self._id = self._meta["expectationId"]
+                return self._id
+            else:
+                return None
 
     @id.setter
     def id(self, id):

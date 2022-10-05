@@ -57,9 +57,12 @@ class ExpectationSuite:
         self._expectations = []
         self._href = href
         
-        if (href != None and feature_store_id == None):
+        if (href != None):
+            print("Populating feature_store_id and feature_group_id from href")
             self._init_feature_store_and_feature_group_ids_from_href(href)
+            print(f"self._feature_store_id: {self._feature_store_id}, self._feature_group_id: {self._feature_group_id}")
         else:
+            print(f"Not populating from href: fs_id {feature_store_id} and fg_id {feature_group_id}")
             self._feature_store_id = feature_store_id
             self._feature_group_id = feature_group_id
 
@@ -68,13 +71,15 @@ class ExpectationSuite:
         self.meta = meta
 
         if self.id:
+            print(f"Expectation suite init, suite has an id: {self.id}. Initialising engine with : ")
+            print(f"self._feature_store_id : {self._feature_store_id}, self._feature_group_id: {self._feature_group_id}, expectation_suite_id: {self.id}")
             self._expectation_engine = ExpectationEngine(
-                feature_store_id=feature_store_id,
-                feature_group_id=feature_group_id,
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._feature_group_id,
                 expectation_suite_id=self.id
             )
-        else:
-            self._ge_object = self.to_ge_type()
+
+        self._ge_object = self.to_ge_type()
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -145,10 +150,12 @@ class ExpectationSuite:
         )
 
     def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
-        self._featurestore_id, self._featuregroup_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
+        self._feature_store_id, self._feature_group_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
 
-    def _init_expectation_engine(self, feature_store_id: int, feature_group_id: int):
+    def _init_expectation_engine(self, feature_store_id: int, feature_group_id: int) -> None:
+        print("init expectation engine of suite:")
         if self.id:
+            print(f"feature_store_id:{feature_store_id}, feature_group_id:{feature_group_id}, expectation_suite_id: {self.id}")
             self._expectation_engine = ExpectationEngine(
                 feature_store_id=feature_store_id,
                 feature_group_id=feature_group_id,
@@ -180,35 +187,69 @@ class ExpectationSuite:
             )
 
     def add_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type: bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
-            converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
-
+            self.expectations.append(converted_expectation)
             if ge_type:
                 return converted_expectation.to_ge_type()
             else:
                 return converted_expectation
         else:
-            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
+            self._ge_object.add_expectation(converted_expectation.to_ge_type())
+            self.expectations = self._ge_object.expectations
+
+            
 
     def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
-            converted_expectation = self._convert_expectation(expectation=expectation)
             # To update an expectation we need an id either from meta field or from self.id
-            self._expectation_engine.check_for_id(expectation)
+            self._expectation_engine.check_for_id(converted_expectation)
             converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
-            if ge_type:
-                return converted_expectation.to_ge_type()
-            else:
-                return converted_expectation
+            self._replace_expectation_local(converted_expectation)
         else:
-            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
+            self._ge_object.replace_expectation(converted_expectation.to_ge_type())
+            self.expectations = self._ge_object.expectations
+        
+        if ge_type:
+            return converted_expectation.to_ge_type()
+        else:
+            return converted_expectation
 
-    def remove_expectation(self, expectation_id : int) -> None:
-        if self.id:
-            self._expectation_engine.delete(expectation_id=expectation_id)
+    def _replace_expectation_local(self, expectation: GeExpectation) -> None:
+        matches = [list_index for list_index, expec in enumerate(self._expectations) if expec.id == expectation.id]
+        if len(matches) == 0:
+            raise ValueError(f"""Expectation not found in local expectation suite based on id : {expectation.id}. 
+            Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
+        elif len(matches) > 1:
+            raise ValueError(f"""Found multiple expectations in local expectation suite based on id : {expectation.id}. 
+            Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
         else:
-            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
+            self.expectations[matches[0]] = expectation
+        
+    def remove_expectation(self, expectation_id : Optional[int], expectation: Union[ge.core.ExpectationConfiguration, GeExpectation, None]) -> None:
+        if self.id and expectation_id:
+            self._expectation_engine.delete(expectation_id=expectation_id)
+            self._remove_expectation_local(expectation_id=expectation_id)
+        elif self.id and expectation:
+            converted_expectation = self._convert_expectation(expectation)
+            self._expectation_engine.delete(converted_expectation.id)
+            self._remove_expectation_local(expectation_id=converted_expectation.id)
+        else:
+            self._ge_object.remove_expectation(expectation)
+            self.expectations = self._ge_object.expectations
+
+    def _remove_expectation_local(self, expectation_id: int) -> None:
+        matches = [list_index for list_index, expec in enumerate(self._expectations) if expec.id == expectation_id]
+        if len(matches) == 0:
+            raise ValueError(f"""Expectation not found in local expectation suite based on id : {expectation_id}. 
+            Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
+        elif len(matches) > 1:
+            raise ValueError(f"""Found multiple expectations in local expectation suite based on id : {expectation_id}. 
+            Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
+        else:
+            self.expectations.pop(matches[0])
     # End of single expectation API              
 
     def __str__(self) -> str:
