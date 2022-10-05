@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+from typing import Optional
 from hsfs import client
 from hsfs.expectation_suite import ExpectationSuite
 
@@ -29,7 +30,7 @@ class ExpectationSuiteApi:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
 
-    def create(self, expectation_suite : ExpectationSuite):
+    def create(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
         """Create an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -52,7 +53,7 @@ class ExpectationSuiteApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation_suite : ExpectationSuite):
+    def update(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
         """Create an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -91,7 +92,7 @@ class ExpectationSuiteApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(self) -> ExpectationSuite:
+    def get(self) -> Optional[ExpectationSuite]:
         """Get the expectation suite attached to a Feature Group.
 
         :return: expectation suite

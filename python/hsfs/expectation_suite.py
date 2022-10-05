@@ -39,8 +39,8 @@ class ExpectationSuite:
         ge_cloud_id=None,
         run_validation: bool=True,
         validation_ingestion_policy: str="ALWAYS",
-        featurestore_id : Optional[int]=None,
-        featuregroup_id : Optional[int]=None,
+        feature_store_id : Optional[int]=None,
+        feature_group_id : Optional[int]=None,
         href : Optional[str]=None,
         expand=None,
         items=None,
@@ -57,11 +57,11 @@ class ExpectationSuite:
         self._expectations = []
         self._href = href
         
-        if (href != None and featurestore_id == None):
-            self._init_id_from_href(href)
+        if (href != None and feature_store_id == None):
+            self._init_feature_store_and_feature_group_ids_from_href(href)
         else:
-            self._featurestore_id = featurestore_id
-            self._featuregroup_id = featuregroup_id
+            self._feature_store_id = feature_store_id
+            self._feature_group_id = feature_group_id
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
@@ -69,8 +69,8 @@ class ExpectationSuite:
 
         if self.id:
             self._expectation_engine = ExpectationEngine(
-                feature_store_id=featurestore_id,
-                feature_group_id=featuregroup_id,
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
                 expectation_suite_id=self.id
             )
 

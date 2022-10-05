@@ -408,11 +408,11 @@ class FeatureGroupBase:
         inplace to include expectationId fields.
 
         # Arguments
-            expectation_suite: The expectation suite to attach to the featuregroup.
+            expectation_suite: The expectation suite to attach to the Feature Group.
             run_validation: Set whether the expectation_suite will run on ingestion
-            validation_ingestion_policy: Set the policy for ingestion to the featuregroup.
-                - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
-                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
+            validation_ingestion_policy: Set the policy for ingestion to the Feature Group.
+                - "STRICT" only allows DataFrame passing validation to be inserted into Feature Group.
+                - "ALWAYS" always insert the DataFrame to the Feature Group, irrespective of overall validation result.
 
         # Raises
             `RestAPIException`.
@@ -442,7 +442,7 @@ class FeatureGroupBase:
             self._expectation_suite = tmp_expectation_suite 
 
     def delete_expectation_suite(self) -> None:
-        """Delete the expectation suite attached to the featuregroup.
+        """Delete the expectation suite attached to the Feature Group.
 
         # Raises
             `RestAPIException`.
@@ -451,7 +451,7 @@ class FeatureGroupBase:
         self._expectation_suite = None
 
     def get_latest_validation_report(self, ge_type: bool = True) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
-        """Return the latest validation report attached to the feature group if it exists.
+        """Return the latest validation report attached to the Feature Group if it exists.
 
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
@@ -459,7 +459,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
+            `ValidationReport`. The latest validation report attached to the Feature Group.
 
         # Raises
             `RestAPIException`.
@@ -499,10 +499,10 @@ class FeatureGroupBase:
         ],
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
-        """Save validation report to hopsworks platform along previous reports of the same featuregroup.
+        """Save validation report to hopsworks platform along previous reports of the same Feature Group.
 
         # Arguments
-            validation_report: The validation report to attach to the featuregroup.
+            validation_report: The validation report to attach to the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -656,7 +656,7 @@ class FeatureGroupBase:
                 **expectation_suite.to_json_dict()
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(**expectation_suite, featurestore_id=self._feature_store_id, featuregroup_id=self._id)
+            self._expectation_suite = ExpectationSuite(**expectation_suite, feature_store_id=self._feature_store_id, feature_group_id=self._id)
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
