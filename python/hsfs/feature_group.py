@@ -750,9 +750,14 @@ class FeatureGroup(FeatureGroupBase):
 
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
-            self._expectation_suite_engine = (
-                expectation_suite_engine.ExpectationSuiteEngine(self._feature_store_id, self._id)
-            )
+            if expectation_suite:
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id
+                )
+            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id = self._feature_store_id, 
+                    feature_group_id = self._id)
             self._validation_report_engine = (
                 validation_report_engine.ValidationReportEngine(self._feature_store_id, self._id)
             )

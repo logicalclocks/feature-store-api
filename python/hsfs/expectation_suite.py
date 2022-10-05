@@ -147,6 +147,15 @@ class ExpectationSuite:
     def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
         self._featurestore_id, self._featuregroup_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
 
+    def _init_expectation_engine(self, feature_store_id: int, feature_group_id: int):
+        if self.id:
+            self._expectation_engine = ExpectationEngine(
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
+                expectation_suite_id=self.id
+            )
+        else:
+            raise ValueError("Initialise the Expectation Suite first by attaching to a Feature Group")
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, dict]) -> GeExpectation:
@@ -303,3 +312,4 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
+
