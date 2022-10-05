@@ -142,7 +142,7 @@ class ExpectationSuite:
             meta=self._meta,
         )
 
-    def _init_id_from_href(self, href) -> None:
+    def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
         self._featurestore_id, self._featuregroup_id = re.search(r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*", href).groups(0)
 
 
