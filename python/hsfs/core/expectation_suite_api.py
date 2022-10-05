@@ -54,7 +54,7 @@ class ExpectationSuiteApi:
         )
 
     def update(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
-        """Create an expectation suite attached to a Feature Group.
+        """Update an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
         :type expectation_suite: `ExpectationSuite`
@@ -69,6 +69,31 @@ class ExpectationSuiteApi:
             self._feature_group_id,
             "expectationsuite",
             expectation_suite.id
+        ]
+
+        headers = {"content-type": "application/json"}
+        payload = expectation_suite.json()
+        return ExpectationSuite.from_response_json(
+            _client._send_request("PUT", path_params, headers=headers, data=payload)
+        )
+
+    def update(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
+        """Update the metadata of an expectation suite attached to a Feature Group.
+
+        :param expectation_suite: expectation suite object to be updated
+        :type expectation_suite: `ExpectationSuite`
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            self._feature_group_id,
+            "expectationsuite",
+            expectation_suite.id,
+            "metadata"
         ]
 
         headers = {"content-type": "application/json"}

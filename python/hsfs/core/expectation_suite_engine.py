@@ -23,7 +23,7 @@ from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteEngine:
-    def __init__(self, feature_store_id : int, feature_group_id: int, expectation_suite_id: Optional[int] = None):
+    def __init__(self, feature_store_id : int, feature_group_id: int):
         """Expectation Suite engine.
 
         :param feature_store_id: id of the respective featurestore
@@ -39,12 +39,29 @@ class ExpectationSuiteEngine:
         )
 
     def save(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+        if expectation_suite.id:
+            self.create(expectation_suite)
+        else:
+            self.update(expectation_suite)
+
+    def create(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
         
         url = self._get_expectation_suite_url()
         print(f"Attached expectation suite to featuregroup, edit it at {url}")
         
         return saved_suite
+
+    def update(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+        saved_suite = self._expectation_suite_api.update(expectation_suite)
+        
+        url = self._get_expectation_suite_url()
+        print(f"Updated expectation suite to featuregroup, edit it at {url}")
+        
+        return saved_suite
+
+    def update_metadata(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+        return self._expectation_suite_api.update_metadata(expectation_suite)
 
     def get(self) -> Optional[ExpectationSuite]:
         return self._expectation_suite_api.get()

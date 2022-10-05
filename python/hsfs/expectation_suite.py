@@ -24,6 +24,7 @@ import great_expectations as ge
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 from hsfs.core.expectation_engine import ExpectationEngine
+from hsfs.core.expectation_suite_engine import ExpectationSuiteEngine
 
 
 class ExpectationSuite:
@@ -77,6 +78,10 @@ class ExpectationSuite:
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._feature_group_id,
                 expectation_suite_id=self.id
+            )
+            self._expectation_suite_engine = ExpectationSuiteEngine(
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._feature_group_id
             )
 
         self._ge_object = self.to_ge_type()
@@ -164,6 +169,43 @@ class ExpectationSuite:
         else:
             raise ValueError("Initialise the Expectation Suite first by attaching to a Feature Group")
 
+    def _init_expectation_suite_engine(self, feature_store_id: Optional[int], feature_group_id: Optional[int]) -> None:
+        print("init expectation suite engine of suite:")
+        if feature_group_id and feature_store_id:
+            self._expectation_suite_engine = ExpectationSuiteEngine(
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
+            )
+        elif self._feature_group_id and self._feature_store_id:
+            print(f"feature_store_id:{feature_store_id}, feature_group_id:{feature_group_id}, expectation_suite_id: {self.id}")
+            self._expectation_suite_engine = ExpectationSuiteEngine(
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._feature_group_id,
+            )
+        else:
+            raise ValueError("Provide feature_store_id or feature_group_id to use the expectation suite API")
+
+    # Expectation Suite Convenience Operations
+    def save(self, feature_store_id: Optional[int] = None, feature_group_id: Optional[int] = None):
+        if self._expectation_suite_engine:
+            self._expectation_suite_engine.save(self)
+        elif feature_store_id and feature_group_id:
+            self._feature_store_id = feature_store_id
+            self._feature_group_id = feature_group_id
+            self._init_expectation_suite_engine(feature_group_id=feature_group_id, feature_store_id=feature_store_id)
+            self._expectation_suite_engine.save(self)
+        elif self._feature_store_id and self._feature_group_id:
+            self._init_expectation_suite_engine(feature_group_id=feature_group_id, feature_store_id=feature_store_id)
+            return self._expectation_suite_engine.save(self)
+        else:
+            raise ValueError("Cannot attach or update the expectation suite without providing feature_store_id and feature_group_id.")
+
+    def delete(self):
+        if self._expectation_suite_engine and self.id:
+            self._expectation_suite_engine.delete(self.id)
+        else:
+            self = None
+
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, dict]) -> GeExpectation:
         """Convert different representation of expectation to Hopsworks GeExpectation type.
@@ -201,16 +243,18 @@ class ExpectationSuite:
 
             
 
-    def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+    def replace_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], existing_expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, None] = None, ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
             # To update an expectation we need an id either from meta field or from self.id
             self._expectation_engine.check_for_id(converted_expectation)
             converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
             self._replace_expectation_local(converted_expectation)
-        else:
-            self._ge_object.replace_expectation(converted_expectation.to_ge_type())
+        elif existing_expectation:
+            self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation))
             self.expectations = self._ge_object.expectations
+        else:
+            raise ValueError("Provide existing expectation configuration or attach the suite to a Feature Group to enable single expectation API")
         
         if ge_type:
             return converted_expectation.to_ge_type()
@@ -228,7 +272,7 @@ class ExpectationSuite:
         else:
             self.expectations[matches[0]] = expectation
         
-    def remove_expectation(self, expectation_id : Optional[int], expectation: Union[ge.core.ExpectationConfiguration, GeExpectation, None]) -> None:
+    def remove_expectation(self, expectation_id : Optional[int], expectation: Union[ge.core.ExpectationConfiguration, GeExpectation, None] = None) -> None:
         if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self._remove_expectation_local(expectation_id=expectation_id)
@@ -250,6 +294,7 @@ class ExpectationSuite:
             Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
         else:
             self.expectations.pop(matches[0])
+            self._ge_object.expectations = [expect.to_ge_object() for expect in self.expectations]
     # End of single expectation API              
 
     def __str__(self) -> str:
