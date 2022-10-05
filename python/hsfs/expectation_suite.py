@@ -149,7 +149,7 @@ class ExpectationSuite:
 
 
     # Emulate GE single expectation api to edit list of expectations
-    def _convert_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration, dict]) -> GeExpectation:
+    def _convert_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, dict]) -> GeExpectation:
         """Convert different representation of expectation to Hopsworks GeExpectation type.
         
         :param expectation: An expectation to convert to Hopsworks GeExpectation type
@@ -170,7 +170,7 @@ class ExpectationSuite:
                 )
             )
 
-    def add_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+    def add_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type: bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
@@ -180,10 +180,7 @@ class ExpectationSuite:
             else:
                 return converted_expectation
         else:
-            self._ge_object.add_expectation(expectation)
-            self.set_expectations(self._ge_object.expectations)
-
-            return expectation
+            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
 
     def replace_expectation(self, expectation : Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         if self.id:
@@ -196,22 +193,13 @@ class ExpectationSuite:
             else:
                 return converted_expectation
         else:
-            self._ge_object.replace_expectation(expectation)
-            self.set_expectations(self._ge_object.expectations)
+            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
 
-            return expectation  
-
-    def remove_expectation(self, expectation_id : Optional[int] = None, expectation: ge.core.ExpectationConfiguration = None) -> None:
-        if self.id and expectation_id:
+    def remove_expectation(self, expectation_id : int) -> None:
+        if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
-        elif self.id and expectation:
-            self._expectation_engine.check_for_id(expectation)
-        elif self.id:
-            raise ValueError("Provide an expectation_id or an expectation with an id in its meta field.")
-        elif expectation:
-            self._ge_object.remove_expectation(expectation)
         else:
-            raise ValueError("Provide an expectation to remove from the suite.")
+            raise ValueError("Initialise the Expectation Suite by attaching it to a Feature Group before using editing expectations.")
     # End of single expectation API              
 
     def __str__(self) -> str:
@@ -226,7 +214,7 @@ class ExpectationSuite:
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: int) -> int:
         self._id = id
 
     @property
@@ -235,16 +223,16 @@ class ExpectationSuite:
         return self._expectation_suite_name
 
     @expectation_suite_name.setter
-    def expectation_suite_name(self, expectation_suite_name):
+    def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
 
     @property
-    def data_asset_type(self):
+    def data_asset_type(self) -> str:
         """Data asset type of the expectation suite, not used by backend."""
         return self._data_asset_type
 
     @data_asset_type.setter
-    def data_asset_type(self, data_asset_type):
+    def data_asset_type(self, data_asset_type: str):
         self._data_asset_type = data_asset_type
 
     @property
@@ -262,7 +250,7 @@ class ExpectationSuite:
         return self._run_validation
 
     @run_validation.setter
-    def run_validation(self, run_validation):
+    def run_validation(self, run_validation: bool):
         self._run_validation = run_validation
 
     @property
@@ -275,7 +263,7 @@ class ExpectationSuite:
         return self._validation_ingestion_policy
 
     @validation_ingestion_policy.setter
-    def validation_ingestion_policy(self, validation_ingestion_policy):
+    def validation_ingestion_policy(self, validation_ingestion_policy: str):
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
 
     @property
@@ -284,7 +272,7 @@ class ExpectationSuite:
         return self._expectations
 
     @expectations.setter
-    def expectations(self, expectations):
+    def expectations(self, expectations: Union[List[ge.core.ExpectationConfiguration], List[GeExpectation], List[dict]]):
         if expectations is None:
             pass
         elif isinstance(expectations, list):
@@ -308,7 +296,7 @@ class ExpectationSuite:
         return self._meta
 
     @meta.setter
-    def meta(self, meta):
+    def meta(self, meta : Union[str, dict]):
         if isinstance(meta, dict):
             self._meta = meta
         elif isinstance(meta, str):
