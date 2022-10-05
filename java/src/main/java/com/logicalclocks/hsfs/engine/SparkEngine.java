@@ -127,6 +127,7 @@ public class SparkEngine {
     sparkSession.conf().set("hive.exec.dynamic.partition.mode", "nonstrict");
     // force Spark to fallback to using the Hive Serde to read Hudi COPY_ON_WRITE tables
     sparkSession.conf().set("spark.sql.hive.convertMetastoreParquet", "false");
+    sparkSession.conf().set("spark.sql.session.timeZone", "UTC");
   }
 
   public void validateSparkConfiguration() throws FeatureStoreException {
@@ -143,6 +144,7 @@ public class SparkEngine {
     configurationMap.put("spark.hadoop.hops.ssl.keystores.passwd.name", null);
     configurationMap.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
     configurationMap.put("spark.sql.hive.metastore.jars", null);
+    configurationMap.put("spark.sql.session.timeZone", "UTC");
     configurationMap.put("spark.hadoop.client.rpc.ssl.enabled.protocol", "TLSv1.2");
     configurationMap.put("spark.hadoop.hive.metastore.uris", null);
 
