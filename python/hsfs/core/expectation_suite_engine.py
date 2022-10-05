@@ -37,12 +37,6 @@ class ExpectationSuiteEngine:
             feature_store_id=feature_store_id,
             feature_group_id=feature_group_id
         )
-        if expectation_suite_id:
-            self._expectation_suite_id = expectation_suite_id
-            self._init_expectation_engine()
-        else:
-            self._expectation_suite_id = None
-            self._expectation_engine = None
 
     def save(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
@@ -50,19 +44,10 @@ class ExpectationSuiteEngine:
         url = self._get_expectation_suite_url()
         print(f"Attached expectation suite to featuregroup, edit it at {url}")
         
-        self._expectation_suite_id = saved_suite.id
-        self._init_expectation_engine()
-        
         return saved_suite
 
     def get(self) -> Optional[ExpectationSuite]:
-        fetched_suite = self._expectation_suite_api.get()
-        
-        if fetched_suite:
-            self._expectation_suite_id = fetched_suite.id
-            self._init_expectation_engine()
-        
-        return fetched_suite
+        return self._expectation_suite_api.get()
 
     def delete(self) -> None:
         self._expectation_suite_api.delete()
