@@ -349,7 +349,7 @@ public class FeatureViewEngine {
           withLabels,
           trainingDataVersion
       );
-     }catch (IOException e) {
+    } catch (IOException e) {
       if (e.getMessage().contains("\"errorCode\":270172")) {
         throw new FeatureStoreException(
             "Cannot generate dataset or query from the given start/end time because"
