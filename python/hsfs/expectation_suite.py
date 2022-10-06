@@ -255,7 +255,7 @@ class ExpectationSuite:
                 return converted_expectation
         else:
             self._ge_object.add_expectation(converted_expectation.to_ge_type())
-            self.expectations = self._ge_object.expectations
+            self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in self._ge_object.expectations]
 
     def replace_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], existing_expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, None] = None, ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
@@ -267,7 +267,7 @@ class ExpectationSuite:
             self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         elif existing_expectation:
             self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation))
-            self.expectations = self._ge_object.expectations
+            self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in self._ge_object.expectations]
         else:
             raise ValueError("Provide existing expectation configuration or attach the suite to a Feature Group to enable single expectation API")
         
@@ -299,7 +299,7 @@ class ExpectationSuite:
             self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         else:
             self._ge_object.remove_expectation(expectation)
-            self.expectations = self._ge_object.expectations
+            self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in self._ge_object.expectations]
 
     def _remove_expectation_local(self, expectation_id: int) -> None:
         matches = [list_index for list_index, expec in enumerate(self._expectations) if expec.id == expectation_id]
