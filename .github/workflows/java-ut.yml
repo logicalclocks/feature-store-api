@@ -27,4 +27,4 @@ jobs:
 
       - name: Test
         working-directory: ./java
-        run: mvn --batch-mode -Dmaven.test.failure.ignore=true test
+        run: mvn --batch-mode test
