@@ -55,6 +55,7 @@ class FeatureGroupBase:
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
+        self._featurestore_id = featurestore_id
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -422,6 +423,8 @@ class FeatureGroupBase:
                 ge_expectation_suite=expectation_suite,
                 run_validation=run_validation,
                 validation_ingestion_policy=validation_ingestion_policy,
+                feature_store_id=self._featurestore_id,
+                feature_group_id=self._id
             )
         elif isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite

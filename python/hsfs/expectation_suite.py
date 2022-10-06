@@ -109,11 +109,15 @@ class ExpectationSuite:
         ge_expectation_suite: ge.core.ExpectationSuite,
         run_validation: Optional[bool] = True,
         validation_ingestion_policy: Optional[str] = "ALWAYS",
+        feature_store_id: Optional[int]= None,
+        feature_group_id: Optional[int] = None
     ):
         return cls(
             **ge_expectation_suite.to_json_dict(),
             run_validation=run_validation,
             validation_ingestion_policy=validation_ingestion_policy,
+            feature_group_id=feature_group_id,
+            feature_store_id=feature_store_id
         )
 
     def to_dict(self) -> dict:
@@ -230,6 +234,15 @@ class ExpectationSuite:
                 )
             )
 
+    def get_expectation(self, expectation_id: int, ge_type: bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        if self.id and self._expectation_engine:
+            if ge_type:
+                return self._expectation_engine.get(expectation_id).to_ge_type()
+            else:
+                return self._expectation_engine.get(expectation_id)
+        else:
+            raise ValueError("Attach the Expectation Suite to a Feature Group to register it and enable fetching expectation by id")
+
     def add_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], ge_type: bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
@@ -243,8 +256,6 @@ class ExpectationSuite:
         else:
             self._ge_object.add_expectation(converted_expectation.to_ge_type())
             self.expectations = self._ge_object.expectations
-
-            
 
     def replace_expectation(self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration], existing_expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, None] = None, ge_type : bool=True) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         converted_expectation = self._convert_expectation(expectation=expectation)
