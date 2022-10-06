@@ -10,7 +10,7 @@ edit_uri: ""
 
 nav:
   - Home: https://docs.hopsworks.ai/
-  - Getting Started: https://docs.hopsworks.ai/
+  - Getting Started ↗: https://docs.hopsworks.ai/
   - Tutorials: https://docs.hopsworks.ai/
   - Concepts: https://docs.hopsworks.ai/
   - Guides: https://docs.hopsworks.ai/
@@ -30,7 +30,7 @@ nav:
       - Transformation Functions: generated/api/transformation_functions_api.md
       - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
-  - Community: https://community.hopsworks.ai/
+  - Community ↗: https://community.hopsworks.ai/
 
 theme:
   name: material
