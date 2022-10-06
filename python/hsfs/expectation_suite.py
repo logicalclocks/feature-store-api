@@ -24,7 +24,7 @@ import great_expectations as ge
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 from hsfs.core.expectation_engine import ExpectationEngine
-from hsfs.core.expectation_suite_engine import ExpectationSuiteEngine
+from hsfs.core import expectation_suite_engine
 
 
 class ExpectationSuite:
@@ -79,7 +79,7 @@ class ExpectationSuite:
                 feature_group_id=self._feature_group_id,
                 expectation_suite_id=self.id
             )
-            self._expectation_suite_engine = ExpectationSuiteEngine(
+            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._feature_group_id
             )
@@ -172,13 +172,13 @@ class ExpectationSuite:
     def _init_expectation_suite_engine(self, feature_store_id: Optional[int], feature_group_id: Optional[int]) -> None:
         print("init expectation suite engine of suite:")
         if feature_group_id and feature_store_id:
-            self._expectation_suite_engine = ExpectationSuiteEngine(
+            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
                 feature_store_id=feature_store_id,
                 feature_group_id=feature_group_id,
             )
         elif self._feature_group_id and self._feature_store_id:
             print(f"feature_store_id:{feature_store_id}, feature_group_id:{feature_group_id}, expectation_suite_id: {self.id}")
-            self._expectation_suite_engine = ExpectationSuiteEngine(
+            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._feature_group_id,
             )
