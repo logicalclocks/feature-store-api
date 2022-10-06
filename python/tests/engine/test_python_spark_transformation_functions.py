@@ -42,7 +42,7 @@ from hsfs.engine import python
 from hsfs.core.transformation_function_engine import TransformationFunctionEngine
 
 
-class TestPythonSparkTransformationFuctions:
+class TestPythonSparkTransformationFunctions:
     def _create_training_dataset(
         self, tf_fun, output_type=None, name=None, col="col_0"
     ):
