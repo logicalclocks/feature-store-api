@@ -112,8 +112,8 @@ public class FeatureView {
     public FeatureViewBuilder query(Query query) {
       this.query = query;
       if (query.isTimeTravel()) {
-        LOGGER.info("`as_of` argument in the `Query` will be ignored because" +
-            " feature view does not support time travel query.");
+        LOGGER.info("`as_of` argument in the `Query` will be ignored because "
+            + "feature view does not support time travel query.");
       }
       return this;
     }
