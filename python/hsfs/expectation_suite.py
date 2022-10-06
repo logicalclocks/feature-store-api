@@ -50,6 +50,8 @@ class ExpectationSuite:
         created=None,
     ):
         self._id = id
+        # Empty object to set the fields and avoid errors in setters
+        self._ge_object = ge.core.ExpectationSuite("empty_suite")
         self._expectation_suite_name = expectation_suite_name
         self._ge_cloud_id = ge_cloud_id
         self._data_asset_type = data_asset_type
@@ -233,7 +235,7 @@ class ExpectationSuite:
         if self.id:
             converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
             self.expectations.append(converted_expectation)
-            self._ge_object = self.to_ge_type()
+            self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
             if ge_type:
                 return converted_expectation.to_ge_type()
             else:
@@ -251,7 +253,7 @@ class ExpectationSuite:
             self._expectation_engine.check_for_id(converted_expectation)
             converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
             self._replace_expectation_local(converted_expectation)
-            self._ge_object = self.to_ge_type()
+            self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         elif existing_expectation:
             self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation))
             self.expectations = self._ge_object.expectations
@@ -278,12 +280,12 @@ class ExpectationSuite:
         if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self._remove_expectation_local(expectation_id=expectation_id)
-            self._ge_object = self.to_ge_type()
+            self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         elif self.id and expectation:
             converted_expectation = self._convert_expectation(expectation)
             self._expectation_engine.delete(converted_expectation.id)
             self._remove_expectation_local(expectation_id=converted_expectation.id)
-            self._ge_object = self.to_ge_type()
+            self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         else:
             self._ge_object.remove_expectation(expectation)
             self.expectations = self._ge_object.expectations
@@ -324,7 +326,7 @@ class ExpectationSuite:
     @expectation_suite_name.setter
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
-        self._ge_object = self.to_ge_type()
+        self._ge_object.expectation_suite_name = self._expectation_suite_name
 
     @property
     def data_asset_type(self) -> str:
@@ -334,7 +336,7 @@ class ExpectationSuite:
     @data_asset_type.setter
     def data_asset_type(self, data_asset_type: str):
         self._data_asset_type = data_asset_type
-        self._ge_object = self.to_ge_type()
+        self._ge_object.data_asset_type = self._data_asset_type
 
     @property
     def ge_cloud_id(self):
@@ -344,7 +346,7 @@ class ExpectationSuite:
     @ge_cloud_id.setter
     def ge_coud_id(self, ge_cloud_id):
         self._ge_cloud_id = ge_cloud_id
-        self._ge_object = self.to_ge_type()
+        self._ge_object.ge_cloud_id = ge_cloud_id
 
     @property
     def run_validation(self) -> bool:
@@ -391,7 +393,7 @@ class ExpectationSuite:
                     raise TypeError(
                         f"Expectation of type {type(expectation)} is not supported."
                     )
-        self._ge_object = self.to_ge_type()
+        self._ge_object.expectations = [expec.to_ge_type() for expec in self._expectations]
 
     @property
     def meta(self) -> dict:
@@ -406,5 +408,5 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
-        self._ge_object = self.to_ge_type()
+        self._ge_object.meta = self._meta
 
