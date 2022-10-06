@@ -136,7 +136,6 @@ class Client(base.Client):
             "spark.hadoop.hops.ssl.keystores.passwd.name": None,
             "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
             "spark.sql.hive.metastore.jars": None,
-            "spark.sql.session.timeZone": "UTC",
             "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
             "spark.hadoop.hive.metastore.uris": None,
         }

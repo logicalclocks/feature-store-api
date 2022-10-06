@@ -144,7 +144,6 @@ public class SparkEngine {
     configurationMap.put("spark.hadoop.hops.ssl.keystores.passwd.name", null);
     configurationMap.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
     configurationMap.put("spark.sql.hive.metastore.jars", null);
-    configurationMap.put("spark.sql.session.timeZone", "UTC");
     configurationMap.put("spark.hadoop.client.rpc.ssl.enabled.protocol", "TLSv1.2");
     configurationMap.put("spark.hadoop.hive.metastore.uris", null);
 

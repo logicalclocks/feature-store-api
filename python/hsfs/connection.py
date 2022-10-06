@@ -388,7 +388,6 @@ class Connection:
         spark.hadoop.hops.ssl.keystore.name {1}/keyStore.jks
         spark.hadoop.hops.ssl.trustore.name {1}/trustStore.jks
         spark.sql.hive.metastore.jars /tmp/apache-hive-bin/lib/*
-        spark.sql.session.timeZone UTC
         spark.hadoop.hive.metastore.uris thrift://{2}:9083
 
         Then save and restart the cluster.
