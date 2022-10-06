@@ -86,6 +86,8 @@ class ExpectationSuite:
                 feature_group_id=self._feature_group_id
             )
 
+        self._expectation_engine = None
+        self._expectation_suite_engine = None
         self._ge_object = self.to_ge_type()
 
     @classmethod
@@ -266,7 +268,7 @@ class ExpectationSuite:
             self._replace_expectation_local(converted_expectation)
             self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         elif existing_expectation:
-            self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation))
+            self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation).to_ge_type())
             self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in self._ge_object.expectations]
         else:
             raise ValueError("Provide existing expectation configuration or attach the suite to a Feature Group to enable single expectation API")
@@ -287,7 +289,7 @@ class ExpectationSuite:
         else:
             self.expectations[matches[0]] = expectation
         
-    def remove_expectation(self, expectation_id : Optional[int], expectation: Union[ge.core.ExpectationConfiguration, GeExpectation, None] = None) -> None:
+    def remove_expectation(self, expectation_id : Optional[int] = None, expectation: Union[ge.core.ExpectationConfiguration, GeExpectation, None] = None) -> None:
         if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self._remove_expectation_local(expectation_id=expectation_id)
@@ -298,7 +300,7 @@ class ExpectationSuite:
             self._remove_expectation_local(expectation_id=converted_expectation.id)
             self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
         else:
-            self._ge_object.remove_expectation(expectation)
+            self._ge_object.remove_expectation(self._convert_expectation(expectation).to_ge_type())
             self._expectations = [GeExpectation(**expectation.to_json_dict()) for expectation in self._ge_object.expectations]
 
     def _remove_expectation_local(self, expectation_id: int) -> None:

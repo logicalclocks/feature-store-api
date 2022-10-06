@@ -77,7 +77,7 @@ class ExpectationSuiteApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
+    def update_metadata(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
         """Update the metadata of an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be updated
