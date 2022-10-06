@@ -65,8 +65,6 @@ public class Query {
   @Getter
   @Setter
   private Boolean hiveEngine = false;
-  @Getter
-  private boolean isTimeTravel = false;
 
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
@@ -196,7 +194,6 @@ public class Query {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
-    isTimeTravel = true;
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
     Long excludeUntilTimestamp = null;
     if (excludeUntil != null) {
@@ -305,5 +302,18 @@ public class Query {
   public Query appendFeature(Feature feature) {
     this.leftFeatures.add(feature);
     return this;
+  }
+
+  public boolean isTimeTravel() {
+    if (leftFeatureGroupStartTime != null || leftFeatureGroupEndTime != null) {
+      return true;
+    }
+    for (Join join: joins) {
+      if (join.getQuery().leftFeatureGroupStartTime != null
+          || join.getQuery().leftFeatureGroupEndTime != null) {
+        return true;
+      }
+    }
+    return false;
   }
 }

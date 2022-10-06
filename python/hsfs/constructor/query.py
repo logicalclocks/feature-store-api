@@ -49,7 +49,6 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
-        self._is_time_travel = False
 
     def _prep_read(self, online, read_options):
         query = self._query_constructor_api.construct_query(self)
@@ -238,14 +237,13 @@ class Query:
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        self._is_time_travel = True
         wallclock_timestamp = util.convert_event_time_to_timestamp(wallclock_time)
 
         exclude_until_timestamp = util.convert_event_time_to_timestamp(exclude_until)
 
-        for join in self._joins:
-            join.query.left_feature_group_end_time = wallclock_timestamp
-            join.query.left_feature_group_start_time = exclude_until_timestamp
+        for _join in self._joins:
+            _join.query.left_feature_group_end_time = wallclock_timestamp
+            _join.query.left_feature_group_start_time = exclude_until_timestamp
         self.left_feature_group_end_time = wallclock_timestamp
         self.left_feature_group_start_time = exclude_until_timestamp
         return self
@@ -410,4 +408,14 @@ class Query:
         self._left_features.append(feature)
 
     def is_time_travel(self):
-        return self._is_time_travel
+        return any(
+            self.left_feature_group_start_time
+            or self.left_feature_group_end_time
+            or any(
+                [
+                    _join.query.left_feature_group_start_time
+                    or _join.query.left_feature_group_end_time
+                    for _join in self._joins
+                ]
+            )
+        )
